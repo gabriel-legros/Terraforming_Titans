@@ -23,6 +23,7 @@ const automationElements = {
   autoTravelPanelBody: null,
   autoTravelMasterToggle: null,
   autoTravelPresetSelect: null,
+  autoTravelPresetUsage: null,
   autoTravelPresetNameInput: null,
   autoTravelNewPresetButton: null,
   autoTravelDeletePresetButton: null,
@@ -33,6 +34,7 @@ const automationElements = {
   autoTravelOrbitSelect: null,
   autoTravelDominionSelect: null,
   autoTravelHazardsWrap: null,
+  autoTravelRandomHazardSubsetToggle: null,
   autoTravelAutoCompleteToggle: null,
   autoTravelWaitSpecializationToggle: null,
   autoTravelBlockIfNoStoredToggle: null,
@@ -57,12 +59,15 @@ const automationElements = {
   scriptDeleteButton: null,
   scriptLinesContainer: null,
   scriptAddLineButton: null,
+  scriptImportButton: null,
+  scriptExportButton: null,
   shipAssignment: null,
   shipAssignmentStatus: null,
   shipAssignmentDescription: null,
   collapseButton: null,
   panelBody: null,
   presetSelect: null,
+  shipPresetUsage: null,
   presetMoveUpButton: null,
   presetMoveDownButton: null,
   presetNameInput: null,
@@ -72,12 +77,15 @@ const automationElements = {
   showPresetInSidebarCheckbox: null,
   stepsContainer: null,
   addStepButton: null,
+  shipImportPresetButton: null,
+  shipExportPresetButton: null,
   lifeDesign: null,
   lifeDesignStatus: null,
   lifeDesignDescription: null,
   lifeCollapseButton: null,
   lifePanelBody: null,
   lifePresetSelect: null,
+  lifePresetUsage: null,
   lifePresetMoveUpButton: null,
   lifePresetMoveDownButton: null,
   lifePresetNameInput: null,
@@ -94,6 +102,10 @@ const automationElements = {
   lifeSeedButton: null,
   lifeDesignEnableCheckbox: null,
   lifeDeployNowButton: null,
+  lifeImportPresetButton: null,
+  lifeExportPresetButton: null,
+  globalExportButton: null,
+  globalImportButton: null,
   researchAutomation: null,
   researchAutomationStatus: null,
   researchAutomationDescription: null,
@@ -114,6 +126,7 @@ const automationElements = {
   researchApplyNextTravelSelect: null,
   researchApplyNextTravelPersistToggle: null,
   researchPresetJsonDetails: null,
+  researchPresetUsage: null,
   buildingsAutomation: null,
   buildingsAutomationStatus: null,
   buildingsAutomationDescription: null,
@@ -133,6 +146,8 @@ const automationElements = {
   buildingsBuilderShowInSidebarCheckbox: null,
   buildingsBuilderTypeSelect: null,
   buildingsBuilderScopeSelect: null,
+  buildingsBuilderPresetModeSelect: null,
+  buildingsBuilderPresetModeMessage: null,
   buildingsBuilderCategorySelect: null,
   buildingsBuilderBuildingSelect: null,
   buildingsBuilderAddButton: null,
@@ -140,6 +155,7 @@ const automationElements = {
   buildingsBuilderClearButton: null,
   buildingsBuilderSelectedList: null,
   buildingsPresetJsonDetails: null,
+  buildingsPresetUsage: null,
   buildingsApplyList: null,
   buildingsApplyHint: null,
   buildingsApplyCombinationButton: null,
@@ -172,6 +188,8 @@ const automationElements = {
   projectsBuilderApplyOnceButton: null,
   projectsBuilderShowInSidebarCheckbox: null,
   projectsBuilderScopeSelect: null,
+  projectsBuilderPresetModeSelect: null,
+  projectsBuilderPresetModeMessage: null,
   projectsBuilderCategorySelect: null,
   projectsBuilderProjectSelect: null,
   projectsBuilderAddButton: null,
@@ -179,6 +197,7 @@ const automationElements = {
   projectsBuilderClearButton: null,
   projectsBuilderSelectedList: null,
   projectsPresetJsonDetails: null,
+  projectsPresetUsage: null,
   projectsApplyList: null,
   projectsApplyHint: null,
   projectsApplyCombinationButton: null,
@@ -213,6 +232,8 @@ const automationElements = {
   colonyBuilderDirty: null,
   colonyBuilderTypeSelect: null,
   colonyBuilderScopeSelect: null,
+  colonyBuilderPresetModeSelect: null,
+  colonyBuilderPresetModeMessage: null,
   colonyBuilderCategorySelect: null,
   colonyBuilderTargetSelect: null,
   colonyBuilderAddButton: null,
@@ -220,6 +241,7 @@ const automationElements = {
   colonyBuilderClearButton: null,
   colonyBuilderSelectedList: null,
   colonyPresetJsonDetails: null,
+  colonyPresetUsage: null,
   colonyApplyList: null,
   colonyApplyHint: null,
   colonyApplyCombinationButton: null,
@@ -939,7 +961,7 @@ function createAutomationCardHeader(card, titleText, onToggle, orderKey) {
   const collapse = document.createElement('button');
   collapse.classList.add('automation-collapse');
   collapse.textContent = '▼';
-  collapse.title = 'Toggle';
+  collapse.title = getAutomationCardText('toggleCard', {}, 'Toggle');
   const title = document.createElement('div');
   title.classList.add('automation-title');
   title.textContent = titleText;
@@ -1019,6 +1041,28 @@ function createAutomationPresetJsonDetails(extraClassName) {
     event.preventDefault();
     event.stopPropagation();
   });
+  const snapshotButton = document.createElement('button');
+  snapshotButton.type = 'button';
+  snapshotButton.textContent = getAutomationCardText('snapshotPresetJsonButton', {}, 'Snapshot');
+  snapshotButton.classList.add('automation-preset-json-snapshot');
+  snapshotButton.style.marginLeft = '8px';
+  snapshotButton.style.display = 'none';
+  snapshotButton.disabled = true;
+  snapshotButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
+  const regenerateButton = document.createElement('button');
+  regenerateButton.type = 'button';
+  regenerateButton.textContent = getAutomationCardText('regeneratePresetJsonButton', {}, 'Regenerate');
+  regenerateButton.classList.add('automation-preset-json-regenerate');
+  regenerateButton.style.marginLeft = '8px';
+  regenerateButton.style.display = 'none';
+  regenerateButton.disabled = true;
+  regenerateButton.addEventListener('click', (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+  });
 
   const filterRow = document.createElement('div');
   filterRow.classList.add('automation-preset-json-filter-row');
@@ -1037,10 +1081,12 @@ function createAutomationPresetJsonDetails(extraClassName) {
   });
   filterRow.append(filterSelect, filterClearButton);
 
-  summary.append(summaryText, filterRow, saveButton);
+  summary.append(summaryText, filterRow, saveButton, snapshotButton, regenerateButton);
   details.appendChild(summary);
   details.addEventListener('toggle', () => {
     saveButton.style.display = details.open ? '' : 'none';
+    snapshotButton.style.display = details.open && details._hasSnapshotButton ? '' : 'none';
+    regenerateButton.style.display = details.open && details._hasRegenerateButton ? '' : 'none';
     filterRow.style.display = details.open && filterRow._hasFilters ? 'inline-flex' : 'none';
   });
 
@@ -1053,6 +1099,8 @@ function createAutomationPresetJsonDetails(extraClassName) {
   details._saveButton = saveButton;
   details._saveButtonTextNode = saveButtonText;
   details._saveButtonStarNode = saveButtonStar;
+  details._snapshotButton = snapshotButton;
+  details._regenerateButton = regenerateButton;
   details._contentNode = pre;
   details._filterRowNode = filterRow;
   details._filterSelectNode = filterSelect;
@@ -1068,6 +1116,15 @@ function createAutomationPresetJsonDetails(extraClassName) {
   details._boundPresetId = null;
   details._activePresetRef = null;
   details._activeOnFieldChange = null;
+  details._activeFieldOptionsResolver = null;
+  details._activeOnFilterChange = null;
+  details._activeOnClearFilter = null;
+  details._activeOnSnapshotFilter = null;
+  details._activeOnRegenerateFilter = null;
+  details._activeSelectedFilterValue = '';
+  details._hasSnapshotButton = false;
+  details._hasRegenerateButton = false;
+  details._parameterInputPathKeys = new Set();
   details._filterOptionSignature = '';
   details.style.display = 'none';
   return details;
@@ -1169,6 +1226,14 @@ function buildAutomationPresetLeafPathKey(path) {
   return path.map((segment) => `[${segment}]`).join('');
 }
 
+function isAutomationPresetJsonRemovablePath(path) {
+  return path.length !== 1 || path[0] !== 'id';
+}
+
+function isAutomationPresetJsonStringValue(value) {
+  return value !== null && value !== undefined && value.constructor === String;
+}
+
 function formatAutomationPresetLeafPathLabel(path) {
   let label = '';
   for (let index = 0; index < path.length; index += 1) {
@@ -1208,15 +1273,62 @@ function getAutomationPresetValueAtPath(target, path) {
   return current;
 }
 
+function hasAutomationPresetValueAtPath(target, path) {
+  let current = target;
+  for (let index = 0; index < path.length; index += 1) {
+    if (Array.isArray(current)) {
+      const segment = path[index];
+      if (!Number.isInteger(segment) || segment < 0 || segment >= current.length) {
+        return false;
+      }
+      current = current[segment];
+      continue;
+    }
+    if (!current || current.constructor !== Object || !Object.prototype.hasOwnProperty.call(current, path[index])) {
+      return false;
+    }
+    current = current[path[index]];
+  }
+  return true;
+}
+
 function setAutomationPresetValueAtPath(target, path, value) {
   if (!target || !Array.isArray(path) || path.length === 0) {
     return;
   }
   let current = target;
   for (let index = 0; index < path.length - 1; index += 1) {
-    current = current[path[index]];
+    const segment = path[index];
+    if (current[segment] === undefined) {
+      current[segment] = Number.isInteger(path[index + 1]) ? [] : {};
+    }
+    current = current[segment];
   }
   current[path[path.length - 1]] = value;
+}
+
+function removeAutomationPresetValueAtPath(target, path) {
+  if (!target || !Array.isArray(path) || path.length === 0) {
+    return false;
+  }
+  let parent = target;
+  for (let index = 0; index < path.length - 1; index += 1) {
+    parent = parent[path[index]];
+  }
+  const leafKey = path[path.length - 1];
+  if (Array.isArray(parent)) {
+    const numericIndex = Number(leafKey);
+    if (!Number.isInteger(numericIndex) || numericIndex < 0 || numericIndex >= parent.length) {
+      return false;
+    }
+    parent.splice(numericIndex, 1);
+    return true;
+  }
+  if (!parent || parent.constructor !== Object || !Object.prototype.hasOwnProperty.call(parent, leafKey)) {
+    return false;
+  }
+  delete parent[leafKey];
+  return true;
 }
 
 function buildAutomationPresetVisibleRenderTree(sourcePreset, visibleLeafPaths) {
@@ -1245,27 +1357,174 @@ function buildAutomationPresetVisibleRenderTree(sourcePreset, visibleLeafPaths) 
   return root;
 }
 
+function collectAutomationPresetJsonNodePaths(leafPaths) {
+  const nodePathMap = {};
+  const nodePaths = [];
+  for (let pathIndex = 0; pathIndex < leafPaths.length; pathIndex += 1) {
+    const path = leafPaths[pathIndex];
+    for (let length = 0; length < path.length; length += 1) {
+      const nodePath = path.slice(0, length);
+      const nodeKey = buildAutomationPresetLeafPathKey(nodePath);
+      if (nodePathMap[nodeKey]) {
+        continue;
+      }
+      nodePathMap[nodeKey] = true;
+      nodePaths.push(nodePath);
+    }
+  }
+  return nodePaths;
+}
+
+function getAutomationPresetJsonDescendantLeafPaths(nodePath, leafPaths) {
+  const descendants = [];
+  for (let pathIndex = 0; pathIndex < leafPaths.length; pathIndex += 1) {
+    const path = leafPaths[pathIndex];
+    if (path.length <= nodePath.length) {
+      continue;
+    }
+    let matches = true;
+    for (let segmentIndex = 0; segmentIndex < nodePath.length; segmentIndex += 1) {
+      if (path[segmentIndex] !== nodePath[segmentIndex]) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches && isAutomationPresetJsonRemovablePath(path)) {
+      descendants.push(path);
+    }
+  }
+  return descendants;
+}
+
+function getAutomationPresetJsonIncludeState(details, descendantLeafPaths) {
+  let includedCount = 0;
+  for (let pathIndex = 0; pathIndex < descendantLeafPaths.length; pathIndex += 1) {
+    const path = descendantLeafPaths[pathIndex];
+    const pathKey = buildAutomationPresetLeafPathKey(path);
+    const draftEntry = details._jsonDraftMap[pathKey];
+    if (!draftEntry || draftEntry.included !== false) {
+      includedCount += 1;
+    }
+  }
+  return {
+    checked: descendantLeafPaths.length > 0 && includedCount === descendantLeafPaths.length,
+    indeterminate: includedCount > 0 && includedCount < descendantLeafPaths.length
+  };
+}
+
+function getAutomationPresetJsonBaseValue(basePreset, path, fallbackValue) {
+  return hasAutomationPresetValueAtPath(basePreset, path)
+    ? getAutomationPresetValueAtPath(basePreset, path)
+    : fallbackValue;
+}
+
+function updateAutomationPresetJsonDirtyState(details, preset) {
+  details._jsonDirty = Object.keys(details._jsonDraftMap).length > 0;
+  if (details._jsonDirty) {
+    saveAutomationPresetJsonDraftStore(details, preset.id);
+  } else {
+    clearAutomationPresetJsonDraftStore(details, preset.id);
+  }
+  if (details._onDirtyChange) {
+    details._onDirtyChange(details._jsonDirty);
+  }
+}
+
+function setAutomationPresetJsonDescendantIncluded(details, preset, descendantLeafPaths, nextIncluded) {
+  const basePreset = details._activePresetRef || preset;
+  for (let pathIndex = 0; pathIndex < descendantLeafPaths.length; pathIndex += 1) {
+    const path = descendantLeafPaths[pathIndex];
+    const pathKey = buildAutomationPresetLeafPathKey(path);
+    const draftEntry = details._jsonDraftMap[pathKey];
+    const nextValue = draftEntry ? draftEntry.value : getAutomationPresetValueAtPath(preset, path);
+    const hasBaseValue = hasAutomationPresetValueAtPath(basePreset, path);
+    const baseValue = getAutomationPresetJsonBaseValue(basePreset, path, nextValue);
+    if (nextIncluded && hasBaseValue && JSON.stringify(baseValue) === JSON.stringify(nextValue)) {
+      delete details._jsonDraftMap[pathKey];
+    } else {
+      details._jsonDraftMap[pathKey] = { path: path.slice(), value: nextValue, included: nextIncluded };
+    }
+  }
+  updateAutomationPresetJsonDirtyState(details, preset);
+}
+
+function regenerateAutomationPresetJsonMissingDrafts(details, preset, referencePreset, rootPath) {
+  if (!preset || !referencePreset) {
+    return false;
+  }
+  const scopedReference = rootPath ? getAutomationPresetValueAtPath(referencePreset, rootPath) : referencePreset;
+  if (!scopedReference || (scopedReference.constructor !== Object && !Array.isArray(scopedReference))) {
+    return false;
+  }
+  const referenceLeafPaths = [];
+  collectAutomationPresetLeafPaths(scopedReference, [], referenceLeafPaths);
+  let changed = false;
+  for (let pathIndex = 0; pathIndex < referenceLeafPaths.length; pathIndex += 1) {
+    const fullPath = rootPath ? rootPath.concat(referenceLeafPaths[pathIndex]) : referenceLeafPaths[pathIndex];
+    if (!isAutomationPresetJsonRemovablePath(fullPath) || hasAutomationPresetValueAtPath(preset, fullPath)) {
+      continue;
+    }
+    const pathKey = buildAutomationPresetLeafPathKey(fullPath);
+    const referenceValue = getAutomationPresetValueAtPath(referencePreset, fullPath);
+    details._jsonDraftMap[pathKey] = {
+      path: fullPath.slice(),
+      value: referenceValue,
+      included: false
+    };
+    changed = true;
+  }
+  updateAutomationPresetJsonDirtyState(details, preset);
+  return changed;
+}
+
+function compareAutomationPresetJsonRemovalEntries(left, right) {
+  const leftPath = left.path;
+  const rightPath = right.path;
+  const sharedLength = Math.min(leftPath.length, rightPath.length);
+  for (let index = 0; index < sharedLength; index += 1) {
+    if (leftPath[index] === rightPath[index]) {
+      continue;
+    }
+    if (Number.isInteger(leftPath[index]) && Number.isInteger(rightPath[index])) {
+      return rightPath[index] - leftPath[index];
+    }
+    return 0;
+  }
+  return rightPath.length - leftPath.length;
+}
+
 function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldChange, fieldOptionsResolver, renderRootPath = null) {
   const content = details._contentNode;
   content.textContent = '';
   details._jsonInputMap = {};
+  details._jsonIncludeCheckboxMap = {};
+  details._jsonNodeIncludeCheckboxMap = {};
 
   const writeText = (text) => {
     content.appendChild(document.createTextNode(text));
   };
 
-  const appendLeafInput = (path, value, isString) => {
+  const appendLeafInput = (path, value, isString, keyPrefix) => {
     const pathKey = buildAutomationPresetLeafPathKey(path);
     const draftEntry = details._jsonDraftMap[pathKey];
+    const isIncluded = !draftEntry || draftEntry.included !== false;
     const valueToRender = draftEntry ? draftEntry.value : value;
+    const isParameterInput = details._parameterInputPathKeys.has(pathKey);
     const fieldOptions = fieldOptionsResolver ? fieldOptionsResolver(path, value, preset) : null;
     const hasCustomSelectOptions = !!(fieldOptions && Array.isArray(fieldOptions.selectOptions) && fieldOptions.selectOptions.length);
     const isBooleanLeaf = typeof value === 'boolean';
-    const useSelect = isBooleanLeaf || hasCustomSelectOptions;
+    const useSelect = !isParameterInput && (isBooleanLeaf || hasCustomSelectOptions);
     const input = useSelect ? document.createElement('select') : document.createElement('input');
     input.classList.add('automation-preset-json-field-input');
     input.dataset.fieldKey = pathKey;
-    if (hasCustomSelectOptions) {
+    if (isParameterInput) {
+      input.type = 'text';
+      input.value = getAutomationCardText('parameterizedPresetInputPlaceholder', {}, 'INPUT');
+      input.size = input.value.length;
+      input.disabled = true;
+      input.classList.add('automation-preset-json-field-input-disabled');
+      input.classList.add('automation-preset-json-parameter-input');
+    } else if (hasCustomSelectOptions) {
       for (let optionIndex = 0; optionIndex < fieldOptions.selectOptions.length; optionIndex += 1) {
         const optionData = fieldOptions.selectOptions[optionIndex];
         const option = document.createElement('option');
@@ -1277,10 +1536,10 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     } else if (isBooleanLeaf) {
       const optionTrue = document.createElement('option');
       optionTrue.value = 'true';
-      optionTrue.textContent = 'true';
+      optionTrue.textContent = getAutomationCardText('booleanTrue', {}, 'true');
       const optionFalse = document.createElement('option');
       optionFalse.value = 'false';
-      optionFalse.textContent = 'false';
+      optionFalse.textContent = getAutomationCardText('booleanFalse', {}, 'false');
       input.append(optionTrue, optionFalse);
       input.value = valueToRender ? 'true' : 'false';
     } else {
@@ -1296,10 +1555,55 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     input.style.lineHeight = 'inherit';
     input.style.padding = '0 2px';
     input.style.margin = '0';
-    input.disabled = path.length === 1 && path[0] === 'id';
+    input.disabled = input.disabled || (path.length === 1 && path[0] === 'id');
     if (input.disabled) {
       input.classList.add('automation-preset-json-field-input-disabled');
     }
+    if (!isIncluded && !input.disabled) {
+      input.disabled = true;
+      input.classList.add('automation-preset-json-field-input-disabled');
+    }
+
+    let includeCheckbox = null;
+    if (path.length !== 1 || path[0] !== 'id') {
+      includeCheckbox = document.createElement('input');
+      includeCheckbox.type = 'checkbox';
+      includeCheckbox.checked = isIncluded;
+      includeCheckbox.classList.add('automation-preset-json-field-include-checkbox');
+      includeCheckbox.title = getAutomationCardText('presetJsonIncludeFieldLabel', {}, 'Include this field in saved preset');
+      includeCheckbox.addEventListener('change', (event) => {
+        const nextIncluded = !!event.target.checked;
+        const basePreset = details._activePresetRef || preset;
+        const existingBaseValue = getAutomationPresetJsonBaseValue(basePreset, path, valueToRender);
+        const nextValue = isParameterInput
+          ? existingBaseValue
+          : hasCustomSelectOptions
+            ? parseAutomationPresetJsonFieldValue(input.value)
+            : isBooleanLeaf
+              ? input.value === 'true'
+              : isString
+                ? input.value
+                : parseAutomationPresetJsonFieldValue(input.value);
+        const hasBaseValue = hasAutomationPresetValueAtPath(basePreset, path);
+        const baseValue = getAutomationPresetJsonBaseValue(basePreset, path, nextValue);
+        const baseMatches = JSON.stringify(baseValue) === JSON.stringify(nextValue);
+        if (nextIncluded && hasBaseValue && baseMatches) {
+          delete details._jsonDraftMap[pathKey];
+        } else {
+          details._jsonDraftMap[pathKey] = { path: path.slice(), value: nextValue, included: nextIncluded };
+        }
+        input.disabled = isParameterInput || !nextIncluded;
+        if (!nextIncluded) {
+          input.classList.add('automation-preset-json-field-input-disabled');
+        } else if (!isParameterInput && !(path.length === 1 && path[0] === 'id')) {
+          input.classList.remove('automation-preset-json-field-input-disabled');
+        }
+        updateAutomationPresetJsonDirtyState(details, preset);
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+      });
+    }
+
     input.addEventListener('change', (event) => {
       try {
         const nextValue = hasCustomSelectOptions
@@ -1310,33 +1614,37 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
               ? event.target.value
               : parseAutomationPresetJsonFieldValue(event.target.value);
         const basePreset = details._activePresetRef || preset;
-        const baseValue = getAutomationPresetValueAtPath(basePreset, path);
-        if (JSON.stringify(baseValue) === JSON.stringify(nextValue)) {
+        const nextIncluded = includeCheckbox ? includeCheckbox.checked : true;
+        const hasBaseValue = hasAutomationPresetValueAtPath(basePreset, path);
+        const baseValue = getAutomationPresetJsonBaseValue(basePreset, path, nextValue);
+        if (nextIncluded && hasBaseValue && JSON.stringify(baseValue) === JSON.stringify(nextValue)) {
           delete details._jsonDraftMap[pathKey];
         } else {
-          details._jsonDraftMap[pathKey] = { path: path.slice(), value: nextValue };
+          details._jsonDraftMap[pathKey] = { path: path.slice(), value: nextValue, included: nextIncluded };
         }
-        details._jsonDirty = Object.keys(details._jsonDraftMap).length > 0;
-        if (details._jsonDirty) {
-          saveAutomationPresetJsonDraftStore(details, preset.id);
-        } else {
-          clearAutomationPresetJsonDraftStore(details, preset.id);
-        }
-        if (details._onDirtyChange) {
-          details._onDirtyChange(details._jsonDirty);
-        }
+        updateAutomationPresetJsonDirtyState(details, preset);
         queueAutomationUIRefresh();
         updateAutomationUI();
       } catch (error) {
-        showAutomationImportStatus(
-          getAutomationCardText('importPresetInvalidJsonError', {}, 'That preset string is not valid JSON.'),
-          true
-        );
+        if (details._showStatus) {
+          details._showStatus(
+            getAutomationCardText('importPresetInvalidJsonError', {}, 'That preset string is not valid JSON.'),
+            true
+          );
+        }
         queueAutomationUIRefresh();
         updateAutomationUI();
       }
     });
     details._jsonInputMap[pathKey] = input;
+    if (includeCheckbox) {
+      details._jsonIncludeCheckboxMap[pathKey] = includeCheckbox;
+      content.appendChild(includeCheckbox);
+      writeText(' ');
+    }
+    if (keyPrefix) {
+      writeText(keyPrefix);
+    }
     if (isString && !hasCustomSelectOptions) {
       writeText('"');
       content.appendChild(input);
@@ -1346,11 +1654,35 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     content.appendChild(input);
   };
 
+  const appendNodeIncludeCheckbox = (path) => {
+    const nodeKey = buildAutomationPresetLeafPathKey(path);
+    const descendantLeafPaths = getAutomationPresetJsonDescendantLeafPaths(path, leafPaths);
+    const includeState = getAutomationPresetJsonIncludeState(details, descendantLeafPaths);
+    const includeCheckbox = document.createElement('input');
+    includeCheckbox.type = 'checkbox';
+    includeCheckbox.checked = includeState.checked;
+    includeCheckbox.indeterminate = includeState.indeterminate;
+    includeCheckbox.disabled = descendantLeafPaths.length === 0;
+    includeCheckbox.classList.add('automation-preset-json-field-include-checkbox');
+    includeCheckbox.classList.add('automation-preset-json-node-include-checkbox');
+    includeCheckbox.title = getAutomationCardText('presetJsonIncludeFieldLabel', {}, 'Include this field in saved preset');
+    includeCheckbox.addEventListener('change', (event) => {
+      setAutomationPresetJsonDescendantIncluded(details, preset, descendantLeafPaths, !!event.target.checked);
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    });
+    details._jsonNodeIncludeCheckboxMap[nodeKey] = includeCheckbox;
+    content.appendChild(includeCheckbox);
+    writeText(' ');
+  };
+
   const renderValue = (value, path, indent, keyName, isLast) => {
     const indentText = '  '.repeat(indent);
     const keyPrefix = keyName === null ? '' : `${JSON.stringify(keyName)}: `;
     if (Array.isArray(value)) {
-      writeText(`${indentText}${keyPrefix}[\n`);
+      writeText(indentText);
+      appendNodeIncludeCheckbox(path);
+      writeText(`${keyPrefix}[\n`);
       for (let index = 0; index < value.length; index += 1) {
         renderValue(value[index], path.concat(index), indent + 1, null, index === value.length - 1);
       }
@@ -1359,7 +1691,9 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     }
     if (value && value.constructor === Object) {
       const keys = Object.keys(value);
-      writeText(`${indentText}${keyPrefix}{\n`);
+      writeText(indentText);
+      appendNodeIncludeCheckbox(path);
+      writeText(`${keyPrefix}{\n`);
       for (let keyIndex = 0; keyIndex < keys.length; keyIndex += 1) {
         const childKey = keys[keyIndex];
         renderValue(value[childKey], path.concat(childKey), indent + 1, childKey, keyIndex === keys.length - 1);
@@ -1367,8 +1701,8 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
       writeText(`${indentText}}${isLast ? '' : ','}\n`);
       return;
     }
-    writeText(`${indentText}${keyPrefix}`);
-    appendLeafInput(path, value, typeof value === 'string');
+    writeText(indentText);
+    appendLeafInput(path, value, isAutomationPresetJsonStringValue(value), keyPrefix);
     writeText(`${isLast ? '' : ','}\n`);
   };
 
@@ -1392,7 +1726,11 @@ function applyAutomationPresetJsonFieldEdit(preset, path, nextValue, options = {
   const leafKey = path[path.length - 1];
   let parent = preset;
   for (let index = 0; index < parentPath.length; index += 1) {
-    parent = parent[parentPath[index]];
+    const segment = parentPath[index];
+    if (parent[segment] === undefined) {
+      parent[segment] = Number.isInteger(parentPath[index + 1]) ? [] : {};
+    }
+    parent = parent[segment];
   }
   const previousValue = parent[leafKey];
   const normalizeValue = options.normalizeValue;
@@ -1404,6 +1742,23 @@ function applyAutomationPresetJsonFieldEdit(preset, path, nextValue, options = {
   parent[leafKey] = finalValue;
   if (options.onApplied) {
     options.onApplied(path, finalValue, rootKey);
+  }
+  return true;
+}
+
+function applyAutomationPresetJsonFieldRemoval(preset, path, options = {}) {
+  if (!preset || !Array.isArray(path) || path.length === 0) {
+    return false;
+  }
+  if (path.length === 1 && path[0] === 'id') {
+    return false;
+  }
+  const rootKey = path[0];
+  if (!removeAutomationPresetValueAtPath(preset, path)) {
+    return false;
+  }
+  if (options.onApplied) {
+    options.onApplied(path, undefined, rootKey);
   }
   return true;
 }
@@ -1434,6 +1789,119 @@ function isValidAutomationPresetLeafReplacement(baseValue, nextValue) {
   return false;
 }
 
+function showAutomationPresetJsonStatus(statusElement, text, isError) {
+  statusElement.textContent = text;
+  statusElement.style.display = '';
+  statusElement.classList.toggle('automation-status-error', !!isError);
+}
+
+function createAutomationPresetUsageLine() {
+  const line = document.createElement('div');
+  line.classList.add('automation-preset-script-usage');
+  return line;
+}
+
+function updateAutomationPresetUsageLine(line, automationType, preset) {
+  if (!line) {
+    return;
+  }
+  if (!preset) {
+    line.textContent = '';
+    line.style.display = 'none';
+    line._usageSignature = '';
+    return;
+  }
+
+  const scriptAutomation = automationManager.scriptAutomation;
+  const references = scriptAutomation.getPresetUsageReferences(automationType, preset.id);
+  const signature = JSON.stringify(references);
+  if (line._usageSignature === signature && line.style.display !== 'none') {
+    return;
+  }
+  line._usageSignature = signature;
+  if (references.length === 0) {
+    line.textContent = '';
+    line.style.display = 'none';
+    return;
+  }
+
+  line.style.display = '';
+  const usageText = references.map(reference => {
+    const lineLabel = getAutomationScriptUsageLineText(reference);
+    if (reference.viaCombinationName) {
+      return getAutomationCardText(
+        'presetScriptUsageReferenceViaCombination',
+        { script: reference.scriptName, line: lineLabel, combination: reference.viaCombinationName },
+        `${reference.scriptName} ${lineLabel} via ${reference.viaCombinationName}`
+      );
+    }
+    return getAutomationCardText(
+      'presetScriptUsageReference',
+      { script: reference.scriptName, line: lineLabel },
+      `${reference.scriptName} ${lineLabel}`
+    );
+  }).join('; ');
+  line.textContent = getAutomationCardText(
+    'presetScriptUsageUsed',
+    { usage: usageText },
+    `Script usage: ${usageText}`
+  );
+}
+
+function getAutomationScriptUsageLineText(reference) {
+  return reference.lineName
+    ? getAutomationCardText(
+        'presetScriptUsageLineNamed',
+        { line: reference.lineNumber, name: reference.lineName },
+        `line ${reference.lineNumber} (${reference.lineName})`
+      )
+    : getAutomationCardText(
+        'presetScriptUsageLine',
+        { line: reference.lineNumber },
+        `line ${reference.lineNumber}`
+      );
+}
+
+function updateAutomationCombinationUsageLine(line, automationType, combination) {
+  if (!line) {
+    return;
+  }
+  if (!combination) {
+    line.textContent = '';
+    line.style.display = 'none';
+    line._usageSignature = '';
+    return;
+  }
+
+  const scriptAutomation = automationManager.scriptAutomation;
+  const references = scriptAutomation.getCombinationUsageReferences(automationType, combination.id);
+  const signature = JSON.stringify(references);
+  if (line._usageSignature === signature && line.style.display !== 'none') {
+    return;
+  }
+  line._usageSignature = signature;
+  if (references.length === 0) {
+    line.textContent = '';
+    line.style.display = 'none';
+    return;
+  }
+
+  line.style.display = '';
+  const usageText = references.map(reference => {
+    const lineLabel = getAutomationScriptUsageLineText(reference);
+    return getAutomationCardText(
+      'presetScriptUsageReference',
+      { script: reference.scriptName, line: lineLabel },
+      `${reference.scriptName} ${lineLabel}`
+    );
+  }).join('; ');
+  line.textContent = getAutomationCardText(
+    'combinationScriptUsageUsed',
+    { usage: usageText },
+    `Combination script usage: ${usageText}`
+  );
+}
+
 function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   if (!details) {
     return;
@@ -1442,6 +1910,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   const onDirtyChange = options.onDirtyChange;
   const isLeafVisible = options.isLeafVisible;
   const fieldOptionsResolver = options.getFieldOptions;
+  const parameterInputPathsResolver = options.getParameterInputPaths;
   const filterOptionsResolver = options.getFilterOptions;
   const rootPath = Array.isArray(options.rootPath) && options.rootPath.length
     ? options.rootPath.slice()
@@ -1449,10 +1918,31 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   const selectedFilterValue = options.selectedFilterValue || '';
   const onFilterChange = options.onFilterChange;
   const onClearFilter = options.onClearFilter;
+  const onSnapshotFilter = options.onSnapshotFilter;
+  const onRegenerateFilter = options.onRegenerateFilter;
+  const showStatus = options.showStatus || null;
+  const parameterInputPath = Array.isArray(options.parameterInputPath)
+    ? options.parameterInputPath
+    : null;
+  const parameterInputPaths = Array.isArray(options.parameterInputPaths)
+    ? options.parameterInputPaths
+    : parameterInputPath
+      ? [parameterInputPath]
+      : [];
   const toFullPath = (path) => (rootPath ? rootPath.concat(path) : path.slice());
   details._onDirtyChange = onDirtyChange || null;
   details._activePresetRef = preset || null;
   details._activeOnFieldChange = onFieldChange || null;
+  details._activeFieldOptionsResolver = fieldOptionsResolver || null;
+  details._activeOnFilterChange = onFilterChange || null;
+  details._activeOnClearFilter = onClearFilter || null;
+  details._activeOnSnapshotFilter = onSnapshotFilter || null;
+  details._activeOnRegenerateFilter = onRegenerateFilter || null;
+  details._activeSelectedFilterValue = selectedFilterValue || '';
+  details._hasSnapshotButton = !!onSnapshotFilter;
+  details._hasRegenerateButton = !!onRegenerateFilter;
+  details._showStatus = showStatus;
+  details._parameterInputPathKeys = new Set(parameterInputPaths.map((path) => buildAutomationPresetLeafPathKey(path)));
 
   if (!preset) {
     details.open = false;
@@ -1474,6 +1964,14 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       if (details._saveButtonStarNode) {
         details._saveButtonStarNode.style.display = 'none';
       }
+    }
+    if (details._snapshotButton) {
+      details._snapshotButton.style.display = 'none';
+      details._snapshotButton.disabled = true;
+    }
+    if (details._regenerateButton) {
+      details._regenerateButton.style.display = 'none';
+      details._regenerateButton.disabled = true;
     }
     if (details._renderedPresetJson) {
       details._contentNode.textContent = '';
@@ -1497,6 +1995,10 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
     details._renderedSummaryText = summaryText;
   }
   details._saveButton.style.display = details.open ? '' : 'none';
+  details._snapshotButton.style.display = details.open && details._hasSnapshotButton ? '' : 'none';
+  details._snapshotButton.disabled = !details._activeOnSnapshotFilter || !details._activeSelectedFilterValue;
+  details._regenerateButton.style.display = details.open && details._hasRegenerateButton ? '' : 'none';
+  details._regenerateButton.disabled = !details._activeOnRegenerateFilter;
   const filterOptions = filterOptionsResolver ? filterOptionsResolver(preset) : [];
   if (details._filterRowNode && details._filterSelectNode && details._filterClearButtonNode) {
     const hasFilters = Array.isArray(filterOptions) && filterOptions.length > 0;
@@ -1517,8 +2019,8 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       details._filterClearButtonNode.disabled = !selectedFilterValue;
       if (!details._filterSelectNode._boundFilterChange) {
         details._filterSelectNode.addEventListener('change', (event) => {
-          if (onFilterChange) {
-            onFilterChange(event.target.value || '');
+          if (details._activeOnFilterChange) {
+            details._activeOnFilterChange(event.target.value || '');
           }
         });
         details._filterSelectNode._boundFilterChange = true;
@@ -1527,8 +2029,8 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
         details._filterClearButtonNode.addEventListener('click', (event) => {
           event.preventDefault();
           event.stopPropagation();
-          if (onClearFilter) {
-            onClearFilter();
+          if (details._activeOnClearFilter) {
+            details._activeOnClearFilter();
           }
         });
         details._filterClearButtonNode._boundFilterClick = true;
@@ -1563,7 +2065,16 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
     }
   }
 
-  const scopedPreset = rootPath ? getAutomationPresetValueAtPath(preset, rootPath) : preset;
+  const effectivePreset = JSON.parse(JSON.stringify(preset));
+  const draftEntries = Object.values(details._jsonDraftMap);
+  for (let draftIndex = 0; draftIndex < draftEntries.length; draftIndex += 1) {
+    const draftEntry = draftEntries[draftIndex];
+    if (!draftEntry || !Array.isArray(draftEntry.path) || draftEntry.path.length === 0) {
+      continue;
+    }
+    setAutomationPresetValueAtPath(effectivePreset, draftEntry.path, draftEntry.value);
+  }
+  const scopedPreset = rootPath ? getAutomationPresetValueAtPath(effectivePreset, rootPath) : effectivePreset;
   if (!scopedPreset || (scopedPreset.constructor !== Object && !Array.isArray(scopedPreset))) {
     details._contentNode.textContent = '';
     details._renderedFieldKeySignature = '';
@@ -1578,14 +2089,8 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   const scopedLeafPaths = [];
   collectAutomationPresetLeafPaths(scopedPreset, [], scopedLeafPaths);
   const leafPaths = scopedLeafPaths.map(toFullPath);
-  const effectivePreset = JSON.parse(JSON.stringify(preset));
-  const draftEntries = Object.values(details._jsonDraftMap);
-  for (let draftIndex = 0; draftIndex < draftEntries.length; draftIndex += 1) {
-    const draftEntry = draftEntries[draftIndex];
-    if (!draftEntry || !Array.isArray(draftEntry.path) || draftEntry.path.length === 0) {
-      continue;
-    }
-    setAutomationPresetValueAtPath(effectivePreset, draftEntry.path, draftEntry.value);
+  if (parameterInputPathsResolver) {
+    details._parameterInputPathKeys = new Set(parameterInputPathsResolver(effectivePreset).map((path) => buildAutomationPresetLeafPathKey(path)));
   }
   const visibleLeafPaths = isLeafVisible
     ? leafPaths.filter((path) => isLeafVisible(path, effectivePreset))
@@ -1598,7 +2103,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       delete details._jsonDraftMap[draftKey];
     }
   }
-  const nextFieldKeySignature = visibleLeafPaths.map((path) => buildAutomationPresetLeafPathKey(path)).join('|');
+  const nextFieldKeySignature = `${visibleLeafPaths.map((path) => buildAutomationPresetLeafPathKey(path)).join('|')}|parameter:${Array.from(details._parameterInputPathKeys).join(',')}`;
   for (let pathIndex = 0; pathIndex < visibleLeafPaths.length; pathIndex += 1) {
     const path = visibleLeafPaths[pathIndex];
     const pathKey = buildAutomationPresetLeafPathKey(path);
@@ -1606,8 +2111,12 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
     if (!draftEntry) {
       continue;
     }
-    const baseValue = getAutomationPresetValueAtPath(preset, path);
-    if (JSON.stringify(baseValue) === JSON.stringify(draftEntry.value)) {
+    if (draftEntry.included === false) {
+      continue;
+    }
+    const hasBaseValue = hasAutomationPresetValueAtPath(preset, path);
+    const baseValue = getAutomationPresetJsonBaseValue(preset, path, draftEntry.value);
+    if (hasBaseValue && JSON.stringify(baseValue) === JSON.stringify(draftEntry.value)) {
       delete details._jsonDraftMap[pathKey];
     }
   }
@@ -1634,36 +2143,58 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       event.stopPropagation();
       const currentPreset = details._activePresetRef;
       const currentOnFieldChange = details._activeOnFieldChange;
+      const currentFieldOptionsResolver = details._activeFieldOptionsResolver;
       if (!currentOnFieldChange || !currentPreset) {
         return;
       }
       const draftEntries = Object.values(details._jsonDraftMap);
       for (let index = 0; index < draftEntries.length; index += 1) {
         const draftEntry = draftEntries[index];
-        const baseValue = getAutomationPresetValueAtPath(currentPreset, draftEntry.path);
-        const fieldOptions = fieldOptionsResolver
-          ? fieldOptionsResolver(draftEntry.path, baseValue, currentPreset)
+        if (draftEntry.included === false) {
+          continue;
+        }
+        const baseValue = getAutomationPresetJsonBaseValue(currentPreset, draftEntry.path, draftEntry.value);
+        const fieldOptions = currentFieldOptionsResolver
+          ? currentFieldOptionsResolver(draftEntry.path, baseValue, currentPreset)
           : null;
         const hasCustomSelectOptions = !!(fieldOptions
           && Array.isArray(fieldOptions.selectOptions)
           && fieldOptions.selectOptions.length);
         if (!hasCustomSelectOptions && !isValidAutomationPresetLeafReplacement(baseValue, draftEntry.value)) {
-          showAutomationImportStatus(
-            getAutomationCardText(
-              'importPresetInvalidJsonError',
-              {},
-              'That preset string is not valid JSON.'
-            ),
-            true
-          );
+          if (showStatus) {
+            showStatus(
+              getAutomationCardText(
+                'importPresetInvalidJsonError',
+                {},
+                'That preset string is not valid JSON.'
+              ),
+              true
+            );
+          }
           queueAutomationUIRefresh();
           updateAutomationUI();
           return;
         }
       }
+      const draftEditEntries = [];
+      const draftRemovalEntries = [];
       for (let index = 0; index < draftEntries.length; index += 1) {
         const draftEntry = draftEntries[index];
-        currentOnFieldChange(draftEntry.path, draftEntry.value);
+        if (draftEntry.included === false) {
+          draftRemovalEntries.push(draftEntry);
+        } else {
+          draftEditEntries.push(draftEntry);
+        }
+      }
+      draftRemovalEntries.sort(compareAutomationPresetJsonRemovalEntries);
+      const draftEntriesToApply = draftEditEntries.concat(draftRemovalEntries);
+      for (let index = 0; index < draftEntriesToApply.length; index += 1) {
+        const draftEntry = draftEntriesToApply[index];
+        if (draftEntry.included === false) {
+          currentOnFieldChange(draftEntry.path, undefined, { remove: true });
+        } else {
+          currentOnFieldChange(draftEntry.path, draftEntry.value);
+        }
       }
       details._jsonDraftMap = {};
       details._jsonDirty = false;
@@ -1683,6 +2214,53 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       updateAutomationUI();
     });
     details._saveButton._boundClick = true;
+  }
+  if (!details._snapshotButton._boundClick) {
+    details._snapshotButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const currentOnSnapshotFilter = details._activeOnSnapshotFilter;
+      const currentSelectedFilterValue = details._activeSelectedFilterValue;
+      if (!details._activePresetRef || !currentOnSnapshotFilter || !currentSelectedFilterValue) {
+        return;
+      }
+      currentOnSnapshotFilter(currentSelectedFilterValue);
+      resetAutomationPresetJsonDetailsState(details, details._activePresetRef.id);
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    });
+    details._snapshotButton._boundClick = true;
+  }
+  if (!details._regenerateButton._boundClick) {
+    details._regenerateButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const currentOnRegenerateFilter = details._activeOnRegenerateFilter;
+      const currentSelectedFilterValue = details._activeSelectedFilterValue;
+      if (!details._activePresetRef || !currentOnRegenerateFilter) {
+        return;
+      }
+      const referencePreset = currentOnRegenerateFilter(currentSelectedFilterValue);
+      const changed = regenerateAutomationPresetJsonMissingDrafts(
+        details,
+        details._activePresetRef,
+        referencePreset,
+        rootPath
+      );
+      if (showStatus) {
+        showStatus(
+          changed
+            ? getAutomationCardText('regeneratePresetJsonSaved', {}, 'Missing fields regenerated.')
+            : getAutomationCardText('regeneratePresetJsonNoChanges', {}, 'No missing fields to regenerate.'),
+          false
+        );
+      }
+      details._renderedFieldKeySignature = '';
+      details._renderedPresetJson = '';
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+    });
+    details._regenerateButton._boundClick = true;
   }
 
   const shouldRebuildJson = details._renderedFieldKeySignature !== nextFieldKeySignature || details._boundPresetId !== preset.id;
@@ -1709,10 +2287,29 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       const valueToRender = draftEntry
         ? draftEntry.value
         : getAutomationPresetValueAtPath(preset, leafPath);
-      if (input.tagName === 'SELECT') {
+      const nextIncluded = !draftEntry || draftEntry.included !== false;
+      const includeCheckbox = details._jsonIncludeCheckboxMap[pathKey];
+      if (includeCheckbox) {
+        includeCheckbox.checked = nextIncluded;
+        includeCheckbox.indeterminate = false;
+      }
+      const isParameterInput = details._parameterInputPathKeys.has(pathKey);
+      const nextDisabled = isParameterInput || !nextIncluded;
+      if (input.disabled !== nextDisabled) {
+        input.disabled = nextDisabled;
+      }
+      if (nextIncluded && !isParameterInput) {
+        input.classList.remove('automation-preset-json-field-input-disabled');
+      } else {
+        input.classList.add('automation-preset-json-field-input-disabled');
+      }
+      if (isParameterInput) {
+        input.value = getAutomationCardText('parameterizedPresetInputPlaceholder', {}, 'INPUT');
+        input.size = input.value.length;
+      } else if (input.tagName === 'SELECT') {
         const fieldOptions = fieldOptionsResolver ? fieldOptionsResolver(leafPath, valueToRender, effectivePreset) : null;
         if (fieldOptions && Array.isArray(fieldOptions.selectOptions) && fieldOptions.selectOptions.length) {
-          input.value = String(valueToRender);
+          syncAutomationSelectOptions(input, fieldOptions.selectOptions, String(valueToRender));
         } else {
           input.value = valueToRender ? 'true' : 'false';
         }
@@ -1720,6 +2317,20 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
         input.value = formatAutomationPresetJsonFieldValue(valueToRender);
         input.size = Math.max(1, input.value.length);
       }
+    }
+    const nodePaths = collectAutomationPresetJsonNodePaths(visibleLeafPaths);
+    for (let nodeIndex = 0; nodeIndex < nodePaths.length; nodeIndex += 1) {
+      const nodePath = nodePaths[nodeIndex];
+      const nodeKey = buildAutomationPresetLeafPathKey(nodePath);
+      const includeCheckbox = details._jsonNodeIncludeCheckboxMap[nodeKey];
+      if (!includeCheckbox) {
+        continue;
+      }
+      const descendantLeafPaths = getAutomationPresetJsonDescendantLeafPaths(nodePath, visibleLeafPaths);
+      const includeState = getAutomationPresetJsonIncludeState(details, descendantLeafPaths);
+      includeCheckbox.checked = includeState.checked;
+      includeCheckbox.indeterminate = includeState.indeterminate;
+      includeCheckbox.disabled = descendantLeafPaths.length === 0;
     }
   }
 
@@ -1845,54 +2456,32 @@ function ensureAutomationPresetImportDialog() {
   }
 
   const overlay = document.createElement('div');
-  overlay.style.position = 'fixed';
-  overlay.style.inset = '0';
-  overlay.style.background = 'rgba(0, 0, 0, 0.6)';
-  overlay.style.display = 'none';
-  overlay.style.alignItems = 'center';
-  overlay.style.justifyContent = 'center';
-  overlay.style.zIndex = '6000';
+  overlay.classList.add('automation-import-dialog-overlay');
 
   const windowEl = document.createElement('div');
-  windowEl.style.width = 'min(720px, calc(100vw - 32px))';
-  windowEl.style.maxHeight = 'calc(100vh - 32px)';
-  windowEl.style.overflow = 'auto';
-  windowEl.style.background = '#1f1f1f';
-  windowEl.style.color = '#f0f0f0';
-  windowEl.style.border = '1px solid rgba(255, 255, 255, 0.18)';
-  windowEl.style.borderRadius = '10px';
-  windowEl.style.padding = '16px';
-  windowEl.style.boxShadow = '0 16px 40px rgba(0, 0, 0, 0.45)';
+  windowEl.classList.add('automation-import-dialog-window');
 
   const title = document.createElement('h3');
-  title.style.margin = '0 0 8px';
-  title.style.fontSize = '18px';
+  title.classList.add('automation-import-dialog-title');
 
   const description = document.createElement('p');
-  description.style.margin = '0 0 12px';
-  description.style.whiteSpace = 'pre-line';
+  description.classList.add('automation-import-dialog-description');
 
   const textarea = document.createElement('textarea');
-  textarea.style.width = '100%';
-  textarea.style.minHeight = '240px';
-  textarea.style.resize = 'vertical';
-  textarea.style.boxSizing = 'border-box';
-  textarea.style.marginBottom = '8px';
+  textarea.classList.add('automation-import-dialog-textarea');
 
   const message = document.createElement('div');
-  message.style.minHeight = '20px';
-  message.style.marginBottom = '12px';
-  message.style.color = '#ff9a9a';
+  message.classList.add('automation-import-dialog-message');
 
   const actions = document.createElement('div');
-  actions.style.display = 'flex';
-  actions.style.justifyContent = 'flex-end';
-  actions.style.gap = '8px';
+  actions.classList.add('automation-import-dialog-actions');
 
   const cancelButton = document.createElement('button');
+  cancelButton.classList.add('automation-import-dialog-cancel');
   cancelButton.textContent = getAutomationCardText('cancelButton', {}, 'Cancel');
 
   const importButton = document.createElement('button');
+  importButton.classList.add('automation-import-dialog-confirm');
   importButton.textContent = getAutomationCardText('importPresetButton', {}, 'Import');
 
   actions.append(cancelButton, importButton);
@@ -1912,7 +2501,7 @@ function ensureAutomationPresetImportDialog() {
   };
 
   const closeDialog = () => {
-    overlay.style.display = 'none';
+    overlay.classList.remove('is-visible');
     message.textContent = '';
     textarea.value = '';
     automationPresetImportDialog.onImport = null;
@@ -1950,8 +2539,133 @@ function openAutomationPresetImportDialog(options) {
   dialog.message.textContent = '';
   dialog.textarea.value = '';
   dialog.onImport = options.onImport;
-  dialog.overlay.style.display = 'flex';
+  dialog.overlay.classList.add('is-visible');
   dialog.textarea.focus();
+}
+
+function buildAutomationGlobalPayload() {
+  const manager = automationManager;
+  return JSON.stringify({
+    format: 'terraforming-titans-all-automations',
+    version: 1,
+    autoTravel: manager.autoTravelAutomation ? manager.autoTravelAutomation.saveState() : null,
+    lifeAutomation: manager.lifeAutomation ? manager.lifeAutomation.saveState() : null,
+    spaceshipAutomation: manager.spaceshipAutomation ? manager.spaceshipAutomation.saveState() : null,
+    scriptAutomation: manager.scriptAutomation ? manager.scriptAutomation.saveState() : null,
+    buildingsAutomation: manager.buildingsAutomation ? manager.buildingsAutomation.saveState() : null,
+    researchAutomation: manager.researchAutomation ? manager.researchAutomation.saveState() : null,
+    projectsAutomation: manager.projectsAutomation ? manager.projectsAutomation.saveState() : null,
+    colonyAutomation: manager.colonyAutomation ? manager.colonyAutomation.saveState() : null
+  }, null, 2);
+}
+
+function exportAllAutomationsToClipboard(button) {
+  const payload = buildAutomationGlobalPayload();
+  copyTextToClipboard(payload, {
+    promptLabel: getAutomationCardText('exportAllAutomationsPrompt', {}, 'Copy all automations string:'),
+    onSuccess: () => {
+      setAutomationTransferButtonFeedback(
+        button,
+        getAutomationCardText('exportPresetCopied', {}, 'Copied')
+      );
+    }
+  });
+}
+
+function importAllAutomationsFromPayload(text) {
+  const trimmed = String(text || '').trim();
+  if (!trimmed) {
+    return {
+      ok: false,
+      error: getAutomationCardText('importPresetEmptyError', {}, 'Paste a preset string first.')
+    };
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(trimmed);
+  } catch (error) {
+    return {
+      ok: false,
+      error: getAutomationCardText('importPresetInvalidJsonError', {}, 'That preset string is not valid JSON.')
+    };
+  }
+  if (!parsed || parsed.format !== 'terraforming-titans-all-automations') {
+    return {
+      ok: false,
+      error: getAutomationCardText('importAllWrongFormatError', {}, 'That string is not a valid all-automations export.')
+    };
+  }
+  const manager = automationManager;
+  if (parsed.autoTravel && manager.autoTravelAutomation) {
+    manager.autoTravelAutomation.loadState(parsed.autoTravel);
+  }
+  if (parsed.lifeAutomation && manager.lifeAutomation) {
+    manager.lifeAutomation.loadState(parsed.lifeAutomation);
+  }
+  if (parsed.spaceshipAutomation && manager.spaceshipAutomation) {
+    manager.spaceshipAutomation.loadState(parsed.spaceshipAutomation);
+  }
+  if (parsed.scriptAutomation && manager.scriptAutomation) {
+    manager.scriptAutomation.loadState(parsed.scriptAutomation);
+  }
+  if (parsed.buildingsAutomation && manager.buildingsAutomation) {
+    manager.buildingsAutomation.loadState(parsed.buildingsAutomation);
+  }
+  if (parsed.researchAutomation && manager.researchAutomation) {
+    manager.researchAutomation.loadState(parsed.researchAutomation);
+  }
+  if (parsed.projectsAutomation && manager.projectsAutomation) {
+    manager.projectsAutomation.loadState(parsed.projectsAutomation);
+  }
+  if (parsed.colonyAutomation && manager.colonyAutomation) {
+    manager.colonyAutomation.loadState(parsed.colonyAutomation);
+  }
+  return { ok: true };
+}
+
+function buildAutomationGlobalToolbar() {
+  const container = automationElements.container;
+  if (!container) {
+    return;
+  }
+  const toolbar = document.createElement('div');
+  toolbar.classList.add('automation-global-toolbar');
+
+  const exportButton = document.createElement('button');
+  exportButton.textContent = getAutomationCardText('exportAllAutomationsButton', {}, 'Export All Automations');
+  exportButton.classList.add('automation-global-export');
+  exportButton.addEventListener('click', () => {
+    exportAllAutomationsToClipboard(exportButton);
+  });
+
+  const importButton = document.createElement('button');
+  importButton.textContent = getAutomationCardText('importAllAutomationsButton', {}, 'Import All Automations');
+  importButton.classList.add('automation-global-import');
+  importButton.addEventListener('click', () => {
+    openAutomationPresetImportDialog({
+      title: getAutomationCardText('importAllAutomationsTitle', {}, 'Import All Automations'),
+      description: getAutomationCardText(
+        'importAllAutomationsDescription',
+        {},
+        'Paste an exported all-automations string below.\nThis will replace all current automation settings.'
+      ),
+      importButtonText: getAutomationCardText('importAllAutomationsButton', {}, 'Import All Automations'),
+      onImport: (text) => {
+        const result = importAllAutomationsFromPayload(text);
+        if (!result.ok) {
+          return result;
+        }
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+        return { ok: true };
+      }
+    });
+  });
+
+  toolbar.append(exportButton, importButton);
+  container.insertBefore(toolbar, container.firstChild);
+  automationElements.globalExportButton = exportButton;
+  automationElements.globalImportButton = importButton;
 }
 
 function createAutomationPresetRow(body) {
@@ -2006,9 +2720,13 @@ function createAutomationPresetRow(body) {
   presetButtons.append(newPreset, duplicatePreset, deletePreset);
   presetRow.appendChild(presetButtons);
 
+  const presetUsage = createAutomationPresetUsageLine();
+  body.appendChild(presetUsage);
+
   return {
     presetRow,
     presetSelect,
+    presetUsage,
     presetMoveUp,
     presetMoveDown,
     presetName,
@@ -2051,6 +2769,10 @@ function setAutomationToggleState(toggle, enabled) {
 }
 
 function showAutomationTab() {
+  if (isCurrentWorldSubtabDisabled('automation-hope')) {
+    hideAutomationTab();
+    return;
+  }
   automationTabVisible = true;
   cacheAutomationElements();
   const { tab, content } = automationElements;
@@ -2082,6 +2804,7 @@ function initializeAutomationUI() {
     return;
   }
   cacheAutomationElements();
+  buildAutomationGlobalToolbar();
   buildAutoTravelUI();
   buildScriptAutomationUI();
   buildAutomationShipUI();

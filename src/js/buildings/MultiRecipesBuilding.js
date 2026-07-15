@@ -11,6 +11,7 @@ class MultiRecipesBuilding extends Building {
     super(config, buildingName);
     this._defaultDisplayName = config.name || this.displayName;
     this._staticConsumption = MultiRecipesBuilding._clone(config.consumption || {});
+    this._staticRealisticEnergyConsumption = config.realisticEnergyConsumption;
     this._defaultProduction = MultiRecipesBuilding._clone(config.production || {});
     this._defaultStorage = MultiRecipesBuilding._clone(config.storage || {});
     this._applyRecipeMapping();
@@ -39,6 +40,9 @@ class MultiRecipesBuilding extends Building {
         const requiredFlag = recipe.requiresResearchFlag;
         const requiredBuildingFlag = recipe.requiresBuildingFlag;
         const disabledBuildingFlag = recipe.disabledByBuildingFlag;
+        if (recipe.gasGiantAllowed === false && currentPlanetParameters.specialAttributes.gasGiant === true) {
+          return false;
+        }
         if (requiredBuildingFlag && !this.isBooleanFlagSet(requiredBuildingFlag)) {
           return false;
         }
@@ -54,6 +58,9 @@ class MultiRecipesBuilding extends Building {
       const requiredBuildingFlag = recipe.requiresBuildingFlag;
       const disabledBuildingFlag = recipe.disabledByBuildingFlag;
       if (recipe.artificialAllowed === false) {
+        return false;
+      }
+      if (recipe.gasGiantAllowed === false && currentPlanetParameters.specialAttributes.gasGiant === true) {
         return false;
       }
       if (requiredBuildingFlag && !this.isBooleanFlagSet(requiredBuildingFlag)) {
@@ -104,14 +111,18 @@ class MultiRecipesBuilding extends Building {
 
     const recipe = (this.recipes || {})[this.currentRecipeKey];
     const consumptionSource = recipe?.consumption || this._staticConsumption;
-    this.consumption = MultiRecipesBuilding._clone(consumptionSource);
-    this._baseConsumption = MultiRecipesBuilding._clone(consumptionSource);
+    const realisticEnergyConsumption = recipe && 'realisticEnergyConsumption' in recipe
+      ? recipe.realisticEnergyConsumption
+      : this._staticRealisticEnergyConsumption;
+    this.consumption = this.getDifficultyConsumption(consumptionSource, realisticEnergyConsumption);
+    this._baseConsumption = MultiRecipesBuilding._clone(this.consumption);
 
     const productionSource = recipe?.production || this._defaultProduction;
     this.production = MultiRecipesBuilding._clone(productionSource);
 
     const storageSource = recipe?.storage || this._defaultStorage;
     this.storage = MultiRecipesBuilding._clone(storageSource);
+    invalidateStorageProviderCache();
 
     this.displayName = recipe?.displayName || this._defaultDisplayName;
     this.shortName = recipe?.shortName || null;
@@ -141,15 +152,34 @@ class MultiRecipesBuilding extends Building {
 
   applyBooleanFlag(effect) {
     super.applyBooleanFlag(effect);
+    const restoredRecipeKey = this._restoredRecipeKey;
     const defs = this.recipes || {};
+    if (restoredRecipeKey && Object.prototype.hasOwnProperty.call(defs, restoredRecipeKey)) {
+      this.currentRecipeKey = restoredRecipeKey;
+      const restoredAllowed = this._getAllowedRecipeKeys().includes(restoredRecipeKey);
+      this._applyRecipeMapping({ ignoreRestrictions: !restoredAllowed });
+      if (restoredAllowed) {
+        this._restoredRecipeKey = null;
+      }
+      return;
+    }
     const hasCurrentRecipe = Object.prototype.hasOwnProperty.call(defs, this.currentRecipeKey);
-    this._applyRecipeMapping({ ignoreRestrictions: hasCurrentRecipe });
+    const allowedKeys = this._getAllowedRecipeKeys();
+    this._applyRecipeMapping({ ignoreRestrictions: hasCurrentRecipe && allowedKeys.includes(this.currentRecipeKey) });
   }
 
   loadState(state = {}) {
+    this._restoredRecipeKey = state && Object.prototype.hasOwnProperty.call(state, 'currentRecipeKey')
+      ? state.currentRecipeKey
+      : null;
     this.ignoreRecipeRestrictionsOnLoad = true;
     super.loadState(state);
     this.ignoreRecipeRestrictionsOnLoad = false;
+    const recipe = this.recipes[this.currentRecipeKey] || {};
+    if (recipe.gasGiantAllowed === false && currentPlanetParameters.specialAttributes.gasGiant === true) {
+      this._restoredRecipeKey = null;
+      this._applyRecipeMapping();
+    }
   }
 
   initializeCustomUI(context = {}) {

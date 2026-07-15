@@ -80,6 +80,8 @@ function buildAutomationResearchUI() {
 
   const presetJsonDetails = createAutomationPresetJsonDetails('research-automation-preset-json-details');
   presetSection.appendChild(presetJsonDetails);
+  const presetUsage = createAutomationPresetUsageLine();
+  presetSection.appendChild(presetUsage);
 
   body.appendChild(presetSection);
 
@@ -100,6 +102,7 @@ function buildAutomationResearchUI() {
   automationElements.researchApplyNextTravelSelect = nextTravelSelect;
   automationElements.researchApplyNextTravelPersistToggle = nextTravelPersistToggle;
   automationElements.researchPresetJsonDetails = presetJsonDetails;
+  automationElements.researchPresetUsage = presetUsage;
   automationElements.researchBuilderDirty = presetTitleDirty;
 
   attachResearchAutomationHandlers();
@@ -209,19 +212,26 @@ function updateResearchAutomationUI() {
 
   updateAutomationPresetJsonDetails(researchPresetJsonDetails, selectedPreset, {
     rootPath: ['researches'],
-    onFieldChange: (fieldPath, nextValue) => {
+    showStatus: (text, isError) => showAutomationPresetJsonStatus(automationElements.researchAutomationStatus, text, isError),
+    onFieldChange: (fieldPath, nextValue, changeOptions = null) => {
       if (!selectedPreset) {
         return;
       }
-      applyAutomationPresetJsonFieldEdit(selectedPreset, fieldPath, nextValue, {
+      const applyOptions = {
         onApplied: (appliedPath, appliedValue, rootKey) => {
           if (rootKey === 'showInSidebar') {
             researchAutomationUIState.builderShowInSidebar = appliedValue !== false;
           }
         }
-      });
+      };
+      if (changeOptions && changeOptions.remove) {
+        applyAutomationPresetJsonFieldRemoval(selectedPreset, fieldPath, applyOptions);
+      } else {
+        applyAutomationPresetJsonFieldEdit(selectedPreset, fieldPath, nextValue, applyOptions);
+      }
     }
   });
+  updateAutomationPresetUsageLine(automationElements.researchPresetUsage, 'research', selectedPreset);
 }
 
 function attachResearchAutomationHandlers() {

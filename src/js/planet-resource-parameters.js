@@ -17,9 +17,10 @@
       silicon: { name: '', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false , unit: 'ton' },
       glass: { name: '', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false , unit: 'ton', maintenanceConversion : {surface : 'junk'}, marginBottom: 10 },
       water: { name: '', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false, maintenanceConversion : {atmospheric : 'atmosphericWater'}, unit: 'ton'},
+      colonyHydrogen: { name: '', initialValue: 0, hasCap: true, baseCap: 0, unlocked:false, maintenanceConversion : {atmospheric : 'hydrogen'}, unit: 'ton'},
       food: { name: '', initialValue: 0, hasCap: true, baseCap: 5000, unlocked:false , unit: 'packs', marginBottom: 10 },
       components: { name: '', initialValue: 0, hasCap: true, baseCap: 500, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, unit: 'ton' },
-      electronics: { name: '', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, unit: 'ton', conversionValue : 0.2},
+      electronics: { name: '', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : { scrapMetal: 0.2, junk: 0.8 }}, unit: 'ton'},
       superconductors: { name: '', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'} , unit: 'ton' },
       superalloys: { name: '', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, maintenanceMultiplier: 0 , unit: 'ton' },
       androids: {name: '', initialValue: 0, hasCap: true, baseCap: 1000, unlocked: false, maintenanceConversion : {surface : 'junk'}},
@@ -262,6 +263,7 @@
         hideWhenSmall: true,
         reverseColor: true,
       },
+      rocks: { name: '', initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true },
       graphite: { name: '', initialValue: 0, unlocked: true, unit: 'ton', hideWhenSmall: true },
       scrapMetal : {name: '', initialValue : 0, unlocked: false, unit: 'ton', marginTop:10, reverseColor: true },
       garbage: { name: '', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
@@ -291,13 +293,18 @@
       // Dust caps derive from land area during resource creation
       albedoUpgrades: {name: '', displayName: '', hasCap: true, initialValue: 0, unlocked: false, hideWhenSmall: true},
       orbitalDebris: { name: '', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
+      systemDebris: { name: '', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
       spaceships: {name: '', hasCap: false, initialValue: 0, unlocked: false},
+      nanobots: { name: '', hasCap: false, initialValue: 1, unlocked: false, hideRate: true, showInSidebar: false, preserveOnTravel: true },
+      solisPoints: { name: '', hasCap: false, initialValue: 0, unlocked: false, hideRate: true, showInSidebar: false, preserveOnTravel: true },
       alienArtifact: { name: '', hasCap: false, initialValue: 0, unlocked: false, preserveOnTravel: true },
-      crusaders: { name: '', hasCap: false, initialValue: 0, unlocked: false },
+      crusaders: { name: '', hasCap: false, initialValue: 0, hideWhenSmall : true, unlocked: false },
+      warpCircuits: { name: '', hasCap: false, initialValue: 0, unlocked: false },
+      yggieNutrients: { name: '', hasCap: false, initialValue: 0, unlocked: false, hideWhenSmall: true },
       antimatter: { name: '', hasCap: true, baseCap: 0, initialValue: 0, unlocked: false, preserveOnTravel: true, preserveOnTravelFields: ['value', 'unlocked', 'enabled', 'syncedToSpaceEnergy'] }
     },
     space: {
-      energy: { name: '', initialValue: 0, hasCap: true, baseCap: 0, unlocked: true, unit: 'Watt-day', preserveOnTravel: true }
+      energy: { name: '', initialValue: 0, hasCap: true, baseCap: 0, unlocked: false, unit: 'Watt-day', preserveOnTravel: true }
     },
     spaceStorage: {
       metal: { name: '', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },

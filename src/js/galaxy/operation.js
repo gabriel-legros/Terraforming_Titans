@@ -68,6 +68,7 @@ class GalaxyOperationManager {
         this.autoSectors = new Set();
         this.autoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
         this.autoMode = DEFAULT_OPERATION_AUTO_MODE;
+        this.skipNextAutoLaunch = false;
         this.hasNeighboringStronghold = hasNeighboringStronghold;
         this.hasFactionPresence = hasFactionPresence;
         this.isFactionFullControlSector = isFactionFullControlSector;
@@ -173,6 +174,7 @@ class GalaxyOperationManager {
             this.autoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
         }
         this.autoMode = this.#normalizeAutoMode(state?.operationAutoMode);
+        this.skipNextAutoLaunch = true;
         const operationUI = getOperationUI();
         operationUI?.syncCacheFromManager?.(this.manager);
         operationUI?.updateOperationsPanel?.(this.manager);
@@ -189,6 +191,7 @@ class GalaxyOperationManager {
         this.autoSectors.clear();
         this.autoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
         this.autoMode = DEFAULT_OPERATION_AUTO_MODE;
+        this.skipNextAutoLaunch = false;
     }
 
     #getOperationKey(sectorKey, factionId) {
@@ -256,6 +259,9 @@ class GalaxyOperationManager {
         }
         if (value === true) {
             this.autoSectors.add(key);
+            if (this.autoMode === 'uncheckAll') {
+                this.autoMode = 'off';
+            }
             return true;
         }
         this.autoSectors.delete(key);
@@ -287,6 +293,9 @@ class GalaxyOperationManager {
 
     setOperationAutoMode(value) {
         this.autoMode = this.#normalizeAutoMode(value);
+        if (this.autoMode === 'uncheckAll') {
+            this.autoSectors.clear();
+        }
         return this.autoMode;
     }
 
@@ -632,17 +641,18 @@ class GalaxyOperationManager {
             attackSucceeded: isSuccessful
         });
 
+        operation.reservedPower = reservedPower;
+        operation.offensePower = offensePower;
+        operation.defensePower = defensePower;
+        operation.successChance = successChance;
+        operation.failureChance = failureChance;
+
         if (isSuccessful) {
             if (operation.factionId === this.uhfFactionId && typeof this.onOperationSuccess === 'function') {
                 this.onOperationSuccess();
             }
             this.#applyOperationSuccess(operation);
         }
-        operation.reservedPower = reservedPower;
-        operation.offensePower = offensePower;
-        operation.defensePower = defensePower;
-        operation.successChance = successChance;
-        operation.failureChance = failureChance;
         operation.losses = losses;
         operation.defenderLosses = defenderLosses;
         operation.targetFactionId = targetFactionId;
@@ -1121,7 +1131,11 @@ class GalaxyOperationManager {
             return;
         }
         const autoMode = this.getOperationAutoMode();
-        if (autoMode === 'forceOff') {
+        if (autoMode === 'pauseAll') {
+            return;
+        }
+        if (this.skipNextAutoLaunch) {
+            this.skipNextAutoLaunch = false;
             return;
         }
         const faction = this.manager.getFaction?.(this.uhfFactionId);
@@ -1140,11 +1154,6 @@ class GalaxyOperationManager {
             availableAntimatter = 0;
         }
         let launched = false;
-        const uiAllocationUpdater = (typeof globalThis !== 'undefined'
-            && globalThis.GalaxyOperationUI
-            && typeof globalThis.GalaxyOperationUI.applyExternalAllocation === 'function')
-            ? globalThis.GalaxyOperationUI.applyExternalAllocation
-            : null;
         const candidates = autoMode === 'all'
             ? this.#getAutoLaunchCandidates(threshold)
             : this.#getSelectedAutoLaunchCandidates(threshold);
@@ -1154,8 +1163,12 @@ class GalaxyOperationManager {
             if (currentOperation && currentOperation.status === 'running') {
                 return;
             }
-            let availablePower = faction.getOperationalFleetPower?.(this.manager);
-            if (!Number.isFinite(availablePower) || availablePower <= 0) {
+            let availablePower = 0;
+            const getOperationalFleetPower = faction.getOperationalFleetPower;
+            if (getOperationalFleetPower) {
+                const operationalPower = getOperationalFleetPower.call(faction, this.manager);
+                availablePower = Number.isFinite(operationalPower) && operationalPower > 0 ? operationalPower : 0;
+            } else {
                 availablePower = Number.isFinite(faction.fleetPower) && faction.fleetPower > 0
                     ? faction.fleetPower
                     : 0;
@@ -1165,6 +1178,15 @@ class GalaxyOperationManager {
             }
             const sector = this.manager.sectors.get(sectorKey);
             if (!sector) {
+                return;
+            }
+            const hasStronghold = this.hasNeighboringStronghold
+                ? this.hasNeighboringStronghold(sector, this.uhfFactionId)
+                : false;
+            const hasPresence = this.hasFactionPresence
+                ? this.hasFactionPresence(sector, this.uhfFactionId)
+                : false;
+            if (!hasStronghold && !hasPresence) {
                 return;
             }
             const targetFactionId = candidate.targetFactionId;
@@ -1185,12 +1207,6 @@ class GalaxyOperationManager {
             if (!(successChance > 0)) {
                 return;
             }
-            if (antimatterCost > 0 && antimatterResource) {
-                if (!spendAntimatterEquivalent(antimatterCost, resources)) {
-                    return;
-                }
-                availableAntimatter = Math.max(0, availableAntimatter - antimatterCost);
-            }
             const operation = this.startOperation({
                 sectorKey,
                 factionId: this.uhfFactionId,
@@ -1201,15 +1217,16 @@ class GalaxyOperationManager {
             if (!operation) {
                 return;
             }
-            operation.launchCost = antimatterCost;
-            if (uiAllocationUpdater) {
-                uiAllocationUpdater(sectorKey, normalizedPower);
+            if (antimatterCost > 0 && antimatterResource) {
+                if (!spendAntimatterEquivalent(antimatterCost, resources)) {
+                    this.cancelOperation(operation);
+                    return;
+                }
+                availableAntimatter = Math.max(0, availableAntimatter - antimatterCost);
             }
+            operation.launchCost = antimatterCost;
             launched = true;
         });
-        if (launched && typeof this.refreshUI === 'function') {
-            this.refreshUI();
-        }
     }
 
     #getAutoLaunchCandidates(threshold) {
@@ -1271,6 +1288,15 @@ class GalaxyOperationManager {
             if (!sector || this.isFactionFullControlSector?.(sector, this.uhfFactionId)) {
                 return;
             }
+            const hasStronghold = this.hasNeighboringStronghold
+                ? this.hasNeighboringStronghold(sector, this.uhfFactionId)
+                : false;
+            const hasPresence = this.hasFactionPresence
+                ? this.hasFactionPresence(sector, this.uhfFactionId)
+                : false;
+            if (!hasStronghold && !hasPresence) {
+                return;
+            }
             const targetFactionId = this.#resolveOperationTarget(sector, this.uhfFactionId);
             if (!targetFactionId) {
                 return;
@@ -1299,11 +1325,11 @@ class GalaxyOperationManager {
 
     #normalizeAutoMode(value) {
         const mode = typeof value === 'string' ? value.trim().toLowerCase() : '';
-        if (mode === 'all' || mode === 'off' || mode === 'forceoff') {
-            if (mode === 'forceoff') {
-                return 'forceOff';
-            }
-            return mode;
+        if (mode === 'all' || mode === 'off' || mode === 'uncheckall') {
+            return mode === 'uncheckall' ? 'uncheckAll' : mode;
+        }
+        if (mode === 'pauseall' || mode === 'forceoff') {
+            return 'pauseAll';
         }
         return DEFAULT_OPERATION_AUTO_MODE;
     }

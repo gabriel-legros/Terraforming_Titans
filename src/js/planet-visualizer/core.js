@@ -28,6 +28,14 @@
       this.ringShadeMaterial = null;
       this.ringShadeOffset = 0;
       this.ringShadeDriftSpeed = 0.006;
+      this.birchWorldLightsGroup = null;
+      this.earthAsteroidGroup = null;
+      this.earthAsteroidMesh = null;
+      this.earthAsteroidTransforms = [];
+      this.earthLunaGroup = null;
+      this.earthLunaMesh = null;
+      this.earthLunaTexture = null;
+      this._earthAsteroidVisibleKey = -1;
 
       // Lighting and atmosphere
       this.sunLight = null;
@@ -40,7 +48,7 @@
       this.starField = null;
       this.cityLightsGroup = null;
       this.cityLights = [];
-      this.maxCityLights = 200;
+      this.maxCityLights = 720;
       this.lastCityLightCount = -1;
 
       // Spaceships
@@ -58,6 +66,9 @@
       this._spawnAcc = 0;
       this._spawnRate = 6;
       this._lastSliderSync = 0;
+      this._earthVisualStateKey = '';
+      this._earthAsteroidOrbit = 0;
+      this._earthLunaOrbit = 0.72;
 
       // Render sizing
       this.width = 0;
@@ -112,13 +123,14 @@
         illum: 1,
         pop: 0,
         kpa: { co2: 0, o2: 0, inert: 0, h2o: 0, ch4: 0 },
-        coverage: { water: 0, life: 0, cloud: 0 },
+        coverage: { water: 0, life: 0, hazardousLife: 0, cloud: 0, ecumenopolis: 0, nanoworld: 0 },
         zonalCoverage: {
-          tropical: { water: 0, ice: 0, life: 0 },
-          temperate: { water: 0, ice: 0, life: 0 },
-          polar: { water: 0, ice: 0, life: 0 },
+          tropical: { water: 0, ice: 0, life: 0, hazardousLife: 0 },
+          temperate: { water: 0, ice: 0, life: 0, hazardousLife: 0 },
+          polar: { water: 0, ice: 0, life: 0, hazardousLife: 0 },
         },
         baseColor: '#8a2a2a',
+        heightMapKey: '',
         inclinationDeg: 15,
         // Large-scale surface feature (e.g., Mars dark regions)
         surfaceFeatures: {
@@ -152,6 +164,11 @@
     isDiskWorld() {
       return currentPlanetParameters?.classification?.type === 'disk'
         || currentPlanetParameters?.specialAttributes?.zoneLayout === 'aldersonDisk';
+    }
+
+    isSmbhShellWorld() {
+      const classification = currentPlanetParameters?.classification || {};
+      return classification.type === 'shell' && classification.core === 'smbh';
     }
 
     isFlatWorld() {
@@ -289,6 +306,9 @@
     }
 
     getGameBaseColor() {
+      if (this.isEarthReconstructionVisualActive()) {
+        return '#878a81';
+      }
       const base = currentPlanetParameters.visualization?.baseColor || '#8a2a2a';
       return base;
     }
@@ -425,12 +445,18 @@
     createSurfaceMesh() {
       const isRing = this.isRingWorld();
       const isDisk = this.isDiskWorld();
-      const material = new THREE.MeshStandardMaterial({
-        color: 0xffffff,
-        roughness: this.isFlatWorld() ? 0.85 : 0.9,
-        metalness: 0.0,
-        side: isRing ? THREE.BackSide : (isDisk ? THREE.DoubleSide : THREE.FrontSide),
-      });
+      const isBirchWorld = this.isSmbhShellWorld();
+      const material = isBirchWorld
+        ? new THREE.MeshBasicMaterial({
+          color: 0xffffff,
+          side: THREE.FrontSide,
+        })
+        : new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          roughness: this.isFlatWorld() ? 0.85 : 0.9,
+          metalness: 0.0,
+          side: isRing ? THREE.BackSide : (isDisk ? THREE.DoubleSide : THREE.FrontSide),
+        });
       if (isRing) {
         const ringRadius = 1;
         const ringHeight = 0.23625;
@@ -460,7 +486,7 @@
         this.diskOuterRadius = diskOuterRadius;
         this.diskInnerRadius = diskInnerRadius;
       } else {
-        const geometry = new THREE.SphereGeometry(1, 32, 32);
+        const geometry = new THREE.SphereGeometry(1, isBirchWorld ? 96 : 32, isBirchWorld ? 64 : 32);
         this.sphere = new THREE.Mesh(geometry, material);
         this.sphere.userData.baseRoughness = material.roughness;
         this.sphere.userData.baseMetalness = material.metalness;
@@ -472,6 +498,235 @@
         this.ringRadius = 1;
         this.diskOuterRadius = 0;
         this.diskInnerRadius = 0;
+      }
+    }
+
+    createBirchWorldLights() {
+      if (!this.sphere || this.birchWorldLightsGroup) return;
+      const group = new THREE.Group();
+      this.sphere.add(group);
+      this.birchWorldLightsGroup = group;
+    }
+
+    updateBirchWorldLights() {
+    }
+
+    createEarthAsteroidBelt() {
+      if (this.earthAsteroidGroup || !this.isEarthReconstructionVisualActive()) return;
+      const group = new THREE.Group();
+      const geometry = new THREE.DodecahedronGeometry(1, 0);
+      const material = new THREE.MeshStandardMaterial({
+        color: 0x78716b,
+        roughness: 0.92,
+        metalness: 0.02,
+      });
+      const count = 60;
+      const mesh = new THREE.InstancedMesh(geometry, material, count);
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      const dummy = new THREE.Object3D();
+      for (let i = 0; i < count; i += 1) {
+        const angle = (i / count) * Math.PI * 2;
+        const stagger = ((i * 17) % count) / count;
+        const radius = 1.75 + (stagger - 0.5) * 0.8;
+        const height = (((i * 29) % count) / count - 0.5) * 1.1;
+        const size = 0.035 + (((i * 11) % count) / count) * 0.055;
+        this.earthAsteroidTransforms.push({
+          position: new THREE.Vector3(Math.cos(angle) * radius, height, Math.sin(angle) * radius),
+          rotation: new THREE.Euler(i * 0.37, i * 0.61, i * 0.19),
+          scale: new THREE.Vector3(size * 1.25, size * 0.8, size)
+        });
+        dummy.position.copy(this.earthAsteroidTransforms[i].position);
+        dummy.rotation.copy(this.earthAsteroidTransforms[i].rotation);
+        dummy.scale.copy(this.earthAsteroidTransforms[i].scale);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(i, dummy.matrix);
+      }
+      mesh.instanceMatrix.needsUpdate = true;
+      group.add(mesh);
+      group.rotation.x = 0.25;
+      group.rotation.z = -0.18;
+      this.scene.add(group);
+      this.earthAsteroidGroup = group;
+      this.earthAsteroidMesh = mesh;
+      this.updateEarthAsteroidVisibility(true);
+    }
+
+    updateEarthAsteroidVisibility(force = false) {
+      if (!this.earthAsteroidMesh || !earthManager) return;
+      const massSteps = earthManager.getActionCount('increaseMass');
+      if (!force && massSteps === this._earthAsteroidVisibleKey) return;
+      this._earthAsteroidVisibleKey = massSteps;
+      const remainingRatio = Math.max(0, Math.min(1, 1 - massSteps / EARTH_RECONSTRUCTION_MAX_MASS_STEPS));
+      const visibleCount = Math.ceil(this.earthAsteroidTransforms.length * remainingRatio);
+      const dummy = new THREE.Object3D();
+      for (let i = 0; i < this.earthAsteroidTransforms.length; i += 1) {
+        const transform = this.earthAsteroidTransforms[i];
+        dummy.position.copy(transform.position);
+        dummy.rotation.copy(transform.rotation);
+        dummy.scale.copy(i < visibleCount ? transform.scale : new THREE.Vector3(0, 0, 0));
+        dummy.updateMatrix();
+        this.earthAsteroidMesh.setMatrixAt(i, dummy.matrix);
+      }
+      this.earthAsteroidMesh.instanceMatrix.needsUpdate = true;
+    }
+
+    updateEarthAsteroidBelt() {
+      if (!this.isEarthReconstructionVisualActive()) {
+        if (this.earthAsteroidGroup) {
+          this.earthAsteroidGroup.visible = false;
+        }
+        return;
+      }
+      this.createEarthAsteroidBelt();
+      if (!this.earthAsteroidGroup) return;
+      this.earthAsteroidGroup.visible = true;
+      this.updateEarthAsteroidVisibility();
+      this._earthAsteroidOrbit += 0.0015;
+      this.earthAsteroidGroup.rotation.y = this._earthAsteroidOrbit;
+    }
+
+    createEarthLunaTexture() {
+      if (this.earthLunaTexture) return this.earthLunaTexture;
+      const size = 512;
+      const canvas = document.createElement('canvas');
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext('2d');
+      const img = ctx.createImageData(size, size);
+      const data = img.data;
+      const hash = (x, y) => {
+        const n = Math.sin(x * 127.1 + y * 311.7 + 91.73) * 43758.5453;
+        return n - Math.floor(n);
+      };
+      for (let y = 0; y < size; y += 1) {
+        for (let x = 0; x < size; x += 1) {
+          const idx = (y * size + x) * 4;
+          const broad = hash(Math.floor(x / 18), Math.floor(y / 18));
+          const fine = hash(x, y);
+          const shade = 142 + broad * 42 + fine * 18;
+          data[idx] = shade;
+          data[idx + 1] = shade;
+          data[idx + 2] = shade * 0.96;
+          data[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(img, 0, 0);
+      for (let i = 0; i < 46; i += 1) {
+        const x = hash(i * 5.3, 1.7) * size;
+        const y = hash(i * 2.1, 8.9) * size;
+        const r = 6 + hash(i * 3.7, 4.1) * 30;
+        const g = ctx.createRadialGradient(x, y, r * 0.1, x, y, r);
+        g.addColorStop(0, 'rgba(70,70,70,0.38)');
+        g.addColorStop(0.55, 'rgba(95,95,95,0.22)');
+        g.addColorStop(0.72, 'rgba(230,230,220,0.22)');
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      const texture = new THREE.CanvasTexture(canvas);
+      if (THREE && THREE.SRGBColorSpace) {
+        texture.colorSpace = THREE.SRGBColorSpace;
+      }
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.ClampToEdgeWrapping;
+      texture.needsUpdate = true;
+      this.earthLunaTexture = texture;
+      return texture;
+    }
+
+    createEarthLuna() {
+      if (this.earthLunaGroup || !this.isEarthReconstructionVisualActive()) return;
+      const group = new THREE.Group();
+      const geometry = new THREE.SphereGeometry(0.16, 48, 32);
+      const material = new THREE.MeshStandardMaterial({
+        map: this.createEarthLunaTexture(),
+        color: 0xffffff,
+        roughness: 0.96,
+        metalness: 0
+      });
+      const mesh = new THREE.Mesh(geometry, material);
+      mesh.position.set(0, 0, 0);
+      group.add(mesh);
+      group.visible = false;
+      this.scene.add(group);
+      this.earthLunaGroup = group;
+      this.earthLunaMesh = mesh;
+    }
+
+    updateEarthLuna() {
+      if (!this.isEarthReconstructionVisualActive()) {
+        if (this.earthLunaGroup) {
+          this.earthLunaGroup.visible = false;
+        }
+        return;
+      }
+      this.createEarthLuna();
+      if (!this.earthLunaGroup || !this.earthLunaMesh) return;
+      const visible = earthManager.getActionCount('replaceLuna') >= EARTH_RECONSTRUCTION_MAX_LUNA_STEPS;
+      this.earthLunaGroup.visible = visible;
+      if (!visible) return;
+
+      this.earthLunaGroup.position.set(1.38, 1.08, -0.9);
+      this.earthLunaMesh.rotation.set(0.12, 0, 0);
+    }
+
+    isEarthReconstructionVisualActive() {
+      return spaceManager
+        && spaceManager.getCurrentPlanetKey
+        && spaceManager.getCurrentPlanetKey() === 'earth'
+        && earthManager
+        && earthManager.enabled;
+    }
+
+    applyEarthVisualOverrides() {
+      if (!this.isEarthReconstructionVisualActive()) {
+        this._earthVisualStateKey = '';
+        return;
+      }
+      const state = earthManager.getVisualizerState();
+      const radiusScale = state.radiusScale;
+      const axialTiltDeg = state.axialTiltDeg || 0;
+      const stateKey = `${radiusScale}|${axialTiltDeg}`;
+      if (stateKey === this._earthVisualStateKey) return;
+      this._earthVisualStateKey = stateKey;
+      if (this.surfaceMesh) {
+        this.surfaceMesh.scale.setScalar(radiusScale);
+      }
+      if (this.cloudMesh) {
+        this.cloudMesh.scale.setScalar(radiusScale);
+      }
+      if (this.atmoMesh) {
+        this.atmoMesh.scale.setScalar(radiusScale);
+      }
+      this.setBaseColor('#878a81', { fromGame: true, skipSurfaceUpdate: true });
+    }
+
+    applyEarthTiltedSpin(angle, cloudAngle) {
+      const state = earthManager.getVisualizerState();
+      const tilt = (state.axialTiltDeg || 0) * Math.PI / 180;
+      const tiltQuaternion = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 0, 1), tilt);
+      const spinAxis = new THREE.Vector3(0, 1, 0);
+      if (this.surfaceMesh) {
+        const spinQuaternion = new THREE.Quaternion().setFromAxisAngle(spinAxis, angle);
+        this.surfaceMesh.quaternion.copy(tiltQuaternion).multiply(spinQuaternion);
+      }
+      if (this.cloudMesh) {
+        const cloudSpinQuaternion = new THREE.Quaternion().setFromAxisAngle(spinAxis, cloudAngle);
+        this.cloudMesh.quaternion.copy(tiltQuaternion).multiply(cloudSpinQuaternion);
+      }
+    }
+
+    positionEarthReconstructionCamera() {
+      if (!this.camera) return;
+      this.camera.position.set(0, this.cameraHeight, this.cameraDistance);
+      this.camera.lookAt(0, 0, 0);
+      if (this.sunLight) {
+        this.sunLight.position.set(0, this.cameraHeight, this.cameraDistance + 2);
+      }
+      if (this.sunMesh) {
+        this.sunMesh.position.set(0, this.cameraHeight, this.cameraDistance + 3.2);
       }
     }
 
@@ -497,6 +752,7 @@
       this.createStarField();
       const isRing = this.isRingWorld();
       const isDisk = this.isDiskWorld();
+      const isBirchWorld = this.isSmbhShellWorld();
       if (isRing) {
         this.cameraDistance = 0;
         this.cameraHeight = 0;
@@ -518,6 +774,7 @@
 
       const initialIllum = this.getGameIllumination();
       this.viz.illum = initialIllum;
+      const visualIllum = isBirchWorld ? 1.35 : initialIllum;
       const baseColorFromGame = this.getGameBaseColor();
       if (baseColorFromGame) {
         this.setBaseColor(baseColorFromGame, { fromGame: true, force: true, skipSurfaceUpdate: true });
@@ -536,15 +793,15 @@
         f.contrast = 2.0;  // higher contrast for visibility
       }
       if (isRing || isDisk) {
-        this.sunLight = new THREE.PointLight(0xffffff, initialIllum, 0, 2);
+        this.sunLight = new THREE.PointLight(0xffffff, visualIllum, 0, 2);
         this.sunLight.position.set(0, 0, 0);
       } else {
-        this.sunLight = new THREE.DirectionalLight(0xffffff, initialIllum);
+        this.sunLight = new THREE.DirectionalLight(0xffffff, visualIllum);
         this.sunLight.position.set(5, 3, 2);
       }
       this.scene.add(this.sunLight);
       // Keep nightside visible with subtle ambient fill
-      this.ambientLight = new THREE.AmbientLight(0xffffff, isDisk ? 0.8 : 0.06);
+      this.ambientLight = new THREE.AmbientLight(0xffffff, isBirchWorld ? 0.34 : (isDisk ? 0.8 : 0.06));
       this.scene.add(this.ambientLight);
 
       const sunGeom = new THREE.SphereGeometry(0.15, 16, 16);
@@ -555,6 +812,8 @@
         this.sunMesh.scale.setScalar(0.2);
         this.sunMesh.renderOrder = 20;
         this.sunMesh.material.depthTest = false;
+      } else if (isBirchWorld) {
+        this.sunMesh.visible = false;
       } else {
         this.sunMesh.position.copy(this.sunLight.position).multiplyScalar(1.6);
       }
@@ -562,13 +821,19 @@
       this.updateSunFromInclination();
 
       this.createSurfaceMesh();
-      this.createLavaOverlayMesh();
-      this.createGasOverlayMesh();
-      if (!this.isFlatWorld()) {
+      if (isBirchWorld) {
+        this.createBirchWorldLights();
+      } else {
+        this.createLavaOverlayMesh();
+        this.createGasOverlayMesh();
+      }
+      if (!this.isFlatWorld() && !isBirchWorld) {
         this.createCityLights();
         this.createAtmosphere();
       }
-      this.createCloudSphere();
+      if (!isBirchWorld) {
+        this.createCloudSphere();
+      }
       if (isRing) {
         this.createRingShadePanels();
       }
@@ -580,10 +845,20 @@
 
       this.updateOverlayText();
       this.updateSurfaceTextureFromPressure(true);
-      this.updateLavaOverlay();
-      this.updateGasOverlay();
-      this.updateCityLights();
-      this.updateCloudUniforms();
+      this.applyEarthVisualOverrides();
+      if (this.isEarthReconstructionVisualActive()) {
+        this.positionEarthReconstructionCamera();
+      }
+      this.updateEarthAsteroidBelt();
+      this.updateEarthLuna();
+      if (isBirchWorld) {
+        this.updateBirchWorldLights();
+      } else {
+        this.updateLavaOverlay();
+        this.updateGasOverlay();
+        this.updateCityLights();
+        this.updateCloudUniforms();
+      }
       this.animate();
     }
 
@@ -611,16 +886,24 @@
       this.planetAngle = angle;
       const isRing = this.isRingWorld();
       const isDisk = this.isDiskWorld();
-      if (this.surfaceMesh) {
-        this.surfaceMesh.rotation.y = isDisk ? 0 : angle;
-      }
+      const isBirchWorld = this.isSmbhShellWorld();
+      const isEarthReconstruction = this.isEarthReconstructionVisualActive();
       if (this.cloudMesh) {
         const now = performance.now();
         if (!this._lastCloudTime) this._lastCloudTime = now;
         const dt = Math.min(0.05, (now - this._lastCloudTime) / 1000);
         this._lastCloudTime = now;
         this.cloudDrift = (this.cloudDrift || 0) + (this.cloudDriftSpeed || 0.005) * dt;
-        this.cloudMesh.rotation.y = isDisk ? 0 : angle + this.cloudDrift;
+      }
+      if (isEarthReconstruction) {
+        this.applyEarthTiltedSpin(angle, angle + (this.cloudDrift || 0));
+      } else {
+        if (this.surfaceMesh) {
+          this.surfaceMesh.rotation.y = isDisk ? 0 : angle;
+        }
+        if (this.cloudMesh) {
+          this.cloudMesh.rotation.y = isDisk ? 0 : angle + this.cloudDrift;
+        }
       }
       if (isRing) {
         this.camera.position.set(0, this.cameraHeight, 0);
@@ -629,6 +912,8 @@
       } else if (isDisk) {
         this.camera.position.set(0, this.cameraHeight, 1.55);
         this.camera.lookAt(0, 0, 0);
+      } else if (isEarthReconstruction) {
+        this.positionEarthReconstructionCamera();
       } else {
         const ang = angle;
         this.camera.position.set(
@@ -643,14 +928,21 @@
       if (this.debug && this.debug.mode === 'game') {
         this.updateZonalCoverageFromGameSafe();
       }
-      this.updateDustTint();
-      this.updateSurfaceHeatMaterial();
-      this.updateLavaOverlay();
-      this.updateGasOverlay();
-      this.updateSurfaceTextureFromPressure();
-      this.updateCityLights();
-      this.updateAtmosphereUniforms();
-      this.updateCloudUniforms();
+      if (isBirchWorld) {
+        this.updateBirchWorldLights();
+      } else {
+        this.applyEarthVisualOverrides();
+        this.updateEarthAsteroidBelt();
+        this.updateEarthLuna();
+        this.updateDustTint();
+        this.updateSurfaceHeatMaterial();
+        this.updateLavaOverlay();
+        this.updateGasOverlay();
+        this.updateSurfaceTextureFromPressure();
+        this.updateCityLights();
+        this.updateAtmosphereUniforms();
+        this.updateCloudUniforms();
+      }
       this.updateShips();
 
       if (this.debug && this.debug.mode === 'game' && this.debug.rows && this.debug.container) {
@@ -674,36 +966,58 @@
       const z = this.viz.zonalCoverage;
       let waterSum = 0;
       let lifeSum = 0;
+      let hazardousLifeSum = 0;
       let weightSum = 0;
       for (const zone of zones) {
-        let w, i, b;
+        let w, i, b, hb;
         if (t && t.zonalCoverageCache && t.zonalCoverageCache[zone]) {
           const c = t.zonalCoverageCache[zone];
           w = c.liquidWater; i = c.ice; b = c.biomass;
+          hb = c.hazardousBiomass;
         } else {
           const area = (t.celestialParameters.surfaceArea || 0) * getZonePercentage(zone);
           const zs = t.zonalSurface?.[zone] || {};
           w = estimateCoverage(zs.liquidWater || 0, area, 0.0001);
           i = estimateCoverage(zs.ice || 0, area, 0.0001 * 100);
           b = estimateCoverage(zs.biomass || 0, area, 0.0001 * 100000);
+          hb = estimateCoverage(zs.hazardousBiomass || 0, area, 0.0001 * 100000);
         }
         z[zone].water = Math.max(0, Math.min(1, Number(w) || 0));
         z[zone].ice = Math.max(0, Math.min(1, Number(i) || 0));
-        z[zone].life = Math.max(0, Math.min(0.5, Number(b) || 0));
+        z[zone].life = Math.max(0, Math.min(0.75, Number(b) || 0));
+        z[zone].hazardousLife = Math.max(0, Math.min(0.75, Number(hb) || 0));
         const weight = t?.getZoneWeight ? t.getZoneWeight(zone) : 1;
         waterSum += z[zone].water * weight;
         lifeSum += z[zone].life * weight;
+        hazardousLifeSum += z[zone].hazardousLife * weight;
         weightSum += weight;
+      }
+      if (
+        this.isEarthReconstructionVisualActive() &&
+        earthManager.getActionCount('addWater') >= EARTH_RECONSTRUCTION_MAX_WATER_STEPS
+      ) {
+        const tropicalWeight = t?.getZoneWeight ? t.getZoneWeight('tropical') : 1;
+        const temperateWeight = t?.getZoneWeight ? t.getZoneWeight('temperate') : 1;
+        waterSum += (0.71 - z.tropical.water) * tropicalWeight;
+        waterSum += (0.70 - z.temperate.water) * temperateWeight;
+        z.tropical.water = 0.71;
+        z.temperate.water = 0.70;
       }
       const norm = weightSum > 0 ? weightSum : zones.length;
       const avgWater = norm > 0 ? (waterSum / norm) : 0;
       const avgLife = norm > 0 ? (lifeSum / norm) : 0;
+      const avgHazardousLife = norm > 0 ? (hazardousLifeSum / norm) : 0;
       const cloudFraction = Number.isFinite(t?.luminosity?.cloudFraction)
         ? Math.max(0, Math.min(1, t.luminosity.cloudFraction))
         : avgWater;
       this.viz.coverage.water = avgWater * 100;
-      this.viz.coverage.life = Math.min(0.5, avgLife) * 100;
+      this.viz.coverage.life = Math.min(0.75, avgLife) * 100;
+      this.viz.coverage.hazardousLife = Math.min(0.75, avgHazardousLife) * 100;
       this.viz.coverage.cloud = Math.max(0, Math.min(100, cloudFraction * 100));
+      this.viz.coverage.ecumenopolis = GAME_FEATURES.steamExclusiveEcumenopolisVisualizer
+        ? Math.max(0, Math.min(100, getEcumenopolisLandFraction(t) * 100))
+        : 0;
+      this.viz.coverage.nanoworld = projectManager.projects.nanoworld.isCompleted ? 100 : 0;
     }
 
     getCurrentPopulation() {

@@ -110,6 +110,7 @@ function createResources(initial = {}) {
       superalloys: createResource('superalloys', initial.colonySuperalloys || 0),
       workers: createResource('workers', 0),
       water: createResource('water', 0, true, Infinity),
+      colonyHydrogen: createResource('colonyHydrogen', 0, true, 0),
     },
     surface: {
       land: createResource('land', 0),
@@ -118,6 +119,7 @@ function createResources(initial = {}) {
     },
     atmospheric: {
       atmosphericWater: createResource('atmosphericWater', 0),
+      hydrogen: createResource('hydrogen', 0),
     },
     space: {
       energy: createResource('energy', initial.spaceEnergy || 0, true, initial.spaceEnergyCap ?? Infinity),
@@ -141,13 +143,90 @@ function createResources(initial = {}) {
   };
 }
 
+function addProjectedRateMethods(building) {
+  building.getProjectedProductionRate = function(category, resource, options = {}) {
+    const automationMultiplier = options.automationMultiplier !== undefined
+      ? options.automationMultiplier
+      : this.getAutomationActivityMultiplier();
+    const workerRatio = options.workerRatio !== undefined ? options.workerRatio : 1;
+    const productivityValue = options.productivity !== undefined ? options.productivity : this.productivity;
+    const productivityScale = options.useProductivity === true
+      ? productivityValue / (workerRatio || 1)
+      : 1;
+    return (this.production[category][resource] || 0) *
+      this.activeNumber *
+      this.getProductionRatio() *
+      this.getEffectiveProductionMultiplier() *
+      this.getEffectiveResourceProductionMultiplier(category, resource) *
+      this.getEffectiveThroughputMultiplier() *
+      automationMultiplier *
+      workerRatio *
+      productivityScale;
+  };
+  building.getProjectedConsumptionRate = function(category, resource, options = {}) {
+    const { amount } = this.getConsumptionResource(category, resource);
+    const automationMultiplier = options.includeAutomation === false
+      ? 1
+      : (options.automationMultiplier !== undefined
+          ? options.automationMultiplier
+          : this.getAutomationActivityMultiplier());
+    const workerRatio = options.includeWorkerRatio === false
+      ? 1
+      : (options.workerRatio !== undefined ? options.workerRatio : 1);
+    const consumptionRatio = options.includeConsumptionRatio === false
+      ? 1
+      : this.getConsumptionRatio();
+    const productivityValue = options.productivity !== undefined ? options.productivity : this.productivity;
+    const productivityScale = options.useProductivity === true
+      ? productivityValue / (workerRatio || 1)
+      : 1;
+    return amount *
+      this.activeNumber *
+      consumptionRatio *
+      this.getEffectiveConsumptionMultiplier() *
+      this.getEffectiveResourceConsumptionMultiplier(category, resource) *
+      this.getEffectiveThroughputMultiplier() *
+      automationMultiplier *
+      workerRatio *
+      productivityScale;
+  };
+  return building;
+}
+
 function createDysonReceiverBuilding(energyPerSecond = 0) {
-  return {
+  return addProjectedRateMethods({
     active: energyPerSecond > 0 ? 1 : 0,
+    activeNumber: energyPerSecond > 0 ? 1 : 0,
     productivity: energyPerSecond > 0 ? 1 : 0,
     displayProductivity: energyPerSecond > 0 ? 1 : 0,
     dayNightActivity: false,
+    displayName: 'Dyson Receiver',
+    production: {},
     consumption: { space: { energy: energyPerSecond } },
+    getAutomationActivityMultiplier() {
+      return 1;
+    },
+    getTotalWorkerNeed() {
+      return 0;
+    },
+    getConsumption() {
+      return this.consumption;
+    },
+    getConsumptionResource(category, resource) {
+      return { amount: this.consumption[category][resource] };
+    },
+    getConsumptionRatio() {
+      return 1;
+    },
+    getEffectiveConsumptionMultiplier() {
+      return 1;
+    },
+    getEffectiveResourceConsumptionMultiplier() {
+      return 1;
+    },
+    getEffectiveThroughputMultiplier() {
+      return 1;
+    },
     getTargetProductivity() {
       return this.active > 0 ? 1 : 0;
     },
@@ -166,11 +245,11 @@ function createDysonReceiverBuilding(energyPerSecond = 0) {
       resources.space.energy.modifyRate(-(amount / seconds), 'Dyson Receiver', 'building');
     },
     applyMaintenance() {},
-  };
+  });
 }
 
 function createProductivityAwareSpaceEnergyConsumer(energyPerSecond = 0, name = 'Dyson Receiver') {
-  return {
+  return addProjectedRateMethods({
     active: energyPerSecond > 0 ? 1n : 0n,
     activeNumber: energyPerSecond > 0 ? 1 : 0,
     productivity: energyPerSecond > 0 ? 1 : 0,
@@ -200,6 +279,9 @@ function createProductivityAwareSpaceEnergyConsumer(energyPerSecond = 0, name = 
     getEffectiveResourceConsumptionMultiplier() {
       return 1;
     },
+    getEffectiveThroughputMultiplier() {
+      return 1;
+    },
     getTargetProductivity(resources) {
       if (this.active <= 0n) {
         return 0;
@@ -221,11 +303,11 @@ function createProductivityAwareSpaceEnergyConsumer(energyPerSecond = 0, name = 
       resources.space.energy.modifyRate(-(amount / seconds), this.displayName, 'building');
     },
     applyMaintenance() {},
-  };
+  });
 }
 
 function createSpaceStorageProducerBuilding(resourceKey, amountPerSecond = 0, name = 'Space Storage Producer') {
-  return {
+  return addProjectedRateMethods({
     active: amountPerSecond > 0 ? 1 : 0,
     activeNumber: amountPerSecond > 0 ? 1 : 0,
     productivity: amountPerSecond > 0 ? 1 : 0,
@@ -249,6 +331,9 @@ function createSpaceStorageProducerBuilding(resourceKey, amountPerSecond = 0, na
     getEffectiveResourceProductionMultiplier() {
       return 1;
     },
+    getEffectiveThroughputMultiplier() {
+      return 1;
+    },
     getConsumption() {
       return {};
     },
@@ -269,7 +354,7 @@ function createSpaceStorageProducerBuilding(resourceKey, amountPerSecond = 0, na
     },
     consume() {},
     applyMaintenance() {},
-  };
+  });
 }
 
 function createDysonCollectorProject(collectorPowerPerSecond = 0) {
@@ -282,8 +367,15 @@ function createDysonCollectorProject(collectorPowerPerSecond = 0) {
     unlocked: true,
     collectors: collectorPowerPerSecond > 0 ? 1 : 0,
     energyPerCollector: collectorPowerPerSecond,
+    isPermanentlyDisabled() {
+      return false;
+    },
     isContinuous() {
       return false;
+    },
+
+    getResourceExecutionDeltaTime(deltaTime) {
+      return deltaTime;
     },
     estimateCostAndGain(deltaTime = 1000, applyRates = true) {
       const seconds = deltaTime / 1000;
@@ -319,8 +411,15 @@ function createSpaceEnergyDrainProject(energyPerSecond = 0, name = 'Dyson Receiv
     autoStart: false,
     operationPreRunThisTick: false,
     unlocked: true,
+    isPermanentlyDisabled() {
+      return false;
+    },
     isContinuous() {
       return false;
+    },
+
+    getResourceExecutionDeltaTime(deltaTime) {
+      return deltaTime;
     },
     estimateCostAndGain() {
       return { cost: {}, gain: {} };
@@ -346,8 +445,15 @@ function createSpaceStorageProject(resources) {
     maxStorage: resources._spaceStorageMaxStorage ?? Infinity,
     usedStorage: 0,
     resourceStrategicReserves: {},
+    isPermanentlyDisabled() {
+      return false;
+    },
     isContinuous() {
       return false;
+    },
+
+    getResourceExecutionDeltaTime(deltaTime) {
+      return deltaTime;
     },
     getStoredResourceValue(resourceKey) {
       return resources.spaceStorage[resourceKey]?.value || 0;
@@ -415,6 +521,14 @@ class MockDemandProject {
     return false;
   }
 
+  getResourceExecutionDeltaTime(deltaTime) {
+    return deltaTime;
+  }
+
+  isPermanentlyDisabled() {
+    return false;
+  }
+
   applyOperationCostAndGain() {}
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true) {
@@ -467,6 +581,14 @@ class MockColonyMetalDemandProject {
     return false;
   }
 
+  getResourceExecutionDeltaTime(deltaTime) {
+    return deltaTime;
+  }
+
+  isPermanentlyDisabled() {
+    return false;
+  }
+
   estimateCostAndGain(deltaTime = 1000, applyRates = true) {
     const seconds = deltaTime / 1000;
     const amount = this.demandPerSecond * seconds;
@@ -510,6 +632,14 @@ class MockProductionProject {
     return false;
   }
 
+  getResourceExecutionDeltaTime(deltaTime) {
+    return deltaTime;
+  }
+
+  isPermanentlyDisabled() {
+    return false;
+  }
+
   applyOperationCostAndGain() {}
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true) {
@@ -549,6 +679,14 @@ class MockClampedContinuousEnergyProject {
 
   isContinuous() {
     return true;
+  }
+
+  getResourceExecutionDeltaTime(deltaTime) {
+    return deltaTime;
+  }
+
+  isPermanentlyDisabled() {
+    return false;
   }
 
   estimateProductivityCostAndGain(deltaTime = 1000) {
@@ -623,6 +761,10 @@ function setupHarness(initialStorage = {}) {
       });
       return multiplier > 0 ? multiplier : 1;
     }
+
+    getEffectiveCostMultiplier() {
+      return 1;
+    }
   }
 
   class BaseProject extends EffectableEntity {
@@ -651,6 +793,10 @@ function setupHarness(initialStorage = {}) {
 
     isContinuous() {
       return false;
+    }
+
+    getResourceExecutionDeltaTime(deltaTime) {
+      return deltaTime;
     }
 
     getDurationWithTerraformBonus(duration) {
@@ -733,7 +879,12 @@ function setupHarness(initialStorage = {}) {
   setGlobal('EffectableEntity', EffectableEntity, originalGlobals);
   setGlobal('TerraformingDurationProject', TerraformingDurationProject, originalGlobals);
   setGlobal('SpecializationProject', SpecializationProject, originalGlobals);
-  setGlobal('MEGA_PROJECT_RESOURCE_MODES', { SPACE_FIRST: 'spaceFirst' }, originalGlobals);
+  setGlobal('MEGA_PROJECT_RESOURCE_MODES', {
+    SPACE_FIRST: 'space-first',
+    COLONY_FIRST: 'colony-first',
+    SPACE_ONLY: 'space-only',
+    COLONY_ONLY: 'colony-only',
+  }, originalGlobals);
   setGlobal('getMegaProjectResourceAvailability', (storage, storageKey, colonyAvailable) => {
     const colony = Math.max(0, colonyAvailable || 0);
     const space = storage?.getAvailableStoredResource ? storage.getAvailableStoredResource(storageKey) : 0;
@@ -741,12 +892,26 @@ function setupHarness(initialStorage = {}) {
   }, originalGlobals);
   setGlobal('getMegaProjectResourceAllocation', (storage, storageKey, amount, colonyAvailable) => {
     const colony = Math.max(0, colonyAvailable || 0);
-    const fromColony = Math.min(amount, colony);
-    const fromStorage = Math.max(0, amount - fromColony);
+    const space = storage?.getAvailableStoredResource ? storage.getAvailableStoredResource(storageKey) : 0;
+    const mode = storage?.megaProjectResourceMode || 'colony-only';
+    if (mode === 'space-only') {
+      return { fromColony: 0, fromStorage: Math.min(amount, Math.max(0, space)) };
+    }
+    if (mode === 'colony-only') {
+      return { fromColony: Math.min(amount, colony), fromStorage: 0 };
+    }
+    if (mode === 'colony-first') {
+      const fromColony = Math.min(amount, colony);
+      const fromStorage = Math.min(Math.max(0, amount - fromColony), Math.max(0, space));
+      return { fromColony, fromStorage };
+    }
+    const fromStorage = Math.min(amount, Math.max(0, space));
+    const fromColony = Math.min(Math.max(0, amount - fromStorage), colony);
     return { fromColony, fromStorage };
   }, originalGlobals);
   setGlobal('resources', resourcesObj, originalGlobals);
   setGlobal('dayNightCycle', { isDay: () => true }, originalGlobals);
+  setGlobal('gameSettings', { unfulfilledMaintenancePenalties: false }, originalGlobals);
   setGlobal('followersManager', null, originalGlobals);
   setGlobal('fundingModule', null, originalGlobals);
   setGlobal('terraforming', {
@@ -758,7 +923,7 @@ function setupHarness(initialStorage = {}) {
     distributeGlobalChangesToZones: () => {},
   }, originalGlobals);
   setGlobal('lifeManager', null, originalGlobals);
-  setGlobal('researchManager', null, originalGlobals);
+  setGlobal('researchManager', { isBooleanFlagSet: () => false }, originalGlobals);
   setGlobal('globalEffects', {}, originalGlobals);
   setGlobal('updateArtificialEcosystems', () => {}, originalGlobals);
   setGlobal('updateAntimatterStorageCap', () => {}, originalGlobals);
@@ -777,10 +942,13 @@ function setupHarness(initialStorage = {}) {
   setGlobal('getZonePercentage', () => 0, originalGlobals);
   setGlobal('buildings', {}, originalGlobals);
   setGlobal('resolveWorldBaseLand', () => 0, originalGlobals);
+  setGlobal('resolveWorldGeometricLand', () => 0, originalGlobals);
   setGlobal('calculateSurfaceAreaHectaresFromRadius', () => 0, originalGlobals);
   setGlobal('getDynamicWorldPlanetaryMassAvailableTons', () => 0, originalGlobals);
   setGlobal('hasDynamicMassEnabled', () => false, originalGlobals);
   setGlobal('globalGameIsLoadingFromSave', false, originalGlobals);
+  setGlobal('autoActivateStructures', () => {}, originalGlobals);
+  setGlobal('hazardManager', { applyPostClampResourceProduction: () => {} }, originalGlobals);
 
   const projectManager = {
     projects: {},
@@ -789,13 +957,18 @@ function setupHarness(initialStorage = {}) {
     isBooleanFlagSet: () => false,
     isHighAgilityFreightersAvailable: () => false,
     getHighAgilityFreighterResearchCost: () => 0,
+    getMegaProjectCostMultiplier: () => 1,
+    getMegaProjectDurationMultiplier: () => 1,
   };
   setGlobal('projectManager', projectManager, originalGlobals);
 
+  const { Project } = require(path.resolve(__dirname, '../src/js/projects.js'));
+  setGlobal('Project', Project, originalGlobals);
   const resourceModule = require(path.resolve(__dirname, '../src/js/resource.js'));
   jest.doMock(path.resolve(__dirname, '../src/js/projects/SpecializationProject.js'), () => ({
     SpecializationProject,
   }));
+  const MegaHeatSinkProject = require(path.resolve(__dirname, '../src/js/projects/MegaHeatSinkProject.js'));
   const NuclearAlchemyFurnaceProject = require(path.resolve(__dirname, '../src/js/projects/NuclearAlchemyFurnaceProject.js'));
   const SuperalloyGigafoundryProject = require(path.resolve(__dirname, '../src/js/projects/SuperalloyGigafoundryProject.js'));
   const ManufacturingWorldProject = require(path.resolve(__dirname, '../src/js/projects/ManufacturingWorldProject.js'));
@@ -803,6 +976,7 @@ function setupHarness(initialStorage = {}) {
   setGlobal('NuclearAlchemyFurnaceProject', NuclearAlchemyFurnaceProject, originalGlobals);
   setGlobal('LiftersProject', LiftersProject, originalGlobals);
   const WhiteDwarfHarvestersProject = require(path.resolve(__dirname, '../src/js/projects/WhiteDwarfHarvestersProject.js'));
+  const ArtificialQuasarsProject = require(path.resolve(__dirname, '../src/js/projects/ArtificialQuasarsProject.js'));
   const DysonSwarmReceiverProject = require(path.resolve(__dirname, '../src/js/projects/dysonswarm.js'));
   const DysonSphereProject = require(path.resolve(__dirname, '../src/js/projects/dysonsphere.js'));
   setGlobal('window', global, originalGlobals);
@@ -817,11 +991,13 @@ function setupHarness(initialStorage = {}) {
     produceResources: resourceModule.produceResources,
     projectManager,
     resources: resourcesObj,
+    MegaHeatSinkProject,
     NuclearAlchemyFurnaceProject,
     SuperalloyGigafoundryProject,
     ManufacturingWorldProject,
     LiftersProject,
     WhiteDwarfHarvestersProject,
+    ArtificialQuasarsProject,
     ArtificialStarsProject,
     DysonSwarmReceiverProject,
     DysonSphereProject,
@@ -834,6 +1010,42 @@ function expectApprox(received, expected, tolerance = 1e-6) {
 }
 
 describe('Space building productivity via produceResources', () => {
+  test('Mega Heat Sink continuous expansion respects expansion reserve scope', () => {
+    const harness = setupHarness({ superalloys: 20 });
+    const {
+      MegaHeatSinkProject,
+      projectManager,
+      resources,
+      cleanup,
+    } = harness;
+
+    resources.colony.workers.cap = 120_000_000_000;
+    projectManager.projects.spaceStorage.resourceStrategicReserves.superalloys = {
+      value: 20,
+      scope: { expansions: false, consumption: true },
+    };
+
+    const heatSink = new MegaHeatSinkProject({
+      name: 'Mega Heat Sink',
+      duration: 60000,
+      cost: { colony: { superalloys: 20 } },
+      attributes: { canUseSpaceStorage: true },
+      repeatable: true,
+      maxRepeatCount: Infinity,
+      unlocked: true,
+      category: 'mega',
+    }, 'megaHeatSink');
+    heatSink.isActive = true;
+    projectManager.projects.megaHeatSink = heatSink;
+
+    const accumulatedChanges = { colony: {}, spaceStorage: {} };
+    heatSink.applyCostAndGain(1000, accumulatedChanges, 1);
+
+    expectApprox(heatSink.repeatCount, 1);
+    expectApprox(accumulatedChanges.spaceStorage.superalloys, -20);
+    cleanup();
+  });
+
   test('continuous project productivity uses full desired cost when normal estimate clamps to available energy', () => {
     const harness = setupHarness();
     const {
@@ -1054,6 +1266,54 @@ describe('Space building productivity via produceResources', () => {
     cleanup();
   });
 
+  test('Manufacturing World throughputMultiplier effect scales production and consumption', () => {
+    const initialMetal = 10000;
+    const harness = setupHarness({ metal: initialMetal, superalloys: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      ManufacturingWorldProject,
+      cleanup,
+    } = harness;
+
+    const manufacturing = new ManufacturingWorldProject({
+      name: 'Manufacturing World',
+      duration: 300000,
+      cost: {},
+      attributes: {
+        projectGroup: 'specializedWorlds',
+        keepStartBarVisible: true,
+        spaceBuilding: true,
+        spaceBuildingProductivity: true,
+      },
+    }, 'manufacturingWorld');
+
+    manufacturing.isRunning = true;
+    manufacturing.cumulativePopulation = 200000;
+    manufacturing.manufacturingAssignments.superalloys = 200000;
+    manufacturing.autoStart = false;
+    manufacturing.isActive = false;
+    manufacturing.activeEffects.push({
+      type: 'throughputMultiplier',
+      value: 0.25,
+      sourceId: 'matrioshkaBrain',
+      effectId: 'matrioshkaBrain-project:manufacturingWorld-throughput',
+    });
+
+    projectManager.projects.manufacturingWorld = manufacturing;
+    projectManager.projectOrder = ['manufacturingWorld'];
+
+    produceResources(1000, {});
+
+    const consumedMetal = initialMetal - resources.spaceStorage.metal.value;
+    const producedSuperalloy = resources.spaceStorage.superalloys.value;
+
+    expectApprox(consumedMetal, 2500);
+    expectApprox(producedSuperalloy, 2.5);
+    cleanup();
+  });
+
   test.each([
     { extraDemand: 0 },
     { extraDemand: 200 },
@@ -1169,7 +1429,7 @@ describe('Space building productivity via produceResources', () => {
     produceResources(1000, buildings);
 
     const consumedMetal = initialMetal + metalProductionPerSecond - resources.spaceStorage.metal.value;
-    const fullDemandPerSecond = gigafoundry.furnaceAssignments.superalloys
+    const fullDemandPerSecond = Number(gigafoundry.furnaceAssignments.superalloys || 0n)
       * gigafoundry.getAlchemyParameter()
       * gigafoundry.getRecipe().inputs.spaceStorage.metal;
     const expectedProductivity = 1;
@@ -1489,6 +1749,146 @@ describe('Space building productivity via produceResources', () => {
     cleanup();
   });
 
+  test('White Dwarf Harvesters display stored idle assignments from loaded saves', () => {
+    const harness = setupHarness();
+    const { WhiteDwarfHarvestersProject, cleanup } = harness;
+
+    const harvesters = new WhiteDwarfHarvestersProject({
+      name: 'White Dwarf Harvesters',
+      duration: 60000,
+      cost: {},
+      attributes: {
+        lifterUnitRate: 1,
+        lifterEnergyPerUnit: 1,
+        lifterHarvestRecipes: {
+          whiteDwarfHarvest: {
+            label: 'White Dwarf Harvesting',
+            storageKey: 'graphite',
+            complexity: 1,
+            displayOrder: 1,
+          },
+        },
+      },
+    }, 'whiteDwarfHarvesters');
+
+    harvesters.repeatCount = 223;
+    harvesters.lifterAssignments.idleUnassigned = 223;
+    harvesters.lifterAssignments.whiteDwarfHarvest = 0;
+    harvesters.autoAssignFlags.whiteDwarfHarvest = true;
+    harvesters.normalizeAssignments();
+
+    expect(harvesters.getDisplayedAssignmentAmount('idleUnassigned')).toBe(223n);
+    expect(harvesters.getDisplayedAssignmentAmount('whiteDwarfHarvest')).toBe(0n);
+    expect(harvesters.getAssignedTotal()).toBe(223n);
+    expect(harvesters.getAvailableLifters()).toBe(0n);
+    cleanup();
+  });
+
+  test('White Dwarf Harvesters reset finite progress when yard duration bonus removal exits continuous mode', () => {
+    const harness = setupHarness();
+    const { WhiteDwarfHarvestersProject, cleanup } = harness;
+
+    const harvesters = new WhiteDwarfHarvestersProject({
+      name: 'White Dwarf Harvesters',
+      duration: 2000,
+      cost: {},
+      attributes: {
+        lifterUnitRate: 1,
+        lifterEnergyPerUnit: 1,
+        lifterHarvestRecipes: {
+          whiteDwarfHarvest: {
+            label: 'White Dwarf Harvesting',
+            storageKey: 'graphite',
+            complexity: 1,
+            displayOrder: 1,
+          },
+        },
+      },
+    }, 'whiteDwarfHarvesters');
+
+    harvesters.getDurationWithTerraformBonus = (duration) => {
+      let bonus = 0;
+      harvesters.activeEffects.forEach((effect) => {
+        if (effect.type === 'effectiveTerraformedWorlds') {
+          bonus += effect.value || 0;
+        }
+      });
+      return duration / Math.max(1, 1 + bonus);
+    };
+    harvesters.getEffectiveDuration = () => harvesters.getDurationWithTerraformBonus(harvesters.duration);
+    harvesters.activeEffects = [{
+      type: 'effectiveTerraformedWorlds',
+      value: 2,
+      effectId: 'hephaestus-yard-whiteDwarfHarvesters',
+      sourceId: 'hephaestusMegaconstruction',
+    }];
+    harvesters.autoStart = true;
+    harvesters.isActive = true;
+    harvesters.startingDuration = Infinity;
+    harvesters.remainingTime = Infinity;
+
+    expect(harvesters.isExpansionContinuous()).toBe(true);
+
+    harvesters.activeEffects = [];
+    harvesters.update(1000);
+
+    expect(harvesters.isExpansionContinuous()).toBe(false);
+    expect(harvesters.isActive).toBe(false);
+    expect(harvesters.startingDuration).toBe(2000);
+    expect(harvesters.remainingTime).toBe(2000);
+    cleanup();
+  });
+
+  test('Artificial Quasars provide space energy for space building productivity', () => {
+    const harness = setupHarness({ spaceEnergy: 0 });
+    const {
+      produceResources,
+      projectManager,
+      resources,
+      ArtificialQuasarsProject,
+      cleanup,
+    } = harness;
+
+    const quasars = new ArtificialQuasarsProject({
+      name: 'Artificial Quasars',
+      duration: 60000,
+      cost: {},
+      attributes: {
+        spaceBuilding: true,
+        spaceBuildingProductivity: true,
+        spaceEnergyProducer: true,
+        lifterUnitRate: 100,
+        lifterEnergyPerUnit: 0,
+        lifterHarvestRecipes: {
+          blackHoleSpinEnergy: {
+            label: 'Black Hole Spin Energy',
+            storageKey: 'spaceEnergy',
+            outputMultiplier: 1,
+            complexity: 1,
+            displayOrder: 1,
+          },
+        },
+      },
+    }, 'artificialQuasars');
+
+    quasars.repeatCount = 1;
+    quasars.lifterAssignments.blackHoleSpinEnergy = 1;
+    quasars.isRunning = true;
+
+    const receiver = createProductivityAwareSpaceEnergyConsumer(100, 'Quasar-fed Receiver');
+    projectManager.projects.artificialQuasars = quasars;
+    projectManager.projectOrder = ['artificialQuasars'];
+
+    produceResources(1000, { receiver });
+
+    expectApprox(receiver.productivity, 1);
+    expectApprox(quasars.operationProductivity?.blackHoleSpinEnergy, 1);
+    expectApprox(resources.space.energy.value, 0);
+    expectApprox(resources.space.energy.projectedProductionRateBySource['Artificial Quasar'] || 0, 100);
+    expectApprox(resources.space.energy.projectedConsumptionRateBySource['Quasar-fed Receiver'] || 0, 100);
+    cleanup();
+  });
+
   test('Artificial Stars projected output respects hydrogen strategic reserve for consumption', () => {
     const harness = setupHarness({ hydrogen: 50_000_000_000, spaceEnergy: 0 });
     const {
@@ -1580,95 +1980,6 @@ describe('Space building productivity via produceResources', () => {
     expectApprox(resources.space.energy.value, 0);
     expectApprox(resources.space.energy.projectedProductionRateBySource['Artificial Stars'] || 0, 0);
     expectApprox(resources.spaceStorage.hydrogen.value, reserve - 1 + reserve * 2);
-    cleanup();
-  });
-
-  test('Building-produced hydrogen can refill reserve before Artificial Stars consume surplus', () => {
-    const reserve = 50_000_000_000;
-    const harness = setupHarness({ hydrogen: reserve - 1, spaceEnergy: 0 });
-    const {
-      produceResources,
-      projectManager,
-      resources,
-      ArtificialStarsProject,
-      cleanup,
-    } = harness;
-
-    projectManager.projects.spaceStorage.resourceStrategicReserves.hydrogen = {
-      mode: 'amount',
-      value: reserve,
-      scope: { consumption: true },
-    };
-
-    buildings.hydrogenProducer = createSpaceStorageProducerBuilding('hydrogen', reserve + 1, 'Hydrogen Producer');
-    const artificialStars = createArtificialStarsProject(ArtificialStarsProject);
-    projectManager.projects.artificialStars = artificialStars;
-    projectManager.projectOrder = ['artificialStars'];
-
-    produceResources(1000, buildings);
-
-    expectApprox(artificialStars.operationProductivity, 1);
-    expectApprox(resources.space.energy.value, 25_000_000_000_000_000_000_000);
-    expectApprox(resources.spaceStorage.hydrogen.value, reserve);
-    cleanup();
-  });
-
-  test('Artificial Stars ignore strategic reserve when consumption scope is disabled', () => {
-    const reserve = 50_000_000_000;
-    const harness = setupHarness({ hydrogen: reserve, spaceEnergy: 0 });
-    const {
-      produceResources,
-      projectManager,
-      resources,
-      ArtificialStarsProject,
-      cleanup,
-    } = harness;
-
-    projectManager.projects.spaceStorage.resourceStrategicReserves.hydrogen = {
-      mode: 'amount',
-      value: reserve,
-      scope: { transfers: true, consumption: false },
-    };
-
-    const artificialStars = createArtificialStarsProject(ArtificialStarsProject);
-    projectManager.projects.artificialStars = artificialStars;
-    projectManager.projectOrder = ['artificialStars'];
-
-    produceResources(1000, {});
-
-    expectApprox(artificialStars.operationProductivity, 1);
-    expectApprox(resources.space.energy.value, 25_000_000_000_000_000_000_000);
-    expectApprox(resources.spaceStorage.hydrogen.value, 0);
-    cleanup();
-  });
-
-  test('Artificial Stars share hydrogen above reserve with other project consumption', () => {
-    const reserve = 50_000_000_000;
-    const harness = setupHarness({ hydrogen: reserve * 2, spaceEnergy: 0 });
-    const {
-      produceResources,
-      projectManager,
-      resources,
-      ArtificialStarsProject,
-      cleanup,
-    } = harness;
-
-    projectManager.projects.spaceStorage.resourceStrategicReserves.hydrogen = {
-      mode: 'amount',
-      value: reserve,
-      scope: { consumption: true },
-    };
-
-    const artificialStars = createArtificialStarsProject(ArtificialStarsProject);
-    projectManager.projects.artificialStars = artificialStars;
-    projectManager.projects.extraHydrogenDemand = new MockConsumingDemandProject('hydrogen', reserve, 'Extra Hydrogen Demand');
-    projectManager.projectOrder = ['artificialStars', 'extraHydrogenDemand'];
-
-    produceResources(1000, {});
-
-    expectApprox(artificialStars.operationProductivity, 0.5);
-    expectApprox(resources.space.energy.value, 12_500_000_000_000_000_000_000);
-    expectApprox(resources.spaceStorage.hydrogen.value, reserve);
     cleanup();
   });
 

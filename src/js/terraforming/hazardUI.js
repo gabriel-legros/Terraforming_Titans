@@ -53,6 +53,17 @@ function initializeHazardUI() {
   if (initializePulsar && initializePulsar.call) {
     initializePulsar();
   }
+
+  let initializeDebrisDisk = null;
+  try {
+    initializeDebrisDisk = initializeDebrisDiskHazardUI;
+  } catch (error) {
+    initializeDebrisDisk = null;
+  }
+
+  if (initializeDebrisDisk && initializeDebrisDisk.call) {
+    initializeDebrisDisk();
+  }
 }
 
 function updateHazardUI(parameters = {}) {
@@ -87,6 +98,17 @@ function updateHazardUI(parameters = {}) {
 
   if (updatePulsar && updatePulsar.call) {
     updatePulsar(parameters.pulsar);
+  }
+
+  let updateDebrisDisk = null;
+  try {
+    updateDebrisDisk = updateDebrisDiskHazardUI;
+  } catch (error) {
+    updateDebrisDisk = null;
+  }
+
+  if (updateDebrisDisk && updateDebrisDisk.call) {
+    updateDebrisDisk(parameters.debrisDisk);
   }
 
   let updateHazardousMachinery = null;

@@ -66,8 +66,10 @@ class FusionPowerPlant extends MultiRecipesBuilding {
     if (this.active < 0n) this.active = 0n;
     this.updateResourceStorage();
 
+    const oldNextActive = next.activeNumber;
     next.count += upgradeCountBigInt;
     next.active += upgradeCountBigInt;
+    next.blendMaintenanceProductivityForNewActive(oldNextActive, next.activeNumber);
     next.updateResourceStorage();
     return true;
   }

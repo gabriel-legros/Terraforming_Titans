@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+OUT_DIR="$ROOT_DIR/dist/browser"
+
+node "$ROOT_DIR/scripts/update-game-version.js" check
+
+rm -rf "$OUT_DIR"
+mkdir -p "$OUT_DIR/src"
+
+cp "$ROOT_DIR/index.html" "$OUT_DIR/"
+cp -R "$ROOT_DIR/vendor" "$OUT_DIR/vendor"
+cp -R "$ROOT_DIR/LICENSES" "$OUT_DIR/LICENSES"
+cp -R "$ROOT_DIR/assets" "$OUT_DIR/assets"
+cp -R "$ROOT_DIR/src/js" "$OUT_DIR/src/js"
+cp -R "$ROOT_DIR/src/css" "$OUT_DIR/src/css"
+BROWSER_VERSION="$(node -p "require('$ROOT_DIR/package.json').version")"
+BROWSER_VERSION="${BROWSER_VERSION%%-playtest.*}"
+printf "const GAME_VERSION = '%s';\n" "$BROWSER_VERSION" > "$OUT_DIR/src/js/game-version.js"
+node "$ROOT_DIR/scripts/purge-browser-parameters.js" "$OUT_DIR"
+cat > "$OUT_DIR/src/js/build-target.js" <<'BUILD_TARGET'
+const GAME_BUILD_TARGET = 'browser';
+const STEAM_APP_ID = null;
+const GAME_FEATURES = {
+    patienceDailyClaimButton: GAME_BUILD_TARGET === 'steam',
+    patienceDailyRewardFromExport: GAME_BUILD_TARGET === 'browser',
+    browserStorageWarning: GAME_BUILD_TARGET === 'browser',
+    whiteNoiseKeepAlive: GAME_BUILD_TARGET === 'browser',
+    exitSaveSlot: GAME_BUILD_TARGET !== 'browser',
+    electronWindowControls: GAME_BUILD_TARGET !== 'browser',
+    electronUIScale: GAME_BUILD_TARGET !== 'browser',
+    electronCrashReporting: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveDominions: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveResearch: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveEcumenopolisVisualizer: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveAtlasWorlds: GAME_BUILD_TARGET !== 'browser'
+};
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { GAME_BUILD_TARGET, STEAM_APP_ID, GAME_FEATURES };
+}
+BUILD_TARGET
+grep -q "GAME_BUILD_TARGET = 'browser'" "$OUT_DIR/src/js/build-target.js"
+
+echo "Browser build written to $OUT_DIR"

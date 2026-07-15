@@ -196,6 +196,13 @@
 
   PlanetVisualizer.prototype.updateSunFromInclination = function updateSunFromInclination() {
     if (!this.sunLight) return;
+    if (this.isSmbhShellWorld()) {
+      this.sunLight.position.set(5, 3, 2);
+      this.sunLight.intensity = 1.35;
+      if (this.ambientLight) this.ambientLight.intensity = 0.34;
+      if (this.sunMesh) this.sunMesh.visible = false;
+      return;
+    }
     if (this.isRingWorld()) {
       this.sunLight.position.set(0, 0, 0);
       this.sunMesh.visible = false;

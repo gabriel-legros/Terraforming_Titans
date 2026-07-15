@@ -10,19 +10,45 @@
     update: update
   },
   fps: {
-    limit: 30,  // The game will run at 30 updates per second
+    limit: 30,  // The game defaults to 30 updates per second
     forceSetTimeOut: true  // Don't use RAF
   },
   autoPause: false  // This prevents the game from pausing when the tab is inactive
 };
 
-const game = new Phaser.Game(config);
-if (typeof globalThis !== 'undefined') {
-  globalThis.game = game;
-}
+var game = null;
 let lastFrameTimeMs = 0;
 const LOGIC_DELTA_QUANTUM_MS = 10;
 let logicDeltaCarryMs = 0;
+const GAME_FRAMERATE_OPTIONS = [10, 20, 30];
+const DEFAULT_GAME_FRAMERATE = 30;
+
+function normalizeGameFramerate(framerate) {
+  const parsedValue = Number(framerate);
+  return GAME_FRAMERATE_OPTIONS.includes(parsedValue)
+    ? parsedValue
+    : DEFAULT_GAME_FRAMERATE;
+}
+
+function getGameFramerate() {
+  return normalizeGameFramerate(gameSettings.framerate);
+}
+
+function applyGameFramerateSetting() {
+  const framerate = getGameFramerate();
+  gameSettings.framerate = framerate;
+  config.fps.limit = framerate;
+  if (game && game.loop) {
+    const targetMs = 1000 / framerate;
+    game.loop.targetFps = framerate;
+    game.loop._target = targetMs;
+    game.loop.actualFps = Math.min(game.loop.actualFps, framerate);
+    if (game.loop.raf) {
+      game.loop.raf.target = targetMs;
+    }
+    resetGameFrameClock(true);
+  }
+}
 
 function resetGameFrameClock(resetCarry = false) {
   lastFrameTimeMs = performance.now();
@@ -46,6 +72,21 @@ window.addEventListener('pageshow', () => {
   resetGameFrameClock();
 });
 
+function initializeTerraformingTitansDom() {
+  applyLanguageToDom();
+  initializeSettingsDom();
+  initializeColonyDomUI();
+  initializeJournalDom();
+}
+
+function startTerraformingTitansGame() {
+  initializeTerraformingTitansDom();
+  game = new Phaser.Game(config);
+  applyGameFramerateSetting();
+}
+
+document.addEventListener('DOMContentLoaded', startTerraformingTitansGame);
+
 function preload() {
   // Load assets (images, sounds, etc.) here
 }
@@ -66,6 +107,7 @@ function create() {
       }
       resetGameFrameClock(true);
     }
+    registerExitSaveHandler();
     return;
 }
 
@@ -73,7 +115,15 @@ function initializeDefaultGlobals(){
   if (!gameSettings.pauseKeybind) {
     gameSettings.pauseKeybind = 'Space';
   }
+  if (!gameSettings.dialogueSkipKeybind) {
+    gameSettings.dialogueSkipKeybind = 'NumpadAdd';
+  }
+  if (!gameSettings.fullscreenKeybind) {
+    gameSettings.fullscreenKeybind = 'F11';
+  }
   setPauseKeybindCode(gameSettings.pauseKeybind);
+  setDialogueSkipKeybindCode(gameSettings.dialogueSkipKeybind);
+  setFullscreenKeybindCode(gameSettings.fullscreenKeybind);
   shipEfficiency = 1;
   // Instantiate the TabManager and load tabs from the constant
   tabManager = new TabManager({
@@ -82,7 +132,7 @@ function initializeDefaultGlobals(){
 
   resetStructureDisplayState();
   resetProjectDisplayState();
-  if (gameSettings.keepTabRunningAudio) {
+  if (GAME_FEATURES.whiteNoiseKeepAlive && gameSettings.keepTabRunningAudio) {
     startBackgroundSilence();
   }
 
@@ -95,8 +145,11 @@ function initializeDefaultGlobals(){
   // Initialize resources
   resources = createResources(currentPlanetParameters.resources);
   createResourceDisplay(resources);
+  celestialParameters = currentPlanetParameters.celestialParameters;
+  terraforming = new Terraforming(resources, celestialParameters, currentPlanetParameters.specialAttributes);
 
   // Initialize buildings
+  setProjectStorageProviders({});
   buildings = initializeBuildings(buildingsParameters);
   createBuildingButtons(buildings);
   if (typeof applyDayNightSettingEffects === 'function') {
@@ -147,8 +200,6 @@ function initializeDefaultGlobals(){
   // Initialize StoryManager
   storyManager = new StoryManager(progressData);  // Pass the progressData object
 
-  celestialParameters = currentPlanetParameters.celestialParameters;
-  terraforming = new Terraforming(resources, celestialParameters, currentPlanetParameters.specialAttributes);
   terraforming.initializeTerraforming();
   terraformingGraphsManager.reset();
   if (typeof window !== 'undefined') {
@@ -189,6 +240,9 @@ function initializeDefaultGlobals(){
 
   rwgManager = new RwgManager();
   patienceManager = new PatienceManager();
+  earthManager = new EarthManager();
+  achievementManager = new AchievementManager();
+  achievementManager.update();
   registerDefaultTabActivationHandlers();
   }
 
@@ -217,6 +271,7 @@ function registerDefaultTabActivationHandlers() {
   });
   registerTabActivationHandler('settings', () => {
     updateStatisticsDisplay();
+    updateAchievementsDisplay();
   });
 }
 
@@ -282,6 +337,15 @@ function prepareForTravel(options = {}) {
   return travelState;
 }
 
+function rebaseDynamicMassInitialGeometryAfterHazards() {
+  if (currentPlanetParameters.specialAttributes?.dynamicMass !== true) {
+    return;
+  }
+  terraforming.synchronizeGlobalResources();
+  terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
+  Object.assign(terraforming.initialCelestialParameters, terraforming.celestialParameters);
+}
+
 function initializeGameState(options = {}) {
   const preserveManagers = options.preserveManagers || false;
   const preserveJournal = options.preserveJournal || false;
@@ -290,6 +354,7 @@ function initializeGameState(options = {}) {
     shipEfficiency = 1;
   }
   globalGameIsTraveling = preserveManagers && !globalGameIsLoadingFromSave;
+  autobuildCostTracker.reset();
   const pendingAutoTravelTabRestore = (
     autoTravelContext
     && autoTravelContext.active
@@ -357,6 +422,7 @@ function initializeGameState(options = {}) {
   }
   if (preserveManagers && resources) {
     savedTravelResources = capturePreservedTravelResourceState(resources);
+    clearResourceTooltipRateCooldownsForTravel(resources);
   }
   if (preserveManagers && lifeDesigner?.prepareTravelState) {
     savedLifeDesignerTravelState = lifeDesigner.prepareTravelState();
@@ -370,18 +436,13 @@ function initializeGameState(options = {}) {
   }
 
   if (!preserveManagers) {
-    gameSettings.autosaveIntervalSeconds = 300;
-    gameSettings.useCelsius = false;
-    gameSettings.disableDayNightCycle = false;
-    gameSettings.showSpaceStorageResources = false;
     if (!globalGameIsLoadingFromSave) {
       fastestTerraformDays = null;
       fastestTerraformRealSeconds = null;
+      birchWorldTerraformTimeSeconds = null;
+      birchWorldTerraformRealTimeSeconds = null;
     }
-    const dayNightToggle = typeof document !== 'undefined' ? document.getElementById('day-night-toggle') : null;
-    if (dayNightToggle) {
-      dayNightToggle.checked = gameSettings.disableDayNightCycle;
-    }
+    updateDifficultySettingInputs();
     nanotechManager.reset();
   }
 
@@ -425,6 +486,7 @@ function initializeGameState(options = {}) {
   if (savedTravelResources) {
     restorePreservedTravelResourceState(resources, savedTravelResources);
   }
+  setProjectStorageProviders({});
   buildings = initializeBuildings(buildingsParameters);
   projectManager = new ProjectManager();
   projectManager.initializeProjects(projectParameters);
@@ -455,6 +517,9 @@ function initializeGameState(options = {}) {
   if (!preserveManagers || !researchManager) {
     researchManager = new ResearchManager(researchParameters);
   } else {
+    if (!globalGameIsLoadingFromSave && researchManager.clearEffectsOnTravel) {
+      researchManager.clearEffectsOnTravel();
+    }
     if (!globalGameIsLoadingFromSave && typeof researchManager.resetRegularResearch === 'function') {
       researchManager.resetRegularResearch();
     }
@@ -471,7 +536,7 @@ function initializeGameState(options = {}) {
   // so a fresh game always starts from a clean state. Saved games
   // will overwrite these values after loading.
   if (typeof resetColonySliders === 'function') {
-    resetColonySliders();
+    resetColonySliders(!preserveManagers);
   }
   if (typeof resetMirrorOversightSettings === 'function') {
     if (!preserveManagers || !gameSettings.preserveProjectSettingsOnTravel) {
@@ -482,7 +547,9 @@ function initializeGameState(options = {}) {
   celestialParameters = currentPlanetParameters.celestialParameters;
   terraforming = new Terraforming(resources, celestialParameters, currentPlanetParameters.specialAttributes);
   terraforming.initializeTerraforming();
-  terraformingGraphsManager.reset();
+  terraformingGraphsManager.reset({
+    preserveWindowState: preserveManagers && autoTravelContext && autoTravelContext.active
+  });
   if (typeof window !== 'undefined') {
     window.terraformingManager = terraforming;
   }
@@ -555,6 +622,9 @@ function initializeGameState(options = {}) {
   if (!preserveManagers || !patienceManager) {
     patienceManager = new PatienceManager();
   }
+  if (!preserveManagers || !earthManager) {
+    earthManager = new EarthManager();
+  }
   if (!preserveManagers || !followersManager) {
     followersManager = new FollowersManager();
   } else if (preserveManagers && savedFollowersTravelState && followersManager.restoreTravelState) {
@@ -595,6 +665,10 @@ function initializeGameState(options = {}) {
       globalThis.spaceManager = spaceManager;
     }
   }
+  if (!preserveManagers || !achievementManager) {
+    achievementManager = new AchievementManager();
+  }
+  achievementManager.update();
 
   hazardManager = setHazardManager(new HazardManager());
   const planetHazards = currentPlanetParameters && currentPlanetParameters.hazards
@@ -604,6 +678,7 @@ function initializeGameState(options = {}) {
   if (preserveManagers && savedHazardousMachineryTravelState && hazardManager?.hazardousMachineryHazard?.load) {
     hazardManager.hazardousMachineryHazard.load(savedHazardousMachineryTravelState);
   }
+  rebaseDynamicMassInitialGeometryAfterHazards();
 
   // Regenerate UI elements to bind to new objects
   createResourceDisplay(resources); // Also need to update resource display
@@ -615,6 +690,9 @@ function initializeGameState(options = {}) {
     initializeBuildingAlerts();
   }
   createColonyButtons(colonies);
+  if (projectManager.projects.matrioshkaBrain) {
+    projectManager.projects.matrioshkaBrain.applyEffects();
+  }
   initializeColonyAlerts();
   initializeFollowersUI();
   initializeColonySubtabs();
@@ -653,16 +731,14 @@ function initializeGameState(options = {}) {
   if (preserveManagers && skillManager && typeof skillManager.reapplyEffects === 'function') {
     skillManager.reapplyEffects();
   }
+  if (preserveManagers) {
+    applyDifficultySettingEffects();
+  }
   if (preserveManagers && automationManager && typeof automationManager.reapplyEffects === 'function') {
     automationManager.reapplyEffects();
   }
-  if (autoTravelContext && autoTravelContext.active) {
-    autoTravelContext.active = false;
-    autoTravelContext.suppressTabSwitch = false;
-    autoTravelContext.restoreTabState = null;
-  }
   if (preserveManagers && solisManager && typeof solisManager.reapplyEffects === 'function') {
-    solisManager.reapplyEffects();
+    solisManager.reapplyEffects({ grantStartingResources: true });
     hazardManager.applyTravelAdjustments(terraforming);
   }
   if (preserveManagers && warpGateCommand && typeof warpGateCommand.reapplyEffects === 'function') {
@@ -683,8 +759,15 @@ function initializeGameState(options = {}) {
   if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.reapplyEffects === 'function') {
     nanotechManager.reapplyEffects();
   }
+  if (preserveManagers) {
+    researchManager.applyActiveEffects(false);
+    researchManager.reapplyEffects();
+  }
 
   applyPlanetParameterEffects();
+  if (typeof applyRWGEffects === 'function') {
+    applyRWGEffects();
+  }
   hazardManager.ensureCrusaderPresence(terraforming);
   updateColonySubtabsVisibility();
   if (preserveManagers && typeof updateRender === 'function') {
@@ -702,7 +785,7 @@ function initializeGameState(options = {}) {
   }
 }
 
-function updateLogic(delta) {
+function updateLogic(delta, realDelta = delta) {
   if(isEquilibrating){
     return;
   }
@@ -714,11 +797,15 @@ function updateLogic(delta) {
 
   colonySliderSettings.updateColonySlidersEffect();
 
-  if (galaxyManager && typeof galaxyManager.update === 'function') {
+  if (!isCurrentWorldManagerDisabled('galaxyManager') && galaxyManager && typeof galaxyManager.update === 'function') {
     galaxyManager.update(delta);
   }
-  galaxyInvasionManager.update(delta);
-  rwgManager.updateDominionUnlocksFromGalaxy(galaxyManager);
+  if (!isCurrentWorldManagerDisabled('galaxyInvasionManager')) {
+    galaxyInvasionManager.update(delta);
+  }
+  if (!isCurrentWorldManagerDisabled('rwgManager')) {
+    rwgManager.updateDominionUnlocksFromGalaxy(galaxyManager);
+  }
   warpGateNetworkManager.update(delta);
 
   const allStructures = {...buildings, ...colonies};
@@ -738,44 +825,50 @@ function updateLogic(delta) {
 
   autoBuild(allStructures, delta);
 
-  goldenAsteroid.update(delta);
+  goldenAsteroid.update(delta, realDelta);
 
-  if (solisManager) {
+  if (!isCurrentWorldManagerDisabled('solisManager') && solisManager) {
     solisManager.update(delta);
   }
-  if (followersManager && typeof followersManager.update === 'function') {
+  if (!isCurrentWorldManagerDisabled('spaceManager') && spaceManager) {
+    spaceManager.update(delta);
+  }
+  if (!isCurrentWorldManagerDisabled('followersManager') && followersManager && typeof followersManager.update === 'function') {
     followersManager.update(delta);
   }
-  if (automationManager) {
+  if (!isCurrentWorldManagerDisabled('automationManager') && automationManager) {
     automationManager.update(delta);
   }
-  if (warpGateCommand) {
+  if (!isCurrentWorldManagerDisabled('warpGateCommand') && warpGateCommand) {
     warpGateCommand.update(delta);
   }
-  if (artificialManager) {
+  if (!isCurrentWorldManagerDisabled('artificialManager') && artificialManager) {
     artificialManager.update(delta);
   }
-  if (atlasManager) {
+  if (!isCurrentWorldManagerDisabled('atlasManager') && atlasManager) {
     atlasManager.update(delta);
   }
 
-  lifeDesigner.update(delta);
+  if (!isCurrentWorldManagerDisabled('lifeDesigner')) {
+    lifeDesigner.update(delta);
+  }
 
-  milestonesManager.update(delta);
+  if (!isCurrentWorldManagerDisabled('milestonesManager')) {
+    milestonesManager.update(delta);
+  }
 
   // **** Update the Story Manager ****
   // This will check objectives for active events, process completions,
   // apply rewards, and check for/activate newly available events.
   storyManager.update(); // <--- NEW CENTRAL UPDATE CALL
-
-  if (typeof applyRWGEffects === 'function') {
-    applyRWGEffects();
-  }
+  achievementManager.update();
 
   recalculateTotalRates();
 
 
-  patienceManager.update(delta);
+  if (!isCurrentWorldManagerDisabled('patienceManager')) {
+    patienceManager.update(delta);
+  }
   terraformingGraphsManager.update(delta);
 }
 
@@ -789,6 +882,7 @@ function updateRender(force = false, options = {}) {
   updateDayNightDisplay();           // Day/night display is global
   updateResourceDisplay(resources, deltaSeconds);  // Resources are global
   updateWarnings();                  // Global warnings
+  storyManager.updateCurrentObjectiveUI();
   // Always keep alert badges in sync regardless of active tab
   if (typeof updateBuildingAlert === 'function') updateBuildingAlert();
   updateColonyAlert();
@@ -797,13 +891,19 @@ function updateRender(force = false, options = {}) {
   if (typeof updateResearchAlert === 'function') updateResearchAlert();
   if (typeof updateHopeAlert === 'function') updateHopeAlert();
   updateSidebarAutomationToggleVisibility();
+  updateAutomationUI();
   updateAutoTravelLoadingPopupVisibility();
 
   // Gate heavy per-tab UI updates behind tab visibility
   if (typeof document !== 'undefined') {
+    const tabContentCache = updateRender.tabContentCache || (updateRender.tabContentCache = {});
     const isActive = (id) => {
       if (force) return true;
-      const el = document.getElementById(id);
+      let el = tabContentCache[id];
+      if (!el || !el.isConnected) {
+        el = document.getElementById(id);
+        tabContentCache[id] = el;
+      }
       return !!(el && el.classList.contains('active'));
     };
 
@@ -812,16 +912,32 @@ function updateRender(force = false, options = {}) {
     }
 
     if (isActive('colonies')) {
-      updateColonyDisplay(colonies);
-      if (typeof updateGrowthRateDisplay === 'function') {
-        updateGrowthRateDisplay();
+      const renderAllColonySubtabs = forceAllSubtabs;
+      const renderPopulationColonySubtab = renderAllColonySubtabs || isColonySubtabActiveFromState('population-colonies');
+      const renderNanocolonySubtab = renderAllColonySubtabs || isColonySubtabActiveFromState('nanocolony-colonies');
+      const renderFollowersSubtab = renderAllColonySubtabs || isColonySubtabActiveFromState('followers-colonies');
+
+      if (renderPopulationColonySubtab) {
+        updateColonyDisplay(colonies);
+        if (typeof updateGrowthRateDisplay === 'function') {
+          updateGrowthRateDisplay();
+        }
+        updateColonySlidersUI();
       }
-      updateColonySlidersUI();
-      updateFollowersUI();
+      if (
+        nanotechManager &&
+        renderNanocolonySubtab
+      ) {
+        nanotechManager.updateUI();
+      }
+      if (renderFollowersSubtab) {
+        updateFollowersUI();
+      }
     }
 
     if (isActive('special-projects')) {
       renderProjects();
+      if (projectManager) projectManager.uiDirty = false;
     }
 
     if (isActive('research')) {
@@ -829,6 +945,9 @@ function updateRender(force = false, options = {}) {
     }
 
     if (isActive('terraforming')) {
+      if (hazardManager && hazardManager.uiDirty) {
+        hazardManager.updateUI();
+      }
       updateTerraformingUI(deltaSeconds, { forceAllSubtabs });
       // Ensure the visualizer resizes once the tab becomes visible
       if (!suppressPlanetVisualizerRuntime && typeof window !== 'undefined' && window.planetVisualizer && typeof window.planetVisualizer.onResize === 'function') {
@@ -852,21 +971,45 @@ function updateRender(force = false, options = {}) {
             ? Math.max(0, Math.min(1, terraforming.luminosity.cloudFraction))
             : waterFrac;
           pv.viz.coverage.cloud = pct(cloudFrac);
+          pv.viz.coverage.ecumenopolis = GAME_FEATURES.steamExclusiveEcumenopolisVisualizer
+            ? pct(getEcumenopolisLandFraction(terraforming))
+            : 0;
+          pv.viz.coverage.nanoworld = projectManager.projects.nanoworld.isCompleted ? 100 : 0;
 
           // Zonal coverages for rendering bands
           const zones = ['tropical', 'temperate', 'polar'];
           const zonal = {};
+          let hazardousLifeSum = 0;
+          let zoneWeightSum = 0;
           for (const z of zones) {
             // Returns fractions 0..1
             const f = calculateZonalSurfaceFractions(terraforming, z);
+            const hazardousLife = Math.max(0, Math.min(1, terraforming.zonalCoverageCache[z]?.hazardousBiomass || 0));
+            const zoneWeight = terraforming.getZoneWeight ? terraforming.getZoneWeight(z) : getZonePercentage(z);
+            hazardousLifeSum += hazardousLife * zoneWeight;
+            zoneWeightSum += zoneWeight;
             zonal[z] = {
               water: Math.max(0, Math.min(1, f.ocean || 0)),
               ice: Math.max(0, Math.min(1, f.ice || 0)),
+              life: Math.max(0, Math.min(1, f.biomass || 0)),
+              hazardousLife,
             };
           }
+          if (
+            spaceManager.getCurrentPlanetKey() === 'earth' &&
+            earthManager &&
+            earthManager.enabled &&
+            earthManager.getActionCount('addWater') >= EARTH_RECONSTRUCTION_MAX_WATER_STEPS
+          ) {
+            zonal.tropical.water = 0.71;
+            zonal.temperate.water = 0.70;
+          }
+          pv.viz.coverage.hazardousLife = pct(zoneWeightSum > 0 ? hazardousLifeSum / zoneWeightSum : 0);
           pv.viz.zonalCoverage = zonal;
           if (typeof pv.setBaseColor === 'function') {
-            const baseColor = currentPlanetParameters?.visualization?.baseColor;
+            const baseColor = pv.getGameBaseColor
+              ? pv.getGameBaseColor()
+              : currentPlanetParameters?.visualization?.baseColor;
             pv.setBaseColor(baseColor, { fromGame: true });
           }
         }
@@ -877,7 +1020,14 @@ function updateRender(force = false, options = {}) {
 
     if (isActive('space') && typeof updateSpaceUI === 'function') {
       updateSpaceUI();
-      if (typeof updateGalaxyUI === 'function') updateGalaxyUI({ force: force || forceAllSubtabs });
+      if (typeof updateGalaxyUI === 'function') {
+        const forceGalaxy = force || forceAllSubtabs || !!(galaxyManager && galaxyManager.forceUIRefresh);
+        updateGalaxyUI({ force: forceGalaxy });
+        if (galaxyManager) {
+          galaxyManager.uiDirty = false;
+          galaxyManager.forceUIRefresh = false;
+        }
+      }
       if (typeof updateRWGEffectsUI === 'function') updateRWGEffectsUI();
     }
 
@@ -887,6 +1037,7 @@ function updateRender(force = false, options = {}) {
 
     if (isActive('settings')) {
       updateStatisticsDisplay();
+      updateAchievementsDisplay();
     }
   } else {
     // Non-DOM environment fallback (tests or headless): keep previous behavior
@@ -894,10 +1045,13 @@ function updateRender(force = false, options = {}) {
     updateColonyDisplay(colonies);
     if (typeof updateGrowthRateDisplay === 'function') updateGrowthRateDisplay();
     updateColonySlidersUI();
+    if (nanotechManager) nanotechManager.updateUI();
     renderProjects();
+    if (projectManager) projectManager.uiDirty = false;
     updateResearchUI();
     updateTerraformingUI(deltaSeconds, { forceAllSubtabs });
     updateStatisticsDisplay();
+    updateAchievementsDisplay();
     updateHopeUI();
     if (typeof updateSpaceUI === 'function') updateSpaceUI();
     if (typeof updateGalaxyUI === 'function') updateGalaxyUI({ force: force || forceAllSubtabs });
@@ -925,9 +1079,10 @@ function update(time, delta) {
   const quantizedDelta = Math.floor((scaledDelta + logicDeltaCarryMs) / LOGIC_DELTA_QUANTUM_MS) * LOGIC_DELTA_QUANTUM_MS;
   logicDeltaCarryMs = scaledDelta + logicDeltaCarryMs - quantizedDelta;
   if (quantizedDelta <= 0) {
+    goldenAsteroid.update(0, deltaMs);
     return;
   }
-  updateLogic(quantizedDelta);   // Update game state
+  updateLogic(quantizedDelta, deltaMs);   // Update game state
   updateRender.lastDelta = quantizedDelta;
   updateRender();             // Render updated game state
 
@@ -937,8 +1092,12 @@ function update(time, delta) {
 function startNewGame() {
   defaultPlanet = 'mars';
   currentPlanetParameters = getPlanetParameters('mars');
+  resetDifficultySettings();
   totalPlayTimeSeconds = 0;
   totalRealPlayTimeSeconds = 0;
+  birchWorldTerraformTimeSeconds = null;
+  birchWorldTerraformRealTimeSeconds = null;
+  gameCompleted = false;
   initializeGameState();
   if (typeof openTerraformingWorldTab === 'function') {
     openTerraformingWorldTab();

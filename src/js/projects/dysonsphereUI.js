@@ -32,7 +32,7 @@ function renderDysonSphereUI(project, container) {
       </div>
       <div class="stats-grid three-col project-summary-grid">
         <div class="stat-item project-summary-box"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.sphereCount', 'Sphere Count:')}</span><span id="dsph-sphere-count" class="stat-value"></span></div>
-        <div class="stat-item project-summary-box"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.maxSpheres', 'Max Spheres:')}</span><span id="dsph-max-spheres" class="stat-value"></span></div>
+        <div class="stat-item project-summary-box"><span class="stat-label" id="dsph-max-spheres-label">${getDysonSphereText('ui.projects.dysonSphere.maxSpheres', 'Max Spheres:')}</span><span id="dsph-max-spheres" class="stat-value"></span></div>
         <div class="stat-item project-summary-box"><span class="stat-label">${getDysonSphereText('ui.projects.dysonSphere.maxPower', 'Max Power:')}</span><span id="dsph-max-power" class="stat-value"></span></div>
       </div>
       <div class="stats-grid two-col collector-cost-container project-summary-grid">
@@ -69,7 +69,9 @@ function renderDysonSphereUI(project, container) {
   collectorSettingsRow.appendChild(advancedSettingsButton);
   const startButton = card.querySelector('#dsph-start');
   const collectorCostLabel = card.querySelector('#dsph-collector-cost-label');
+  const maxSpheresLabel = card.querySelector('#dsph-max-spheres-label');
   let collectorCostTooltipContent = null;
+  let maxSpheresTooltipContent = null;
   if (collectorCostLabel && typeof attachDynamicInfoTooltip === 'function') {
     const collectorCostInfo = document.createElement('span');
     collectorCostInfo.className = 'info-tooltip-icon';
@@ -80,6 +82,13 @@ function renderDysonSphereUI(project, container) {
       getDysonSphereText('ui.projects.dysonSphere.collectorCostTooltip', 'After the first sphere worth of power (5e25), Dyson Sphere collector expansion adds a fixed superalloy cost per collector to build additional frames.')
     );
   }
+  if (maxSpheresLabel && typeof attachDynamicInfoTooltip === 'function') {
+    const maxSpheresInfo = document.createElement('span');
+    maxSpheresInfo.className = 'info-tooltip-icon';
+    maxSpheresInfo.innerHTML = '&#9432;';
+    maxSpheresLabel.appendChild(maxSpheresInfo);
+    maxSpheresTooltipContent = attachDynamicInfoTooltip(maxSpheresInfo, '');
+  }
 
   projectElements[project.name] = {
     ...projectElements[project.name],
@@ -89,6 +98,7 @@ function renderDysonSphereUI(project, container) {
     totalPowerDisplay: card.querySelector('#dsph-total-power'),
     sphereCountDisplay: card.querySelector('#dsph-sphere-count'),
     maxSpheresDisplay: card.querySelector('#dsph-max-spheres'),
+    maxSpheresTooltipContent,
     maxPowerDisplay: card.querySelector('#dsph-max-power'),
     costDisplay: card.querySelector('#dsph-collector-cost'),
     costTooltipContent: collectorCostTooltipContent,
@@ -182,6 +192,7 @@ function updateDysonSphereUI(project) {
     const autoCheckbox = sphereCard.querySelector('#dsph-auto');
     const travelResetCheckbox = sphereCard.querySelector('#dsph-auto-travel-reset');
     const collectorCostInfo = sphereCard.querySelector('#dsph-collector-cost-label .info-tooltip-icon');
+    const maxSpheresInfo = sphereCard.querySelector('#dsph-max-spheres-label .info-tooltip-icon');
     projectElements[project.name] = {
       ...els,
       sphereCard,
@@ -190,6 +201,7 @@ function updateDysonSphereUI(project) {
       totalPowerDisplay: sphereCard.querySelector('#dsph-total-power'),
       sphereCountDisplay: sphereCard.querySelector('#dsph-sphere-count'),
       maxSpheresDisplay: sphereCard.querySelector('#dsph-max-spheres'),
+      maxSpheresTooltipContent: maxSpheresInfo ? maxSpheresInfo.querySelector('.resource-tooltip.dynamic-tooltip') : null,
       maxPowerDisplay: sphereCard.querySelector('#dsph-max-power'),
       costDisplay: sphereCard.querySelector('#dsph-collector-cost'),
       costTooltipContent: collectorCostInfo ? collectorCostInfo.querySelector('.resource-tooltip.dynamic-tooltip-content') : null,
@@ -221,6 +233,9 @@ function updateDysonSphereUI(project) {
       ? project.getAllowedMaxSphereCount()
       : 1;
     els.maxSpheresDisplay.textContent = formatNumber(maxSpheres, false, 2);
+  }
+  if (els.maxSpheresTooltipContent) {
+    els.maxSpheresTooltipContent.textContent = project.getMaxSphereTooltipText();
   }
   if (els.maxPowerDisplay) {
     const maxPower = typeof project.getMaximumPowerValue === 'function'
@@ -266,7 +281,7 @@ function updateDysonSphereUI(project) {
   }
   if (!project.isCompleted) {
     els.startButton.textContent = getDysonSphereText('ui.projects.dysonSphere.buildFrame', 'Build the frame to deploy collectors');
-    els.startButton.style.background = '#f44336';
+    els.startButton.style.background = getStatusColor('failure');
     els.startButton.disabled = true;
     return;
   }
@@ -275,21 +290,21 @@ function updateDysonSphereUI(project) {
   if (project.isCollectorContinuous()) {
     if (project.autoContinuousOperation && (project.isCompleted || project.collectors > 0)) {
       els.startButton.textContent = getDysonSphereText('ui.projects.dysonSphere.continuousOn', 'Continuous (On)');
-      els.startButton.style.background = '#4caf50';
+      els.startButton.style.background = getStatusColor('success');
     } else {
       els.startButton.textContent = getDysonSphereText('ui.projects.dysonSphere.continuousOff', 'Continuous (Off)');
-      els.startButton.style.background = '#f44336';
+      els.startButton.style.background = getStatusColor('failure');
     }
   } else if (project.collectorProgress > 0) {
     const pct = ((project.collectorDuration - project.collectorProgress) / project.collectorDuration) * 100;
     const secs = Math.max(0, project.collectorProgress / 1000).toFixed(2);
     els.startButton.textContent = getDysonSphereText('ui.projects.dysonSphere.deploying', 'Deploying ({time}s)', { time: secs });
-    els.startButton.style.background = `linear-gradient(to right, #4caf50 ${pct}%, #ccc ${pct}%)`;
+    els.startButton.style.background = getStatusProgressBackground(pct);
   } else {
     const can = project.canStartCollector();
-    const dur = Math.round(project.collectorDuration / 1000);
+    const dur = (project.collectorDuration / 1000).toFixed(2);
     els.startButton.textContent = getDysonSphereText('ui.projects.dysonSphere.deployCollector', 'Deploy Collector ({time}s)', { time: dur });
-    els.startButton.style.background = can ? '#4caf50' : '#f44336';
+    els.startButton.style.background = can ? getStatusColor('success') : getStatusColor('failure');
     els.startButton.disabled = !can;
   }
 }

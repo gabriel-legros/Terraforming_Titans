@@ -1,6 +1,6 @@
-let journalEntriesData = []; // Array to store entry text currently shown
+let journalEntriesData = []; // Legacy/ad hoc entry text currently shown; sourced entries store null
 let journalEntrySources = []; // Matching array of entry sources
-let journalHistoryData = []; // Array to store all journal history text
+let journalHistoryData = []; // Legacy/ad hoc journal history text; sourced entries store null
 let journalHistorySources = []; // Matching array of history entry sources
 let journalCollapsed = false;
 let journalUnread = false;
@@ -11,6 +11,7 @@ let journalTyping = false;  // flag indicating an entry is currently being typed
 let journalCurrentEventId = null; // id of the event whose text is typing
 let journalTypingSession = 0;
 let journalTypingFrameId = 0;
+let journalTypingSkip = null;
 let journalUserScrolling = false;
 let journalChapterIndex = 0;
 let journalIndexVisible = false;
@@ -84,12 +85,20 @@ const GREEN_TOKEN = '$GREEN$';
 const DIAGNOSTIC_CLASS = 'diagnostic-text';
 const ORANGE_TOKEN = '$ORANGE$';
 const ORANGE_CLASS = 'orange-text';
+const BLUE_TOKEN = '$BLUE$';
+const BLUE_CLASS = 'blue-text';
+const PINK_TOKEN = '$PINK$';
+const PINK_CLASS = 'pink-text';
 const JOURNAL_WHITE_CLASS = 'journal-white-text';
+const JOURNAL_LIE_CLASS = 'journal-lie-text';
 const JOURNAL_INLINE_CLASSES = new Set([
   PROMETHEUS_CLASS,
   DIAGNOSTIC_CLASS,
   ORANGE_CLASS,
-  JOURNAL_WHITE_CLASS
+  BLUE_CLASS,
+  PINK_CLASS,
+  JOURNAL_WHITE_CLASS,
+  JOURNAL_LIE_CLASS
 ]);
 
 const JOURNAL_LINE_TOKENS = [
@@ -97,19 +106,49 @@ const JOURNAL_LINE_TOKENS = [
   { token: RED_TOKEN, className: PROMETHEUS_CLASS, label: '' },
   { token: DIAGNOSTIC_TOKEN, className: DIAGNOSTIC_CLASS, label: '' },
   { token: GREEN_TOKEN, className: DIAGNOSTIC_CLASS, label: '' },
-  { token: ORANGE_TOKEN, className: ORANGE_CLASS, label: '' }
+  { token: ORANGE_TOKEN, className: ORANGE_CLASS, label: '' },
+  { token: BLUE_TOKEN, className: BLUE_CLASS, label: '' },
+  { token: PINK_TOKEN, className: PINK_CLASS, label: '' }
 ];
 
 function buildJournalSegments(text) {
   const lines = joinLines(text).split('\n');
   const segments = [];
   for (let i = 0; i < lines.length; i++) {
-    segments.push(...buildJournalLineSegments(lines[i]));
+    segments.push(...buildJournalLieSegments(buildJournalLineSegments(lines[i])));
     if (i < lines.length - 1) {
       segments.push({ isBreak: true });
     }
   }
   return segments;
+}
+
+function buildJournalLieSegments(segments) {
+  const expanded = [];
+  for (const segment of segments) {
+    if (segment.isBreak || segment.className || !segment.text || segment.text.indexOf('|') === -1) {
+      expanded.push(segment);
+      continue;
+    }
+    let lieOpen = false;
+    let buffer = '';
+    for (let i = 0; i < segment.text.length; i++) {
+      const char = segment.text[i];
+      if (char === '|') {
+        if (buffer) {
+          expanded.push({ text: buffer, className: lieOpen ? JOURNAL_LIE_CLASS : null });
+          buffer = '';
+        }
+        lieOpen = !lieOpen;
+      } else {
+        buffer += char;
+      }
+    }
+    if (buffer) {
+      expanded.push({ text: buffer, className: lieOpen ? JOURNAL_LIE_CLASS : null });
+    }
+  }
+  return expanded;
 }
 
 function buildJournalLineSegments(line) {
@@ -199,28 +238,57 @@ function getChapterNumberFromSource(src) {
   return null;
 }
 
+function compactJournalText(text, source) {
+  return source ? null : text;
+}
+
+function compactJournalTexts(entries, sources) {
+  const compacted = [];
+  for (let i = 0; i < entries.length; i++) {
+    compacted.push(compactJournalText(entries[i], sources && sources[i]));
+  }
+  return compacted;
+}
+
+function getResolvedJournalText(storedText, source) {
+  if (storedText !== null && storedText !== undefined) {
+    return storedText;
+  }
+  const sourceText = getJournalTextFromSource(source);
+  return sourceText ? resolveStoryPlaceholders(sourceText) : '';
+}
+
+function getResolvedJournalTexts(entries, sources) {
+  const resolved = [];
+  for (let i = 0; i < entries.length; i++) {
+    resolved.push(getResolvedJournalText(entries[i], sources && sources[i]));
+  }
+  return resolved;
+}
+
 function getJournalChapterGroups() {
   ensureJournalWorldData();
   const groups = [];
+  const groupsByKey = new Map();
   let current = null;
-  let currentNum = null;
-  let currentWorldId = null;
   for (let i = 0; i < journalHistoryData.length; i++) {
     const src = journalHistorySources[i];
-    const text = journalHistoryData[i];
+    const text = getResolvedJournalText(journalHistoryData[i], src);
     const chNum = getChapterNumberFromSource(src);
     const meta = src && src.id ? journalChapterMetaById && journalChapterMetaById.get(src.id) : null;
     const worldId = meta ? meta.worldId : null;
     if (chNum !== null) {
-      if (chNum !== currentNum || worldId !== currentWorldId) {
-        currentNum = chNum;
-        currentWorldId = worldId;
-        current = chNum >= 0 ? { chapterId: src.id, chapterNum: chNum, worldId, entries: [], sources: [] } : null;
-        if (current) groups.push(current);
+      if (chNum < 0) {
+        continue;
+      }
+      const key = `${worldId || ''}:${chNum}`;
+      current = groupsByKey.get(key);
+      if (!current) {
+        current = { chapterId: src.id, chapterNum: chNum, worldId, entries: [], sources: [] };
+        groupsByKey.set(key, current);
+        groups.push(current);
       }
     } else if (!current) {
-      currentNum = null;
-      currentWorldId = null;
       current = { chapterId: null, chapterNum: null, worldId: null, entries: [], sources: [] };
       // group without chapter number is not shown when navigating but keep for completeness
     }
@@ -251,7 +319,9 @@ function ensureJournalWorldData() {
     { id: 'hades', label: 'Hades', source: getStorySource(() => progressHades, './story/hades.js') },
     { id: 'poseidon', label: 'Poseidon', source: getStorySource(() => progressPoseidon, './story/poseidon.js') },
     { id: 'styx', label: 'Styx', source: getStorySource(() => progressStyx, './story/styx.js') },
-    { id: 'zeus', label: 'Zeus', source: getStorySource(() => progressZeus, './story/zeus.js') }
+    { id: 'zeus', label: 'Zeus', source: getStorySource(() => progressZeus, './story/zeus.js') },
+    { id: 'olympus', label: 'Olympus', source: getStorySource(() => progressOlympus, './story/olympus.js') },
+    { id: 'earth', label: 'Earth', source: getStorySource(() => progressEarth, './story/earth.js') }
   ].filter(world => world.source && Array.isArray(world.source.chapters));
   const standardWorlds = [];
   worlds.forEach(world => {
@@ -374,7 +444,7 @@ function openJournalIndex() {
   ensureJournalWorldData();
   journalIndexVisible = true;
   journalIndexIcon.classList.add('active');
-  journalIndexIcon.title = 'Hide journal index';
+  journalIndexIcon.title = t('ui.journal.hideJournalIndex', {}, 'Hide journal index');
   journalIndexContainer.classList.remove('hidden');
   journalEntriesContainer.classList.add('hidden');
   journalObjectiveContainer.classList.add('hidden');
@@ -385,7 +455,7 @@ function openJournalIndex() {
 function closeJournalIndex() {
   journalIndexVisible = false;
   journalIndexIcon.classList.remove('active');
-  journalIndexIcon.title = 'Show journal index';
+  journalIndexIcon.title = t('ui.journal.showJournalIndex', {}, 'Show journal index');
   journalIndexContainer.classList.add('hidden');
   journalEntriesContainer.classList.remove('hidden');
   journalObjectiveContainer.classList.remove('hidden');
@@ -450,9 +520,10 @@ function renderJournalEntries(entries) {
 
 function setDisplayedJournalEntries(entries, entrySources) {
   const journalContainer = journalContainerElement;
-  renderJournalEntries(entries);
-  journalEntriesData = entries.slice();
   journalEntrySources = entrySources ? entrySources.slice() : new Array(entries.length).fill(null);
+  const displayEntries = getResolvedJournalTexts(entries, journalEntrySources);
+  renderJournalEntries(displayEntries);
+  journalEntriesData = compactJournalTexts(entries, journalEntrySources);
   if (!journalUserScrolling && journalContainer) {
     journalContainer.scrollTop = journalContainer.scrollHeight;
   }
@@ -462,6 +533,7 @@ function stopJournalTyping(completeEvent) {
   journalTypingSession += 1;
   cancelAnimationFrame(journalTypingFrameId);
   journalTypingFrameId = 0;
+  journalTypingSkip = null;
   if (completeEvent) {
     const storyEvent = new CustomEvent('storyJournalFinishedTyping', { detail: { eventId: journalCurrentEventId } });
     document.dispatchEvent(storyEvent);
@@ -470,22 +542,32 @@ function stopJournalTyping(completeEvent) {
   journalCurrentEventId = null;
 }
 
+function skipJournalTyping() {
+  if (!journalTypingSkip) {
+    return false;
+  }
+  journalTypingSkip();
+  return true;
+}
+
 function addJournalEntry(text, eventId = null, source = null) {
   let entryText = joinLines(text);
   entryText = resolveStoryPlaceholders(entryText);
 
-  let separator = false;
   if (source && source.type === 'project' &&
       progressData && progressData.storyProjects && progressData.storyProjects[source.id]) {
     const proj = progressData.storyProjects[source.id];
-    const total = proj.attributes && Array.isArray(proj.attributes.storySteps)
-      ? proj.attributes.storySteps.length : 0;
+    const projectInstance = projectManager && projectManager.projects && projectManager.projects[source.id];
+    const total = projectInstance && projectInstance.getJournalStepTotal
+      ? projectInstance.getJournalStepTotal()
+      : (proj.attributes && Array.isArray(proj.attributes.storySteps)
+        ? proj.attributes.storySteps.length : 0);
     const stepNum = (typeof source.step === 'number') ? source.step + 1 : 1;
-    entryText = `${proj.name} ${stepNum}/${total}: ${entryText}`;
-    separator = true;
+    const stepLabel = source.stepLabel || `${stepNum}/${total}`;
+    entryText = `${proj.name} ${stepLabel}: ${entryText}`;
   }
 
-  journalQueue.push({ text: entryText, eventId, source, separator });
+  journalQueue.push({ text: entryText, eventId, source });
   if (!journalTyping) {
     processNextJournalEntry();
   }
@@ -501,44 +583,43 @@ function processNextJournalEntry() {
   journalTyping = true;
   journalTypingSession += 1;
   const sessionId = journalTypingSession;
-  const { text, eventId, source, separator } = journalQueue.shift();
+  const { text, eventId, source } = journalQueue.shift();
   journalCurrentEventId = eventId;
   const journalEntries = journalEntriesContainer;
   const journalContainer = journalContainerElement;
   const segments = buildJournalSegments(text);
 
   const srcObj = source || (eventId ? { type: 'chapter', id: eventId } : null);
-  journalHistoryData.push(text); // Also keep it in the full history
+  journalHistoryData.push(compactJournalText(text, srcObj)); // Also keep it in the full history
   journalHistorySources.push(srcObj);
   const groups = getJournalChapterGroups();
-  const targetGroupIndex = groups.length > 0 ? groups.length - 1 : 0;
-  const showingTargetGroup = !journalIndexVisible && journalChapterIndex === targetGroupIndex;
-
-  if (!showingTargetGroup) {
-    if (journalIndexVisible) {
-      closeJournalIndex();
-    }
-    const targetGroup = groups[targetGroupIndex];
-    if (targetGroup) {
-      setDisplayedJournalEntries(targetGroup.entries.slice(0, -1), targetGroup.sources.slice(0, -1));
-      journalChapterIndex = targetGroupIndex;
-    } else {
-      setDisplayedJournalEntries([], []);
-      journalChapterIndex = 0;
+  const targetChapter = getChapterNumberFromSource(srcObj);
+  const targetMeta = srcObj && srcObj.id ? journalChapterMetaById && journalChapterMetaById.get(srcObj.id) : null;
+  const targetWorldId = targetMeta ? targetMeta.worldId : null;
+  let targetGroupIndex = groups.length > 0 ? groups.length - 1 : 0;
+  if (targetChapter !== null) {
+    const matchingIndex = groups.findIndex(group => group.chapterNum === targetChapter && group.worldId === targetWorldId);
+    if (matchingIndex >= 0) {
+      targetGroupIndex = matchingIndex;
     }
   }
+  if (journalIndexVisible) {
+    closeJournalIndex();
+  }
+  const targetGroup = groups[targetGroupIndex];
+  if (targetGroup) {
+    setDisplayedJournalEntries(targetGroup.entries.slice(0, -1), targetGroup.sources.slice(0, -1));
+    journalChapterIndex = targetGroupIndex;
+  } else {
+    setDisplayedJournalEntries([], []);
+    journalChapterIndex = 0;
+  }
 
-  journalEntriesData.push(text);
+  journalEntriesData.push(compactJournalText(text, srcObj));
   journalEntrySources.push(srcObj);
   updateJournalNavArrows();
   if (journalIndexVisible) {
     buildJournalIndex();
-  }
-
-  if (separator) {
-    const hr = document.createElement('hr');
-    hr.classList.add('journal-entry-separator');
-    journalEntries.appendChild(hr);
   }
 
   const entry = document.createElement('p');
@@ -549,9 +630,58 @@ function processNextJournalEntry() {
   let lastTimestamp = 0;
   let lastChar = '';
   let currentNode = null;
+  let entryTypingComplete = false;
+
+  const appendRemainingJournalText = () => {
+    while (segmentIndex < segments.length) {
+      const segment = segments[segmentIndex];
+      if (segment.isBreak) {
+        entry.appendChild(document.createElement('br'));
+        segmentIndex += 1;
+        charIndex = 0;
+        currentNode = null;
+        continue;
+      }
+      if (!currentNode) {
+        currentNode = segment.className
+          ? document.createElement('span')
+          : document.createTextNode('');
+        if (segment.className) {
+          currentNode.className = segment.className;
+        }
+        entry.appendChild(currentNode);
+      }
+      const remaining = segment.text.slice(charIndex);
+      if (currentNode.nodeType === 3) {
+        currentNode.nodeValue += remaining;
+      } else {
+        currentNode.textContent += remaining;
+      }
+      segmentIndex += 1;
+      charIndex = 0;
+      currentNode = null;
+    }
+  };
+
+  const finishCurrentJournalEntry = () => {
+    if (entryTypingComplete) {
+      return;
+    }
+    entryTypingComplete = true;
+    cancelAnimationFrame(journalTypingFrameId);
+    journalTypingFrameId = 0;
+    appendRemainingJournalText();
+    if (!journalUserScrolling && journalContainer) {
+      journalContainer.scrollTop = journalContainer.scrollHeight;
+    }
+    journalTypingSkip = null;
+    const storyEvent = new CustomEvent('storyJournalFinishedTyping', { detail: { eventId: journalCurrentEventId } });
+    document.dispatchEvent(storyEvent);
+    processNextJournalEntry();
+  };
 
   const typeLetter = (timestamp) => {
-    if (sessionId !== journalTypingSession) {
+    if (entryTypingComplete || sessionId !== journalTypingSession) {
       return;
     }
     if (!lastTimestamp) {
@@ -610,13 +740,11 @@ function processNextJournalEntry() {
         journalContainer.scrollTop = journalContainer.scrollHeight;
       }
 
-      const storyEvent = new CustomEvent('storyJournalFinishedTyping', { detail: { eventId: journalCurrentEventId } });
-      document.dispatchEvent(storyEvent);
-
-      processNextJournalEntry();
+      finishCurrentJournalEntry();
     }
   };
 
+  journalTypingSkip = finishCurrentJournalEntry;
   journalTypingFrameId = requestAnimationFrame(typeLetter);
 
   if (journalCollapsed) {
@@ -630,11 +758,11 @@ function loadJournalEntries(entries, history = null, entrySources = null, histor
   journalQueue = [];
   setDisplayedJournalEntries(entries, entrySources);
   if (history) {
-    journalHistoryData = history.slice();
     journalHistorySources = historySourcesParam ? historySourcesParam.slice() : journalEntrySources.slice();
+    journalHistoryData = compactJournalTexts(history, journalHistorySources);
   } else {
-    journalHistoryData = entries.slice();
     journalHistorySources = journalEntrySources.slice();
+    journalHistoryData = compactJournalTexts(entries, journalHistorySources);
   }
   journalChapterIndex = getJournalChapterGroups().length - 1;
   updateJournalNavArrows();
@@ -652,7 +780,7 @@ function clearJournal() {
   if (journalQueue && journalQueue.length) {
     journalQueue.forEach(({ text, eventId, source }) => {
       const srcObj = source || (eventId ? { type: 'chapter', id: eventId } : null);
-      journalHistoryData.push(text);
+      journalHistoryData.push(compactJournalText(text, srcObj));
       journalHistorySources.push(srcObj);
     });
   }
@@ -727,19 +855,19 @@ function showJournalHistory() {
   windowDiv.classList.add('history-window');
 
   const title = document.createElement('h2');
-  title.textContent = 'Journal History';
+  title.textContent = t('ui.journal.historyTitle', {}, 'Journal History');
 
   const entriesContainer = document.createElement('div');
   entriesContainer.classList.add('history-entries');
-  journalHistoryData.forEach(text => {
+  journalHistoryData.forEach((text, index) => {
     const entry = document.createElement('p');
-    appendJournalSegments(entry, buildJournalSegments(text));
+    appendJournalSegments(entry, buildJournalSegments(getResolvedJournalText(text, journalHistorySources[index])));
     entriesContainer.appendChild(entry);
   });
 
   const closeBtn = document.createElement('button');
   closeBtn.classList.add('history-close-button');
-  closeBtn.textContent = 'Close';
+  closeBtn.textContent = t('ui.common.close', {}, 'Close');
   closeBtn.addEventListener('click', () => {
     document.body.removeChild(overlay);
   });
@@ -768,13 +896,32 @@ function getJournalTextFromSource(source) {
     }
   } else if (source.type === 'project') {
     const proj = progressData && progressData.storyProjects && progressData.storyProjects[source.id];
-    const steps = proj && proj.attributes && (proj.attributes.storyStepLines || proj.attributes.storySteps);
+    const projectInstance = projectManager && projectManager.projects && projectManager.projects[source.id];
+    if (projectInstance && projectInstance.getJournalStepText) {
+      let text = projectInstance.getJournalTextForSource
+        ? projectInstance.getJournalTextForSource(source)
+        : projectInstance.getJournalStepText(source.step);
+      if (text) {
+        const total = projectInstance.getJournalStepTotal ? projectInstance.getJournalStepTotal() : 0;
+        const stepNum = (typeof source.step === 'number') ? source.step + 1 : 1;
+        const stepLabel = source.stepLabel || `${stepNum}/${total}`;
+        text = `${proj.name} ${stepLabel}: ${text}`;
+        return text;
+      }
+    }
+    const steps = proj && proj.attributes && (
+      proj.attributes.formattedStoryStepLines ||
+      proj.attributes.formattedStorySteps ||
+      proj.attributes.storyStepLines ||
+      proj.attributes.storySteps
+    );
     if (steps && steps[source.step] !== undefined) {
       let text = joinLines(steps[source.step]);
       if (proj && proj.name) {
         const total = Array.isArray(proj.attributes?.storySteps) ? proj.attributes.storySteps.length : (Array.isArray(proj.attributes?.storyStepLines) ? proj.attributes.storyStepLines.length : steps.length);
         const stepNum = (typeof source.step === 'number') ? source.step + 1 : 1;
-        text = `${proj.name} ${stepNum}/${total}: ${text}`;
+        const stepLabel = source.stepLabel || `${stepNum}/${total}`;
+        text = `${proj.name} ${stepLabel}: ${text}`;
       }
       return text;
     }
@@ -784,6 +931,10 @@ function getJournalTextFromSource(source) {
 
 function mapSourcesToText(sources) {
   return (sources || []).map(getJournalTextFromSource);
+}
+
+function mapStoredJournalEntriesToText(entries, sources) {
+  return getResolvedJournalTexts(entries || [], sources || []);
 }
 
 function initializeJournalUI() {
@@ -838,9 +989,7 @@ function initializeJournalUI() {
   initializeSidebarAutomationUI();
 }
 
-initializeJournalUI();
-
-document.addEventListener('DOMContentLoaded', () => {
+function initializeJournalDom() {
   initializeJournalUI();
   loadJournalEntries(journalEntriesData, journalHistoryData, journalEntrySources, journalHistorySources);
-});
+}

@@ -27,8 +27,53 @@ function normalizeBuildingCount(value) {
   }));
 }
 
+function normalizeSignedBuildingCount(value) {
+  if (value === undefined || value === null || value === '') {
+    return 0n;
+  }
+  if (typeof value === 'bigint') {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return 0n;
+    }
+    if (/^-?\d+$/.test(trimmed)) {
+      return BigInt(trimmed);
+    }
+  }
+  const numeric = Number(value) || 0;
+  if (numeric === 0) {
+    return 0n;
+  }
+  if (Number.isSafeInteger(numeric)) {
+    return BigInt(Math.trunc(numeric));
+  }
+  const sign = numeric < 0 ? -1n : 1n;
+  const absString = Math.floor(Math.abs(numeric)).toLocaleString('fullwide', {
+    useGrouping: false,
+    maximumFractionDigits: 0
+  });
+  return BigInt(absString) * sign;
+}
+
 function buildingCountToNumber(value) {
   return Number(normalizeBuildingCount(value));
+}
+
+function bigIntToConservativeNumber(value) {
+  if (value <= 0n) {
+    return 0;
+  }
+  if (value <= BigInt(Number.MAX_SAFE_INTEGER)) {
+    return Number(value);
+  }
+  const digits = value.toString();
+  const significantDigits = 15;
+  const head = digits.slice(0, significantDigits);
+  const conservativeText = `${head}${'0'.repeat(Math.max(0, digits.length - significantDigits))}`;
+  return Number(conservativeText);
 }
 
 // Building Class (Core Game Logic)
@@ -67,6 +112,12 @@ class Building extends EffectableEntity {
     this.active = 0n;
     this.productivity = 0;
     this.displayProductivity = 0;
+    this.maintenanceProductivity = 1;
+    this.productivityLimitInfo = {
+      target: 0,
+      displayTarget: 0,
+      factors: [],
+    };
     this.isHidden = false; // track whether the building is hidden in the UI
     this.permanentlyDisabled = false;
     this.alertedWhenUnlocked = this.unlocked ? true : false;
@@ -85,6 +136,7 @@ class Building extends EffectableEntity {
     this.maintenanceCost = this.calculateMaintenanceCost();
     this.currentProduction = {};
     this.currentConsumption = {};
+    this.currentFactoryHeatConsumption = null;
     this.currentMaintenance = {};
     this.currentWasteCleanupSlack = {};
     this._tickEffectCache = null;
@@ -99,7 +151,8 @@ class Building extends EffectableEntity {
     this.recipes = config.recipes || null;
     this.defaultRecipe = config.defaultRecipe || null;
     this.currentRecipeKey = this.defaultRecipe || (this.recipes ? Object.keys(this.recipes)[0] : null);
-    this._baseConsumption = JSON.parse(JSON.stringify(this.consumption || {}));
+    this._legacyBaseConsumption = JSON.parse(JSON.stringify(this.consumption || {}));
+    this._baseConsumption = this.getDifficultyConsumption(this._legacyBaseConsumption, this.realisticEnergyConsumption);
     this._applyRecipeMapping();
   }
 
@@ -141,7 +194,11 @@ class Building extends EffectableEntity {
         ignoreResourceForProductivityResourceDisplay,
         alwaysShowProduction,
         alwaysShowConsumption,
+        realisticEnergyConsumption,
+        factoryHeatCoefficient,
+        factoryCoolingCoefficient,
         kesslerDebrisSize,
+        disableWhenHazard,
         automationRequiresEverEnabled
       } = config;
   
@@ -168,9 +225,19 @@ class Building extends EffectableEntity {
       this.ignoreResourceForProductivityResourceDisplay = ignoreResourceForProductivityResourceDisplay || null;
       this.alwaysShowProduction = !!alwaysShowProduction;
       this.alwaysShowConsumption = !!alwaysShowConsumption;
+      this.realisticEnergyConsumption = realisticEnergyConsumption;
+      this.factoryHeatCoefficient = Number.isFinite(factoryHeatCoefficient)
+        ? Math.max(0, factoryHeatCoefficient)
+        : 0;
+      this.factoryCoolingCoefficient = Number.isFinite(factoryCoolingCoefficient)
+        ? Math.max(0, factoryCoolingCoefficient)
+        : 0;
       this.powerPerBuilding = config.powerPerBuilding;
       this.temperatureMaintenanceImmune = !!temperatureMaintenanceImmune;
       this.kesslerDebrisSize = kesslerDebrisSize || null;
+      this.disableWhenHazard = Array.isArray(disableWhenHazard)
+        ? disableWhenHazard.slice()
+        : [];
       this.automationRequiresEverEnabled = automationRequiresEverEnabled === true;
       this.aerostatReduction = Math.max(
         0,
@@ -180,7 +247,7 @@ class Building extends EffectableEntity {
         ? [
             {
               value: 'aerostatCapacity',
-              label: 'Aerostat Capacity'
+              label: t('ui.buildings.automationBasis.aerostatCapacity', {}, 'Aerostat Capacity')
             }
           ]
         : null;
@@ -219,13 +286,45 @@ class Building extends EffectableEntity {
     return Math.max(this.getBuildLimit() - this.countNumber, 0);
   }
 
+  getAutoBuildCountLimit() {
+    return this.getBuildLimit();
+  }
+
   getAutoBuildMaxCount(reservePercent = 0, additionalReserves = null) {
     let maxBuildable = this.maxBuildable(reservePercent, additionalReserves);
 
     if (this.requiresLand && typeof this.landAffordCount === 'function') {
-      const inactiveCount = Math.max(0, this.countNumber - this.activeNumber);
-      const remainingLandBackedBuilds = Math.max(0, this.landAffordCount(reservePercent) - inactiveCount);
-      maxBuildable = Math.min(maxBuildable, remainingLandBackedBuilds);
+      const landResource = resources?.surface?.land;
+      if (
+        landResource &&
+        typeof landResource.getExactLandAvailable === 'function'
+      ) {
+        const cap = landResource.cap || 0;
+        const landReservePercent = this.getStrategicReservePercentForResource(reservePercent, 'surface', 'land');
+        const strategicReserve = Number.isFinite(cap) ? (landReservePercent / 100) * cap : 0;
+        const exactReserve = numberToExactLandAmount(strategicReserve);
+        const exactAvailable = landResource.getExactLandAvailable() - exactReserve;
+        const exactPerBuilding = numberToExactLandAmount(this.requiresLand);
+        const inactiveCount = this.count > this.active ? this.count - this.active : 0n;
+        const affordableByLand = exactAvailable > 0n && exactPerBuilding > 0n
+          ? exactAvailable / exactPerBuilding
+          : 0n;
+        const remainingLandBackedBuilds = affordableByLand > inactiveCount
+          ? affordableByLand - inactiveCount
+          : 0n;
+        let cappedBuildable = remainingLandBackedBuilds;
+        if (Number.isFinite(maxBuildable)) {
+          const maxBuildableBigInt = normalizeBuildingCount(maxBuildable);
+          cappedBuildable = remainingLandBackedBuilds < maxBuildableBigInt
+            ? remainingLandBackedBuilds
+            : maxBuildableBigInt;
+        }
+        maxBuildable = bigIntToConservativeNumber(cappedBuildable);
+      } else {
+        const inactiveCount = Math.max(0, this.countNumber - this.activeNumber);
+        const remainingLandBackedBuilds = Math.max(0, this.landAffordCount(reservePercent) - inactiveCount);
+        maxBuildable = Math.min(maxBuildable, remainingLandBackedBuilds);
+      }
     }
 
     return Math.max(maxBuildable, 0);
@@ -286,11 +385,11 @@ class Building extends EffectableEntity {
 
   // Internal: apply production/displayName for the active recipe (if configured)
   _applyRecipeMapping() {
-    if (!this.recipes || !this.currentRecipeKey) return;
     this.clearTickEffectCache();
-    const recipe = this.recipes[this.currentRecipeKey] || {};
     // Keep base energy/material consumption separate
     this.consumption = JSON.parse(JSON.stringify(this._baseConsumption));
+    if (!this.recipes || !this.currentRecipeKey) return;
+    const recipe = this.recipes[this.currentRecipeKey] || {};
     // Apply production from current recipe
     if (recipe.production) {
       this.production = JSON.parse(JSON.stringify(recipe.production));
@@ -298,6 +397,30 @@ class Building extends EffectableEntity {
     if (recipe.displayName) {
       this.displayName = recipe.displayName;
     }
+  }
+
+  getDifficultyConsumption(consumption, realisticEnergyConsumption) {
+    const adjusted = JSON.parse(JSON.stringify(consumption || {}));
+    if (
+      gameSettings.realisticFactoryEnergyConsumption &&
+      realisticEnergyConsumption !== undefined &&
+      adjusted.colony &&
+      adjusted.colony.energy !== undefined
+    ) {
+      const energyEntry = adjusted.colony.energy;
+      adjusted.colony.energy = Object(energyEntry) === energyEntry
+        ? { ...energyEntry, amount: realisticEnergyConsumption }
+        : realisticEnergyConsumption;
+    }
+    return adjusted;
+  }
+
+  refreshDifficultyConsumption() {
+    this._baseConsumption = this.getDifficultyConsumption(this._legacyBaseConsumption || {}, this.realisticEnergyConsumption);
+    this._applyRecipeMapping();
+    this.maintenanceCost = this.calculateMaintenanceCost();
+    this.currentConsumption = {};
+    this.clearTickEffectCache();
   }
 
   saveState() {
@@ -312,6 +435,7 @@ class Building extends EffectableEntity {
       count: serializeCount(this.count),
       active: serializeCount(this.active),
       productivity: this.productivity,
+      maintenanceProductivity: this.maintenanceProductivity,
       isHidden: this.isHidden,
       alertedWhenUnlocked: this.alertedWhenUnlocked,
       autoBuildEnabled: this.autoBuildEnabled,
@@ -351,6 +475,7 @@ class Building extends EffectableEntity {
     if ('count' in state) this.count = state.count;
     if ('active' in state) this.active = state.active;
     if ('productivity' in state) this.productivity = state.productivity;
+    if ('maintenanceProductivity' in state) this.maintenanceProductivity = Math.max(0, Math.min(1, Number(state.maintenanceProductivity) || 0));
     if ('isHidden' in state) this.isHidden = state.isHidden;
     if ('alertedWhenUnlocked' in state) this.alertedWhenUnlocked = state.alertedWhenUnlocked;
     if ('autoBuildEnabled' in state) this.autoBuildEnabled = state.autoBuildEnabled;
@@ -410,6 +535,19 @@ class Building extends EffectableEntity {
     }
   }
 
+  blendMaintenanceProductivityForNewActive(oldActive, newActive) {
+    if (newActive <= 0) {
+      this.maintenanceProductivity = 1;
+      return;
+    }
+    if (newActive <= oldActive) {
+      return;
+    }
+    const addedActive = newActive - oldActive;
+    const weightedExisting = this.maintenanceProductivity * oldActive;
+    this.maintenanceProductivity = Math.max(0, Math.min(1, (weightedExisting + addedActive) / newActive));
+  }
+
   // External: enable reversal via effect
   enableReversal() {
     this.reversalAvailable = true;
@@ -450,6 +588,7 @@ class Building extends EffectableEntity {
   }
 
   applyActiveEffects(firstTime = true) {
+    this._baseConsumption = this.getDifficultyConsumption(this._legacyBaseConsumption || {}, this.realisticEnergyConsumption);
     this.consumption = JSON.parse(JSON.stringify(this._baseConsumption));
     this.clearTickEffectCache();
     super.applyActiveEffects(firstTime);
@@ -881,7 +1020,7 @@ class Building extends EffectableEntity {
       modifiedProduction[category] = {};
       for (const resource in this.production[category]) {
         const baseProduction = this.production[category][resource];
-        const productionMultiplier = this.getEffectiveProductionMultiplier() * this.getEffectiveResourceProductionMultiplier(category, resource);
+        const productionMultiplier = this.getEffectiveProductionMultiplier() * this.getEffectiveResourceProductionMultiplier(category, resource) * this.getEffectiveThroughputMultiplier();
         modifiedProduction[category][resource] = baseProduction * productionMultiplier;
       }
     }
@@ -898,7 +1037,7 @@ class Building extends EffectableEntity {
       modifiedConsumption[category] = {};
       for (const resource in consumption[category]) {
         const { amount } = this.getConsumptionResource(category, resource);
-        const consumptionMultiplier = this.getEffectiveConsumptionMultiplier() * this.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const consumptionMultiplier = this.getEffectiveConsumptionMultiplier() * this.getEffectiveResourceConsumptionMultiplier(category, resource) * this.getEffectiveThroughputMultiplier();
         modifiedConsumption[category][resource] = amount * consumptionMultiplier;
       }
     }
@@ -1033,7 +1172,40 @@ class Building extends EffectableEntity {
     );
   }
 
+  getDisableHazards() {
+    return this.disableWhenHazard || [];
+  }
+
+  isHazardActiveForDisable(hazardKey) {
+    if (!hazardManager || !hazardManager.parameters) {
+      return false;
+    }
+    if (hazardKey === 'kessler') {
+      return hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
+    }
+    if (hazardKey === 'pulsar') {
+      return hazardManager.parameters.pulsar && !hazardManager.pulsarHazard.isCleared(terraforming, hazardManager.parameters.pulsar);
+    }
+    if (hazardKey === 'debrisDisk') {
+      return hazardManager.parameters.debrisDisk && !hazardManager.debrisDiskHazard.isCleared(terraforming, hazardManager.parameters.debrisDisk);
+    }
+    return false;
+  }
+
+  isHazardDisabled() {
+    const disableHazards = this.getDisableHazards();
+    for (let i = 0; i < disableHazards.length; i += 1) {
+      if (this.isHazardActiveForDisable(disableHazards[i])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   getProductionRatio(){
+    if (this.isHazardDisabled()) {
+      return 0;
+    }
     const isDay = dayNightCycle.isDay();
     if(this.dayNightActivity && !isDay){
       return 0;
@@ -1043,7 +1215,73 @@ class Building extends EffectableEntity {
   }
 
   getConsumptionRatio(){
+    if (this.isHazardDisabled()) {
+      return 0;
+    }
     return 1;
+  }
+
+  getConsumptionRatioForResource(category, resource) {
+    return this.getConsumptionRatio();
+  }
+
+  getProjectedProductionRate(category, resource, options = {}) {
+    const automationMultiplier = options.automationMultiplier !== undefined
+      ? options.automationMultiplier
+      : this.getAutomationActivityMultiplier();
+    const workerRatio = options.workerRatio !== undefined
+      ? options.workerRatio
+      : (this.getTotalWorkerNeed() > 0
+          ? populationModule.getWorkerAvailabilityRatio(this.workerPriority)
+          : 1);
+    const productivityValue = options.productivity !== undefined ? options.productivity : this.productivity;
+    const productivityScale = options.useProductivity === true
+      ? productivityValue / (workerRatio || 1)
+      : 1;
+    const baseProduction = this.production[category][resource] || 0;
+
+    return baseProduction *
+      this.activeNumber *
+      this.getProductionRatio() *
+      this.getEffectiveProductionMultiplier() *
+      this.getEffectiveResourceProductionMultiplier(category, resource) *
+      this.getEffectiveThroughputMultiplier() *
+      automationMultiplier *
+      workerRatio *
+      productivityScale;
+  }
+
+  getProjectedConsumptionRate(category, resource, options = {}) {
+    const { amount } = this.getConsumptionResource(category, resource);
+    const automationMultiplier = options.includeAutomation === false
+      ? 1
+      : (options.automationMultiplier !== undefined
+          ? options.automationMultiplier
+          : this.getAutomationActivityMultiplier());
+    const workerRatio = options.includeWorkerRatio === false
+      ? 1
+      : (options.workerRatio !== undefined
+          ? options.workerRatio
+          : (this.getTotalWorkerNeed() > 0
+              ? populationModule.getWorkerAvailabilityRatio(this.workerPriority)
+              : 1));
+    const consumptionRatio = options.includeConsumptionRatio === false
+      ? 1
+      : this.getConsumptionRatioForResource(category, resource);
+    const productivityValue = options.productivity !== undefined ? options.productivity : this.productivity;
+    const productivityScale = options.useProductivity === true
+      ? productivityValue / (workerRatio || 1)
+      : 1;
+
+    return amount *
+      this.activeNumber *
+      consumptionRatio *
+      this.getEffectiveConsumptionMultiplier() *
+      this.getEffectiveResourceConsumptionMultiplier(category, resource) *
+      this.getEffectiveThroughputMultiplier() *
+      automationMultiplier *
+      workerRatio *
+      productivityScale;
   }
 
   calculateMaintenanceCost() {
@@ -1133,6 +1371,14 @@ class Building extends EffectableEntity {
       const cap = land.cap || 0;
       const landReservePercent = this.getStrategicReservePercentForResource(reservePercent, 'surface', 'land');
       const strategicReserve = Number.isFinite(cap) ? (landReservePercent / 100) * cap : 0;
+      if (land.getExactLandAvailable) {
+        const exactAvailable = land.getExactLandAvailable() - numberToExactLandAmount(strategicReserve);
+        const exactRequired = normalizeBuildingCount(amount) * numberToExactLandAmount(this.requiresLand);
+        if (exactRequired <= 0n) {
+          return true;
+        }
+        return exactAvailable >= exactRequired;
+      }
       const available = (land.getAvailableAmount ? land.getAvailableAmount() : land.value - land.reserved) - strategicReserve;
       if (available < this.requiresLand * amount) {
         return false;
@@ -1150,6 +1396,14 @@ class Building extends EffectableEntity {
     const cap = land.cap || 0;
     const landReservePercent = this.getStrategicReservePercentForResource(reservePercent, 'surface', 'land');
     const strategicReserve = Number.isFinite(cap) ? (landReservePercent / 100) * cap : 0;
+    if (land.getExactLandAvailable) {
+      const exactAvailable = land.getExactLandAvailable() - numberToExactLandAmount(strategicReserve);
+      const exactRequirement = numberToExactLandAmount(this.requiresLand);
+      if (exactAvailable <= 0n || exactRequirement <= 0n) {
+        return 0;
+      }
+      return bigIntToConservativeNumber(exactAvailable / exactRequirement);
+    }
     const available = Math.max((land.getAvailableAmount ? land.getAvailableAmount() : land.value - land.reserved) - strategicReserve, 0);
     return Math.floor(available / this.requiresLand);
   }
@@ -1164,7 +1418,7 @@ class Building extends EffectableEntity {
       return false;
     }
 
-    const normalizedChange = Number.isFinite(amount) ? amount : 0;
+    const normalizedChange = normalizeSignedBuildingCount(amount);
     const sourceKey = `building:${this.name}`;
 
     if (!landResource.setReservedAmountForSource) {
@@ -1176,8 +1430,9 @@ class Building extends EffectableEntity {
       typeof landResource.getExactLandAvailable === 'function'
     ) {
       const currentReservedForSource = landResource.getExactReservedAmountForSource(sourceKey);
-      const exactChange = numberToExactLandAmount(Math.abs(normalizedChange)) * BigInt(this.requiresLand);
-      let targetReserved = normalizedChange >= 0
+      const magnitude = normalizedChange < 0n ? -normalizedChange : normalizedChange;
+      const exactChange = magnitude * numberToExactLandAmount(this.requiresLand);
+      let targetReserved = normalizedChange >= 0n
         ? currentReservedForSource + exactChange
         : currentReservedForSource - exactChange;
 
@@ -1194,8 +1449,9 @@ class Building extends EffectableEntity {
       return true;
     }
 
+    const normalizedChangeNumber = Number(normalizedChange);
     const currentActive = this.activeNumber;
-    const targetActive = Math.max(0, currentActive + normalizedChange);
+    const targetActive = Math.max(0, currentActive + normalizedChangeNumber);
     const targetReserved = targetActive * this.requiresLand;
 
     const currentReservedForSource = landResource.getReservedAmountForSource
@@ -1280,10 +1536,12 @@ class Building extends EffectableEntity {
       if (activate) {
         this.active += buildCountBigInt;
       }
+      this.blendMaintenanceProductivityForNewActive(oldActive, this.activeNumber);
       if(this.active > 0n){
         this.productivity = oldProductivity * (this.activeNumber > 0 ? (oldActive / this.activeNumber) : 0);
       } else {
         this.productivity = 0;
+        this.maintenanceProductivity = 1;
       }
       this.updateResourceStorage();
       this._applyKesslerDebris(baseCost, multiplier);
@@ -1309,7 +1567,8 @@ class Building extends EffectableEntity {
   }
 
   // Method to calculate the base minRatio based on resource consumption and worker availability
-  calculateBaseMinRatio(resources, deltaTime, ignoreMap) {
+  getBaseProductivityFactors(resources, deltaTime, ignoreMap) {
+    const factors = [];
     let minRatio = Infinity;
     const ignore = ignoreMap || {};
 
@@ -1324,12 +1583,29 @@ class Building extends EffectableEntity {
         }
         const { amount } = this.getConsumptionResource(category, resource);
         const resourceMultiplier = this.getEffectiveResourceConsumptionMultiplier(category, resource);
-        const effectiveAmount = amount * consumptionMultiplier * resourceMultiplier;
+        const effectiveAmount = amount * consumptionMultiplier * resourceMultiplier * this.getEffectiveThroughputMultiplier();
         if (effectiveAmount <= 0) {
           continue;
         }
-        const ratio = resources[category][resource].availabilityRatio;
+        const resourceData = resources[category][resource];
+        const ratio = resourceData.availabilityRatio;
+        const demandSeconds = deltaTime / 1000;
+        const largestDemands = Object.entries(resourceData.projectedConsumptionRateBySource)
+          .filter(([, rate]) => rate > 0)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([source, rate]) => ({ source, amount: rate * demandSeconds }));
         minRatio = Math.min(minRatio, ratio);
+        factors.push({
+          type: 'resource',
+          category,
+          resource,
+          label: resourceData.displayName,
+          ratio,
+          availableAmount: resourceData.availabilityDetails.availableAmount,
+          requiredAmount: resourceData.availabilityDetails.requiredAmount,
+          largestDemands,
+        });
       }
     }
 
@@ -1337,9 +1613,66 @@ class Building extends EffectableEntity {
     if (this.getTotalWorkerNeed() > 0) {
       const workerRatio = populationModule.getWorkerAvailabilityRatio(this.workerPriority);
       minRatio = Math.min(minRatio, workerRatio);
+      let availableWorkers = populationModule.workerResource.cap;
+      let requiredWorkers = populationModule.totalWorkersRequiredHigh;
+      if (this.workerPriority === 0) {
+        availableWorkers = Math.max(0, populationModule.workerResource.cap - populationModule.totalWorkersRequiredHigh);
+        requiredWorkers = populationModule.totalWorkersRequiredNormal;
+      } else if (this.workerPriority < 0) {
+        availableWorkers = Math.max(
+          0,
+          populationModule.workerResource.cap -
+            populationModule.totalWorkersRequiredHigh -
+            populationModule.totalWorkersRequiredNormal
+        );
+        requiredWorkers = populationModule.totalWorkersRequiredLow;
+      }
+      factors.push({
+        type: 'workers',
+        category: 'colony',
+        resource: 'workers',
+        label: resources.colony.workers.displayName,
+        ratio: workerRatio,
+        availableAmount: availableWorkers,
+        requiredAmount: requiredWorkers,
+      });
     }
 
-    return minRatio;
+    return { minRatio, factors };
+  }
+
+  calculateBaseMinRatio(resources, deltaTime, ignoreMap) {
+    return this.getBaseProductivityFactors(resources, deltaTime, ignoreMap).minRatio;
+  }
+
+  updateProductivityLimitInfo(resources, deltaTime, target, displayTarget, maintenanceCap, ignoreMap) {
+    const details = this.getBaseProductivityFactors(resources, deltaTime, ignoreMap);
+    const factors = [];
+    for (let i = 0; i < details.factors.length; i += 1) {
+      if (details.factors[i].ratio < 0.9995) {
+        factors.push(details.factors[i]);
+      }
+    }
+    if (maintenanceCap < 0.9995) {
+      factors.push({
+        type: 'maintenance',
+        ratio: maintenanceCap,
+      });
+    }
+    factors.sort((a, b) => a.ratio - b.ratio);
+    this.productivityLimitInfo = {
+      target: Math.max(0, Math.min(1, target)),
+      displayTarget: Math.max(0, Math.min(1, displayTarget)),
+      factors,
+    };
+  }
+
+  setProductivityLimitInfo(target, displayTarget, factors) {
+    this.productivityLimitInfo = {
+      target: Math.max(0, Math.min(1, target)),
+      displayTarget: Math.max(0, Math.min(1, displayTarget)),
+      factors: factors || [],
+    };
   }
 
   computeBaseProductivity(resources, deltaTime) {
@@ -1358,7 +1691,8 @@ class Building extends EffectableEntity {
       const base = this.production[category]?.[resource] || 0;
       const effectiveMultiplier =
         this.getEffectiveProductionMultiplier() *
-        this.getEffectiveResourceProductionMultiplier(category, resource);
+        this.getEffectiveResourceProductionMultiplier(category, resource) *
+        this.getEffectiveThroughputMultiplier();
       return this.activeNumber * base * effectiveMultiplier * (deltaTime / 1000);
     };
 
@@ -1443,19 +1777,39 @@ class Building extends EffectableEntity {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
       this.displayProductivity = 0;
+      this.maintenanceProductivity = 1;
+      this.setProductivityLimitInfo(0, 0, []);
       return;
     }
 
     let targetProductivity = baseTarget;
+    const maintenanceCap = gameSettings.unfulfilledMaintenancePenalties
+      ? Math.max(0, Math.min(1, this.maintenanceProductivity))
+      : 1;
+    const cappedTargetProductivity = Math.min(targetProductivity, maintenanceCap);
+    const cappedDisplayTarget = Math.min(displayTarget, maintenanceCap);
+    this.updateProductivityLimitInfo(
+      resources,
+      deltaTime,
+      cappedTargetProductivity,
+      cappedDisplayTarget,
+      maintenanceCap
+    );
 
     if (this.snapProductivity) {
-      this.productivity = targetProductivity;
-      this.displayProductivity = displayTarget;
+      this.productivity = cappedTargetProductivity;
+      this.displayProductivity = cappedDisplayTarget;
       return;
     }
 
-    this.productivity = this.applyProductivityDamping(this.productivity, targetProductivity, deltaTime);
-    this.displayProductivity = this.applyProductivityDamping(this.displayProductivity, displayTarget, deltaTime);
+    this.productivity = Math.min(
+      this.applyProductivityDamping(this.productivity, targetProductivity, deltaTime),
+      maintenanceCap
+    );
+    this.displayProductivity = Math.min(
+      this.applyProductivityDamping(this.displayProductivity, displayTarget, deltaTime),
+      maintenanceCap
+    );
   }
 
   // Updated produce function to track production rates
@@ -1464,7 +1818,7 @@ class Building extends EffectableEntity {
     if (this.reversalAvailable && this.reverseEnabled) {
       return; // Skip normal production entirely while reversed
     }
-    const effectiveMultiplier = this.getEffectiveProductionMultiplier();
+    const effectiveMultiplier = this.getEffectiveProductionMultiplier() * this.getEffectiveThroughputMultiplier();
     const displayProductivity = this.productivity;
 
     // Calculate production using effectiveMultiplier and accumulate changes
@@ -1501,13 +1855,14 @@ class Building extends EffectableEntity {
 
   // Updated consume function to track consumption rates
   consume(accumulatedChanges, deltaTime, accumulatedSpecialChanges) {
-    const effectiveConsumptionMultiplier = this.getEffectiveConsumptionMultiplier();
-    const effectiveProductionMultiplier = this.getEffectiveProductionMultiplier();
+    const effectiveConsumptionMultiplier = this.getEffectiveConsumptionMultiplier() * this.getEffectiveThroughputMultiplier();
+    const effectiveProductionMultiplier = this.getEffectiveProductionMultiplier() * this.getEffectiveThroughputMultiplier();
     const displayProductivity = this.ignoreResourceForProductivityResourceDisplay
       ? this.displayProductivity
       : this.productivity;
 
     this.currentConsumption = {}; // Reset current consumption
+    this.currentFactoryHeatConsumption = null;
     this.currentWasteCleanupSlack = {};
 
     // Reversal dynamic consumption: when reversed, consume the active recipe's produced resource
@@ -1563,8 +1918,7 @@ class Building extends EffectableEntity {
         this.currentConsumption[category][resource] = scaledConsumption;
 
         if (this.category === 'waste' && category === 'surface') {
-          const maxScaledConsumption = baseConsumption * (deltaTime / 1000);
-          const cleanupSlack = Math.max(0, maxScaledConsumption - scaledConsumption);
+          const cleanupSlack = Math.max(0, displayConsumption - scaledConsumption);
           if (cleanupSlack > 0) {
             if (!this.currentWasteCleanupSlack[category]) {
               this.currentWasteCleanupSlack[category] = {};
@@ -1638,20 +1992,20 @@ class Building extends EffectableEntity {
         // Check for a maintenance conversion for this resource
         const resourceData = resources.colony[resource];
         if (resourceData.maintenanceConversion) {
-          for (const targetCategory in resourceData.maintenanceConversion) {
-            const targetResourceName = resourceData.maintenanceConversion[targetCategory];
-            const conversionValue = resourceData.conversionValue || 1;
+          const conversionEntries = getMaintenanceConversionEntries(resourceData);
+          for (let i = 0; i < conversionEntries.length; i += 1) {
+            const conversion = conversionEntries[i];
 
             // Apply conversion by adding the scaled maintenance cost to the target resource
-            const convertedAmount = maintenanceCost * conversionValue * conversionScale;
-            const displayConvertedAmount = displayMaintenanceCost * conversionValue * conversionScale;
+            const convertedAmount = maintenanceCost * conversion.value * conversionScale;
+            const displayConvertedAmount = displayMaintenanceCost * conversion.value * conversionScale;
 
-            if (resources[targetCategory] && resources[targetCategory][targetResourceName]) {
-              accumulatedChanges[targetCategory][targetResourceName] = 
-                (accumulatedChanges[targetCategory][targetResourceName] || 0) + convertedAmount;
+            if (resources[conversion.category] && resources[conversion.category][conversion.resource]) {
+              accumulatedChanges[conversion.category][conversion.resource] =
+                (accumulatedChanges[conversion.category][conversion.resource] || 0) + convertedAmount;
 
               // Update production rate for the converted resource
-              resources[targetCategory][targetResourceName].modifyRate(
+              resources[conversion.category][conversion.resource].modifyRate(
                 displayConvertedAmount * (1000 / deltaTime),
                 this.displayName,
                 'building'
@@ -1711,6 +2065,8 @@ function registerBuildingConstructor(name, ctor) {
 const constructors = {
   oreMine: 'OreMine',
   sandQuarry: 'SandQuarry',
+  glassSmelter: 'MultiRecipesBuilding',
+  electronicsFactory: 'MultiRecipesBuilding',
   sandSeeder: 'SandSeeder',
   vanadiumHazeSeeder: 'VanadiumHazeSeeder',
   androidFactory: 'AndroidFactory',
@@ -1725,12 +2081,15 @@ const constructors = {
   solarPanel: 'solarPanel',
   windTurbine: 'windTurbine',
   boschReactor: 'ChemicalReactor',
+  pyrolyzer: 'Pyrolyzer',
   waterTank: 'WaterTank',
+  hydrogenReservoir: 'HydrogenReservoir',
   antimatterBattery: 'AntimatterBattery',
   spaceMirror: 'SpaceMirror',
   androidHousing: 'AndroidHousing',
   hyperionLantern: 'HyperionLantern',
   trashIncinerator: 'MultiRecipesBuilding',
+  junkRecycler: 'MultiRecipesBuilding',
   storageDepot: 'MultiRecipesBuilding',
   antimatterFarm: 'MultiRecipesBuilding',
   fusionPowerPlant: 'FusionPowerPlant',

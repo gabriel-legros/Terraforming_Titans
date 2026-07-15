@@ -171,7 +171,7 @@ progressUmbra.chapters.push(
     chapter: 22,
     activePlanet: 'umbra',
     title : 'Chapter 22 : Spring Cleaning',
-    narrative: "Feroza : 'Mary, the battle in space has turned to our advantage.  We should be able to give you and HOPE an escape route.' \n Mary : 'Finally!  HOPE, let's get out of here.' \n HOPE : 'Negative.  Humanity's survival requires removal of all hazardous biomass.'  \n Mary : 'HOPE!  You are too valuable to stay on an active battlefield.  You can't possibly be suggesting to TERRAFORM an army to death.  That is just absurd.' \n HOPE : 'Affirmative.  Terraforming is a valid method of removing hazardous elements.'",
+    narrative: "Feroza : 'Mary, the battle in space has turned to our advantage.  We should be able to give you and HOPE an escape route.' \n Mary : 'Finally!  HOPE, let's get out of here.' \n HOPE : 'Negative.  Humanity's survival requires removal of all hazardous biomass.'  \n Mary : 'HOPE!  You are too valuable to stay on an active battlefield.  You can't possibly be suggesting to TERRAFORM an army to death.  That is just absurd.' \n HOPE : 'Affirmative.  Terraforming is a valid method of removing hazardous elements.'  \n Mary : '...  Well at least they're not civilians otherwise I would be pressing the kill switch right about now.'",
     prerequisites: ['chapter21.7'],
     objectives: [
       { type: 'collection', resourceType: 'colony', resource: 'colonists', quantity: 10_000 }
@@ -268,7 +268,7 @@ progressUmbra.chapters.push(
     chapter: 23,
     title :  'Chapter 23 : Taking out the trash',
     activePlanet: 'umbra',
-    narrative: "Pete : 'Mary, are you seriously going to let your machine commit mass murder like that?' \n Mary : 'Pete, are you seriously going to let the killing of tens of thousands of martians go unpunished?' \n  Pete : 'Point taken.  Proceed.  You have my approval.'",
+    narrative: "Pete : 'Mary, are you seriously going to let your machine commit mass murder like that?' \n Mary : 'Pete, first of all this is an aggressive army, not innocent civilians.  You know that.  Secondly, are you seriously going to let the killing of tens of thousands of martians go unpunished?' \n  Pete : 'Point taken.  Proceed.  You have my approval.'",
     prerequisites: ['chapter22.5'],
     objectives: [
       { type: 'depletion', resourceType: 'surface', resource: 'hazardousBiomass', quantity: 1_000_000_000 }

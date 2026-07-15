@@ -10,6 +10,7 @@ function getStructuresUIText(path, fallback, vars) {
 
 // Create an object to store the selected build count for each structure
 const selectedBuildCounts = {};
+const unhideButtonContainerCache = {};
 
 function resetSelectedBuildCounts() {
   for (const name in selectedBuildCounts) {
@@ -62,9 +63,80 @@ function getManualBuildCount(structure, buildCount) {
 }
 
 function swapResourceRateColor(resource, color) {
-  if (resource.reverseColor && color === 'red') return 'green';
-  if (resource.reverseColor && color === 'green') return 'red';
+  if (color === 'red') {
+    return resource.reverseColor ? getStatusColor('success') : getStatusColor('failure');
+  }
+  if (color === 'green') {
+    return resource.reverseColor ? getStatusColor('failure') : getStatusColor('success');
+  }
   return color;
+}
+
+function formatProductivityTooltipPercent(value) {
+  const percent = Math.max(0, Math.min(100, value * 100));
+  const decimals = percent > 0 && percent < 1 ? 2 : 1;
+  return formatNumber(percent, false, decimals);
+}
+
+function buildStructureProductivityTooltip(structure) {
+  const info = structure.productivityLimitInfo;
+  if (structure.active === 0n) {
+    return getStructuresUIText('ui.structures.tooltips.productivityNoActive', 'No active structures');
+  }
+
+  if (info.target >= 0.9995) {
+    return getStructuresUIText('ui.structures.tooltips.productivityTrendingFull', 'Trending to 100%');
+  }
+
+  const lines = [
+    getStructuresUIText('ui.structures.tooltips.productivityLimitedHeader', 'Limited to {value}%', {
+      value: formatProductivityTooltipPercent(info.target),
+    })
+  ];
+  const factors = info.factors || [];
+  if (factors.length === 0) {
+    lines.push(getStructuresUIText('ui.structures.tooltips.productivityNoDetails', 'No limiting factor found.'));
+    return lines.join('\n');
+  }
+
+  for (let i = 0; i < factors.length; i += 1) {
+    const factor = factors[i];
+    const percent = formatProductivityTooltipPercent(factor.ratio);
+    if (factor.type === 'resource') {
+      lines.push(getStructuresUIText('ui.structures.tooltips.productivityResourceLine', '{resource}: {available} available / {required} demanded ({percent}%)', {
+        resource: factor.label,
+        available: formatNumber(factor.availableAmount, true, 3),
+        required: formatNumber(factor.requiredAmount, true, 3),
+        percent,
+      }));
+      const largestDemands = factor.largestDemands || [];
+      if (largestDemands.length > 0) {
+        lines.push(getStructuresUIText('ui.structures.tooltips.productivityLargestDemands', 'Largest demands:'));
+        for (let demandIndex = 0; demandIndex < largestDemands.length; demandIndex += 1) {
+          const demand = largestDemands[demandIndex];
+          lines.push(getStructuresUIText('ui.structures.tooltips.productivityDemandLine', '  {source}: {amount}', {
+            source: demand.source,
+            amount: formatNumber(demand.amount, true, 3),
+          }));
+        }
+      }
+    } else if (factor.type === 'workers') {
+      lines.push(getStructuresUIText('ui.structures.tooltips.productivityWorkerLine', '{resource}: {available} available / {required} needed ({percent}%)', {
+        resource: factor.label,
+        available: formatNumber(factor.availableAmount, true, 3),
+        required: formatNumber(factor.requiredAmount, true, 3),
+        percent,
+      }));
+    } else if (factor.type === 'maintenance') {
+      lines.push(getStructuresUIText('ui.structures.tooltips.productivityMaintenanceLine', 'Maintenance paid: {percent}%', {
+        percent,
+      }));
+    } else if (factor.type === 'dayNight') {
+      lines.push(getStructuresUIText('ui.structures.tooltips.productivityDayNight', 'Inactive at night'));
+    }
+  }
+
+  return lines.join('\n');
 }
 
 // Helper function to get all unique building categories from buildings-parameters.js
@@ -147,7 +219,7 @@ function applyStructureDisplayPreferences(structureCollection) {
 
 const AUTO_BUILD_DEFAULT_STEP = 0.01;
 const AUTO_BUILD_MIN_STEP = 0.000001;
-const AUTO_BUILD_MAX_STEP = 1000000;
+const AUTO_BUILD_MAX_STEP = 1e50;
 
 function sanitizeAutoBuildStep(value) {
   if (!Number.isFinite(value) || value <= 0) return AUTO_BUILD_DEFAULT_STEP;
@@ -158,6 +230,9 @@ function sanitizeAutoBuildStep(value) {
 
 function formatAutoBuildStepValue(step) {
   const normalized = sanitizeAutoBuildStep(step);
+  if (normalized > 1000) {
+    return normalized.toExponential(0).replace('e+', 'e');
+  }
   let decimals = 2;
   if (normalized < 1) decimals = 3;
   if (normalized < 0.1) decimals = 4;
@@ -193,7 +268,7 @@ function getAutoBuildInputValue(structure) {
     return formatAutoBuildFixedValue(structure.autoBuildFixed);
   }
   if (isAdjustableAutoBuildMaxMode(structure)) {
-    return `${structure.autoBuildPercent || 0}`;
+    return `${structure.autoBuildMaxPercent || 0}`;
   }
   if (isAutoBuildFillMode(structure)) {
     return `${structure.autoBuildFillPercent || 0}`;
@@ -211,9 +286,7 @@ function updateAutoBuildStepButtonLabels(structure, incrementBtn, decrementBtn) 
   if (!structure) return;
   structure.autoBuildStep = sanitizeAutoBuildStep(structure.autoBuildStep);
   const stepValue = getAutoBuildStepValue(structure);
-  const label = structure.autoBuildBasis === 'fixed'
-    ? formatNumber(stepValue, true)
-    : formatAutoBuildStepValue(stepValue);
+  const label = formatAutoBuildStepValue(stepValue);
   if (incrementBtn) incrementBtn.textContent = `+${label}`;
   if (decrementBtn) decrementBtn.textContent = `-${label}`;
 }
@@ -294,6 +367,8 @@ function refreshAutoBuildTarget(structure) {
       ? fixedTarget
       : autoBuildUsesFill
         ? (structure.autoBuildFillPercent || 0)
+        : autoBuildUsesAdjustableMax
+          ? (structure.autoBuildMaxPercent || 0)
         : (structure.autoBuildPercent || 0);
     els.autoBuildInput.dataset.autoBuildValue = `${datasetValue}`;
   }
@@ -348,7 +423,7 @@ function applyAutoBuildDelta(structure, input, delta) {
   } else if (autoBuildUsesAdjustableMax || isAutoBuildFillMode(structure)) {
     const normalized = Math.min(100, Number(next.toFixed(6)));
     if (autoBuildUsesAdjustableMax) {
-      structure.autoBuildPercent = normalized;
+      structure.autoBuildMaxPercent = normalized;
     } else {
       structure.autoBuildFillPercent = normalized;
     }
@@ -493,6 +568,7 @@ function invalidateStructureUICache() {
   structureUICacheInvalidated = true;
   // Explicitly clear element caches when UI is rebuilt
   for (const k in structureUIElements) delete structureUIElements[k];
+  for (const k in unhideButtonContainerCache) delete unhideButtonContainerCache[k];
 }
 
 function applyCollapseState(structureName) {
@@ -542,9 +618,6 @@ function createBuildingButtons() {
   
   // Initialize unhide button event listeners
   initializeUnhideButtons();
-  
-  // Update subtab visibility after creating buttons
-  updateBuildingSubtabsVisibility();
 }
 
 function createColonyButtons(colonies) {
@@ -894,6 +967,8 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
         structure.autoBuildFixed = parsed;
       } else if (isAutoBuildFillMode(structure)) {
         structure.autoBuildFillPercent = parsed;
+      } else if (isAdjustableAutoBuildMaxMode(structure)) {
+        structure.autoBuildMaxPercent = parsed;
       } else {
         structure.autoBuildPercent = parsed;
       }
@@ -988,9 +1063,11 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   customControlsContainer.classList.add('building-custom-controls');
   controlsColumn.appendChild(customControlsContainer);
 
-  const { structureControls, increaseButton, decreaseButton } = createStructureControls(structure, toggleCallback, isColony);
+  const { structureControls, increaseButton, decreaseButton, zeroButton, maxButton } = createStructureControls(structure, toggleCallback, isColony);
   cached.increaseButton = increaseButton;
   cached.decreaseButton = decreaseButton;
+  cached.zeroButton = zeroButton;
+  cached.maxButton = maxButton;
 
   if (structure.canBeToggled) {
     const toggleControlsWrapper = document.createElement('div');
@@ -1030,8 +1107,12 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     upgradeButton.addEventListener('click', function () {
       const upgrades = Math.max(1, selectedBuildCounts[structure.name] / 10 || 1);
       if (structure.upgrade(upgrades)) {
+        if (gameSettings.colonyUpgradeUnchecksAutobuild) {
+          autoBuildCheckbox.checked = false;
+          structure.autoBuildEnabled = false;
+        }
         if (isColony) {
-        updateStructureDisplay(colonies);
+          updateStructureDisplay(colonies);
         } else {
           updateBuildingDisplay(buildings);
         }
@@ -1115,10 +1196,12 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     constructedCountElement.innerHTML = `
       <strong>Constructed:</strong> <span id="${structure.name}-count-active">${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}</span>
     `;
+    cached.countActiveElement = constructedCountElement.querySelector(`#${structure.name}-count-active`);
   } else {
     constructedCountElement.innerHTML = `
       <strong>Constructed:</strong> <span id="${structure.name}-count">${formatBuildingCount(structure.count)}</span>
     `;
+    cached.countElement = constructedCountElement.querySelector(`#${structure.name}-count`);
   }
 
   constructedInfo.appendChild(constructedCountElement);
@@ -1137,8 +1220,32 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
 
     const productivityValue = document.createElement('span');
     productivityValue.id = `${structure.name}-productivity`;
-    productivityValue.textContent = `${Math.round(structure.productivity * 100)}%`;
+    productivityValue.classList.add('productivity-tooltip-anchor', 'inline-tooltip-anchor');
+    const productivityTextNode = document.createTextNode(`${Math.round(structure.productivity * 100)}%`);
+    productivityValue._valueNode = productivityTextNode;
+    productivityValue.appendChild(productivityTextNode);
+
+    const productivityTooltip = attachDynamicInfoTooltip(
+      productivityValue,
+      buildStructureProductivityTooltip(structure)
+    );
+    productivityValue._productivityTooltip = productivityTooltip;
+    productivityValue._productivityTooltipCache = {};
+    productivityValue._updateProductivityTooltip = () => {
+      const text = buildStructureProductivityTooltip(structure);
+      setTooltipText(
+        productivityTooltip,
+        text,
+        productivityValue._productivityTooltipCache,
+        'text'
+      );
+    };
+    productivityValue.addEventListener('mouseenter', productivityValue._updateProductivityTooltip);
+    productivityValue.addEventListener('focusin', productivityValue._updateProductivityTooltip);
+    productivityValue.addEventListener('pointerdown', productivityValue._updateProductivityTooltip);
+
     productivityContainer.appendChild(productivityValue);
+    cached.productivityElement = productivityValue;
 
     if (structure.name === 'biodome') {
       const warning = document.createElement('span');
@@ -1157,6 +1264,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       dayNightIcon.classList.add('day-night-icon');
       dayNightIcon.textContent = dayNightCycle.isDay() ? '☀️' : '🌙';
       productivityContainer.appendChild(dayNightIcon);
+      cached.dayNightIcon = dayNightIcon;
     }
 
     constructedInfo.appendChild(productivityContainer);
@@ -1403,7 +1511,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
       const activeCount = getStructureCountNumber(structure.active);
       const rawPercent = (activeCount * 100) / capacity;
       const bestPercent = Math.min(100, Math.max(0, Math.ceil(rawPercent * 1000000) / 1000000));
-      structure.autoBuildPercent = bestPercent;
+      structure.autoBuildMaxPercent = bestPercent;
       if (cached.autoBuildInput) {
         cached.autoBuildInput.value = `${bestPercent}`;
       }
@@ -1489,16 +1597,14 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     }
 
     if (usesAndroidCountMode) {
-      const perBuildingCapacity = structure.getStorageAmount('colony', 'androids');
       const totalAndroids = resources.colony.androids.value || 0;
-      if (perBuildingCapacity <= 0 || totalAndroids <= 0) {
+      if (totalAndroids <= 0) {
         return;
       }
       const activeCount = getStructureCountNumber(structure.active);
-      const rawPercent = (activeCount * perBuildingCapacity * 100) / totalAndroids;
+      const rawPercent = (activeCount * 100) / totalAndroids;
       const targetFromPercent = (percent) => {
-        const androidBudget = (percent * totalAndroids) / 100;
-        return Math.floor(androidBudget / perBuildingCapacity);
+        return Math.floor((percent * totalAndroids) / 100);
       };
       let bestPercent = Math.ceil(rawPercent * 1000000) / 1000000;
       for (let decimals = 5; decimals >= 0; decimals--) {
@@ -1615,7 +1721,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     autoUpgradeCheckbox.classList.add('auto-upgrade-checkbox');
     autoUpgradeCheckbox.addEventListener('change', () => {
       structure.autoUpgradeEnabled = autoUpgradeCheckbox.checked;
-      if (autoUpgradeCheckbox.checked && isColony && gameSettings.colonyUpgradeUnchecksAutobuild) {
+      if (autoUpgradeCheckbox.checked && gameSettings.colonyUpgradeUnchecksAutobuild) {
         autoBuildCheckbox.checked = false;
         structure.autoBuildEnabled = false;
       }
@@ -1774,6 +1880,7 @@ function createStructureControls(structure, toggleCallback) {
     zeroButton = document.createElement('button');
     zeroButton.id = `${structure.name}-zero-button`;
     zeroButton.textContent = getStructuresUIText('ui.structures.common.zero', '0');
+    zeroButton.disabled = structure.count === 0n;
     zeroButton.addEventListener('click', function () {
       toggleCallback(structure, (-normalizeBuildingCount(structure.active)).toString());
       disableAutoActive(structure);
@@ -1783,6 +1890,7 @@ function createStructureControls(structure, toggleCallback) {
     decreaseButton = document.createElement('button');
     decreaseButton.id = `${structure.name}-decrease-button`;
     decreaseButton.textContent = '-1';
+    decreaseButton.disabled = structure.count === 0n;
     decreaseButton.addEventListener('click', function () {
       toggleCallback(structure, `-${selectedBuildCounts[structure.name]}`);
       updateDecreaseButtonText(decreaseButton, selectedBuildCounts[structure.name]);
@@ -1792,6 +1900,7 @@ function createStructureControls(structure, toggleCallback) {
     increaseButton = document.createElement('button');
     increaseButton.id = `${structure.name}-increase-button`;
     increaseButton.textContent = '+1';
+    increaseButton.disabled = structure.count === 0n;
     increaseButton.addEventListener('click', function () {
       toggleCallback(structure, selectedBuildCounts[structure.name]);
       updateIncreaseButtonText(increaseButton, selectedBuildCounts[structure.name]);
@@ -1802,7 +1911,9 @@ function createStructureControls(structure, toggleCallback) {
     structureControls.appendChild(increaseButton);
 
     maxButton = document.createElement('button');
+    maxButton.id = `${structure.name}-max-button`;
     maxButton.textContent = getStructuresUIText('ui.common.max', 'Max');
+    maxButton.disabled = structure.count === 0n;
     maxButton.addEventListener('click', function () {
       toggleCallback(structure, (normalizeBuildingCount(structure.count) - normalizeBuildingCount(structure.active)).toString());
       disableAutoActive(structure);
@@ -1867,6 +1978,7 @@ function updateDecreaseButtonText(button, buildCount) {
     const nextName = structure.getNextTierName();
     const isColony = structure instanceof Colony;
     const next = nextName ? (isColony ? colonies[nextName] : buildings[nextName]) : null;
+    const fusionCountTooLow = structure.name === 'fusionPowerPlant' && structure.count < 10n;
 
     if (!next || !next.unlocked) {
       button.style.display = 'none';
@@ -1904,7 +2016,7 @@ function updateDecreaseButtonText(button, buildCount) {
     const amountString = `${amount}`;
     if (!button._upgradePrefixNode) {
       button.textContent = '';
-      button._upgradePrefixNode = document.createTextNode('Upgrade ');
+      button._upgradePrefixNode = document.createTextNode(getStructuresUIText('ui.structures.controls.upgradePrefix', 'Upgrade '));
       button._upgradeAmountNode = document.createTextNode('');
       button.append(button._upgradePrefixNode, button._upgradeAmountNode);
     }
@@ -1949,6 +2061,27 @@ function updateDecreaseButtonText(button, buildCount) {
     button.disabled = !canAfford;
     button.style.display = 'inline-block';
     button.style.color = '';
+
+    if (fusionCountTooLow) {
+      if (!button._upgradeRequirementIcon) {
+        const icon = document.createElement('span');
+        icon.classList.add('info-tooltip-icon');
+        icon.textContent = '\u24d8';
+        button.appendChild(icon);
+        button._upgradeRequirementIcon = icon;
+        button._upgradeRequirementTooltip = attachDynamicInfoTooltip(
+          icon,
+          getStructuresUIText('ui.structures.tooltips.fusionUpgradeRequiresTen', 'Requires at least 10 to upgrade')
+        );
+      }
+      button._upgradeRequirementIcon.style.display = '';
+      setTooltipText(
+        button._upgradeRequirementTooltip,
+        getStructuresUIText('ui.structures.tooltips.fusionUpgradeRequiresTen', 'Requires at least 10 to upgrade')
+      );
+    } else if (button._upgradeRequirementIcon) {
+      button._upgradeRequirementIcon.style.display = 'none';
+    }
   }
   
   function formatRwgMultiplierSource(sourceId) {
@@ -2176,6 +2309,14 @@ function updateDecreaseButtonText(button, buildCount) {
           name: resolveCostMultiplierSourceName(effect),
           value: effect.value
         });
+        return;
+      }
+      if (effect.type === 'throughputMultiplier') {
+        if (effect.value === 0) return;
+        multipliers.push({
+          name: resolveCostMultiplierSourceName(effect),
+          value: 1 + effect.value
+        });
       }
     });
 
@@ -2227,6 +2368,20 @@ function updateDecreaseButtonText(button, buildCount) {
           name: resolveCostMultiplierSourceName(effect),
           value: effect.value
         });
+        return;
+      }
+      if (effect.type === 'throughputMultiplier') {
+        if (effect.value === 0) return;
+        multipliers.push({
+          name: resolveCostMultiplierSourceName(effect),
+          value: 1 + effect.value
+        });
+        if (isReverseMode) {
+          reverseMultipliers.push({
+            name: resolveCostMultiplierSourceName(effect),
+            value: 1 + effect.value
+          });
+        }
         return;
       }
       if (!isReverseMode) return;
@@ -2379,6 +2534,7 @@ function updateDecreaseButtonText(button, buildCount) {
     }
 
     const activeKeys = new Set(items.map(item => item.key));
+    const orderedSpans = [];
     items.forEach(item => {
       let span = costElement._spans.get(item.key);
       if (!span) {
@@ -2408,18 +2564,37 @@ function updateDecreaseButtonText(button, buildCount) {
             addTrackedUIListener(costElement, span, 'mouseenter', span._updateCostTooltip);
             addTrackedUIListener(costElement, span, 'focusin', span._updateCostTooltip);
             addTrackedUIListener(costElement, span, 'pointerdown', span._updateCostTooltip);
+        } else if (!item.isWorkerRequirement) {
+          const textSpan = document.createElement('span');
+          span.appendChild(textSpan);
+          span._textSpan = textSpan;
         }
         costElement._spans.set(item.key, span);
-        list.appendChild(span);
       }
-      span.style.display = '';
+      if (span.style.display) {
+        span.style.display = '';
+      }
+      orderedSpans.push(span);
     });
 
     costElement._spans.forEach((span, key) => {
       if (!activeKeys.has(key)) {
-        span.style.display = 'none';
+        cleanupDynamicTooltipsIn(span);
+        span.remove();
+        costElement._spans.delete(key);
       }
     });
+
+    orderedSpans.forEach((span, index) => {
+      if (list.childNodes[index] !== span) {
+        list.insertBefore(span, list.childNodes[index] || null);
+      }
+    });
+    while (list.childNodes.length > orderedSpans.length) {
+      const child = list.childNodes[list.childNodes.length - 1];
+      cleanupDynamicTooltipsIn(child);
+      child.remove();
+    }
 
     items.forEach((item, idx) => {
       const span = costElement._spans.get(item.key);
@@ -2596,7 +2771,7 @@ function updateDecreaseButtonText(button, buildCount) {
           desiredChange = landLimited;
         }
       }
-      if (desiredChange !== 0n && !structure.adjustLand(Number(desiredChange))) {
+      if (desiredChange !== 0n && !structure.adjustLand(desiredChange)) {
         return;
       }
     }
@@ -2622,8 +2797,10 @@ function updateDecreaseButtonText(button, buildCount) {
     if (newActive === 0n) {
       structure.productivity = 0;
       structure.displayProductivity = 0;
+      structure.maintenanceProductivity = 1;
     } else if (newActive > oldActive) {
       const ratio = oldActive > 0n ? Number(oldActive) / Number(newActive) : 0;
+      structure.blendMaintenanceProductivityForNewActive(Number(oldActive), Number(newActive));
       structure.productivity *= ratio;
       structure.displayProductivity *= ratio;
     }
@@ -2699,8 +2876,8 @@ function updateDecreaseButtonText(button, buildCount) {
         const btn = document.getElementById(`build-${structureName}`);
         return btn ? btn.closest('.building-row') : null;
       })();
-      const countElement = document.getElementById(`${structureName}-count`);
-      const countActiveElement = document.getElementById(`${structureName}-count-active`);
+      const countElement = els.countElement;
+      const countActiveElement = els.countActiveElement;
       const selectedBuildCount = selectedBuildCounts[structureName];
       const manualBuildCount = getManualBuildCount(structure, selectedBuildCount);
       const isColony = structure instanceof Colony;
@@ -2710,22 +2887,39 @@ function updateDecreaseButtonText(button, buildCount) {
         ? structure.isVisible()
         : structure.unlocked && !structure.isHidden;
       if (isVisible && structureRow) {
-        combinedStructureRow.classList.remove('hidden');
-        combinedStructureRow.style.display = 'flex'; // Show the building when unlocked
+        if (combinedStructureRow.classList.contains('hidden')) {
+          combinedStructureRow.classList.remove('hidden');
+        }
+        if (combinedStructureRow.style.display !== 'flex') {
+          combinedStructureRow.style.display = 'flex'; // Show the building when unlocked
+        }
       } else {
-        combinedStructureRow.classList.add('hidden');
-        combinedStructureRow.style.display = 'none';
+        if (!combinedStructureRow.classList.contains('hidden')) {
+          combinedStructureRow.classList.add('hidden');
+        }
+        if (combinedStructureRow.style.display !== 'none') {
+          combinedStructureRow.style.display = 'none';
+        }
         continue;
       }
   
       if (countElement) {
-        countElement.textContent = formatBuildingCount(structure.count);
+        const countText = formatBuildingCount(structure.count);
+        if (countElement.textContent !== countText) {
+          countElement.textContent = countText;
+        }
       } else if (countActiveElement) {
-        countActiveElement.textContent = `${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}`;
+        const countActiveText = `${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}`;
+        if (countActiveElement.textContent !== countActiveText) {
+          countActiveElement.textContent = countActiveText;
+        }
       }
-      els.headerActive.textContent = structure.canBeToggled
+      const headerActiveText = structure.canBeToggled
         ? `${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}`
         : `${formatBuildingCount(structure.count)}`;
+      if (els.headerActive.textContent !== headerActiveText) {
+        els.headerActive.textContent = headerActiveText;
+      }
 
       updateStructureKesslerWarning(structure, els, manualBuildCount);
 
@@ -2736,6 +2930,21 @@ function updateDecreaseButtonText(button, buildCount) {
       const decBtn = els.decreaseButton || document.getElementById(`${structureName}-decrease-button`);
       if (decBtn) {
         updateDecreaseButtonText(decBtn, selectedBuildCount);
+      }
+      const hasConstructedStructures = structure.count > 0n;
+      const zeroBtn = els.zeroButton || document.getElementById(`${structureName}-zero-button`);
+      if (zeroBtn) {
+        zeroBtn.disabled = !hasConstructedStructures;
+      }
+      if (decBtn) {
+        decBtn.disabled = !hasConstructedStructures;
+      }
+      if (incBtn) {
+        incBtn.disabled = !hasConstructedStructures;
+      }
+      const maxBtn = els.maxButton || document.getElementById(`${structureName}-max-button`);
+      if (maxBtn) {
+        maxBtn.disabled = !hasConstructedStructures;
       }
 
       // Toggle visibility of the "Hide" button based on conditions
@@ -2811,17 +3020,26 @@ function updateDecreaseButtonText(button, buildCount) {
         structure.updateUI?.(els);
       }
   
-      const productivityElement = document.getElementById(`${structureName}-productivity`);
+      const productivityElement = els.productivityElement;
       if (productivityElement) {
         const productivityValue = Math.round((structure.productivity * 100));
-        productivityElement.textContent = `${productivityValue}%`;
+        const productivityText = `${productivityValue}%`;
+        if (productivityElement._valueNode && productivityElement._valueNode.nodeValue !== productivityText) {
+          productivityElement._valueNode.nodeValue = productivityText;
+        }
+        if (productivityElement.style.color) {
+          productivityElement.style.color = '';
+        }
 
         if (structure.dayNightActivity && dayNightCycle.isNight() && !(typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle)) {
-          productivityElement.style.color = 'darkblue';
+          productivityElement.classList.add('productivity-day-night-inactive');
+          productivityElement.classList.remove('productivity-low');
         } else if (productivityValue < 100) {
-          productivityElement.style.color = 'red';
+          productivityElement.classList.add('productivity-low');
+          productivityElement.classList.remove('productivity-day-night-inactive');
         } else {
-          productivityElement.style.color = 'inherit';
+          productivityElement.classList.remove('productivity-day-night-inactive');
+          productivityElement.classList.remove('productivity-low');
         }
       }
 
@@ -2832,13 +3050,16 @@ function updateDecreaseButtonText(button, buildCount) {
         }
       }
 
-      const iconElement = document.getElementById(`${structureName}-day-night-icon`);
+      const iconElement = els.dayNightIcon;
       if (iconElement) {
         if (typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle) {
           iconElement.style.display = 'none';
         } else {
           iconElement.style.display = '';
-          iconElement.textContent = dayNightCycle.isDay() ? '☀️' : '🌙';
+          const iconText = dayNightCycle.isDay() ? '☀️' : '🌙';
+          if (iconElement.textContent !== iconText) {
+            iconElement.textContent = iconText;
+          }
         }
       }
   
@@ -2848,7 +3069,7 @@ function updateDecreaseButtonText(button, buildCount) {
       }
   
       // Update the production and consumption details
-      const productionConsumptionDetails = document.getElementById(`${structureName}-production-consumption`);
+      const productionConsumptionDetails = els.productionDetails;
       if (productionConsumptionDetails) {
         updateProductionConsumptionDetails(structure, productionConsumptionDetails, manualBuildCount);
       }
@@ -2874,7 +3095,7 @@ function updateDecreaseButtonText(button, buildCount) {
     const sections = getProdConsSections(structure, buildCount);
     const keyString = sections
       .map(sec => {
-        const keys = sec.key === 'provides'
+        const keys = isPlainProdConsSection(sec.key)
           ? sec.data.map((_, i) => String(i)).join('|')
           : (sec.keys || []).join('|');
         return `${sec.key}:${keys}`;
@@ -2886,6 +3107,9 @@ function updateDecreaseButtonText(button, buildCount) {
     }
     const combinedCosts = {};
     sections.forEach(sec => {
+      if (isPlainProdConsSection(sec.key)) {
+        return;
+      }
       if (sec.key === 'consumption') {
         for (const category in sec.data) {
           for (const resource in sec.data[category]) {
@@ -2904,7 +3128,7 @@ function updateDecreaseButtonText(button, buildCount) {
     sections.forEach(sec => {
       const info = productionConsumptionElement._sections[sec.key];
       if (!info) return;
-      if (sec.key === 'provides') {
+      if (isPlainProdConsSection(sec.key)) {
         sec.data.forEach((text, i) => {
           const span = info.spans.get(String(i));
           if (span && span.textContent !== text) {
@@ -2935,6 +3159,7 @@ function updateDecreaseButtonText(button, buildCount) {
               resource,
               buildCount
             };
+            if (span._updateMaintenanceTooltip) span._updateMaintenanceTooltip();
           } else if (sec.key === 'production') {
             span._productionTooltipContext = {
               structure,
@@ -2942,6 +3167,7 @@ function updateDecreaseButtonText(button, buildCount) {
               resource,
               buildCount
             };
+            if (span._updateProductionTooltip) span._updateProductionTooltip();
           } else if (sec.key === 'consumption') {
             span._consumptionTooltipContext = {
               structure,
@@ -2949,21 +3175,25 @@ function updateDecreaseButtonText(button, buildCount) {
               resource,
               buildCount
             };
+            if (span._updateConsumptionTooltip) span._updateConsumptionTooltip();
           }
           if (resObj) {
             const netRate = (resObj.productionRate || 0) - (resObj.consumptionRate || 0);
+            let color = '';
             if (sec.key === 'production') {
-              const color = netRate < 0 ? 'green' : '';
-              textSpan.style.color = swapResourceRateColor(resObj, color);
+              color = swapResourceRateColor(resObj, netRate < 0 ? 'green' : '');
             } else if (sec.key === 'consumption' || sec.key === 'maintenance') {
               const totalCost = combinedCosts[`${category}.${resource}`] || amount;
               const projectedNet = netRate - totalCost;
-              textSpan.style.color = projectedNet < 0 ? 'orange' : '';
-            } else {
-              textSpan.style.color = '';
+              color = projectedNet < 0 ? 'orange' : '';
+            }
+            if (textSpan.style.color !== color) {
+              textSpan.style.color = color;
             }
           } else {
-            textSpan.style.color = '';
+            if (textSpan.style.color) {
+              textSpan.style.color = '';
+            }
           }
         });
       }
@@ -3051,7 +3281,39 @@ function updateDecreaseButtonText(button, buildCount) {
       }
     }
 
+    const heatCoefficient = structure.factoryHeatCoefficient || 0;
+    let energyConsumption = displayConsumption.colony?.energy || 0;
+    if (structure.getWarpnetEnergyConsumptionMultiplier) {
+      const warpnetMultiplier = structure.getWarpnetEnergyConsumptionMultiplier();
+      if (warpnetMultiplier > 1) {
+        energyConsumption /= warpnetMultiplier;
+      }
+    }
+    const heatPower = gameSettings.factoryHeating ? energyConsumption * heatCoefficient : 0;
+    if (heatPower > 0) {
+      sections.push({
+        key: 'heat',
+        label: getStructuresUIText('ui.structures.labels.heat', 'Heat'),
+        data: [`${formatNumber(heatPower, false, 2)}W`]
+      });
+    }
+    const coolingCoefficient = structure.factoryCoolingCoefficient || 0;
+    const energyProduction = displayProduction.colony?.energy || 0;
+    const surfaceAlbedo = Math.max(0, Math.min(1, terraforming.luminosity.surfaceAlbedo || 0));
+    const coolingPower = gameSettings.factoryHeating ? energyProduction * coolingCoefficient * (1 - surfaceAlbedo) : 0;
+    if (coolingPower > 0) {
+      sections.push({
+        key: 'cooling',
+        label: getStructuresUIText('ui.structures.labels.cooling', 'Cooling'),
+        data: [`${formatNumber(coolingPower, false, 2)}W`]
+      });
+    }
+
     return sections;
+  }
+
+  function isPlainProdConsSection(key) {
+    return key === 'provides' || key === 'heat' || key === 'cooling';
   }
 
   function collectResourceKeys(resourceObject, { forceShow, allowNegative } = {}) {
@@ -3073,7 +3335,7 @@ function updateDecreaseButtonText(button, buildCount) {
   function buildProdConsElement(element, sections) {
     const keyString = sections
       .map(sec => {
-        const keys = sec.key === 'provides'
+        const keys = isPlainProdConsSection(sec.key)
           ? sec.data.map((_, i) => String(i)).join('|')
           : (sec.keys || []).join('|');
         return `${sec.key}:${keys}`;
@@ -3098,6 +3360,7 @@ function updateDecreaseButtonText(button, buildCount) {
           span._maintenanceTooltipCache = {};
           span._updateMaintenanceTooltip = () => {
             const context = span._maintenanceTooltipContext;
+            if (!context) return;
             const text = buildStructureMaintenanceTooltip(
               context.structure,
               context.resource,
@@ -3113,6 +3376,7 @@ function updateDecreaseButtonText(button, buildCount) {
           span._productionTooltipCache = {};
           span._updateProductionTooltip = () => {
             const context = span._productionTooltipContext;
+            if (!context) return;
             const text = buildStructureProductionTooltip(
               context.structure,
               context.category,
@@ -3129,6 +3393,7 @@ function updateDecreaseButtonText(button, buildCount) {
           span._consumptionTooltipCache = {};
           span._updateConsumptionTooltip = () => {
             const context = span._consumptionTooltipContext;
+            if (!context) return;
             const text = buildStructureConsumptionTooltip(
               context.structure,
               context.category,
@@ -3182,18 +3447,14 @@ function updateDecreaseButtonText(button, buildCount) {
     }
 
     function syncSectionItems(info, sec) {
-      const nextKeys = sec.key === 'provides'
+      const nextKeys = isPlainProdConsSection(sec.key)
         ? sec.data.map((_, i) => String(i))
         : sec.keys;
       const nextKeySet = new Set(nextKeys);
       info.spans.forEach((span, key) => {
         if (!nextKeySet.has(key)) {
-          const separator = info.separators.get(key);
-          if (separator) {
-            separator.nodeValue = '';
-            separator._inactive = true;
-          }
-          span.style.display = 'none';
+          info.spans.delete(key);
+          info.separators.delete(key);
         }
       });
       nextKeys.forEach((key, index) => {
@@ -3368,7 +3629,12 @@ function updateBuildingSubtabsVisibility() {
       const isVisible = b.isVisible ? b.isVisible() : b.unlocked && !b.isHidden;
       return b.category === category && isVisible;
     });
-    const hasHiddenBuilding = Object.values(buildings).some(b => b.category === category && b.isHidden);
+    const hasHiddenBuilding = Object.values(buildings).some(b => (
+      b.category === category
+      && b.unlocked
+      && b.isHidden
+      && !b.permanentlyDisabled
+    ));
     const shouldShow = hasVisibleBuilding || hasHiddenBuilding;
     if (shouldShow) {
       anyAvailableBuilding = true;
@@ -3422,13 +3688,27 @@ function updateBuildingSubtabsVisibility() {
 function updateUnhideButtons() {
   const categories = getBuildingCategories();
   categories.forEach(cat => {
-    const container = document.getElementById(`${cat}-unhide-container`);
+    const cacheKey = `${cat}-unhide-container`;
+    let container = unhideButtonContainerCache[cacheKey];
+    if (!container || !container.isConnected) {
+      container = document.getElementById(cacheKey);
+      unhideButtonContainerCache[cacheKey] = container;
+    }
     if (!container) return;
-    const hasHidden = Object.values(buildings).some(b => b.category === cat && b.isHidden);
+    const hasHidden = Object.values(buildings).some(b => (
+      b.category === cat
+      && b.unlocked
+      && b.isHidden
+      && !b.permanentlyDisabled
+    ));
     container.style.display = hasHidden ? 'block' : 'none';
   });
 
-  const colonyContainer = document.getElementById('unhide-obsolete-container');
+  let colonyContainer = unhideButtonContainerCache.obsolete;
+  if (!colonyContainer || !colonyContainer.isConnected) {
+    colonyContainer = document.getElementById('unhide-obsolete-container');
+    unhideButtonContainerCache.obsolete = colonyContainer;
+  }
   if (colonyContainer) {
     const hasColonyHidden = Object.values(colonies).some(c => c.isHidden);
     colonyContainer.style.display = hasColonyHidden ? 'block' : 'none';

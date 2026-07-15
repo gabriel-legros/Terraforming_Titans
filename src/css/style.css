@@ -1,10 +1,20 @@
 html {
     font-size: 16px;
+    height: 100%;
 }
 
 body {
     font-family: Arial, sans-serif;
+    height: 100%;
+    margin: 0;
     overflow:hidden;
+}
+
+#game-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
 }
 
 .loading-overlay {
@@ -93,6 +103,7 @@ body {
 }
 
 .tabs {
+    flex: 0 0 auto;
     flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
@@ -172,14 +183,15 @@ body.journal-collapsed .space-subtabs
 .resource-wrapper {
     flex: 0 0 16%; /* Takes up 16% of the space */
     min-width: 300px;
-    height: calc(100vh - 120px); /* Scale with window height minus top area */
+    min-height: 0;
     overflow-y: auto; /* Scroll if content exceeds space */
 }
 
 .tab-content-wrapper {
     display: flex;
     gap: 10px;
-    height: calc(100vh - 120px); /* Fill remaining vertical space below tabs */
+    flex: 1 1 auto;
+    min-height: 0;
     background-color: white;
 }
 
@@ -187,10 +199,22 @@ body.journal-collapsed .space-subtabs
 .tab-content {
     flex: 1; /* Takes up the remaining space between resource and journal */
     display: none;
-    height: calc(100vh - 120px); /* Scale with window height minus top area */
-    overflow-y: auto; /* Scroll if content exceeds space */
+    min-height: 0;
+    overflow: hidden;
     padding-left:10px;
     padding-right:10px;
+}
+
+.tab-content > .container {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+.tab-content > .container.hidden {
+    display: none;
 }
 
 /* Add extra space for show journal button when journal is collapsed */
@@ -199,7 +223,7 @@ body.journal-collapsed .tab-content {
 }
 
 .tab-content.active {
-    display: block;
+    display: flex;
 }
 
 .building-list, 
@@ -238,6 +262,22 @@ body.journal-collapsed .tab-content {
     display: block;
 }
 
+.building-subtab-content-wrapper,
+.colony-subtab-content-wrapper,
+.projects-subtab-content-wrapper,
+.terraforming-subtab-content-wrapper,
+.hope-subtab-content-wrapper,
+.space-subtab-content-wrapper,
+.subtab-content-wrapper {
+    flex: 1 1 auto;
+    box-sizing: border-box;
+    margin-right: -10px;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 10px;
+    scrollbar-gutter: stable;
+}
+
 .subtab-content-wrapper {
     display: flex;
     flex-direction: column;
@@ -253,7 +293,7 @@ body.journal-collapsed .tab-content {
     padding: 15px; /* Adds padding to the journal text */
     box-sizing: border-box; /* Ensures padding is inside the element width */
     overflow-y: auto; /* Allows scrolling if content exceeds height */
-    height: calc(100vh - 120px); /* Scale with window height minus top area */
+    min-height: 0;
 }
 
 .journal-header {
@@ -306,23 +346,74 @@ body.journal-collapsed .tab-content {
 }
 
 #journal-entries .prometheus-text,
+.popup-text .prometheus-text,
 .history-entries .prometheus-text {
     color: #c43333;
 }
 
 #journal-entries .diagnostic-text,
+.popup-text .diagnostic-text,
 .history-entries .diagnostic-text {
     color: #2e7d32;
 }
 
 #journal-entries .orange-text,
+.popup-text .orange-text,
 .history-entries .orange-text {
     color: #d97706;
 }
 
+#journal-entries .blue-text,
+.popup-text .blue-text,
+.history-entries .blue-text {
+    color: #2563eb;
+}
+
+#journal-entries .pink-text,
+.popup-text .pink-text,
+.history-entries .pink-text {
+    color: #db2777;
+}
+
 #journal-entries .journal-white-text,
+.popup-text .journal-white-text,
 .history-entries .journal-white-text {
     color: inherit;
+}
+
+#journal-entries .journal-lie-text,
+.popup-text .journal-lie-text,
+.history-entries .journal-lie-text {
+    color: #c43333;
+    text-decoration-line: underline;
+    text-decoration-color: #c43333;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 2px;
+}
+
+.olympus-throne-room-choices {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.olympus-throne-room-choice {
+    min-height: 48px;
+    padding: 10px 12px;
+    white-space: normal;
+    line-height: 1.25;
+}
+
+.olympus-throne-room-choice.is-selected {
+    border-color: #67b7dc;
+    box-shadow: 0 0 0 2px rgba(103, 183, 220, 0.25);
+}
+
+@media (max-width: 700px) {
+    .olympus-throne-room-choices {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Separator for story project entries */
@@ -343,6 +434,7 @@ body.journal-collapsed .tab-content {
 /* Top bar holding progress and journal toggle */
 .top-bar {
     display: flex;
+    flex: 0 0 auto;
     align-items: center;
     gap: 10px;
 }

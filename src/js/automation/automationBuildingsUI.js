@@ -4,6 +4,8 @@ const buildingAutomationUIState = {
   builderName: '',
   builderScope: 'all',
   builderType: 'both',
+  builderPresetMode: 'regular',
+  builderPresetModeInvalidMessage: '',
   builderShowInSidebar: true,
   builderSelectedBuildings: [],
   jsonFilterBuildingId: '',
@@ -20,7 +22,7 @@ let buildingsBuilderBuildingSignature = '';
 let buildingsBuilderSelectedSignature = '';
 
 function getBuildingAutomationPickerCatalog(selectedCategory) {
-  return Object.values(buildings).filter(building => (
+  return getAutomatableBuildings().filter(building => (
     selectedCategory === 'all' || building.category === selectedCategory
   ));
 }
@@ -55,6 +57,7 @@ function updateBuildingAutomationApplyDetail(detail, automation, presetId) {
 function createBuildingAutomationApplyRow(automation) {
   const row = document.createElement('div');
   row.classList.add('building-automation-apply-row');
+  row._automation = automation;
   const primary = document.createElement('div');
   primary.classList.add('building-automation-apply-primary');
   const toggle = createToggleButton({
@@ -64,21 +67,23 @@ function createBuildingAutomationApplyRow(automation) {
   });
   toggle.classList.add('building-automation-apply-toggle');
   toggle.addEventListener('click', () => {
+    const currentAutomation = row._automation;
     const assignmentId = Number(row.dataset.assignmentId);
-    const assignment = automation.getAssignments().find(entry => entry.id === assignmentId);
+    const assignment = currentAutomation.getAssignments().find(entry => entry.id === assignmentId);
     if (!assignment) {
       return;
     }
-    automation.setAssignmentEnabled(assignment.id, !assignment.enabled);
+    currentAutomation.setAssignmentEnabled(assignment.id, !assignment.enabled);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
   const select = document.createElement('select');
   select.addEventListener('change', (event) => {
+    const currentAutomation = row._automation;
     const assignmentId = Number(row.dataset.assignmentId);
     const presetId = Number(event.target.value);
-    automation.setAssignmentPreset(assignmentId, presetId);
-    updateBuildingAutomationApplyDetail(row._refs.detail, automation, presetId);
+    currentAutomation.setAssignmentPreset(assignmentId, presetId);
+    updateBuildingAutomationApplyDetail(row._refs.detail, currentAutomation, presetId);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -90,7 +95,7 @@ function createBuildingAutomationApplyRow(automation) {
   moveUp.textContent = '↑';
   moveUp.title = getAutomationCardText('moveApplyUp', {}, 'Move up');
   moveUp.addEventListener('click', () => {
-    automation.moveAssignment(Number(row.dataset.assignmentId), -1);
+    row._automation.moveAssignment(Number(row.dataset.assignmentId), -1);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -98,7 +103,7 @@ function createBuildingAutomationApplyRow(automation) {
   moveDown.textContent = '↓';
   moveDown.title = getAutomationCardText('moveApplyDown', {}, 'Move down');
   moveDown.addEventListener('click', () => {
-    automation.moveAssignment(Number(row.dataset.assignmentId), 1);
+    row._automation.moveAssignment(Number(row.dataset.assignmentId), 1);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -106,7 +111,7 @@ function createBuildingAutomationApplyRow(automation) {
   remove.textContent = '✕';
   remove.title = getAutomationCardText('removePresetFromApply', {}, 'Remove preset');
   remove.addEventListener('click', () => {
-    automation.removeAssignment(Number(row.dataset.assignmentId));
+    row._automation.removeAssignment(Number(row.dataset.assignmentId));
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -128,6 +133,7 @@ function getBuildingAutomationPresetOptionData(presets) {
 }
 
 function prepareBuildingAutomationApplyRow(row, automation, presets, assignment, index, assignmentCount) {
+  row._automation = automation;
   row.dataset.assignmentId = String(assignment.id);
   row.style.display = '';
   setToggleButtonState(row._refs.toggle, assignment.enabled);
@@ -314,8 +320,22 @@ function buildAutomationBuildingsUI() {
   manualScope.value = 'manual';
   manualScope.textContent = getAutomationCardText('chooseBuildings', {}, 'Choose buildings');
   scopeSelect.append(allScope, manualScope);
-  builderModeRow.append(typeSelect, scopeSelect);
+  const presetModeSelect = document.createElement('select');
+  presetModeSelect.classList.add('building-automation-builder-preset-mode');
+  const regularModeOption = document.createElement('option');
+  regularModeOption.value = 'regular';
+  regularModeOption.textContent = getAutomationCardText('regularPresetMode', {}, 'Regular preset');
+  const parameterizedModeOption = document.createElement('option');
+  parameterizedModeOption.value = 'parameterized';
+  parameterizedModeOption.textContent = getAutomationCardText('parameterizedPresetMode', {}, 'Parametrized preset');
+  presetModeSelect.append(regularModeOption, parameterizedModeOption);
+  builderModeRow.append(typeSelect, scopeSelect, presetModeSelect);
   builderSection.appendChild(builderModeRow);
+
+  const presetModeMessage = document.createElement('div');
+  presetModeMessage.classList.add('automation-parameterized-preset-message');
+  presetModeMessage.style.display = 'none';
+  builderSection.appendChild(presetModeMessage);
 
   const builderHint = document.createElement('div');
   builderHint.classList.add('building-automation-hint');
@@ -346,6 +366,8 @@ function buildAutomationBuildingsUI() {
 
   const presetJsonDetails = createAutomationPresetJsonDetails('building-automation-preset-json-details');
   builderSection.appendChild(presetJsonDetails);
+  const presetUsage = createAutomationPresetUsageLine();
+  builderSection.appendChild(presetUsage);
 
   body.appendChild(builderSection);
 
@@ -390,6 +412,8 @@ function buildAutomationBuildingsUI() {
   automationElements.buildingsBuilderDirty = builderDirty;
   automationElements.buildingsBuilderTypeSelect = typeSelect;
   automationElements.buildingsBuilderScopeSelect = scopeSelect;
+  automationElements.buildingsBuilderPresetModeSelect = presetModeSelect;
+  automationElements.buildingsBuilderPresetModeMessage = presetModeMessage;
   automationElements.buildingsBuilderCategorySelect = categorySelect;
   automationElements.buildingsBuilderBuildingSelect = buildingSelect;
   automationElements.buildingsBuilderAddButton = addButton;
@@ -397,6 +421,7 @@ function buildAutomationBuildingsUI() {
   automationElements.buildingsBuilderClearButton = clearButton;
   automationElements.buildingsBuilderSelectedList = selectedList;
   automationElements.buildingsPresetJsonDetails = presetJsonDetails;
+  automationElements.buildingsPresetUsage = presetUsage;
   automationElements.buildingsApplyCombinationButton = applyParts.applyCombinationButton;
   automationElements.buildingsApplyNextTravelSelect = applyParts.applyNextTravelSelect;
   automationElements.buildingsApplyNextTravelPersistToggle = applyParts.applyNextTravelPersistToggle;
@@ -406,8 +431,10 @@ function buildAutomationBuildingsUI() {
   automationElements.buildingsCombinationNameInput = applyParts.combinationNameInput;
   automationElements.buildingsCombinationNewButton = applyParts.combinationNewButton;
   automationElements.buildingsCombinationSaveButton = applyParts.combinationSaveButton;
+  automationElements.buildingsCombinationDirtyIndicator = applyParts.combinationDirtyIndicator;
   automationElements.buildingsCombinationDeleteButton = applyParts.combinationDeleteButton;
   automationElements.buildingsCombinationShowInSidebarCheckbox = applyParts.combinationShowInSidebarCheckbox;
+  automationElements.buildingsCombinationUsage = applyParts.combinationUsage;
   automationElements.buildingsApplyList = applyParts.applyList;
   automationElements.buildingsApplyHint = applyParts.applyHint;
   automationElements.buildingsAddApplyButton = applyParts.addApplyButton;
@@ -436,6 +463,8 @@ function updateBuildingsAutomationUI() {
     buildingsBuilderDirty,
     buildingsBuilderTypeSelect,
     buildingsBuilderScopeSelect,
+    buildingsBuilderPresetModeSelect,
+    buildingsBuilderPresetModeMessage,
     buildingsBuilderCategorySelect,
     buildingsBuilderBuildingSelect,
     buildingsBuilderAddButton,
@@ -455,8 +484,10 @@ function updateBuildingsAutomationUI() {
     buildingsCombinationNameInput,
     buildingsCombinationNewButton,
     buildingsCombinationSaveButton,
+    buildingsCombinationDirtyIndicator,
     buildingsCombinationDeleteButton,
-    buildingsCombinationShowInSidebarCheckbox
+    buildingsCombinationShowInSidebarCheckbox,
+    buildingsCombinationUsage
   } = automationElements;
   const manager = automationManager;
   const automation = manager.buildingsAutomation;
@@ -503,6 +534,7 @@ function updateBuildingsAutomationUI() {
   if (activePreset && buildingAutomationUIState.syncedPresetId !== activePresetId) {
     const names = Object.keys(activePreset.buildings);
     buildingAutomationUIState.builderScope = activePreset.scopeAll ? 'all' : 'manual';
+    buildingAutomationUIState.builderPresetMode = automation.getPresetModeValue(activePreset.presetMode);
     buildingAutomationUIState.builderSelectedBuildings = names.slice();
     buildingAutomationUIState.builderType = activePreset.includeControl && activePreset.includeAutomation
         ? 'both'
@@ -524,6 +556,10 @@ function updateBuildingsAutomationUI() {
   }
   updateAutomationPresetJsonDetails(buildingsPresetJsonDetails, activePreset, {
     rootPath: ['buildings'],
+    getParameterInputPaths: (preset) => automation.isParameterizedPreset(preset)
+      ? automation.getPresetParameterInfo(preset).parameterPaths
+      : [],
+    showStatus: (text, isError) => showAutomationPresetJsonStatus(automationElements.buildingsAutomationStatus, text, isError),
     isLeafVisible: (fieldPath, preset) => {
       const selectedBuildingId = buildingAutomationUIState.jsonFilterBuildingId;
       if (selectedBuildingId && fieldPath[0] === 'buildings' && fieldPath[1] !== selectedBuildingId) {
@@ -541,14 +577,11 @@ function updateBuildingsAutomationUI() {
         return mode === 'fill';
       }
       if (leafKey === 'autoBuildPercent') {
-        if (mode === 'fixed' || mode === 'fill') {
-          return false;
-        }
-        if (mode !== 'max') {
-          return true;
-        }
+        return mode !== 'fixed' && mode !== 'fill' && mode !== 'max';
+      }
+      if (leafKey === 'autoBuildMaxPercent') {
         const building = buildings[fieldPath[1]];
-        return building.hasAdjustableAutoBuildMaxTarget();
+        return mode === 'max' && building.hasAdjustableAutoBuildMaxTarget();
       }
       return true;
     },
@@ -587,11 +620,60 @@ function updateBuildingsAutomationUI() {
       queueAutomationUIRefresh();
       updateAutomationUI();
     },
-    onFieldChange: (fieldPath, nextValue) => {
+    onSnapshotFilter: (buildingId) => {
       if (!activePreset) {
         return;
       }
-      applyAutomationPresetJsonFieldEdit(activePreset, fieldPath, nextValue, {
+      const changed = automation.snapshotBuildingIntoPreset(activePreset.id, buildingId);
+      if (changed) {
+        buildingAutomationUIState.builderSelectedBuildings = Object.keys(activePreset.buildings);
+        showAutomationPresetJsonStatus(
+          automationElements.buildingsAutomationStatus,
+          getAutomationCardText('snapshotPresetJsonSaved', {}, 'Snapshot saved.'),
+          false
+        );
+      } else {
+        showAutomationPresetJsonStatus(
+          automationElements.buildingsAutomationStatus,
+          getAutomationCardText('snapshotPresetJsonFailed', {}, 'Could not snapshot that selection.'),
+          true
+        );
+      }
+    },
+    onRegenerateFilter: (buildingId) => {
+      if (!activePreset) {
+        return null;
+      }
+      const referencePreset = JSON.parse(JSON.stringify(activePreset));
+      const buildingIds = buildingId ? [buildingId] : selectedBuildingIds;
+      let changed = false;
+      for (let index = 0; index < buildingIds.length; index += 1) {
+        const targetBuildingId = buildingIds[index];
+        const building = buildings[targetBuildingId];
+        if (!building) {
+          continue;
+        }
+        const entry = automation.captureBuildingSettings(
+          building,
+          activePreset.includeControl !== false,
+          activePreset.includeAutomation !== false
+        );
+        if (!entry.control && !entry.automation) {
+          continue;
+        }
+        referencePreset.buildings[targetBuildingId] = entry;
+        changed = true;
+      }
+      if (!changed) {
+        return null;
+      }
+      return referencePreset;
+    },
+    onFieldChange: (fieldPath, nextValue, changeOptions = null) => {
+      if (!activePreset) {
+        return;
+      }
+      const applyOptions = {
         normalizeValue: (path, value) => {
           if (path[0] === 'buildings' && path[2] === 'control' && path[3] === 'workerPriority') {
             return Number.parseInt(value, 10);
@@ -616,9 +698,15 @@ function updateBuildingsAutomationUI() {
                 : 'automation';
           }
         }
-      });
+      };
+      if (changeOptions && changeOptions.remove) {
+        applyAutomationPresetJsonFieldRemoval(activePreset, fieldPath, applyOptions);
+      } else {
+        applyAutomationPresetJsonFieldEdit(activePreset, fieldPath, nextValue, applyOptions);
+      }
     }
   });
+  updateAutomationPresetUsageLine(automationElements.buildingsPresetUsage, 'buildings', activePreset);
 
   if (document.activeElement !== buildingsBuilderPresetNameInput) {
     buildingsBuilderPresetNameInput.value = activePreset ? activePreset.name : buildingAutomationUIState.builderName;
@@ -632,6 +720,20 @@ function updateBuildingsAutomationUI() {
   if (document.activeElement !== buildingsBuilderScopeSelect) {
     buildingsBuilderScopeSelect.value = buildingAutomationUIState.builderScope;
   }
+  const showPresetMode = manager.hasFeature('automationScripts');
+  buildingsBuilderPresetModeSelect.style.display = showPresetMode ? '' : 'none';
+  if (!showPresetMode) {
+    buildingAutomationUIState.builderPresetMode = 'regular';
+  }
+  if (document.activeElement !== buildingsBuilderPresetModeSelect) {
+    buildingsBuilderPresetModeSelect.value = buildingAutomationUIState.builderPresetMode;
+  }
+  const parameterizedInvalidMessage = activePreset
+    && showPresetMode
+    ? automation.getParameterizedPresetInvalidMessage(activePreset)
+    : buildingAutomationUIState.builderPresetModeInvalidMessage;
+  buildingsBuilderPresetModeMessage.textContent = parameterizedInvalidMessage;
+  buildingsBuilderPresetModeMessage.style.display = parameterizedInvalidMessage ? '' : 'none';
 
   const showManual = buildingAutomationUIState.builderScope === 'manual';
   buildingsBuilderCategorySelect.parentElement.style.display = showManual ? 'flex' : 'none';
@@ -712,7 +814,7 @@ function updateBuildingsAutomationUI() {
     persistToggleElement: buildingsApplyNextTravelPersistToggle
   });
 
-  updateAutomationCombinationControls({
+  const combinationControlState = updateAutomationCombinationControls({
     automation,
     combinations,
     uiState: buildingAutomationUIState,
@@ -721,8 +823,14 @@ function updateBuildingsAutomationUI() {
     showCheckboxElement: buildingsCombinationShowInSidebarCheckbox,
     moveUpButtonElement: buildingsCombinationMoveUpButton,
     moveDownButtonElement: buildingsCombinationMoveDownButton,
-    deleteButtonElement: buildingsCombinationDeleteButton
+    deleteButtonElement: buildingsCombinationDeleteButton,
+    dirtyIndicatorElement: buildingsCombinationDirtyIndicator
   });
+  updateAutomationCombinationUsageLine(
+    buildingsCombinationUsage,
+    'buildings',
+    combinationControlState ? combinationControlState.activeCombination : null
+  );
 
   const selectedHasFocus = buildingsBuilderSelectedList.contains(document.activeElement)
     && document.activeElement.tagName === 'INPUT';
@@ -761,7 +869,6 @@ function updateBuildingsAutomationUI() {
             const preset = automationManager.buildingsAutomation.getPresetById(Number(presetId));
             if (preset && preset.buildings[name]) {
               delete preset.buildings[name];
-              buildingAutomationUIState.syncedPresetId = null;
             }
           }
           queueAutomationUIRefresh();
@@ -786,6 +893,7 @@ function updateBuildingsAutomationUI() {
       ? 'all'
       : 'manual'
     : 'all';
+  const savedPresetMode = activePreset && showPresetMode ? automation.getPresetModeValue(activePreset.presetMode) : 'regular';
   const savedBuildingIds = activePreset ? Object.keys(activePreset.buildings) : [];
   const savedBuildingSet = new Set(savedBuildingIds);
   const manualSelection = buildingAutomationUIState.builderScope === 'manual';
@@ -796,12 +904,14 @@ function updateBuildingsAutomationUI() {
     && (
       buildingAutomationUIState.builderName.trim() !== ''
       || buildingAutomationUIState.builderType !== 'both'
+      || (showPresetMode && buildingAutomationUIState.builderPresetMode !== 'regular')
       || buildingAutomationUIState.builderScope !== 'all'
       || buildingAutomationUIState.builderSelectedBuildings.length > 0
     );
   const existingDirty = !!activePreset
     && (
       buildingAutomationUIState.builderType !== savedType
+      || (showPresetMode && buildingAutomationUIState.builderPresetMode !== savedPresetMode)
       || buildingAutomationUIState.builderScope !== savedScope
       || selectionChanged
     );
@@ -833,6 +943,7 @@ function attachBuildingsAutomationHandlers() {
     buildingsBuilderExportButton,
     buildingsBuilderTypeSelect,
     buildingsBuilderScopeSelect,
+    buildingsBuilderPresetModeSelect,
     buildingsBuilderCategorySelect,
     buildingsBuilderBuildingSelect,
     buildingsBuilderAddButton,
@@ -911,6 +1022,7 @@ function attachBuildingsAutomationHandlers() {
     buildingAutomationUIState.builderName = '';
     buildingAutomationUIState.builderScope = 'manual';
     buildingAutomationUIState.builderType = 'both';
+    buildingAutomationUIState.builderPresetMode = 'regular';
     buildingAutomationUIState.builderShowInSidebar = true;
     buildingAutomationUIState.builderSelectedBuildings = [];
     buildingAutomationUIState.builderCategoryValue = 'all';
@@ -930,6 +1042,22 @@ function attachBuildingsAutomationHandlers() {
 
   buildingsBuilderScopeSelect.addEventListener('change', (event) => {
     buildingAutomationUIState.builderScope = event.target.value;
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  buildingsBuilderPresetModeSelect.addEventListener('change', (event) => {
+    buildingAutomationUIState.builderPresetMode = event.target.value === 'parameterized' ? 'parameterized' : 'regular';
+    buildingAutomationUIState.builderPresetModeInvalidMessage = '';
+    if (buildingAutomationUIState.builderPresetMode === 'parameterized' && buildingAutomationUIState.builderScope === 'all') {
+      buildingAutomationUIState.builderScope = 'manual';
+    }
+    const presetId = automationManager.buildingsAutomation.getSelectedPresetId();
+    if (presetId) {
+      const preset = automationManager.buildingsAutomation.getPresetById(Number(presetId));
+      if (preset) {
+        preset.presetMode = buildingAutomationUIState.builderPresetMode;
+      }
+    }
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -1049,21 +1177,30 @@ function attachBuildingsAutomationHandlers() {
     const includeControl = type === 'control' || type === 'both';
     const includeAutomation = type === 'automation' || type === 'both';
     const scopeAll = buildingAutomationUIState.builderScope === 'all';
+    const presetMode = buildingAutomationUIState.builderPresetMode;
     const showInSidebar = buildingAutomationUIState.builderShowInSidebar;
     const buildingIds = buildingAutomationUIState.builderScope === 'all'
-      ? Object.values(buildings).map(building => building.name)
+      ? getAutomatableBuildings().map(building => building.name)
       : buildingAutomationUIState.builderSelectedBuildings.slice();
     const presetId = automation.getSelectedPresetId();
     if (presetId) {
       resetAutomationPresetJsonDetailsState(automationElements.buildingsPresetJsonDetails, Number(presetId));
     }
+    const candidatePreset = automation.buildPreset(name, buildingIds, { includeControl, includeAutomation, scopeAll, showInSidebar, presetMode }, presetId || automation.nextPresetId);
+    if (automation.isParameterizedPreset(candidatePreset) && !automation.getPresetParameterInfo(candidatePreset).valid) {
+      buildingAutomationUIState.builderPresetModeInvalidMessage = automation.getParameterizedPresetInvalidMessage(candidatePreset);
+      queueAutomationUIRefresh();
+      updateAutomationUI();
+      return;
+    }
     if (presetId) {
-      automation.updatePreset(Number(presetId), name, buildingIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
+      automation.updatePreset(Number(presetId), name, buildingIds, { includeControl, includeAutomation, scopeAll, showInSidebar, presetMode });
     } else {
-      automation.addPreset(name, buildingIds, { includeControl, includeAutomation, scopeAll, showInSidebar });
+      automation.addPreset(name, buildingIds, { includeControl, includeAutomation, scopeAll, showInSidebar, presetMode });
       buildingAutomationUIState.syncedPresetId = null;
       buildingAutomationUIState.builderName = '';
     }
+    buildingAutomationUIState.builderPresetModeInvalidMessage = '';
     queueAutomationUIRefresh();
     updateAutomationUI();
   });

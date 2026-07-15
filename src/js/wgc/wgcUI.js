@@ -1,9 +1,9 @@
 let wgcTabVisible = false;
 let wgcUIInitialized = false;
-let wgcStoryToggleButton = null;
-let wgcStoryToggleLabel = null;
 let wgcCopyStatsButton = null;
 let wgcTeamRulesInfoIcon = null;
+let wgcArtifactBalanceElement = null;
+let wgcArtifactSidebarToggle = null;
 const wgcPendingLogScroll = new Set();
 
 function getWGCText(path, fallback, vars) {
@@ -79,18 +79,6 @@ function copyWGCTeamStatsToClipboard() {
   });
 }
 
-function updateWGCStoryToggleButton() {
-  if (!wgcStoryToggleButton || typeof warpGateCommand === 'undefined') return;
-  const hidden = !!warpGateCommand.hideStoryLogs;
-  wgcStoryToggleButton.classList.toggle('is-visible', !hidden);
-  wgcStoryToggleButton.classList.toggle('is-hidden', hidden);
-  wgcStoryToggleButton.setAttribute('aria-pressed', hidden ? 'false' : 'true');
-  if (wgcStoryToggleLabel) {
-    wgcStoryToggleLabel.textContent = hidden
-      ? getWGCText('hideStory', 'Hide Story')
-      : getWGCText('showStory', 'Show Story');
-  }
-}
 function queueWGCLogScroll(teamIndex) {
   if (!Number.isInteger(teamIndex) || teamIndex < 0) return;
   wgcPendingLogScroll.add(teamIndex);
@@ -252,15 +240,14 @@ function formatWGCLogLine(line) {
 
 function renderWGCLogLines(entries) {
   if (!Array.isArray(entries) || entries.length === 0) return '';
-  const hideStory = typeof warpGateCommand !== 'undefined' && warpGateCommand.hideStoryLogs;
-  const filtered = hideStory
-    ? entries.filter(line => typeof line !== 'string' || line.indexOf('Story Step') === -1)
-    : entries;
-  if (filtered.length === 0) return '';
-  return filtered.map(line => `<div class="wgc-log-line">${formatWGCLogLine(line)}</div>`).join('');
+  return entries.map(line => `<div class="wgc-log-line">${formatWGCLogLine(line)}</div>`).join('');
 }
 
 function showWGCTab() {
+  if (isCurrentWorldSubtabDisabled('wgc-hope')) {
+    hideWGCTab();
+    return;
+  }
   wgcTabVisible = true;
   if (typeof hopeSubtabManager !== 'undefined' && hopeSubtabManager) {
     hopeSubtabManager.show('wgc-hope');
@@ -395,9 +382,17 @@ function invalidateWGCTeamCache() {
   teamElements.length = 0;
   const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
   names.forEach((_, tIdx) => {
-    const card = document.querySelector(`.wgc-team-card[data-team="${tIdx}"]`);
+    const prev = previous[tIdx];
+    let card = prev && prev.card && prev.card.isConnected ? prev.card : null;
+    if (!card) {
+      card = document.querySelector(`.wgc-team-card[data-team="${tIdx}"]`);
+    }
     if (!card) {
       teamElements[tIdx] = null;
+      return;
+    }
+    if (prev && prev.card === card) {
+      teamElements[tIdx] = prev;
       return;
     }
     const lockOverlay = card.querySelector('.wgc-team-locked');
@@ -409,9 +404,7 @@ function invalidateWGCTeamCache() {
       bar: slot.querySelector('.team-hp-bar-fill'),
       indicator: slot.querySelector('.unspent-points-indicator') || null
     }));
-    const prev = previous[tIdx];
     const isNewCard = !prev || prev.card !== card;
-    const hideStory = typeof warpGateCommand !== 'undefined' && !!warpGateCommand.hideStoryLogs;
     const entry = {
       card,
       startBtn: card.querySelector('.start-button'),
@@ -434,7 +427,6 @@ function invalidateWGCTeamCache() {
       logEl: logContent,
       logPinned: prev && prev.logPinned === false ? false : isWGCLogPinned(logContainer),
       lastRenderedCount: !isNewCard && prev ? prev.lastRenderedCount || 0 : 0,
-      lastRenderedHideState: !isNewCard && prev ? prev.lastRenderedHideState : hideStory,
       lastRenderedHtml: !isNewCard && prev ? prev.lastRenderedHtml || '' : '',
       lockOverlay,
       lockDetail: lockOverlay ? lockOverlay.querySelector('.wgc-team-locked-detail') : null,
@@ -461,6 +453,107 @@ function invalidateWGCTeamCache() {
       }
     }
   });
+}
+
+function refreshWGCSlotRefs(slotEntry) {
+  const slot = slotEntry.slot;
+  slotEntry.button = slot.querySelector('button');
+  slotEntry.bar = slot.querySelector('.team-hp-bar-fill');
+  slotEntry.name = slot.querySelector('.team-member-name');
+  slotEntry.icon = slot.querySelector('.team-icon');
+  slotEntry.indicator = slot.querySelector('.unspent-points-indicator');
+}
+
+function clearWGCSlot(slot) {
+  while (slot.firstChild) {
+    slot.removeChild(slot.firstChild);
+  }
+}
+
+function showWGCEmptySlot(slotEntry, unlocked) {
+  const slot = slotEntry.slot;
+  clearWGCSlot(slot);
+  slot.classList.remove('filled');
+  const button = document.createElement('button');
+  button.textContent = '+';
+  button.disabled = !unlocked;
+  slot.appendChild(button);
+  refreshWGCSlotRefs(slotEntry);
+}
+
+function showWGCFilledSlot(slotEntry, member) {
+  const slot = slotEntry.slot;
+  clearWGCSlot(slot);
+  slot.classList.add('filled');
+
+  const hpBar = document.createElement('div');
+  hpBar.className = 'team-hp-bar';
+  const hpFill = document.createElement('div');
+  hpFill.className = 'team-hp-bar-fill';
+  hpBar.appendChild(hpFill);
+  slot.appendChild(hpBar);
+
+  const name = document.createElement('div');
+  name.className = 'team-member-name';
+  slot.appendChild(name);
+
+  const icon = document.createElement('img');
+  icon.className = 'team-icon';
+  slot.appendChild(icon);
+
+  refreshWGCSlotRefs(slotEntry);
+  updateWGCFilledSlot(slotEntry, member);
+}
+
+function updateWGCFilledSlot(slotEntry, member) {
+  if (slotEntry.name) {
+    slotEntry.name.textContent = member.firstName;
+  }
+  if (slotEntry.icon) {
+    const img = classImages[member.classType] || '';
+    if (slotEntry.icon.getAttribute('src') !== img) {
+      slotEntry.icon.setAttribute('src', img);
+    }
+  }
+  if (slotEntry.bar) {
+    const hpPercent = Math.floor((member.health / member.maxHealth) * 100);
+    slotEntry.bar.style.height = `${hpPercent}%`;
+    slotEntry.bar.classList.remove('low-hp', 'critical-hp');
+    if (hpPercent < 25) {
+      slotEntry.bar.classList.add('critical-hp');
+    } else if (hpPercent < 50) {
+      slotEntry.bar.classList.add('low-hp');
+    }
+  }
+  let indicator = slotEntry.indicator;
+  if (member.getPointsToAllocate() > 0) {
+    if (!indicator) {
+      const newIndicator = document.createElement('div');
+      newIndicator.className = 'unspent-points-indicator';
+      newIndicator.textContent = '!';
+      slotEntry.slot.appendChild(newIndicator);
+      slotEntry.indicator = newIndicator;
+    }
+  } else if (indicator) {
+    indicator.remove();
+    slotEntry.indicator = null;
+  }
+}
+
+function reconcileWGCMemberSlot(slotEntry, member, unlocked) {
+  if (member) {
+    if (!slotEntry.slot.classList.contains('filled')) {
+      showWGCFilledSlot(slotEntry, member);
+    } else {
+      updateWGCFilledSlot(slotEntry, member);
+    }
+    return;
+  }
+  if (slotEntry.slot.classList.contains('filled') || !slotEntry.button) {
+    showWGCEmptySlot(slotEntry, unlocked);
+  } else {
+    slotEntry.button.disabled = !unlocked;
+  }
 }
 
 function createRDItem(key, label) {
@@ -525,6 +618,29 @@ function createRDHeader() {
   div.appendChild(purchase);
 
   return div;
+}
+
+function createWGCArtifactSidebarControls() {
+  const controls = document.createElement('span');
+  controls.classList.add('wgc-rd-artifact-controls');
+
+  wgcArtifactBalanceElement = document.createElement('span');
+  wgcArtifactBalanceElement.classList.add('wgc-rd-artifact-balance');
+  controls.appendChild(wgcArtifactBalanceElement);
+
+  wgcArtifactSidebarToggle = createToggleButton({
+    onLabel: getWGCText('showArtifactsInSidebar', 'Show in sidebar'),
+    offLabel: getWGCText('showArtifactsInSidebar', 'Show in sidebar'),
+    isOn: warpGateCommand.showArtifactsInSidebar
+  });
+  wgcArtifactSidebarToggle.classList.add('wgc-rd-artifact-toggle');
+  wgcArtifactSidebarToggle.addEventListener('click', () => {
+    warpGateCommand.setArtifactSidebarVisibility(!warpGateCommand.showArtifactsInSidebar);
+    setToggleButtonState(wgcArtifactSidebarToggle, warpGateCommand.showArtifactsInSidebar);
+    updateResourceDisplay(resources, 0);
+  });
+  controls.appendChild(wgcArtifactSidebarToggle);
+  return controls;
 }
 
 function buildWGCRDPurchaseTooltipText() {
@@ -676,6 +792,21 @@ function closeRecruitDialog() {
   if (typeof updateWGCUI === 'function') updateWGCUI();
 }
 
+function getWGCAdjacentMemberSlot(teamIndex, slotIndex, direction) {
+  const teamCount = warpGateCommand.teams.length;
+  const slotCount = warpGateCommand.teams[teamIndex].length;
+  let rosterIndex = (teamIndex * slotCount) + slotIndex + direction;
+  while (rosterIndex >= 0 && rosterIndex < teamCount * slotCount) {
+    const nextTeamIndex = Math.floor(rosterIndex / slotCount);
+    const nextSlotIndex = rosterIndex % slotCount;
+    if (warpGateCommand.teams[nextTeamIndex][nextSlotIndex]) {
+      return { teamIndex: nextTeamIndex, slotIndex: nextSlotIndex };
+    }
+    rosterIndex += direction;
+  }
+  return null;
+}
+
 function openRecruitDialog(teamIndex, slotIndex, member) {
   closeRecruitDialog();
   if (member) member.isBeingEdited = true;
@@ -685,11 +816,37 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   const win = document.createElement('div');
   win.classList.add('wgc-popup-window');
 
+  const titleRow = document.createElement('div');
+  titleRow.classList.add('wgc-member-dialog-title-row');
+
+  const previousSlot = member ? getWGCAdjacentMemberSlot(teamIndex, slotIndex, -1) : null;
+  const nextSlot = member ? getWGCAdjacentMemberSlot(teamIndex, slotIndex, 1) : null;
+
+  const previousButton = document.createElement('button');
+  previousButton.type = 'button';
+  previousButton.classList.add('wgc-member-rotate-button', 'wgc-member-rotate-left');
+  if (!member) previousButton.classList.add('wgc-member-rotate-placeholder');
+  previousButton.innerHTML = '&#9664;';
+  previousButton.disabled = !previousSlot;
+  previousButton.setAttribute('aria-label', getWGCText('previousMember', 'Previous member'));
+  titleRow.appendChild(previousButton);
+
   const title = document.createElement('h2');
   title.textContent = member
     ? getWGCText('editMember', 'Edit Member')
     : getWGCText('recruitMember', 'Recruit Member');
-  win.appendChild(title);
+  titleRow.appendChild(title);
+
+  const nextButton = document.createElement('button');
+  nextButton.type = 'button';
+  nextButton.classList.add('wgc-member-rotate-button', 'wgc-member-rotate-right');
+  if (!member) nextButton.classList.add('wgc-member-rotate-placeholder');
+  nextButton.innerHTML = '&#9654;';
+  nextButton.disabled = !nextSlot;
+  nextButton.setAttribute('aria-label', getWGCText('nextMember', 'Next member'));
+  titleRow.appendChild(nextButton);
+
+  win.appendChild(titleRow);
 
   const originalStats = member ? {
     power: member.power,
@@ -1021,12 +1178,10 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   const buttonContainer = document.createElement('div');
   buttonContainer.classList.add('wgc-dialog-buttons');
 
-  const confirm = document.createElement('button');
-  confirm.textContent = getWGCText('confirm', 'Confirm');
-  confirm.addEventListener('click', () => {
+  const confirmRecruitDialog = () => {
     const firstName = firstNameField.value.trim();
     const lastName = lastNameField.value.trim();
-    if (!firstName) return;
+    if (!firstName) return false;
 
     if (member) {
       member.firstName = firstName;
@@ -1038,6 +1193,13 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
       warpGateCommand.recruitMember(teamIndex, slotIndex, m);
     }
     if (activeDialog) activeDialog._restoreStats = false;
+    return true;
+  };
+
+  const confirm = document.createElement('button');
+  confirm.textContent = getWGCText('confirm', 'Confirm');
+  confirm.addEventListener('click', () => {
+    if (!confirmRecruitDialog()) return;
     closeRecruitDialog();
     redrawWGCTeamCards();
   });
@@ -1051,6 +1213,21 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   win.appendChild(buttonContainer);
 
   if (member) {
+    previousButton.addEventListener('click', () => {
+      if (previousButton.disabled || !confirmRecruitDialog()) return;
+      const nextMember = warpGateCommand.teams[previousSlot.teamIndex][previousSlot.slotIndex];
+      closeRecruitDialog();
+      redrawWGCTeamCards();
+      openRecruitDialog(previousSlot.teamIndex, previousSlot.slotIndex, nextMember);
+    });
+    nextButton.addEventListener('click', () => {
+      if (nextButton.disabled || !confirmRecruitDialog()) return;
+      const nextMember = warpGateCommand.teams[nextSlot.teamIndex][nextSlot.slotIndex];
+      closeRecruitDialog();
+      redrawWGCTeamCards();
+      openRecruitDialog(nextSlot.teamIndex, nextSlot.slotIndex, nextMember);
+    });
+
     const dismiss = document.createElement('button');
     dismiss.textContent = getWGCText('dismiss', 'Dismiss');
     const opActive = warpGateCommand && warpGateCommand.operations &&
@@ -1103,30 +1280,84 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   }
 }
 
+function generateWGCPresetsDialogHTML() {
+  const manager = getWGCManager();
+  const names = manager && manager.teamNames ? manager.teamNames : teamNames;
+  const teamOptions = names.map((n, i) => `<option value="${i}">${escapeWGCLogHTML(n)}</option>`).join('');
+  const classOptions = Object.keys(classLabels).map(k => `<option value="${k}">${escapeWGCLogHTML(classLabels[k])}</option>`).join('');
+  return `
+    <div id="wgc-presets-overlay" class="wgc-presets-overlay">
+      <div class="wgc-presets-dialog" role="dialog" aria-modal="true" aria-labelledby="wgc-presets-dialog-title">
+        <div class="wgc-presets-dialog-header">
+          <h3 id="wgc-presets-dialog-title">${getWGCText('presetsTitle', 'Stat Presets')}</h3>
+          <button id="wgc-presets-close" class="wgc-presets-close" aria-label="Close">✕</button>
+        </div>
+        <p class="wgc-preset-description">${getWGCText('presetsDescription', 'Presets define a Power / Athletics / Wit ratio and are auto-applied on level-up. Points are distributed using a weighted algorithm — a ratio of 2·1·1 gives twice as many points to Power, not an exact split. Apply manually fills unspent points or fully respecs matching members depending on the mode below.')}</p>
+        <div id="wgc-preset-form" class="wgc-preset-form">
+          <input id="wgc-preset-name" type="text" class="wgc-preset-name-input" placeholder="${getWGCText('presetNamePlaceholder', 'Preset name')}" maxlength="40">
+          <div class="wgc-preset-scope-row">
+            <select id="wgc-preset-scope-type" class="wgc-preset-select">
+              <option value="global">${getWGCText('presetScopeGlobal', 'Global')}</option>
+              <option value="team">${getWGCText('presetScopeTeamOpt', 'Team')}</option>
+              <option value="class">${getWGCText('presetScopeClassOpt', 'Class')}</option>
+            </select>
+            <span id="wgc-preset-scope-value-wrap" style="display:none">
+              <select id="wgc-preset-scope-value" class="wgc-preset-select">
+                ${teamOptions}
+                ${classOptions}
+              </select>
+            </span>
+          </div>
+          <div class="wgc-preset-ratios-row">
+            <label>${getWGCText('powerShort', 'Pow')}<input id="wgc-preset-power" type="number" min="0" class="wgc-preset-ratio-input" value="1"></label>
+            <label>${getWGCText('athleticsShort', 'Ath')}<input id="wgc-preset-athletics" type="number" min="0" class="wgc-preset-ratio-input" value="1"></label>
+            <label>${getWGCText('witShort', 'Wit')}<input id="wgc-preset-wit" type="number" min="0" class="wgc-preset-ratio-input" value="1"></label>
+          </div>
+          <button id="wgc-preset-save" class="wgc-preset-save-button">${getWGCText('presetSave', 'Save Preset')}</button>
+        </div>
+        <button type="button" id="wgc-respec-toggle" class="wgc-respec-toggle" aria-pressed="false">
+          <span class="wgc-respec-toggle__track" aria-hidden="true">
+            <span class="wgc-respec-toggle__thumb"></span>
+          </span>
+          <span class="wgc-respec-toggle__label">${getWGCText('presetApplyModeUnspent', 'Unspent only')}</span>
+        </button>
+        <div id="wgc-presets-list" class="wgc-presets-list"></div>
+      </div>
+    </div>`;
+}
+
+function openWGCPresetsDialog() {
+  const overlay = document.getElementById('wgc-presets-overlay');
+  if (!overlay) return;
+  renderWGCPresetsUI();
+  overlay.classList.add('is-open');
+}
+
+function closeWGCPresetsDialog() {
+  const overlay = document.getElementById('wgc-presets-overlay');
+  if (overlay) overlay.classList.remove('is-open');
+}
+
 function generateWGCLayout() {
   return `
     <div class="wgc-container">
+      ${generateWGCPresetsDialogHTML()}
       <div class="wgc-main">
         <div class="wgc-left">
           <div class="wgc-card" id="wgc-teams-section">
             <div class="wgc-card-header">
               <div class="wgc-card-title">
                 <h3>${getWGCText('teamsSectionTitle', 'Teams')} <span id="wgc-team-rules-info" class="info-tooltip-icon">&#9432;</span></h3>
-                <span id="wgc-copy-team-stats" class="wgc-copy-team-stats" role="button" tabindex="0" aria-label="${getWGCText('copyTeamStatsTooltip', 'Copy Team Stats to Clipboard')}"></span>
+                <span id="wgc-copy-team-stats" class="wgc-copy-team-stats" role="button" tabindex="0" aria-label="${getWGCText('copyTeamStatsTooltip', 'Copy all stats to clipboard')}"><span class="wgc-copy-team-stats-icon" aria-hidden="true"></span></span>
+                <span id="wgc-open-presets-btn" class="wgc-presets-icon-btn" role="button" tabindex="0" aria-label="${getWGCText('presetsTitle', 'Stat Presets')}"><span class="wgc-presets-icon-btn-icon" aria-hidden="true"></span></span>
               </div>
-              <button type="button" id="wgc-story-toggle" class="wgc-story-toggle" aria-pressed="false">
-                <span class="wgc-story-toggle__track" aria-hidden="true">
-                  <span class="wgc-story-toggle__thumb"></span>
-                </span>
-                <span class="wgc-story-toggle__label">${getWGCText('showStory', 'Show Story')}</span>
-              </button>
             </div>
             <div id="wgc-team-cards"></div>
           </div>
         </div>
         <div class="wgc-right">
           <div class="wgc-card" id="wgc-rd-section">
-            <h3>${getWGCText('rdTitle', 'R&D')}</h3>
+            <h3 class="wgc-rd-card-title"><span>${getWGCText('rdTitle', 'R&D')}</span><span id="wgc-rd-artifact-controls"></span></h3>
             <div id="wgc-rd-menu"></div>
           </div>
           <div class="wgc-card" id="wgc-facilities-section">
@@ -1152,6 +1383,7 @@ function initializeWGCUI() {
   const container = document.getElementById('wgc-hope');
   if (container) {
     container.innerHTML = generateWGCLayout();
+    container.querySelector('#wgc-rd-artifact-controls').replaceWith(createWGCArtifactSidebarControls());
     wgcTeamRulesInfoIcon = container.querySelector('#wgc-team-rules-info');
     const teamTooltip = attachDynamicInfoTooltip(wgcTeamRulesInfoIcon, teamRulesTooltip);
     if (teamTooltip) {
@@ -1159,7 +1391,7 @@ function initializeWGCUI() {
     }
     wgcCopyStatsButton = container.querySelector('#wgc-copy-team-stats');
     if (wgcCopyStatsButton) {
-      attachDynamicInfoTooltip(wgcCopyStatsButton, getWGCText('copyTeamStatsTooltip', 'Copy Team Stats to Clipboard'), false);
+      attachDynamicInfoTooltip(wgcCopyStatsButton, getWGCText('copyTeamStatsTooltip', 'Copy all stats to clipboard'), false);
       const triggerCopy = () => {
         copyWGCTeamStatsToClipboard();
       };
@@ -1170,19 +1402,6 @@ function initializeWGCUI() {
           triggerCopy();
         }
       });
-    }
-    wgcStoryToggleButton = container.querySelector('#wgc-story-toggle');
-    if (wgcStoryToggleButton) {
-      wgcStoryToggleLabel = wgcStoryToggleButton.querySelector('.wgc-story-toggle__label');
-    }
-    if (wgcStoryToggleButton) {
-      wgcStoryToggleButton.addEventListener('click', () => {
-        if (typeof warpGateCommand === 'undefined') return;
-        warpGateCommand.hideStoryLogs = !warpGateCommand.hideStoryLogs;
-        updateWGCStoryToggleButton();
-        updateWGCUI();
-      });
-      updateWGCStoryToggleButton();
     }
     const teamContainer = container.querySelector('#wgc-team-cards');
     if (teamContainer) {
@@ -1321,6 +1540,37 @@ function initializeWGCUI() {
     }
     populateRDMenu();
     populateFacilityMenu();
+    attachWGCPresetFormHandlers();
+    renderWGCPresetsUI();
+
+    const openBtn = document.getElementById('wgc-open-presets-btn');
+    if (openBtn) {
+      openBtn.addEventListener('click', openWGCPresetsDialog);
+      openBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openWGCPresetsDialog(); } });
+    }
+
+    const closeBtn = document.getElementById('wgc-presets-close');
+    if (closeBtn) closeBtn.addEventListener('click', closeWGCPresetsDialog);
+
+    const respecToggle = document.getElementById('wgc-respec-toggle');
+    if (respecToggle) {
+      respecToggle.addEventListener('click', () => {
+        const on = respecToggle.getAttribute('aria-pressed') === 'true';
+        respecToggle.setAttribute('aria-pressed', String(!on));
+        respecToggle.classList.toggle('is-on', !on);
+        const label = respecToggle.querySelector('.wgc-respec-toggle__label');
+        if (label) label.textContent = !on ? getWGCText('presetApplyModeRespec', 'Respec') : getWGCText('presetApplyModeUnspent', 'Unspent only');
+      });
+    }
+
+    const overlay = document.getElementById('wgc-presets-overlay');
+    if (overlay) {
+      overlay.addEventListener('click', e => { if (e.target === overlay) closeWGCPresetsDialog(); });
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeWGCPresetsDialog();
+    });
   }
   wgcUIInitialized = true;
   if (typeof warpGateCommand !== 'undefined') {
@@ -1387,8 +1637,15 @@ function updateOperationProgressSegments(op, refs) {
 
 function updateWGCUI() {
   const names = (typeof warpGateCommand !== 'undefined' && warpGateCommand.teamNames) ? warpGateCommand.teamNames : teamNames;
-  updateWGCStoryToggleButton();
   setTooltipText(wgcRDPurchaseTooltip, buildWGCRDPurchaseTooltipText(), wgcTooltipCache, 'wgcRDPurchase');
+  if (wgcArtifactBalanceElement) {
+    wgcArtifactBalanceElement.textContent = getWGCText('artifactBalance', 'Artifacts: {value}', {
+      value: formatNumber(resources.special.alienArtifact.value, false, 2)
+    });
+  }
+  if (wgcArtifactSidebarToggle) {
+    setToggleButtonState(wgcArtifactSidebarToggle, warpGateCommand.showArtifactsInSidebar);
+  }
   const opEl = document.getElementById('wgc-stat-operation');
   if (opEl) {
     opEl.textContent = getWGCText('operationStatsCompleted', 'Operations Completed: {value}', {
@@ -1531,11 +1788,7 @@ function updateWGCUI() {
     updateOperationProgressSegments(op, refs);
     if (logEl) {
       const logEntries = warpGateCommand.logs[tIdx] || [];
-      const hideStory = typeof warpGateCommand !== 'undefined' && warpGateCommand.hideStoryLogs;
-      const visibleEntries = hideStory
-        ? logEntries.filter(line => typeof line !== 'string' || line.indexOf('Story Step') === -1)
-        : logEntries;
-      const visibleCount = visibleEntries.length;
+      const visibleCount = logEntries.length;
       const logVisible = logContainer && !logContainer.classList.contains('hidden');
       const wasPinned = logVisible ? isWGCLogPinned(logContainer) : refs.logPinned !== false;
       const newHtml = renderWGCLogLines(logEntries);
@@ -1545,7 +1798,6 @@ function updateWGCUI() {
         logEl.innerHTML = newHtml;
         refs.lastRenderedHtml = newHtml;
         refs.lastRenderedCount = visibleCount;
-        refs.lastRenderedHideState = hideStory;
       }
       if (logVisible) {
         if ((contentChanged && visibleCount > 0 && refs.logPinned !== false && wasPinned) || forceScroll) {
@@ -1560,33 +1812,9 @@ function updateWGCUI() {
       }
     }
 
-    slots.forEach(({ slot, bar, button }, sIdx) => {
+    slots.forEach((slotEntry, sIdx) => {
       const member = team[sIdx];
-      if (button) button.disabled = !unlocked || !!member;
-      if (!slot || !member) return;
-      if (bar) {
-        const hpPercent = Math.floor((member.health / member.maxHealth) * 100);
-        bar.style.height = `${hpPercent}%`;
-        bar.classList.remove('low-hp', 'critical-hp');
-        if (hpPercent < 25) {
-          bar.classList.add('critical-hp');
-        } else if (hpPercent < 50) {
-          bar.classList.add('low-hp');
-        }
-      }
-      let indicator = slots[sIdx].indicator;
-      if (member.getPointsToAllocate() > 0) {
-        if (!indicator) {
-          const newIndicator = document.createElement('div');
-          newIndicator.className = 'unspent-points-indicator';
-          newIndicator.textContent = '!';
-          slot.appendChild(newIndicator);
-          slots[sIdx].indicator = newIndicator;
-        }
-      } else if (indicator) {
-        indicator.remove();
-        slots[sIdx].indicator = null;
-      }
+      reconcileWGCMemberSlot(slotEntry, member, unlocked);
     });
   });
 
@@ -1639,6 +1867,167 @@ function updateWGCUI() {
     if (syncAutoInputs) syncAutoInputs();
   }
 }
+
+function getPresetScopeLabel(scope) {
+  if (!scope || scope.type === 'global') return getWGCText('presetScopeGlobal', 'Global');
+  if (scope.type === 'team') {
+    const manager = getWGCManager();
+    const names = manager && manager.teamNames ? manager.teamNames : teamNames;
+    const name = names[scope.value] || `Team ${scope.value + 1}`;
+    return getWGCText('presetScopeTeam', 'Team: {name}', { name });
+  }
+  if (scope.type === 'class') {
+    return getWGCText('presetScopeClass', 'Class: {name}', { name: classLabels[scope.value] || scope.value });
+  }
+  return getWGCText('presetScopeGlobal', 'Global');
+}
+
+function renderWGCPresetsUI() {
+  const container = document.getElementById('wgc-presets-list');
+  if (!container) return;
+  const manager = getWGCManager();
+  const presets = manager && Array.isArray(manager.presets) ? manager.presets : [];
+  if (presets.length === 0) {
+    container.innerHTML = `<div class="wgc-preset-empty">${getWGCText('noPresets', 'No presets saved.')}</div>`;
+    return;
+  }
+  container.innerHTML = presets.map(preset => {
+    const { id, name, scope, ratios } = preset;
+    const r = ratios || {};
+    return `
+      <div class="wgc-preset-row" data-preset-id="${id}">
+        <div class="wgc-preset-info">
+          <span class="wgc-preset-name">${escapeWGCLogHTML(name)}</span>
+          <span class="wgc-preset-scope">${escapeWGCLogHTML(getPresetScopeLabel(scope))}</span>
+          <span class="wgc-preset-ratios">${getWGCText('ratios', 'P:{p} A:{a} W:{w}', { p: r.power || 0, a: r.athletics || 0, w: r.wit || 0 })}</span>
+        </div>
+        <div class="wgc-preset-actions">
+          <button class="wgc-preset-apply" data-preset-id="${id}">${getWGCText('presetApply', 'Apply')}</button>
+          <button class="wgc-preset-delete" data-preset-id="${id}">✕</button>
+        </div>
+      </div>`;
+  }).join('');
+  container.querySelectorAll('.wgc-preset-apply').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pid = btn.getAttribute('data-preset-id');
+      if (!manager) return;
+      const preset = manager.presets.find(p => p.id === pid);
+      if (!preset) return;
+      const respec = document.getElementById('wgc-respec-toggle')?.getAttribute('aria-pressed') === 'true';
+      const s = preset.scope || { type: 'global' };
+      const { power = 0, athletics = 0, wit = 0 } = preset.ratios || {};
+      const ratioSum = power + athletics + wit;
+      if (ratioSum <= 0) return;
+      manager.teams.forEach((team, tIdx) => {
+        team.forEach(m => {
+          if (!m) return;
+          let matches = false;
+          if (s.type === 'global') matches = true;
+          else if (s.type === 'team') matches = s.value === tIdx;
+          else if (s.type === 'class') matches = s.value === m.classType;
+          if (!matches) return;
+          if (respec) m.respec();
+          const points = m.getPointsToAllocate();
+          if (points <= 0) return;
+          const base = WGCTeamMember.getBaseStats(m.classType);
+          const current = { power: m.power - base.power, athletics: m.athletics - base.athletics, wit: m.wit - base.wit };
+          const stats = ['power', 'athletics', 'wit'].filter(stat => preset.ratios[stat] > 0);
+          let remaining = points;
+          let total = current.power + current.athletics + current.wit;
+          while (remaining > 0) {
+            let best = '';
+            let bestErr = Infinity;
+            for (const stat of stats) {
+              const nextTotal = total + 1;
+              let mse = 0;
+              for (const s2 of stats) {
+                const desired = preset.ratios[s2] / ratioSum;
+                const actual = (current[s2] + (s2 === stat ? 1 : 0)) / nextTotal;
+                mse += (desired - actual) ** 2;
+              }
+              const err = mse / stats.length;
+              if (err + 1e-9 < bestErr) { bestErr = err; best = stat; }
+            }
+            if (!best) break;
+            current[best] += 1;
+            m[best] += 1;
+            total += 1;
+            remaining -= 1;
+          }
+        });
+      });
+      updateWGCUI();
+    });
+  });
+  container.querySelectorAll('.wgc-preset-delete').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const pid = btn.getAttribute('data-preset-id');
+      if (!manager) return;
+      manager.deletePreset(pid);
+      if (typeof saveGameToSlot === 'function') saveGameToSlot('autosave');
+      renderWGCPresetsUI();
+    });
+  });
+}
+
+function attachWGCPresetFormHandlers() {
+  const form = document.getElementById('wgc-preset-form');
+  if (!form) return;
+  const saveBtn = document.getElementById('wgc-preset-save');
+  if (!saveBtn) return;
+  saveBtn.addEventListener('click', () => {
+    const manager = getWGCManager();
+    if (!manager) return;
+    const name = (document.getElementById('wgc-preset-name') || {}).value || 'Preset';
+    const scopeType = (document.getElementById('wgc-preset-scope-type') || {}).value || 'global';
+    const scopeVal = document.getElementById('wgc-preset-scope-value');
+    let scope = { type: 'global' };
+    if (scopeType === 'team') scope = { type: 'team', value: parseInt(scopeVal ? scopeVal.value : '0', 10) };
+    else if (scopeType === 'class') scope = { type: 'class', value: scopeVal ? scopeVal.value : 'Soldier' };
+    const power = parseInt((document.getElementById('wgc-preset-power') || {}).value || '0', 10) || 0;
+    const athletics = parseInt((document.getElementById('wgc-preset-athletics') || {}).value || '0', 10) || 0;
+    const wit = parseInt((document.getElementById('wgc-preset-wit') || {}).value || '0', 10) || 0;
+    manager.addPreset(name, scope, { power, athletics, wit });
+    if (document.getElementById('wgc-preset-name')) document.getElementById('wgc-preset-name').value = '';
+    if (typeof saveGameToSlot === 'function') saveGameToSlot('autosave');
+    renderWGCPresetsUI();
+  });
+
+  const scopeTypeSelect = document.getElementById('wgc-preset-scope-type');
+  const scopeValueWrap = document.getElementById('wgc-preset-scope-value-wrap');
+  const scopeValueSelect = document.getElementById('wgc-preset-scope-value');
+  if (scopeTypeSelect && scopeValueWrap && scopeValueSelect) {
+    const updateScopeValueOptions = () => {
+      const type = scopeTypeSelect.value;
+      if (type === 'global') {
+        scopeValueWrap.style.display = 'none';
+        return;
+      }
+      scopeValueWrap.style.display = '';
+      scopeValueSelect.innerHTML = '';
+      if (type === 'team') {
+        const manager = getWGCManager();
+        const names = manager && manager.teamNames ? manager.teamNames : teamNames;
+        names.forEach((n, i) => {
+          const opt = document.createElement('option');
+          opt.value = i;
+          opt.textContent = n;
+          scopeValueSelect.appendChild(opt);
+        });
+      } else if (type === 'class') {
+        Object.keys(classLabels).forEach(k => {
+          const opt = document.createElement('option');
+          opt.value = k;
+          opt.textContent = classLabels[k];
+          scopeValueSelect.appendChild(opt);
+        });
+      }
+    };
+    scopeTypeSelect.addEventListener('change', updateScopeValueOptions);
+    updateScopeValueOptions();
+  }
+}
+
 
 function redrawWGCTeamCards() {
   const teamContainer = document.getElementById('wgc-team-cards');

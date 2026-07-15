@@ -24,12 +24,13 @@ class SpaceshipAutomation {
     };
   }
 
-  constructor() {
+  constructor(encounteredTargets = null) {
     this.presets = [];
     this.activePresetId = null;
     this.enabled = false;
     this.disabledProjects = new Set();
     this.seenProjectTargets = new Set();
+    this.encounteredTargets = encounteredTargets;
     this.collapsed = false;
     this.nextPresetId = 1;
     this.elapsed = 0;
@@ -52,7 +53,7 @@ class SpaceshipAutomation {
     const areMassDriversEnabled = () => disposalProject.isBooleanFlagSet('massDriverEnabled');
     return {
       name: this.getMassDriverAutomationId(),
-      displayName: 'Resource Disposal (mass drivers included)',
+      displayName: t('ui.hope.automationCards.massDriverDisposalTarget', {}, 'Resource Disposal (mass drivers included)'),
       enabled: disposalProject.enabled !== false,
       unlocked: disposalProject.unlocked !== false,
       isVisible: () => disposalProject.isVisible(),
@@ -105,7 +106,7 @@ class SpaceshipAutomation {
     }
     const preset = {
       id: this.nextPresetId++,
-      name: 'Default',
+      name: t('ui.hope.automationCards.defaultPresetName', {}, 'Default'),
       showInSidebar: true,
       steps: []
     };
@@ -157,6 +158,10 @@ class SpaceshipAutomation {
     if (this.enabled) {
       this.disableAutoAssignForProjects();
     }
+  }
+
+  isToggledOn() {
+    return this.enabled;
   }
 
   addPreset(name = '') {
@@ -439,6 +444,9 @@ class SpaceshipAutomation {
       return false;
     }
     this.seenProjectTargets.add(project.name);
+    if (this.encounteredTargets) {
+      this.encounteredTargets.record('ships', project.name);
+    }
     return true;
   }
 
@@ -459,6 +467,11 @@ class SpaceshipAutomation {
     this.seenProjectTargets.forEach((projectId) => {
       seen.add(projectId);
     });
+    if (this.encounteredTargets) {
+      this.encounteredTargets.getIds('ships').forEach((projectId) => {
+        seen.add(projectId);
+      });
+    }
 
     for (let presetIndex = 0; presetIndex < this.presets.length; presetIndex += 1) {
       const preset = this.presets[presetIndex];
@@ -492,7 +505,7 @@ class SpaceshipAutomation {
   getUnassignedTarget() {
     return {
       name: 'unassignedShips',
-      displayName: 'Unassigned Ships',
+      displayName: t('ui.hope.automationCards.unassignedShipsTarget', {}, 'Unassigned Ships'),
       enabled: true,
       unlocked: true,
       isVisible: () => true,
@@ -579,6 +592,9 @@ class SpaceshipAutomation {
       if (elements.assignmentContainer) {
         elements.assignmentContainer.classList.toggle('automation-locked', locked);
       }
+      if (elements.autoAssignAutomationLockInfo) {
+        elements.autoAssignAutomationLockInfo.hidden = !locked;
+      }
     }
   }
 
@@ -661,7 +677,10 @@ class SpaceshipAutomation {
       const manuallyDisabled = target.isAutomationManuallyDisabled
         ? target.isAutomationManuallyDisabled()
         : false;
-      disabledTargetStates[target.name] = !automationAllowed || manuallyDisabled;
+      disabledTargetStates[target.name] = {
+        automationDisabled: !automationAllowed,
+        manuallyDisabled,
+      };
     }
 
     const desiredAssignments = {};
@@ -754,8 +773,10 @@ class SpaceshipAutomation {
           if (!project) continue;
           const usesMassDrivers = entry.projectId === massDriverTargetId;
           const releaseOnDisable = this.disabledProjects.has(entry.projectId);
-          const isTemporarilyDisabled = disabledTargetStates[entry.projectId] === true;
-          if (isTemporarilyDisabled) {
+          const disabledState = disabledTargetStates[entry.projectId] || { automationDisabled: false, manuallyDisabled: false };
+          const isTemporarilyDisabled = disabledState.automationDisabled;
+          const isManuallyDisabled = disabledState.manuallyDisabled;
+          if (isManuallyDisabled || (isTemporarilyDisabled && releaseOnDisable)) {
             const currentTarget = this.sanitizeShipCount(
               Object.prototype.hasOwnProperty.call(desiredAssignments, entry.projectId)
                 ? desiredAssignments[entry.projectId]
@@ -910,7 +931,7 @@ class SpaceshipAutomation {
         };
 
         const mode = step.mode || 'fill';
-        if (mode === 'cappedMin' && hasMassEntries && hasNonMassEntries) {
+        if (mode === 'cappedMin' && hasMassEntries && hasNonMassEntries && remainingMassDriverEquivalency > 0) {
           const shipEntries = weightedEntries.filter(item => !item.usesMassDrivers);
           const massEntries = weightedEntries.filter(item => item.usesMassDrivers);
           const shipWeight = shipEntries.reduce((sum, item) => sum + item.entry.weight, 0);
@@ -948,7 +969,7 @@ class SpaceshipAutomation {
           break;
         }
 
-        if (hasMassEntries && hasNonMassEntries) {
+        if (hasMassEntries && hasNonMassEntries && remainingMassDriverEquivalency > 0) {
           const shipEntries = weightedEntries.filter(item => !item.usesMassDrivers);
           const massEntries = weightedEntries.filter(item => item.usesMassDrivers);
           const shipWeight = shipEntries.reduce((sum, item) => sum + item.entry.weight, 0);
@@ -1184,10 +1205,66 @@ class SpaceshipAutomation {
     this.enabled = data.enabled !== undefined ? !!data.enabled : migratedEnabled;
     this.disabledProjects = new Set(Array.isArray(data.disabledProjects) ? data.disabledProjects : []);
     this.seenProjectTargets = new Set(Array.isArray(data.seenProjectTargets) ? data.seenProjectTargets : []);
+    if (this.encounteredTargets) {
+      this.encounteredTargets.recordAll('ships', Array.from(this.seenProjectTargets));
+    }
     this.collapsed = !!data.collapsed;
     this.nextPresetId = data.nextPresetId || this.presets.length + 1;
     this.ensureDefaultPreset();
     this.recordCurrentlyAvailableTargets();
+  }
+
+  exportPreset(presetId) {
+    const preset = this.getPresetById(Number(presetId));
+    if (!preset) {
+      return null;
+    }
+    return {
+      name: preset.name,
+      showInSidebar: preset.showInSidebar !== false,
+      steps: preset.steps.map(step => ({
+        id: step.id,
+        limit: step.limit,
+        mode: step.mode,
+        entries: step.entries.map(entry => ({ ...entry }))
+      }))
+    };
+  }
+
+  importPreset(presetData = {}) {
+    const id = this.nextPresetId++;
+    const importedPreset = {
+      id,
+      name: presetData.name || `Preset ${id}`,
+      showInSidebar: presetData.showInSidebar !== false,
+      steps: Array.isArray(presetData.steps) ? presetData.steps.map(step => {
+        const lv = step.limit === null || step.limit === undefined ? null : this.sanitizeShipCount(Number(step.limit));
+        let mode = step.mode || 'fill';
+        if (mode !== 'cappedMin' && mode !== 'cappedMax' && mode !== 'remainingPercent' && lv === null) {
+          mode = 'cappedMax';
+        }
+        return {
+          id: step.id,
+          limit: (mode === 'cappedMin' || mode === 'cappedMax') ? null : (mode === 'remainingPercent'
+            ? (lv === null ? 100 : Math.min(Math.max(lv, 0), 100))
+            : lv),
+          mode,
+          entries: Array.isArray(step.entries) ? step.entries.map(entry => {
+            const weight = Number(entry.weight);
+            const max = Number(entry.max);
+            return {
+              projectId: entry.projectId,
+              weight: Number.isFinite(weight) && weight > 0 ? weight : 0,
+              max: Number.isFinite(max) && max > 0 ? max : null,
+              maxMode: entry.maxMode || 'absolute'
+            };
+          }) : []
+        };
+      }) : []
+    };
+    this.presets.push(importedPreset);
+    this.activePresetId = importedPreset.id;
+    return importedPreset.id;
   }
 }
 

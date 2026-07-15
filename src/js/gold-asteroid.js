@@ -19,7 +19,7 @@ const goldenEffects = [
     target: 'fundingModule',
     type: 'productionMultiplier',
     value: 5,
-    name: 'Golden Asteroid'
+    name: t('ui.goldAsteroid.effectName', {}, 'Golden Asteroid')
   },
   {
     effectId: `${goldenEffectPrefix}-oreMineMultiplier`,
@@ -27,7 +27,7 @@ const goldenEffects = [
     targetId: 'oreMine',
     type: 'productionMultiplier',
     value: 5,
-    name: 'Golden Asteroid'
+    name: t('ui.goldAsteroid.effectName', {}, 'Golden Asteroid')
   },
   {
     effectId: `${goldenEffectPrefix}-foundryMultiplier`,
@@ -37,7 +37,7 @@ const goldenEffects = [
     resourceCategory: 'colony',
     resourceTarget: 'metal',
     value: 5,
-    name: 'Golden Asteroid'
+    name: t('ui.goldAsteroid.effectName', {}, 'Golden Asteroid')
   },
   {
     effectId: `${goldenEffectPrefix}-componentFactoryMultiplier`,
@@ -45,7 +45,7 @@ const goldenEffects = [
     targetId: 'componentFactory',
     type: 'productionMultiplier',
     value: 5,
-    name: 'Golden Asteroid'
+    name: t('ui.goldAsteroid.effectName', {}, 'Golden Asteroid')
   },
   {
     effectId: `${goldenEffectPrefix}-electronicsFactoryMultiplier`,
@@ -53,7 +53,7 @@ const goldenEffects = [
     targetId: 'electronicsFactory',
     type: 'productionMultiplier',
     value: 5,
-    name: 'Golden Asteroid'
+    name: t('ui.goldAsteroid.effectName', {}, 'Golden Asteroid')
   },
   {
     effectId: `${goldenEffectPrefix}-populationGrowth`,
@@ -61,51 +61,7 @@ const goldenEffects = [
     type: 'growthMultiplier',
     value: 5
   },
-  {
-    effectId: `${goldenEffectPrefix}-fundingFlag`,
-    type: 'booleanFlag',
-    target: 'resource',
-    resourceType: 'colony',
-    targetId: 'funding',
-    flagId: 'golden',
-    value: true
-  },
-  {
-    effectId: `${goldenEffectPrefix}-metalFlag`,
-    type: 'booleanFlag',
-    target: 'resource',
-    resourceType: 'colony',
-    targetId: 'metal',
-    flagId: 'golden',
-    value: true
-  },
-  {
-    effectId: `${goldenEffectPrefix}-componentsFlag`,
-    type: 'booleanFlag',
-    target: 'resource',
-    resourceType: 'colony',
-    targetId: 'components',
-    flagId: 'golden',
-    value: true
-  },
-  {
-    effectId: `${goldenEffectPrefix}-electronicsFlag`,
-    type: 'booleanFlag',
-    target: 'resource',
-    resourceType: 'colony',
-    targetId: 'electronics',
-    flagId: 'golden',
-    value: true
-  },
-  {
-    effectId: `${goldenEffectPrefix}-colonistsFlag`,
-    type: 'booleanFlag',
-    target: 'resource',
-    resourceType: 'colony',
-    targetId: 'colonists',
-    flagId: 'golden',
-    value: true
-  }
+  ...createResourceFlagEffects('colony', ['funding', 'metal', 'components', 'electronics', 'colonists'], 'golden', goldenEffectPrefix)
 ]
 
 class GoldenAsteroid {
@@ -128,6 +84,12 @@ class GoldenAsteroid {
         this.countdownDuration = 30000; // 30 seconds in milliseconds
         this.countdownStartTime = 0;
         this.countdownActive = false; // New flag to track countdown state
+        this.celebrationActive = false;
+        this.celebrationRemainingTime = 0;
+        this.confettiContainer = null;
+        this.confettiSpawnCarry = 0;
+        this.chaosWarningElement = null;
+        this.chaosWarningVisible = false;
         this.cacheContainers();
         this.cacheElements();
         }
@@ -145,6 +107,7 @@ class GoldenAsteroid {
       this.imageElement = this.imageElement?.isConnected ? this.imageElement : document.getElementById('golden-asteroid-image');
       this.buttonElement = this.buttonElement?.isConnected ? this.buttonElement : document.getElementById('golden-asteroid-button');
       this.countdownElement = this.countdownElement?.isConnected ? this.countdownElement : document.getElementById('gold-asteroid-countdown');
+      this.chaosWarningElement = this.chaosWarningElement?.isConnected ? this.chaosWarningElement : document.getElementById('gold-asteroid-chaos-warning');
     }
 
     ensureButtonElement() {
@@ -152,7 +115,7 @@ class GoldenAsteroid {
       this.buttonElement ??= document.createElement('button');
       this.buttonElement.id = 'golden-asteroid-button';
       this.buttonElement.className = 'golden-asteroid-button';
-      this.buttonElement.textContent = 'Golden Asteroid!';
+      this.buttonElement.textContent = t('ui.goldAsteroid.button', {}, 'Golden Asteroid!');
       this.buttonElement.onmousedown = this.clickHandler;
       this.buttonElement.ontouchstart = this.clickHandler;
       if (this.buttonElement.parentElement !== this.countdownContainer) {
@@ -206,6 +169,106 @@ class GoldenAsteroid {
       this.buttonElement?.style && (this.buttonElement.style.display = 'none');
       this.imageElement?.style && (this.imageElement.style.display = 'none');
     }
+
+    isChaosActive() {
+      for (let i = 0; i < terraforming.activeEffects.length; i += 1) {
+        const effect = terraforming.activeEffects[i];
+        if (effect.sourceId === STELLAR_ENGINE_SOURCE_ID && effect.effectId === STELLAR_ENGINE_FLUX_EFFECT_ID) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    ensureChaosWarningElement() {
+      this.cacheContainers();
+      this.cacheElements();
+      this.chaosWarningElement ??= document.createElement('div');
+      this.chaosWarningElement.id = 'gold-asteroid-chaos-warning';
+      this.chaosWarningElement.className = 'gold-asteroid-chaos-warning';
+      this.chaosWarningElement.textContent = t('ui.goldAsteroid.chaosWarning', {}, 'CHAOS');
+      if (this.chaosWarningElement.parentElement !== this.countdownContainer) {
+        this.countdownContainer.appendChild(this.chaosWarningElement);
+      }
+    }
+
+    updateChaosWarning() {
+      const active = this.isChaosActive();
+      if (!active) {
+        if (this.chaosWarningVisible && this.chaosWarningElement) {
+          this.chaosWarningElement.style.display = 'none';
+          this.chaosWarningVisible = false;
+        }
+        return;
+      }
+      this.ensureChaosWarningElement();
+      if (!this.chaosWarningVisible) {
+        this.chaosWarningElement.style.display = 'block';
+        this.chaosWarningVisible = true;
+      }
+    }
+
+    ensureConfettiContainer() {
+      if (!this.confettiContainer || !this.confettiContainer.isConnected) {
+        this.confettiContainer = document.getElementById('golden-asteroid-confetti');
+      }
+      if (!this.confettiContainer) {
+        this.confettiContainer = document.createElement('div');
+        this.confettiContainer.id = 'golden-asteroid-confetti';
+        this.confettiContainer.className = 'golden-asteroid-confetti';
+        document.body.appendChild(this.confettiContainer);
+      }
+    }
+
+    spawnConfettiBurst(count) {
+      this.ensureConfettiContainer();
+      const fragment = document.createDocumentFragment();
+      const colors = ['#ffd700', '#ff4d6d', '#2ec4b6', '#3a86ff', '#fb8500', '#7bd88f', '#f72585', '#ffffff'];
+      for (let i = 0; i < count; i += 1) {
+        const piece = document.createElement('span');
+        const size = 6 + Math.random() * 9;
+        const duration = 3000 + Math.random() * 3500;
+        piece.className = 'golden-asteroid-confetti-piece';
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.width = `${size}px`;
+        piece.style.height = `${size * (0.5 + Math.random())}px`;
+        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDuration = `${duration}ms`;
+        piece.style.animationDelay = `${Math.random() * 250}ms`;
+        piece.style.setProperty('--confetti-drift', `${(Math.random() - 0.5) * 260}px`);
+        piece.style.setProperty('--confetti-spin', `${360 + Math.random() * 1080}deg`);
+        fragment.appendChild(piece);
+        window.setTimeout(() => {
+          piece.remove();
+        }, duration + 500);
+      }
+      this.confettiContainer.appendChild(fragment);
+    }
+
+    updateConfetti(delta) {
+      this.confettiSpawnCarry += delta;
+      while (this.confettiSpawnCarry >= 100) {
+        this.confettiSpawnCarry -= 100;
+        this.spawnConfettiBurst(12);
+      }
+    }
+
+    stopConfetti() {
+      this.confettiSpawnCarry = 0;
+      if (this.confettiContainer) {
+        this.confettiContainer.remove();
+        this.confettiContainer = null;
+      }
+    }
+
+    startBirchWorldCelebration(duration = 30000) {
+      this.celebrationActive = true;
+      this.celebrationRemainingTime = duration;
+      this.confettiSpawnCarry = 0;
+      this.spawnConfettiBurst(180);
+      this.despawn();
+      this.spawn(duration);
+    }
   
     spawn(duration = 5000) {
         if (!this.active) {
@@ -245,6 +308,9 @@ class GoldenAsteroid {
         this.addEffects();
         this.startCountdown(this.countdownDuration + getGlobalGoldenAsteroidDurationBonusMs());
         this.despawn();
+        if (this.celebrationActive && this.celebrationRemainingTime > 0) {
+          this.spawn(this.celebrationRemainingTime);
+        }
         }
     }
 
@@ -289,19 +355,39 @@ class GoldenAsteroid {
       this.despawn();
       this.countdownActive = false;
       this.countdownRemainingTime = 0;
+      this.updateChaosWarning();
+      this.celebrationActive = false;
+      this.celebrationRemainingTime = 0;
+      this.stopConfetti();
       this.removeCountdownDisplay();
       this.lastSpawnTime = 0;
       this.generateNextSpawnTime();
     }
   
-    update(delta) {
+    update(delta, realDelta = delta) {
+        this.updateChaosWarning();
+        updateResortVacationGoldButton();
+        if (this.celebrationActive) {
+          this.celebrationRemainingTime -= realDelta;
+          if (this.celebrationRemainingTime > 0) {
+            this.updateConfetti(realDelta);
+            if (!this.active) {
+              this.spawn(this.celebrationRemainingTime);
+            }
+          } else {
+            this.celebrationActive = false;
+            this.celebrationRemainingTime = 0;
+            this.stopConfetti();
+          }
+        }
+
         if (this.active) {
-          this.duration -= delta;
+          this.duration -= realDelta;
           if (this.duration <= 0) {
             this.despawn();
           }
-        } else {
-          this.lastSpawnTime += delta;
+        } else if (!this.celebrationActive) {
+          this.lastSpawnTime += realDelta;
     
           if (this.lastSpawnTime >= this.nextSpawnTime) {
             const duration = 5000; // 5 seconds
@@ -316,7 +402,11 @@ class GoldenAsteroid {
     
           if (this.countdownRemainingTime > 0) {
             const seconds = Math.ceil(this.countdownRemainingTime / 1000);
-            this.countdownElement.textContent = `Gold asteroid 5x multiplier! ${seconds}s`;
+            this.countdownElement.textContent = t(
+              'ui.goldAsteroid.countdown',
+              { seconds },
+              'Gold asteroid 5x multiplier! {seconds}s'
+            );
           } else {
             this.removeEffects();
             this.countdownActive = false;
@@ -349,6 +439,8 @@ class GoldenAsteroid {
           spawnTime: this.spawnTime,
           countdownActive: this.countdownActive,
           countdownRemainingTime: this.countdownRemainingTime,
+          celebrationActive: this.celebrationActive,
+          celebrationRemainingTime: this.celebrationRemainingTime,
         };
       }
     
@@ -357,6 +449,9 @@ class GoldenAsteroid {
       this.removeEffects();
       this.countdownActive = false;
       this.countdownRemainingTime = 0;
+      this.celebrationActive = false;
+      this.celebrationRemainingTime = 0;
+      this.stopConfetti();
       this.cacheElements();
       this.removeCountdownDisplay();
 
@@ -370,12 +465,19 @@ class GoldenAsteroid {
       this.spawnTime = data.spawnTime;
       this.countdownActive = data.countdownActive;
       this.countdownRemainingTime = data.countdownRemainingTime;
+      this.celebrationActive = data.celebrationActive === true;
+      this.celebrationRemainingTime = data.celebrationRemainingTime || 0;
       this.lastSpawnTime = 0;
       this.generateNextSpawnTime();
 
       if (this.countdownActive) {
         this.addEffects();
         this.startCountdown(this.countdownRemainingTime, { extendExisting: false });
+      }
+      if (this.celebrationActive && this.celebrationRemainingTime > 0) {
+        this.active = false;
+        this.spawnConfettiBurst(180);
+        this.spawn(this.celebrationRemainingTime);
       }
     }
   }

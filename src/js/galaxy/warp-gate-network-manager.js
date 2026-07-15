@@ -31,11 +31,11 @@ const IMPORT_CAP_FLAT_BONUSES = {
   water: 0,
 };
 const IMPORT_CAP_RESOURCES = [
-  { key: 'metal', label: 'Metal' },
-  { key: 'nitrogen', label: 'Nitrogen' },
-  { key: 'carbon', label: 'CO2' },
-  { key: 'silicon', label: 'Silicates' },
-  { key: 'water', label: 'Water' },
+  { key: 'metal', label: t('ui.galaxy.importCaps.resources.metal', {}, 'Metal') },
+  { key: 'nitrogen', label: t('ui.galaxy.importCaps.resources.nitrogen', {}, 'Nitrogen') },
+  { key: 'carbon', label: t('ui.galaxy.importCaps.resources.carbon', {}, 'CO2') },
+  { key: 'silicon', label: t('ui.galaxy.importCaps.resources.silicon', {}, 'Silicates') },
+  { key: 'water', label: t('ui.galaxy.importCaps.resources.water', {}, 'Water') },
 ];
 
 const getImportCapRatio = (resourceKey) => (
@@ -131,18 +131,17 @@ class WarpGateNetworkManager extends EffectableEntity {
     }
     const deltaHours = deltaMs / 3600000;
     const sectors = galaxyManager.getUhfControlledSectors();
+    let sliderBonus = getCylindersHopeWarpGateWorldBonusPerSector(spaceManager, galaxyManager);
+    const sliderTick = spaceManager.getSpaceSliderTick('cylindersHope');
+    let sliderProductivity = spaceManager.getSpaceSliderRuntimeProductivity('cylindersHope');
+    if (sliderTick > 0 && sliderProductivity <= 0) {
+      sliderProductivity = 1;
+    }
+    sliderBonus *= Math.max(0, Math.min(1, sliderProductivity));
     let levelChanged = false;
     for (let index = 0; index < sectors.length; index += 1) {
       const sector = sectors[index];
       const baseWorldCount = galaxyManager.getTerraformedWorldCountForSector(sector);
-      let sliderBonus = 0;
-      sliderBonus = getCylindersHopeWarpGateWorldBonusPerSector(spaceManager, galaxyManager);
-      const sliderTick = spaceManager.getSpaceSliderTick('cylindersHope');
-      let sliderProductivity = spaceManager.getSpaceSliderRuntimeProductivity('cylindersHope');
-      if (sliderTick > 0 && sliderProductivity <= 0) {
-        sliderProductivity = 1;
-      }
-      sliderBonus *= Math.max(0, Math.min(1, sliderProductivity));
       const worldCount = baseWorldCount + sliderBonus;
       if (!(worldCount > 0)) {
         continue;
@@ -356,7 +355,7 @@ class WarpGateNetworkManager extends EffectableEntity {
         ruleLines: [foundryRule, crackerRule].filter(Boolean),
         fullControlLine: '',
         caps: getImportCapEntries(IMPORT_CAP_BASE, null, 'Base cap', bonusByResource, rwgReductionByResource),
-        hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
+        hydrogen: { label: t('ui.galaxy.importCaps.resources.hydrogen', {}, 'Hydrogen'), ratio: '—', cap: '∞', detail: t('ui.galaxy.importCaps.noCap', {}, 'No cap') },
       };
     }
     if (!this.galaxyUnlocked) {
@@ -367,7 +366,7 @@ class WarpGateNetworkManager extends EffectableEntity {
         ruleLines: [foundryRule, crackerRule].filter(Boolean),
         fullControlLine: '',
         caps: getImportCapEntries(IMPORT_CAP_WARP, null, 'Base cap', bonusByResource, rwgReductionByResource),
-        hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
+        hydrogen: { label: t('ui.galaxy.importCaps.resources.hydrogen', {}, 'Hydrogen'), ratio: '—', cap: '∞', detail: t('ui.galaxy.importCaps.noCap', {}, 'No cap') },
       };
     }
     const summary = this.getGalaxyBreakdown();
@@ -385,7 +384,7 @@ class WarpGateNetworkManager extends EffectableEntity {
         ],
       fullControlLine,
       caps: getImportCapEntries(IMPORT_CAP_PER_SECTOR, summary, 'Minimum cap', bonusByResource, rwgReductionByResource),
-      hydrogen: { label: 'Hydrogen', ratio: '—', cap: '∞', detail: 'No cap' },
+      hydrogen: { label: t('ui.galaxy.importCaps.resources.hydrogen', {}, 'Hydrogen'), ratio: '—', cap: '∞', detail: t('ui.galaxy.importCaps.noCap', {}, 'No cap') },
     };
   }
 
@@ -480,8 +479,8 @@ class WarpGateNetworkManager extends EffectableEntity {
     return this.allSectorWarpGateAverageCache;
   }
 
-  getWarpGateMultiplier(sector) {
-    if (!this.isBooleanFlagSet('warpGateFabrication')) {
+  getWarpGateMultiplier(sector, warpGateFabricationEnabled = this.isBooleanFlagSet('warpGateFabrication')) {
+    if (!warpGateFabricationEnabled) {
       return 1;
     }
     const level = sector.warpGateNetworkLevel || 0;

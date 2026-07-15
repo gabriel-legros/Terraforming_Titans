@@ -22,12 +22,14 @@ class AutoTravelAutomation {
     this.nextPresetId += 1;
     this.presets.push({
       id,
-      name: `Preset ${id}`,
+      name: t('ui.hope.automationCards.presetWithId', { id }, `Preset ${id}`),
       target: 'random',
       type: 'random',
       orbitPreset: 'random',
       dominion: 'random',
+      randomTypeExclusions: ['jupiter-like'],
       hazards: [],
+      randomHazardSubset: false,
       autoCompleteTerraforming: true,
       waitForSpecialization: false,
       skipEquilibration: false,
@@ -87,7 +89,9 @@ class AutoTravelAutomation {
       type: 'random',
       orbitPreset: 'random',
       dominion: 'random',
+      randomTypeExclusions: ['jupiter-like'],
       hazards: [],
+      randomHazardSubset: false,
       autoCompleteTerraforming: true,
       waitForSpecialization: false,
       skipEquilibration: false,
@@ -108,7 +112,9 @@ class AutoTravelAutomation {
       type: this._normalizeTypeId(rawPreset.type),
       orbitPreset: rawPreset.orbitPreset || 'random',
       dominion: rawPreset.dominion || 'random',
+      randomTypeExclusions: this._normalizeRandomTypeExclusions(rawPreset.randomTypeExclusions),
       hazards: this._normalizeHazards(rawPreset.hazards),
+      randomHazardSubset: !!rawPreset.randomHazardSubset,
       autoCompleteTerraforming: rawPreset.autoCompleteTerraforming !== false,
       waitForSpecialization: !!rawPreset.waitForSpecialization,
       skipEquilibration: !!rawPreset.skipEquilibration,
@@ -133,11 +139,12 @@ class AutoTravelAutomation {
   }
 
   _finishTravelAttempt(preset, traveled) {
-    if (!traveled) {
-      autoTravelContext.active = false;
-    } else if (preset.turnOffAfterTravel) {
+    if (traveled && preset.turnOffAfterTravel) {
       this.enabled = false;
     }
+    autoTravelContext.active = false;
+    autoTravelContext.suppressTabSwitch = false;
+    autoTravelContext.restoreTabState = null;
     this._travelInProgress = false;
     this._cooldownMs = 1000;
     queueAutomationUIRefresh();
@@ -216,6 +223,20 @@ class AutoTravelAutomation {
     return normalized;
   }
 
+  _rollHazardsForTravel(preset) {
+    const hazards = this._normalizeHazards(preset.hazards);
+    if (!preset.randomHazardSubset) {
+      return hazards;
+    }
+    const rolled = [];
+    for (let index = 0; index < hazards.length; index += 1) {
+      if (Math.random() < 0.5) {
+        rolled.push(hazards[index]);
+      }
+    }
+    return rolled;
+  }
+
   _normalizeTypeId(typeId) {
     const normalized = String(typeId || '').trim();
     if (!normalized || normalized === 'random') {
@@ -225,6 +246,35 @@ class AutoTravelAutomation {
       return 'icy-moon';
     }
     return normalized;
+  }
+
+  _normalizeRandomTypeExclusions(typeIds) {
+    const list = Array.isArray(typeIds) ? typeIds : ['jupiter-like'];
+    const seen = new Set();
+    const normalized = [];
+    for (let index = 0; index < list.length; index += 1) {
+      const typeId = this._normalizeTypeId(list[index]);
+      if (!typeId || typeId === 'random' || seen.has(typeId)) {
+        continue;
+      }
+      seen.add(typeId);
+      normalized.push(typeId);
+    }
+    return normalized;
+  }
+
+  _getRandomTypeCandidates(preset) {
+    const exclusions = new Set(this._normalizeRandomTypeExclusions(preset.randomTypeExclusions));
+    const typeIds = RWG_WORLD_TYPES ? Object.keys(RWG_WORLD_TYPES) : [];
+    const candidates = [];
+    for (let index = 0; index < typeIds.length; index += 1) {
+      const typeId = typeIds[index];
+      if (exclusions.has(typeId) || rwgManager.isTypeLocked(typeId)) {
+        continue;
+      }
+      candidates.push(typeId);
+    }
+    return candidates;
   }
 
   _getSkipEquilibrationUnlocked() {
@@ -243,23 +293,7 @@ class AutoTravelAutomation {
   }
 
   _hasCompletedSpecialization() {
-    const projects = projectManager?.projects;
-    if (!projects) {
-      return false;
-    }
-    if (projects.bioworld && projects.bioworld.isCompleted) {
-      return true;
-    }
-    if (projects.manufacturingWorld && projects.manufacturingWorld.isCompleted) {
-      return true;
-    }
-    if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) {
-      return true;
-    }
-    if (projects.foundryWorld && projects.foundryWorld.isCompleted) {
-      return true;
-    }
-    return false;
+    return hasCompletedWorldSpecialization();
   }
 
   _getOldestStoredArtificialSeed() {
@@ -288,33 +322,31 @@ class AutoTravelAutomation {
   }
 
   _runAfterLoadingPaint(callback) {
-    if (document.hidden) {
+    let callbackQueued = false;
+    const queueCallback = () => {
+      if (callbackQueued) {
+        return;
+      }
+      callbackQueued = true;
       window.setTimeout(callback, 80);
-      return;
+    };
+    window.setTimeout(queueCallback, 120);
+    if (window.requestAnimationFrame) {
+      window.requestAnimationFrame(queueCallback);
+    } else {
+      queueCallback();
     }
-    window.requestAnimationFrame(() => {
-      window.setTimeout(callback, 80);
-    });
   }
 
   _captureCurrentTabState() {
-    const activeMainTab = document.querySelector('.tab.active');
-    const mainTabId = activeMainTab?.dataset?.tab || '';
-    const getActiveSubtabId = (selector) => {
-      const node = document.querySelector(`${selector}.active`);
-      return node?.dataset?.subtab || '';
-    };
-    const getActiveContentId = (selector) => {
-      const node = document.querySelector(`${selector}.active`);
-      return node?.id || '';
-    };
+    const activeTabButton = document.querySelector('.tab.active[data-tab]');
     return {
-      mainTabId,
-      hopeSubtabId: getActiveSubtabId('.hope-subtab'),
-      spaceSubtabId: getActiveSubtabId('.space-subtab'),
-      terraformingSubtabId: getActiveSubtabId('.terraforming-subtab'),
-      colonySubtabId: getActiveSubtabId('.colony-subtab'),
-      settingsSubtabId: getActiveSubtabId('.settings-subtab') || getActiveContentId('.settings-subtab-content')
+      mainTabId: activeTabButton ? activeTabButton.dataset.tab : tabManager?.getActiveTabId?.() || '',
+      hopeSubtabId: hopeSubtabManager?.getActiveId?.() || 'awakening-hope',
+      spaceSubtabId: spaceSubtabManager?.getActiveId?.() || 'space-story',
+      terraformingSubtabId: terraformingSubtabManager?.getActiveId?.() || 'world-terraforming',
+      colonySubtabId: colonySubtabState.activeSubtabId || 'population-colonies',
+      settingsSubtabId: settingsSubtabManager?.getActiveId?.() || 'save-settings-subtab'
     };
   }
 
@@ -366,8 +398,11 @@ class AutoTravelAutomation {
       target: this._resolveRandomWorldSelection(preset.target, 'auto'),
       orbitPreset: this._resolveRandomWorldSelection(preset.orbitPreset, 'auto'),
       type: this._resolveRandomWorldSelection(typeId, 'auto'),
-      hazards: this._normalizeHazards(preset.hazards)
+      hazards: this._rollHazardsForTravel(preset)
     };
+    if (typeId === 'random') {
+      options.availableTypes = this._getRandomTypeCandidates(preset);
+    }
     const res = generateRandomPlanet(randomSeed, options);
     if (!res || !res.merged) {
       return null;
@@ -525,7 +560,9 @@ class AutoTravelAutomation {
         type: preset.type || 'random',
         orbitPreset: preset.orbitPreset || 'random',
         dominion: preset.dominion || 'random',
+        randomTypeExclusions: this._normalizeRandomTypeExclusions(preset.randomTypeExclusions),
         hazards: this._normalizeHazards(preset.hazards),
+        randomHazardSubset: !!preset.randomHazardSubset,
         autoCompleteTerraforming: preset.autoCompleteTerraforming !== false,
         waitForSpecialization: !!preset.waitForSpecialization,
         skipEquilibration: !!preset.skipEquilibration,

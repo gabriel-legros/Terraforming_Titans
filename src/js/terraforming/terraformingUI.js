@@ -83,6 +83,13 @@ function getCoreHeatTooltipText() {
   );
 }
 
+function getFactoryHeatTooltipText() {
+  return getTerraformingSummaryText(
+    'temperature.factoryHeatTooltip',
+    'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is reduced by surface albedo. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat. Direct waste heat is not impacted by albedo or day-night averaging.'
+  );
+}
+
 const ATMOSPHERE_TOOLTIP_MOLAR_WEIGHTS = {
   carbonDioxide: 44.01,
   atmosphericWater: 18.01528,
@@ -330,7 +337,8 @@ const terraformingUICache = {
   life: {},
   magnetosphere: {},
   luminosity: {},
-  summary: {}
+  summary: {},
+  earthActions: {}
 };
 
 const TEMPERATURE_INFOGRAPHIC_PATH = 'assets/images/infographic.jpg';
@@ -458,7 +466,7 @@ function getTemperatureMaintenanceImmuneTooltip() {
           altitude: altitudeText,
           temperature: formatNumber(toDisplayTemperature(floorContext.temperatureK), false, 2),
           unit,
-          penalty: floorContext.penalty.toFixed(2),
+          penalty: formatNumber(floorContext.penalty, false, 2),
         }
       )
     );
@@ -497,7 +505,7 @@ function getTemperatureMaintenanceFloorTooltip(floorContext) {
     ? `${formatNumber(floorContext.pressureKPa, false, 2)} kPa`
     : getTerraformingSummaryText('notAvailable', 'N/A');
   const floorPenalty = Number.isFinite(floorContext?.penalty)
-    ? `x${floorContext.penalty.toFixed(2)}`
+    ? `x${formatNumber(floorContext.penalty, false, 2)}`
     : getTerraformingSummaryText('notAvailable', 'N/A');
 
   return [
@@ -673,7 +681,7 @@ function updateTerraformingSubtabUI(subtabId, deltaSeconds) {
     case 'summary-terraforming':
       updateTerraformingSummaryWorldIdentity();
       updatePlayTimeDisplay();
-      updateTemperatureBox();
+      updateTemperatureBox(deltaSeconds);
       updateAtmosphereBox(deltaSeconds);
       updateWaterBox();
       updateLuminosityBox();
@@ -692,6 +700,7 @@ function updateTerraformingSubtabUI(subtabId, deltaSeconds) {
     case 'world-terraforming': {
       updateWorldVisualizerDisabledPrompt();
       updateWorldVisualizerFailurePrompt();
+      updateEarthReconstructionControls();
       const viz = typeof window !== 'undefined' ? window.planetVisualizer : null;
       if (!suppressPlanetVisualizerRuntime && terraformingWorldInitialized && isTerraformingWorldSubtabActive() && viz && viz.animate) {
         try {
@@ -764,6 +773,238 @@ function updateWorldVisualizerFailurePrompt() {
   prompt.style.display = 'flex';
 }
 
+function updateEarthReconstructionControls() {
+  const controls = terraformingUICache.earthActions;
+  if (!controls || !controls.container) return;
+
+  const currentPlanetKey = spaceManager && spaceManager.getCurrentPlanetKey ? spaceManager.getCurrentPlanetKey() : '';
+  const showControls = currentPlanetKey === 'earth'
+    && earthManager
+    && earthManager.enabled
+    && (
+      earthManager.isActionUnlocked('increaseMass')
+      || earthManager.isActionUnlocked('removeHeat')
+      || earthManager.isActionUnlocked('shapeSurface')
+      || earthManager.isActionUnlocked('buildAtmosphere')
+      || earthManager.isActionUnlocked('addWater')
+      || earthManager.isActionUnlocked('adjustTilt')
+      || earthManager.isActionUnlocked('restoreBiomass')
+      || earthManager.isActionUnlocked('replaceLuna')
+      || earthManager.isActionUnlocked('completeTerraforming')
+    );
+
+  controls.container.classList.toggle('hidden', !showControls);
+  if (!showControls) return;
+
+  const massCount = earthManager.getActionCount('increaseMass');
+  controls.increaseMassButton.classList.toggle('hidden', !earthManager.isActionUnlocked('increaseMass'));
+  controls.increaseMassButton.textContent = `${t('ui.terraforming.earthActions.increaseMass', null, 'Increase mass')} ${massCount}/${EARTH_RECONSTRUCTION_MAX_MASS_STEPS}`;
+  controls.increaseMassButton.disabled = massCount >= EARTH_RECONSTRUCTION_MAX_MASS_STEPS;
+
+  const heatCount = earthManager.getActionCount('removeHeat');
+  controls.removeHeatButton.classList.toggle('hidden', !earthManager.isActionUnlocked('removeHeat'));
+  controls.removeHeatButton.textContent = `${t('ui.terraforming.earthActions.removeHeat', null, 'Remove heat')} ${heatCount}/${EARTH_RECONSTRUCTION_MAX_HEAT_STEPS}`;
+  controls.removeHeatButton.disabled = heatCount >= EARTH_RECONSTRUCTION_MAX_HEAT_STEPS;
+
+  const shapeCount = earthManager.getActionCount('shapeSurface');
+  controls.shapeSurfaceButton.classList.toggle('hidden', !earthManager.isActionUnlocked('shapeSurface'));
+  controls.shapeSurfaceButton.textContent = `${t('ui.terraforming.earthActions.shapeSurface', null, 'Shape surface')} ${shapeCount}/${EARTH_RECONSTRUCTION_MAX_SHAPE_STEPS}`;
+  controls.shapeSurfaceButton.disabled = shapeCount >= EARTH_RECONSTRUCTION_MAX_SHAPE_STEPS;
+
+  const atmosphereCount = earthManager.getActionCount('buildAtmosphere');
+  controls.buildAtmosphereButton.classList.toggle('hidden', !earthManager.isActionUnlocked('buildAtmosphere'));
+  controls.buildAtmosphereButton.textContent = `${t('ui.terraforming.earthActions.buildAtmosphere', null, 'Build atmosphere')} ${atmosphereCount}/${EARTH_RECONSTRUCTION_MAX_ATMOSPHERE_STEPS}`;
+  controls.buildAtmosphereButton.disabled = atmosphereCount >= EARTH_RECONSTRUCTION_MAX_ATMOSPHERE_STEPS;
+
+  const waterCount = earthManager.getActionCount('addWater');
+  controls.addWaterButton.classList.toggle('hidden', !earthManager.isActionUnlocked('addWater'));
+  controls.addWaterButton.textContent = `${t('ui.terraforming.earthActions.addWater', null, 'Add water')} ${waterCount}/${EARTH_RECONSTRUCTION_MAX_WATER_STEPS}`;
+  controls.addWaterButton.disabled = waterCount >= EARTH_RECONSTRUCTION_MAX_WATER_STEPS;
+
+  const tiltCount = earthManager.getActionCount('adjustTilt');
+  controls.adjustTiltButton.classList.toggle('hidden', !earthManager.isActionUnlocked('adjustTilt'));
+  controls.adjustTiltButton.textContent = `${t('ui.terraforming.earthActions.adjustTilt', null, 'Adjust tilt')} ${tiltCount}/${EARTH_RECONSTRUCTION_MAX_TILT_STEPS}`;
+  controls.adjustTiltButton.disabled = tiltCount >= EARTH_RECONSTRUCTION_MAX_TILT_STEPS;
+
+  const biomassCount = earthManager.getActionCount('restoreBiomass');
+  controls.restoreBiomassButton.classList.toggle('hidden', !earthManager.isActionUnlocked('restoreBiomass'));
+  controls.restoreBiomassButton.textContent = `${t('ui.terraforming.earthActions.restoreBiomass', null, 'Restore biomass')} ${biomassCount}/${EARTH_RECONSTRUCTION_MAX_BIOMASS_STEPS}`;
+  controls.restoreBiomassButton.disabled = biomassCount >= EARTH_RECONSTRUCTION_MAX_BIOMASS_STEPS;
+
+  const lunaCount = earthManager.getActionCount('replaceLuna');
+  controls.replaceLunaButton.classList.toggle('hidden', !earthManager.isActionUnlocked('replaceLuna'));
+  controls.replaceLunaButton.textContent = `${t('ui.terraforming.earthActions.replaceLuna', null, 'Replace Luna')} ${lunaCount}/${EARTH_RECONSTRUCTION_MAX_LUNA_STEPS}`;
+  controls.replaceLunaButton.disabled = lunaCount >= EARTH_RECONSTRUCTION_MAX_LUNA_STEPS;
+
+  const completeCount = earthManager.getActionCount('completeTerraforming');
+  controls.completeTerraformingButton.classList.toggle('hidden', !earthManager.isActionUnlocked('completeTerraforming'));
+  controls.completeTerraformingButton.textContent = `${t('ui.terraforming.earthActions.completeTerraforming', null, 'Complete terraforming')} ${completeCount}/${EARTH_RECONSTRUCTION_MAX_COMPLETE_TERRAFORMING_STEPS}`;
+  controls.completeTerraformingButton.disabled = completeCount >= EARTH_RECONSTRUCTION_MAX_COMPLETE_TERRAFORMING_STEPS;
+}
+
+function createEarthReconstructionControls() {
+  const controls = document.createElement('div');
+  controls.className = 'earth-reconstruction-controls hidden';
+
+  const increaseMassButton = document.createElement('button');
+  increaseMassButton.type = 'button';
+  increaseMassButton.className = 'earth-reconstruction-button';
+  increaseMassButton.addEventListener('click', () => {
+    if (earthManager.pressAction('increaseMass')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+      if (window.planetVisualizer && window.planetVisualizer.applyEarthVisualOverrides) {
+        window.planetVisualizer.applyEarthVisualOverrides();
+        window.planetVisualizer.updateEarthAsteroidVisibility();
+      }
+    }
+  });
+
+  const removeHeatButton = document.createElement('button');
+  removeHeatButton.type = 'button';
+  removeHeatButton.className = 'earth-reconstruction-button hidden';
+  removeHeatButton.addEventListener('click', () => {
+    if (earthManager.pressAction('removeHeat')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+      if (window.planetVisualizer && window.planetVisualizer.updateLavaOverlay) {
+        window.planetVisualizer.updateSurfaceHeatMaterial();
+        window.planetVisualizer.updateLavaOverlay();
+      }
+    }
+  });
+
+  const shapeSurfaceButton = document.createElement('button');
+  shapeSurfaceButton.type = 'button';
+  shapeSurfaceButton.className = 'earth-reconstruction-button hidden';
+  shapeSurfaceButton.addEventListener('click', () => {
+    if (earthManager.pressAction('shapeSurface')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+      if (window.planetVisualizer && window.planetVisualizer.updateSurfaceTextureFromPressure) {
+        window.planetVisualizer.heightMap = null;
+        window.planetVisualizer.heightZoneHists = null;
+        window.planetVisualizer.resetSurfaceTextureThrottle();
+        window.planetVisualizer.updateSurfaceTextureFromPressure(true);
+      }
+    }
+  });
+
+  const buildAtmosphereButton = document.createElement('button');
+  buildAtmosphereButton.type = 'button';
+  buildAtmosphereButton.className = 'earth-reconstruction-button hidden';
+  buildAtmosphereButton.addEventListener('click', () => {
+    if (earthManager.pressAction('buildAtmosphere')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+    }
+  });
+
+  const addWaterButton = document.createElement('button');
+  addWaterButton.type = 'button';
+  addWaterButton.className = 'earth-reconstruction-button hidden';
+  addWaterButton.addEventListener('click', () => {
+    if (earthManager.pressAction('addWater')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+      if (window.planetVisualizer && window.planetVisualizer.resetSurfaceTextureThrottle) {
+        window.planetVisualizer.resetSurfaceTextureThrottle();
+      }
+    }
+  });
+
+  const adjustTiltButton = document.createElement('button');
+  adjustTiltButton.type = 'button';
+  adjustTiltButton.className = 'earth-reconstruction-button hidden';
+  adjustTiltButton.addEventListener('click', () => {
+    if (earthManager.pressAction('adjustTilt')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+      if (window.planetVisualizer && window.planetVisualizer.applyEarthVisualOverrides) {
+        window.planetVisualizer.applyEarthVisualOverrides();
+      }
+    }
+  });
+
+  const restoreBiomassButton = document.createElement('button');
+  restoreBiomassButton.type = 'button';
+  restoreBiomassButton.className = 'earth-reconstruction-button hidden';
+  restoreBiomassButton.addEventListener('click', () => {
+    if (earthManager.pressAction('restoreBiomass')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+    }
+  });
+
+  const replaceLunaButton = document.createElement('button');
+  replaceLunaButton.type = 'button';
+  replaceLunaButton.className = 'earth-reconstruction-button hidden';
+  replaceLunaButton.addEventListener('click', () => {
+    if (earthManager.pressAction('replaceLuna')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+      if (window.planetVisualizer && window.planetVisualizer.updateEarthLuna) {
+        window.planetVisualizer.updateEarthLuna();
+      }
+    }
+  });
+
+  const completeTerraformingButton = document.createElement('button');
+  completeTerraformingButton.type = 'button';
+  completeTerraformingButton.className = 'earth-reconstruction-button earth-reconstruction-button--complete hidden';
+  completeTerraformingButton.addEventListener('click', () => {
+    if (!earthManager.isActionUnlocked('completeTerraforming')) return;
+    if (earthManager.getActionCount('completeTerraforming') >= EARTH_RECONSTRUCTION_MAX_COMPLETE_TERRAFORMING_STEPS) return;
+    terraforming.readyForCompletion = true;
+    if (!completeTerraformingNow()) return;
+    if (earthManager.pressAction('completeTerraforming')) {
+      updateEarthReconstructionControls();
+      if (storyManager) {
+        storyManager.updateCurrentObjectiveUI();
+      }
+    }
+  });
+
+  controls.appendChild(increaseMassButton);
+  controls.appendChild(removeHeatButton);
+  controls.appendChild(shapeSurfaceButton);
+  controls.appendChild(buildAtmosphereButton);
+  controls.appendChild(addWaterButton);
+  controls.appendChild(adjustTiltButton);
+  controls.appendChild(restoreBiomassButton);
+  controls.appendChild(replaceLunaButton);
+  controls.appendChild(completeTerraformingButton);
+  terraformingUICache.earthActions = {
+    container: controls,
+    increaseMassButton,
+    removeHeatButton,
+    shapeSurfaceButton,
+    buildAtmosphereButton,
+    addWaterButton,
+    adjustTiltButton,
+    restoreBiomassButton,
+    replaceLunaButton,
+    completeTerraformingButton
+  };
+  return controls;
+}
+
 function setWorldVisualizerRuntimeFailure(reason) {
   suppressPlanetVisualizerRuntime = true;
   planetVisualizerRuntimeFailed = true;
@@ -828,6 +1069,7 @@ function markTerraformingMilestonesIfActive() {
 
 function setTerraformingSummaryVisibility(unlocked) {
   cacheTerraformingTabElements();
+  unlocked = unlocked && !isCurrentWorldSubtabDisabled('summary-terraforming');
 
   const { summaryButton, summaryContent } = terraformingTabElements;
   if (!summaryButton || !summaryContent) {
@@ -848,6 +1090,7 @@ function setTerraformingSummaryVisibility(unlocked) {
 
 function setTerraformingLifeVisibility(unlocked) {
   cacheTerraformingTabElements();
+  unlocked = unlocked && !isCurrentWorldSubtabDisabled('life-terraforming');
 
   const { lifeButton, lifeContent } = terraformingTabElements;
   if (!lifeButton || !lifeContent) {
@@ -868,6 +1111,7 @@ function setTerraformingLifeVisibility(unlocked) {
 
 function setTerraformingHazardsVisibility(unlocked) {
   cacheTerraformingTabElements();
+  unlocked = unlocked && !isCurrentWorldSubtabDisabled('hazard-terraforming');
 
   const { hazardsButton, hazardsContent } = terraformingTabElements;
   if (!hazardsButton || !hazardsContent) {
@@ -891,6 +1135,7 @@ function setTerraformingHazardsVisibility(unlocked) {
 
 function setTerraformingMilestonesVisibility(unlocked) {
   cacheTerraformingTabElements();
+  unlocked = unlocked && !isCurrentWorldSubtabDisabled('milestone-terraforming');
 
   const { milestonesButton, milestonesContent } = terraformingTabElements;
   if (!milestonesButton || !milestonesContent) {
@@ -911,7 +1156,6 @@ function setTerraformingMilestonesVisibility(unlocked) {
 
 function openTerraformingWorldTab() {
   if (autoTravelContext && autoTravelContext.suppressTabSwitch) {
-    autoTravelContext.suppressTabSwitch = false;
     return;
   }
   initializeTerraformingTabs();
@@ -932,6 +1176,11 @@ function createTerraformingWorldUI() {
 
   // Clear any placeholder content and create the visualizer shell
   while (host.firstChild) host.removeChild(host.firstChild);
+
+  const layout = document.createElement('div');
+  layout.className = 'earth-visualizer-layout';
+
+  const earthControls = createEarthReconstructionControls();
 
   // Container for WebGL canvas
   const container = document.createElement('div');
@@ -958,7 +1207,9 @@ function createTerraformingWorldUI() {
   failurePrompt.className = 'planet-visualizer-failure-prompt';
   failurePrompt.addEventListener('click', retryWorldVisualizerAfterFailure);
 
-  host.appendChild(container);
+  host.appendChild(layout);
+  layout.appendChild(earthControls);
+  layout.appendChild(container);
   container.appendChild(disabledPrompt);
   container.appendChild(failurePrompt);
   host.appendChild(overlay);
@@ -967,6 +1218,7 @@ function createTerraformingWorldUI() {
   terraformingWorldInitialized = true;
   updateWorldVisualizerDisabledPrompt();
   updateWorldVisualizerFailurePrompt();
+  updateEarthReconstructionControls();
 }
 
 function createTerraformingSummaryUI() {
@@ -1088,8 +1340,9 @@ function createTemperatureBox(row) {
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
       <p>${getTerraformingSummaryText('temperature.labels.globalMeanTemp', 'Global Mean Temp')}: <span id="temperature-current"></span><span class="temp-unit"></span></p>
-      <p>${getTerraformingSummaryText('temperature.labels.equilibriumTemp', 'Equilibrium Temp')}: <span id="equilibrium-temp"></span> <span class="temp-unit"></span></p>
+      <p>${getTerraformingSummaryText('temperature.labels.equilibriumTemp', 'Equilibrium Temp')}: <span id="equilibrium-temp"></span> <span class="temp-unit"></span> <span id="equilibrium-temp-info" class="info-tooltip-icon">&#9432;</span></p>
       <p id="temperature-core-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netCoreHeatFlux', 'Net Core Heat Flux')}: <span id="temperature-core-heat"></span> W/m^2</p>
+      <p id="temperature-factory-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netFactoryHeatFlux', 'Net Factory Heat Flux')}: <span id="temperature-factory-heat"></span> W/m^2</p>
       <table>
         <colgroup>
           <col class="gas-col">
@@ -1141,6 +1394,14 @@ function createTemperatureBox(row) {
       temperatureHeading.appendChild(tempInfo);
       temperatureHeading.appendChild(tempInfographicButton);
     }
+    const equilibriumTempInfo = temperatureBox.querySelector('#equilibrium-temp-info');
+    const equilibriumTempTooltip = attachDynamicInfoTooltip(
+      equilibriumTempInfo,
+      getTerraformingSummaryText(
+        'temperature.equilibriumTempTooltip',
+        'The blackbody radiative balance temperature from absorbed sunlight, albedo, and direct non-atmospheric heat. It ignores greenhouse heat trapping; physically, it is the temperature that would radiate the same energy back to space. Earth\'s value is about 255 K (-18°C).'
+      )
+    );
     const coreHeatLine = temperatureBox.querySelector('#temperature-core-heat-line');
     const coreHeatInfo = document.createElement('span');
     coreHeatInfo.classList.add('info-tooltip-icon');
@@ -1151,6 +1412,18 @@ function createTemperatureBox(row) {
       attachDynamicInfoTooltip(
         coreHeatInfo,
         getCoreHeatTooltipText()
+      );
+    }
+    const factoryHeatLine = temperatureBox.querySelector('#temperature-factory-heat-line');
+    const factoryHeatInfo = document.createElement('span');
+    factoryHeatInfo.classList.add('info-tooltip-icon');
+    factoryHeatInfo.innerHTML = '&#9432;';
+    if (factoryHeatLine) {
+      factoryHeatLine.appendChild(document.createTextNode(' '));
+      factoryHeatLine.appendChild(factoryHeatInfo);
+      attachDynamicInfoTooltip(
+        factoryHeatInfo,
+        getFactoryHeatTooltipText()
       );
     }
     const infographicElements = ensureTemperatureInfographicOverlay();
@@ -1227,9 +1500,13 @@ function createTemperatureBox(row) {
       target: temperatureBox.querySelector('#temperature-target'),
       current: temperatureBox.querySelector('#temperature-current'),
       equilibrium: temperatureBox.querySelector('#equilibrium-temp'),
+      equilibriumTooltip: equilibriumTempTooltip,
       coreHeatLine,
       coreHeatTooltip: coreHeatInfo.querySelector('.resource-tooltip'),
       coreHeat: temperatureBox.querySelector('#temperature-core-heat'),
+      factoryHeatLine,
+      factoryHeatTooltip: factoryHeatInfo.querySelector('.resource-tooltip'),
+      factoryHeat: temperatureBox.querySelector('#temperature-factory-heat'),
       tropicalLabel: temperatureBox.querySelector('#tropical-temp')?.closest('tr')?.firstElementChild,
       tropicalTemp: temperatureBox.querySelector('#tropical-temp'),
       tropicalTrendTemp: temperatureBox.querySelector('#tropical-trend-temp'),
@@ -1260,14 +1537,16 @@ function createTemperatureBox(row) {
       maintenanceFloorInfo: temperatureBox.querySelector('#temperature-maintenance-floor-info'),
       maintenanceFloorTooltip,
       infographicButton: tempInfographicButton,
-      infographicOverlay: infographicElements.overlay
+      infographicOverlay: infographicElements.overlay,
+      maintenanceFloorHideTimer: 0
     };
   }
 
-  function updateTemperatureBox() {
+  function updateTemperatureBox(deltaSeconds) {
     const els = terraformingUICache.temperature;
     const temperatureBox = els.box;
     if (!temperatureBox) return;
+    const frameDelta = deltaSeconds > 0 ? Math.min(1, deltaSeconds) : 0;
 
     const zoneKeys = getZones();
     const showTemperate = zoneKeys.includes('temperate');
@@ -1309,6 +1588,17 @@ function createTemperatureBox(row) {
     if (els.coreHeat) {
       els.coreHeat.textContent = formatNumber(netCoreHeatFlux, false, 2);
     }
+    const factoryHeatFlux = terraforming.getFactoryHeatFlux ? terraforming.getFactoryHeatFlux() : 0;
+    const netFactoryHeatFlux = terraforming.getNetFactoryHeatFlux ? terraforming.getNetFactoryHeatFlux() : factoryHeatFlux;
+    if (els.factoryHeatLine) {
+      els.factoryHeatLine.style.display = factoryHeatFlux !== 0 ? '' : 'none';
+    }
+    if (els.factoryHeatTooltip) {
+      setTooltipText(els.factoryHeatTooltip, getFactoryHeatTooltipText());
+    }
+    if (els.factoryHeat) {
+      els.factoryHeat.textContent = formatNumber(netFactoryHeatFlux, false, 2);
+    }
 
     els.tropicalTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.value), false, 2);
     els.tropicalTrendTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.trendValue), false, 2);
@@ -1331,7 +1621,7 @@ function createTemperatureBox(row) {
     els.polarDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.day), false, 2);
     els.polarNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.night), false, 2);
 
-    temperatureBox.style.borderColor = terraforming.getTemperatureStatus() ? 'green' : 'red';
+    temperatureBox.style.borderColor = terraforming.getTemperatureStatus() ? getStatusColor('success') : getStatusColor('failure');
 
     if (els.energyPenalty) {
       els.energyPenalty.textContent = `${getTerraformingSummaryText(
@@ -1344,12 +1634,12 @@ function createTemperatureBox(row) {
       if (penalty > 1) {
         els.maintenancePenalty.style.display = '';
         if (els.maintenancePenaltyValue) {
-          els.maintenancePenaltyValue.textContent = penalty.toFixed(2);
+          els.maintenancePenaltyValue.textContent = formatNumber(penalty, false, 2);
         } else {
           els.maintenancePenalty.textContent = `${getTerraformingSummaryText(
             'temperature.labels.maintenanceMultiplier',
             'Maintenance cost multiplier from temperature : '
-          )}${penalty.toFixed(2)}`;
+          )}${formatNumber(penalty, false, 2)}`;
         }
         if (els.maintenancePenaltyTooltip) {
           setTooltipText(els.maintenancePenaltyTooltip, getTemperatureMaintenanceImmuneTooltip());
@@ -1360,7 +1650,9 @@ function createTemperatureBox(row) {
     }
     if (els.maintenanceFloor) {
       const floorContext = terraforming.calculateOneAtmMaintenanceFloor();
-      if (floorContext.penalty > 1 && Number.isFinite(floorContext.temperatureK)) {
+      const shouldShowFloor = floorContext.penalty > 1 && Number.isFinite(floorContext.temperatureK);
+      if (shouldShowFloor) {
+        els.maintenanceFloorHideTimer = 1;
         els.maintenanceFloor.style.display = '';
         const floorTemperature = formatNumber(
           toDisplayTemperature(floorContext.temperatureK),
@@ -1369,13 +1661,13 @@ function createTemperatureBox(row) {
         );
         if (els.maintenanceFloorValue) {
           els.maintenanceFloorValue.textContent =
-            `${floorTemperature}${unit} (floor x${floorContext.penalty.toFixed(2)})`;
+            `${floorTemperature}${unit} (floor x${formatNumber(floorContext.penalty, false, 2)})`;
         } else {
           els.maintenanceFloor.textContent =
             `${getTerraformingSummaryText(
               'temperature.labels.oneAtmEstimate',
               '1 atm temperature estimate : '
-            )}${floorTemperature}${unit} (floor x${floorContext.penalty.toFixed(2)})`;
+            )}${floorTemperature}${unit} (floor x${formatNumber(floorContext.penalty, false, 2)})`;
         }
         if (els.maintenanceFloorTooltip) {
           setTooltipText(
@@ -1384,7 +1676,8 @@ function createTemperatureBox(row) {
           );
         }
       } else {
-        els.maintenanceFloor.style.display = 'none';
+        els.maintenanceFloorHideTimer = Math.max(0, (els.maintenanceFloorHideTimer || 0) - frameDelta);
+        els.maintenanceFloor.style.display = els.maintenanceFloorHideTimer > 0 ? '' : 'none';
       }
     }
   }
@@ -1514,7 +1807,7 @@ function createTemperatureBox(row) {
     const els = terraformingUICache.atmosphere;
     const atmosphereBox = els.box;
     if (!atmosphereBox) return;
-    atmosphereBox.style.borderColor = terraforming.getAtmosphereStatus() ? 'green' : 'red';
+    atmosphereBox.style.borderColor = terraforming.getAtmosphereStatus() ? getStatusColor('success') : getStatusColor('failure');
     const gasTargets = terraforming.gasTargets;
     const gasBody = els.gasBody;
     const frameDelta = deltaSeconds > 0 ? Math.min(1, deltaSeconds) : 0;
@@ -1675,7 +1968,8 @@ function createTemperatureBox(row) {
         const currentGlobalPressurePa = calculateAtmosphericPressure(
             currentAmount,
             terraforming.celestialParameters.gravity,
-            terraforming.celestialParameters.radius
+            terraforming.celestialParameters.radius,
+            terraforming.celestialParameters.surfaceArea
         );
 
         const gasEls = els.gases[gas];
@@ -1940,6 +2234,7 @@ function createWaterBox(row) {
     const avgDryIceCoverage = calculateAverageCoverage(terraforming, 'dryIce') || 0;
     const avgFineSandCoverage = calculateAverageCoverage(terraforming, 'fineSand') || 0;
     const avgLiquidHydrogenCoverage = calculateAverageCoverage(terraforming, 'liquidHydrogen') || 0;
+    const hasLiquidCoverageTargets = terraforming.liquidCoverageTargets.length > 0;
     const hasLiquidHydrogen = avgLiquidHydrogenCoverage > 1e-9;
 
     const requiresCo2 = terraforming.liquidCoverageTargets.some((entry) => entry.liquidType === 'carbonDioxide');
@@ -1960,11 +2255,11 @@ function createWaterBox(row) {
       }
     }
 
-    waterBox.style.borderColor = terraforming.liquidCoverageTargets.length
-      ? (allTargetsMet && !hasLiquidHydrogen ? 'green' : 'red')
+    waterBox.style.borderColor = hasLiquidCoverageTargets
+      ? (allTargetsMet && !hasLiquidHydrogen ? getStatusColor('success') : getStatusColor('failure'))
       : '';
     if (els.liquidHydrogenWarningRow) {
-      els.liquidHydrogenWarningRow.style.display = hasLiquidHydrogen ? '' : 'none';
+      els.liquidHydrogenWarningRow.style.display = hasLiquidCoverageTargets && hasLiquidHydrogen ? '' : 'none';
     }
 
     els.waterCurrent.textContent = (avgLiquidCoverage * 100).toFixed(2);
@@ -2046,13 +2341,22 @@ function createWaterBox(row) {
 
     const targetSpan = document.createElement('span');
     const effectiveLifeTarget = getEffectiveLifeFraction(terraforming);
-    targetSpan.textContent = formatTerraformingTargetText(
-      getTerraformingSummaryText(
-        'lifeSummary.targetAtLeast',
-        'Life coverage at least {percent}%.',
-        { percent: (effectiveLifeTarget * 100).toFixed(0) }
+    const densityTarget = getLifeBiomassDensityTarget(terraforming);
+    targetSpan.textContent = densityTarget > 0
+      ? formatTerraformingTargetText(
+        getTerraformingSummaryText(
+          'lifeSummary.targetBiomassAmountAtLeast',
+          'Life biomass at least {amount} tons.',
+          { amount: formatNumber(getEffectiveLifeTargetAmount(terraforming), true) }
+        )
       )
-    );
+      : formatTerraformingTargetText(
+        getTerraformingSummaryText(
+          'lifeSummary.targetAtLeast',
+          'Life coverage at least {percent}%.',
+          { percent: (effectiveLifeTarget * 100).toFixed(0) }
+        )
+      );
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
     lifeBox.appendChild(targetSpan);
@@ -2094,30 +2398,37 @@ function updateLifeBox() {
       row.style.display = zones.includes(zone) ? '' : 'none';
     });
 
-    // Calculate total biomass from zonal data
-    let totalBiomass = 0;
-    zones.forEach(zone => {
-        totalBiomass += terraforming.zonalSurface[zone].biomass || 0;
-    });
+    const totalBiomass = getTerraformingTotalBiomass(terraforming);
 
     // Calculate average biomass coverage percentage using the centralized helper function
     const avgBiomassCoverage = calculateAverageCoverage(terraforming, 'biomass');
 
     const effectiveTarget = getEffectiveLifeFraction(terraforming);
+    const densityTarget = getLifeBiomassDensityTarget(terraforming);
     const hazardTolerance = 1e-6;
     const hazardsCleared = typeof terraforming.getHazardClearanceStatus === 'function'
       ? terraforming.getHazardClearanceStatus()
       : zones.every(zone => (terraforming.zonalSurface[zone]?.hazardousBiomass || 0) <= hazardTolerance);
-    const lifeTargetMet = avgBiomassCoverage >= effectiveTarget;
-    lifeBox.style.borderColor = lifeTargetMet ? 'green' : 'red';
+    const lifeTargetMet = densityTarget > 0
+      ? getLifeBiomassDensity(terraforming) >= densityTarget
+      : avgBiomassCoverage >= effectiveTarget;
+    lifeBox.style.borderColor = lifeTargetMet ? getStatusColor('success') : getStatusColor('failure');
     if (els.target) {
-      els.target.textContent = formatTerraformingTargetText(
-        getTerraformingSummaryText(
-          'lifeSummary.targetAbove',
-          'Life coverage above {percent}%.',
-          { percent: (effectiveTarget * 100).toFixed(0) }
+      els.target.textContent = densityTarget > 0
+        ? formatTerraformingTargetText(
+          getTerraformingSummaryText(
+            'lifeSummary.targetBiomassAmountAbove',
+            'Life biomass above {amount} tons.',
+            { amount: formatNumber(getEffectiveLifeTargetAmount(terraforming), true) }
+          )
         )
-      );
+        : formatTerraformingTargetText(
+          getTerraformingSummaryText(
+            'lifeSummary.targetAbove',
+            'Life coverage above {percent}%.',
+            { percent: (effectiveTarget * 100).toFixed(0) }
+          )
+        );
     }
 
     const zoneLines = zones.map(zone => {
@@ -2447,7 +2758,7 @@ function updateLifeBox() {
     }
 
     updateOtherRequirementStatuses(els);
-    magnetosphereBox.style.borderColor = terraforming.getOthersStatus() ? 'green' : 'red';
+    magnetosphereBox.style.borderColor = terraforming.getOthersStatus() ? getStatusColor('success') : getStatusColor('failure');
   }
   
   function buildAlbedoTable() {
@@ -2658,7 +2969,7 @@ function updateLifeBox() {
     const els = terraformingUICache.luminosity;
     const luminosityBox = els.box;
     if (!luminosityBox) return;
-    luminosityBox.style.borderColor = terraforming.getLuminosityStatus() ? 'green' : 'red';
+    luminosityBox.style.borderColor = terraforming.getLuminosityStatus() ? getStatusColor('success') : getStatusColor('failure');
 
     if (els.target) {
       els.target.textContent = formatTerraformingTargetText(
@@ -2806,6 +3117,9 @@ function updateLifeBox() {
       const isRingworld = currentPlanetParameters?.classification?.type === 'ring';
       const isDisk = isAldersonDiskWorld();
       const lines = [getTerraformingSummaryText('luminosity.solarFluxTooltip.starAverageByZone', 'Average Solar Flux by zone (star only)')];
+      if (!isRingworld && !isDisk) {
+        lines.push(getTerraformingSummaryText('luminosity.solarFluxTooltip.orbitalFlux', 'Orbital Flux: {value}', { value: terraforming.luminosity.solarFlux.toFixed(1) }));
+      }
       getZones().forEach(zone => {
         const baseFlux = isDisk
           ? terraforming.calculateDiskDirectSolarFlux(zone)
@@ -2940,7 +3254,24 @@ function updateLifeBox() {
     }
   }
 
+function getTerraformingCompletionBlockerText() {
+  const statuses = terraforming.getOtherRequirementStatuses();
+  for (let i = 0; i < statuses.length; i += 1) {
+    const status = statuses[i];
+    if (!status.passed && status.buttonText) {
+      return status.buttonText;
+    }
+  }
+  return '';
+}
+
 function completeTerraformingNow() {
+  const isSmbhShellworld = currentPlanetParameters.classification?.type === 'shell'
+    && currentPlanetParameters.classification?.core === 'smbh';
+  if (isSmbhShellworld && birchWorldTerraformTimeSeconds === null) {
+    birchWorldTerraformTimeSeconds = totalPlayTimeSeconds;
+    birchWorldTerraformRealTimeSeconds = totalRealPlayTimeSeconds;
+  }
   const isRingworld = currentPlanetParameters.classification?.type === 'ring';
   if (isRingworld) {
     const ringProject = projectManager.projects.ringworldTerraforming;
@@ -2959,6 +3290,9 @@ function completeTerraformingNow() {
     ? terraforming.getHazardClearanceStatus()
     : true;
   if (!hazardsCleared) {
+    return false;
+  }
+  if (getTerraformingCompletionBlockerText()) {
     return false;
   }
   const planetTerraformed = (typeof spaceManager !== 'undefined' &&
@@ -2995,6 +3329,7 @@ function completeTerraformingNow() {
   return true;
 }
 
+
 // Function to create the "Complete Terraforming" button
   function createCompleteTerraformingButton(container) {
     const doc = (container && container.ownerDocument) || document;
@@ -3007,7 +3342,7 @@ function completeTerraformingNow() {
   button.style.width = '100%';
   button.style.padding = '15px';
   button.style.marginTop = '20px';
-  button.style.backgroundColor = 'red';
+  button.style.backgroundColor = getStatusColor('failure');
   button.style.color = 'white';
   button.style.border = 'none';
   button.style.borderRadius = '5px';
@@ -3048,7 +3383,7 @@ function completeTerraformingNow() {
             'actions.spinRingworldFirst',
             'Spin Ringworld first'
           );
-          button.style.backgroundColor = 'red';
+          button.style.backgroundColor = getStatusColor('failure');
           button.style.cursor = 'not-allowed';
           button.disabled = true;
           return;
@@ -3062,7 +3397,7 @@ function completeTerraformingNow() {
             'actions.fillDiskworldFirst',
             'Fill Diskworld first'
           );
-          button.style.backgroundColor = 'red';
+          button.style.backgroundColor = getStatusColor('failure');
           button.style.cursor = 'not-allowed';
           button.disabled = true;
           return;
@@ -3078,7 +3413,16 @@ function completeTerraformingNow() {
         'actions.removeAllHazardsFirst',
         'Remove all hazards first'
       );
-      button.style.backgroundColor = 'red';
+      button.style.backgroundColor = getStatusColor('failure');
+      button.style.cursor = 'not-allowed';
+      button.disabled = true;
+      return;
+  }
+
+  const completionBlockerText = getTerraformingCompletionBlockerText();
+  if (completionBlockerText) {
+      button.textContent = completionBlockerText;
+      button.style.backgroundColor = getStatusColor('failure');
       button.style.cursor = 'not-allowed';
       button.disabled = true;
       return;
@@ -3101,7 +3445,7 @@ function completeTerraformingNow() {
   }
 
   if (terraforming.readyForCompletion) {
-      button.style.backgroundColor = 'green';
+      button.style.backgroundColor = getStatusColor('success');
       button.style.cursor = 'pointer';
       button.disabled = false; // Enable the button
       button.textContent = getTerraformingSummaryText(
@@ -3109,7 +3453,7 @@ function completeTerraformingNow() {
         'Complete Terraforming'
       );
   } else {
-      button.style.backgroundColor = 'red';
+      button.style.backgroundColor = getStatusColor('failure');
       button.style.cursor = 'not-allowed';
       button.disabled = true; // Disable the button
       button.textContent = getTerraformingSummaryText(

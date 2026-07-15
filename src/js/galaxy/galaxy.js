@@ -30,13 +30,16 @@ class GalaxyManager extends EffectableEntity {
         this.popupVisibility = {
             sector: true,
             operations: true,
-            defense: true
+            defense: true,
+            incoming: false
         };
         this.fleetUpgradePurchases = {};
         GALAXY_FLEET_UPGRADE_KEYS.forEach((key) => {
             this.fleetUpgradePurchases[key] = 0;
         });
         this.successfulOperations = 0;
+        this.uiDirty = true;
+        this.forceUIRefresh = false;
         const operationHooks = {
             uhfFactionId: UHF_FACTION_ID,
             hasNeighboringStronghold: (sector, factionId) => this.#hasNeighboringStronghold(sector, factionId),
@@ -60,14 +63,17 @@ class GalaxyManager extends EffectableEntity {
                 this.galacticInvasionManager?.handlePrometheanOperationResult?.(operation);
             },
             refreshUI: () => {
-                if (typeof updateGalaxyUI === 'function') {
-                    updateGalaxyUI();
-                }
+                this.markUIDirty();
             }
         };
         this.operationManager = new GalaxyOperationManager(this, {
             ...operationHooks
         });
+    }
+
+    markUIDirty(options = {}) {
+        this.uiDirty = true;
+        this.forceUIRefresh = this.forceUIRefresh || options.force === true;
     }
 
     initialize() {
@@ -84,7 +90,7 @@ class GalaxyManager extends EffectableEntity {
     }
 
     update(deltaMs) {
-        if(!this.enabled){
+        if(!isManagerEffectivelyEnabled(this, 'galaxyManager')){
             return;
         }
         updateFactions.call(this, deltaMs);
@@ -95,6 +101,9 @@ class GalaxyManager extends EffectableEntity {
     }
 
     enable(targetId, { autoSwitch = true } = {}) {
+        if (isCurrentWorldManagerDisabled('galaxyManager')) {
+            return;
+        }
         if (targetId && targetId !== 'space-galaxy' && targetId !== 'galaxy') {
             return;
         }
@@ -104,7 +113,7 @@ class GalaxyManager extends EffectableEntity {
     }
 
     refreshUIVisibility() {
-        if (this.enabled) {
+        if (isManagerEffectivelyEnabled(this, 'galaxyManager')) {
             if (typeof showSpaceGalaxyTab === 'function') {
                 showSpaceGalaxyTab();
             }
@@ -114,6 +123,8 @@ class GalaxyManager extends EffectableEntity {
             if (typeof updateGalaxyUI === 'function') {
                 updateGalaxyUI({ force: true });
             }
+            this.uiDirty = false;
+            this.forceUIRefresh = false;
         } else if (typeof hideSpaceGalaxyTab === 'function') {
             hideSpaceGalaxyTab();
         }
@@ -166,7 +177,8 @@ class GalaxyManager extends EffectableEntity {
         return {
             sector: this.popupVisibility.sector !== false,
             operations: this.popupVisibility.operations !== false,
-            defense: this.popupVisibility.defense !== false
+            defense: this.popupVisibility.defense !== false,
+            incoming: this.popupVisibility.incoming === true
         };
     }
 
@@ -174,7 +186,8 @@ class GalaxyManager extends EffectableEntity {
         this.popupVisibility = {
             sector: state.sector !== false,
             operations: state.operations !== false,
-            defense: state.defense !== false
+            defense: state.defense !== false,
+            incoming: state.incoming === true
         };
         return this.getPopupVisibilityState();
     }
@@ -247,6 +260,12 @@ class GalaxyManager extends EffectableEntity {
         galaxyInvasionManager?.refreshUIVisibility?.();
         this.#updateIncomingAttackWarning();
         artificialManager?.refreshConditionalRingStarCoreUnlocks?.();
+    }
+
+    finalizeLoadedDefenseAssignments() {
+        this.factions.forEach((faction) => {
+            faction.finalizeLoadedDefenseAssignments?.(this);
+        });
     }
 
     #serializeFleetUpgrades() {
@@ -621,8 +640,12 @@ class GalaxyManager extends EffectableEntity {
     setOperationAutoMode(value) {
         if (!this.operationManager) {
             const normalized = typeof value === 'string' ? value.trim().toLowerCase() : '';
-            if (normalized === 'all' || normalized === 'off' || normalized === 'forceoff') {
-                operationAutoModeDefault = normalized === 'forceoff' ? 'forceOff' : normalized;
+            if (normalized === 'all' || normalized === 'off') {
+                operationAutoModeDefault = normalized;
+            } else if (normalized === 'uncheckall') {
+                operationAutoModeDefault = 'uncheckAll';
+            } else if (normalized === 'pauseall' || normalized === 'forceoff') {
+                operationAutoModeDefault = 'pauseAll';
             } else {
                 operationAutoModeDefault = 'off';
             }
@@ -641,6 +664,10 @@ class GalaxyManager extends EffectableEntity {
             assignedPower,
             targetFactionId
         });
+    }
+
+    getOperationControlGainFraction(operation) {
+        return this.galacticInvasionManager?.getInvasionOperationControlFraction?.(operation) ?? 0.1;
     }
 
     getOperationLossEstimate({
@@ -925,7 +952,21 @@ class GalaxyManager extends EffectableEntity {
                 return;
             }
             const value = Number(effect.value);
-            if (Number.isFinite(value) && value > 0) {
+            if (Number.isFinite(value) && value >= 0) {
+                multiplier *= value;
+            }
+        });
+        return multiplier;
+    }
+
+    getThreatScalingMultiplier() {
+        let multiplier = 1;
+        this.activeEffects.forEach((effect) => {
+            if (effect?.type !== 'threatScalingMultiplier') {
+                return;
+            }
+            const value = Number(effect.value);
+            if (Number.isFinite(value) && value >= 0) {
                 multiplier *= value;
             }
         });

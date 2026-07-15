@@ -3,6 +3,7 @@ let autoTravelTypeOptionsSignature = '';
 let autoTravelOrbitOptionsSignature = '';
 let autoTravelDominionOptionsSignature = '';
 let autoTravelScriptOptionsSignature = '';
+let autoTravelRandomTypeSettingsSignature = '';
 
 function getAutoTravelAutomation() {
   return automationManager ? automationManager.autoTravelAutomation : null;
@@ -40,6 +41,118 @@ function buildAutoTravelSelect(parent, className, options) {
   }
   parent.appendChild(select);
   return select;
+}
+
+function getAutoTravelTypeLabel(typeId) {
+  const label = RWG_WORLD_TYPES[typeId]?.displayName || typeId;
+  return getAutoTravelOptionText('type.named', '{name}', { name: label });
+}
+
+function getAutoTravelRandomTypeEntries() {
+  const typeIds = RWG_WORLD_TYPES ? Object.keys(RWG_WORLD_TYPES) : [];
+  const entries = [];
+  for (let index = 0; index < typeIds.length; index += 1) {
+    const typeId = typeIds[index];
+    if (rwgManager.isTypeLocked(typeId)) {
+      continue;
+    }
+    entries.push({
+      id: typeId,
+      label: getAutoTravelTypeLabel(typeId)
+    });
+  }
+  return entries;
+}
+
+function getAutoTravelPresetRandomTypeExclusions(preset) {
+  const source = Array.isArray(preset?.randomTypeExclusions)
+    ? preset.randomTypeExclusions
+    : ['jupiter-like'];
+  const exclusions = new Set();
+  for (let index = 0; index < source.length; index += 1) {
+    const typeId = String(source[index] || '').trim();
+    if (typeId && typeId !== 'random') {
+      exclusions.add(typeId);
+    }
+  }
+  return exclusions;
+}
+
+function updateAutoTravelRandomTypeSettingsWindow() {
+  const overlay = automationElements.autoTravelRandomTypeSettingsOverlay;
+  const body = automationElements.autoTravelRandomTypeSettingsBody;
+  if (!overlay || !body || !overlay.classList.contains('is-visible')) {
+    return;
+  }
+  const preset = getAutoTravelAutomation()?.getSelectedPreset();
+  if (!preset) {
+    overlay.classList.remove('is-visible');
+    return;
+  }
+  const entries = getAutoTravelRandomTypeEntries();
+  const exclusions = getAutoTravelPresetRandomTypeExclusions(preset);
+  const signature = entries.map((entry) => `${entry.id}:${exclusions.has(entry.id) ? 0 : 1}`).join('|');
+  if (signature === autoTravelRandomTypeSettingsSignature) {
+    return;
+  }
+  autoTravelRandomTypeSettingsSignature = signature;
+  const activeIds = new Set();
+  if (!body._rowCache) {
+    body._rowCache = new Map();
+  }
+  let includedCount = 0;
+  for (let index = 0; index < entries.length; index += 1) {
+    if (!exclusions.has(entries[index].id)) {
+      includedCount += 1;
+    }
+  }
+  for (let index = 0; index < entries.length; index += 1) {
+    const entry = entries[index];
+    activeIds.add(entry.id);
+    let row = body._rowCache.get(entry.id);
+    if (!row) {
+      row = document.createElement('label');
+      row.classList.add('auto-travel-random-type-row');
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      const text = document.createElement('span');
+      row.append(input, text);
+      row._refs = { input, text };
+      input.addEventListener('change', () => {
+        const currentPreset = getAutoTravelAutomation()?.getSelectedPreset();
+        if (!currentPreset) return;
+        const nextExclusions = getAutoTravelPresetRandomTypeExclusions(currentPreset);
+        if (input.checked) {
+          nextExclusions.delete(entry.id);
+        } else {
+          nextExclusions.add(entry.id);
+        }
+        currentPreset.randomTypeExclusions = Array.from(nextExclusions);
+        autoTravelRandomTypeSettingsSignature = '';
+        queueAutomationUIRefresh();
+        updateAutoTravelRandomTypeSettingsWindow();
+      });
+      body._rowCache.set(entry.id, row);
+    }
+    row._refs.text.textContent = entry.label;
+    row._refs.input.checked = !exclusions.has(entry.id);
+    row._refs.input.disabled = row._refs.input.checked && includedCount <= 1;
+    row.style.display = '';
+    body.appendChild(row);
+  }
+  body._rowCache.forEach((row, id) => {
+    if (!activeIds.has(id)) {
+      row.style.display = 'none';
+    }
+  });
+}
+
+function openAutoTravelRandomTypeSettingsWindow() {
+  const overlay = automationElements.autoTravelRandomTypeSettingsOverlay;
+  if (!overlay) return;
+  autoTravelRandomTypeSettingsSignature = '';
+  overlay.classList.add('is-visible');
+  updateAutoTravelRandomTypeSettingsWindow();
 }
 
 function buildAutoTravelUI() {
@@ -108,6 +221,8 @@ function buildAutoTravelUI() {
   transferButtons.append(newPresetButton, deletePresetButton, transfer.importButton, transfer.exportButton);
   presetRow.appendChild(transferButtons);
   presetSection.appendChild(presetRow);
+  const presetUsage = createAutomationPresetUsageLine();
+  presetSection.appendChild(presetUsage);
 
   const destinationSection = createSection(getAutoTravelOptionText('destinationSection', 'Destination'), 'auto-travel-destination-section');
   const selectionRow = document.createElement('div');
@@ -118,7 +233,17 @@ function buildAutoTravelUI() {
     { value: 'planet', label: getAutoTravelOptionText('target.planet', 'Target: Planet') },
     { value: 'moon', label: getAutoTravelOptionText('target.moon', 'Target: Moon') }
   ]);
-  const typeSelect = buildAutoTravelSelect(selectionRow, 'auto-travel-type-select', [{ value: 'random', label: getAutoTravelOptionText('type.random', 'Type: Random') }]);
+  const typeControl = document.createElement('div');
+  typeControl.classList.add('auto-travel-type-control');
+  const typeSelect = buildAutoTravelSelect(typeControl, 'auto-travel-type-select', [{ value: 'random', label: getAutoTravelOptionText('type.random', 'Type: Random') }]);
+  const typeSettingsButton = document.createElement('button');
+  typeSettingsButton.type = 'button';
+  typeSettingsButton.classList.add('auto-travel-random-type-settings');
+  typeSettingsButton.title = getAutoTravelOptionText('randomTypeSettingsButton', 'Random type settings');
+  typeSettingsButton.setAttribute('aria-label', getAutoTravelOptionText('randomTypeSettingsButton', 'Random type settings'));
+  typeSettingsButton.textContent = '⚙';
+  typeControl.appendChild(typeSettingsButton);
+  selectionRow.appendChild(typeControl);
   const orbitSelect = buildAutoTravelSelect(selectionRow, 'auto-travel-orbit-select', [{ value: 'random', label: getAutoTravelOptionText('orbit.random', 'Orbit: Random') }]);
   const dominionSelect = buildAutoTravelSelect(selectionRow, 'auto-travel-dominion-select', [{ value: 'random', label: getAutoTravelOptionText('dominion.random', 'Dominion: Random') }]);
   destinationSection.appendChild(selectionRow);
@@ -138,8 +263,17 @@ function buildAutoTravelUI() {
   const hazardsSection = createSection(getAutoTravelOptionText('hazardsSection', 'Hazards'), 'auto-travel-hazards-section');
   const hazardsRow = document.createElement('div');
   hazardsRow.classList.add('auto-travel-hazards-row');
+  const randomHazardSubsetLabel = document.createElement('label');
+  randomHazardSubsetLabel.classList.add('auto-travel-checkbox-row', 'auto-travel-random-hazard-subset-row');
+  const randomHazardSubsetToggle = document.createElement('input');
+  randomHazardSubsetToggle.type = 'checkbox';
+  randomHazardSubsetToggle.classList.add('auto-travel-random-hazard-subset');
+  const randomHazardSubsetText = document.createElement('span');
+  randomHazardSubsetText.textContent = getAutoTravelOptionText('randomHazardSubset', 'Random subset of selected');
+  randomHazardSubsetLabel.append(randomHazardSubsetToggle, randomHazardSubsetText);
   const hazardsWrap = document.createElement('div');
   hazardsWrap.classList.add('auto-travel-hazards');
+  hazardsRow.appendChild(randomHazardSubsetLabel);
   hazardsRow.appendChild(hazardsWrap);
   hazardsSection.appendChild(hazardsRow);
 
@@ -182,10 +316,34 @@ function buildAutoTravelUI() {
   }
   const skipVisualizerToggle = addCheckboxRow('skip-visualizer', getAutoTravelOptionText('skipVisualizer', 'Skip world visualizer initialization'));
 
+  const randomTypeSettingsOverlay = document.createElement('div');
+  randomTypeSettingsOverlay.classList.add('space-storage-settings-overlay', 'auto-travel-random-type-settings-overlay');
+  const randomTypeSettingsWindow = document.createElement('div');
+  randomTypeSettingsWindow.classList.add('space-storage-settings-window', 'auto-travel-random-type-settings-window');
+  const randomTypeSettingsHeader = document.createElement('div');
+  randomTypeSettingsHeader.classList.add('space-storage-settings-header');
+  const randomTypeSettingsTitle = document.createElement('div');
+  randomTypeSettingsTitle.classList.add('space-storage-settings-title');
+  randomTypeSettingsTitle.textContent = getAutoTravelOptionText('randomTypeSettingsTitle', 'Random Planet Types');
+  const randomTypeSettingsClose = document.createElement('button');
+  randomTypeSettingsClose.type = 'button';
+  randomTypeSettingsClose.classList.add('space-storage-settings-close');
+  randomTypeSettingsClose.textContent = getAutoTravelOptionText('randomTypeSettingsClose', 'X');
+  randomTypeSettingsHeader.append(randomTypeSettingsTitle, randomTypeSettingsClose);
+  const randomTypeSettingsDescription = document.createElement('div');
+  randomTypeSettingsDescription.classList.add('auto-travel-random-type-settings-description');
+  randomTypeSettingsDescription.textContent = getAutoTravelOptionText('randomTypeSettingsDescription', 'Choose which unlocked planet types can be picked when Type is Random.');
+  const randomTypeSettingsBody = document.createElement('div');
+  randomTypeSettingsBody.classList.add('auto-travel-random-type-settings-body');
+  randomTypeSettingsWindow.append(randomTypeSettingsHeader, randomTypeSettingsDescription, randomTypeSettingsBody);
+  randomTypeSettingsOverlay.appendChild(randomTypeSettingsWindow);
+  document.body.appendChild(randomTypeSettingsOverlay);
+
   automationElements.autoTravelCollapseButton = header.collapse;
   automationElements.autoTravelPanelBody = body;
   automationElements.autoTravelMasterToggle = toggle;
   automationElements.autoTravelPresetSelect = presetSelect;
+  automationElements.autoTravelPresetUsage = presetUsage;
   automationElements.autoTravelPresetNameInput = presetNameInput;
   automationElements.autoTravelNewPresetButton = newPresetButton;
   automationElements.autoTravelDeletePresetButton = deletePresetButton;
@@ -193,6 +351,7 @@ function buildAutoTravelUI() {
   automationElements.autoTravelExportPresetButton = transfer.exportButton;
   automationElements.autoTravelTargetSelect = targetSelect;
   automationElements.autoTravelTypeSelect = typeSelect;
+  automationElements.autoTravelTypeSettingsButton = typeSettingsButton;
   automationElements.autoTravelOrbitSelect = orbitSelect;
   automationElements.autoTravelDominionSelect = dominionSelect;
   automationElements.autoTravelScriptAfterTravelToggle = scriptAfterTravelToggle;
@@ -200,12 +359,16 @@ function buildAutoTravelUI() {
   automationElements.autoTravelSelectionRow = selectionRow;
   automationElements.autoTravelHazardsSection = hazardsSection;
   automationElements.autoTravelHazardsWrap = hazardsWrap;
+  automationElements.autoTravelRandomHazardSubsetToggle = randomHazardSubsetToggle;
   automationElements.autoTravelAutoCompleteToggle = autoCompleteToggle;
   automationElements.autoTravelWaitSpecializationToggle = waitSpecializationToggle;
   automationElements.autoTravelBlockIfNoStoredToggle = blockIfNoStoredToggle;
   automationElements.autoTravelTurnOffAfterTravelToggle = turnOffAfterTravelToggle;
   automationElements.autoTravelSkipEquilibrationToggle = skipEquilibrationToggle;
   automationElements.autoTravelSkipVisualizerToggle = skipVisualizerToggle;
+  automationElements.autoTravelRandomTypeSettingsOverlay = randomTypeSettingsOverlay;
+  automationElements.autoTravelRandomTypeSettingsBody = randomTypeSettingsBody;
+  automationElements.autoTravelRandomTypeSettingsClose = randomTypeSettingsClose;
 
   wireAutoTravelEvents();
 }
@@ -296,6 +459,15 @@ function wireAutoTravelEvents() {
 
   els.autoTravelTargetSelect.addEventListener('change', (event) => setPresetField('target', event.target.value));
   els.autoTravelTypeSelect.addEventListener('change', (event) => setPresetField('type', event.target.value));
+  els.autoTravelTypeSettingsButton.addEventListener('click', openAutoTravelRandomTypeSettingsWindow);
+  els.autoTravelRandomTypeSettingsClose.addEventListener('click', () => {
+    els.autoTravelRandomTypeSettingsOverlay.classList.remove('is-visible');
+  });
+  els.autoTravelRandomTypeSettingsOverlay.addEventListener('click', (event) => {
+    if (event.target === els.autoTravelRandomTypeSettingsOverlay) {
+      els.autoTravelRandomTypeSettingsOverlay.classList.remove('is-visible');
+    }
+  });
   els.autoTravelOrbitSelect.addEventListener('change', (event) => setPresetField('orbitPreset', event.target.value));
   els.autoTravelDominionSelect.addEventListener('change', (event) => setPresetField('dominion', event.target.value));
   els.autoTravelScriptAfterTravelSelect.addEventListener('change', (event) => {
@@ -311,6 +483,7 @@ function wireAutoTravelEvents() {
   }
 
   els.autoTravelAutoCompleteToggle.addEventListener('change', (event) => setPresetFlag('autoCompleteTerraforming', event.target.checked));
+  els.autoTravelRandomHazardSubsetToggle.addEventListener('change', (event) => setPresetFlag('randomHazardSubset', event.target.checked));
   els.autoTravelWaitSpecializationToggle.addEventListener('change', (event) => setPresetFlag('waitForSpecialization', event.target.checked));
   els.autoTravelBlockIfNoStoredToggle.addEventListener('change', (event) => setPresetFlag('blockIfNoStoredFromArtificial', event.target.checked));
   els.autoTravelTurnOffAfterTravelToggle.addEventListener('change', (event) => setPresetFlag('turnOffAfterTravel', event.target.checked));
@@ -352,8 +525,7 @@ function populateAutoTravelTypeOptions(select) {
   const types = RWG_WORLD_TYPES ? Object.keys(RWG_WORLD_TYPES) : [];
   for (let index = 0; index < types.length; index += 1) {
     const typeId = types[index];
-    const label = RWG_WORLD_TYPES[typeId]?.displayName || typeId;
-    options.push({ value: typeId, label: getAutoTravelOptionText('type.named', '{name}', { name: label }) });
+    options.push({ value: typeId, label: getAutoTravelTypeLabel(typeId) });
   }
   const signature = JSON.stringify(options);
   if (signature !== autoTravelTypeOptionsSignature && document.activeElement !== select) {
@@ -459,26 +631,41 @@ function updateAutoTravelHazards(preset) {
     return;
   }
   wrap.dataset.signature = signature;
-  wrap.innerHTML = '';
+  if (!wrap._rowCache) {
+    wrap._rowCache = new Map();
+  }
+  const activeIds = new Set();
   hazardIds.forEach((hazardId) => {
-    const row = document.createElement('label');
-    row.classList.add('auto-travel-hazard-row');
-    const input = document.createElement('input');
-    input.type = 'checkbox';
-    input.checked = selected.has(hazardId);
-    input.addEventListener('change', (event) => {
-      const currentPreset = getAutoTravelAutomation()?.getSelectedPreset();
-      if (!currentPreset) return;
-      const next = new Set(Array.isArray(currentPreset.hazards) ? currentPreset.hazards : []);
-      if (event.target.checked) next.add(hazardId);
-      else next.delete(hazardId);
-      currentPreset.hazards = Array.from(next);
-      queueAutomationUIRefresh();
-    });
-    const text = document.createElement('span');
-    text.textContent = getRwgUiText(`hazards.names.${hazardId}`, hazardId);
-    row.append(input, text);
+    activeIds.add(hazardId);
+    let row = wrap._rowCache.get(hazardId);
+    if (!row) {
+      row = document.createElement('label');
+      row.classList.add('auto-travel-hazard-row');
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      const text = document.createElement('span');
+      input.addEventListener('change', (event) => {
+        const currentPreset = getAutoTravelAutomation()?.getSelectedPreset();
+        if (!currentPreset) return;
+        const next = new Set(Array.isArray(currentPreset.hazards) ? currentPreset.hazards : []);
+        if (event.target.checked) next.add(hazardId);
+        else next.delete(hazardId);
+        currentPreset.hazards = Array.from(next);
+        queueAutomationUIRefresh();
+      });
+      row.append(input, text);
+      row._refs = { input, text };
+      wrap._rowCache.set(hazardId, row);
+    }
+    row._refs.input.checked = selected.has(hazardId);
+    row._refs.text.textContent = getRwgUiText(`hazards.names.${hazardId}`, hazardId);
+    row.style.display = '';
     wrap.appendChild(row);
+  });
+  wrap._rowCache.forEach((row, id) => {
+    if (!activeIds.has(id)) {
+      row.style.display = 'none';
+    }
   });
 }
 
@@ -525,6 +712,7 @@ function updateAutoTravelUI() {
     });
   }
   if (preset) {
+    const storedOnlyTarget = (preset.target === 'storedArtificial');
     if (document.activeElement !== automationElements.autoTravelPresetSelect) {
       automationElements.autoTravelPresetSelect.value = String(preset.id);
     }
@@ -536,10 +724,18 @@ function updateAutoTravelUI() {
     populateAutoTravelDominionOptions(automationElements.autoTravelDominionSelect);
     populateAutoTravelScriptOptions(automationElements.autoTravelScriptAfterTravelSelect);
     if (document.activeElement !== automationElements.autoTravelTargetSelect) {
-    automationElements.autoTravelTargetSelect.value = preset.target || 'random';
+      automationElements.autoTravelTargetSelect.value = preset.target || 'random';
     }
     if (document.activeElement !== automationElements.autoTravelTypeSelect) {
       automationElements.autoTravelTypeSelect.value = preset.type || 'random';
+    }
+    if (automationElements.autoTravelTypeSettingsButton) {
+      const showTypeSettings = (preset.type || 'random') === 'random' && !storedOnlyTarget;
+      automationElements.autoTravelTypeSettingsButton.classList.toggle('hidden', !showTypeSettings);
+      automationElements.autoTravelTypeSettingsButton.disabled = disabled || !showTypeSettings;
+      if (!showTypeSettings && automationElements.autoTravelRandomTypeSettingsOverlay) {
+        automationElements.autoTravelRandomTypeSettingsOverlay.classList.remove('is-visible');
+      }
     }
     if (document.activeElement !== automationElements.autoTravelOrbitSelect) {
       automationElements.autoTravelOrbitSelect.value = preset.orbitPreset || 'random';
@@ -560,6 +756,7 @@ function updateAutoTravelUI() {
       }
     }
     automationElements.autoTravelScriptAfterTravelToggle.checked = !!preset.runScriptAfterTravelEnabled;
+    automationElements.autoTravelRandomHazardSubsetToggle.checked = !!preset.randomHazardSubset;
     automationElements.autoTravelAutoCompleteToggle.checked = preset.autoCompleteTerraforming !== false;
     automationElements.autoTravelWaitSpecializationToggle.checked = !!preset.waitForSpecialization;
     automationElements.autoTravelBlockIfNoStoredToggle.checked = preset.blockIfNoStoredFromArtificial !== false;
@@ -573,8 +770,8 @@ function updateAutoTravelUI() {
     );
     automationElements.autoTravelSkipVisualizerToggle.checked = !!preset.skipWorldVisualizerInitialization;
     updateAutoTravelHazards(preset);
+    updateAutoTravelRandomTypeSettingsWindow();
 
-    const storedOnlyTarget = (preset.target === 'storedArtificial');
     const disableWhenStoredOnly = [
       automationElements.autoTravelTypeSelect,
       automationElements.autoTravelOrbitSelect,
@@ -590,12 +787,14 @@ function updateAutoTravelUI() {
       automationElements.autoTravelHazardsSection.classList.toggle('hidden', storedOnlyTarget);
     }
   }
+  updateAutomationPresetUsageLine(automationElements.autoTravelPresetUsage, 'autoTravel', preset);
 
   const controls = [
     automationElements.autoTravelMasterToggle,
     automationElements.autoTravelPresetSelect,
     automationElements.autoTravelPresetNameInput,
     automationElements.autoTravelTargetSelect,
+    automationElements.autoTravelRandomHazardSubsetToggle,
     automationElements.autoTravelScriptAfterTravelToggle,
     automationElements.autoTravelAutoCompleteToggle,
     automationElements.autoTravelWaitSpecializationToggle,

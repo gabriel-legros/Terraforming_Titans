@@ -39,6 +39,15 @@
   .resource-cap-limited {
     color: orange;
   }
+
+  .resource-at-cap {
+    color: #0077b6;
+  }
+
+  .dark-mode .resource-at-cap,
+  .dark-grey-mode .resource-at-cap {
+    color: cyan;
+  }
   
   .resource-pps {
     text-align: right; /* Right-align pps */
@@ -69,6 +78,12 @@
     color: #6AA84F;
     font-weight: bold;
     text-shadow: 1px 1px 2px black;
+  }
+
+  .resource-resort-vacation {
+    color: #2fb35d;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px #0d3a1d;
   }
 
   .sparkling-gold {
@@ -119,6 +134,7 @@
 
 .resource-wrapper {
   background-color: #f4f4f4;
+  padding-left: 5px;
   padding-right: 5px;
 }
 

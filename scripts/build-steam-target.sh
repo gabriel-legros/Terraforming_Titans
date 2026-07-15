@@ -1,0 +1,96 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+TARGET_NAME="${1:?target name required}"
+STEAM_APP_ID="${2:?Steam AppID required}"
+OUT_DIR_NAME="${3:?output directory name required}"
+PLATFORM="${4:-win}"
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+OUT_DIR="$ROOT_DIR/dist/$OUT_DIR_NAME"
+BUILD_TARGET_FILE="$ROOT_DIR/src/js/build-target.js"
+
+node "$ROOT_DIR/scripts/update-game-version.js" check
+
+restore_build_target() {
+  cat > "$BUILD_TARGET_FILE" <<'BUILD_TARGET'
+const GAME_BUILD_TARGET = 'browser';
+const STEAM_APP_ID = null;
+const GAME_FEATURES = {
+    patienceDailyClaimButton: GAME_BUILD_TARGET === 'steam',
+    patienceDailyRewardFromExport: GAME_BUILD_TARGET === 'browser',
+    browserStorageWarning: GAME_BUILD_TARGET === 'browser',
+    whiteNoiseKeepAlive: GAME_BUILD_TARGET === 'browser',
+    exitSaveSlot: GAME_BUILD_TARGET !== 'browser',
+    electronWindowControls: GAME_BUILD_TARGET !== 'browser',
+    electronUIScale: GAME_BUILD_TARGET !== 'browser',
+    electronCrashReporting: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveDominions: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveResearch: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveEcumenopolisVisualizer: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveAtlasWorlds: GAME_BUILD_TARGET !== 'browser'
+};
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { GAME_BUILD_TARGET, STEAM_APP_ID, GAME_FEATURES };
+}
+BUILD_TARGET
+}
+trap restore_build_target EXIT
+
+cd "$ROOT_DIR"
+rm -rf "$OUT_DIR"
+cat > "$BUILD_TARGET_FILE" <<BUILD_TARGET
+const GAME_BUILD_TARGET = 'steam';
+const STEAM_APP_ID = $STEAM_APP_ID;
+const GAME_FEATURES = {
+    patienceDailyClaimButton: GAME_BUILD_TARGET === 'steam',
+    patienceDailyRewardFromExport: GAME_BUILD_TARGET === 'browser',
+    browserStorageWarning: GAME_BUILD_TARGET === 'browser',
+    whiteNoiseKeepAlive: GAME_BUILD_TARGET === 'browser',
+    exitSaveSlot: GAME_BUILD_TARGET !== 'browser',
+    electronWindowControls: GAME_BUILD_TARGET !== 'browser',
+    electronUIScale: GAME_BUILD_TARGET !== 'browser',
+    electronCrashReporting: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveDominions: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveResearch: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveEcumenopolisVisualizer: GAME_BUILD_TARGET !== 'browser',
+    steamExclusiveAtlasWorlds: GAME_BUILD_TARGET !== 'browser'
+};
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = { GAME_BUILD_TARGET, STEAM_APP_ID, GAME_FEATURES };
+}
+BUILD_TARGET
+case "$PLATFORM" in
+  win)
+    npx electron-builder --win --dir --config.directories.output=dist --config.electronDist=node_modules/electron/dist
+    if [ -d "$ROOT_DIR/dist/win-unpacked" ]; then
+      mv "$ROOT_DIR/dist/win-unpacked" "$OUT_DIR"
+    fi
+    cp "$ROOT_DIR/node_modules/steamworks.js/dist/win64/steam_api64.dll" "$OUT_DIR/steam_api64.dll"
+    ;;
+  linux)
+    npx electron-builder --linux --dir --config.directories.output=dist
+    if [ -d "$ROOT_DIR/dist/linux-unpacked" ]; then
+      mv "$ROOT_DIR/dist/linux-unpacked" "$OUT_DIR"
+    fi
+    cp "$ROOT_DIR/node_modules/steamworks.js/dist/linux64/libsteam_api.so" "$OUT_DIR/libsteam_api.so"
+    ;;
+  *)
+    echo "Unsupported Steam build platform: $PLATFORM" >&2
+    exit 1
+    ;;
+esac
+BUILD_TARGET_PATH="$OUT_DIR/resources/app/src/js/build-target.js" EXPECTED_STEAM_APP_ID="$STEAM_APP_ID" TARGET_NAME="$TARGET_NAME" node <<'NODE'
+const fs = require('fs');
+const data = fs.readFileSync(process.env.BUILD_TARGET_PATH, 'utf8');
+if (!data.includes("GAME_BUILD_TARGET = 'steam'")) {
+  throw new Error(`${process.env.TARGET_NAME} build did not package the steam build target`);
+}
+if (!data.includes(`STEAM_APP_ID = ${process.env.EXPECTED_STEAM_APP_ID}`)) {
+  throw new Error(`${process.env.TARGET_NAME} build did not package AppID ${process.env.EXPECTED_STEAM_APP_ID}`);
+}
+NODE
+
+echo "$TARGET_NAME build written to $OUT_DIR"

@@ -23,7 +23,7 @@ const SUBTAB_SELECTORS_BY_TAB = {
 
 class GameResourceLoader extends ResourceLoader {
   fetch(url, options) {
-    if (url.includes('phaser.min.js') || url.includes('three.min.js')) {
+    if ((url.includes('phaser') || url.includes('three')) && url.includes('.min.js')) {
       return Promise.resolve(Buffer.from(''));
     }
     if (url.includes('/planet-visualizer/')) {
@@ -279,6 +279,14 @@ function setupBrowserStubs(window, options = {}) {
     window.HTMLMediaElement.prototype.pause = () => {};
   }
 
+  window.electronWindowControls = {
+    isFullscreen: () => Promise.resolve(false),
+    setFullscreen: enabled => Promise.resolve(!!enabled),
+    setZoomFactor: scale => Promise.resolve(Number(scale) || 1),
+    onFullscreenChanged() {},
+    exitGame() {}
+  };
+
   window.Phaser = {
     AUTO: 'AUTO',
     Game: class {
@@ -355,20 +363,24 @@ function clickElement(window, element) {
   }));
 }
 
-function advanceTicks(window, tickCount = DEFAULT_TICK_COUNT, deltaMs = DEFAULT_TICK_MS) {
+function advanceTicks(window, tickCount = DEFAULT_TICK_COUNT, deltaMs = DEFAULT_TICK_MS, options = {}) {
   for (let index = 0; index < tickCount; index += 1) {
     window.updateLogic(deltaMs);
-    window.updateRender.lastDelta = deltaMs;
-    window.updateRender(false, { forceAllSubtabs: false });
+    if (!options.skipRender) {
+      window.updateRender.lastDelta = deltaMs;
+      window.updateRender(false, { forceAllSubtabs: false });
+    }
   }
 }
 
-function loadSaveFromRelativePath(window, relativePath) {
+function loadSaveFromRelativePath(window, relativePath, options = {}) {
   const savePath = path.resolve(REPO_ROOT, relativePath);
   const saveText = fs.readFileSync(savePath, 'utf8');
-  window.loadGame(saveText, true);
-  window.updateRender.lastDelta = 0;
-  window.updateRender(true, { forceAllSubtabs: true });
+  window.loadGame(saveText, true, { skipRender: true });
+  if (!options.skipRender) {
+    window.updateRender.lastDelta = 0;
+    window.updateRender(true, { forceAllSubtabs: true });
+  }
 }
 
 function getVisibleMainTabButtons(window) {

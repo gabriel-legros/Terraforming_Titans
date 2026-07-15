@@ -2,6 +2,11 @@ const CYLINDERS_HOPE_FLAG = 'cylindersHopeCollaborationAgreement';
 const CYLINDERS_HOPE_TICK_MAX = 10;
 const CYLINDERS_HOPE_BASE_ENERGY_PER_CYLINDER = 1e15;
 const CYLINDERS_HOPE_MANUFACTURING_POP_PER_CYLINDER = 1e13;
+const MEGAPROJECTS_COORDINATION_FLAG = 'megaprojectsCoordination';
+const MEGAPROJECTS_COORDINATION_MIN = 25;
+const MEGAPROJECTS_COORDINATION_MAX = 75;
+const MEGAPROJECTS_COORDINATION_STEP = 5;
+const MEGAPROJECTS_COORDINATION_DEFAULT = 50;
 
 function clampCylindersHopeTick(value) {
   const numeric = Math.floor(Number(value) || 0);
@@ -36,8 +41,44 @@ function isCylindersHopeUnlocked(space) {
   return !!space?.isBooleanFlagSet?.(CYLINDERS_HOPE_FLAG);
 }
 
+function clampMegaprojectsCoordinationAllocation(value) {
+  const numeric = Number(value);
+  const allocation = Number.isFinite(numeric) ? numeric : MEGAPROJECTS_COORDINATION_DEFAULT;
+  const stepped = Math.round(allocation / MEGAPROJECTS_COORDINATION_STEP) * MEGAPROJECTS_COORDINATION_STEP;
+  return Math.max(MEGAPROJECTS_COORDINATION_MIN, Math.min(MEGAPROJECTS_COORDINATION_MAX, stepped));
+}
+
+function isMegaprojectsCoordinationUnlocked(space) {
+  return !!space?.isBooleanFlagSet?.(MEGAPROJECTS_COORDINATION_FLAG);
+}
+
+function getMegaprojectsCoordinationAllocation(space) {
+  if (!isMegaprojectsCoordinationUnlocked(space)) {
+    return MEGAPROJECTS_COORDINATION_DEFAULT;
+  }
+  return clampMegaprojectsCoordinationAllocation(space.getSpaceSliderTick('megaprojectsCoordination'));
+}
+
+function getMegaprojectsCoordinationMegaprojectSpeedMultiplier(space) {
+  const allocation = getMegaprojectsCoordinationAllocation(space);
+  return 1 + (allocation - MEGAPROJECTS_COORDINATION_DEFAULT) * 0.02;
+}
+
+function getMegaprojectsCoordinationAdvancedResearchMultiplier(space) {
+  const allocation = getMegaprojectsCoordinationAllocation(space);
+  return 1 - (allocation - MEGAPROJECTS_COORDINATION_DEFAULT) * 0.02;
+}
+
+function getMegaprojectsCoordinationProjectDurationMultiplier(space, project) {
+  const category = project.category || 'resources';
+  if (category === 'resources' || category === 'infrastructure' || category === 'story') {
+    return 1;
+  }
+  return 1 / getMegaprojectsCoordinationMegaprojectSpeedMultiplier(space);
+}
+
 function getAnySpaceSliderEnabled(space) {
-  return isCylindersHopeUnlocked(space);
+  return isCylindersHopeUnlocked(space) || isMegaprojectsCoordinationUnlocked(space);
 }
 
 function getCylindersHopeTotalDesiredEnergyPerSecond(space) {
@@ -181,6 +222,12 @@ if (typeof module !== 'undefined' && module.exports) {
     getCylindersHopeTotalDesiredEnergyPerSecond,
     getSpaceSliderProductivityOperations,
     isCylindersHopeUnlocked,
+    clampMegaprojectsCoordinationAllocation,
+    isMegaprojectsCoordinationUnlocked,
+    getMegaprojectsCoordinationAllocation,
+    getMegaprojectsCoordinationMegaprojectSpeedMultiplier,
+    getMegaprojectsCoordinationAdvancedResearchMultiplier,
+    getMegaprojectsCoordinationProjectDurationMultiplier,
     getAnySpaceSliderEnabled,
     updateSpaceSliders,
   };
@@ -196,6 +243,12 @@ if (typeof window !== 'undefined') {
   window.getCylindersHopeTotalDesiredEnergyPerSecond = getCylindersHopeTotalDesiredEnergyPerSecond;
   window.getSpaceSliderProductivityOperations = getSpaceSliderProductivityOperations;
   window.isCylindersHopeUnlocked = isCylindersHopeUnlocked;
+  window.clampMegaprojectsCoordinationAllocation = clampMegaprojectsCoordinationAllocation;
+  window.isMegaprojectsCoordinationUnlocked = isMegaprojectsCoordinationUnlocked;
+  window.getMegaprojectsCoordinationAllocation = getMegaprojectsCoordinationAllocation;
+  window.getMegaprojectsCoordinationMegaprojectSpeedMultiplier = getMegaprojectsCoordinationMegaprojectSpeedMultiplier;
+  window.getMegaprojectsCoordinationAdvancedResearchMultiplier = getMegaprojectsCoordinationAdvancedResearchMultiplier;
+  window.getMegaprojectsCoordinationProjectDurationMultiplier = getMegaprojectsCoordinationProjectDurationMultiplier;
   window.getAnySpaceSliderEnabled = getAnySpaceSliderEnabled;
   window.updateSpaceSliders = updateSpaceSliders;
 }

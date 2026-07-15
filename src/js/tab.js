@@ -2,49 +2,49 @@ const tabParameters = {
     tabs: [
       {
         id: "buildings-tab",
-        label: "Buildings",
+        label: t('ui.tabs.buildings', {}, 'Buildings'),
         isActive: false,
         isHidden: true
       },
       {
         id: "special-projects-tab",
-        label: "Special Projects",
+        label: t('ui.tabs.specialProjects', {}, 'Special Projects'),
         isActive: false,
         isHidden: true // Hidden initially
       },
       {
         id: "colonies-tab",
-        label: "Colony",
+        label: t('ui.tabs.colony', {}, 'Colony'),
         isActive: false,
         isHidden: true // Hidden initially
       },
       {
         id: "research-tab",
-        label: "Research",
+        label: t('ui.tabs.research', {}, 'Research'),
         isActive: false,
         isHidden: true // Hidden initially
       },
       {
         id: "terraforming-tab",
-        label: "Terraforming",
+        label: t('ui.tabs.terraforming', {}, 'Terraforming'),
         isActive: false,
         isHidden: false // Visible by default
       },
       {
         id: "space-tab",
-        label: "Space",
+        label: t('ui.tabs.space', {}, 'Space'),
         isActive: false, // Not active when unlocked initially
         isHidden: true   // Start hidden
       },
       {
         id: "hope-tab",
-        label: "H.O.P.E.",
+        label: t('ui.tabs.hope', {}, 'H.O.P.E.'),
         isActive: false,
         isHidden: true // Hidden initially
       },
       {
         id: "settings-tab",
-        label: "Settings",
+        label: t('ui.tabs.settingsShort', {}, 'Settings'),
         isActive: false,
         isHidden: false // Always visible
       }
@@ -55,6 +55,7 @@ const tabParameters = {
     constructor(config, tabParams) {
       super(config);
       this.tabs = {}; // Object to store tab elements by their ID
+      this.activeTabId = null;
       this.loadTabs(tabParams); // Initialize tabs from parameters
     }
 
@@ -70,7 +71,7 @@ const tabParameters = {
       tabParams.tabs.forEach(tabConfig => {
         const tab = this.tabs[tabConfig.id];
         if (tab) {
-          if (tabConfig.isHidden) {
+          if (tabConfig.isHidden || isCurrentWorldTabDisabled(tabConfig.id)) {
             tab.classList.add('hidden');
           } else {
             tab.classList.remove('hidden');
@@ -120,8 +121,15 @@ const tabParameters = {
   
     // Enable a tab by removing the hidden class
     enable(tabId) {
-      if (this.tabs[tabId]) {
-        this.tabs[tabId].classList.remove('hidden');
+      const managedTabId = this.tabs[tabId]
+        ? tabId
+        : document.querySelector(`[data-tab="${tabId}"]`)?.id;
+      if (managedTabId && this.tabs[managedTabId]) {
+        if (isCurrentWorldTabDisabled(tabId)) {
+          this.hide(managedTabId);
+          return;
+        }
+        this.tabs[managedTabId].classList.remove('hidden');
         console.log(`Tab "${tabId}" unlocked.`);
       } else {
         console.error(`Tab "${tabId}" not managed by TabManager.`);
@@ -152,6 +160,11 @@ const tabParameters = {
         console.error(`Tab button with data-tab="${tabId}" not found.`);
         return;
       }
+      if (isCurrentWorldTabDisabled(tabId)) {
+        tabElement.classList.add('hidden');
+        this.activateTab('settings');
+        return;
+      }
       if (tabElement.classList.contains('hidden')) {
         console.log(`Tab ${tabId} is hidden, cannot activate.`);
         this.activateTab('settings');
@@ -163,6 +176,7 @@ const tabParameters = {
 
         tabElement.classList.add('active');
         tabContentElement.classList.add('active');
+        this.activeTabId = tabId;
       } else {
         console.error(`Tab content with id "${tabId}" not found.`);
       }
@@ -188,6 +202,10 @@ const tabParameters = {
       if (tabId === 'space') {
         markSpaceTabAlertViewed();
       }
+    }
+
+    getActiveTabId() {
+      return this.activeTabId;
     }
 
     setSpaceTabAlert(effect) {

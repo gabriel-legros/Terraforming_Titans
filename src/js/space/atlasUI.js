@@ -149,7 +149,7 @@ function buildAtlasOtherRequirementEffects(definition) {
     const requirements = Array.isArray(definition?.overrides?.specialAttributes?.otherRequirements)
         ? definition.overrides.specialAttributes.otherRequirements
         : [];
-    return requirements.map((requirement, index) => {
+    return requirements.filter((requirement) => !requirement?.hideFromChallengeRules).map((requirement, index) => {
         const fallback = requirement?.targetText || requirement?.label || requirement?.type || '';
         let description = fallback;
         if (requirement?.targetTextKey) {

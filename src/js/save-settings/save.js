@@ -4,6 +4,11 @@ globalGameIsTraveling = false;
 let loadingOverlayElement = null;
 let loadingOverlayIsVisible = true;
 let pendingAutomationSafetyRestoreState = null;
+let loadStringDialog = null;
+let exitSaveHandlerRegistered = false;
+const SAVE_SLOTS = ['autosave', 'exitsave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
+const SAVE_FALLBACK_LOAD_ORDER = ['autosave', 'exitsave', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5', 'pretravel'];
+const RENAMABLE_SAVE_SLOTS = ['slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
 
 function cacheLoadingOverlayElement() {
   if (loadingOverlayElement || typeof document === 'undefined') {
@@ -214,8 +219,9 @@ function recalculateLandUsage() {
   }
 }
 
-function getGameState() {
+function getGameState(saveDate = new Date()) {
   return {
+    savedAt: new Date(saveDate).getTime(),
     dayNightCycle: (typeof dayNightCycle !== 'undefined' && typeof dayNightCycle.saveState === 'function') ? dayNightCycle.saveState() : undefined,
     resources: typeof resources !== 'undefined'
       ? Object.fromEntries(
@@ -261,6 +267,8 @@ function getGameState() {
     solisManager: (typeof solisManager !== 'undefined' && typeof solisManager.saveState === 'function') ? solisManager.saveState() : undefined,
     warpGateCommand: (typeof warpGateCommand !== 'undefined' && typeof warpGateCommand.saveState === 'function') ? warpGateCommand.saveState() : undefined,
     patienceManager: (typeof patienceManager !== 'undefined' && typeof patienceManager.saveState === 'function') ? patienceManager.saveState() : undefined,
+    earthManager: (typeof earthManager !== 'undefined' && typeof earthManager.saveState === 'function') ? earthManager.saveState() : undefined,
+    achievementManager: achievementManager && achievementManager.saveState ? achievementManager.saveState() : undefined,
     followersManager: (typeof followersManager !== 'undefined' && typeof followersManager.saveState === 'function') ? followersManager.saveState() : undefined,
     artificialManager: (typeof artificialManager !== 'undefined' && typeof artificialManager.saveState === 'function') ? artificialManager.saveState() : undefined,
     atlasManager: (typeof atlasManager !== 'undefined' && typeof atlasManager.saveState === 'function') ? atlasManager.saveState() : undefined,
@@ -286,41 +294,52 @@ function getGameState() {
     realPlayTimeSeconds: typeof realPlayTimeSeconds !== 'undefined' ? realPlayTimeSeconds : undefined,
     totalRealPlayTimeSeconds: typeof totalRealPlayTimeSeconds !== 'undefined' ? totalRealPlayTimeSeconds : undefined,
     fastestTerraformDays: typeof fastestTerraformDays !== 'undefined' ? fastestTerraformDays : undefined,
-    fastestTerraformRealSeconds: typeof fastestTerraformRealSeconds !== 'undefined' ? fastestTerraformRealSeconds : undefined
+    fastestTerraformRealSeconds: typeof fastestTerraformRealSeconds !== 'undefined' ? fastestTerraformRealSeconds : undefined,
+    birchWorldTerraformTimeSeconds,
+    birchWorldTerraformRealTimeSeconds,
+    gameCompleted
   };
 }
 
 // Load game state from a specific slot or custom string
-function loadGame(slotOrCustomString, recreate = true) {
-
-  if(recreate){
-    initializeDefaultGlobals();
-  }
+function loadGame(slotOrCustomString, recreate = true, options = {}) {
 
   if (slotOrCustomString === undefined) {
     console.log('No slot or custom string provided. Loading aborted.');
-    return;
+    return false;
   }
 
   let savedState = '';
 
   if (slotOrCustomString.startsWith('gameState_')) {
     // Load from a specific slot
-    savedState = localStorage.getItem(slotOrCustomString);
+    savedState = getSavedStateForSlot(slotOrCustomString.replace('gameState_', ''));
   } else {
     // Load from a custom string
     savedState = slotOrCustomString;
   }
   if (!savedState) {
     console.log('No saved game found.');
-    return;
+    return false;
+  }
+
+  let gameState = null;
+  try {
+    gameState = JSON.parse(savedState);
+  } catch (e) {
+    console.warn('Unable to parse saved game. Loading aborted:', e);
+    return false;
+  }
+
+  if(recreate){
+    initializeDefaultGlobals();
   }
 
   showLoadingOverlay();
   globalGameIsLoadingFromSave = true;
 
   try {
-    const gameState = JSON.parse(savedState);
+    gameCompleted = gameState.gameCompleted === true;
     captureAutomationSafetyRestoreState(gameState);
     resetStructureDisplayState();
     resetProjectDisplayState();
@@ -527,9 +546,11 @@ function loadGame(slotOrCustomString, recreate = true) {
         }
       }
       applyStructureDisplayPreferences(buildings);
-      createBuildingButtons(buildings);
-      if (typeof initializeBuildingAlerts === 'function') {
-        initializeBuildingAlerts();
+      if (!globalGameIsLoadingFromSave) {
+        createBuildingButtons(buildings);
+        if (typeof initializeBuildingAlerts === 'function') {
+          initializeBuildingAlerts();
+        }
       }
   
       // Restore colonies
@@ -557,8 +578,10 @@ function loadGame(slotOrCustomString, recreate = true) {
           }
         }
       applyStructureDisplayPreferences(colonies);
-      createColonyButtons(colonies);
-      initializeColonyAlerts();
+      if (!globalGameIsLoadingFromSave) {
+        createColonyButtons(colonies);
+        initializeColonyAlerts();
+      }
       structures = { ...buildings, ...colonies };
       recalculateLandUsage();
 
@@ -573,8 +596,10 @@ function loadGame(slotOrCustomString, recreate = true) {
           }
         }
         if (typeof updateBuildingDisplay === 'function') {
-          updateBuildingDisplay(buildings);
-          updateBuildingDisplay(colonies);
+          if (!globalGameIsLoadingFromSave) {
+            updateBuildingDisplay(buildings);
+            updateBuildingDisplay(colonies);
+          }
         }
       }
     
@@ -593,14 +618,16 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (typeof warpGateCommand.reapplyEffects === 'function') {
         warpGateCommand.reapplyEffects();
       }
-      if (typeof redrawWGCTeamCards === 'function') {
-        redrawWGCTeamCards();
-      }
-      if (typeof updateWGCUI === 'function') {
-        updateWGCUI();
-      }
-      if (typeof updateWGCVisibility === 'function') {
-        updateWGCVisibility();
+      if (!globalGameIsLoadingFromSave) {
+        if (typeof redrawWGCTeamCards === 'function') {
+          redrawWGCTeamCards();
+        }
+        if (typeof updateWGCUI === 'function') {
+          updateWGCUI();
+        }
+        if (typeof updateWGCVisibility === 'function') {
+          updateWGCVisibility();
+        }
       }
     }
 
@@ -621,9 +648,9 @@ function loadGame(slotOrCustomString, recreate = true) {
     }
 
       if (gameState.journalEntrySources) {
-        const entries = mapSourcesToText(gameState.journalEntrySources);
         const historySources = gameState.journalHistorySources || gameState.journalEntrySources;
-        const history = mapSourcesToText(historySources);
+        const entries = new Array(gameState.journalEntrySources.length).fill(null);
+        const history = new Array(historySources.length).fill(null);
         loadJournalEntries(entries, history, gameState.journalEntrySources, historySources);
       } else if (gameState.journalEntries) {
         const history = gameState.journalHistory || gameState.journalEntries;
@@ -648,7 +675,9 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (gameState.research) {
           researchManager.loadState(gameState.research);
           projectManager.applyEffects();
-          updateAllResearchButtons(researchManager.researches);
+          if (!globalGameIsLoadingFromSave) {
+            updateAllResearchButtons(researchManager.researches);
+          }
       }
       if (typeof updateAdvancedResearchVisibility === 'function') {
           updateAdvancedResearchVisibility();
@@ -665,6 +694,7 @@ function loadGame(slotOrCustomString, recreate = true) {
     if(gameState.goldenAsteroid){
       goldenAsteroid.loadState(gameState.goldenAsteroid);
     }
+    projectManager.projects.birchWorld.triggerPendingCompletionCelebration();
 
     if(gameState.nanotechManager){
       nanotechManager.loadState(gameState.nanotechManager);
@@ -705,6 +735,14 @@ function loadGame(slotOrCustomString, recreate = true) {
     if(gameState.patienceManager && typeof patienceManager !== 'undefined' && typeof patienceManager.loadState === 'function'){
       patienceManager.loadState(gameState.patienceManager);
     }
+    if(gameState.earthManager && typeof earthManager !== 'undefined' && typeof earthManager.loadState === 'function'){
+      earthManager.loadState(gameState.earthManager);
+    }
+    if (gameState.achievementManager && achievementManager && achievementManager.loadState) {
+      achievementManager.loadState(gameState.achievementManager);
+    } else if (achievementManager && achievementManager.update) {
+      achievementManager.update();
+    }
     if (gameState.followersManager && followersManager && followersManager.loadState) {
       followersManager.loadState(gameState.followersManager);
     } else if (gameState.orbitalManager && followersManager && followersManager.loadState) {
@@ -728,6 +766,7 @@ function loadGame(slotOrCustomString, recreate = true) {
         gameSettings.autosaveIntervalSeconds = gameState.settings.disableAutosave ? 0 : 300;
       }
       setAutosaveIntervalSeconds(gameSettings.autosaveIntervalSeconds);
+      applyGameFramerateSetting();
       delete gameSettings.disableAutosave;
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'showSpaceStorageResources')) {
         gameSettings.showSpaceStorageResources = false;
@@ -738,8 +777,26 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'showSpaceStorageInDefaultPanel')) {
         gameSettings.showSpaceStorageInDefaultPanel = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'showNetResourceRateWithAutobuild')) {
+        gameSettings.showNetResourceRateWithAutobuild = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'highlightFullResourceCaps')) {
+        gameSettings.highlightFullResourceCaps = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'resourceDepletionWarningSeconds')) {
+        gameSettings.resourceDepletionWarningSeconds = 120;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'immigrationPool')) {
+        gameSettings.immigrationPool = false;
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'pauseKeybind')) {
         gameSettings.pauseKeybind = 'Space';
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'dialogueSkipKeybind')) {
+        gameSettings.dialogueSkipKeybind = 'NumpadAdd';
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'fullscreenKeybind')) {
+        gameSettings.fullscreenKeybind = 'F11';
       }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'noSpecializationWarningOnTravel')) {
         gameSettings.noSpecializationWarningOnTravel = false;
@@ -747,16 +804,78 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'alwaysDisableAutomationOnLoad')) {
         gameSettings.alwaysDisableAutomationOnLoad = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'disableFusionConsumptionScaling')) {
+        gameSettings.disableFusionConsumptionScaling = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'disableSpeedControls')) {
+        gameSettings.disableSpeedControls = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'unfulfilledMaintenancePenalties')) {
+        gameSettings.unfulfilledMaintenancePenalties = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'earlyAdvancedOversight')) {
+        gameSettings.earlyAdvancedOversight = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'factoryHeating')) {
+        gameSettings.factoryHeating = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'realisticFactoryEnergyConsumption')) {
+        gameSettings.realisticFactoryEnergyConsumption = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'infinitePatience')) {
+        gameSettings.infinitePatience = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'liftersStrippingCap')) {
+        gameSettings.liftersStrippingCap = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'orbitalCap')) {
+        gameSettings.orbitalCap = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'allowSpaceStorageBiomassWithdrawOnNonHumanDominion')) {
+        gameSettings.allowSpaceStorageBiomassWithdrawOnNonHumanDominion = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'noOverpopulationCylinders')) {
+        gameSettings.noOverpopulationCylinders = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'colorblindPalette')) {
+        gameSettings.colorblindPalette = 'redGreen';
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'themeMode')) {
+        gameSettings.themeMode = gameSettings.darkMode ? 'darkBlue' : 'light';
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'uiScale')) {
+        gameSettings.uiScale = 1;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'difficultySettingsLocked')) {
+        gameSettings.difficultySettingsLocked = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'difficultySettingsLockedWorldKey')) {
+        gameSettings.difficultySettingsLockedWorldKey = '';
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'difficultySettingsLockedWorldName')) {
+        gameSettings.difficultySettingsLockedWorldName = '';
+      }
+      normalizeDifficultySettings();
+      applyDifficultySettingEffects();
       setPauseKeybindCode(gameSettings.pauseKeybind);
+      setDialogueSkipKeybindCode(gameSettings.dialogueSkipKeybind);
+      setFullscreenKeybindCode(gameSettings.fullscreenKeybind);
+      applySpeedControlsSetting();
+      applyColorblindPaletteSettings();
       if (gameSettings.showSpaceStorageInDefaultPanel) {
         gameSettings.showSpaceStorageResources = false;
       }
       delete gameSettings.formatAutoBuildTargets;
       const cachedSettings = cacheSettingsElements();
       cachedSettings.autosaveIntervalSelect.value = String(getAutosaveIntervalSeconds());
+      cachedSettings.framerateSelect.value = String(getGameFramerate());
+      if (!GAME_FEATURES.whiteNoiseKeepAlive) {
+        gameSettings.keepTabRunningAudio = false;
+      }
       cachedSettings.keepTabRunningAudioToggle.checked = gameSettings.keepTabRunningAudio;
       cachedSettings.terraformingSubstepsToggle.checked = gameSettings.enableTerraformingSubsteps;
       cachedSettings.celsiusToggle.checked = gameSettings.useCelsius;
+      cachedSettings.colorblindPaletteSelect.value = getColorblindPaletteKey();
       const debugEnabled = !!gameSettings.planetVisualizerDebugEnabled;
       if (typeof globalThis !== 'undefined') {
         globalThis.planetVisualizerDebugEnabled = debugEnabled;
@@ -768,10 +887,15 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.silenceToggle.checked = gameSettings.silenceSolisAlert;
       cachedSettings.milestoneToggle.checked = gameSettings.silenceMilestoneAlert;
       cachedSettings.showSpaceStorageInDefaultPanelToggle.checked = gameSettings.showSpaceStorageInDefaultPanel;
+      cachedSettings.netResourceRateDisplayToggle.checked = gameSettings.showNetResourceRateWithAutobuild;
+      cachedSettings.highlightFullResourceCapsToggle.checked = gameSettings.highlightFullResourceCaps;
+      cachedSettings.resourceDepletionWarningSecondsInput.value = String(gameSettings.resourceDepletionWarningSeconds);
+      cachedSettings.resourceDepletionWarningSecondsInput.dataset.resourceDepletionWarningSeconds = String(gameSettings.resourceDepletionWarningSeconds);
+      cachedSettings.immigrationPoolToggle.checked = gameSettings.immigrationPool;
       cachedSettings.unlockToggle.checked = gameSettings.silenceUnlockAlert;
       cachedSettings.dayNightToggle.checked = gameSettings.disableDayNightCycle;
-      cachedSettings.darkModeToggle.checked = gameSettings.darkMode;
-      document.body.classList.toggle('dark-mode', gameSettings.darkMode);
+      applyThemeModeSetting();
+      applyElectronUIScaleSetting();
       cachedSettings.preserveAutoStartToggle.checked = gameSettings.preserveProjectAutoStart;
       cachedSettings.preserveProjectSettingsToggle.checked = gameSettings.preserveProjectSettingsOnTravel;
       cachedSettings.keepHiddenStructuresToggle.checked = gameSettings.keepHiddenStructuresOnTravel;
@@ -779,16 +903,31 @@ function loadGame(slotOrCustomString, recreate = true) {
       cachedSettings.noSpecializationWarningOnTravelToggle.checked = gameSettings.noSpecializationWarningOnTravel;
       cachedSettings.autobuildSetActiveToggle.checked = gameSettings.autobuildAlsoSetsActive;
       cachedSettings.colonyUpgradeUncheckAutobuildToggle.checked = gameSettings.colonyUpgradeUnchecksAutobuild;
+      cachedSettings.autobuildIgnoreAutoUpgradeColoniesToggle.checked = gameSettings.autobuildIgnoreAutoUpgradeColonies;
       cachedSettings.roundBuildingToggle.checked = gameSettings.roundBuildingConstruction;
       cachedSettings.scientificNotationThresholdInput.value = formatScientific(gameSettings.scientificNotationThreshold ?? 1e30);
       cachedSettings.scientificNotationThresholdInput.dataset.scientificNotationThreshold = String(gameSettings.scientificNotationThreshold ?? 1e30);
       cachedSettings.simplifyGoldenAsteroidToggle.checked = gameSettings.simplifyGoldenAsteroid;
       cachedSettings.suppressFaithToggle.checked = gameSettings.suppressFaith;
+      cachedSettings.disableFusionConsumptionScalingToggle.checked = gameSettings.disableFusionConsumptionScaling;
+      cachedSettings.disableSpeedControlsToggle.checked = gameSettings.disableSpeedControls;
+      cachedSettings.unfulfilledMaintenancePenaltiesToggle.checked = gameSettings.unfulfilledMaintenancePenalties;
+      cachedSettings.earlyAdvancedOversightToggle.checked = gameSettings.earlyAdvancedOversight;
+      cachedSettings.factoryHeatingToggle.checked = gameSettings.factoryHeating;
+      cachedSettings.realisticFactoryEnergyConsumptionToggle.checked = gameSettings.realisticFactoryEnergyConsumption;
+      cachedSettings.infinitePatienceToggle.checked = gameSettings.infinitePatience;
+      cachedSettings.liftersStrippingCapToggle.checked = gameSettings.liftersStrippingCap;
+      cachedSettings.orbitalCapToggle.checked = gameSettings.orbitalCap;
+      cachedSettings.noOverpopulationCylindersToggle.checked = gameSettings.noOverpopulationCylinders;
+      patienceManager.enforceInfinitePatience();
+      updateDifficultySettingInputs();
       updatePauseKeybindButtons();
+      updateDialogueSkipKeybindButtons();
+      updateFullscreenKeybindButtons();
       if (followersManager && followersManager.reapplyEffects) {
         followersManager.reapplyEffects();
       }
-      if (gameSettings.keepTabRunningAudio) {
+      if (GAME_FEATURES.whiteNoiseKeepAlive && gameSettings.keepTabRunningAudio) {
         startBackgroundSilence();
       } else {
         stopBackgroundSilence();
@@ -798,12 +937,16 @@ function loadGame(slotOrCustomString, recreate = true) {
       if (typeof completedResearchHidden !== 'undefined') {
         completedResearchHidden = gameSettings.hideCompletedResearch || false;
         if (typeof updateAllResearchButtons === 'function') {
-          updateAllResearchButtons(researchManager.researches);
-          updateCompletedResearchVisibility();
+          if (!globalGameIsLoadingFromSave) {
+            updateAllResearchButtons(researchManager.researches);
+            updateCompletedResearchVisibility();
+          }
         }
       }
       if (typeof createResourceDisplay === 'function' && resources) {
-        createResourceDisplay(resources);
+        if (!globalGameIsLoadingFromSave) {
+          createResourceDisplay(resources);
+        }
       }
     }
 
@@ -849,7 +992,16 @@ function loadGame(slotOrCustomString, recreate = true) {
           fastestTerraformRealSeconds = null;
         }
       }
-
+      if (gameState.birchWorldTerraformTimeSeconds !== undefined) {
+        birchWorldTerraformTimeSeconds = gameState.birchWorldTerraformTimeSeconds;
+      } else {
+        birchWorldTerraformTimeSeconds = null;
+      }
+      if (gameState.birchWorldTerraformRealTimeSeconds !== undefined) {
+        birchWorldTerraformRealTimeSeconds = gameState.birchWorldTerraformRealTimeSeconds;
+      } else {
+        birchWorldTerraformRealTimeSeconds = null;
+      }
       if (typeof openTerraformingWorldTab === 'function') {
         openTerraformingWorldTab();
       } else if (tabManager && typeof tabManager.activateTab === 'function') {
@@ -867,7 +1019,12 @@ function loadGame(slotOrCustomString, recreate = true) {
     }
 
     applyPlanetParameterEffects();
-    if (typeof updateRender === 'function') {
+    if (typeof applyRWGEffects === 'function') {
+      applyRWGEffects();
+    }
+    galaxyManager?.finalizeLoadedDefenseAssignments?.();
+    globalGameIsLoadingFromSave = false;
+    if (!options.skipRender && typeof updateRender === 'function') {
       updateRender(true, { forceAllSubtabs: true });
     }
     const pv = window.planetVisualizer;
@@ -877,6 +1034,7 @@ function loadGame(slotOrCustomString, recreate = true) {
     }
 
       console.log('Game loaded successfully (DayNightCycle, resources, buildings, projects, colonies, and research).');
+      return true;
   } finally {
     globalGameIsLoadingFromSave = false;
     hideLoadingOverlay();
@@ -892,16 +1050,163 @@ function setSaveSlotStatus(slot, text) {
   }
 }
 
+function getSaveStorage() {
+  return window.electronSaveStorage || localStorage;
+}
+
+function readSaveStorageItem(key) {
+  return getSaveStorage().getItem(key);
+}
+
+function writeSaveStorageItem(key, value) {
+  return getSaveStorage().setItem(key, value);
+}
+
+function removeSaveStorageItem(key) {
+  return getSaveStorage().removeItem(key);
+}
+
+function readSaveSlotDates() {
+  try {
+    const saveSlotDates = JSON.parse(readSaveStorageItem('saveSlotDates')) || {};
+    return saveSlotDates && saveSlotDates.constructor === Object ? saveSlotDates : {};
+  } catch (e) {
+    console.warn('Unable to access save storage for save slot dates:', e);
+    return {};
+  }
+}
+
+function writeSaveSlotDates(saveSlotDates) {
+  try {
+    writeSaveStorageItem('saveSlotDates', JSON.stringify(saveSlotDates));
+    return true;
+  } catch (e) {
+    console.warn('Unable to access save storage for save slot dates:', e);
+    return false;
+  }
+}
+
+function readSaveSlotNames() {
+  try {
+    const saveSlotNames = JSON.parse(readSaveStorageItem('saveSlotNames')) || {};
+    return saveSlotNames && saveSlotNames.constructor === Object ? saveSlotNames : {};
+  } catch (e) {
+    console.warn('Unable to access save storage for save slot names:', e);
+    return {};
+  }
+}
+
+function writeSaveSlotNames(saveSlotNames) {
+  try {
+    writeSaveStorageItem('saveSlotNames', JSON.stringify(saveSlotNames));
+    return true;
+  } catch (e) {
+    console.warn('Unable to access save storage for save slot names:', e);
+    return false;
+  }
+}
+
+function getDefaultSaveSlotName(slot) {
+  return t(`ui.settings.${slot}`, null, slot);
+}
+
+function normalizeSaveSlotName(slot, value) {
+  const name = String(value || '').trim();
+  return name || getDefaultSaveSlotName(slot);
+}
+
+function getSaveSlotName(slot, saveSlotNames) {
+  if (RENAMABLE_SAVE_SLOTS.indexOf(slot) === -1) {
+    return getDefaultSaveSlotName(slot);
+  }
+  return normalizeSaveSlotName(slot, saveSlotNames[slot]);
+}
+
+function setSaveSlotLabel(slot, name) {
+  const label = document.getElementById(`${slot}-label`);
+  if (label) {
+    label.textContent = name;
+  }
+}
+
+function setSaveSlotCompletedIndicator(slot, isCompleted) {
+  const indicator = document.getElementById(`${slot}-completed-star`);
+  if (indicator) {
+    indicator.hidden = !isCompleted;
+  }
+}
+
+function saveSaveSlotName(slot, name) {
+  const saveSlotNames = readSaveSlotNames();
+  saveSlotNames[slot] = normalizeSaveSlotName(slot, name);
+  writeSaveSlotNames(saveSlotNames);
+  setSaveSlotLabel(slot, saveSlotNames[slot]);
+}
+
+function loadSaveSlotNames() {
+  const saveSlotNames = readSaveSlotNames();
+  const repairedNames = {};
+  for (const slot of RENAMABLE_SAVE_SLOTS) {
+    const name = getSaveSlotName(slot, saveSlotNames);
+    if (saveSlotNames[slot] !== undefined) {
+      repairedNames[slot] = name;
+    }
+    setSaveSlotLabel(slot, name);
+  }
+  writeSaveSlotNames(repairedNames);
+}
+
+function getSavedStateForSlot(slot) {
+  try {
+    return readSaveStorageItem(`gameState_${slot}`);
+  } catch (e) {
+    console.warn(`Unable to access save storage for slot ${slot}:`, e);
+    return null;
+  }
+}
+
+function getTimestampFromSavedState(savedState) {
+  try {
+    const parsedState = JSON.parse(savedState);
+    const timestamp = Number(parsedState.savedAt);
+    return Number.isFinite(timestamp) && timestamp > 0 ? timestamp : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function getGameCompletedFromSavedState(savedState) {
+  try {
+    return JSON.parse(savedState).gameCompleted === true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function getSaveSlotTimestamp(slot, saveSlotDates) {
+  const savedState = getSavedStateForSlot(slot);
+  if (!savedState) {
+    return null;
+  }
+  const embeddedTimestamp = getTimestampFromSavedState(savedState);
+  if (embeddedTimestamp !== null) {
+    return embeddedTimestamp;
+  }
+  const metadataTimestamp = Number(saveSlotDates[slot]);
+  return Number.isFinite(metadataTimestamp) && metadataTimestamp > 0 ? metadataTimestamp : null;
+}
+
 function saveGameToSlot(slot) {
-  const gameState = getGameState();
-  const genericFailure = t('ui.settings.saveFailedLocalStorage', null, 'SAVE FAILED: Game needs cookies/local storage permission.');
+  const saveDate = new Date();
+  const gameState = getGameState(saveDate);
+  const genericFailure = t('ui.settings.saveFailedLocalStorage', null, 'SAVE FAILED: Unable to write save storage.');
   let saveFailedReason = '';
   try {
-    localStorage.setItem(`gameState_${slot}`, JSON.stringify(gameState));
+    writeSaveStorageItem(`gameState_${slot}`, JSON.stringify(gameState));
     console.log(`Game saved successfully to slot ${slot}.`);
   } catch (e) {
     saveFailedReason = e?.message || 'Unknown error';
-    console.warn(`Unable to access localStorage for slot ${slot}:`, e);
+    console.warn(`Unable to access save storage for slot ${slot}:`, e);
     setSaveSlotStatus(slot, genericFailure);
     if (slot === 'autosave') {
       updateAutosaveText(genericFailure);
@@ -909,11 +1214,10 @@ function saveGameToSlot(slot) {
     return { success: false, error: saveFailedReason };
   }
 
-  // Get the current date and time
-  const saveDate = new Date();
   const formattedSaveDate = formatDate(saveDate);
 
   setSaveSlotStatus(slot, formattedSaveDate);
+  setSaveSlotCompletedIndicator(slot, gameState.gameCompleted === true);
 
   // Save the save slot dates as UNIX timestamps
   saveSaveSlotDates(slot, saveDate);
@@ -926,10 +1230,33 @@ function saveGameToSlot(slot) {
   return { success: true };
 }
 
+function initializeExitSaveSlot() {
+  const row = document.getElementById('exitsave-row');
+  if (GAME_FEATURES.exitSaveSlot) {
+    row.hidden = false;
+    row.classList.remove('build-target-hidden');
+  } else {
+    row.hidden = true;
+    row.classList.add('build-target-hidden');
+  }
+}
+
+function registerExitSaveHandler() {
+  if (!GAME_FEATURES.exitSaveSlot || exitSaveHandlerRegistered) {
+    return;
+  }
+  window.addEventListener('beforeunload', () => {
+    saveGameToSlot('exitsave');
+  });
+  exitSaveHandlerRegistered = true;
+}
+
 function saveGameToFile() {
-  patienceManager.claimDailyPatience();
-  updatePatienceUI();
-  const gameState = getGameState();
+  if (GAME_FEATURES.patienceDailyRewardFromExport) {
+    patienceManager.claimDailyPatience();
+    updatePatienceUI();
+  }
+  const gameState = getGameState(new Date());
 
   const saveData = JSON.stringify(gameState);
   const blob = new Blob([saveData], { type: 'application/json' });
@@ -949,15 +1276,19 @@ function saveGameToFile() {
 }
 
 function saveGameToClipboard() {
-  patienceManager.claimDailyPatience();
-  updatePatienceUI();
-  const saveData = JSON.stringify(getGameState());
+  if (GAME_FEATURES.patienceDailyRewardFromExport) {
+    patienceManager.claimDailyPatience();
+    updatePatienceUI();
+  }
+  const saveData = JSON.stringify(getGameState(new Date()));
   copyTextToClipboard(saveData, {
     promptLabel: 'Copy save data:',
     onSuccess: () => {
       console.log('Game saved to clipboard.');
-      patienceManager.claimDailyPatience();
-      updatePatienceUI();
+      if (GAME_FEATURES.patienceDailyRewardFromExport) {
+        patienceManager.claimDailyPatience();
+        updatePatienceUI();
+      }
     },
     onError: (e) => console.warn('Unable to copy save to clipboard:', e)
   });
@@ -980,24 +1311,111 @@ function loadGameFromFile(event) {
   }
 }
 
-function loadGameFromString() {
-  const text = window.prompt(t('ui.settings.pasteSaveData', null, 'Paste save data to load:'));
-  if (text) {
-    loadGame(text);
+function ensureLoadStringDialog() {
+  if (loadStringDialog) {
+    return loadStringDialog;
   }
+
+  const overlay = document.createElement('div');
+  overlay.classList.add('load-string-dialog-overlay');
+
+  const windowEl = document.createElement('div');
+  windowEl.classList.add('load-string-dialog-window');
+
+  const title = document.createElement('h3');
+  title.classList.add('load-string-dialog-title');
+  title.textContent = t('ui.settings.loadStringDialogTitle', null, 'Load from string');
+
+  const description = document.createElement('p');
+  description.classList.add('load-string-dialog-description');
+  description.textContent = t('ui.settings.loadStringDialogDescription', null, 'Paste save data below.');
+
+  const textarea = document.createElement('textarea');
+  textarea.classList.add('load-string-dialog-textarea');
+  textarea.setAttribute('spellcheck', 'false');
+  textarea.setAttribute('autocomplete', 'off');
+  textarea.setAttribute('autocapitalize', 'off');
+
+  const message = document.createElement('div');
+  message.classList.add('load-string-dialog-message');
+
+  const actions = document.createElement('div');
+  actions.classList.add('load-string-dialog-actions');
+
+  const cancelButton = document.createElement('button');
+  cancelButton.classList.add('load-string-dialog-cancel');
+  cancelButton.textContent = t('ui.common.cancel', null, 'Cancel');
+
+  const loadButton = document.createElement('button');
+  loadButton.classList.add('load-string-dialog-confirm');
+  loadButton.textContent = t('ui.common.load', null, 'Load');
+
+  actions.append(cancelButton, loadButton);
+  windowEl.append(title, description, textarea, message, actions);
+  overlay.appendChild(windowEl);
+  document.body.appendChild(overlay);
+
+  loadStringDialog = {
+    overlay,
+    textarea,
+    message,
+    loadButton,
+    cancelButton
+  };
+
+  const closeDialog = () => {
+    overlay.classList.remove('is-visible');
+    textarea.value = '';
+    message.textContent = '';
+  };
+
+  cancelButton.addEventListener('click', closeDialog);
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) {
+      closeDialog();
+    }
+  });
+  overlay.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeDialog();
+    }
+  });
+  loadButton.addEventListener('click', () => {
+    const text = textarea.value.trim();
+    if (!text) {
+      message.textContent = t('ui.settings.loadStringDialogEmpty', null, 'Paste save data before loading.');
+      return;
+    }
+    if (!loadGame(text)) {
+      message.textContent = t('ui.settings.loadStringDialogInvalid', null, 'Could not load that save data.');
+      return;
+    }
+    closeDialog();
+  });
+
+  return loadStringDialog;
+}
+
+function loadGameFromString() {
+  const dialog = ensureLoadStringDialog();
+  dialog.message.textContent = '';
+  dialog.textarea.value = '';
+  dialog.overlay.classList.add('is-visible');
+  dialog.textarea.focus();
 }
 
 // Delete save file from a specific slot
 function deleteSaveFileFromSlot(slot) {
   try {
-    localStorage.removeItem(`gameState_${slot}`);
+    removeSaveStorageItem(`gameState_${slot}`);
     console.log(`Save file deleted successfully from slot ${slot}.`);
   } catch (e) {
-    console.warn(`Unable to access localStorage for slot ${slot}:`, e);
+    console.warn(`Unable to access save storage for slot ${slot}:`, e);
   }
 
   // Clear the save date for the slot
   document.getElementById(`${slot}-date`).textContent = t('ui.common.empty', null, 'Empty');
+  setSaveSlotCompletedIndicator(slot, false);
 
   // Delete the save slot date
   deleteSaveSlotDate(slot);
@@ -1010,34 +1428,43 @@ function deleteSaveFileFromSlot(slot) {
 
 // Save the save slot dates as UNIX timestamps
 function saveSaveSlotDates(slot, date) {
-  try {
-    const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
-    saveSlotDates[slot] = new Date(date).getTime();
-    localStorage.setItem('saveSlotDates', JSON.stringify(saveSlotDates));
-  } catch (e) {
-    console.warn('Unable to access localStorage for save slot dates:', e);
-  }
+  const saveSlotDates = readSaveSlotDates();
+  saveSlotDates[slot] = new Date(date).getTime();
+  writeSaveSlotDates(saveSlotDates);
 }
 
 // Load the save slot dates and display them in a user-friendly format
 function loadSaveSlotDates() {
-  let saveSlotDates = {};
-  try {
-    saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
-  } catch (e) {
-    console.warn('Unable to access localStorage for save slot dates:', e);
-    saveSlotDates = {};
-  }
-  for (const slot in saveSlotDates) {
-    const timestamp = saveSlotDates[slot];
-    const date = new Date(timestamp);
-    const formattedDate = formatDate(date);
+  const saveSlotDates = readSaveSlotDates();
+  const repairedDates = { ...saveSlotDates };
+
+  for (const slot of SAVE_SLOTS) {
+    const savedState = getSavedStateForSlot(slot);
     const dateCell = document.getElementById(`${slot}-date`);
-    if (dateCell) dateCell.textContent = formattedDate;
+    if (!savedState) {
+      if (dateCell) dateCell.textContent = t('ui.common.empty', null, 'Empty');
+      setSaveSlotCompletedIndicator(slot, false);
+      if (repairedDates[slot] !== undefined) {
+        delete repairedDates[slot];
+      }
+      continue;
+    }
+
+    const timestamp = getSaveSlotTimestamp(slot, saveSlotDates);
+    if (timestamp !== null) {
+      const date = new Date(timestamp);
+      const formattedDate = formatDate(date);
+      if (dateCell) dateCell.textContent = formattedDate;
+      repairedDates[slot] = timestamp;
+    }
+    setSaveSlotCompletedIndicator(slot, getGameCompletedFromSavedState(savedState));
   }
+
+  writeSaveSlotDates(repairedDates);
+
   const preRow = document.getElementById('pretravel-row');
   if (preRow) {
-    if (saveSlotDates.pretravel) {
+    if (getSavedStateForSlot('pretravel')) {
       preRow.classList.remove('hidden');
     } else {
       preRow.classList.add('hidden');
@@ -1061,45 +1488,47 @@ function formatDate(date) {
 
 // Delete a save slot date
 function deleteSaveSlotDate(slot) {
-  try {
-    const saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
-    delete saveSlotDates[slot];
-    localStorage.setItem('saveSlotDates', JSON.stringify(saveSlotDates));
-  } catch (e) {
-    console.warn('Unable to access localStorage for save slot dates:', e);
-  }
+  const saveSlotDates = readSaveSlotDates();
+  delete saveSlotDates[slot];
+  writeSaveSlotDates(saveSlotDates);
 }
 
 // Load the most recent save
 function loadMostRecentSave() {
   loadSaveSlotDates();
 
-  let saveSlotDates = {};
-  try {
-    saveSlotDates = JSON.parse(localStorage.getItem('saveSlotDates')) || {};
-  } catch (e) {
-    console.warn('Unable to access localStorage for most recent save:', e);
-    return false;
-  }
-  let mostRecentSlot = null;
-  let mostRecentTimestamp = null;
+  const saveSlotDates = readSaveSlotDates();
+  const candidates = [];
+  const candidateSlots = new Set();
 
-  for (const slot in saveSlotDates) {
-    const timestamp = saveSlotDates[slot];
-    if (mostRecentTimestamp === null || timestamp > mostRecentTimestamp) {
-      mostRecentSlot = slot;
-      mostRecentTimestamp = timestamp;
+  for (const slot of SAVE_SLOTS) {
+    const timestamp = getSaveSlotTimestamp(slot, saveSlotDates);
+    if (timestamp === null) {
+      continue;
+    }
+    candidates.push({ slot, timestamp });
+    candidateSlots.add(slot);
+  }
+
+  candidates.sort((a, b) => b.timestamp - a.timestamp);
+
+  for (const slot of SAVE_FALLBACK_LOAD_ORDER) {
+    if (!candidateSlots.has(slot) && getSavedStateForSlot(slot)) {
+      candidates.push({ slot, timestamp: 0 });
+      candidateSlots.add(slot);
     }
   }
 
-  if (mostRecentSlot) {
-    loadGame(`gameState_${mostRecentSlot}`, recreate = false);
-    console.log(`Loaded most recent save from slot ${mostRecentSlot}.`);
-    return true;
-  } else {
-    console.log('No save slots found. Starting a new game.');
-    return false;
+  for (const candidate of candidates) {
+    const loaded = loadGame(`gameState_${candidate.slot}`, false);
+    if (loaded) {
+      console.log(`Loaded most recent save from slot ${candidate.slot}.`);
+      return true;
+    }
   }
+
+  console.log('No valid save slots found. Starting a new game.');
+  return false;
 }
 
 const AUTOSAVE_INTERVAL_OPTIONS = [30, 60, 120, 300, 900, 1800, 3600, 0];
@@ -1127,6 +1556,7 @@ function setAutosaveIntervalSeconds(intervalSeconds) {
 
 let autosaveInterval = DEFAULT_AUTOSAVE_INTERVAL_SECONDS;
 let autosaveTimer = autosaveInterval;
+let autosaveTextElement = null;
 
 function autosave(delta) {
   const intervalSeconds = getAutosaveIntervalSeconds();
@@ -1155,7 +1585,10 @@ function autosave(delta) {
 }
 
 function updateAutosaveText(overrideText) {
-  const autosaveText = document.getElementById('autosave-text');
+  if (!autosaveTextElement || !autosaveTextElement.isConnected) {
+    autosaveTextElement = document.getElementById('autosave-text');
+  }
+  const autosaveText = autosaveTextElement;
   if (!autosaveText) return;
   if (overrideText) {
     autosaveText.textContent = overrideText;

@@ -5,6 +5,7 @@ let HazardousMachineryHazardCtor = null;
 let GarbageHazardCtor = null;
 let KesslerHazardCtor = null;
 let PulsarHazardCtor = null;
+let DebrisDiskHazardCtor = null;
 let LandReservationReconcilerCtor = null;
 let getCoreFluxLandReservationShareHelper = null;
 let normalizeLandReservationShareHelper = null;
@@ -79,6 +80,16 @@ try {
 }
 
 try {
+  ({ DebrisDiskHazard: DebrisDiskHazardCtor } = require('./hazards/debrisDiskHazard.js'));
+} catch (error) {
+  try {
+    DebrisDiskHazardCtor = DebrisDiskHazard;
+  } catch (innerError) {
+    DebrisDiskHazardCtor = null;
+  }
+}
+
+try {
   ({
     LandReservationReconciler: LandReservationReconcilerCtor,
     getCoreFluxLandReservationShare: getCoreFluxLandReservationShareHelper,
@@ -148,6 +159,29 @@ function getPlanetHazards(parameters) {
   }
 }
 
+function migrateSavedHazardParameters(baseParameters, savedParameters) {
+  const migrated = cloneHazardParameters(savedParameters);
+  const baseDebrisDisk = baseParameters && baseParameters.debrisDisk && baseParameters.debrisDisk.constructor === Object
+    ? baseParameters.debrisDisk
+    : {};
+  const savedDebrisDisk = migrated && migrated.debrisDisk && migrated.debrisDisk.constructor === Object
+    ? migrated.debrisDisk
+    : null;
+
+  if (
+    savedDebrisDisk &&
+    savedDebrisDisk.kesslerRegenerationRatePerBinPerSecond === 0.01 &&
+    (
+      !Number.isFinite(baseDebrisDisk.kesslerRegenerationRatePerBinPerSecond) ||
+      baseDebrisDisk.kesslerRegenerationRatePerBinPerSecond === 0.001
+    )
+  ) {
+    savedDebrisDisk.kesslerRegenerationRatePerBinPerSecond = 0.001;
+  }
+
+  return migrated;
+}
+
 function getTerraforming() {
   try {
     return terraforming;
@@ -159,6 +193,7 @@ function getTerraforming() {
 class HazardManager {
   constructor() {
     this.enabled = false;
+    this.uiDirty = true;
     this.parameters = {};
     this.lastSerializedParameters = '';
     this.cachedHazardousBiomassControl = 0;
@@ -191,6 +226,11 @@ class HazardManager {
     KesslerHazardCtor = resolveKesslerCtor(KesslerHazardCtor);
     this.kesslerHazard = KesslerHazardCtor ? new KesslerHazardCtor(this) : null;
     this.pulsarHazard = PulsarHazardCtor ? new PulsarHazardCtor(this) : null;
+    this.debrisDiskHazard = DebrisDiskHazardCtor ? new DebrisDiskHazardCtor(this) : null;
+  }
+
+  markUIDirty() {
+    this.uiDirty = true;
   }
 
   normalizeHazardParametersForKey(key, value) {
@@ -212,6 +252,10 @@ class HazardManager {
 
     if (key === 'pulsar' && this.pulsarHazard) {
       return this.pulsarHazard.normalize(value);
+    }
+
+    if (key === 'debrisDisk' && this.debrisDiskHazard) {
+      return this.debrisDiskHazard.normalize(value);
     }
 
     return value;
@@ -297,6 +341,14 @@ class HazardManager {
         });
       }
     }
+
+    if (key === 'debrisDisk') {
+      if (this.debrisDiskHazard && hazardParameters) {
+        this.debrisDiskHazard.initializeResources(activeTerraforming, hazardParameters, options);
+      } else if (this.debrisDiskHazard) {
+        this.debrisDiskHazard.clearEffects();
+      }
+    }
   }
 
   enable() {
@@ -305,7 +357,7 @@ class HazardManager {
     }
 
     this.enabled = true;
-    this.updateUI();
+    this.markUIDirty();
   }
 
   disable() {
@@ -322,7 +374,7 @@ class HazardManager {
     this.setHazardLandReservationShare('hazardousBiomass', 0);
     this.setHazardLandReservationShare('hazardousMachinery', 0);
     this.setHazardLandReservationShare('pulsar', 0);
-    this.updateUI();
+    this.markUIDirty();
   }
 
   initialize(parameters = null, options = {}) {
@@ -337,15 +389,17 @@ class HazardManager {
     this.initializeHazardState('garbage', activeTerraforming, options);
     this.initializeHazardState('kessler', activeTerraforming, options);
     this.initializeHazardState('pulsar', activeTerraforming, options);
+    this.initializeHazardState('debrisDisk', activeTerraforming, options);
 
     this.syncHazardLandReservation(activeTerraforming);
 
     if (changed && this.enabled) {
-      this.updateUI();
+      this.markUIDirty();
     }
   }
 
   updateUI() {
+    this.uiDirty = false;
     let visibilityToggle = null;
     try {
       visibilityToggle = setTerraformingHazardsVisibility;
@@ -420,7 +474,7 @@ class HazardManager {
     this.crusaderTargetZone = normalized;
 
     if (this.enabled) {
-      this.updateUI();
+      this.markUIDirty();
     }
 
     return this.crusaderTargetZone;
@@ -429,6 +483,7 @@ class HazardManager {
   save() {
     let kesslerState = null;
     let pulsarState = null;
+    let debrisDiskState = null;
     let hazardousMachineryState = null;
     try {
       kesslerState = this.kesslerHazard.save();
@@ -447,13 +502,21 @@ class HazardManager {
     } catch (error) {
       hazardousMachineryState = null;
     }
+    try {
+      debrisDiskState = this.debrisDiskHazard && this.debrisDiskHazard.save
+        ? this.debrisDiskHazard.save()
+        : null;
+    } catch (error) {
+      debrisDiskState = null;
+    }
     return {
       parameters: cloneHazardParameters(this.parameters),
       crusaderTargetZone: this.getCrusaderTargetZone(),
       hazardousMachineryHazard: hazardousMachineryState,
       garbageHazard: this.garbageHazard && this.garbageHazard.save ? this.garbageHazard.save() : null,
       kesslerHazard: kesslerState,
-      pulsarHazard: pulsarState
+      pulsarHazard: pulsarState,
+      debrisDiskHazard: debrisDiskState
     };
   }
 
@@ -461,9 +524,10 @@ class HazardManager {
     const savedParameters = data && data.parameters && data.parameters.constructor === Object
       ? data.parameters
       : null;
+    const planetHazards = getPlanetHazards();
     const parameters = savedParameters
-      ? mergeHazardParameters(getPlanetHazards(), savedParameters)
-      : getPlanetHazards();
+      ? mergeHazardParameters(planetHazards, migrateSavedHazardParameters(planetHazards, savedParameters))
+      : planetHazards;
 
     this.initialize(parameters, {
       unlockOnly: true,
@@ -484,6 +548,11 @@ class HazardManager {
     }
     try {
       this.pulsarHazard && this.pulsarHazard.load && this.pulsarHazard.load(data && data.pulsarHazard ? data.pulsarHazard : null);
+    } catch (error) {
+      // no-op
+    }
+    try {
+      this.debrisDiskHazard && this.debrisDiskHazard.load && this.debrisDiskHazard.load(data && data.debrisDiskHazard ? data.debrisDiskHazard : null);
     } catch (error) {
       // no-op
     }
@@ -514,13 +583,16 @@ class HazardManager {
     this.syncHazardLandReservation(activeTerraforming);
 
     if (this.enabled) {
-      this.updateUI();
+      this.markUIDirty();
     }
 
     return true;
   }
 
-  update(deltaTime = 0, terraformingState = null) {
+  update(deltaTime = 0, terraformingState = null, options = {}) {
+    if (isCurrentWorldManagerDisabled('hazardManager')) {
+      return;
+    }
     if (!terraformingState) {
       return;
     }
@@ -566,7 +638,21 @@ class HazardManager {
     if (this.kesslerHazard && this.hasHazardParameters('kessler')) {
       this.kesslerHazard.update(deltaSeconds, terraformingState, this.parameters.kessler);
     }
+    if (this.debrisDiskHazard && this.hasHazardParameters('debrisDisk')) {
+      this.debrisDiskHazard.update(deltaSeconds, terraformingState, this.parameters.debrisDisk, options);
+    } else if (this.debrisDiskHazard) {
+      this.debrisDiskHazard.clearEffects();
+    }
     this.syncHazardLandReservation(terraformingState);
+  }
+
+  applyPostClampResourceProduction() {
+    if (this.pulsarHazard && this.pulsarHazard.applyPendingSurfaceSalvage) {
+      this.pulsarHazard.applyPendingSurfaceSalvage();
+    }
+    if (this.debrisDiskHazard && this.debrisDiskHazard.applyPendingSurfaceSalvage) {
+      this.debrisDiskHazard.applyPendingSurfaceSalvage();
+    }
   }
 
   normalizeHazardLandShare(share) {
@@ -812,6 +898,11 @@ class HazardManager {
           break;
         case 'pulsar':
           if (this.pulsarHazard && !this.pulsarHazard.isCleared(terraformingState, this.parameters.pulsar)) {
+            return false;
+          }
+          break;
+        case 'debrisDisk':
+          if (this.debrisDiskHazard && !this.debrisDiskHazard.isCleared(terraformingState, this.parameters.debrisDisk)) {
             return false;
           }
           break;
@@ -1203,7 +1294,7 @@ class HazardManager {
                 resourceId: resource,
                 value: buildCostMultiplier,
                 sourceId: 'hazardPenalties',
-                name: 'Hazardous Biomass'
+                name: t('ui.terraforming.hazardEffects.hazardousBiomass', {}, 'Hazardous Biomass')
               });
             });
           });
@@ -1223,7 +1314,7 @@ class HazardManager {
             type: 'maintenanceMultiplier',
             value: maintenanceMultiplier,
             sourceId: 'hazardPenalties',
-            name: 'Hazardous Biomass'
+            name: t('ui.terraforming.hazardEffects.hazardousBiomass', {}, 'Hazardous Biomass')
           });
         });
 
@@ -1235,7 +1326,7 @@ class HazardManager {
             type: 'maintenanceMultiplier',
             value: maintenanceMultiplier,
             sourceId: 'hazardPenalties',
-            name: 'Hazardous Biomass'
+            name: t('ui.terraforming.hazardEffects.hazardousBiomass', {}, 'Hazardous Biomass')
           });
         });
       }

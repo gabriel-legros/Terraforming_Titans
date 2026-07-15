@@ -18,16 +18,21 @@ let spaceRandomTabVisible = false;
 let spaceAtlasTabVisible = false;
 let spaceGalaxyTabVisible = false;
 let spaceSubtabManager = null;
+let spaceSubtabActivationHandlerRegistered = false;
 // Cache the last rendered world so we can skip redundant updates
 let lastWorldKey = null;
 let lastWorldSeed = null;
 let currentWorldDetailsDirty = true;
 let spaceStatUniqueValueEl = null;
 let spaceStatEffectiveValueEl = null;
+let spaceStatGalacticPopulationValueEl = null;
+let spaceStatGalacticCapacityValueEl = null;
 let spaceStatUniqueTooltipEl = null;
 let spaceStatEffectiveTooltipEl = null;
+let spaceStatGalacticPopulationTooltipEl = null;
 let spaceStatUniqueTooltipContentEl = null;
 let spaceStatEffectiveTooltipContentEl = null;
+let spaceStatGalacticPopulationTooltipContentEl = null;
 let spaceStatOneillCardEl = null;
 let spaceStatOneillValueEl = null;
 let spaceStatOneillTooltipEl = null;
@@ -113,6 +118,10 @@ function updateTravelWarningMessageText() {
 }
 
 function showSpaceRandomTab() {
+    if (isCurrentWorldSubtabDisabled('space-random')) {
+        hideSpaceRandomTab();
+        return;
+    }
     spaceRandomTabVisible = true;
     if (spaceSubtabManager) {
         spaceSubtabManager.show('space-random');
@@ -236,15 +245,31 @@ function setSpaceIncomingAttackWarning(isActive, isThreat = true) {
         }
         return;
     }
-    warning.classList.remove('is-visible');
-    warning.classList.remove('is-safe');
-    warning.setAttribute('aria-hidden', 'true');
-    warning.removeAttribute('role');
-    warning.removeAttribute('aria-label');
-    warning.removeAttribute('title');
+    if (warning.classList.contains('is-visible')) {
+        warning.classList.remove('is-visible');
+    }
+    if (warning.classList.contains('is-safe')) {
+        warning.classList.remove('is-safe');
+    }
+    if (warning.getAttribute('aria-hidden') !== 'true') {
+        warning.setAttribute('aria-hidden', 'true');
+    }
+    if (warning.hasAttribute('role')) {
+        warning.removeAttribute('role');
+    }
+    if (warning.hasAttribute('aria-label')) {
+        warning.removeAttribute('aria-label');
+    }
+    if (warning.hasAttribute('title')) {
+        warning.removeAttribute('title');
+    }
 }
 
 function showSpaceAtlasTab() {
+    if (isCurrentWorldSubtabDisabled('space-atlas')) {
+        hideSpaceAtlasTab();
+        return;
+    }
     spaceAtlasTabVisible = true;
     const { button, content } = cacheAtlasTabElements();
     if (spaceSubtabManager) {
@@ -267,6 +292,10 @@ function hideSpaceAtlasTab() {
 }
 
 function showSpaceGalaxyTab() {
+    if (isCurrentWorldSubtabDisabled('space-galaxy')) {
+        hideSpaceGalaxyTab();
+        return;
+    }
     spaceGalaxyTabVisible = true;
     const { button, content } = cacheGalaxyTabElements();
     if (spaceSubtabManager) {
@@ -298,12 +327,9 @@ function maybeShowGalaxyWelcomePopup() {
     if (!galaxyManager.enabled || galaxyManager.hasSeenWelcomePopup) {
         return;
     }
-    const title = getSpaceUIText('galaxyWelcome.title', 'Galactic Overview');
-    const text = getSpaceUIText(
-        'galaxyWelcome.body',
-        'Welcome to the galaxy map.  With the galaxy in disarray, the United Human Federation will be forced to participate.\n\nYou begin in Sector R5-07.  You will have to take over this sector to expand further.\n\nWhile you can be attacked by Imperial factions, the war is designed to be unloseable.'
-    );
-    const buttonText = getSpaceUIText('galaxyWelcome.close', 'Continue');
+    const title = t('ui.space.galaxyWelcome.title', null, 'Galactic Overview');
+    const text = t('ui.space.galaxyWelcome.body', null, '');
+    const buttonText = t('ui.space.galaxyWelcome.close', null, 'Continue');
     createSystemPopup(title, text, buttonText);
     galaxyManager.hasSeenWelcomePopup = true;
 }
@@ -434,38 +460,15 @@ function showTravelWarningPopup(warningData, onConfirm) {
 }
 
 function getActiveSpecializationProject() {
-    const bioworld = projectManager.projects.bioworld;
-    if (bioworld.isActive && !bioworld.isCompleted) {
-        return bioworld;
-    }
-    const foundry = projectManager.projects.foundryWorld;
-    if (foundry.isActive && !foundry.isCompleted) {
-        return foundry;
-    }
-    const manufacturing = projectManager.projects.manufacturingWorld;
-    if (manufacturing.isActive && !manufacturing.isCompleted) {
-        return manufacturing;
-    }
-    return null;
+    return getActiveWorldSpecializationProject();
 }
 
 function hasCompletedSpecializationProject() {
-    const bioworld = projectManager.projects.bioworld;
-    if (bioworld.isCompleted) {
-        return true;
-    }
-    const foundry = projectManager.projects.foundryWorld;
-    if (foundry.isCompleted) {
-        return true;
-    }
-    const manufacturing = projectManager.projects.manufacturingWorld;
-    if (manufacturing.isCompleted) {
-        return true;
-    }
-    if (followersManager.isCurrentWorldHolyConsecrated()) {
-        return true;
-    }
-    return false;
+    return hasCompletedWorldSpecialization();
+}
+
+function hasUnlockedSpecializationProject() {
+    return hasUnlockedWorldSpecializationProject();
 }
 
 function getSpecializationTravelWarningMessage(project = getActiveSpecializationProject()) {
@@ -481,6 +484,9 @@ function getSpecializationTravelWarningMessage(project = getActiveSpecialization
 
 function getNoSpecializationTravelWarningMessage() {
     if (!gameSettings.noSpecializationWarningOnTravel) {
+        return '';
+    }
+    if (!hasUnlockedSpecializationProject()) {
         return '';
     }
     if (getActiveSpecializationProject()) {
@@ -533,33 +539,38 @@ function handleCurrentWorldTravelWarnings(onConfirm) {
 
 function updateSpaceRandomVisibility() {
     if (!_spaceManagerInstance) return;
-    if (_spaceManagerInstance.randomTabEnabled) {
+    if (_spaceManagerInstance.randomTabEnabled && !isCurrentWorldSubtabDisabled('space-random')) {
         if (!spaceRandomTabVisible) {
             showSpaceRandomTab();
         }
-    } else if (spaceRandomTabVisible) {
+    } else {
         hideSpaceRandomTab();
+    }
+}
+
+function handleSpaceSubtabActivated(id) {
+    if (id === 'space-atlas' && typeof updateAtlasUI === 'function') {
+        updateAtlasUI({ force: true });
+    }
+    if (id === 'space-galaxy' && typeof updateGalaxyUI === 'function') {
+        updateGalaxyUI({ force: true });
+        maybeShowGalaxyWelcomePopup();
+    }
+    if (id === 'space-invasion') {
+        updateGalacticInvasionUI({ force: true });
+    }
+    if (id === 'space-story') {
+        markSpaceStoryAlertViewed();
     }
 }
 
 function initializeSpaceTabs() {
     if (typeof SubtabManager !== 'function') return;
     spaceSubtabManager = new SubtabManager('.space-subtab', '.space-subtab-content', true);
-    spaceSubtabManager.onActivate((id) => {
-        if (id === 'space-atlas' && typeof updateAtlasUI === 'function') {
-            updateAtlasUI({ force: true });
-        }
-        if (id === 'space-galaxy' && typeof updateGalaxyUI === 'function') {
-            updateGalaxyUI({ force: true });
-            maybeShowGalaxyWelcomePopup();
-        }
-        if (id === 'space-invasion') {
-            updateGalacticInvasionUI({ force: true });
-        }
-        if (id === 'space-story') {
-            markSpaceStoryAlertViewed();
-        }
-    });
+    if (!spaceSubtabActivationHandlerRegistered) {
+        registerSubtabActivationHandler('space-subtab', handleSpaceSubtabActivated);
+        spaceSubtabActivationHandlerRegistered = true;
+    }
 }
 
 function activateSpaceSubtab(subtabId) {
@@ -634,14 +645,18 @@ function initializeSpaceUI(spaceManager) {
     const statusContainer = document.getElementById('travel-status');
     spaceStatUniqueValueEl = document.getElementById('space-stat-unique-value');
     spaceStatEffectiveValueEl = document.getElementById('space-stat-effective-value');
+    spaceStatGalacticPopulationValueEl = document.getElementById('space-stat-galactic-population-value');
+    spaceStatGalacticCapacityValueEl = document.getElementById('space-stat-galactic-capacity-value');
     spaceStatUniqueTooltipEl = document.getElementById('space-stat-unique-tooltip');
     spaceStatEffectiveTooltipEl = document.getElementById('space-stat-effective-tooltip');
+    spaceStatGalacticPopulationTooltipEl = document.getElementById('space-stat-galactic-population-tooltip');
     spaceStatOneillCardEl = document.getElementById('space-stat-oneill-card');
     spaceStatOneillValueEl = document.getElementById('space-stat-oneill-value');
     spaceStatOneillTooltipEl = document.getElementById('space-stat-oneill-tooltip');
     spaceStatOneillRateEl = document.getElementById('space-stat-oneill-rate');
     spaceStatUniqueTooltipContentEl = attachDynamicInfoTooltip(spaceStatUniqueTooltipEl, '');
     spaceStatEffectiveTooltipContentEl = attachDynamicInfoTooltip(spaceStatEffectiveTooltipEl, '');
+    spaceStatGalacticPopulationTooltipContentEl = attachDynamicInfoTooltip(spaceStatGalacticPopulationTooltipEl, '');
     spaceStatOneillTooltipContentEl = attachDynamicInfoTooltip(spaceStatOneillTooltipEl, '');
     if (typeof setOneillStatsElements === 'function') {
         setOneillStatsElements({
@@ -739,7 +754,16 @@ function initializeSpaceUI(spaceManager) {
 function updateSpaceUI() {
     if (!_spaceManagerInstance) return; // Guard clause
     if (typeof updateArtificialUI === 'function') {
-        updateArtificialUI();
+        updateArtificialUI({ force: artificialManager?.forceUIRefresh === true });
+        artificialManager.uiDirty = false;
+        artificialManager.forceUIRefresh = false;
+    }
+    const atlasSubtabContent = document.getElementById('space-atlas');
+    const atlasActive = atlasSubtabContent?.classList?.contains('active') === true;
+    if ((atlasActive || atlasManager?.uiDirty) && typeof updateAtlasUI === 'function') {
+        updateAtlasUI({ force: atlasManager?.forceUIRefresh === true });
+        atlasManager.uiDirty = false;
+        atlasManager.forceUIRefresh = false;
     }
     updateSpaceRandomVisibility();
     updateCurrentWorldUI();
@@ -747,7 +771,9 @@ function updateSpaceUI() {
     updateSpaceAlertUI();
     const invasionSubtabContent = document.getElementById('space-invasion');
     if (invasionSubtabContent?.classList?.contains('active') && typeof updateGalacticInvasionUI === 'function') {
-        updateGalacticInvasionUI();
+        updateGalacticInvasionUI({ force: galaxyInvasionManager?.forceUIRefresh === true });
+        galaxyInvasionManager.uiDirty = false;
+        galaxyInvasionManager.forceUIRefresh = false;
     }
 
     const statusContainer = document.getElementById('travel-status');
@@ -808,8 +834,26 @@ function updateSpaceStatsUI() {
     }
     const uniqueCount = _spaceManagerInstance.getUnmodifiedTerraformedWorldCount();
     const effectiveCount = _spaceManagerInstance.getTerraformedPlanetCount();
+    const populationStats = _spaceManagerInstance.getTotalPopulationStats();
     spaceStatUniqueValueEl.textContent = formatGroupedNumber(uniqueCount, 2, 0);
     spaceStatEffectiveValueEl.textContent = formatGroupedNumber(effectiveCount, 2, 0);
+    if (spaceStatGalacticPopulationValueEl) {
+        spaceStatGalacticPopulationValueEl.textContent = formatNumber(populationStats.population, true, 2);
+    }
+    if (spaceStatGalacticCapacityValueEl) {
+        spaceStatGalacticCapacityValueEl.textContent = formatNumber(populationStats.populationCapacity, true, 2);
+    }
+    if (spaceStatGalacticPopulationTooltipEl) {
+        const populationTooltip = getSpaceUIText(
+            'stats.galacticPopulationTooltip',
+            'Galactic population grows at 0.5% / 365 per second, multiplied by (1 - population / capacity). Growth slows as population approaches galactic population capacity and stops at capacity.'
+        );
+        if (spaceStatGalacticPopulationTooltipContentEl) {
+            spaceStatGalacticPopulationTooltipContentEl.textContent = populationTooltip;
+        } else {
+            spaceStatGalacticPopulationTooltipEl.title = populationTooltip;
+        }
+    }
     const galaxyUnlocked = typeof galaxyManager !== 'undefined' && galaxyManager && galaxyManager.enabled;
     if (spaceStatUniqueTooltipEl) {
         const uniqueBase = getSpaceUIText(
@@ -876,16 +920,22 @@ function selectPlanet(planetKey, force, skipCurrentWorldWarnings){
         console.error('SpaceManager not initialized');
         return;
     }
-    if (!force && !skipCurrentWorldWarnings && handleCurrentWorldTravelWarnings(() => selectPlanet(planetKey, false, true))) {
+    const targetPlanetParameters = planetParameters[planetKey];
+    const targetSkipsCurrentWorldWarnings = targetPlanetParameters?.specialAttributes?.skipCurrentWorldTravelWarnings === true;
+    if (!force && !skipCurrentWorldWarnings && !targetSkipsCurrentWorldWarnings && handleCurrentWorldTravelWarnings(() => selectPlanet(planetKey, false, true))) {
         return;
     }
-    if(!force && planetParameters[planetKey]?.travelWarning){
-        showTravelWarningPopup(planetParameters[planetKey].travelWarning, () => selectPlanet(planetKey, true));
+    if(!force && targetPlanetParameters?.travelWarning){
+        showTravelWarningPopup(targetPlanetParameters.travelWarning, () => selectPlanet(planetKey, true));
         return;
     }
     const travelled = _spaceManagerInstance.travelToStoryPlanet(planetKey);
     if (!travelled) {
         return;
+    }
+    if (planetKey === 'olympus') {
+        gameCompleted = false;
+        reconstructJournalState(storyManager, projectManager);
     }
     resetCurrentWorldCache();
 

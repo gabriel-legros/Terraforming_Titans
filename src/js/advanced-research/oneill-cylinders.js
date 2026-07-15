@@ -81,6 +81,23 @@ function getWarpGateCapacityMultiplier(sector) {
   return multiplier;
 }
 
+function getEnabledWarpGateCapacityMultiplier(sector) {
+  let multiplier = 1;
+  try {
+    multiplier = warpGateNetworkManager?.getWarpGateMultiplier?.(sector, true);
+  } catch (error) {
+    multiplier = 1;
+  }
+  if (!Number.isFinite(multiplier) || multiplier <= 0) {
+    return 1;
+  }
+  return multiplier;
+}
+
+function isWarpGateCapacityEnabled() {
+  return !!(warpGateNetworkManager && warpGateNetworkManager.isBooleanFlagSet('warpGateFabrication'));
+}
+
 function getLocalizedOneillText(path, vars, fallback) {
   try {
     return t(path, vars, fallback);
@@ -111,18 +128,27 @@ function getOneillSectorCapMultiplier(space) {
   return Math.max(1, Math.min(10, 1 + bonus));
 }
 
-function getOneillCylinderCapacity(galaxy, space) {
+function getOneillCylinderCapacity(galaxy, space, options = {}) {
   const capacityPerSector = ONEILL_CAPACITY_PER_SECTOR * getOneillSectorCapMultiplier(space);
   const sectors = getUhfControlledSectors(galaxy);
   if (!sectors.length) {
     return capacityPerSector;
   }
-  if (!space?.isBooleanFlagSet?.(HYPERLANE_FLAG)) {
+  const hyperlaneEnabled = options.ignoreWorldDisabled === true
+    ? space?.booleanFlags?.has(HYPERLANE_FLAG)
+    : space?.isBooleanFlagSet?.(HYPERLANE_FLAG);
+  if (!hyperlaneEnabled) {
+    return sectors.length * capacityPerSector;
+  }
+  const warpGateEnabled = options.warpGateEnabled === undefined
+    ? isWarpGateCapacityEnabled()
+    : options.warpGateEnabled === true;
+  if (!warpGateEnabled) {
     return sectors.length * capacityPerSector;
   }
   let total = 0;
   sectors.forEach((sector) => {
-    total += capacityPerSector * getWarpGateCapacityMultiplier(sector);
+    total += capacityPerSector * getEnabledWarpGateCapacityMultiplier(sector);
   });
   return total > 0 ? total : capacityPerSector;
 }
@@ -234,8 +260,8 @@ function getOneillTooltipText(space, capacity) {
 function updateOneillCylinders(deltaTime, { effects, space, galaxy } = {}) {
   const { current, capacity, perSecond, next } = getOneillGrowthDelta(deltaTime, { space, galaxy });
   if (!(capacity > 0)) {
-    space?.setOneillCylinderCount?.(0, 0);
-    return 0;
+    space?.setOneillCylinderCount?.(current);
+    return space?.getOneillCylinderCount?.() ?? 0;
   }
   if (!(perSecond > 0)) {
     space?.setOneillCylinderCount?.(current);

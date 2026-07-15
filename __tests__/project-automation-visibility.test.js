@@ -59,21 +59,73 @@ function createSpaceStorageProject(selectedResources = []) {
     name: 'spaceStorage',
     displayName: 'Space Storage',
     category: 'mega',
+    shipTransferMode: 'store',
+    lastUniformTransferMode: 'store',
     selectedResources: selectedResources.map(entry => ({ ...entry })),
     resourceTransferModes: {},
+    resourceTransferWeights: {},
+    resourceImportLimitRespects: {},
     resourceCaps: {},
     resourceStrategicReserves: {},
+    waterWithdrawTarget: 'colony',
+    hydrogenTransferTarget: 'atmospheric',
     saveAutomationSettings() {
       return {
         selectedResources: this.selectedResources.map(entry => ({ ...entry })),
         resourceTransferModes: { ...this.resourceTransferModes },
+        resourceTransferWeights: { ...this.resourceTransferWeights },
+        resourceImportLimitRespects: { ...this.resourceImportLimitRespects },
         resourceCaps: { ...this.resourceCaps },
-        resourceStrategicReserves: { ...this.resourceStrategicReserves }
+        resourceStrategicReserves: { ...this.resourceStrategicReserves },
+        waterWithdrawTarget: this.waterWithdrawTarget,
+        hydrogenTransferTarget: this.hydrogenTransferTarget
       };
     },
     sanitizeTransferModes() {},
+    isResourceUnlocked() {
+      return true;
+    },
+    getResourceTransferMode(resourceKey) {
+      const storedMode = this.resourceTransferModes[resourceKey];
+      if (storedMode === 'store' || storedMode === 'withdraw') {
+        return storedMode;
+      }
+      if (this.shipTransferMode === 'store' || this.shipTransferMode === 'withdraw') {
+        return this.shipTransferMode;
+      }
+      return this.lastUniformTransferMode || 'store';
+    },
+    setShipTransferMode(mode) {
+      this.shipTransferMode = mode;
+      if (mode === 'store' || mode === 'withdraw') {
+        this.lastUniformTransferMode = mode;
+        this.resourceTransferModes = {};
+      }
+    },
+    updateShipTransferModeFromResources(resourceKeys) {
+      const uniformMode = this.getResourceTransferMode(resourceKeys[0]);
+      let mixed = false;
+      for (let i = 1; i < resourceKeys.length; i += 1) {
+        if (this.getResourceTransferMode(resourceKeys[i]) !== uniformMode) {
+          mixed = true;
+          break;
+        }
+      }
+      if (mixed) {
+        this.shipTransferMode = 'mixed';
+      } else {
+        this.setShipTransferMode(uniformMode);
+      }
+    },
     sanitizeResourceCaps() {},
-    sanitizeResourceStrategicReserves() {}
+    sanitizeResourceStrategicReserves() {},
+    setRespectImportProjectLimits(resourceKey, enabled) {
+      if (enabled) {
+        this.resourceImportLimitRespects[resourceKey] = true;
+      } else {
+        delete this.resourceImportLimitRespects[resourceKey];
+      }
+    }
   };
 }
 
@@ -174,7 +226,8 @@ describe('Project automation visibility', () => {
     expect(preset.projects['spaceStorageSingleResource:liquidWater'].operations).toMatchObject({
       spaceStorageSingleResourceKey: 'liquidWater',
       category: 'surface',
-      selected: false
+      selected: false,
+      waterWithdrawTarget: 'colony'
     });
   });
 
@@ -204,6 +257,7 @@ describe('Project automation visibility', () => {
     automation.applyPresetOnce(1);
 
     expect(spaceStorage.resourceTransferModes.liquidWater).toBe('withdraw');
+    expect(spaceStorage.shipTransferMode).toBe('mixed');
     expect(spaceStorage.selectedResources).toEqual([
       { category: 'surface', resource: 'liquidWater' }
     ]);
@@ -212,5 +266,85 @@ describe('Project automation visibility', () => {
     automation.applyPresetOnce(1);
 
     expect(spaceStorage.selectedResources).toEqual([]);
+  });
+
+  it('ignores empty Space Storage cap and reserve artifacts in single-resource presets', () => {
+    const automation = new ProjectAutomation();
+    const spaceStorage = createSpaceStorageProject();
+    setGlobal('projectManager', createSpaceStorageProjectManager(spaceStorage), originalGlobals);
+    const biomassCap = { mode: 'remaining', value: 0 };
+    spaceStorage.resourceCaps.biomass = { ...biomassCap };
+    automation.presets = [{
+      id: 1,
+      name: 'Dump Life',
+      includeExpansion: true,
+      includeOperations: true,
+      scopeAll: false,
+      projects: {
+        'spaceStorageSingleResource:biomass': {
+          operations: {
+            spaceStorageSingleResourceKey: 'biomass',
+            mode: 'withdraw',
+            selected: true,
+            category: 'surface',
+            resourceStrategicReserves: {
+              biomass: {
+                scope: {}
+              }
+            },
+            resourceCaps: {
+              biomass: {}
+            },
+            transferWeight: 1
+          }
+        }
+      }
+    }];
+
+    automation.applyPresetOnce(1);
+
+    expect(spaceStorage.resourceCaps.biomass).toEqual(biomassCap);
+    expect(spaceStorage.resourceTransferModes.biomass).toBe('withdraw');
+    expect(spaceStorage.selectedResources).toEqual([
+      { category: 'surface', resource: 'biomass' }
+    ]);
+  });
+
+  it('applies Space Storage single-resource water import target and import limit settings', () => {
+    const automation = new ProjectAutomation();
+    const spaceStorage = createSpaceStorageProject();
+    setGlobal('projectManager', createSpaceStorageProjectManager(spaceStorage), originalGlobals);
+    automation.presets = [{
+      id: 1,
+      name: 'Water single resource',
+      includeExpansion: true,
+      includeOperations: true,
+      scopeAll: false,
+      projects: {
+        'spaceStorageSingleResource:liquidWater': {
+          operations: {
+            spaceStorageSingleResourceKey: 'liquidWater',
+            resourceImportLimitRespects: {
+              liquidWater: false
+            },
+            transferWeight: 1000,
+            mode: null,
+            selected: true,
+            category: 'surface',
+            waterWithdrawTarget: 'surface'
+          }
+        }
+      }
+    }];
+
+    spaceStorage.resourceImportLimitRespects.liquidWater = true;
+    automation.applyPresetOnce(1);
+
+    expect(spaceStorage.waterWithdrawTarget).toBe('surface');
+    expect(spaceStorage.resourceImportLimitRespects.liquidWater).toBeUndefined();
+    expect(spaceStorage.resourceTransferWeights.liquidWater).toBe(1000);
+    expect(spaceStorage.selectedResources).toEqual([
+      { category: 'surface', resource: 'liquidWater' }
+    ]);
   });
 });

@@ -1,6 +1,10 @@
 
 applyLanguageToGameData();
 
+var hopeCreditsImagePath = 'assets/images/hope_credits.webp';
+var preloadedHopeCreditsImage = new Image();
+preloadedHopeCreditsImage.src = hopeCreditsImagePath;
+
 let defaultPlanet = 'mars';
 let tabManager;
 let currentPlanetParameters = getPlanetParameters(defaultPlanet);
@@ -55,10 +59,53 @@ let suppressPlanetVisualizerRuntime = false;
 let planetVisualizerRuntimeFailed = false;
 let planetVisualizerRuntimeFailureReason = '';
 
+const DIFFICULTY_SETTING_DEFAULTS = {
+  disableDayNightCycle: false,
+  earlyAdvancedOversight: false,
+  disableFusionConsumptionScaling: false,
+  disableSpeedControls: false,
+  immigrationPool: false,
+  unfulfilledMaintenancePenalties: false,
+  factoryHeating: false,
+  realisticFactoryEnergyConsumption: false,
+  infinitePatience: false,
+  liftersStrippingCap: false,
+  orbitalCap: false,
+  allowSpaceStorageBiomassWithdrawOnNonHumanDominion: false,
+  noOverpopulationCylinders: false,
+  buildingCostMultiplier: 1,
+  researchCostMultiplier: 1,
+  workerRequirementMultiplier: 1,
+  projectDurationMultiplier: 1,
+  megaProjectDurationMultiplier: 1,
+  megaProjectCostMultiplier: 1,
+  popGrowthMultiplier: 1,
+  lifeGrowthMultiplier: 1,
+  maintenanceCostMultiplier: 1,
+  spaceshipEnergyBeforeSpaceElevatorMultiplier: 1,
+  spaceshipEnergyAfterSpaceElevatorMultiplier: 1,
+  advancedResearchMultiplier: 1,
+  skillPointsGainMultiplier: 1,
+  solisPointsGainMultiplier: 1,
+  artifactsGainMultiplier: 1,
+  galaxyFleetCapacityMultiplier: 1,
+  galaxyThreatScalingMultiplier: 1,
+  invasionMultiplier: 1,
+  artificialWorldConstructionTimeMultiplier: 1,
+  rwgRewardsCap: null,
+  difficultySettingsLocked: false,
+  difficultySettingsLockedWorldKey: '',
+  difficultySettingsLockedWorldName: '',
+};
+
 let gameSettings = {
   autosaveIntervalSeconds: 300,
+  framerate: 30,
+  uiScale: 1,
   useCelsius: false,
-  darkMode: false,
+  colorblindPalette: 'redGreen',
+  themeMode: 'darkBlue',
+  darkMode: true,
   keepTabRunningAudio: false,
   enableTerraformingSubsteps: true,
   hideCompletedResearch: false,
@@ -67,11 +114,11 @@ let gameSettings = {
   silenceSolisAlert: false,
   silenceMilestoneAlert: false,
   silenceUnlockAlert: false,
-  disableDayNightCycle: false,
   preserveProjectAutoStart: false,
   preserveProjectSettingsOnTravel: false,
   autobuildAlsoSetsActive: true,
   colonyUpgradeUnchecksAutobuild: false,
+  autobuildIgnoreAutoUpgradeColonies: false,
   roundBuildingConstruction: false,
   planetVisualizerDebugEnabled: false,
   keepHiddenStructuresOnTravel: false,
@@ -80,10 +127,16 @@ let gameSettings = {
   alwaysDisableAutomationOnLoad: false,
   showSpaceStorageResources: false,
   showSpaceStorageInDefaultPanel: false,
+  showNetResourceRateWithAutobuild: false,
+  highlightFullResourceCaps: false,
+  resourceDepletionWarningSeconds: 120,
   simplifyGoldenAsteroid: false,
   suppressFaith: false,
+  ...DIFFICULTY_SETTING_DEFAULTS,
   scientificNotationThreshold: 1e30,
   pauseKeybind: 'Space',
+  dialogueSkipKeybind: 'NumpadAdd',
+  fullscreenKeybind: 'F11',
 };
 
 Object.defineProperty(globalThis, 'gameSettings', {
@@ -99,21 +152,81 @@ Object.defineProperty(globalThis, 'gameSettings', {
 });
 
 globalThis.planetVisualizerDebugEnabled = gameSettings.planetVisualizerDebugEnabled;
+
+const colorblindPalettes = {
+  redGreen: {
+    success: '#4caf50',
+    failure: 'red',
+  },
+  blueOrange: {
+    success: '#0072b2',
+    failure: '#e69f00',
+  },
+  purpleYellow: {
+    success: '#7b3294',
+    failure: '#fdb863',
+  },
+  cyanMagenta: {
+    success: '#00bfc4',
+    failure: '#cc79a7',
+  },
+  grayscale: {
+    success: '#111111',
+    failure: '#777777',
+  },
+};
+
+function getColorblindPaletteKey() {
+  return colorblindPalettes[gameSettings.colorblindPalette]
+    ? gameSettings.colorblindPalette
+    : 'redGreen';
+}
+
+function getStatusColor(status) {
+  const paletteKey = getColorblindPaletteKey();
+  const palette = colorblindPalettes[paletteKey];
+  if (status === 'success' && paletteKey === 'redGreen' && gameSettings.themeMode === 'oledBlack') {
+    return '#6AA84F';
+  }
+  if (status === 'failure' && paletteKey === 'redGreen' && gameSettings.themeMode === 'oledBlack') {
+    return '#ef7070';
+  }
+  return status === 'success' ? palette.success : palette.failure;
+}
+
+function getStatusProgressBackground(progressPercent) {
+  return `linear-gradient(to right, ${getStatusColor('success')} ${progressPercent}%, #ccc ${progressPercent}%)`;
+}
+
+function applyColorblindPaletteSettings() {
+  const root = document.documentElement;
+  root.style.setProperty('--status-success-color', getStatusColor('success'));
+  root.style.setProperty('--status-failure-color', getStatusColor('failure'));
+}
+
+applyColorblindPaletteSettings();
 let globalEffects = new EffectableEntity({description : 'Manages global effects'});
 let skillManager;
 let solisManager;
 let warpGateCommand;
 let patienceManager;
+let rwgManager;
 let galaxyManager;
 let galaxyInvasionManager;
 let nanotechManager;
 let followersManager;
+let milestonesManager;
+let earthManager;
+let achievementManager;
 let playTimeSeconds = 0;
 let totalPlayTimeSeconds = 0;
 let realPlayTimeSeconds = 0;
 let totalRealPlayTimeSeconds = 0;
 let fastestTerraformDays = null;
 let fastestTerraformRealSeconds = null;
+let birchWorldTerraformTimeSeconds = null;
+let birchWorldTerraformRealTimeSeconds = null;
+let gameCompleted = false;
 let gameSpeed = 1;
 
 Object.defineProperty(globalThis, 'galaxyManager', {

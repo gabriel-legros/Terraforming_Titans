@@ -28,6 +28,9 @@ class ScriptAutomation {
     this.maxLinesPerTick = 25;
     this.maxActionsPerTick = 25;
     this.registry = new ScriptVariableRegistry();
+    this.variableValues = {};
+    this.scriptVariableValues = {};
+    this.resetVariables();
     this.ensureDefaultScript();
   }
 
@@ -54,7 +57,7 @@ class ScriptAutomation {
     if (this.scripts.length > 0) return;
     const script = {
       id: this.nextScriptId++,
-      name: 'Default Script',
+      name: t('ui.hope.automationCards.defaultScriptName', {}, 'Default Script'),
       lines: [this.createLine('if')]
     };
     this.scripts.push(script);
@@ -109,6 +112,45 @@ class ScriptAutomation {
         }
       ]
     };
+  }
+
+  resetVariables() {
+    this.variableValues = {};
+    this.scriptVariableValues = {};
+    for (let index = 0; index < 26; index += 1) {
+      const id = String.fromCharCode(65 + index);
+      this.variableValues[id] = 0;
+      this.scriptVariableValues[id] = null;
+    }
+  }
+
+  getVariableValue(variableId) {
+    const id = this.normalizeVariableId(variableId);
+    return this.registry.toNumber(this.variableValues[id]);
+  }
+
+  setVariableValue(variableId, value) {
+    const id = this.normalizeVariableId(variableId);
+    this.variableValues[id] = this.registry.toNumber(value);
+    return true;
+  }
+
+  getScriptVariableValue(variableId) {
+    const id = this.normalizeVariableId(variableId);
+    const scriptId = Number(this.scriptVariableValues[id]);
+    return this.scripts.find(script => script.id === scriptId) ? scriptId : null;
+  }
+
+  setScriptVariableValue(variableId, scriptId) {
+    const id = this.normalizeVariableId(variableId);
+    const numericId = Number(scriptId);
+    this.scriptVariableValues[id] = this.scripts.find(script => script.id === numericId) ? numericId : null;
+    return true;
+  }
+
+  normalizeVariableId(variableId) {
+    const id = String(variableId || 'A').toUpperCase();
+    return /^[A-Z]$/.test(id) ? id : 'A';
   }
 
   getSelectedScript() {
@@ -180,6 +222,9 @@ class ScriptAutomation {
       this.nextTravelScriptId = null;
       this.nextTravelPersistent = false;
     }
+    for (const id in this.scriptVariableValues) {
+      if (Number(this.scriptVariableValues[id]) === numericId) this.scriptVariableValues[id] = null;
+    }
     return true;
   }
 
@@ -218,6 +263,94 @@ class ScriptAutomation {
       }
     }
     return changed;
+  }
+
+  getPresetUsageReferences(automationType, presetId) {
+    const numericPresetId = Number(presetId);
+    const target = this.getAutomationTarget(automationType);
+    const references = [];
+    if (!automationType || !numericPresetId || !target) {
+      return references;
+    }
+
+    const matchingCombinationNames = {};
+    if (Array.isArray(target.combinations)) {
+      target.combinations.forEach(combination => {
+        const assignments = Array.isArray(combination.assignments) ? combination.assignments : [];
+        if (assignments.find(entry => Number(entry.presetId) === numericPresetId && entry.enabled !== false)) {
+          matchingCombinationNames[combination.id] = combination.name || `${target.combinationLabel || 'Combination'} ${combination.id}`;
+        }
+      });
+    }
+
+    for (let scriptIndex = 0; scriptIndex < this.scripts.length; scriptIndex += 1) {
+      const script = this.scripts[scriptIndex];
+      const lines = Array.isArray(script.lines) ? script.lines : [];
+      for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+        const line = lines[lineIndex];
+        const actions = Array.isArray(line.actions) ? line.actions : [];
+        for (let actionIndex = 0; actionIndex < actions.length; actionIndex += 1) {
+          const action = actions[actionIndex];
+          if (action.automationType !== automationType) {
+            continue;
+          }
+          if (action.kind === 'applyPreset' && Number(action.presetId) === numericPresetId) {
+            references.push({
+              scriptId: script.id,
+              scriptName: script.name || `Script ${script.id}`,
+              lineNumber: lineIndex + 1,
+              lineName: line.name || '',
+              viaCombinationName: ''
+            });
+          } else if (action.kind === 'applyCombination') {
+            const combinationName = matchingCombinationNames[Number(action.combinationId)] || '';
+            if (combinationName) {
+              references.push({
+                scriptId: script.id,
+                scriptName: script.name || `Script ${script.id}`,
+                lineNumber: lineIndex + 1,
+                lineName: line.name || '',
+                viaCombinationName: combinationName
+              });
+            }
+          }
+        }
+      }
+    }
+    return references;
+  }
+
+  getCombinationUsageReferences(automationType, combinationId) {
+    const numericCombinationId = Number(combinationId);
+    const target = this.getAutomationTarget(automationType);
+    const references = [];
+    if (!automationType || !numericCombinationId || !target) {
+      return references;
+    }
+
+    for (let scriptIndex = 0; scriptIndex < this.scripts.length; scriptIndex += 1) {
+      const script = this.scripts[scriptIndex];
+      const lines = Array.isArray(script.lines) ? script.lines : [];
+      for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+        const line = lines[lineIndex];
+        const actions = Array.isArray(line.actions) ? line.actions : [];
+        for (let actionIndex = 0; actionIndex < actions.length; actionIndex += 1) {
+          const action = actions[actionIndex];
+          if (action.automationType !== automationType) {
+            continue;
+          }
+          if (action.kind === 'applyCombination' && Number(action.combinationId) === numericCombinationId) {
+            references.push({
+              scriptId: script.id,
+              scriptName: script.name || `Script ${script.id}`,
+              lineNumber: lineIndex + 1,
+              lineName: line.name || ''
+            });
+          }
+        }
+      }
+    }
+    return references;
   }
 
   runScript(id) {
@@ -260,7 +393,7 @@ class ScriptAutomation {
   runTravelScript(scriptId, statusText) {
     const script = this.scripts.find(item => item.id === Number(scriptId));
     if (!script) return false;
-    this.enabled = true;
+    this.enable();
     this.selectedScriptId = script.id;
     this.runScript(script.id);
     this.applyGoToRowOneOnTravel(script);
@@ -496,6 +629,11 @@ class ScriptAutomation {
     const maxLines = forceStep ? 1 : this.maxLinesPerTick;
 
     while (linesEvaluated < maxLines) {
+      if (!forceStep && actionsUsed >= this.maxActionsPerTick) {
+        this.haltedReason = 'actionLimit';
+        this.lastStatus = 'Action limit reached';
+        break;
+      }
       const line = this.getCurrentLine(script);
       if (!line) {
         if (this.autoRestartOnCompletion) {
@@ -525,7 +663,7 @@ class ScriptAutomation {
           script,
           { actionsUsed, gotoUsed },
           this.pcActionIndex,
-          forceStep ? 1 : this.maxActionsPerTick,
+          forceStep ? 1 : Infinity,
           forceStep
         );
         actionsUsed = actionResult.actionsUsed;
@@ -559,7 +697,7 @@ class ScriptAutomation {
             script,
             { actionsUsed, gotoUsed },
             this.pcActionIndex,
-            forceStep ? 1 : this.maxActionsPerTick,
+            forceStep ? 1 : Infinity,
             forceStep
           );
           actionsUsed = actionResult.actionsUsed;
@@ -624,7 +762,7 @@ class ScriptAutomation {
           script,
           { actionsUsed, gotoUsed },
           this.pcActionIndex,
-          forceStep ? 1 : this.maxActionsPerTick,
+          forceStep ? 1 : Infinity,
           forceStep
         );
         actionsUsed = actionResult.actionsUsed;
@@ -781,7 +919,8 @@ class ScriptAutomation {
       }
       if (action.kind === 'gotoScript') {
         if (gotoUsed) continue;
-        const targetScript = this.scripts.find(item => item.id === Number(action.targetScriptId));
+        const targetScriptId = this.resolveGotoScriptTargetId(action);
+        const targetScript = this.scripts.find(item => item.id === Number(targetScriptId));
         const targetLine = targetScript?.lines?.[0] || null;
         if (targetScript && targetLine) {
           this.activeScriptId = targetScript.id;
@@ -793,8 +932,12 @@ class ScriptAutomation {
           summaries.push(`GOTO ${targetScript.name || `Script ${targetScript.id}`} #1`);
         }
         actionsUsed += 1;
-        nextActionIndex = 0;
-        break;
+        if (gotoTriggered) {
+          nextActionIndex = 0;
+          break;
+        }
+        nextActionIndex = index + 1;
+        continue;
       }
 
       if (this.applyAutomationAction(action)) {
@@ -812,6 +955,9 @@ class ScriptAutomation {
 
   applyAutomationAction(action) {
     if (!action || action.constructor !== Object) return false;
+    if (action.kind === 'setVariable') {
+      return this.applySetVariableAction(action);
+    }
     if (action.kind === 'toggleAutomation') {
       return this.applyAutomationToggleAction(action);
     }
@@ -822,7 +968,8 @@ class ScriptAutomation {
     if (!target) return false;
     if (action.kind === 'applyPreset' && action.presetId) {
       const presetId = Number(action.presetId);
-      if (target.getPresetById && !target.getPresetById(presetId)) {
+      const preset = target.getPresetById ? target.getPresetById(presetId) : null;
+      if (target.getPresetById && !preset) {
         this.lastError = t(
           'ui.automation.cards.scriptMissingPresetError',
           { type: action.automationType, id: presetId },
@@ -830,7 +977,28 @@ class ScriptAutomation {
         );
         return false;
       }
-      target.applyPresetOnce(presetId);
+      let parameterValue = null;
+      if (target.isParameterizedPreset && target.isParameterizedPreset(preset)) {
+        const parameterInfo = target.getPresetParameterInfo(preset);
+        if (!parameterInfo.valid) {
+          this.lastError = t(
+            'ui.hope.automationCards.scriptInvalidParameterizedPresetError',
+            { type: action.automationType, id: presetId },
+            `Script error: invalid parametrized ${action.automationType} preset #${presetId}`
+          );
+          return false;
+        }
+        parameterValue = this.getVariableValue(action.parameterVariableId);
+      }
+      if ((action.automationType === 'ship' || action.automationType === 'life') && !target.isToggledOn()) {
+        this.lastError = t(
+          'ui.automation.cards.scriptAutomationDisabledError',
+          { type: action.automationType },
+          `Script error: ${action.automationType} automation is disabled`
+        );
+        return false;
+      }
+      target.applyPresetOnce(presetId, parameterValue);
       return true;
     }
     if (action.kind === 'applyCombination' && action.combinationId && target.applyCombinationPresets) {
@@ -838,6 +1006,23 @@ class ScriptAutomation {
       return true;
     }
     return false;
+  }
+
+  applySetVariableAction(action) {
+    if (action.variableType === 'script') {
+      return this.setScriptVariableValue(action.variableId, action.targetScriptId);
+    }
+    const expression = action.valueExpression && action.valueExpression.constructor === Object
+      ? action.valueExpression
+      : this.createDefaultExpression();
+    return this.setVariableValue(action.variableId, this.evaluateExpression(expression));
+  }
+
+  resolveGotoScriptTargetId(action) {
+    if (action.scriptTargetMode === 'variable') {
+      return this.getScriptVariableValue(action.scriptVariableId);
+    }
+    return action.targetScriptId;
   }
 
   getAutomationTarget(type) {
@@ -925,9 +1110,20 @@ class ScriptAutomation {
       const next = this.registry.resolveValue(term.ref);
       if (term.op === 'subtract') value -= next;
       else if (term.op === 'multiply') value *= next;
+      else if (term.op === 'safeDivide') {
+        const quotient = next === 0 ? 0 : value / next;
+        value = Number.isFinite(quotient) ? quotient : 0;
+      }
       else value += next;
     }
     return value;
+  }
+
+  getExpressionOperatorLabel(op) {
+    if (op === 'subtract') return t('ui.hope.automationCards.scriptOperatorSubtract', {}, 'SUBTRACT');
+    if (op === 'multiply') return t('ui.hope.automationCards.scriptOperatorMultiply', {}, 'MULTIPLY');
+    if (op === 'safeDivide') return t('ui.hope.automationCards.scriptOperatorSafeDivide', {}, 'SAFE DIVIDE');
+    return t('ui.hope.automationCards.scriptOperatorAdd', {}, 'ADD');
   }
 
   describeCondition(condition) {
@@ -944,15 +1140,22 @@ class ScriptAutomation {
     const terms = Array.isArray(expression?.terms) ? expression.terms : [];
     if (terms.length === 0) return '0';
     return terms.map((term, index) => {
-      const op = index === 0 ? '' : ` ${String(term.op || 'add').toUpperCase()} `;
+      const op = index === 0 ? '' : ` ${this.getExpressionOperatorLabel(term.op || 'add')} `;
       return `${op}${this.registry.describeReference(term.ref)}`;
     }).join('');
   }
 
   describeAction(action) {
     if (action.kind === 'sleep') return `Sleep ${formatNumber(this.registry.toNumber(action.durationMs), false, 0)} ms`;
+    if (action.kind === 'setVariable') {
+      if (action.variableType === 'script') {
+        const targetScript = this.scripts.find(item => item.id === Number(action.targetScriptId));
+        return `Set Script ${this.normalizeVariableId(action.variableId)} = ${targetScript?.name || targetScript?.id || 'NULL'}`;
+      }
+      return `Set ${this.normalizeVariableId(action.variableId)} = ${this.describeExpression(action.valueExpression)}`;
+    }
     if (action.kind === 'gotoScript') {
-      const targetScript = this.scripts.find(item => item.id === Number(action.targetScriptId));
+      const targetScript = this.scripts.find(item => item.id === Number(this.resolveGotoScriptTargetId(action)));
       if (!targetScript) return 'GOTO Script ?';
       return `GOTO ${targetScript.name || `Script ${targetScript.id}`} #1`;
     }
@@ -966,7 +1169,10 @@ class ScriptAutomation {
     if (!target) return 'Action';
     if (action.kind === 'applyPreset') {
       const preset = target.getPresetById?.(Number(action.presetId));
-      return `Apply ${action.automationType} preset ${preset?.name || action.presetId}`;
+      const parameterText = preset && target.isParameterizedPreset && target.isParameterizedPreset(preset)
+        ? ` with ${this.normalizeVariableId(action.parameterVariableId)}`
+        : '';
+      return `Apply ${action.automationType} preset ${preset?.name || action.presetId}${parameterText}`;
     }
     if (action.kind === 'applyCombination') {
       const combo = target.getCombinationById?.(Number(action.combinationId));
@@ -990,6 +1196,8 @@ class ScriptAutomation {
       nextTravelScriptId: this.nextTravelScriptId,
       nextTravelPersistent: this.nextTravelPersistent,
       sleepRemainingMs: this.sleepRemainingMs,
+      variableValues: { ...this.variableValues },
+      scriptVariableValues: { ...this.scriptVariableValues },
       scripts: this.deepClone(this.scripts),
       selectedScriptId: this.selectedScriptId,
       activeScriptId: this.activeScriptId,
@@ -1013,7 +1221,18 @@ class ScriptAutomation {
     this.nextTravelScriptId = data.nextTravelScriptId ? Number(data.nextTravelScriptId) : null;
     this.nextTravelPersistent = data.nextTravelPersistent === true && !!this.nextTravelScriptId;
     this.sleepRemainingMs = this.registry.toNumber(data.sleepRemainingMs);
+    this.resetVariables();
+    if (data.variableValues && data.variableValues.constructor === Object) {
+      for (const id in data.variableValues) {
+        this.setVariableValue(id, data.variableValues[id]);
+      }
+    }
     this.scripts = Array.isArray(data.scripts) ? this.normalizeScripts(data.scripts) : [];
+    if (data.scriptVariableValues && data.scriptVariableValues.constructor === Object) {
+      for (const id in data.scriptVariableValues) {
+        this.setScriptVariableValue(id, data.scriptVariableValues[id]);
+      }
+    }
     this.selectedScriptId = data.selectedScriptId ? Number(data.selectedScriptId) : null;
     this.activeScriptId = data.activeScriptId ? Number(data.activeScriptId) : null;
     this.pcLineId = data.pcLineId ? Number(data.pcLineId) : null;
@@ -1056,8 +1275,29 @@ class ScriptAutomation {
       enabled: line.enabled !== false,
       expanded: line.expanded !== false,
       condition: line.condition?.constructor === Object ? line.condition : this.createDefaultCondition(),
-      actions: Array.isArray(line.actions) ? line.actions : []
+      actions: Array.isArray(line.actions) ? line.actions.map(action => this.normalizeAction(action)) : []
     };
+  }
+
+  normalizeAction(action) {
+    if (!action || action.constructor !== Object) return { kind: 'applyPreset', automationType: 'buildings', presetId: null };
+    const normalized = this.deepClone(action);
+    if (normalized.kind === 'setVariable') {
+      normalized.variableType = normalized.variableType === 'script' ? 'script' : 'number';
+      normalized.variableId = this.normalizeVariableId(normalized.variableId);
+      if (normalized.variableType === 'script') {
+        normalized.targetScriptId = normalized.targetScriptId ? Number(normalized.targetScriptId) : null;
+      } else if (!normalized.valueExpression || normalized.valueExpression.constructor !== Object) {
+        normalized.valueExpression = this.createDefaultExpression();
+      }
+    } else if (normalized.kind === 'gotoScript') {
+      normalized.scriptTargetMode = normalized.scriptTargetMode === 'variable' ? 'variable' : 'script';
+      normalized.scriptVariableId = this.normalizeVariableId(normalized.scriptVariableId);
+      normalized.targetScriptId = normalized.targetScriptId ? Number(normalized.targetScriptId) : null;
+    } else if (normalized.kind === 'applyPreset') {
+      normalized.parameterVariableId = this.normalizeVariableId(normalized.parameterVariableId);
+    }
+    return normalized;
   }
 
   normalizeLinkedElseLines(script) {
@@ -1097,5 +1337,47 @@ class ScriptAutomation {
     const clone = {};
     for (const key in value) clone[key] = this.deepClone(value[key]);
     return clone;
+  }
+
+  exportScript(scriptId) {
+    const script = this.scripts.find(item => item.id === Number(scriptId));
+    if (!script) {
+      return null;
+    }
+    return this.deepClone(script);
+  }
+
+  importScript(scriptData = {}) {
+    const id = this.nextScriptId++;
+    const rawScript = {
+      id,
+      name: scriptData.name || `Script ${id}`,
+      lines: Array.isArray(scriptData.lines) && scriptData.lines.length
+        ? scriptData.lines.map(line => {
+            const oldId = line.id;
+            const newId = this.nextLineId++;
+            return { ...this.deepClone(line), id: newId, _oldId: oldId };
+          })
+        : [this.createLine('if')]
+    };
+    const lineIdMap = {};
+    rawScript.lines.forEach(line => {
+      if (line._oldId) {
+        lineIdMap[line._oldId] = line.id;
+      }
+      delete line._oldId;
+    });
+    rawScript.lines.forEach(line => {
+      line.linkedIfLineId = line.linkedIfLineId ? lineIdMap[line.linkedIfLineId] || null : null;
+    });
+    const normalizedScript = {
+      id: rawScript.id,
+      name: rawScript.name,
+      lines: rawScript.lines.map(line => this.normalizeLine(line))
+    };
+    this.normalizeLinkedElseLines(normalizedScript);
+    this.scripts.push(normalizedScript);
+    this.selectedScriptId = normalizedScript.id;
+    return normalizedScript.id;
   }
 }

@@ -61,10 +61,20 @@ try {
   AutoTravelAutomationRef = AutoTravelAutomationRef || require('./auto-travel-automation.js').AutoTravelAutomation;
 } catch (error) {}
 
+let AutomationEncounterManagerRef;
+try {
+  AutomationEncounterManagerRef = AutomationEncounterManager;
+} catch (error) {}
+try {
+  AutomationEncounterManagerRef = AutomationEncounterManagerRef
+    || require('./automation-encounter-manager.js').AutomationEncounterManager;
+} catch (error) {}
+
 class AutomationManager extends EffectableEntity {
   constructor() {
     super({ description: 'Automation Manager' });
     this.enabled = false;
+    this.uiDirty = true;
     this.automationCardOrder = [
       'autoTravel',
       'scripts',
@@ -85,12 +95,13 @@ class AutomationManager extends EffectableEntity {
       automationColony: false,
       automationScripts: false
     };
-    this.spaceshipAutomation = SpaceshipAutomationRef ? new SpaceshipAutomationRef() : null;
+    this.encounteredTargets = new AutomationEncounterManagerRef();
+    this.spaceshipAutomation = SpaceshipAutomationRef ? new SpaceshipAutomationRef(this.encounteredTargets) : null;
     this.lifeAutomation = LifeAutomationRef ? new LifeAutomationRef() : null;
-    this.buildingsAutomation = BuildingAutomationRef ? new BuildingAutomationRef() : null;
-    this.projectsAutomation = ProjectAutomationRef ? new ProjectAutomationRef() : null;
-    this.colonyAutomation = ColonyAutomationRef ? new ColonyAutomationRef() : null;
-    this.researchAutomation = ResearchAutomationRef ? new ResearchAutomationRef() : null;
+    this.buildingsAutomation = BuildingAutomationRef ? new BuildingAutomationRef(this.encounteredTargets) : null;
+    this.projectsAutomation = ProjectAutomationRef ? new ProjectAutomationRef(this.encounteredTargets) : null;
+    this.colonyAutomation = ColonyAutomationRef ? new ColonyAutomationRef(this.encounteredTargets) : null;
+    this.researchAutomation = ResearchAutomationRef ? new ResearchAutomationRef(this.encounteredTargets) : null;
     this.scriptAutomation = ScriptAutomationRef ? new ScriptAutomationRef() : null;
     this.autoTravelAutomation = AutoTravelAutomationRef ? new AutoTravelAutomationRef() : null;
   }
@@ -173,8 +184,16 @@ class AutomationManager extends EffectableEntity {
   }
 
   enable() {
+    if (isCurrentWorldManagerDisabled('automationManager')) {
+      return;
+    }
     this.enabled = true;
-    this.updateUI();
+    this.markUIDirty();
+  }
+
+  markUIDirty() {
+    this.uiDirty = true;
+    queueAutomationUIRefresh();
   }
 
   applyBooleanFlag(effect) {
@@ -203,10 +222,7 @@ class AutomationManager extends EffectableEntity {
 
   setFeature(flagId, value) {
     this.features[flagId] = !!value;
-    if (typeof queueAutomationUIRefresh === 'function') {
-      queueAutomationUIRefresh();
-    }
-    this.updateUI();
+    this.markUIDirty();
   }
 
   hasFeature(flagId) {
@@ -214,14 +230,16 @@ class AutomationManager extends EffectableEntity {
   }
 
   updateUI() {
-    if (typeof queueAutomationUIRefresh === 'function') {
-      queueAutomationUIRefresh();
-    }
+    this.uiDirty = false;
+    queueAutomationUIRefresh();
     updateAutomationVisibility();
     updateAutomationUI();
   }
 
   reapplyEffects() {
+    if (isCurrentWorldManagerDisabled('automationManager')) {
+      return;
+    }
     this.setFeature('automationAutoTravel', this.isBooleanFlagSet('automationAutoTravel'));
     this.setFeature('automationShipAssignment', this.isBooleanFlagSet('automationShipAssignment'));
     this.setFeature('automationLifeDesign', this.isBooleanFlagSet('automationLifeDesign'));
@@ -239,16 +257,26 @@ class AutomationManager extends EffectableEntity {
     if (this.projectsAutomation) {
       this.projectsAutomation.recordCurrentlyAvailableProjects();
     }
+    if (this.colonyAutomation) {
+      this.colonyAutomation.recordCurrentlyAvailableTargets();
+    }
+    if (this.researchAutomation) {
+      this.researchAutomation.recordCurrentlyAvailableResearches();
+    }
     if (this.spaceshipAutomation) {
       this.spaceshipAutomation.recordCurrentlyAvailableTargets();
       this.spaceshipAutomation.unlockManualControls();
     }
     if (this.enabled) {
-      this.updateUI();
+      this.markUIDirty();
     }
   }
 
   applyTravelCombinationPresets() {
+    if (this.scriptAutomation) {
+      this.scriptAutomation.resetVariables();
+    }
+
     const travelAutomations = [
       this.buildingsAutomation,
       this.projectsAutomation,
@@ -300,10 +328,7 @@ class AutomationManager extends EffectableEntity {
 
     if (appliedTravelAutomation) {
       queueAutomationUIRefresh();
-      updateAutomationUI();
-      if (typeof updateResearchUI === 'function') {
-        updateResearchUI();
-      }
+      this.markUIDirty();
     }
 
     return appliedTravelAutomation;
@@ -315,6 +340,7 @@ class AutomationManager extends EffectableEntity {
       automationCardOrder: this.getAutomationCardOrder(),
       features: { ...this.features },
       booleanFlags: Array.from(this.booleanFlags),
+      encounteredTargets: this.encounteredTargets.saveState(),
       autoTravelAutomation: this.autoTravelAutomation ? this.autoTravelAutomation.saveState() : null,
       spaceshipAutomation: this.spaceshipAutomation ? this.spaceshipAutomation.saveState() : null,
       lifeAutomation: this.lifeAutomation ? this.lifeAutomation.saveState() : null,
@@ -341,6 +367,7 @@ class AutomationManager extends EffectableEntity {
     }, data.features || {});
     const flags = Array.isArray(data.booleanFlags) ? data.booleanFlags : [];
     this.booleanFlags = new Set(flags);
+    this.encounteredTargets.loadState(data.encounteredTargets || {});
     if (data.autoTravelAutomation && this.autoTravelAutomation) {
       this.autoTravelAutomation.loadState(data.autoTravelAutomation);
     }
@@ -366,11 +393,20 @@ class AutomationManager extends EffectableEntity {
       this.scriptAutomation.loadState(data.scriptAutomation || {});
     }
     this.reapplyEffects();
+    if (typeof invalidateShipAutomationUI === 'function') {
+      invalidateShipAutomationUI();
+    }
   }
 
   update(delta) {
+    if (isEquilibrating || isCurrentWorldManagerDisabled('automationManager')) {
+      return;
+    }
     if (this.autoTravelAutomation) {
       this.autoTravelAutomation.update(delta || 0);
+    }
+    if (isEquilibrating) {
+      return;
     }
     if (this.scriptAutomation) {
       this.scriptAutomation.update(delta || 0);

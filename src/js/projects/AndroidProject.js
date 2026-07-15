@@ -18,6 +18,10 @@ class AndroidProject extends Project {
     this.shortfallLastTick = false;
   }
 
+  getAndroidAssignmentLabelText() {
+    return this.getAndroidProjectText('ui.projects.android.androids', 'Androids');
+  }
+
   isContinuous() {
     const baseDuration = this.getEffectiveDuration();
     return baseDuration < this.continuousThreshold;
@@ -31,12 +35,30 @@ class AndroidProject extends Project {
     return Math.floor(Math.min(resources.colony.androids.value || 0, resources.colony.androids.cap || 0));
   }
 
+  getMaxAssignableAndroids() {
+    return Infinity;
+  }
+
+  getMaxAndroidsForThisProject() {
+    const total = this.getAssignableAndroidTotal();
+    const assignedOther = projectManager.getAssignedAndroids(this);
+    return Math.max(0, Math.min(total - assignedOther, this.getMaxAssignableAndroids()));
+  }
+
   releaseAndroidAssignments() {
     if (!this.assignedAndroids) return;
     this.assignedAndroids = 0;
     this.adjustActiveDuration();
     populationModule.updateWorkerCap();
     updateProjectUI(this.name);
+  }
+
+  shouldReleaseAndroidAssignmentsForCompleteOrDisabled() {
+    return this.isCompleted || this.isPermanentlyDisabled();
+  }
+
+  shouldReleaseAndroidAssignmentsWhenIdle() {
+    return true;
   }
 
   adjustActiveDuration() {
@@ -82,9 +104,7 @@ class AndroidProject extends Project {
       this.releaseAndroidAssignments();
       return;
     }
-    const total = this.getAssignableAndroidTotal();
-    const assignedOther = (typeof projectManager !== 'undefined' && typeof projectManager.getAssignedAndroids === 'function') ? projectManager.getAssignedAndroids(this) : 0;
-    const maxForThisProject = total - assignedOther;
+    const maxForThisProject = this.getMaxAndroidsForThisProject();
     this.assignedAndroids = this.assignedAndroids || 0;
     const available = maxForThisProject - this.assignedAndroids;
     const adjusted = Math.max(-this.assignedAndroids, Math.min(count, available));
@@ -148,11 +168,11 @@ class AndroidProject extends Project {
   }
 
   update(deltaTime) {
-    if (this.isCompleted && this.releaseAndroidsOnComplete !== false && this.assignedAndroids > 0) {
+    if (this.shouldReleaseAndroidAssignmentsForCompleteOrDisabled() && this.releaseAndroidsOnComplete !== false && this.assignedAndroids > 0) {
       this.releaseAndroidAssignments();
     }
     if (this.isPermanentlyDisabled()) {
-      if (this.releaseAndroidsOnComplete !== false && this.assignedAndroids > 0) {
+      if (this.shouldReleaseAndroidAssignmentsForCompleteOrDisabled() && this.releaseAndroidsOnComplete !== false && this.assignedAndroids > 0) {
         this.releaseAndroidAssignments();
       }
       this.isActive = false;
@@ -258,7 +278,7 @@ class AndroidProject extends Project {
     const headerRow = document.createElement('div');
     headerRow.classList.add('android-assignment-headers');
     const androidHeader = document.createElement('div');
-    androidHeader.textContent = this.getAndroidProjectText('ui.projects.android.androids', 'Androids');
+    androidHeader.textContent = this.getAndroidAssignmentLabelText();
     const controlsHeader = document.createElement('div');
     controlsHeader.textContent = this.getAndroidProjectText('ui.projects.android.controls', 'Controls');
     const autoHeader = document.createElement('div');
@@ -307,12 +327,21 @@ class AndroidProject extends Project {
     mainButtons.classList.add('main-buttons');
     buttonsContainer.appendChild(mainButtons);
 
-    createButton(this.getAndroidProjectText('ui.projects.common.zero', '0'), () => this.assignAndroids(-this.assignedAndroids), mainButtons);
-    const minusButton = createButton(`-${formatNumber(this.assignmentMultiplier, true)}`, () => this.assignAndroids(-this.assignmentMultiplier), mainButtons);
-    const plusButton = createButton(`+${formatNumber(this.assignmentMultiplier, true)}`, () => this.assignAndroids(this.assignmentMultiplier), mainButtons);
+    createButton(this.getAndroidProjectText('ui.projects.common.zero', '0'), () => {
+      const project = projectElements[this.name].androidProject;
+      project.assignAndroids(-project.assignedAndroids);
+    }, mainButtons);
+    const minusButton = createButton(`-${formatNumber(this.assignmentMultiplier, true)}`, () => {
+      const project = projectElements[this.name].androidProject;
+      project.assignAndroids(-project.assignmentMultiplier);
+    }, mainButtons);
+    const plusButton = createButton(`+${formatNumber(this.assignmentMultiplier, true)}`, () => {
+      const project = projectElements[this.name].androidProject;
+      project.assignAndroids(project.assignmentMultiplier);
+    }, mainButtons);
     createButton(this.getAndroidProjectText('ui.projects.common.max', 'Max'), () => {
-      const max = this.getAssignableAndroidTotal() - ((typeof projectManager !== 'undefined' && typeof projectManager.getAssignedAndroids === 'function') ? projectManager.getAssignedAndroids(this) : 0);
-      this.assignAndroids(max);
+      const project = projectElements[this.name].androidProject;
+      project.assignAndroids(project.getMaxAndroidsForThisProject());
     }, mainButtons);
 
     const multiplierContainer = document.createElement('div');
@@ -320,14 +349,16 @@ class AndroidProject extends Project {
     buttonsContainer.appendChild(multiplierContainer);
 
     createButton(this.getAndroidProjectText('ui.projects.common.divideTen', '/10'), () => {
-      this.assignmentMultiplier = Math.max(1, this.assignmentMultiplier / 10);
-      minusButton.textContent = `-${formatNumber(this.assignmentMultiplier, true)}`;
-      plusButton.textContent = `+${formatNumber(this.assignmentMultiplier, true)}`;
+      const project = projectElements[this.name].androidProject;
+      project.assignmentMultiplier = Math.max(1, project.assignmentMultiplier / 10);
+      minusButton.textContent = `-${formatNumber(project.assignmentMultiplier, true)}`;
+      plusButton.textContent = `+${formatNumber(project.assignmentMultiplier, true)}`;
     }, multiplierContainer);
     createButton(this.getAndroidProjectText('ui.projects.common.timesTen', 'x10'), () => {
-      this.assignmentMultiplier *= 10;
-      minusButton.textContent = `-${formatNumber(this.assignmentMultiplier, true)}`;
-      plusButton.textContent = `+${formatNumber(this.assignmentMultiplier, true)}`;
+      const project = projectElements[this.name].androidProject;
+      project.assignmentMultiplier *= 10;
+      minusButton.textContent = `-${formatNumber(project.assignmentMultiplier, true)}`;
+      plusButton.textContent = `+${formatNumber(project.assignmentMultiplier, true)}`;
     }, multiplierContainer);
 
     const autoAssignContainer = document.createElement('div');
@@ -393,19 +424,24 @@ class AndroidProject extends Project {
       autoAssignAndroidInput: autoAssignInput,
       releaseOnCompleteCheckbox,
       androidSpeedDisplay: speedDisplay,
+      androidMinusButton: minusButton,
+      androidPlusButton: plusButton,
+      androidProject: this,
     };
 
     autoAssignCheckbox.addEventListener('change', () => {
-      this.autoAssignAndroids = autoAssignCheckbox.checked;
-      this.autoAssign();
-      updateProjectUI(this.name);
+      const project = projectElements[this.name].androidProject;
+      project.autoAssignAndroids = autoAssignCheckbox.checked;
+      project.autoAssign();
+      updateProjectUI(project.name);
     });
     releaseOnCompleteCheckbox.addEventListener('change', () => {
-      this.releaseAndroidsOnComplete = releaseOnCompleteCheckbox.checked;
-      if (this.releaseAndroidsOnComplete && this.isCompleted) {
-        this.releaseAndroidAssignments();
+      const project = projectElements[this.name].androidProject;
+      project.releaseAndroidsOnComplete = releaseOnCompleteCheckbox.checked;
+      if (project.releaseAndroidsOnComplete && project.shouldReleaseAndroidAssignmentsForCompleteOrDisabled()) {
+        project.releaseAndroidAssignments();
       }
-      updateProjectUI(this.name);
+      updateProjectUI(project.name);
     });
     wireStringNumberInput(autoAssignInput, {
       datasetKey: 'autoAssignAndroidPercent',
@@ -416,11 +452,12 @@ class AndroidProject extends Project {
       },
       formatValue: (parsed) => String(parsed),
       onValue: (parsed) => {
-        this.autoAssignAndroidPercent = parsed;
-        if (this.autoAssignAndroids) {
-          this.autoAssign();
+        const project = projectElements[this.name].androidProject;
+        project.autoAssignAndroidPercent = parsed;
+        if (project.autoAssignAndroids) {
+          project.autoAssign();
         }
-        updateProjectUI(this.name);
+        updateProjectUI(project.name);
       },
     });
     autoAssignInput.dataset.autoAssignAndroidPercent = String(initialAutoAssign);
@@ -433,11 +470,15 @@ class AndroidProject extends Project {
   updateUI() {
     const elements = projectElements[this.name];
     if (!elements) return;
+    elements.androidProject = this;
     if (elements.androidAssignmentContainer) {
       elements.androidAssignmentContainer.style.display = this.canAssignAndroids() ? 'block' : 'none';
     }
     elements.assignedAndroidsDisplay.textContent = formatNumber(this.assignedAndroids, true);
-    const avail = this.getAssignableAndroidTotal() - projectManager.getAssignedAndroids();
+    const avail = Math.max(0, Math.min(
+      this.getAssignableAndroidTotal() - projectManager.getAssignedAndroids(),
+      this.getMaxAssignableAndroids() - this.assignedAndroids
+    ));
     elements.availableAndroidsDisplay.textContent = formatNumber(avail, true);
     elements.autoAssignAndroidCheckbox.checked = this.autoAssignAndroids;
     const percent = this.autoAssignAndroidPercent || 0;
@@ -446,6 +487,9 @@ class AndroidProject extends Project {
       elements.autoAssignAndroidInput.value = String(percent);
     }
     elements.releaseOnCompleteCheckbox.checked = this.releaseAndroidsOnComplete !== false;
+    const assignmentLabel = formatNumber(this.assignmentMultiplier, true);
+    elements.androidMinusButton.textContent = `-${assignmentLabel}`;
+    elements.androidPlusButton.textContent = `+${assignmentLabel}`;
     elements.androidSpeedDisplay.title = this.getAndroidSpeedTooltip();
     elements.androidSpeedDisplay.textContent = this.getAndroidSpeedDisplayText();
   }
@@ -456,26 +500,22 @@ class AndroidProject extends Project {
       return;
     }
     if (!this.autoAssignAndroids) return;
-    if (this.isCompleted) {
+    if (this.shouldReleaseAndroidAssignmentsForCompleteOrDisabled()) {
       if (this.releaseAndroidsOnComplete !== false) {
         this.releaseAndroidAssignments();
       }
       return;
     }
     if (this.isPermanentlyDisabled()) {
-      if (this.releaseAndroidsOnComplete !== false) {
-        this.releaseAndroidAssignments();
-      }
       return;
     }
     const isRunning = this.isActive && !this.isPaused;
-    if (!isRunning && !this.autoStart && this.releaseAndroidsOnComplete !== false) {
+    if (!isRunning && !this.autoStart && this.releaseAndroidsOnComplete !== false && this.shouldReleaseAndroidAssignmentsWhenIdle()) {
       this.releaseAndroidAssignments();
       return;
     }
     const total = this.getAssignableAndroidTotal();
-    const assignedOther = projectManager.getAssignedAndroids(this);
-    const maxForThisProject = Math.max(0, total - assignedOther);
+    const maxForThisProject = this.getMaxAndroidsForThisProject();
     const target = Math.min(Math.floor(total * (this.autoAssignAndroidPercent / 100)), maxForThisProject);
     const delta = target - this.assignedAndroids;
     if (delta) {
@@ -495,6 +535,10 @@ class AndroidProject extends Project {
 
   loadAutomationSettings(settings = {}) {
     super.loadAutomationSettings(settings);
+    const elements = projectElements[this.name];
+    if (elements) {
+      elements.androidProject = this;
+    }
     if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignAndroids')) {
       this.autoAssignAndroids = settings.autoAssignAndroids === true;
     }
@@ -508,7 +552,7 @@ class AndroidProject extends Project {
     if (Object.prototype.hasOwnProperty.call(settings, 'assignmentMultiplier')) {
       this.assignmentMultiplier = Math.max(1, Math.round(settings.assignmentMultiplier || 1));
     }
-    if (this.isCompleted && this.releaseAndroidsOnComplete !== false) {
+    if (this.shouldReleaseAndroidAssignmentsForCompleteOrDisabled() && this.releaseAndroidsOnComplete !== false) {
       this.releaseAndroidAssignments();
     }
     if (this.autoAssignAndroids) {
@@ -528,6 +572,10 @@ class AndroidProject extends Project {
 
   loadState(state) {
     super.loadState(state);
+    const elements = projectElements[this.name];
+    if (elements) {
+      elements.androidProject = this;
+    }
     this.assignedAndroids = state.assignedAndroids || 0;
     this.autoAssignAndroids = state.autoAssignAndroids || 0;
     this.autoAssignAndroidPercent = Number(state.autoAssignAndroidPercent ?? 100) || 0;
@@ -547,6 +595,10 @@ class AndroidProject extends Project {
   }
 
   loadTravelState(state = {}) {
+    const elements = projectElements[this.name];
+    if (elements) {
+      elements.androidProject = this;
+    }
     if (!gameSettings.preserveProjectSettingsOnTravel) {
       return;
     }

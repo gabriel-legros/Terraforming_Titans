@@ -50,6 +50,56 @@ function getScientificThreshold() {
   return scientificThreshold;
 }
 
+function getRoundedDisplayValue(value, integer, precision, allowSmall, roundDown) {
+  let divisor = 1;
+
+  if (value >= 1e39 - 1e36) {
+    divisor = 1e39;
+  } else if (value >= 1e36 - 1e33) {
+    divisor = 1e36;
+  } else if (value >= 1e33 - 1e30) {
+    divisor = 1e33;
+  } else if (value >= 1e30 - 1e27) {
+    divisor = 1e30;
+  } else if (value >= 1e27 - 1e24) {
+    divisor = 1e27;
+  } else if (value >= 1e24 - 1e21) {
+    divisor = 1e24;
+  } else if (value >= 1e21 - 1e18) {
+    divisor = 1e21;
+  } else if (value >= 1e18 - 1e15) {
+    divisor = 1e18;
+  } else if (value >= 1e15 - 1e12) {
+    divisor = 1e15;
+  } else if (value >= 1e12 - 1e9) {
+    divisor = 1e12;
+  } else if (value >= 1e9 - 1e6) {
+    divisor = 1e9;
+  } else if (value >= 1e6 - 1e3) {
+    divisor = 1e6;
+  } else if (value >= 1e3 - 1) {
+    divisor = 1e3;
+  } else if (value >= 1e-3 - 1e-6) {
+    divisor = 1e-3;
+  } else if (value >= 1e-6 - 1e-9) {
+    divisor = 1e-6;
+  } else if (value >= 1e-9 - 1e-12) {
+    divisor = 1e-9;
+  } else if (allowSmall && value >= 1e-12 - 1e-15) {
+    divisor = 1e-12;
+  } else if (allowSmall && value >= 1e-15 - 1e-18) {
+    divisor = 1e-15;
+  } else if ((value < 1e-12 && !allowSmall) || value < 1e-18) {
+    return 0;
+  }
+
+  const scaled = value / divisor;
+  const rounded = integer && (divisor !== 1 || value % 1 === 0) && isNearlyWhole(scaled)
+    ? formatIntegerWithRounding(scaled, roundDown)
+    : formatWithRounding(scaled, precision, roundDown);
+  return Number(rounded) * divisor;
+}
+
 function formatBigIntValue(value, precision, roundDown) {
   const absValue = value < 0n ? -value : value;
   let formatted;
@@ -113,7 +163,7 @@ function formatNumber(value, integer = false, precision = 1, allowSmall = false,
     let formatted;
     const scientificThreshold = getScientificThreshold();
 
-    if (absValue >= scientificThreshold) {
+    if (absValue >= scientificThreshold || getRoundedDisplayValue(absValue, integer, precision, allowSmall, roundDown) >= scientificThreshold) {
       formatted = formatScientificWithRounding(absValue, precision, roundDown);
       return value < 0 ? '-' + formatted : formatted;
     }
@@ -198,10 +248,10 @@ function formatNumber(value, integer = false, precision = 1, allowSmall = false,
     } else if (allowSmall && absValue >= 1e-15 - 1e-18) {
 	        formatted = formatWithRounding(absValue / 1e-15, precision, roundDown) + 'f'; // Femto
     } else if (absValue < 1e-12 && !allowSmall) {
-      formatted = 0;
+      formatted = '0';
       value = 0;
     } else if (absValue < 1e-18){
-      formatted = 0;
+      formatted = '0';
       value = 0;
     }
     else {

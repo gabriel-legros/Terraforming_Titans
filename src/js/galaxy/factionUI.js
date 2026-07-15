@@ -44,20 +44,20 @@ function sanitizeReservedPower(operation) {
 
 function extractAttacker(manager, factionId, cache) {
     if (!factionId) {
-        return { faction: null, name: 'Unknown faction' };
+        return { faction: null, name: t('ui.galaxy.factions.unknownFaction', {}, 'Unknown faction') };
     }
     if (cache.has(factionId)) {
         const cached = cache.get(factionId);
         return {
             faction: cached,
-            name: cached?.name || 'Unknown faction'
+            name: cached?.name || t('ui.galaxy.factions.unknownFaction', {}, 'Unknown faction')
         };
     }
     const faction = manager?.getFaction?.(factionId) || null;
     cache.set(factionId, faction);
     return {
         faction,
-        name: faction?.name || 'Unknown faction'
+        name: faction?.name || t('ui.galaxy.factions.unknownFaction', {}, 'Unknown faction')
     };
 }
 

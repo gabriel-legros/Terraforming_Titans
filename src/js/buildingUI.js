@@ -7,6 +7,7 @@ if (typeof SubtabManager === 'undefined') {
     }
 }
 let buildingSubtabManager = null;
+const buildingAlertElements = {};
 
 function createBuildingCategoryTabs() {
     const categories = typeof getBuildingCategories === 'function' ? getBuildingCategories() : [];
@@ -53,7 +54,7 @@ function createBuildingCategoryTabs() {
             const header = document.createElement('div');
             header.className = 'category-header';
             const title = document.createElement('h3');
-            title.textContent = `${categoryLabel} Buildings`;
+            title.textContent = t('ui.buildings.categoryTitle', { category: categoryLabel }, '{category} Buildings');
             const unhideContainer = document.createElement('div');
             unhideContainer.className = 'unhide-obsolete-container';
             unhideContainer.id = `${category}-unhide-container`;
@@ -61,7 +62,7 @@ function createBuildingCategoryTabs() {
             const unhideButton = document.createElement('button');
             unhideButton.id = `${category}-unhide-button`;
             unhideButton.className = 'unhide-obsolete-button';
-            unhideButton.textContent = 'Unhide Obsolete Buildings';
+            unhideButton.textContent = t('ui.buildings.unhideObsolete', {}, 'Unhide Obsolete Buildings');
             unhideContainer.appendChild(unhideButton);
             header.append(title, unhideContainer);
 
@@ -146,13 +147,21 @@ function registerBuildingUnlockAlert(subtabId) {
 }
 
 function updateBuildingAlert() {
-    const alertEl = document.getElementById('buildings-alert');
+    let alertEl = buildingAlertElements.main;
+    if (!alertEl || !alertEl.isConnected) {
+        alertEl = document.getElementById('buildings-alert');
+        buildingAlertElements.main = alertEl;
+    }
     if (alertEl) {
         const display = (!gameSettings.silenceUnlockAlert && buildingTabAlertNeeded) ? 'inline' : 'none';
         alertEl.style.display = display;
     }
     for (const key in buildingSubtabAlerts) {
-        const el = document.getElementById(`${key}-alert`);
+        let el = buildingAlertElements[key];
+        if (!el || !el.isConnected) {
+            el = document.getElementById(`${key}-alert`);
+            buildingAlertElements[key] = el;
+        }
         if (el) {
             const display = (!gameSettings.silenceUnlockAlert && buildingSubtabAlerts[key]) ? 'inline' : 'none';
             el.style.display = display;

@@ -1,4 +1,8 @@
 const PROJECT_AUTOMATION_SPACE_STORAGE_PROJECT_ID = 'spaceStorage';
+const PROJECT_AUTOMATION_SPACE_MIRROR_FACILITY_ID = 'spaceMirrorFacility';
+const PROJECT_AUTOMATION_SPACE_MIRROR_OVERSIGHT_SETTINGS_KEY = 'mirrorOversightSettings';
+const PROJECT_AUTOMATION_SPACE_MIRROR_PROJECTED_STATE_KEY = 'lastProjectedTemperatureState';
+const PROJECT_AUTOMATION_SPACE_MIRROR_LAST_SOLUTION_KEY = 'lastSolution';
 const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_ID = 'spaceStorageCapsReserve';
 const PROJECT_AUTOMATION_SPACE_STORAGE_EXPANSION_ID = 'spaceStorageExpansion';
 const PROJECT_AUTOMATION_SPACE_STORAGE_OPERATIONS_ID = 'spaceStorageOperations';
@@ -9,7 +13,16 @@ const PROJECT_AUTOMATION_LEGACY_SPACE_STORAGE_OTHER_ID = 'spaceStorageOther';
 const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS = new Set([
   'resourceStrategicReserves',
   'resourceCaps',
-  'resourceImportLimitRespects'
+  'resourceImportLimitRespects',
+  'resourceBiomassDensityWithdrawLimits',
+  'resourcePressureWithdrawLimits',
+  'resourceAmountWithdrawLimits'
+]);
+const PROJECT_AUTOMATION_SPACE_STORAGE_OPERATION_KEYS = new Set([
+  'transferMethod',
+  'teleporterRun',
+  'teleporterTransferRate',
+  'teleporterTransferRateBasis'
 ]);
 const PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY = {
   metal: 'colony',
@@ -51,6 +64,17 @@ const PROJECT_AUTOMATION_EXPANSION_KEYS = new Set([
   'expansionRecipeKey',
   'spaceStorageResourceMode'
 ]);
+const PROJECT_AUTOMATION_DISPOSAL_LEGACY_SETTING_KEYS = new Set([
+  'selectedDisposalResource',
+  'waitForCapacity',
+  'disableBelowTemperature',
+  'disableTemperatureThreshold',
+  'disableBelowPressure',
+  'disablePressureThreshold',
+  'disableBelowCoverage',
+  'disableCoverageThreshold',
+  'disposalLimitSettings'
+]);
 
 const PROJECT_AUTOMATION_PROJECT_EXPANSION_KEYS = {
   satellite: new Set(['step']),
@@ -67,7 +91,7 @@ try {
 const ProjectAutomationPresetManagerBaseClass = ProjectAutomationPresetManagerBaseRef || class ProjectAutomationPresetManagerBaseFallback {};
 
 class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
-  constructor() {
+  constructor(encounteredTargets = null) {
     super({
       featureKey: 'automationProjects',
       presetLabel: 'Preset',
@@ -75,8 +99,10 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       useMasterEnabled: true,
       useAssignments: true,
       useCombinations: true,
-      nextTravelKind: 'combination'
+      nextTravelKind: 'combination',
+      presetCollectionKey: 'projects'
     });
+    this.encounteredTargets = encounteredTargets;
     this.everEnabledProjects = new Set();
     this.elapsed = 0;
   }
@@ -109,15 +135,20 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
   recordProjectEnabled(projectId) {
     const normalizedProjectId = this.normalizeProjectId(projectId);
     const project = this.getProjectForAutomationId(normalizedProjectId);
-    if (!project || !project.automationRequiresEverEnabled) {
+    if (!project || project.category === 'story') {
       return false;
     }
     this.everEnabledProjects.add(normalizedProjectId);
+    if (this.encounteredTargets) {
+      this.encounteredTargets.record('projects', normalizedProjectId);
+    }
     return true;
   }
 
   hasEverEnabledProject(projectId) {
-    return this.everEnabledProjects.has(this.normalizeProjectId(projectId));
+    const normalizedProjectId = this.normalizeProjectId(projectId);
+    return this.everEnabledProjects.has(normalizedProjectId)
+      || (this.encounteredTargets && this.encounteredTargets.has('projects', normalizedProjectId));
   }
 
   getSeenProjectIdSet(extraProjectIds = []) {
@@ -126,6 +157,11 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     this.everEnabledProjects.forEach((projectId) => {
       seen.add(this.normalizeProjectId(projectId));
     });
+    if (this.encounteredTargets) {
+      this.encounteredTargets.getIds('projects').forEach((projectId) => {
+        seen.add(this.normalizeProjectId(projectId));
+      });
+    }
 
     this.presets.forEach((preset) => {
       Object.keys(preset.projects || {}).forEach((projectId) => {
@@ -156,9 +192,6 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     if (!project || project.category === 'story') {
       return false;
     }
-    if (!project.automationRequiresEverEnabled) {
-      return true;
-    }
     if (this.isProjectAvailableNow(project)) {
       this.recordProjectEnabled(project.name);
       return true;
@@ -173,7 +206,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
 
     for (let index = 0; index < order.length; index += 1) {
       const project = projectManager.projects[order[index]];
-      if (!project || !project.automationRequiresEverEnabled) {
+      if (!project || project.category === 'story') {
         continue;
       }
       if (this.isProjectAvailableNow(project)) {
@@ -319,6 +352,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     return {
       name: preset.name,
       showInSidebar: preset.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(preset.presetMode),
       includeExpansion: preset.includeExpansion !== false,
       includeOperations: preset.includeOperations !== false,
       scopeAll: preset.scopeAll === true,
@@ -332,11 +366,13 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       id,
       name: presetData.name || `Preset ${id}`,
       showInSidebar: presetData.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(presetData.presetMode),
       includeExpansion: presetData.includeExpansion !== false,
       includeOperations: presetData.includeOperations !== false,
       scopeAll: presetData.scopeAll === true,
       projects: this.normalizeLoadedPresetProjects(presetData.projects || {})
     };
+    this.recordPresetTargets(importedPreset);
     this.presets.push(importedPreset);
     this.selectedPresetId = importedPreset.id;
     return importedPreset.id;
@@ -351,6 +387,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       id,
       name: name || `Preset ${id}`,
       showInSidebar: options.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(options.presetMode),
       includeExpansion,
       includeOperations,
       scopeAll,
@@ -362,7 +399,19 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       const entry = this.captureProjectSettingsForId(projectId, includeExpansion, includeOperations);
       this.mergePresetProjectEntry(preset.projects, projectId, entry);
     }
+    this.recordPresetTargets(preset);
     return preset;
+  }
+
+  recordPresetTargets(preset) {
+    const projectIds = Object.keys(preset.projects || {});
+    for (let index = 0; index < projectIds.length; index += 1) {
+      const projectId = this.normalizeProjectId(projectIds[index]);
+      this.everEnabledProjects.add(projectId);
+      if (this.encounteredTargets) {
+        this.encounteredTargets.record('projects', projectId);
+      }
+    }
   }
 
   mergeMissingProjectsIntoPreset(presetId, projectIds = []) {
@@ -388,7 +437,29 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       this.mergePresetProjectEntry(preset.projects, projectId, entry);
       changed = true;
     }
+    if (changed) {
+      this.recordPresetTargets(preset);
+    }
     return changed;
+  }
+
+  snapshotProjectIntoPreset(presetId, projectId) {
+    const preset = this.getPresetById(Number(presetId));
+    if (!preset) {
+      return false;
+    }
+    const normalizedProjectId = this.normalizeProjectId(projectId);
+    const entry = this.captureProjectSettingsForId(
+      normalizedProjectId,
+      preset.includeExpansion !== false,
+      preset.includeOperations !== false
+    );
+    if (!entry) {
+      return false;
+    }
+    preset.projects[normalizedProjectId] = {};
+    this.mergePresetProjectEntry(preset.projects, normalizedProjectId, entry);
+    return true;
   }
 
   captureProjectSettingsForId(projectId, includeExpansion = true, includeOperations = true) {
@@ -441,6 +512,9 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       if (!preset) {
         continue;
       }
+      if (this.isParameterizedPreset(preset) && !this.getPresetParameterInfo(preset).valid) {
+        continue;
+      }
       const entries = preset.projects || {};
       for (const projectId in entries) {
         const entry = entries[projectId];
@@ -467,8 +541,8 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     this.applyPresets();
   }
 
-  applyPresetOnce(presetId) {
-    const preset = this.getPresetById(presetId);
+  applyPresetOnce(presetId, parameterValue = null) {
+    const preset = this.buildPresetForApplication(this.getPresetById(presetId), parameterValue);
     if (!preset) {
       return;
     }
@@ -601,7 +675,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
   }
 
   splitProjectSettings(projectId, settings = {}) {
-    const source = settings || {};
+    let source = settings || {};
     const normalizedProjectId = this.normalizeProjectId(projectId);
     const singleResourceKey = this.parseSpaceStorageSingleResourceProjectId(normalizedProjectId);
     if (singleResourceKey) {
@@ -628,14 +702,46 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
         operations: this.filterSpaceStorageOperationSettings(source)
       };
     }
+    const project = this.getProjectForAutomationId(normalizedProjectId);
+    if (project && Array.isArray(project.disposalTargets)) {
+      const migratedSource = {};
+      const hasDisposalTargets = Array.isArray(source.disposalTargets) && source.disposalTargets.length > 0;
+      for (const key in source) {
+        if (PROJECT_AUTOMATION_DISPOSAL_LEGACY_SETTING_KEYS.has(key)) {
+          continue;
+        }
+        migratedSource[key] = this.deepClone(source[key]);
+      }
+      if (!hasDisposalTargets && source.selectedDisposalResource?.category && source.selectedDisposalResource?.resource) {
+        migratedSource.disposalTargets = [{
+          id: 1,
+          selectedDisposalResource: this.deepClone(source.selectedDisposalResource),
+          autoStart: source.autoStart === true,
+          disableBelowTemperature: source.disableBelowTemperature === true,
+          disableTemperatureThreshold: source.disableTemperatureThreshold ?? 303.15,
+          disableBelowPressure: source.disableBelowPressure === true,
+          disablePressureThreshold: source.disablePressureThreshold ?? 0,
+          disableBelowCoverage: source.disableBelowCoverage === true,
+          disableCoverageThreshold: source.disableCoverageThreshold ?? 0
+        }];
+      }
+      source = migratedSource;
+    }
     const expansion = {};
     const operations = {};
 
     for (const key in source) {
+      const value = this.deepClone(source[key]);
+      if (normalizedProjectId === PROJECT_AUTOMATION_SPACE_MIRROR_FACILITY_ID
+        && key === PROJECT_AUTOMATION_SPACE_MIRROR_OVERSIGHT_SETTINGS_KEY
+        && value) {
+        delete value[PROJECT_AUTOMATION_SPACE_MIRROR_PROJECTED_STATE_KEY];
+        delete value[PROJECT_AUTOMATION_SPACE_MIRROR_LAST_SOLUTION_KEY];
+      }
       if (this.isExpansionSettingKey(normalizedProjectId, key)) {
-        expansion[key] = this.deepClone(source[key]);
+        expansion[key] = value;
       } else {
-        operations[key] = this.deepClone(source[key]);
+        operations[key] = value;
       }
     }
 
@@ -673,6 +779,10 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const source = settings || {};
     const filtered = {};
     for (const key in source) {
+      if (PROJECT_AUTOMATION_SPACE_STORAGE_OPERATION_KEYS.has(key)) {
+        filtered[key] = this.deepClone(source[key]);
+        continue;
+      }
       if (PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS.has(key)) {
         continue;
       }
@@ -690,6 +800,9 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const resourceCategory = PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY[resourceKey] || 'colony';
     const weightSource = source.resourceTransferWeights || {};
     const importLimitSource = source.resourceImportLimitRespects || {};
+    const biomassDensityLimitSource = source.resourceBiomassDensityWithdrawLimits || {};
+    const pressureLimitSource = source.resourcePressureWithdrawLimits || {};
+    const amountLimitSource = source.resourceAmountWithdrawLimits || {};
     filtered.spaceStorageSingleResourceKey = resourceKey;
     if (Object.prototype.hasOwnProperty.call(source, 'mode')) {
       filtered.mode = source.mode;
@@ -712,17 +825,23 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     if (Object.prototype.hasOwnProperty.call(source, 'resourceStrategicReserves')) {
       const reserveSource = source.resourceStrategicReserves || {};
       if (Object.prototype.hasOwnProperty.call(reserveSource, resourceKey)) {
-        filtered.resourceStrategicReserves = {
-          [resourceKey]: this.deepClone(reserveSource[resourceKey])
-        };
+        const reserveSetting = reserveSource[resourceKey] || {};
+        if (reserveSetting.mode === 'amount' || reserveSetting.mode === 'percentCap' || reserveSetting.mode === 'percentTotal') {
+          filtered.resourceStrategicReserves = {
+            [resourceKey]: this.deepClone(reserveSetting)
+          };
+        }
       }
     }
     if (Object.prototype.hasOwnProperty.call(source, 'resourceCaps')) {
       const capSource = source.resourceCaps || {};
       if (Object.prototype.hasOwnProperty.call(capSource, resourceKey)) {
-        filtered.resourceCaps = {
-          [resourceKey]: this.deepClone(capSource[resourceKey])
-        };
+        const capSetting = capSource[resourceKey] || {};
+        if (capSetting.mode === 'amount' || capSetting.mode === 'percent' || capSetting.mode === 'weight' || capSetting.mode === 'remaining') {
+          filtered.resourceCaps = {
+            [resourceKey]: this.deepClone(capSetting)
+          };
+        }
       }
     }
     if (Object.prototype.hasOwnProperty.call(source, 'resourceTransferWeights')) {
@@ -746,6 +865,27 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
         };
       }
     }
+    if (Object.prototype.hasOwnProperty.call(source, 'resourceBiomassDensityWithdrawLimits')) {
+      if (Object.prototype.hasOwnProperty.call(biomassDensityLimitSource, resourceKey)) {
+        filtered.resourceBiomassDensityWithdrawLimits = {
+          [resourceKey]: biomassDensityLimitSource[resourceKey] === true
+        };
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'resourcePressureWithdrawLimits')) {
+      if (Object.prototype.hasOwnProperty.call(pressureLimitSource, resourceKey)) {
+        filtered.resourcePressureWithdrawLimits = {
+          [resourceKey]: this.deepClone(pressureLimitSource[resourceKey])
+        };
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'resourceAmountWithdrawLimits')) {
+      if (Object.prototype.hasOwnProperty.call(amountLimitSource, resourceKey)) {
+        filtered.resourceAmountWithdrawLimits = {
+          [resourceKey]: this.deepClone(amountLimitSource[resourceKey])
+        };
+      }
+    }
     if (Object.prototype.hasOwnProperty.call(source, 'respectImportProjectLimits')) {
       filtered.resourceImportLimitRespects = {
         [resourceKey]: source.respectImportProjectLimits === true
@@ -755,6 +895,42 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       filtered.resourceImportLimitRespects = {
         [resourceKey]: source.spaceStorageSingleResourceRespectImportProjectLimits === true
       };
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'limitWithdrawalsToMaxBiomassDensity')) {
+      filtered.resourceBiomassDensityWithdrawLimits = {
+        [resourceKey]: source.limitWithdrawalsToMaxBiomassDensity === true
+      };
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourceLimitWithdrawalsToMaxBiomassDensity')) {
+      filtered.resourceBiomassDensityWithdrawLimits = {
+        [resourceKey]: source.spaceStorageSingleResourceLimitWithdrawalsToMaxBiomassDensity === true
+      };
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'pressureWithdrawLimitPa')) {
+      filtered.resourcePressureWithdrawLimits = {
+        [resourceKey]: source.pressureWithdrawLimitPa
+      };
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourcePressureWithdrawLimitPa')) {
+      filtered.resourcePressureWithdrawLimits = {
+        [resourceKey]: source.spaceStorageSingleResourcePressureWithdrawLimitPa
+      };
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'amountWithdrawLimit')) {
+      filtered.resourceAmountWithdrawLimits = {
+        [resourceKey]: source.amountWithdrawLimit
+      };
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourceAmountWithdrawLimit')) {
+      filtered.resourceAmountWithdrawLimits = {
+        [resourceKey]: source.spaceStorageSingleResourceAmountWithdrawLimit
+      };
+    }
+    if (resourceKey === 'liquidWater' && Object.prototype.hasOwnProperty.call(source, 'waterWithdrawTarget')) {
+      filtered.waterWithdrawTarget = source.waterWithdrawTarget === 'surface' ? 'surface' : 'colony';
+    }
+    if (resourceKey === 'hydrogen' && Object.prototype.hasOwnProperty.call(source, 'hydrogenTransferTarget')) {
+      filtered.hydrogenTransferTarget = source.hydrogenTransferTarget === 'colony' ? 'colony' : 'atmospheric';
     }
     if (!Object.prototype.hasOwnProperty.call(filtered, 'transferWeight')) {
       filtered.transferWeight = Object.prototype.hasOwnProperty.call(weightSource, resourceKey)
@@ -912,7 +1088,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       : this.captureFallbackSettings(project);
 
     if (project.loadAutomationSettings) {
-      project.loadAutomationSettings(this.deepClone(settings));
+      project.loadAutomationSettings(this.deepClone(settings), { isPresetApplication: true });
     } else {
       this.applyFallbackSettings(project, settings);
     }
@@ -933,6 +1109,9 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const reserveSource = settings.resourceStrategicReserves || {};
     const weightSource = settings.resourceTransferWeights || {};
     const importLimitSource = settings.resourceImportLimitRespects || {};
+    const biomassDensityLimitSource = settings.resourceBiomassDensityWithdrawLimits || {};
+    const pressureLimitSource = settings.resourcePressureWithdrawLimits || {};
+    const amountLimitSource = settings.resourceAmountWithdrawLimits || {};
     const hasTransferMode = Object.prototype.hasOwnProperty.call(settings, 'mode')
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceTransferMode');
     const hasSelectedFlag = Object.prototype.hasOwnProperty.call(settings, 'selected')
@@ -941,11 +1120,28 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceTransferWeight');
     const hasRespectImportLimits = Object.prototype.hasOwnProperty.call(settings, 'respectImportProjectLimits')
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceRespectImportProjectLimits');
-    const capsHasKey = Object.prototype.hasOwnProperty.call(capsSource, resourceKey);
-    const reserveHasKey = Object.prototype.hasOwnProperty.call(reserveSource, resourceKey);
+    const hasBiomassDensityLimit = Object.prototype.hasOwnProperty.call(settings, 'limitWithdrawalsToMaxBiomassDensity')
+      || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceLimitWithdrawalsToMaxBiomassDensity');
+    const hasPressureLimit = Object.prototype.hasOwnProperty.call(settings, 'pressureWithdrawLimitPa')
+      || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourcePressureWithdrawLimitPa');
+    const hasAmountLimit = Object.prototype.hasOwnProperty.call(settings, 'amountWithdrawLimit')
+      || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceAmountWithdrawLimit');
+    const hasWaterWithdrawTarget = resourceKey === 'liquidWater'
+      && Object.prototype.hasOwnProperty.call(settings, 'waterWithdrawTarget');
+    const hasHydrogenTransferTarget = resourceKey === 'hydrogen'
+      && Object.prototype.hasOwnProperty.call(settings, 'hydrogenTransferTarget');
+    const capSetting = capsSource[resourceKey] || {};
+    const reserveSetting = reserveSource[resourceKey] || {};
+    const capsHasKey = Object.prototype.hasOwnProperty.call(capsSource, resourceKey)
+      && (capSetting.mode === 'amount' || capSetting.mode === 'percent' || capSetting.mode === 'weight' || capSetting.mode === 'remaining');
+    const reserveHasKey = Object.prototype.hasOwnProperty.call(reserveSource, resourceKey)
+      && (reserveSetting.mode === 'amount' || reserveSetting.mode === 'percentCap' || reserveSetting.mode === 'percentTotal');
     const weightHasKey = Object.prototype.hasOwnProperty.call(weightSource, resourceKey);
     const importLimitHasKey = Object.prototype.hasOwnProperty.call(importLimitSource, resourceKey);
-    if (!capsHasKey && !reserveHasKey && !weightHasKey && !importLimitHasKey && !hasTransferWeight && !hasTransferMode && !hasSelectedFlag && !hasRespectImportLimits) {
+    const biomassDensityLimitHasKey = Object.prototype.hasOwnProperty.call(biomassDensityLimitSource, resourceKey);
+    const pressureLimitHasKey = Object.prototype.hasOwnProperty.call(pressureLimitSource, resourceKey);
+    const amountLimitHasKey = Object.prototype.hasOwnProperty.call(amountLimitSource, resourceKey);
+    if (!capsHasKey && !reserveHasKey && !weightHasKey && !importLimitHasKey && !biomassDensityLimitHasKey && !pressureLimitHasKey && !amountLimitHasKey && !hasTransferWeight && !hasTransferMode && !hasSelectedFlag && !hasRespectImportLimits && !hasBiomassDensityLimit && !hasPressureLimit && !hasAmountLimit && !hasWaterWithdrawTarget && !hasHydrogenTransferTarget) {
       return false;
     }
 
@@ -954,6 +1150,11 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     const beforeTransfer = project.resourceTransferModes?.[resourceKey];
     const beforeWeight = project.resourceTransferWeights?.[resourceKey];
     const beforeRespectImportLimits = project.resourceImportLimitRespects?.[resourceKey] === true;
+    const beforeBiomassDensityLimit = project.resourceBiomassDensityWithdrawLimits?.[resourceKey] === true;
+    const beforePressureLimit = project.resourcePressureWithdrawLimits?.[resourceKey];
+    const beforeAmountLimit = project.resourceAmountWithdrawLimits?.[resourceKey];
+    const beforeWaterWithdrawTarget = project.waterWithdrawTarget;
+    const beforeHydrogenTransferTarget = project.hydrogenTransferTarget;
     const canonicalCategory = PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY[resourceKey] || 'colony';
     const beforeSelectedResourceCount = Array.isArray(project.selectedResources)
       ? project.selectedResources.filter((entry) => entry?.resource === resourceKey).length
@@ -1024,6 +1225,50 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       project.setRespectImportProjectLimits(resourceKey, enabled);
       changed = changed || beforeRespectImportLimits !== (project.resourceImportLimitRespects?.[resourceKey] === true);
     }
+    if (biomassDensityLimitHasKey || hasBiomassDensityLimit) {
+      if (!project.resourceBiomassDensityWithdrawLimits) {
+        project.resourceBiomassDensityWithdrawLimits = {};
+      }
+      const enabled = biomassDensityLimitHasKey
+        ? biomassDensityLimitSource[resourceKey] === true
+        : (Object.prototype.hasOwnProperty.call(settings, 'limitWithdrawalsToMaxBiomassDensity')
+          ? settings.limitWithdrawalsToMaxBiomassDensity === true
+          : settings.spaceStorageSingleResourceLimitWithdrawalsToMaxBiomassDensity === true);
+      project.setLimitWithdrawalsToMaxBiomassDensity(resourceKey, enabled);
+      changed = changed || beforeBiomassDensityLimit !== (project.resourceBiomassDensityWithdrawLimits?.[resourceKey] === true);
+    }
+    if (pressureLimitHasKey || hasPressureLimit) {
+      if (!project.resourcePressureWithdrawLimits) {
+        project.resourcePressureWithdrawLimits = {};
+      }
+      const pressureLimit = pressureLimitHasKey
+        ? pressureLimitSource[resourceKey]
+        : (Object.prototype.hasOwnProperty.call(settings, 'pressureWithdrawLimitPa')
+          ? settings.pressureWithdrawLimitPa
+          : settings.spaceStorageSingleResourcePressureWithdrawLimitPa);
+      project.setPressureWithdrawLimitPa(resourceKey, pressureLimit);
+      changed = changed || !this.areSettingsEqual(beforePressureLimit, project.resourcePressureWithdrawLimits?.[resourceKey]);
+    }
+    if (amountLimitHasKey || hasAmountLimit) {
+      if (!project.resourceAmountWithdrawLimits) {
+        project.resourceAmountWithdrawLimits = {};
+      }
+      const amountLimit = amountLimitHasKey
+        ? amountLimitSource[resourceKey]
+        : (Object.prototype.hasOwnProperty.call(settings, 'amountWithdrawLimit')
+          ? settings.amountWithdrawLimit
+          : settings.spaceStorageSingleResourceAmountWithdrawLimit);
+      project.setAmountWithdrawLimit(resourceKey, amountLimit);
+      changed = changed || !this.areSettingsEqual(beforeAmountLimit, project.resourceAmountWithdrawLimits?.[resourceKey]);
+    }
+    if (hasWaterWithdrawTarget) {
+      project.waterWithdrawTarget = settings.waterWithdrawTarget === 'surface' ? 'surface' : 'colony';
+      changed = changed || beforeWaterWithdrawTarget !== project.waterWithdrawTarget;
+    }
+    if (hasHydrogenTransferTarget) {
+      project.hydrogenTransferTarget = settings.hydrogenTransferTarget === 'colony' ? 'colony' : 'atmospheric';
+      changed = changed || beforeHydrogenTransferTarget !== project.hydrogenTransferTarget;
+    }
     if (hasSelectedFlag) {
       if (!Array.isArray(project.selectedResources)) {
         project.selectedResources = [];
@@ -1038,6 +1283,11 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       const afterSelectedResourceCount = project.selectedResources.filter((entry) => entry?.resource === resourceKey).length;
       const afterSelected = project.selectedResources.some((entry) => entry?.category === canonicalCategory && entry?.resource === resourceKey);
       changed = changed || beforeSelected !== afterSelected || beforeSelectedResourceCount !== afterSelectedResourceCount;
+    }
+    if (hasTransferMode || hasSelectedFlag) {
+      const resourceKeys = Object.keys(PROJECT_AUTOMATION_SPACE_STORAGE_RESOURCE_CATEGORY_BY_KEY)
+        .filter((key) => project.isResourceUnlocked(key));
+      project.updateShipTransferModeFromResources(resourceKeys);
     }
     return changed;
   }
@@ -1110,6 +1360,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
         id: preset.id,
         name: preset.name,
         showInSidebar: preset.showInSidebar !== false,
+        presetMode: this.getPresetModeValue(preset.presetMode),
         includeExpansion: preset.includeExpansion !== false,
         includeOperations: preset.includeOperations !== false,
         scopeAll: !!preset.scopeAll,
@@ -1135,6 +1386,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       id: preset.id,
       name: preset.name || 'Preset',
       showInSidebar: preset.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(preset.presetMode),
       includeExpansion: preset.includeExpansion !== false,
       includeOperations: preset.includeOperations !== false,
       scopeAll: preset.scopeAll === true,
@@ -1147,6 +1399,12 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
         ? data.everEnabledProjects.map(projectId => this.normalizeProjectId(projectId))
         : []
     );
+    this.everEnabledProjects.forEach(projectId => {
+      if (this.encounteredTargets) {
+        this.encounteredTargets.record('projects', projectId);
+      }
+    });
+    this.presets.forEach(preset => this.recordPresetTargets(preset));
     this.loadCommonListState(data, { allowLegacyApplyOnNextTravel: true });
     this.recordCurrentlyAvailableProjects();
   }

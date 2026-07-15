@@ -42,31 +42,31 @@ const UHF_FACTION_KEY = (typeof globalThis !== 'undefined' && typeof globalThis.
 const FLEET_UPGRADE_FALLBACKS = [
     {
         key: 'militaryResearch',
-        label: 'Military R&D',
-        description: 'Channel advanced research into hangar expansions that squeeze in additional wings.',
+        label: getGalaxyText('fleetUpgrades.militaryResearch.label', 'Military R&D'),
+        description: getGalaxyText('fleetUpgrades.militaryResearch.description', 'Channel advanced research into hangar expansions that squeeze in additional wings.'),
         increment: 0.1,
-        costLabel: 'Adv. Research'
+        costLabel: getGalaxyText('fleetUpgrades.cost.advancedResearch', 'Adv. Research')
     },
     {
         key: 'micOutsource',
-        label: 'MIC Contracts',
-        description: 'Cut Solis a check so they can subcontract extra yards for the fleet.',
+        label: getGalaxyText('fleetUpgrades.micOutsource.label', 'MIC Contracts'),
+        description: getGalaxyText('fleetUpgrades.micOutsource.description', 'Cut Solis a check so they can subcontract extra yards for the fleet.'),
         increment: 0.1,
-        costLabel: 'Solis Points'
+        costLabel: getGalaxyText('fleetUpgrades.cost.solisPoints', 'Solis Points')
     },
     {
         key: 'enemyLessons',
-        label: 'Reverse Engineering',
-        description: 'Reverse-engineer alien tactics and fold their tricks into UHF logistics.',
+        label: getGalaxyText('fleetUpgrades.enemyLessons.label', 'Reverse Engineering'),
+        description: getGalaxyText('fleetUpgrades.enemyLessons.description', 'Reverse-engineer alien tactics and fold their tricks into UHF logistics.'),
         increment: 0.1,
-        costLabel: 'Alien Artifacts'
+        costLabel: getGalaxyText('fleetUpgrades.cost.alienArtifacts', 'Alien Artifacts')
     },
     {
         key: 'pandoraBox',
-        label: "PANDORA'S Box",
-        description: 'Spend a skill point to greenlight unconventional fleet experiments.',
+        label: getGalaxyText('fleetUpgrades.pandoraBox.label', "PANDORA'S Box"),
+        description: getGalaxyText('fleetUpgrades.pandoraBox.description', 'Spend a skill point to greenlight unconventional fleet experiments.'),
         increment: 0.25,
-        costLabel: 'Skill Points'
+        costLabel: getGalaxyText('fleetUpgrades.cost.skillPoints', 'Skill Points')
     }
 ];
 
@@ -83,7 +83,6 @@ if (!galaxyOperationUI && typeof globalThis !== 'undefined' && globalThis.Galaxy
     galaxyOperationUI = globalThis.GalaxyOperationUI;
 }
 
-const OPERATION_ARROW_LINE_WIDTH = 4;
 const OPERATION_ARROW_MARGIN = 24;
 const OPERATION_ARROW_MIN_LENGTH = 18;
 const GALAXY_MAP_REFRESH_INTERVAL_MS = 1000;
@@ -520,6 +519,7 @@ function createGalaxyHex(doc, { q, r, x, y, displayName }, size, offsets) {
     hex.galaxyKey = key;
     hex.galaxyCenterX = centerX;
     hex.galaxyCenterY = centerY;
+    hex.galaxyDisplayWidth = displayWidth;
     hex.dataset.controlSignature = '';
     hex.dataset.storySignature = '';
     hex.dataset.defenseSignature = '';
@@ -694,8 +694,16 @@ function handleGalaxyPopupToggle(event) {
     if (!popupKey || !cache || !cache.popupVisibility) {
         return;
     }
-    cache.popupVisibility[popupKey] = cache.popupVisibility[popupKey] === false;
-    galaxyManager?.setPopupVisibilityState?.(cache.popupVisibility);
+    cache.popupVisibility[popupKey] = popupKey === 'incoming'
+        ? cache.popupVisibility[popupKey] !== true
+        : cache.popupVisibility[popupKey] === false;
+    if (cache.popupVisibility[popupKey] === true) {
+        setPopupClosedState(popupKey, false);
+    }
+    const savedVisibility = galaxyManager?.setPopupVisibilityState?.(cache.popupVisibility);
+    if (savedVisibility) {
+        cache.popupVisibility = savedVisibility;
+    }
     setGalaxySectorPopupsVisible(!!cache.selectedSector);
     if (popupKey === 'incoming') {
         updateIncomingAttacksPopupVisibility(cache);
@@ -1598,7 +1606,7 @@ function updateSectorDefenseSection() {
         cache.defenseClearButton.disabled = !(manualTotal > 0);
     }
 
-    if (cache.defenseInput) {
+    if (cache.defenseInput && cache.defenseInput.ownerDocument.activeElement !== cache.defenseInput) {
         cache.defenseInput.value = formatDefenseDisplayValue(manualAssigned);
     }
     if (cache.defenseButtons) {
@@ -1683,6 +1691,29 @@ function handleDefenseButtonClick(event) {
         cache.defenseInput.value = formatDefenseDisplayValue(applied);
     }
     renderSelectedSectorDetails();
+}
+
+function handleDefenseInputCommit(event) {
+    const input = event.currentTarget;
+    const selection = galaxyUICache.selectedSector;
+    if (!selection) {
+        renderSelectedSectorDetails();
+        return;
+    }
+    galaxyManager.setDefenseAssignment({
+        factionId: UHF_FACTION_KEY,
+        sectorKey: selection.key,
+        value: parseFlexibleNumber(input.value)
+    });
+    renderSelectedSectorDetails();
+}
+
+function handleDefenseInputKeydown(event) {
+    if (event.key !== 'Enter') {
+        return;
+    }
+    event.preventDefault();
+    event.currentTarget.blur();
 }
 
 function handleDefenseClearAllClick(event) {
@@ -2007,6 +2038,7 @@ function clearOperationArrows(cache) {
         }
     });
     cache.operationArrows.clear();
+    cache.operationArrowSignature = '';
 }
 
 
@@ -2557,15 +2589,18 @@ function createIncomingAttackRow(doc) {
     const attacker = doc.createElement('span');
     const sector = doc.createElement('span');
     const power = doc.createElement('span');
+    const time = doc.createElement('span');
     const chance = doc.createElement('span');
     power.className = 'galaxy-incoming-attacks__cell--numeric';
+    time.className = 'galaxy-incoming-attacks__cell--numeric';
     chance.className = 'galaxy-incoming-attacks__cell--numeric';
-    row.append(attacker, sector, power, chance);
+    row.append(attacker, sector, power, time, chance);
     return {
         row,
         attacker,
         sector,
         power,
+        time,
         chance
     };
 }
@@ -2575,8 +2610,7 @@ function updateIncomingAttacksPopupVisibility(cache) {
         return;
     }
     const visible = cache.popupVisibility?.incoming !== false
-        && cache.popupClosed?.incoming !== true
-        && cache.incomingAttacksHasRows === true;
+        && cache.popupClosed?.incoming !== true;
     cache.incomingAttacksPopup.classList.toggle('is-hidden', !visible);
 }
 
@@ -2628,7 +2662,7 @@ function cacheGalaxyElements() {
     incomingAttacksToggle.dataset.popupKey = 'incoming';
     incomingAttacksToggle.textContent = GALAXY_ALIEN_ICON;
     incomingAttacksToggle.setAttribute('aria-label', getGalaxyText('map.toggleIncomingAttacks', 'Toggle incoming attacks'));
-    incomingAttacksToggle.setAttribute('aria-pressed', 'true');
+    incomingAttacksToggle.setAttribute('aria-pressed', 'false');
 
     const mapWrapper = doc.createElement('div');
     mapWrapper.className = 'galaxy-map-wrapper';
@@ -2764,6 +2798,8 @@ function cacheGalaxyElements() {
     });
     [detailsToggle, operationsToggle, defenseToggle, incomingAttacksToggle].forEach((button) => {
         button.addEventListener('click', handleGalaxyPopupToggle);
+    });
+    [detailsToggle, operationsToggle, defenseToggle, incomingAttacksToggle].forEach((button) => {
         button.addEventListener('mousedown', (event) => event.stopPropagation());
         button.addEventListener('touchstart', (event) => {
             event.stopPropagation();
@@ -2812,12 +2848,16 @@ function cacheGalaxyElements() {
     const incomingAttacksHeader = doc.createElement('div');
     incomingAttacksHeader.className = 'galaxy-incoming-attacks__row galaxy-incoming-attacks__row--header';
     [
-        getGalaxyText('attacks.attacker', 'Attacker'),
-        getGalaxyText('attacks.sector', 'Sector'),
-        getGalaxyText('attacks.power', 'Power'),
-        getGalaxyText('attacks.enemySuccessChance', 'Enemy Success Chance')
-    ].forEach((label) => {
+        { label: getGalaxyText('attacks.attacker', 'Attacker') },
+        { label: getGalaxyText('attacks.sector', 'Sector') },
+        { label: getGalaxyText('attacks.power', 'Power'), numeric: true },
+        { label: getGalaxyText('attacks.timeUntilAttack', 'Time'), numeric: true },
+        { label: getGalaxyText('attacks.enemySuccessChance', 'Enemy Success Chance'), numeric: true }
+    ].forEach(({ label, numeric }) => {
         const cell = doc.createElement('span');
+        if (numeric) {
+            cell.className = 'galaxy-incoming-attacks__cell--numeric';
+        }
         cell.textContent = label;
         incomingAttacksHeader.appendChild(cell);
     });
@@ -2825,6 +2865,10 @@ function cacheGalaxyElements() {
     incomingAttacksRows.className = 'galaxy-incoming-attacks__body';
     incomingAttacksTable.append(incomingAttacksHeader, incomingAttacksRows);
     incomingAttacksPanel.body.appendChild(incomingAttacksTable);
+    const incomingAttacksEmpty = doc.createElement('p');
+    incomingAttacksEmpty.className = 'galaxy-incoming-attacks__empty';
+    incomingAttacksEmpty.textContent = getGalaxyText('sections.noHostilesDetected', 'No hostiles detected.');
+    incomingAttacksPanel.body.appendChild(incomingAttacksEmpty);
     const attackContent = doc.createElement('div');
     attackContent.className = 'galaxy-attack-panel';
     attackContent.dataset.emptyMessage = getGalaxyText('sections.noHostilesDetected', 'No hostiles detected.');
@@ -2881,11 +2925,10 @@ function cacheGalaxyElements() {
     defenseRow.className = 'galaxy-defense-form__row';
     const defenseInput = doc.createElement('input');
     defenseInput.type = 'text';
-    defenseInput.readOnly = true;
-    defenseInput.tabIndex = -1;
-    defenseInput.setAttribute('aria-readonly', 'true');
     defenseInput.className = 'galaxy-defense-form__input';
     defenseInput.value = formatDefenseDisplayValue(0);
+    defenseInput.addEventListener('keydown', handleDefenseInputKeydown);
+    defenseInput.addEventListener('blur', handleDefenseInputCommit);
     defenseRow.appendChild(defenseInput);
 
     const defenseButtonsContainer = doc.createElement('div');
@@ -2924,20 +2967,30 @@ function cacheGalaxyElements() {
 
     const defenseHistory = doc.createElement('div');
     defenseHistory.className = 'galaxy-defense-history';
-    const defenseHistoryTitle = doc.createElement('div');
+    const defenseHistoryTitle = doc.createElement('button');
+    defenseHistoryTitle.type = 'button';
     defenseHistoryTitle.className = 'galaxy-defense-history__title';
-    defenseHistoryTitle.textContent = getGalaxyText('defense.lastFiveAttacks', 'Last 5 Attacks');
+    defenseHistoryTitle.setAttribute('aria-expanded', 'true');
+    defenseHistoryTitle.setAttribute('aria-label', getGalaxyText('defense.toggleAttackHistory', 'Toggle attack history'));
+    const defenseHistoryArrow = doc.createElement('span');
+    defenseHistoryArrow.className = 'galaxy-defense-history__arrow';
+    defenseHistoryArrow.textContent = '▼';
+    const defenseHistoryTitleText = doc.createElement('span');
+    defenseHistoryTitleText.textContent = getGalaxyText('defense.lastFiveAttacks', 'Last 5 Attacks');
+    defenseHistoryTitle.append(defenseHistoryArrow, defenseHistoryTitleText);
 
     const defenseHistoryHeader = doc.createElement('div');
     defenseHistoryHeader.className = 'galaxy-defense-history__row galaxy-defense-history__row--header';
     [
-        getGalaxyText('defense.historyEnemy', 'Enemy'),
-        getGalaxyText('defense.historyEnemyPower', 'Enemy Power'),
-        getGalaxyText('defense.historyResult', 'Result'),
-        getGalaxyText('defense.historyUhfLosses', 'UHF Losses')
-    ].forEach((label) => {
+        { label: getGalaxyText('defense.historyEnemy', 'Enemy') },
+        { label: getGalaxyText('defense.historyEnemyPower', 'Enemy Power'), numeric: true },
+        { label: getGalaxyText('defense.historyResult', 'Result') },
+        { label: getGalaxyText('defense.historyUhfLosses', 'UHF Losses'), numeric: true }
+    ].forEach(({ label, numeric }) => {
         const cell = doc.createElement('span');
-        cell.className = 'galaxy-defense-history__cell';
+        cell.className = numeric
+            ? 'galaxy-defense-history__cell galaxy-defense-history__cell--numeric'
+            : 'galaxy-defense-history__cell';
         cell.textContent = label;
         defenseHistoryHeader.appendChild(cell);
     });
@@ -2963,12 +3016,22 @@ function cacheGalaxyElements() {
     defenseHistoryEmpty.className = 'galaxy-defense-history__empty';
     defenseHistoryEmpty.textContent = getGalaxyText('defense.noAttacksRecorded', 'No attacks recorded yet.');
 
+    const defenseHistoryBody = doc.createElement('div');
+    defenseHistoryBody.className = 'galaxy-defense-history__body';
+    defenseHistoryBody.appendChild(defenseHistoryHeader);
+    defenseHistoryRows.forEach((entry) => defenseHistoryBody.appendChild(entry.row));
+    defenseHistoryBody.appendChild(defenseHistoryEmpty);
+
     defenseHistory.appendChild(defenseHistoryTitle);
-    defenseHistory.appendChild(defenseHistoryHeader);
-    defenseHistoryRows.forEach((entry) => defenseHistory.appendChild(entry.row));
-    defenseHistory.appendChild(defenseHistoryEmpty);
+    defenseHistory.appendChild(defenseHistoryBody);
+    defenseHistoryTitle.addEventListener('click', () => {
+        const collapsed = defenseHistory.classList.toggle('is-collapsed');
+        defenseHistoryTitle.setAttribute('aria-expanded', String(!collapsed));
+        defenseHistoryArrow.textContent = collapsed ? '▶' : '▼';
+    });
 
     attackContent.appendChild(defenseSection);
+    incomingAttacksPanel.body.appendChild(defenseHistory);
     incomingAttacks.body.appendChild(attackContent);
 
     Object.values(defenseButtons).forEach((button) => {
@@ -3210,12 +3273,12 @@ function cacheGalaxyElements() {
 
     container.replaceChildren(layout);
 
-    const popupVisibility = galaxyManager?.getPopupVisibilityState?.() || {
+    const popupVisibility = Object.assign({
         sector: true,
         operations: true,
         defense: true,
-        incoming: true
-    };
+        incoming: false
+    }, galaxyManager?.getPopupVisibilityState?.() || {});
 
     galaxyUICache = {
         container,
@@ -3254,6 +3317,9 @@ function cacheGalaxyElements() {
         operationsInput: operationsCache.operationsInput,
         operationsButtons: operationsCache.operationsButtons,
         operationsLaunchButton: operationsCache.operationsLaunchButton,
+        operationsAutoModeHeader: operationsCache.operationsAutoModeHeader,
+        operationsAutoModeSelect: operationsCache.operationsAutoModeSelect,
+        operationsAutoModeThresholdInput: operationsCache.operationsAutoModeThresholdInput,
         operationsAutoCheckbox: operationsCache.operationsAutoCheckbox,
         operationsAutoThresholdInput: operationsCache.operationsAutoThresholdInput,
         operationsProgress: operationsCache.operationsProgress,
@@ -3287,9 +3353,10 @@ function cacheGalaxyElements() {
         attackList,
         attackEntries: new Map(),
         incomingAttacksPopup: incomingAttacksPanel.section,
+        incomingAttacksTable,
         incomingAttacksRows,
+        incomingAttacksEmpty,
         incomingAttacksRowCache: new Map(),
-        incomingAttacksHasRows: false,
         defenseSection,
         defenseWarning,
         defenseForm,
@@ -3303,6 +3370,8 @@ function cacheGalaxyElements() {
         defenseButtons,
         defenseClearButton,
         defenseHistory,
+        defenseHistoryBody,
+        defenseHistoryTitle,
         defenseHistoryRows,
         defenseHistoryEmpty,
         sectorCloseButton,
@@ -3316,6 +3385,7 @@ function cacheGalaxyElements() {
         hexElements,
         hexLookup,
         operationArrows: new Map(),
+        operationArrowSignature: '',
         selectedHex: null,
         selectedSector: null
     };
@@ -3618,6 +3688,7 @@ function updateIncomingAttackPanel(manager, cache) {
             row.attacker.textContent = attack.attackerName || getGalaxyText('attacks.unknownAttacker', 'Unknown attacker');
             row.sector.textContent = attack.sectorName || getGalaxyText('attacks.unknownSector', 'Unknown sector');
             row.power.textContent = formatFleetValue(attack.power);
+            row.time.textContent = formatAttackCountdown(attack.remainingMs);
             const estimate = manager.operationManager.getOperationLossEstimate({
                 sectorKey: attack.sectorKey,
                 factionId: attack.attackerId,
@@ -3639,7 +3710,13 @@ function updateIncomingAttackPanel(manager, cache) {
             row?.row?.remove();
             rowCache.delete(key);
         });
-        cache.incomingAttacksHasRows = uhfAttacks.length > 0;
+        const hasIncomingAttacks = uhfAttacks.length > 0;
+        if (cache.incomingAttacksTable) {
+            cache.incomingAttacksTable.hidden = !hasIncomingAttacks;
+        }
+        if (cache.incomingAttacksEmpty) {
+            cache.incomingAttacksEmpty.classList.toggle('is-hidden', hasIncomingAttacks);
+        }
         updateIncomingAttacksPopupVisibility(cache);
     }
 

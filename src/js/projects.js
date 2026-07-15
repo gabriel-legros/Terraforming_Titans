@@ -26,6 +26,13 @@ const MEGA_PROJECT_RESOURCE_MODES = {
 
 const EARTH_RADIUS_KM = 6371;
 
+function isMegaProjectCategory(category) {
+  const projectCategory = category || 'resources';
+  return projectCategory !== 'resources' &&
+    projectCategory !== 'infrastructure' &&
+    projectCategory !== 'story';
+}
+
 const MEGA_PROJECT_RESOURCE_MODE_OPTIONS = [
   { value: MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST, label: getProjectsText('ui.projects.resourceModes.spaceFirst', 'Prioritize space resources for mega+ projects') },
   { value: MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST, label: getProjectsText('ui.projects.resourceModes.colonyFirst', 'Prioritize colony resources for mega+ projects') },
@@ -104,6 +111,7 @@ class Project extends EffectableEntity {
     this.shownStorySteps = new Set(); // Track which story steps have been displayed
     this.autoStart = false;
     this.autoStartUncheckOnTravel = false;
+    this.manualContinuousRun = false;
     this.isPaused = false; // Whether the project is paused due to missing sustain cost
     this.shortfallLastTick = false; // Tracks if resource consumption failed last tick
     this.alertedWhenUnlocked = this.unlocked ? true : false;
@@ -239,6 +247,9 @@ class Project extends EffectableEntity {
       }
       return hazardManager.parameters.pulsar && !hazardManager.pulsarHazard.isCleared(terraformingState, hazardManager.parameters.pulsar);
     }
+    if (hazardKey === 'debrisDisk') {
+      return hazardManager.parameters.debrisDisk && !hazardManager.debrisDiskHazard.isCleared(terraforming, hazardManager.parameters.debrisDisk);
+    }
     return false;
   }
 
@@ -264,6 +275,9 @@ class Project extends EffectableEntity {
     }
     if (hazardKey === 'pulsar') {
       return getProjectsText('ui.projects.hazards.pulsar', 'Pulsar');
+    }
+    if (hazardKey === 'debrisDisk') {
+      return getProjectsText('ui.projects.hazards.debrisDisk', 'Debris Disk');
     }
     return '';
   }
@@ -330,7 +344,7 @@ class Project extends EffectableEntity {
 
   getDurationMultiplier(options) {
     if (this.attributes.ignoreDurationModifiers) {
-      return 1;
+      return projectManager.getMegaProjectDurationMultiplier(this);
     }
     let multiplier = 1;
     if (
@@ -358,8 +372,7 @@ class Project extends EffectableEntity {
   }
 
   updateDurationFromEffects() {
-    const base = this.getBaseDuration();
-    const newDuration = base * this.getDurationMultiplier();
+    const newDuration = this.getEffectiveDuration();
     if (this.isActive && this.isContinuous()) {
       this.startingDuration = Infinity;
       this.remainingTime = Infinity;
@@ -405,6 +418,21 @@ class Project extends EffectableEntity {
 
   isContinuous() {
     return false;
+  }
+
+  getEffectiveCostMultiplier(resourceCategory, resourceId) {
+    const multiplier = super.getEffectiveCostMultiplier(resourceCategory, resourceId);
+    if (!isMegaProjectCategory(this.category)) {
+      return multiplier;
+    }
+    return multiplier * projectManager.getMegaProjectCostMultiplier(this);
+  }
+
+  getResourceExecutionDeltaTime(deltaTime) {
+    if (!this.manualContinuousRun || !this.isContinuous()) {
+      return deltaTime;
+    }
+    return this.getEffectiveDuration();
   }
 
   // Method to calculate scaled cost if costScaling is enabled
@@ -472,11 +500,7 @@ class Project extends EffectableEntity {
       return false;
     }
 
-    if (
-      this.category === 'story' &&
-      this.attributes.planet &&
-      spaceManager.getCurrentPlanetKey() !== this.attributes.planet
-    ) {
+    if (this.category === 'story' && !projectManager.isProjectRelevantToCurrentPlanet(this)) {
       return false;
     }
 
@@ -529,9 +553,6 @@ class Project extends EffectableEntity {
       }
     }
 
-    if (storageProj && typeof updateSpaceStorageUI === 'function') {
-      updateSpaceStorageUI(storageProj.storageProject || storageProj);
-    }
   }
 
   hasSustainResources(deltaTime = 1000, includeNetProduction = true) {
@@ -576,7 +597,9 @@ class Project extends EffectableEntity {
     if (this.canStart(resources)) {
       // Deduct the required resources if this isn't a resume
       if (!this.isPaused) {
-        this.deductResources(resources);
+        if (!this.manualContinuousRun || !this.isContinuous()) {
+          this.deductResources(resources);
+        }
         this.remainingTime = this.getEffectiveDuration();
         this.startingDuration = this.remainingTime;
         if (this.kesslerDebrisSize) {
@@ -624,11 +647,7 @@ class Project extends EffectableEntity {
     }
     if (!this.isActive || this.isCompleted || this.isPaused) return;
 
-    if (
-      this.category === 'story' &&
-      this.attributes.planet &&
-      spaceManager.getCurrentPlanetKey() !== this.attributes.planet
-    ) {
+    if (this.category === 'story' && !projectManager.isProjectRelevantToCurrentPlanet(this)) {
       this.isActive = false;
       return;
     }
@@ -637,22 +656,34 @@ class Project extends EffectableEntity {
       return;
     }
 
-    if (!this.hasSustainResources(deltaTime, false)) {
-      this.isActive = false;
-      this.isPaused = true;
-      return;
+    let progressDelta = Math.min(deltaTime, this.remainingTime);
+    if (this.sustainCost) {
+      for (const category in this.sustainCost) {
+        for (const resource in this.sustainCost[category]) {
+          const rate = this.sustainCost[category][resource];
+          if (rate > 0) {
+            const affordableDelta = (Math.max(0, resources[category][resource].value) / rate) * 1000;
+            progressDelta = Math.min(progressDelta, affordableDelta);
+          }
+        }
+      }
+      if (!(progressDelta > 0)) {
+        this.isActive = false;
+        this.isPaused = true;
+        return;
+      }
     }
 
     const kesslerDelta = this.kesslerRollPending
-      ? Math.min(deltaTime, this.remainingTime)
-      : deltaTime;
+      ? Math.min(progressDelta, this.remainingTime)
+      : progressDelta;
     if (this._checkKesslerFailure(kesslerDelta)) {
       return;
     }
 
-    this.deductSustainResources(deltaTime);
+    this.deductSustainResources(progressDelta);
 
-    this.remainingTime -= deltaTime;
+    this.remainingTime -= progressDelta;
 
     if (this.remainingTime <= 0) {
       if (this.kesslerRollPending) {
@@ -705,7 +736,10 @@ class Project extends EffectableEntity {
     // Apply the effective resource gain to the resources
     for (const resourceCategory in effectiveResourceGain) {
       for (const resource in effectiveResourceGain[resourceCategory]) {
-        const amount = effectiveResourceGain[resourceCategory][resource];
+        let amount = effectiveResourceGain[resourceCategory][resource];
+        if (resourceCategory === 'special' && resource === 'alienArtifact') {
+          amount = getArtifactGainAmount(amount);
+        }
         resources[resourceCategory][resource].increase(amount, ignoreCap);
       }
     }
@@ -767,7 +801,7 @@ class Project extends EffectableEntity {
   }
 
   isPermanentlyDisabled() {
-    return this.permanentlyDisabled === true;
+    return this.permanentlyDisabled === true || isCurrentWorldProjectCategoryDisabled(this.category || 'resources');
   }
 
   enable() {
@@ -997,10 +1031,12 @@ class Project extends EffectableEntity {
     const accumulatedChanges = options.accumulatedChanges || null;
     const getStoragePending = (resourceKey) => accumulatedChanges?.spaceStorage?.[resourceKey] ?? 0;
     const getAvailable = (resourceKey) => {
-      const stored = reserveScope === 'ignoreReserve'
-        ? storageProj.getStoredResourceValue(resourceKey)
-        : storageProj.getAvailableStoredResource(resourceKey, reserveScope);
-      return Math.max(0, stored + getStoragePending(resourceKey));
+      const stored = storageProj.getStoredResourceValue(resourceKey) + getStoragePending(resourceKey);
+      if (reserveScope === 'ignoreReserve') {
+        return Math.max(0, stored);
+      }
+      const reserve = storageProj.getResourceStrategicReserveAmount(resourceKey, reserveScope);
+      return Math.max(0, stored - reserve);
     };
     return {
       storageProject: storageProj,
@@ -1156,6 +1192,15 @@ class ProjectManager extends EffectableEntity {
 
     this.projects = {};
     this.projectOrder = [];
+    this.uiDirty = true;
+  }
+
+  markUIDirty() {
+    this.uiDirty = true;
+  }
+
+  addAndReplace(effect) {
+    super.addAndReplace({ ...effect });
   }
 
   currentWorldHasStar() {
@@ -1169,26 +1214,50 @@ class ProjectManager extends EffectableEntity {
   }
 
   isProjectRelevantToCurrentPlanet(project) {
-    const targetPlanet = project?.category === 'story' ? project.attributes?.planet : null;
-    const manager = this.spaceManager || spaceManager;
-    const fallbackParameters = manager?.currentPlanetParameters || currentPlanetParameters;
-    const currentPlanetKey =
-      manager?.getCurrentPlanetKey?.() ??
-      manager?.currentPlanetKey ??
-      fallbackParameters?.key ??
-      fallbackParameters?.planetKey ??
-      null;
-
-    if (typeof project?.isRelevantToCurrentPlanet === 'function') {
-      return project.isRelevantToCurrentPlanet(currentPlanetKey, fallbackParameters, manager) !== false
-        && (!targetPlanet || !currentPlanetKey || targetPlanet === currentPlanetKey);
+    const currentPlanetKey = spaceManager.getCurrentPlanetKey();
+    if (project.isRelevantToCurrentPlanet
+      && project.isRelevantToCurrentPlanet(currentPlanetKey, currentPlanetParameters, spaceManager) === false) {
+      return false;
     }
+    if (project.category !== 'story') return true;
+    return (!project.attributes.planet || project.attributes.planet === currentPlanetKey)
+      && (!project.attributes.specialSeedKey
+        || project.attributes.specialSeedKey === currentPlanetParameters.rwgMeta?.specialSeedKey);
+  }
 
-    return !targetPlanet || !currentPlanetKey || targetPlanet === currentPlanetKey;
+  isMegaProject(project) {
+    return isMegaProjectCategory(project.category);
+  }
+
+  getMegaProjectCostMultiplier(project) {
+    if (!this.isMegaProject(project)) {
+      return 1;
+    }
+    let multiplier = 1;
+    for (const effect of this.activeEffects) {
+      if (effect.type === 'megaProjectCostMultiplier') {
+        multiplier *= effect.value;
+      }
+    }
+    return multiplier;
+  }
+
+  getMegaProjectDurationMultiplier(project) {
+    if (!this.isMegaProject(project)) {
+      return 1;
+    }
+    let multiplier = 1;
+    for (const effect of this.activeEffects) {
+      if (effect.type === 'megaProjectDurationMultiplier') {
+        multiplier *= effect.value;
+      }
+    }
+    return multiplier;
   }
 
   getDurationMultiplier(project, options) {
-    let multiplier = 1;
+    let multiplier = getMegaprojectsCoordinationProjectDurationMultiplier(spaceManager, project) *
+      this.getMegaProjectDurationMultiplier(project);
     const isSpaceshipProject = !!(
       options?.treatAsSpaceshipProject
       || project.attributes.spaceMining
@@ -1260,6 +1329,8 @@ class ProjectManager extends EffectableEntity {
         resourceId,
         value,
         skipForSpaceStorageImports: effect.skipForSpaceStorageImports === true,
+        appliesBeforeSpaceElevator: effect.appliesBeforeSpaceElevator === true,
+        appliesAfterSpaceElevator: effect.appliesAfterSpaceElevator === true,
         effectId: `${baseEffectId}-${name}`,
         sourceId,
         name: effect.name
@@ -1284,6 +1355,8 @@ class ProjectManager extends EffectableEntity {
         resourceId,
         value,
         skipForSpaceStorageImports: effect.skipForSpaceStorageImports === true,
+        appliesBeforeSpaceElevator: effect.appliesBeforeSpaceElevator === true,
+        appliesAfterSpaceElevator: effect.appliesAfterSpaceElevator === true,
         effectId: `${baseEffectId}-${name}`,
         sourceId,
         name: effect.name
@@ -1327,13 +1400,23 @@ class ProjectManager extends EffectableEntity {
     this.projectOrder = storyProjects.reverse().concat(otherProjects);
     this.normalizeImportProjectOrder();
     this.normalizeGroupedProjectOrder();
+    setProjectStorageProviders(this.projects);
   }
 
-  startProject(projectName) {
+  startProject(projectName, options = {}) {
     const project = this.projects[projectName];
-    if (project && project.start(resources)) {
-      updateProjectUI(projectName);
+    if (!project) {
+      return;
+    }
+    project.manualContinuousRun = options.manualContinuousRun === true
+      && project.isContinuous()
+      && !project.autoStart;
+    if (project.start(resources)) {
+      if (options.updateUI !== false) {
+        this.markUIDirty();
+      }
     } else {
+      project.manualContinuousRun = false;
     }
   }
 
@@ -1368,6 +1451,10 @@ class ProjectManager extends EffectableEntity {
         project.lastActiveTime = 0;
       }
 
+      if (!project.isActive || !project.isContinuous()) {
+        project.manualContinuousRun = false;
+      }
+
       if (
         this.isBooleanFlagSet('automateSpecialProjects') &&
         project.autoStart &&
@@ -1376,11 +1463,9 @@ class ProjectManager extends EffectableEntity {
         project.canStart()
       ) {
         if (project.isPaused) {
-          if (project.resume() && typeof updateProjectUI === 'function') {
-            updateProjectUI(project.name);
-          }
+          project.resume();
         } else {
-          this.startProject(project.name);
+          this.startProject(project.name, { updateUI: false });
         }
       }
     }
@@ -1651,9 +1736,6 @@ class ProjectManager extends EffectableEntity {
         if (typeof project.adjustActiveDuration === 'function') {
           project.adjustActiveDuration();
         }
-        if (typeof updateProjectUI === 'function') {
-          updateProjectUI(project.name);
-        }
       }
     }
   }
@@ -1724,15 +1806,7 @@ class ProjectManager extends EffectableEntity {
       }
     }
 
-    if (typeof initializeProjectsUI === 'function') {
-      initializeProjectsUI();
-    }
-    if (typeof renderProjects === 'function') {
-      renderProjects();
-    }
-    if (typeof initializeProjectAlerts === 'function') {
-      initializeProjectAlerts();
-    }
+    this.markUIDirty();
   }
 
   saveTravelState() {
@@ -1845,9 +1919,7 @@ class ProjectManager extends EffectableEntity {
         if ('autoDeployCollectors' in project && project.autoDeployCollectors) {
           project.autoDeployCollectors = false;
         }
-        if (typeof updateProjectUI === 'function') {
-          updateProjectUI(name);
-        }
+        this.markUIDirty();
       }
     }
   }

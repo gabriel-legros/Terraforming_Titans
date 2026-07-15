@@ -25,6 +25,7 @@ class SkillManager {
     this.skills = {};
     this.skillPoints = 0;
     this.activeEffects = [];
+    this.uiDirty = true;
     if (skillData) {
       for (const key in skillData) {
         this.skills[key] = new Skill(skillData[key]);
@@ -95,7 +96,12 @@ class SkillManager {
       )) ||
       (skill.id === 'cloning_expertise' && effectConfig.type === 'productionMultiplier') ||
       (skill.id === 'nanotech_efficiency' && effectConfig.type === 'nanotechEfficiencyMultiplier') ||
-      (skill.id === 'optimized_heat_sinks' && effectConfig.type === 'heatSinkPowerMultiplier')
+      (skill.id === 'optimized_heat_sinks' && effectConfig.type === 'heatSinkPowerMultiplier') ||
+      (skill.id === 'ecumenopolis_capacity' && (
+        effectConfig.type === 'storageMultiplier' ||
+        effectConfig.type === 'productionMultiplier' ||
+        effectConfig.type === 'consumptionMultiplier'
+      ))
     ) {
       return 1 + effectConfig.baseValue * skill.rank;
     }
@@ -169,6 +175,9 @@ class SkillManager {
   }
 
   applySkillEffect(skill) {
+    if (isCurrentWorldManagerDisabled('skillManager')) {
+      return;
+    }
     const effects = Array.isArray(skill.effects)
       ? skill.effects
       : (skill.effect ? [skill.effect] : []);
@@ -211,6 +220,9 @@ class SkillManager {
   }
 
   reapplyEffects() {
+    if (isCurrentWorldManagerDisabled('skillManager')) {
+      return;
+    }
     this.refreshMaxRanks();
     for (const id in this.skills) {
       const skill = this.skills[id];
@@ -223,9 +235,7 @@ class SkillManager {
   handleAtlasCompletionChange() {
     this.refreshMaxRanks();
     this.reapplyEffects();
-    if (typeof updateSkillTreeUI === 'function') {
-      updateSkillTreeUI();
-    }
+    this.uiDirty = true;
   }
 
   resetSkillTree() {

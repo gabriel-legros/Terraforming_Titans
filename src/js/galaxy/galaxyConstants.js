@@ -21,43 +21,43 @@ const BORDER_HEX_NEIGHBOR_DIRECTIONS = [
 const GALAXY_FLEET_UPGRADE_DEFINITIONS = {
     militaryResearch: {
         key: 'militaryResearch',
-        label: 'Military R&D',
-        description: 'Channel advanced research into hangar expansions that squeeze in additional wings.',
+        label: t('ui.galaxy.fleetUpgrades.militaryResearch.label', {}, 'Military R&D'),
+        description: t('ui.galaxy.fleetUpgrades.militaryResearch.description', {}, 'Channel advanced research into hangar expansions that squeeze in additional wings.'),
         increment: FLEET_UPGRADE_INCREMENT,
         baseCost: 100000,
         costType: 'resource',
         resourceCategory: 'colony',
         resourceId: 'advancedResearch',
-        costLabel: 'Adv. Research'
+        costLabel: t('ui.galaxy.fleetUpgrades.cost.advancedResearch', {}, 'Adv. Research')
     },
     micOutsource: {
         key: 'micOutsource',
-        label: 'MIC Contracts',
-        description: 'Cut Solis a check so they can subcontract extra yards for the fleet.',
+        label: t('ui.galaxy.fleetUpgrades.micOutsource.label', {}, 'MIC Contracts'),
+        description: t('ui.galaxy.fleetUpgrades.micOutsource.description', {}, 'Cut Solis a check so they can subcontract extra yards for the fleet.'),
         increment: FLEET_UPGRADE_INCREMENT,
         baseCost: 1000,
         costType: 'solis',
-        costLabel: 'Solis Points',
+        costLabel: t('ui.galaxy.fleetUpgrades.cost.solisPoints', {}, 'Solis Points'),
         maxPurchases: 100
     },
     enemyLessons: {
         key: 'enemyLessons',
-        label: 'Reverse Engineering',
-        description: 'Reverse-engineer alien tactics and fold their tricks into UHF logistics.',
+        label: t('ui.galaxy.fleetUpgrades.enemyLessons.label', {}, 'Reverse Engineering'),
+        description: t('ui.galaxy.fleetUpgrades.enemyLessons.description', {}, 'Reverse-engineer alien tactics and fold their tricks into UHF logistics.'),
         increment: FLEET_UPGRADE_INCREMENT,
         baseCost: 100,
         costType: 'artifact',
-        costLabel: 'Alien Artifacts',
+        costLabel: t('ui.galaxy.fleetUpgrades.cost.alienArtifacts', {}, 'Alien Artifacts'),
         maxPurchases: 100
     },
     pandoraBox: {
         key: 'pandoraBox',
-        label: "PANDORA'S Box",
-        description: 'Spend a skill point to greenlight unconventional fleet experiments.',
+        label: t('ui.galaxy.fleetUpgrades.pandoraBox.label', {}, "PANDORA'S Box"),
+        description: t('ui.galaxy.fleetUpgrades.pandoraBox.description', {}, 'Spend a skill point to greenlight unconventional fleet experiments.'),
         increment: 0.25,
         baseCost: 1,
         costType: 'skill',
-        costLabel: 'Skill Points'
+        costLabel: t('ui.galaxy.fleetUpgrades.cost.skillPoints', {}, 'Skill Points')
     }
 };
 const GALAXY_FLEET_UPGRADE_KEYS = Object.keys(GALAXY_FLEET_UPGRADE_DEFINITIONS);

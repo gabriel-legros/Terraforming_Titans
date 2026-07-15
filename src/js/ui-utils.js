@@ -114,10 +114,12 @@ function addTooltipHover(anchor, tooltip, options = {}) {
 
   const showTooltip = () => {
     tooltipEl._isActive = true;
-    const isResource = dynamicPlacement || !!tooltipEl._columnsInfo || !!tooltipEl.closest('.resource-item');
-    const hasColumns = typeof setResourceTooltipColumns === 'function' && (!!tooltipEl._columnsInfo || !!tooltipEl.closest('.resource-item'));
-    tooltipEl.classList.remove('above', 'three-column');
+    const isResourceTooltip = !!tooltipEl.closest('.resource-item');
+    const isResource = dynamicPlacement || !!tooltipEl._columnsInfo || isResourceTooltip;
+    const hasColumns = typeof setResourceTooltipColumns === 'function' && (!!tooltipEl._columnsInfo || isResourceTooltip);
+    tooltipEl.classList.remove('above', 'right', 'two-column', 'three-column');
     if (dynamicPlacement) tooltipEl.style.zIndex = '4000';
+    if (tooltipEl._prepareTooltipContent) tooltipEl._prepareTooltipContent();
 
     if (isResource) {
       if (hasColumns) setResourceTooltipColumns(tooltipEl, 1);
@@ -173,6 +175,25 @@ function addTooltipHover(anchor, tooltip, options = {}) {
         clampHorizontally();
         clampVertically();
       };
+      const fitsViewport = () => {
+        const margin = 4;
+        const rect = tooltipEl.getBoundingClientRect();
+        return rect.left >= margin
+          && rect.right <= window.innerWidth - margin
+          && rect.top >= margin
+          && rect.bottom <= window.innerHeight - margin;
+      };
+      const placeRight = () => {
+        const margin = 4;
+        tooltipEl.style.transform = 'none';
+        tooltipEl.style.left = `${aRect.right + margin}px`;
+        tooltipEl.style.top = `${aRect.top}px`;
+        const rect = tooltipEl.getBoundingClientRect();
+        const maxTop = window.innerHeight - margin - rect.height;
+        if (maxTop < margin) return false;
+        tooltipEl.style.top = `${Math.max(margin, Math.min(aRect.top, maxTop))}px`;
+        return fitsViewport();
+      };
       // below -> above
       place('below');
       let rect = tooltipEl.getBoundingClientRect();
@@ -190,7 +211,32 @@ function addTooltipHover(anchor, tooltip, options = {}) {
         place('below');
         rect = tooltipEl.getBoundingClientRect();
         placed = rect.bottom <= window.innerHeight;
-        if (!placed) place('above');
+        if (!placed) {
+          place('above');
+          rect = tooltipEl.getBoundingClientRect();
+          placed = rect.top >= 0;
+        }
+      }
+      // If neither vertical layout fits, a scrolled resource near the top of the
+      // resource bar can still fit beside its row. Only use this as a last resort.
+      if (!placed && isResourceTooltip) {
+        if (hasColumns) setResourceTooltipColumns(tooltipEl, 2);
+        tooltipEl.classList.remove('above', 'three-column');
+        tooltipEl.style.display = hasColumns ? 'flex' : 'block';
+        tooltipEl.style.maxHeight = `${window.innerHeight - 8}px`;
+        tooltipEl.style.overflowY = 'auto';
+        tooltipEl.classList.add('right', 'two-column');
+        placed = placeRight();
+
+        if (!placed) {
+          tooltipEl.classList.remove('right', 'two-column');
+          tooltipEl.style.maxHeight = '';
+          tooltipEl.style.overflowY = '';
+          if (hasColumns) setResourceTooltipColumns(tooltipEl, 3);
+          tooltipEl.classList.add('three-column');
+          tooltipEl.style.display = 'flex';
+          place('above');
+        }
       }
       tooltipEl.style.visibility = 'visible';
       tooltipEl.style.display = dynamicPlacement ? 'block' : (prevDisplay || '');
@@ -209,12 +255,14 @@ function addTooltipHover(anchor, tooltip, options = {}) {
 
   const hideTooltip = () => {
     tooltipEl._isActive = false;
-    tooltipEl.classList.remove('above', 'three-column');
+    tooltipEl.classList.remove('above', 'right', 'two-column', 'three-column');
     if (typeof setResourceTooltipColumns === 'function') setResourceTooltipColumns(tooltipEl, 1);
     tooltipEl.style.top = '';
     tooltipEl.style.left = '';
     tooltipEl.style.transform = '';
     tooltipEl.style.position = '';
+    tooltipEl.style.maxHeight = '';
+    tooltipEl.style.overflowY = '';
     tooltipEl.style.display = dynamicPlacement ? 'none' : '';
     tooltipEl.style.visibility = '';
   };
@@ -321,6 +369,7 @@ function cleanupDynamicTooltipsIn(root) {
   const dynamicTooltipListeners = [
     '_updateCostTooltip',
     '_updateWorkerTooltip',
+    '_updateProductivityTooltip',
     '_updateMaintenanceTooltip',
     '_updateProductionTooltip',
     '_updateConsumptionTooltip'
@@ -439,9 +488,18 @@ function createToggleButton(options = {}) {
 }
 
 function setToggleButtonState(toggle, enabled) {
-  toggle.classList.toggle('is-on', !!enabled);
-  toggle.setAttribute('aria-pressed', enabled ? 'true' : 'false');
-  toggle._toggleLabel.textContent = enabled ? toggle.dataset.onLabel : toggle.dataset.offLabel;
+  const isEnabled = !!enabled;
+  if (toggle.classList.contains('is-on') !== isEnabled) {
+    toggle.classList.toggle('is-on', isEnabled);
+  }
+  const pressed = isEnabled ? 'true' : 'false';
+  if (toggle.getAttribute('aria-pressed') !== pressed) {
+    toggle.setAttribute('aria-pressed', pressed);
+  }
+  const label = isEnabled ? toggle.dataset.onLabel : toggle.dataset.offLabel;
+  if (toggle._toggleLabel.textContent !== label) {
+    toggle._toggleLabel.textContent = label;
+  }
 }
 
 function makeCollapsibleCard(card) {

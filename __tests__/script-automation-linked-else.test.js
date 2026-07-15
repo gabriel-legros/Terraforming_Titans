@@ -25,6 +25,7 @@ function loadScriptAutomation() {
     ScriptVariableRegistry,
     automationManager: { enabled: true },
     formatNumber: value => String(value),
+    t: (path, vars, fallback) => fallback || path,
   });
 }
 

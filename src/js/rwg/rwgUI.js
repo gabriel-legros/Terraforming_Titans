@@ -1304,16 +1304,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
       const cancelToken = { cancelled: false };
       // Progress window
       const overlay = document.createElement('div');
-      overlay.style.position = 'fixed';
-      overlay.style.top = '0';
-      overlay.style.left = '0';
-      overlay.style.width = '100%';
-      overlay.style.height = '100%';
-      overlay.style.background = 'rgba(0,0,0,0.5)';
-      overlay.style.display = 'flex';
-      overlay.style.alignItems = 'center';
-      overlay.style.justifyContent = 'center';
-      overlay.style.zIndex = 3;
+      overlay.className = 'rwg-equilibration-overlay';
 
       const win = document.createElement('div');
       win.style.background = '#222';
@@ -1459,7 +1450,7 @@ function resolveWorldStar(res) {
     ?? res?.merged?.celestialParameters?.starLuminosity;
   return {
     name: source.name || getRwgUiText('details.unknownStar', 'Unknown Star'),
-    spectralType: source.spectralType || '—',
+    spectralType: source.spectralType || '-',
     luminositySolar: Number(source.luminositySolar ?? celestialLum ?? 1),
     massSolar: Number(source.massSolar ?? 1),
     temperatureK: Number(source.temperatureK ?? 0),
@@ -1499,16 +1490,7 @@ async function runAutoTravelEquilibrationPopup(res) {
   const cancelToken = { cancelled: false };
 
   const overlay = document.createElement('div');
-  overlay.style.position = 'fixed';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
-  overlay.style.width = '100%';
-  overlay.style.height = '100%';
-  overlay.style.background = 'rgba(0,0,0,0.5)';
-  overlay.style.display = 'flex';
-  overlay.style.alignItems = 'center';
-  overlay.style.justifyContent = 'center';
-  overlay.style.zIndex = 3;
+  overlay.className = 'rwg-equilibration-overlay';
 
   const win = document.createElement('div');
   win.style.background = '#222';

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'">
+  <title data-i18n="meta.documentTitle"></title>
+  <link rel="stylesheet" href="crash-window.css">
+</head>
+<body>
+  <main>
+    <h1 id="crash-title"></h1>
+    <p id="crash-description"></p>
+    <pre id="crash-report"></pre>
+    <div class="actions">
+      <button id="copy-log-button" type="button"></button>
+      <button id="open-log-folder-button" type="button"></button>
+      <button id="continue-button" type="button"></button>
+      <button id="close-game-button" class="danger" type="button"></button>
+    </div>
+  </main>
+  <script src="../src/js/lang/localization.js"></script>
+  <script src="../src/js/lang/current-language.js"></script>
+  <script src="crash-window.js"></script>
+</body>
+</html>

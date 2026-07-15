@@ -54,7 +54,7 @@ try {
 const BuildingAutomationPresetManagerBaseClass = BuildingAutomationPresetManagerBaseRef || class BuildingAutomationPresetManagerBaseFallback {};
 
 class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
-  constructor() {
+  constructor(encounteredTargets = null) {
     super({
       featureKey: 'automationBuildings',
       presetLabel: 'Preset',
@@ -62,8 +62,10 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       useMasterEnabled: true,
       useAssignments: true,
       useCombinations: true,
-      nextTravelKind: 'combination'
+      nextTravelKind: 'combination',
+      presetCollectionKey: 'buildings'
     });
+    this.encounteredTargets = encounteredTargets;
     this.everEnabledBuildings = new Set();
     this.elapsed = 0;
   }
@@ -88,23 +90,24 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
 
   recordBuildingEnabled(buildingId) {
     const building = buildings?.[buildingId];
-    if (!building || !building.automationRequiresEverEnabled) {
+    if (!building) {
       return false;
     }
     this.everEnabledBuildings.add(buildingId);
+    if (this.encounteredTargets) {
+      this.encounteredTargets.record('buildings', buildingId);
+    }
     return true;
   }
 
   hasEverEnabledBuilding(buildingId) {
-    return this.everEnabledBuildings.has(buildingId);
+    return this.everEnabledBuildings.has(buildingId)
+      || (this.encounteredTargets && this.encounteredTargets.has('buildings', buildingId));
   }
 
   shouldShowBuildingInAutomation(building) {
     if (!building) {
       return false;
-    }
-    if (!building.automationRequiresEverEnabled) {
-      return this.isBuildingAvailableNow(building);
     }
     if (this.isBuildingAvailableNow(building)) {
       this.recordBuildingEnabled(building.name);
@@ -117,7 +120,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     const buildingList = Object.values(buildings || {});
     for (let index = 0; index < buildingList.length; index += 1) {
       const building = buildingList[index];
-      if (!building || !building.automationRequiresEverEnabled) {
+      if (!building) {
         continue;
       }
       if (this.isBuildingAvailableNow(building)) {
@@ -268,6 +271,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     return {
       name: preset.name,
       showInSidebar: preset.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(preset.presetMode),
       includeControl: preset.includeControl !== false,
       includeAutomation: preset.includeAutomation !== false,
       scopeAll: preset.scopeAll === true,
@@ -292,6 +296,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       id,
       name: presetData.name || `Preset ${id}`,
       showInSidebar: presetData.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(presetData.presetMode),
       includeControl: presetData.includeControl !== false,
       includeAutomation: presetData.includeAutomation !== false,
       scopeAll: presetData.scopeAll === true,
@@ -305,11 +310,19 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       if (automation && automation.autoBuildBasis === 'initialLand') {
         automation.autoBuildBasis = 'geometricLand';
       }
+      if (buildingId === 'dysonReceiver'
+        && automation
+        && automation.autoBuildBasis === 'max'
+        && !('autoBuildMaxPercent' in automation)
+        && 'autoBuildPercent' in automation) {
+        automation.autoBuildMaxPercent = automation.autoBuildPercent;
+      }
       if (!control && !automation) {
         continue;
       }
       importedPreset.buildings[buildingId] = { control, automation };
     }
+    this.recordPresetTargets(importedPreset);
     this.presets.push(importedPreset);
     this.selectedPresetId = importedPreset.id;
     return importedPreset.id;
@@ -324,6 +337,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       id,
       name: name || `Preset ${id}`,
       showInSidebar: options.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(options.presetMode),
       includeControl,
       includeAutomation,
       scopeAll,
@@ -341,7 +355,19 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
         preset.buildings[buildingId] = entry;
       }
     }
+    this.recordPresetTargets(preset);
     return preset;
+  }
+
+  recordPresetTargets(preset) {
+    const buildingIds = Object.keys(preset.buildings || {});
+    for (let index = 0; index < buildingIds.length; index += 1) {
+      const buildingId = buildingIds[index];
+      this.everEnabledBuildings.add(buildingId);
+      if (this.encounteredTargets) {
+        this.encounteredTargets.record('buildings', buildingId);
+      }
+    }
   }
 
   mergeMissingBuildingsIntoPreset(presetId, buildingIds = []) {
@@ -371,7 +397,62 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       preset.buildings[buildingId] = entry;
       changed = true;
     }
+    if (changed) {
+      this.recordPresetTargets(preset);
+    }
     return changed;
+  }
+
+  snapshotBuildingIntoPreset(presetId, buildingId) {
+    const preset = this.getPresetById(Number(presetId));
+    const building = buildings[buildingId];
+    if (!preset || !building) {
+      return false;
+    }
+    const entry = this.captureBuildingSettings(
+      building,
+      preset.includeControl !== false,
+      preset.includeAutomation !== false
+    );
+    if (!entry.control && !entry.automation) {
+      return false;
+    }
+    preset.buildings[buildingId] = entry;
+    return true;
+  }
+
+  isPresetParameterPathEligible(preset, path) {
+    if (!Array.isArray(path) || path[0] !== 'buildings') {
+      return true;
+    }
+    const section = path[2];
+    const leafKey = path[path.length - 1];
+    if (section === 'control' && path[3] === 'workerPriority') {
+      return false;
+    }
+    if (section !== 'automation') {
+      return true;
+    }
+    if (leafKey === 'autoBuildPriority') {
+      return false;
+    }
+    const buildingId = path[1];
+    const automation = preset.buildings[buildingId]?.automation || {};
+    const mode = automation.autoBuildBasis || '';
+    if (leafKey === 'autoBuildFixed') {
+      return mode === 'fixed';
+    }
+    if (leafKey === 'autoBuildFillPercent') {
+      return mode === 'fill';
+    }
+    if (leafKey === 'autoBuildPercent') {
+      return mode !== 'fixed' && mode !== 'fill' && mode !== 'max';
+    }
+    if (leafKey === 'autoBuildMaxPercent') {
+      const building = buildings[buildingId];
+      return mode === 'max' && building.hasAdjustableAutoBuildMaxTarget();
+    }
+    return true;
   }
 
   captureBuildingSettings(building, includeControl, includeAutomation) {
@@ -427,6 +508,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       autoUpgradeEnabled: building.autoUpgradeEnabled === true
     };
     if (building.name === 'dysonReceiver') {
+      settings.autoBuildMaxPercent = building.autoBuildMaxPercent;
       settings.capActiveToDysonCapacity = building.capActiveToDysonCapacity === true;
     }
     return settings;
@@ -444,6 +526,9 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       }
       const preset = this.getPresetById(assignment.presetId);
       if (!preset) {
+        continue;
+      }
+      if (this.isParameterizedPreset(preset) && !this.getPresetParameterInfo(preset).valid) {
         continue;
       }
       const entries = preset.buildings;
@@ -472,8 +557,8 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     this.applyPresets();
   }
 
-  applyPresetOnce(presetId) {
-    const preset = this.getPresetById(presetId);
+  applyPresetOnce(presetId, parameterValue = null) {
+    const preset = this.buildPresetForApplication(this.getPresetById(presetId), parameterValue);
     if (!preset) {
       return;
     }
@@ -565,7 +650,6 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       const nextAutoFillingEnabled = control.autoFillingEnabled === true;
       if (building.autoFillingEnabled !== nextAutoFillingEnabled) {
         building.autoFillingEnabled = nextAutoFillingEnabled;
-        building.updateUI(building._cachedUI || {});
         changed = true;
       }
     }
@@ -574,43 +658,49 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
 
   applyAutomationSettings(building, automation) {
     let changed = false;
-    if (building.autoBuildEnabled !== automation.autoBuildEnabled) {
+    if ('autoBuildEnabled' in automation && building.autoBuildEnabled !== automation.autoBuildEnabled) {
       building.autoBuildEnabled = automation.autoBuildEnabled;
       changed = true;
     }
-    if (building.autoBuildPriority !== automation.autoBuildPriority) {
+    if ('autoBuildPriority' in automation && building.autoBuildPriority !== automation.autoBuildPriority) {
       building.autoBuildPriority = automation.autoBuildPriority;
       changed = true;
     }
-    const automationBasis = automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : automation.autoBuildBasis;
-    if (building.autoBuildBasis !== automationBasis) {
-      building.autoBuildBasis = automationBasis;
-      if (typeof building.normalizeAutoBuildBasis === 'function') {
-        building.normalizeAutoBuildBasis();
+    if ('autoBuildBasis' in automation) {
+      const automationBasis = automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : automation.autoBuildBasis;
+      if (building.autoBuildBasis !== automationBasis) {
+        building.autoBuildBasis = automationBasis;
+        if (typeof building.normalizeAutoBuildBasis === 'function') {
+          building.normalizeAutoBuildBasis();
+        }
+        changed = true;
       }
+    }
+    if ('autoBuildPercent' in automation && building.autoBuildPercent !== automation.autoBuildPercent) {
+      building.autoBuildPercent = automation.autoBuildPercent;
       changed = true;
     }
-    if (building.autoBuildPercent !== automation.autoBuildPercent) {
-      building.autoBuildPercent = automation.autoBuildPercent;
+    if ('autoBuildMaxPercent' in automation && building.autoBuildMaxPercent !== automation.autoBuildMaxPercent) {
+      building.autoBuildMaxPercent = automation.autoBuildMaxPercent;
       changed = true;
     }
     if ('autoBuildFixed' in automation && building.autoBuildFixed !== automation.autoBuildFixed) {
       building.autoBuildFixed = automation.autoBuildFixed;
       changed = true;
     }
-    if (building.autoBuildFillPercent !== automation.autoBuildFillPercent) {
+    if ('autoBuildFillPercent' in automation && building.autoBuildFillPercent !== automation.autoBuildFillPercent) {
       building.autoBuildFillPercent = automation.autoBuildFillPercent;
       changed = true;
     }
-    if (building.autoBuildFillResourcePrimary !== automation.autoBuildFillResourcePrimary) {
+    if ('autoBuildFillResourcePrimary' in automation && building.autoBuildFillResourcePrimary !== automation.autoBuildFillResourcePrimary) {
       building.autoBuildFillResourcePrimary = automation.autoBuildFillResourcePrimary;
       changed = true;
     }
-    if (building.autoBuildFillResourceSecondary !== automation.autoBuildFillResourceSecondary) {
+    if ('autoBuildFillResourceSecondary' in automation && building.autoBuildFillResourceSecondary !== automation.autoBuildFillResourceSecondary) {
       building.autoBuildFillResourceSecondary = automation.autoBuildFillResourceSecondary;
       changed = true;
     }
-    if (building.autoActiveEnabled !== automation.autoActiveEnabled) {
+    if ('autoActiveEnabled' in automation && building.autoActiveEnabled !== automation.autoActiveEnabled) {
       building.autoActiveEnabled = automation.autoActiveEnabled;
       changed = true;
     }
@@ -661,6 +751,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
         id: preset.id,
         name: preset.name,
         showInSidebar: preset.showInSidebar !== false,
+        presetMode: this.getPresetModeValue(preset.presetMode),
         includeControl: !!preset.includeControl,
         includeAutomation: !!preset.includeAutomation,
         scopeAll: !!preset.scopeAll,
@@ -697,15 +788,19 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       id: preset.id,
       name: preset.name || 'Preset',
       showInSidebar: preset.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(preset.presetMode),
       includeControl: preset.includeControl !== false,
       includeAutomation: preset.includeAutomation !== false,
       scopeAll: preset.scopeAll === true,
       buildings: Object.fromEntries(
         Object.entries(preset.buildings || {}).map(([buildingId, entry]) => {
-          const control = entry?.control ? { ...entry.control } : null;
+          let control = entry?.control ? { ...entry.control } : null;
           let automation = entry?.automation ? { ...entry.automation } : null;
           if (control && 'autoUpgradeEnabled' in control && !automation) {
-            automation = {};
+            automation = {
+              autoUpgradeEnabled: control.autoUpgradeEnabled === true
+            };
+            delete control.autoUpgradeEnabled;
           }
           if (control && 'autoUpgradeEnabled' in control && automation && !('autoUpgradeEnabled' in automation)) {
             automation.autoUpgradeEnabled = control.autoUpgradeEnabled === true;
@@ -713,6 +808,19 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
           }
           if (automation && automation.autoBuildBasis === 'initialLand') {
             automation.autoBuildBasis = 'geometricLand';
+          }
+          if (buildingId === 'dysonReceiver'
+            && automation
+            && automation.autoBuildBasis === 'max'
+            && !('autoBuildMaxPercent' in automation)
+            && 'autoBuildPercent' in automation) {
+            automation.autoBuildMaxPercent = automation.autoBuildPercent;
+          }
+          if (control && Object.keys(control).length === 0) {
+            control = null;
+          }
+          if (automation && Object.keys(automation).length === 0) {
+            automation = null;
           }
           return [buildingId, {
             control,
@@ -726,6 +834,12 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     this.everEnabledBuildings = new Set(
       Array.isArray(data.everEnabledBuildings) ? data.everEnabledBuildings : []
     );
+    this.everEnabledBuildings.forEach(buildingId => {
+      if (this.encounteredTargets) {
+        this.encounteredTargets.record('buildings', buildingId);
+      }
+    });
+    this.presets.forEach(preset => this.recordPresetTargets(preset));
     this.loadCommonListState(data, { allowLegacyApplyOnNextTravel: true });
     this.recordCurrentlyAvailableBuildings();
   }

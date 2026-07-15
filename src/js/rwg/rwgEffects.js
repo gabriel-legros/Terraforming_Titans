@@ -213,7 +213,7 @@ const RWG_EFFECTS = {
       type: "projectDurationMultiplier",
       factor: 0.01,
       excludeSpaceships: true,
-      description: "Non-spaceship project duration (1% each)",
+      description: t('ui.rwg.rewardEffects.nonSpaceshipProjectDuration', {}, 'Non-spaceship project duration (1% each)'),
       computeValue(count, def) {
         const f = def?.factor ?? 0.01;
         return 1 / (1 + f * count);
@@ -225,7 +225,7 @@ const RWG_EFFECTS = {
       effectId: "rwg-chthonian-suffering",
       target: "global",
       type: "flavorText",
-      description: "Suffering Enjoyment",
+      description: t('ui.rwg.rewardEffects.sufferingEnjoyment', {}, 'Suffering Enjoyment'),
       computeValue() {
         return 0;
       },
@@ -237,7 +237,7 @@ const RWG_EFFECTS = {
       target: "global",
       type: "globalMaintenanceReduction",
       factor: 0.02,
-      description: "Maintenance divided by (1 + 2% each)",
+      description: t('ui.rwg.rewardEffects.maintenanceReduction', {}, 'Maintenance divided by (1 + 2% each)'),
       computeValue(count, def) {
         const f = def?.factor ?? 0.02;
         const divisor = 1 + f * count;
@@ -292,7 +292,7 @@ const RWG_EFFECTS = {
       resourceCategory: "colony",
       resourceTarget: "energy",
       factor: 0.05,
-      description: "Geothermal and fusion energy production increased (+5% each)",
+      description: t('ui.rwg.rewardEffects.geothermalAndFusionEnergy', {}, 'Geothermal and fusion energy production increased (+5% each)'),
       computeValue(count, def) {
         const f = def?.factor ?? 0.05;
         return 1 + f * count;
@@ -305,6 +305,19 @@ const RWG_EFFECTS = {
       type: "resourceProductionMultiplier",
       resourceCategory: "colony",
       resourceTarget: "energy",
+      factor: 0.05,
+      hideInSummary: true,
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.05;
+        return 1 + f * count;
+      },
+    },
+    {
+      effectId: "rwg-molten-fusion-consumption",
+      target: "building",
+      targetId: "fusionPowerPlant",
+      type: "consumptionMultiplier",
+      disabledWhenGameSettingEnabled: "disableFusionConsumptionScaling",
       factor: 0.05,
       hideInSummary: true,
       computeValue(count, def) {
@@ -326,6 +339,19 @@ const RWG_EFFECTS = {
         return 1 + f * count;
       },
     },
+    {
+      effectId: "rwg-molten-superalloy-fusion-consumption",
+      target: "building",
+      targetId: "superalloyFusionReactor",
+      type: "consumptionMultiplier",
+      disabledWhenGameSettingEnabled: "disableFusionConsumptionScaling",
+      factor: 0.05,
+      hideInSummary: true,
+      computeValue(count, def) {
+        const f = def?.factor ?? 0.05;
+        return 1 + f * count;
+      },
+    },
   ],
   "jupiter-like": [
     {
@@ -333,7 +359,7 @@ const RWG_EFFECTS = {
       target: "global",
       type: "globalCostReduction",
       factor: 0.01,
-      description: "Building and colony construction cost divided by (1 + 1% × √N)",
+      description: t('ui.rwg.rewardEffects.jupiterLikeConstructionCost', {}, 'Building and colony construction cost divided by (1 + 1% × √N)'),
       computeValue(count, def) {
         const f = def?.factor ?? 0.01;
         const divisor = 1 + f * Math.sqrt(Math.max(0, count));
@@ -413,8 +439,30 @@ function countRandomWorldHazards(status) {
   return hazardKeys.size;
 }
 
+function clearRWGEffects() {
+  if (!(removeEffect instanceof Function)) return;
+  const removed = new Set();
+  for (const [type, effects] of Object.entries(RWG_EFFECTS)) {
+    const sourceId = `rwg-${type}`;
+    for (const effect of effects) {
+      if (effect.type === "flavorText") continue;
+      const key = `${effect.target}:${sourceId}`;
+      if (removed.has(key)) continue;
+      removed.add(key);
+      removeEffect({
+        target: effect.target,
+        sourceId,
+      });
+    }
+  }
+}
+
 function applyRWGEffects() {
   if (!spaceManager || !(addEffect instanceof Function)) return;
+  if (isCurrentWorldManagerDisabled("rwgManager")) {
+    clearRWGEffects();
+    return;
+  }
 
   let counts = {};
   let hazardBonuses = {};
@@ -440,7 +488,9 @@ function applyRWGEffects() {
   for (const [type, effects] of Object.entries(RWG_EFFECTS)) {
     const baseCount = counts[type] || 0;
     const bonus = hazardBonuses[type] || 0;
-    const effectiveCount = baseCount + bonus;
+    const uncappedCount = baseCount + bonus;
+    const cap = gameSettings.rwgRewardsCap ?? null;
+    const effectiveCount = cap === null ? uncappedCount : Math.min(uncappedCount, cap);
     for (const eff of effects) {
       if (eff.type === "flavorText") continue;
       const value = eff.computeValue instanceof Function ? eff.computeValue(effectiveCount, eff) : eff.value;
@@ -455,6 +505,7 @@ function applyRWGEffects() {
             resourceCategory: eff.resourceCategory,
             resourceId,
             excludeSpaceships: eff.excludeSpaceships,
+            disabledWhenGameSettingEnabled: eff.disabledWhenGameSettingEnabled,
             value,
           });
         }
@@ -472,6 +523,7 @@ function applyRWGEffects() {
         resourceId: eff.resourceId,
         resourceKey: eff.resourceKey,
         excludeSpaceships: eff.excludeSpaceships,
+        disabledWhenGameSettingEnabled: eff.disabledWhenGameSettingEnabled,
         value,
       });
     }

@@ -95,17 +95,24 @@
   justify-content: center;
   width: 18px;
   height: 18px;
-  background-color: var(--wgc-border-color);
   border: none;
   padding: 2px;
   cursor: pointer;
+  position: relative;
+}
+
+.wgc-copy-team-stats-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: var(--wgc-border-color);
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M15.5 3H14a3 3 0 0 0-4 0H8.5A2.5 2.5 0 0 0 6 5.5v13A2.5 2.5 0 0 0 8.5 21h7a2.5 2.5 0 0 0 2.5-2.5v-13A2.5 2.5 0 0 0 15.5 3Zm1.5 13.5A1.5 1.5 0 0 1 15.5 18h-7A1.5 1.5 0 0 1 7 16.5v-11A1.5 1.5 0 0 1 8.5 4h1.59a1 1 0 0 0 .7-.29l.21-.21h1.9l.21.21a1 1 0 0 0 .7.29h1.59A1.5 1.5 0 0 1 17 5.5Zm-8-5.5h6v1h-6Zm0 3h6v1h-6Zm0 3h4v1h-4Z'/%3E%3C/svg%3E");
   mask-repeat: no-repeat;
   mask-position: center;
   mask-size: contain;
 }
 
-.wgc-copy-team-stats:hover:not(:disabled) {
+.wgc-copy-team-stats:hover:not(:disabled) .wgc-copy-team-stats-icon {
   background-color: var(--wgc-border-color);
 }
 
@@ -427,80 +434,6 @@
   color-scheme: dark;
 }
 
-.wgc-container .wgc-story-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  border: none;
-  padding: 0;
-  font-family: inherit;
-  font-size: 0.9rem;
-  color: var(--wgc-text-light);
-  text-transform: none;
-  appearance: none;
-  -webkit-appearance: none;
-  box-shadow: none;
-}
-
-.wgc-container .wgc-story-toggle__track {
-  width: 44px;
-  height: 22px;
-  background-color: var(--wgc-bg-light);
-  border-radius: 999px;
-  position: relative;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.wgc-container .wgc-story-toggle__thumb {
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background-color: var(--wgc-text-light);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
-  transition: transform 0.2s ease;
-}
-
-.wgc-container .wgc-story-toggle.is-visible .wgc-story-toggle__track {
-  background-color: var(--wgc-border-color);
-  box-shadow: var(--wgc-accent-glow);
-}
-
-.wgc-container .wgc-story-toggle.is-visible .wgc-story-toggle__thumb {
-  transform: translateX(22px);
-}
-
-.wgc-container .wgc-story-toggle:focus-visible {
-  outline: 2px solid var(--wgc-border-color);
-  outline-offset: 2px;
-}
-
-.wgc-container .wgc-story-toggle__label {
-  font-weight: 600;
-  color: var(--wgc-text-light);
-  min-width: 88px;
-  text-align: left;
-}
-
-.wgc-container .wgc-story-toggle.is-hidden .wgc-story-toggle__track {
-  background-color: var(--wgc-bg-light);
-  box-shadow: none;
-}
-
-.wgc-container .wgc-story-toggle:hover {
-  background: transparent;
-  color: var(--wgc-text-light);
-  border: none;
-  box-shadow: none;
-}
-
-.wgc-container .wgc-story-toggle:hover .wgc-story-toggle__track {
-  box-shadow: none;
-}
-
 /* R&D and Facilities List */
 .wgc-rd-item {
   display: grid;
@@ -564,6 +497,60 @@
   font-weight: bold;
   color: var(--wgc-text-light);
   background-color: transparent !important;
+}
+
+.wgc-rd-card-title {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.wgc-rd-artifact-controls {
+  display: contents;
+}
+
+.wgc-rd-artifact-balance {
+  grid-column: 2;
+  font-size: 0.75em;
+  white-space: nowrap;
+}
+
+.wgc-rd-artifact-toggle {
+  grid-column: 3;
+  justify-self: end;
+  font-size: 1em;
+  gap: 4px !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+
+.wgc-rd-artifact-toggle .ui-toggle__label {
+  min-width: 0;
+  color: var(--wgc-text-light) !important;
+  white-space: nowrap;
+}
+
+#wgc-rd-section {
+  container-type: inline-size;
+}
+
+@container (max-width: 420px) {
+  .wgc-rd-card-title {
+    grid-template-columns: auto 1fr;
+  }
+
+  .wgc-rd-artifact-balance {
+    grid-column: 2;
+    justify-self: end;
+  }
+
+  .wgc-rd-artifact-toggle {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: end;
+  }
 }
 
 /* Popup Dialog */
@@ -687,6 +674,13 @@
   opacity: 0.6;
 }
 
+.wgc-member-dialog-title-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  align-items: center;
+  gap: 8px;
+}
+
 .wgc-popup-window h2 {
   text-align: center;
   margin-top: 0;
@@ -728,6 +722,24 @@
 .wgc-popup-window .wgc-roll-name-button {
   width: 42px;
   padding: 4px 6px;
+}
+
+.wgc-popup-window .wgc-member-rotate-button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  color: var(--wgc-border-color);
+  line-height: 1;
+}
+
+.wgc-popup-window .wgc-member-rotate-button:disabled {
+  color: var(--wgc-text-dark);
+  opacity: 0.45;
+  cursor: default;
+}
+
+.wgc-popup-window .wgc-member-rotate-placeholder {
+  visibility: hidden;
 }
 
 .wgc-popup-window .wgc-respec-button {
@@ -890,6 +902,326 @@
   background-color: var(--wgc-green);
   border-radius: 2px;
   transition: height 0.3s ease, background-color 0.3s ease;
+}
+
+/* Toolbar (above the main WGC layout) */
+/* Presets icon button */
+.wgc-presets-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  position: relative;
+}
+
+.wgc-presets-icon-btn-icon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: var(--wgc-border-color);
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='black' d='M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-position: center;
+  mask-size: contain;
+}
+
+.wgc-presets-icon-btn:hover .wgc-presets-icon-btn-icon {
+  background-color: var(--wgc-border-color);
+  opacity: 0.75;
+}
+
+.wgc-presets-icon-btn:focus-visible {
+  outline: 1px dashed var(--wgc-border-color);
+  outline-offset: 2px;
+}
+
+/* Stat Presets dialog overlay */
+.wgc-presets-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.55);
+  align-items: center;
+  justify-content: center;
+}
+
+.wgc-presets-overlay.is-open {
+  display: flex;
+}
+
+.wgc-presets-dialog {
+  background: var(--wgc-bg-dark);
+  border: 1px solid var(--wgc-border-color);
+  border-radius: 6px;
+  padding: 20px 22px;
+  width: min(480px, 94vw);
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.wgc-presets-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2px;
+}
+
+.wgc-presets-dialog-header h3 {
+  margin: 0;
+  color: var(--wgc-text-light);
+  font-size: 1.05em;
+}
+
+.wgc-presets-close {
+  background: transparent;
+  border: none;
+  color: var(--wgc-text-medium);
+  font-size: 1.1em;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+  line-height: 1;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.wgc-presets-close:hover {
+  color: var(--wgc-text-light);
+  background-color: var(--wgc-bg-light);
+}
+
+/* Form inside the dialog */
+.wgc-preset-description {
+  color: var(--wgc-text-medium);
+  font-size: 0.82em;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.wgc-preset-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--wgc-bg-light);
+  border-radius: 4px;
+  padding: 10px;
+}
+
+.wgc-preset-name-input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.wgc-preset-scope-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.wgc-preset-select {
+  flex: 1 1 auto;
+  min-width: 100px;
+}
+
+.wgc-preset-ratios-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.wgc-preset-ratios-row label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.88em;
+  color: var(--wgc-text-light);
+}
+
+.wgc-preset-ratio-input {
+  width: 52px;
+}
+
+.wgc-preset-save-button {
+  align-self: flex-start;
+  background-color: var(--wgc-bg-light);
+  border: 1px solid var(--wgc-border-color);
+  color: var(--wgc-text-light);
+  border-radius: 3px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.wgc-preset-save-button:hover {
+  background-color: var(--wgc-border-color);
+  color: var(--wgc-bg-dark);
+}
+
+/* Respec toggle */
+.wgc-respec-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--wgc-text-medium);
+  cursor: pointer;
+  box-shadow: none;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.wgc-respec-toggle__track {
+  width: 36px;
+  height: 18px;
+  background-color: var(--wgc-bg-light);
+  border-radius: 999px;
+  position: relative;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.wgc-respec-toggle__thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: var(--wgc-text-light);
+  transition: transform 0.2s ease;
+}
+
+.wgc-respec-toggle.is-on .wgc-respec-toggle__track {
+  background-color: var(--wgc-border-color);
+}
+
+.wgc-respec-toggle.is-on .wgc-respec-toggle__thumb {
+  transform: translateX(18px);
+}
+
+.wgc-container .wgc-presets-dialog .wgc-respec-toggle:hover {
+  background: transparent;
+  color: var(--wgc-text-light);
+  border: none;
+  box-shadow: none;
+}
+
+.dark-mode .wgc-container .wgc-presets-dialog button.wgc-respec-toggle,
+.dark-mode .wgc-container .wgc-presets-dialog button.wgc-respec-toggle:hover:not(:disabled) {
+  background: transparent;
+  border: none;
+  color: var(--wgc-text-medium);
+  box-shadow: none;
+}
+
+.dark-mode .wgc-container .wgc-presets-dialog button.wgc-respec-toggle:hover:not(:disabled) {
+  color: var(--wgc-text-light);
+}
+
+.wgc-respec-toggle:focus-visible {
+  outline: 2px solid var(--wgc-border-color);
+  outline-offset: 2px;
+}
+
+/* Preset list */
+.wgc-presets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wgc-preset-empty {
+  color: var(--wgc-text-dark);
+  font-size: 0.85em;
+  font-style: italic;
+}
+
+.wgc-preset-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 7px 10px;
+  background-color: var(--wgc-bg-light);
+  border: 1px solid var(--wgc-bg-light);
+  border-radius: 4px;
+}
+
+.wgc-preset-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.wgc-preset-name {
+  font-weight: 600;
+  color: var(--wgc-text-light);
+  font-size: 0.9em;
+}
+
+.wgc-preset-scope {
+  color: var(--wgc-text-medium);
+  font-size: 0.8em;
+}
+
+.wgc-preset-ratios {
+  color: var(--wgc-text-dark);
+  font-size: 0.8em;
+}
+
+.wgc-preset-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.wgc-presets-dialog .wgc-preset-apply {
+  background-color: var(--wgc-bg-medium);
+  border: 1px solid var(--wgc-border-color);
+  color: var(--wgc-text-light);
+  border-radius: 3px;
+  padding: 3px 10px;
+  font-size: 0.82em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.wgc-presets-dialog .wgc-preset-apply:hover {
+  background-color: var(--wgc-border-color);
+  color: var(--wgc-bg-dark);
+  box-shadow: none;
+}
+
+.wgc-presets-dialog .wgc-preset-delete {
+  background: transparent;
+  border: 1px solid var(--wgc-red);
+  color: var(--wgc-red);
+  border-radius: 3px;
+  padding: 3px 7px;
+  font-size: 0.82em;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.wgc-presets-dialog .wgc-preset-delete:hover {
+  background-color: var(--wgc-red);
+  color: #fff;
+  box-shadow: none;
 }
 
 /* Stats */

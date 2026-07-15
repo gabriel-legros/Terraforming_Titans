@@ -13,6 +13,7 @@ const DEBRIS_DISTRIBUTION_DRAG_LINE_MIN_METERS = 10000;
 const DEBRIS_DISTRIBUTION_MEAN_MIN_METERS = 12000;
 const DEBRIS_DECAY_DENSITY_FLOOR = 1e-20;
 const DEBRIS_DECAY_MAX_MULTIPLIER = 100;
+const KESSLER_BIN_REGENERATION_CAP_EPSILON = 1e-9;
 const KESSLER_DECAY_CONSTANTS = {
   baseRate: DEBRIS_DECAY_BASE_RATE,
   densityFloor: DEBRIS_DECAY_DENSITY_FLOOR,
@@ -49,11 +50,11 @@ function resolveDensityModel(terraforming) {
 
 function calculateKesslerRadiusContext(terraforming, entry) {
   const referenceRadiusKm = entry?.referenceRadiusKm
+    || terraforming?.initialCelestialParameters?.radius
+    || terraforming?.celestialParameters?.radius
     || terraforming?.baseRadius
     || terraforming?.initialCelestialParameters?.baseRadius
-    || terraforming?.initialCelestialParameters?.radius
     || terraforming?.celestialParameters?.baseRadius
-    || terraforming?.celestialParameters?.radius
     || 0;
   const currentRadiusKm = terraforming?.celestialParameters?.radius || referenceRadiusKm;
   return {
@@ -66,6 +67,31 @@ function calculateKesslerRadiusContext(terraforming, entry) {
 function getEffectivePeriapsisAltitudeMeters(entry, terraforming) {
   const radiusContext = calculateKesslerRadiusContext(terraforming, entry);
   return Math.max(0, entry.periapsisMeters + radiusContext.altitudeOffsetMeters);
+}
+
+function shouldRebaseKesslerRadiusReference(terraforming, referenceRadiusKm) {
+  const initialRadiusKm = terraforming?.initialCelestialParameters?.radius || 0;
+  const baseRadiusKm = terraforming?.baseRadius
+    || terraforming?.initialCelestialParameters?.baseRadius
+    || terraforming?.celestialParameters?.baseRadius
+    || 0;
+  return Boolean(
+    initialRadiusKm
+    && baseRadiusKm
+    && referenceRadiusKm
+    && Math.abs(referenceRadiusKm - baseRadiusKm) < 1e-6
+    && initialRadiusKm > baseRadiusKm
+  );
+}
+
+function normalizeKesslerRadiusReferences(terraforming, entries) {
+  const referenceRadiusKm = calculateKesslerRadiusContext(terraforming).referenceRadiusKm;
+  entries.forEach((entry) => {
+    entry.referenceRadiusKm = entry.referenceRadiusKm || referenceRadiusKm;
+    if (shouldRebaseKesslerRadiusReference(terraforming, entry.referenceRadiusKm)) {
+      entry.referenceRadiusKm = terraforming.initialCelestialParameters.radius;
+    }
+  });
 }
 
 function buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, maxMeters, referenceRadiusKm, samples = PERIAPSIS_SAMPLE_COUNT) {
@@ -133,6 +159,13 @@ function normalizeKesslerParameters(parameters = {}) {
   };
 }
 
+function getKesslerBaselineMassForEntry(baseline, resource, entryCount) {
+  if (baseline) {
+    return Math.max(0, baseline.massTons || 0);
+  }
+  return entryCount > 0 ? (resource.initialValue || 0) / entryCount : 0;
+}
+
 class KesslerHazard {
   constructor(manager) {
     this.manager = manager;
@@ -155,7 +188,7 @@ class KesslerHazard {
 
   initializeResources(terraforming, kesslerParameters, options = {}) {
     const perLand = kesslerParameters.orbitalDebrisPerLand;
-    const initialLand = resolveWorldBaseLand(terraforming, resources?.surface?.land);
+    const initialLand = resolveWorldGeometricLand(terraforming, resources?.surface?.land);
     const calculatedValue = initialLand * perLand;
     const resource = resources.special.orbitalDebris;
     const unlockOnly = options.unlockOnly === true;
@@ -187,7 +220,11 @@ class KesslerHazard {
   save() {
     return {
       permanentlyCleared: this.permanentlyCleared,
-      periapsisDistribution: this.periapsisDistribution,
+      periapsisDistribution: this.periapsisDistribution.map((entry) => {
+        const savedEntry = { ...entry };
+        delete savedEntry.lastDecayTonsPerSecond;
+        return savedEntry;
+      }),
       periapsisBaseline: this.periapsisBaseline
     };
   }
@@ -337,6 +374,8 @@ class KesslerHazard {
       return;
     }
     const resource = resources.special.orbitalDebris;
+    resource.unlocked = true;
+    this.permanentlyCleared = false;
     if (!this.periapsisDistribution.length) {
       this.ensurePeriapsisDistribution(terraforming, this.manager.parameters.kessler, resource.value || 0);
     }
@@ -368,15 +407,91 @@ class KesslerHazard {
     resource.value += addedTons;
   }
 
+  regenerateDebrisFromDisk(terraforming, kesslerParameters, deltaSeconds, ratePerBinPerSecond = 0, maxGeneratedTons = Infinity) {
+    if (!(deltaSeconds > 0) || !(ratePerBinPerSecond > 0)) {
+      return 0;
+    }
+    const resource = resources.special.orbitalDebris;
+    resource.unlocked = true;
+    if (!this.periapsisDistribution.length) {
+      this.ensurePeriapsisDistribution(terraforming, kesslerParameters, resource.value || 0);
+    }
+    if (!this.periapsisDistribution.length) {
+      return 0;
+    }
+
+    const additions = [];
+    let rawRegeneration = 0;
+    let startingTotal = 0;
+    const baselineTotal = this.getBaselineTotalMass();
+    for (let i = 0; i < this.periapsisDistribution.length; i += 1) {
+      const entry = this.periapsisDistribution[i];
+      startingTotal += entry.massTons || 0;
+      const baselineMass = getKesslerBaselineMassForEntry(
+        this.periapsisBaseline[i],
+        resource,
+        this.periapsisDistribution.length
+      );
+      const capEpsilon = baselineMass * KESSLER_BIN_REGENERATION_CAP_EPSILON;
+      const binCapacity = (baselineMass - (entry.massTons || 0)) > capEpsilon
+        ? Math.max(0, baselineMass - (entry.massTons || 0))
+        : 0;
+      const added = Math.min(
+        binCapacity,
+        Math.max(0, baselineMass * ratePerBinPerSecond * deltaSeconds)
+      );
+      additions.push(added);
+      rawRegeneration += added;
+    }
+
+    if (baselineTotal > 0 && startingTotal >= baselineTotal * (1 - KESSLER_BIN_REGENERATION_CAP_EPSILON)) {
+      this.clampDistributionToBaseline();
+      return 0;
+    }
+
+    const generationScale = rawRegeneration > 0
+      ? Math.min(1, maxGeneratedTons / rawRegeneration)
+      : 0;
+    let regenerated = 0;
+    for (let i = 0; i < this.periapsisDistribution.length; i += 1) {
+      const entry = this.periapsisDistribution[i];
+      const added = additions[i] * generationScale;
+      entry.massTons += added;
+      entry.maxSinceZero = Math.max(entry.maxSinceZero || 0, entry.massTons);
+      regenerated += added;
+    }
+
+    let updatedTotal = 0;
+    this.periapsisDistribution.forEach((entry) => {
+      updatedTotal += entry.massTons || 0;
+    });
+    if (baselineTotal > 0 && updatedTotal > baselineTotal) {
+      let excess = updatedTotal - baselineTotal;
+      for (let i = this.periapsisDistribution.length - 1; i >= 0 && excess > 0; i -= 1) {
+        const entry = this.periapsisDistribution[i];
+        const removed = Math.min(entry.massTons || 0, excess);
+        entry.massTons -= removed;
+        excess -= removed;
+      }
+      updatedTotal = baselineTotal;
+    }
+    regenerated = Math.max(0, updatedTotal - startingTotal);
+    resource.value = Math.max(0, updatedTotal);
+    if (regenerated > 0) {
+      resource.modifyRate(
+        regenerated / deltaSeconds,
+        t('ui.terraforming.hazardEffects.debrisDiskKesslerRegeneration', {}, 'Debris Disk Regeneration'),
+        'hazard'
+      );
+      this.permanentlyCleared = false;
+    }
+    return regenerated;
+  }
+
   ensurePeriapsisDistribution(terraforming, kesslerParameters, totalMass) {
     if (this.periapsisDistribution.length) {
-      const referenceRadiusKm = calculateKesslerRadiusContext(terraforming).referenceRadiusKm;
-      this.periapsisDistribution.forEach((entry) => {
-        entry.referenceRadiusKm = entry.referenceRadiusKm || referenceRadiusKm;
-      });
-      this.periapsisBaseline.forEach((entry) => {
-        entry.referenceRadiusKm = entry.referenceRadiusKm || referenceRadiusKm;
-      });
+      normalizeKesslerRadiusReferences(terraforming, this.periapsisDistribution);
+      normalizeKesslerRadiusReferences(terraforming, this.periapsisBaseline);
       return;
     }
     const densityModel = resolveDensityModel(terraforming);
@@ -407,6 +522,8 @@ class KesslerHazard {
     if (!this.periapsisDistribution.length) {
       this.ensurePeriapsisDistribution(terraforming, kesslerParameters, totalMass);
     }
+    normalizeKesslerRadiusReferences(terraforming, this.periapsisDistribution);
+    normalizeKesslerRadiusReferences(terraforming, this.periapsisBaseline);
     let distributionTotal = 0;
     this.periapsisDistribution.forEach((entry) => {
       distributionTotal += entry.massTons;
@@ -430,6 +547,32 @@ class KesslerHazard {
     this.periapsisDistribution.forEach((entry) => {
       entry.massTons *= scale;
     });
+  }
+
+  getBaselineTotalMass() {
+    const resource = resources.special.orbitalDebris;
+    const entryCount = this.periapsisDistribution.length;
+    let baselineTotal = 0;
+    for (let i = 0; i < entryCount; i += 1) {
+      baselineTotal += getKesslerBaselineMassForEntry(this.periapsisBaseline[i], resource, entryCount);
+    }
+    return baselineTotal;
+  }
+
+  clampDistributionToBaseline() {
+    const resource = resources.special.orbitalDebris;
+    const entryCount = this.periapsisDistribution.length;
+    let total = 0;
+    for (let i = 0; i < entryCount; i += 1) {
+      const entry = this.periapsisDistribution[i];
+      const baselineMass = getKesslerBaselineMassForEntry(this.periapsisBaseline[i], resource, entryCount);
+      if (baselineMass > 0 && entry.massTons > baselineMass) {
+        entry.massTons = baselineMass;
+      }
+      total += entry.massTons || 0;
+    }
+    resource.value = Math.max(0, total);
+    return total;
   }
 
   update(deltaSeconds, terraforming, kesslerParameters) {
@@ -490,6 +633,7 @@ class KesslerHazard {
       const decayFraction = 1 - Math.exp(-decayRate * deltaSeconds);
       const decayBasis = density >= DEBRIS_DECAY_DENSITY_REFERENCE ? entry.maxSinceZero : entry.massTons;
       const removed = Math.min(entry.massTons, decayBasis * decayFraction);
+      entry.lastDecayTonsPerSecond = deltaSeconds ? removed / deltaSeconds : 0;
       entry.massTons = Math.max(0, entry.massTons - removed);
       if (!entry.massTons) {
         entry.maxSinceZero = 0;

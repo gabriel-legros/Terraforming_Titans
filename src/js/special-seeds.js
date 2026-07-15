@@ -40,6 +40,80 @@ function normalizeSpecialSeedKey(seedInput) {
   return base.trim().toLowerCase();
 }
 
+const specialSeedStoryHazards = {
+  hazardousBiomass: {
+    baseGrowth: { value: 0.4, maxDensity: 1 },
+    invasivenessResistance: { value: 20, severity: 0.005 },
+    oxygenPressure: { min: 0, max: 10, unit: 'kPa', severity: 0.01 },
+    co2Pressure: { min: 10, max: 50, unit: 'kPa', severity: 0.01 },
+    atmosphericPressure: { min: 150, max: 200, unit: 'kPa', severity: 0.002 },
+    landPreference: { value: 'Land', severity: 0.1 },
+    temperaturePreference: {
+      min: 223.15,
+      max: 303.15,
+      unit: 'K',
+      severityBelow: 0.004,
+      severityHigh: 0.005
+    },
+    radiationPreference: { min: 0, max: 0.01, unit: 'mSv/day', severity: 0.1 },
+    penalties: {
+      buildCost: 0.75,
+      maintenanceCost: 0.75,
+      populationGrowth: 1
+    }
+  },
+  hazardousMachinery: {
+    initialCoverage: 1,
+    maxCoverageBase: 1,
+    waterCoveragePenalty: 0.5,
+    baseGrowth: { value: 1 },
+    invasivenessPreference: { min: 0, max: 50, severityHigh: 0.001 },
+    oxygenPreference: { min: 0, max: 0, unit: 'kPa', severityHigh: 0.001 },
+    temperaturePreference: { min: -273.15, max: 500, unit: 'C', severityHigh: 0.003 },
+    crusaderRemovalPerSecond: 0.5,
+    researchToDisableCost: 10000,
+    penalties: {
+      availableAndroidDecayRate: 0.05,
+      nanoColonyGrowthMultiplier: 0,
+      researchMultiplier: 0.1,
+      buildCostMultiplier: 2,
+      electronicsMaintenanceMultiplier: 10,
+      shipWorkersPerAssignedShip: 100
+    }
+  },
+  garbage: {
+    surfaceResources: {
+      garbage: { amountMultiplier: 1000 },
+      trash: { amountMultiplier: 100 },
+      junk: { amountMultiplier: 100 },
+      scrapMetal: { amountMultiplier: 100 },
+      radioactiveWaste: { amountMultiplier: 0.25 }
+    },
+    penalties: {
+      garbage: { sandHarvesterMultiplier: 0.25, nanoColonyGrowthMultiplier: 0.25 },
+      trash: { happiness: -0.05 },
+      junk: { happiness: -0.05 },
+      scrapMetal: { oreScanningSpeedMultiplier: 0.25 },
+      radioactiveWaste: { lifeGrowthMultiplier: 0.1, androidAttrition: 0.001 }
+    }
+  },
+  kessler: {
+    orbitalDebrisPerLand: 100
+  },
+  pulsar: {
+    stormDurationSeconds: 5,
+    severity: 1,
+    orbitalDoseBoost_mSvPerDay: 4900,
+    description: ''
+  },
+  debrisDisk: {
+    debrisPerLand: 1e10,
+    attritionRatePerSecond: 0.01,
+    colonistGrowthPenalty: 0.9,
+    kesslerRegenerationRatePerBinPerSecond: 0.001
+  }
+};
+
 const wolfysNightmareOverrides = {
   name: 'WolfysNightmare',
   gravityPenaltyEnabled: true,
@@ -182,7 +256,6 @@ const wolfysNightmareOverrides = {
       orbitalDebrisPerLand: 10000
     },
     pulsar: {
-      pulsePeriodSeconds: 1.337,
       stormDurationSeconds: 25,
       severity: 1,
       orbitalDoseBoost_mSvPerDay: 4900,
@@ -516,12 +589,600 @@ const hermesOverrides = {
   ]
 };
 
+const teeBeePeeOverrides = {
+  name: 'TeeBeePee',
+  gravityPenaltyEnabled: true,
+  specialAttributes: {
+    hasSand: true,
+    otherRequirements: [
+      {
+        type: 'projectCompletion',
+        projectId: 'stellarEngine',
+        labelKey: 'catalogs.specialSeeds.teebeepee.otherRequirements.stellarEngine.label',
+        targetTextKey: 'catalogs.specialSeeds.teebeepee.otherRequirements.stellarEngine.targetText',
+        buttonTextKey: 'ui.terraforming.summaryUi.actions.completeStellarEngineFirst',
+        hideFromChallengeRules: true
+      }
+    ]
+  },
+  "resources": {
+    "surface": {
+      "ice": {
+        "initialValue": 167037900983160.06
+      },
+      "liquidWater": {
+        "initialValue": 0
+      },
+      "dryIce": {
+        "initialValue": 619070857947.785
+      },
+      "liquidCO2": {
+        "initialValue": 0
+      },
+      "liquidHydrogen": {
+        "initialValue": 0
+      },
+      "liquidMethane": {
+        "initialValue": 0
+      },
+      "hydrocarbonIce": {
+        "initialValue": 0
+      },
+      "liquidOxygen": {
+        "initialValue": 0
+      },
+      "oxygenIce": {
+        "initialValue": 0
+      },
+      "liquidNitrogen": {
+        "initialValue": 0
+      },
+      "nitrogenIce": {
+        "initialValue": 0
+      },
+      "land": {
+        "initialValue": 11983795360
+      }
+    },
+    "atmospheric": {
+      "carbonDioxide": {
+        "initialValue": 42201707404097.06
+      },
+      "atmosphericWater": {
+        "initialValue": 43050301.037099026
+      },
+      "atmosphericMethane": {
+        "initialValue": 0
+      },
+      "atmosphericAmmonia": {
+        "initialValue": 0
+      },
+      "oxygen": {
+        "initialValue": 36088765720.46206
+      },
+      "inertGas": {
+        "initialValue": 8520844402885.591
+      },
+      "hydrogen": {
+        "initialValue": 0
+      },
+      "sulfuricAcid": {
+        "initialValue": 0
+      }
+    }
+  },
+  "zonalSurface": {
+    "tropical": {
+      "liquidWater": 0,
+      "ice": 15407065.63708217,
+      "liquidAmmonia": 0,
+      "ammoniaIce": 0,
+      "buriedAmmoniaIce": 0,
+      "buriedIce": 44543451742256.53,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 0,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
+    },
+    "temperate": {
+      "liquidWater": 0,
+      "ice": 30652906.16910652,
+      "liquidAmmonia": 0,
+      "ammoniaIce": 0,
+      "buriedAmmoniaIce": 0,
+      "buriedIce": 44543451742256.53,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 0,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
+    },
+    "polar": {
+      "liquidWater": 0,
+      "ice": 55679225567546.93,
+      "liquidAmmonia": 0,
+      "ammoniaIce": 0,
+      "buriedAmmoniaIce": 0,
+      "buriedIce": 22271725871128.266,
+      "dryIce": 619070857947.785,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 0,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
+    }
+  },
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 237.13965535388692,
+      "day": 254.5282062226445,
+      "night": 219.75110448512933
+    },
+    "temperate": {
+      "value": 220.7262283442197,
+      "day": 235.18615401448454,
+      "night": 206.26630267395484
+    },
+    "polar": {
+      "value": 165.81932666267048,
+      "day": 173.3249048281644,
+      "night": 158.31374849717656
+    }
+  },
+  celestialParameters: {
+    distanceFromSun: 0.05245772339140234,
+    gravity: 4.711319460302461,
+    radius: 3088.1064331881703,
+    mass: 6.731647247967333e+23,
+    baseGravity: 4.711319460302461,
+    baseRadius: 3088.1064331881703,
+    baseMass: 6.731647247967333e+23,
+    baseLand: 11983795360,
+    basePlanetaryMass: 6.731647247967333e+23,
+    basePlanetaryVolumeM3: 123357451817028120000,
+    baseSurfaceMassKg: 0,
+    baseAtmosphericMassKg: 0,
+    albedo: 0.5,
+    rotationPeriod: 36.410134547390044,
+    spinPeriod: 36.410134547390044,
+    starLuminosity: 0.002013612234820151,
+    surfaceArea: 119837953599617.55,
+    actualAlbedo: 0.5,
+    hasNaturalMagnetosphere: false,
+    sector: 'R5-07',
+    rogue: false,
+    roguePulsar: false,
+    coreHeatFlux: 0,
+    crossSectionArea: 29959488399904.387
+  },
+  star: {
+    name: 'Tee Bee and Pee',
+    spectralType: 'M',
+    luminositySolar: 0.002013612234820151,
+    massSolar: 0.16970998037606477,
+    radiusSolar: 0.24197244153298497,
+    temperatureK: 2486,
+    habitableZone: null
+  },
+  classification: {
+    archetype: 'cold-desert',
+    TeqK: 216
+  },
+  visualization: {
+    baseColor: '#b38c61'
+  },
+  effects: [
+    {
+      target: 'project',
+      targetId: 'stellarEngine',
+      type: 'enable',
+      effectId: 'teebeepee-enable-stellar-engine'
+    },
+    {
+      target: 'project',
+      targetId: 'planetaryThruster',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'teebeepee-disable-planetary-thrusters'
+    },
+    {
+      target: 'followersManager',
+      type: 'booleanFlag',
+      flagId: 'disableOrbitals',
+      value: true,
+      effectId: 'teebeepee-disable-orbitals'
+    },
+    {
+      target: 'project',
+      targetId: 'spaceStorage',
+      type: 'booleanFlag',
+      flagId: 'disableWithdrawal',
+      value: true,
+      effectId: 'teebeepee-disable-space-storage-withdrawals'
+    },
+    {
+      target: 'project',
+      targetId: 'galactic_market',
+      type: 'booleanFlag',
+      flagId: 'galacticMarketPurchaseCap',
+      value: true,
+      effectId: 'teebeepee-cap-galactic-market-purchases'
+    },
+    {
+      target: 'building',
+      targetId: 'antimatterBattery',
+      type: 'booleanFlag',
+      flagId: 'antimatterBatteryFillDisabled',
+      value: true,
+      effectId: 'teebeepee-disable-antimatter-battery-fill'
+    },
+    {
+      target: 'building',
+      targetId: 'dysonReceiver',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'teebeepee-disable-dyson-receiver'
+    }
+  ]
+};
+
+const shadesNightmareOverrides = {
+  name: 'ShadesNightmare',
+  gravityPenaltyEnabled: true,
+  specialAttributes: {
+    hasSand: false,
+    dynamicMass: true,
+    gasGiant: true
+  },
+  effects: [
+    {
+      target: 'building',
+      targetId: 'pyrolyzer',
+      type: 'booleanFlag',
+      flagId: 'pyrolyzer',
+      value: true,
+      effectId: 'shades-nightmare-enable-pyrolyzer'
+    },
+    {
+      target: 'researchManager',
+      targetId: 'teleporters',
+      type: 'researchDisable',
+      effectId: 'shades-nightmare-disable-teleporters-research'
+    },
+    {
+      target: 'project',
+      targetId: 'aerostatStructuralNet',
+      type: 'enable',
+      effectId: 'shades-nightmare-enable-aerostat-structural-net'
+    },
+    {
+      target: 'building',
+      targetId: 'trashIncinerator',
+      type: 'booleanFlag',
+      flagId: 'disableHazardousBiomassIncineratorRecipe',
+      value: true
+    },
+    {
+      target: 'building',
+      targetId: 'antimatterBattery',
+      type: 'booleanFlag',
+      flagId: 'antimatterBatteryFillDisabled',
+      value: true,
+      effectId: 'teebeepee-disable-antimatter-battery-fill'
+    }
+  ],
+  star: {
+    name: 'Nyx',
+    spectralType: 'K1V',
+    luminositySolar: 0.46,
+    massSolar: 0.84,
+    temperatureK: 5100,
+    habitableZone: { inner: 0.67, outer: 1.05 }
+  },
+  visualization: {
+    baseColor: '#b9915b'
+  },
+  "resources": {
+    "surface": {
+      "ice": {
+        "initialValue": 0
+      },
+      "liquidWater": {
+        "initialValue": 0
+      },
+      "dryIce": {
+        "initialValue": 0
+      },
+      "liquidCO2": {
+        "initialValue": 0
+      },
+      "liquidHydrogen": {
+        "initialValue": 1.6286500778183345e+24
+      },
+      "liquidMethane": {
+        "initialValue": 0
+      },
+      "hydrocarbonIce": {
+        "initialValue": 0
+      },
+      "liquidOxygen": {
+        "initialValue": 0
+      },
+      "oxygenIce": {
+        "initialValue": 0
+      },
+      "liquidNitrogen": {
+        "initialValue": 0
+      },
+      "nitrogenIce": {
+        "initialValue": 0
+      },
+      "land": {
+        "initialValue": 6164253525061.392
+      }
+    },
+    underground: {
+      ore: {
+        initialValue: 0,
+        maxDeposits: 0,
+        areaTotal: 0
+      },
+      geothermal: {
+        initialValue: 0,
+        maxDeposits: 0,
+        areaTotal: 0
+      }
+    },
+    "atmospheric": {
+      "carbonDioxide": {
+        "initialValue": 0
+      },
+      "atmosphericWater": {
+        "initialValue": 183600002029996700
+      },
+      "atmosphericMethane": {
+        "initialValue": 7420000000000000000
+      },
+      "atmosphericAmmonia": {
+        "initialValue": 0
+      },
+      "oxygen": {
+        "initialValue": 0
+      },
+      "inertGas": {
+        "initialValue": 52700000000000000000
+      },
+      "hydrogen": {
+        "initialValue": 2.638116911824148e+22
+      },
+      "sulfuricAcid": {
+        "initialValue": 0
+      }
+    }
+  },
+  "zonalSurface": {
+    "tropical": {
+      "liquidWater": 0,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 6.494227021350906e+23,
+      "biomass": 0,
+      "hazardousBiomass": 2457990353297.125,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
+    },
+    "temperate": {
+      "liquidWater": 0,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 8.441472593763293e+23,
+      "biomass": 0,
+      "hazardousBiomass": 3195000441911.835,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
+    },
+    "polar": {
+      "liquidWater": 0,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 1.3508011630691461e+23,
+      "biomass": 0,
+      "hazardousBiomass": 511262728748.2395,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
+    }
+  },
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 3003.4861741909726,
+      "day": 3003.4861750407317,
+      "night": 3003.4861733412135
+    },
+    "temperate": {
+      "value": 3003.4861488513216,
+      "day": 3003.4861494839374,
+      "night": 3003.4861482187057
+    },
+    "polar": {
+      "value": 3003.486102377955,
+      "day": 3003.4861026123267,
+      "night": 3003.486102143583
+    }
+  },
+  "celestialParameters": {
+    "distanceFromSun": 9.58,
+    "hasNaturalMagnetosphere": true,
+    "albedo": 0.499,
+    "rotationPeriod": 10.7,
+    "spinPeriod": 10.7,
+    "starLuminosity": 0.46,
+    "coreHeatFlux": 4112684,
+    "surfaceArea": 61642535250613910,
+    "crossSectionArea": 15410633812653478,
+    "baseLand": 6291545240475.356,
+    "baseRadius": 58232,
+    "baseMass": 5.6834e+26,
+    "baseGravity": 11.186404873657612,
+    "basePlanetaryMass": 6.619e+25,
+    "basePlanetaryVolumeM3": 1.047e+22,
+    "baseSurfaceMassKg": 1.628650756502195e+27,
+    "baseAtmosphericMassKg": 2.6441472718243496e+25,
+    "dynamicDirectMassDeltaKg": 0,
+    "dynamicDirectVolumeDeltaM3": 0,
+    "dynamicMassDeltaKg": 1.1529422292204387e+27,
+    "dynamicSurfaceVolumeDeltaM3": 6.11981942374499e+23,
+    "currentPlanetaryMassKg": 6.619e+25,
+    "currentSurfaceMassKg": 1.6286507565021952e+27,
+    "currentAtmosphericMassKg": 2.644147271824351e+25,
+    "currentPlanetaryVolumeM3": 1.047e+22,
+    "currentSurfaceVolumeM3": 1.4286418575253966e+24,
+    "mass": 1.7212822292204387e+27,
+    "radius": 70038.25451084432,
+    "gravity": 23.420015628158335,
+    "sector": "R5-29"
+  },
+  hazards: {
+    hazardousBiomass: {
+      baseGrowth: { value: 1, maxDensity: 1 },
+      invasivenessResistance: { value: 100, severity: 0.001 },
+      oxygenPressure: { min: 0, max: 100000, unit: 'kPa', severity: 0.00001 },
+      co2Pressure: { min: 0, max: 500000, unit: 'kPa', severity: 0.00001 },
+      atmosphericPressure: { min: 0, max: 12000000, unit: 'kPa', severity: 0.000001 },
+      landPreference: { value: 'Land', severity: 0.1 },
+      temperaturePreference: {
+        min: 300,
+        max: 3300,
+        unit: 'K',
+        severityBelow: 0.001,
+        severityHigh: 0.001
+      },
+      radiationPreference: { min: 0, max: 5000, unit: 'mSv/day', severity: 0.1 },
+      penalties: {
+        buildCost: 0.75,
+        maintenanceCost: 0.75,
+        populationGrowth: 1
+      }
+    },
+    hazardousMachinery: {
+      initialCoverage: 1,
+      maxCoverageBase: 1,
+      waterCoveragePenalty: 0.5,
+      baseGrowth: { value: 1 },
+      invasivenessPreference: { min: 0, max: 1000, severityHigh: 0.0001 },
+      oxygenPreference: { min: 0, max: 100000, unit: 'kPa', severityHigh: 0.00001 },
+      temperaturePreference: { min: 0, max: 3300, unit: 'K', severityBelow: 0, severityHigh: 0.001 },
+      crusaderRemovalPerSecond: 0.5,
+      researchToDisableCost: 10000,
+      penalties: {
+        availableAndroidDecayRate: 0.50,
+        nanoColonyGrowthMultiplier: 0,
+        researchMultiplier: 0.1,
+        buildCostMultiplier: 2,
+        electronicsMaintenanceMultiplier: 10,
+        shipWorkersPerAssignedShip: 100
+      }
+    },
+    garbage: {
+      surfaceResources: {
+        garbage: { amountMultiplier: 0 },
+        trash: { amountMultiplier: 10000 },
+        junk: { amountMultiplier: 100000 },
+        scrapMetal: { amountMultiplier: 0 },
+        radioactiveWaste: { amountMultiplier: 100 }
+      },
+      penalties: {
+        garbage: { sandHarvesterMultiplier: 0.25, nanoColonyGrowthMultiplier: 0.1 },
+        trash: { happiness: -0.05 },
+        junk: { happiness: -0.05 },
+        scrapMetal: { oreScanningSpeedMultiplier: 0.25 },
+        radioactiveWaste: { lifeGrowthMultiplier: 0.1, androidAttrition: 0.05 }
+      }
+    },
+    kessler: {
+      orbitalDebrisPerLand: 1000
+    },
+    pulsar: {
+      stormDurationSeconds: 25,
+      severity: 1,
+      orbitalDoseBoost_mSvPerDay: 4900,
+      description: ''
+    },
+    debrisDisk: {
+      debrisPerLand: 1e11,
+      attritionRatePerSecond: 0.0025,
+      colonistGrowthPenalty: 0.9,
+      kesslerRegenerationRatePerBinPerSecond: 0.001
+    }
+  }
+};
+
 const toi3693bOverrides = {
   name: 'TOI-3693 b',
   gravityPenaltyEnabled: true,
   specialAttributes: {
     hasSand: false,
-    dynamicMass: true
+    dynamicMass: true,
+    gasGiant: true
   },
   star: {
     name: 'TOI-3693',
@@ -729,7 +1390,6 @@ const toi3693bOverrides = {
   },
   hazards: {
     pulsar: {
-      pulsePeriodSeconds: 1.337,
       stormDurationSeconds: 2,
       stormIntervalSeconds: 7.094741,
       severity: 0.25,
@@ -775,7 +1435,7 @@ const theRealPoseidonOverrides = {
     hasNaturalMagnetosphere: true,
     radius: 7600,
     mass: 1.31e25,
-    baseLand: 72_500_000_000,
+    baseLand: 72_583_356_668.53859,
     albedo: 0.08,
     rotationPeriod: 21.8,
     spinPeriod: 21.8,
@@ -817,7 +1477,7 @@ const theRealPoseidonOverrides = {
   ],
   resources: {
     surface: {
-      land: { initialValue: 72_500_000_000, baseLand: 72_500_000_000 },
+      land: { initialValue: 72_583_356_668.53859, baseLand: 72_583_356_668.53859 },
       liquidWater: { initialValue: 0 },
       ice: { initialValue: 0 },
       dryIce: { initialValue: 0 },
@@ -828,7 +1488,7 @@ const theRealPoseidonOverrides = {
     },
     underground: {
       ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
-      geothermal: { initialValue: 72_500_000_000, maxDeposits: 72_500_000_000, areaTotal: 72500000000 }
+      geothermal: { initialValue: 72_583_356_668.53859, maxDeposits: 72_583_356_668.53859, areaTotal: 72_583_356_668.53859 }
     },
     atmospheric: {
       carbonDioxide: { initialValue: 0 },
@@ -1112,7 +1772,7 @@ const earthOverrunOverrides = {
     surface: {
       land: { initialValue: 51007200000 },
       ice: { initialValue: 0, unlocked: true },
-      liquidWater: { initialValue: 1.386e18, unlocked: true },
+      liquidWater: { initialValue: 644656795267087900, unlocked: true },
       dryIce: { initialValue: 0 },
       liquidMethane: { initialValue: 0 },
       hydrocarbonIce: { initialValue: 0 }
@@ -1126,10 +1786,13 @@ const earthOverrunOverrides = {
         "initialValue": 2056831169131.2002
       },
       "atmosphericWater": {
-        "initialValue": 18874743689210.16
+        "initialValue": 18678784443623.46
       },
       "atmosphericMethane": {
         "initialValue": 9882092383
+      },
+      "atmosphericAmmonia": {
+        "initialValue": 0
       },
       "oxygen": {
         "initialValue": 1109477074900000
@@ -1147,14 +1810,15 @@ const earthOverrunOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "liquidWater": 552669895738704700,
+      "liquidWater": 280304580319841150,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
+      "liquidHydrogen": 0,
       "biomass": 0,
-      "hazardousBiomass": 2033907348854.644,
+      "hazardousBiomass": 2033877330665.0093,
       "liquidMethane": 0,
       "hydrocarbonIce": 0,
       "buriedHydrocarbonIce": 0,
@@ -1166,14 +1830,15 @@ const earthOverrunOverrides = {
       "buriedNitrogenIce": 0
     },
     "temperate": {
-      "liquidWater": 718384395470084900,
+      "liquidWater": 364351819684932350,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
+      "liquidHydrogen": 0,
       "biomass": 0,
-      "hazardousBiomass": 2643759309177.7793,
+      "hazardousBiomass": 2643720290257.687,
       "liquidMethane": 0,
       "hydrocarbonIce": 0,
       "buriedHydrocarbonIce": 0,
@@ -1185,14 +1850,15 @@ const earthOverrunOverrides = {
       "buriedNitrogenIce": 0
     },
     "polar": {
-      "liquidWater": 1.5087540313075096e-89,
-      "ice": 114993408143605650,
+      "liquidWater": 395262314397.17847,
+      "ice": 114178198844575490,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
+      "liquidHydrogen": 0,
       "biomass": 0,
-      "hazardousBiomass": 423053336967.61584,
+      "hazardousBiomass": 423047093171.4065,
       "liquidMethane": 0,
       "hydrocarbonIce": 0,
       "buriedHydrocarbonIce": 0,
@@ -1206,19 +1872,19 @@ const earthOverrunOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 291.6640961434312,
-      "day": 291.80616701998656,
-      "night": 291.52202526687586
+      "value": 292.223771743476,
+      "day": 292.38559470842,
+      "night": 292.061948778532
     },
     "temperate": {
-      "value": 286.74499253134843,
-      "day": 286.8631352832809,
-      "night": 286.626849779416
+      "value": 286.6503936467183,
+      "day": 286.7849616296886,
+      "night": 286.51582566374805
     },
     "polar": {
-      "value": 261.6309761375806,
-      "day": 262.9052410488269,
-      "night": 260.3567112263343
+      "value": 258.1925403339957,
+      "day": 259.46768991923057,
+      "night": 256.9173907487608
     }
   },
   hazards: {
@@ -1269,13 +1935,15 @@ const earthOverrunOverrides = {
     }
   },
   visualization: {
-    baseColor: '#878a81'
+    baseColor: '#878a81',
+    heightMapKey: 'earth'
   }
 };
 
 const specialSeedDefinitions = {
   titania: {
     key: 'titania',
+    enabled: true,
     seed: 'Titania',
     name: 'Titania',
     nameKey: 'catalogs.specialSeeds.titania.name',
@@ -1324,6 +1992,7 @@ const specialSeedDefinitions = {
   },
   hermes: {
     key: 'hermes',
+    enabled: true,
     seed: 'Hermes',
     name: 'Hermes',
     nameKey: 'catalogs.specialSeeds.hermes.name',
@@ -1381,6 +2050,7 @@ const specialSeedDefinitions = {
   },
   wolfysnightmare: {
     key: 'wolfysnightmare',
+    enabled: true,
     seed: 'WolfysNightmare',
     name: 'WolfysNightmare',
     difficultyKey: 'catalogs.specialSeeds.wolfysnightmare.difficulty',
@@ -1398,12 +2068,14 @@ const specialSeedDefinitions = {
       {
         id: 'lifters-no-strip',
         descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.liftersNoStrip',
+        labelKey: 'catalogs.specialSeeds.commonEffects.liftersStripModeDisabled',
         label: 'Lifters Strip Mode Disabled',
         description: 'Lifters cannot use Atmosphere Strip mode.'
       },
       {
         id: 'incinerator-no-hazardous-biomass',
         descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.incineratorNoHazardousBiomass',
+        labelKey: 'catalogs.specialSeeds.commonEffects.incineratorRecipeDisabled',
         label: 'Incinerator Recipe Disabled',
         description: 'Trash Incinerator cannot run the Hazardous Biomass recipe.'
       }
@@ -1427,6 +2099,7 @@ const specialSeedDefinitions = {
   },
   therealposeidon: {
     key: 'therealposeidon',
+    enabled: true,
     seed: 'TheRealPoseidon',
     name: 'TheRealPoseidon',
     nameKey: 'catalogs.specialSeeds.therealposeidon.name',
@@ -1475,8 +2148,124 @@ const specialSeedDefinitions = {
     ],
     overrides: theRealPoseidonOverrides
   },
+  teebeepee: {
+    key: 'teebeepee',
+    enabled: true,
+    seed: 'TeeBeePee',
+    name: 'TeeBeePee',
+    nameKey: 'catalogs.specialSeeds.teebeepee.name',
+    difficultyKey: 'catalogs.specialSeeds.teebeepee.difficulty',
+    difficultyRating: 'Very Hard',
+    replayable: true,
+    steamExclusive: true,
+    target: 'planet',
+    archetype: 'cold-desert',
+    orbitPreset: 'hz-mid',
+    specialEffects: [
+      {
+        id: 'three-stars',
+        descriptionKey: 'catalogs.specialSeeds.teebeepee.effects.threeStars',
+        description: 'The planet in this system has three stars. Expect very chaotic solar flux.'
+      },
+      {
+        id: 'stellar-engine-available',
+        descriptionKey: 'catalogs.specialSeeds.teebeepee.effects.stellarEngineAvailable',
+        description: 'Stellar Engine story project is available on this world.'
+      },
+      {
+        id: 'planetary-thrusters-disabled',
+        labelKey: 'catalogs.specialSeeds.commonEffects.planetaryThrustersDisabled',
+        label: 'Planetary Thrusters Disabled',
+        descriptionKey: 'catalogs.specialSeeds.teebeepee.effects.planetaryThrustersDisabled',
+        description: 'Planetary Thrusters are permanently disabled on this world. A story special project will handle the problem instead.'
+      },
+      {
+        id: 'orbitals-disabled',
+        descriptionKey: 'catalogs.specialSeeds.teebeepee.effects.orbitalsDisabled',
+        description: 'Orbitals are capped at 0 on this world.'
+      },
+      {
+        id: 'space-storage-no-withdrawal',
+        descriptionKey: 'catalogs.specialSeeds.teebeepee.effects.noSpaceWithdrawal',
+        description: 'Space Storage cannot withdraw any resources on this world.'
+      }
+    ],
+    completionRewards: [
+      {
+        id: 'reveal-mass-driver-effectiveness',
+        descriptionKey: 'catalogs.specialSeeds.teebeepee.rewards.revealMassDriverEffectiveness',
+        description: 'Reveals the Mass Driver Effectiveness awakening skill.',
+        effects: [
+          {
+            target: 'skillManager',
+            targetId: 'mass_driver_effectiveness',
+            type: 'skillReveal',
+            value: true
+          }
+        ]
+      }
+    ],
+    overrides: teeBeePeeOverrides
+  },
+  shadesnightmare: {
+    key: 'shadesnightmare',
+    enabled: true,
+    seed: 'ShadesNightmare',
+    name: 'ShadesNightmare',
+    nameKey: 'catalogs.specialSeeds.shadesnightmare.name',
+    difficultyKey: 'catalogs.specialSeeds.shadesnightmare.difficulty',
+    difficultyRating: 'Extreme',
+    replayable: true,
+    steamExclusive: true,
+    target: 'planet',
+    archetype: 'jupiter-like',
+    orbitPreset: 'cold',
+    specialEffects: [
+      {
+        id: 'all-six-hazards',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.allSixHazards',
+        description: 'All six hazard systems are active on this world.'
+      },
+      {
+        id: 'teleporters-disabled',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.teleportersDisabled',
+        description: 'The 100Q advanced research is disabled.'
+      }
+    ],
+    completionRewards: [
+      {
+        id: 'reveal-ecumenopolis-capacity',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.rewards.revealEcumenopolisCapacity',
+        description: 'Reveals the Ecumenopolis Capacity awakening skill.',
+        effects: [
+          {
+            target: 'skillManager',
+            targetId: 'ecumenopolis_capacity',
+            type: 'skillReveal',
+            value: true
+          }
+        ]
+      },
+      {
+        id: 'enable-pyrolyzer',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.rewards.enablePyrolyzer',
+        description: 'Chemical reactor research will also enable pyrolyzers.',
+        effects: [
+          {
+            target: 'building',
+            targetId: 'pyrolyzer',
+            type: 'booleanFlag',
+            flagId: 'pyrolyzer',
+            value: true
+          }
+        ]
+      }
+    ],
+    overrides: shadesNightmareOverrides
+  },
   toi3693b: {
     key: 'toi3693b',
+    enabled: true,
     seed: 'TOI3693B',
     name: 'TOI-3693 b',
     designer: 'JamesM',
@@ -1505,6 +2294,7 @@ const specialSeedDefinitions = {
   },
   sculkbioworld: {
     key: 'sculkbioworld',
+    enabled: true,
     seed: 'SculkBioworld',
     name: 'Sculkia-1c',
     designer: 'JamesM',
@@ -1515,17 +2305,23 @@ const specialSeedDefinitions = {
     specialEffects: [
       {
         id: 'lifters-no-strip',
+        labelKey: 'catalogs.specialSeeds.commonEffects.liftersStripModeDisabled',
         label: 'Lifters Strip Mode Disabled',
+        descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.liftersNoStrip',
         description: 'Lifters cannot use Atmosphere Strip mode.'
       },
       {
         id: 'planetary-thrusters-disabled',
+        labelKey: 'catalogs.specialSeeds.commonEffects.planetaryThrustersDisabled',
         label: 'Planetary Thrusters Disabled',
+        descriptionKey: 'catalogs.specialSeeds.sculkbioworld.effects.planetaryThrustersDisabled',
         description: 'Planetary Thrusters are permanently disabled on this world.'
       },
       {
         id: 'incinerator-no-hazardous-biomass',
+        labelKey: 'catalogs.specialSeeds.commonEffects.incineratorRecipeDisabled',
         label: 'Incinerator Recipe Disabled',
+        descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.incineratorNoHazardousBiomass',
         description: 'Trash Incinerator cannot run the Hazardous Biomass recipe.'
       }
     ],
@@ -1533,6 +2329,7 @@ const specialSeedDefinitions = {
   },
   earthoverrun: {
     key: 'earthoverrun',
+    enabled: true,
     seed: 'EarthOverrun',
     name: 'EarthOverrun',
     designer: 'Off Kinter Space',
@@ -1543,7 +2340,9 @@ const specialSeedDefinitions = {
     specialEffects: [
       {
         id: 'incinerator-no-hazardous-biomass',
+        labelKey: 'catalogs.specialSeeds.commonEffects.incineratorRecipeDisabled',
         label: 'Incinerator Recipe Disabled',
+        descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.incineratorNoHazardousBiomass',
         description: 'Trash Incinerator cannot run the Hazardous Biomass recipe.'
       }
     ],

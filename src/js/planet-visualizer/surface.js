@@ -8,6 +8,9 @@
   const HYDROGEN_VISUAL_MIN_KPA = 1e3;
   const HYDROGEN_VISUAL_MAX_KPA = 1e6;
   const SURFACE_TEXTURE_UPDATE_INTERVAL_MS = 5000;
+  const HEIGHT_MAP_KEYS = {
+    earth: true,
+  };
 
   const PLANET_TYPE_TEXTURES = {
     default: {
@@ -169,6 +172,18 @@
     return type || 'default';
   }
 
+  function resolveHeightMapKey(context) {
+    const key = context?.viz?.heightMapKey || currentPlanetParameters?.visualization?.heightMapKey || '';
+    if (HEIGHT_MAP_KEYS[key]) return key;
+
+    const specialSeedKey = currentPlanetParameters?.rwgMeta?.specialSeedKey || '';
+    const planetName = currentPlanetParameters?.name || '';
+    if (specialSeedKey === 'earthoverrun' || planetName === 'EarthOverrun') {
+      return 'earth';
+    }
+    return '';
+  }
+
   function createJitterRandom(seedX, seedY) {
     const sx = Number.isFinite(seedX) ? seedX : 0.37;
     const sy = Number.isFinite(seedY) ? seedY : 0.73;
@@ -216,6 +231,43 @@
     return clamp01((valueLog - minLog) / span);
   }
 
+  function getEarthReconstructionShapeRatio(context) {
+    if (context.isEarthReconstructionVisualActive()) {
+      return earthManager.getVisualizerState().surfaceShapeRatio;
+    }
+    return 1;
+  }
+
+  function getEarthReconstructionNoiseHeight(u, v, phase) {
+    const wave = (longitudeFrequency, latitudeFrequency, angle, offset) => {
+      const lon = u * Math.PI * 2 * longitudeFrequency + angle;
+      const lat = v * Math.PI * 2 * latitudeFrequency + offset;
+      return Math.sin(lon + Math.sin(lat) * 0.7);
+    };
+    const broad = wave(2, 1.4, phase * 0.31, phase * 0.47) * 0.5 + 0.5;
+    const mid = wave(6, 3.6, phase * 0.73, phase * 0.19) * 0.5 + 0.5;
+    const fine = wave(17, 9.2, phase * 1.17, phase * 0.61) * 0.5 + 0.5;
+    const ridge = 1 - Math.abs((wave(9, 5.4, phase * 1.43, phase * 0.83) * 0.5 + 0.5) * 2 - 1);
+    return clamp01(0.18 + broad * 0.38 + mid * 0.2 + ridge * 0.16 + fine * 0.08);
+  }
+
+  function getEarthReconstructionPeriodicLavaNoise(u, v, phase) {
+    const periodicHash = (scale, offset) => {
+      const lon = u * Math.PI * 2;
+      const x = Math.cos(lon) * scale;
+      const z = Math.sin(lon) * scale;
+      const y = v * scale;
+      const n = Math.sin(x * 12.9898 + y * 78.233 + z * 37.719 + phase * 19.19 + offset) * 43758.5453;
+      return n - Math.floor(n);
+    };
+    const coarse = periodicHash(18, 0);
+    const mid = periodicHash(46, 11.7);
+    const fine = periodicHash(92, -5.4);
+    const pin = periodicHash(170, 27.3);
+    const ridge = 1 - Math.abs((mid * 0.62 + fine * 0.38) * 2 - 1);
+    return clamp01(coarse * 0.18 + mid * 0.25 + fine * 0.32 + pin * 0.16 + ridge * 0.09);
+  }
+
   PlanetVisualizer.prototype.getSurfaceTemperatureK = function getSurfaceTemperatureK() {
     const worldTemp = this.terraforming?.temperature?.value;
     if (Number.isFinite(worldTemp) && worldTemp > 0) {
@@ -229,7 +281,20 @@
   };
 
   PlanetVisualizer.prototype.getLavaTransitionStrength = function getLavaTransitionStrength() {
-    return smoothstep(LAVA_WORLD_START_K, LAVA_WORLD_FULL_K, this.getSurfaceTemperatureK());
+    const baseStrength = smoothstep(LAVA_WORLD_START_K, LAVA_WORLD_FULL_K, this.getSurfaceTemperatureK());
+    if (this.isEarthReconstructionVisualActive()) {
+      return baseStrength * earthManager.getVisualizerState().heatRatio;
+    }
+    return baseStrength;
+  };
+
+  PlanetVisualizer.prototype.getEcumenopolisVisualizerStrength = function getEcumenopolisVisualizerStrength() {
+    if (!GAME_FEATURES.steamExclusiveEcumenopolisVisualizer) return 0;
+    return clamp01((this.viz.coverage?.ecumenopolis || 0) / 100);
+  };
+
+  PlanetVisualizer.prototype.getNanoworldVisualizerStrength = function getNanoworldVisualizerStrength() {
+    return clamp01((this.viz.coverage?.nanoworld || 0) / 100);
   };
 
   PlanetVisualizer.prototype.updateSurfaceHeatMaterial = function updateSurfaceHeatMaterial() {
@@ -238,13 +303,27 @@
     if (!material) return;
 
     const lava = this.getLavaTransitionStrength();
+    const city = this.getEcumenopolisVisualizerStrength();
+    const nanoworld = this.getNanoworldVisualizerStrength();
     const baseRoughness = surface.userData?.baseRoughness ?? (this.isRingWorld() ? 0.85 : 0.9);
     const baseMetalness = surface.userData?.baseMetalness ?? 0;
-    material.roughness = Math.max(0.22, baseRoughness - lava * 0.45);
-    material.metalness = Math.min(0.16, baseMetalness + lava * 0.06);
+    material.roughness = Math.max(0.12, baseRoughness - lava * 0.45 - city * 0.28 - nanoworld * 0.62);
+    material.metalness = Math.min(0.82, baseMetalness + lava * 0.06 + city * 0.24 + nanoworld * 0.76);
     if (material.emissive) {
-      material.emissive.setRGB(0.95, 0.18 + lava * 0.16, 0.03 + lava * 0.07);
-      material.emissiveIntensity = lava * 0.72;
+      if (nanoworld > 0 && material.emissiveMap) {
+        material.emissive.setRGB(0.28, 0.9, 1);
+        material.emissiveIntensity = 1.15 * nanoworld;
+      } else if (city > 0 && material.emissiveMap) {
+        material.emissive.setRGB(1, 0.82, 0.18);
+        material.emissiveIntensity = Math.max(lava * 0.72, 1.35 * city);
+      } else {
+        material.emissive.setRGB(
+          0.95,
+          0.18 + lava * 0.16,
+          0.03 + lava * 0.07
+        );
+        material.emissiveIntensity = lava * 0.72;
+      }
     }
   };
 
@@ -420,7 +499,10 @@
     if (!material) return;
 
     const { w, h } = this.getSurfaceTextureSize();
-    const textureKey = `${w}x${h}`;
+    const earthKey = this.isEarthReconstructionVisualActive()
+      ? `${earthManager.getActionCount('shapeSurface')}`
+      : '';
+    const textureKey = `${w}x${h}|${earthKey}`;
     if (this.lavaOverlayTexture && this.lavaOverlayTextureKey === textureKey) {
       return;
     }
@@ -550,6 +632,9 @@
       return { w, h };
     }
     if (this.isDiskWorld()) {
+      if (this.getEcumenopolisVisualizerStrength() > 0 || this.getNanoworldVisualizerStrength() > 0) {
+        return { w: 512, h: 512 };
+      }
       return { w: 1024, h: 1024 };
     }
     return { w: 1024, h: 512 };
@@ -563,6 +648,20 @@
   };
 
   PlanetVisualizer.prototype.updateSurfaceTextureFromPressure = function updateSurfaceTextureFromPressure(force = false) {
+    if (this.isSmbhShellWorld()) {
+      const tex = this.generateBirchWorldTexture();
+      const surface = this.surfaceMesh || this.sphere;
+      if (surface && surface.material && surface.material.map !== tex) {
+        const previousMap = surface.material.map;
+        surface.material.map = tex;
+        surface.material.color.setRGB(1, 1, 1);
+        surface.material.needsUpdate = true;
+        if (previousMap && previousMap !== tex && previousMap.dispose) {
+          previousMap.dispose();
+        }
+      }
+      return;
+    }
     if (this.debug.mode === 'game') {
       const gameBase = this.getGameBaseColor();
       if (gameBase !== this.viz.baseColor) {
@@ -578,9 +677,12 @@
     const factor = Math.max(0, Math.min(1, 1 - (kPa / 100)));
     const water = (this.viz.coverage?.water || 0) / 100;
     const life = (this.viz.coverage?.life || 0) / 100;
+    const hazardousLife = (this.viz.coverage?.hazardousLife || 0) / 100;
+    const ecumenopolis = this.getEcumenopolisVisualizerStrength();
+    const nanoworld = this.getNanoworldVisualizerStrength();
     const z = this.viz.zonalCoverage || {};
     const zKey = ['tropical', 'temperate', 'polar']
-      .map(k => `${(z[k]?.water ?? 0).toFixed(2)}_${(z[k]?.ice ?? 0).toFixed(2)}_${(z[k]?.life ?? 0).toFixed(2)}`)
+      .map(k => `${(z[k]?.water ?? 0).toFixed(2)}_${(z[k]?.ice ?? 0).toFixed(2)}_${(z[k]?.life ?? 0).toFixed(2)}_${(z[k]?.hazardousLife ?? 0).toFixed(2)}`)
       .join('|');
     const baseColorKey = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
     const dustBaseColor = this.normalizeHexColor(this.dustTintColor) || baseColorKey;
@@ -593,7 +695,14 @@
     try { typeKey = resolvePlanetArchetype(this, baseColorKey) || 'default'; } catch (e) {}
     const sf = this.viz.surfaceFeatures || {};
     const fKey = `${sf.enabled ? '1' : '0'}_${Number(sf.strength || 0).toFixed(2)}_${Number(sf.scale || 0).toFixed(2)}_${Number(sf.contrast || 0).toFixed(2)}_${Number(sf.offsetX || 0).toFixed(2)}_${Number(sf.offsetY || 0).toFixed(2)}`;
-    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${zKey}|${dustKey}|${typeKey}|${fKey}`;
+    const heightKey = resolveHeightMapKey(this);
+    const earthShapeKey = this.isEarthReconstructionVisualActive() ? earthManager.getActionCount('shapeSurface') : '';
+    if (earthShapeKey !== this._earthSurfaceShapeTextureKey) {
+      this._earthSurfaceShapeTextureKey = earthShapeKey;
+      this.heightMap = null;
+      this.heightZoneHists = null;
+    }
+    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${hazardousLife.toFixed(2)}|${ecumenopolis.toFixed(2)}|${nanoworld.toFixed(2)}|${zKey}|${dustKey}|${typeKey}|${fKey}|${heightKey}|${earthShapeKey}`;
     if (!force && key === this.lastCraterFactorKey) return;
     this.lastCraterFactorKey = key;
 
@@ -603,7 +712,15 @@
     if (surface && surface.material) {
       const previousMap = surface.material.map;
       surface.material.map = tex;
+      if (nanoworld > 0 && this._nanoworldEmissionTexture) {
+        surface.material.emissiveMap = this._nanoworldEmissionTexture;
+      } else if (ecumenopolis > 0 && this._ecumenopolisEmissionTexture) {
+        surface.material.emissiveMap = this._ecumenopolisEmissionTexture;
+      } else {
+        surface.material.emissiveMap = null;
+      }
       surface.material.needsUpdate = true;
+      this.updateSurfaceHeatMaterial();
       if (previousMap && previousMap !== tex && previousMap.dispose) {
         previousMap.dispose();
       }
@@ -615,11 +732,121 @@
     this.lastCraterFactorKey = null;
   };
 
+  PlanetVisualizer.prototype.generateBirchWorldTexture = function generateBirchWorldTexture() {
+    if (this._birchWorldTexture) return this._birchWorldTexture;
+
+    const w = 1536;
+    const h = 768;
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    const img = ctx.createImageData(w, h);
+    const data = img.data;
+    const seed = this.hashSeedFromPlanet();
+    const seedValue = Math.floor((seed.x * 104729) ^ (seed.y * 130363)) >>> 0;
+    const hash = (x, y) => {
+      const n = Math.sin(x * 127.1 + y * 311.7 + seedValue * 0.00017) * 43758.5453;
+      return n - Math.floor(n);
+    };
+    const smoothstepLocal = (a, b, v) => {
+      const t = clamp01((v - a) / Math.max(0.000001, b - a));
+      return t * t * (3 - 2 * t);
+    };
+    const valueNoise = (x, y) => {
+      const xi = Math.floor(x);
+      const yi = Math.floor(y);
+      const xf = x - xi;
+      const yf = y - yi;
+      const sx = xf * xf * (3 - 2 * xf);
+      const sy = yf * yf * (3 - 2 * yf);
+      const a = hash(xi, yi);
+      const b = hash(xi + 1, yi);
+      const c = hash(xi, yi + 1);
+      const d = hash(xi + 1, yi + 1);
+      return (a * (1 - sx) + b * sx) * (1 - sy) + (c * (1 - sx) + d * sx) * sy;
+    };
+
+    for (let i = 0; i < w * h; i++) {
+      const x = i % w;
+      const y = (i - x) / w;
+      const u = x / Math.max(1, w - 1);
+      const v = y / Math.max(1, h - 1);
+      const lat = Math.abs(v - 0.5) * 2;
+      const panelU = Math.floor(u * 36);
+      const panelV = Math.floor(v * 18);
+      const panelSeed = hash(panelU, panelV);
+      const panelShade = 0.82 + panelSeed * 0.28;
+      const fine = valueNoise(u * 180, v * 90) - 0.5;
+      const broad = valueNoise(u * 18, v * 9) - 0.5;
+      const seamX = Math.min(u * 36 - panelU, 1 - (u * 36 - panelU));
+      const seamY = Math.min(v * 18 - panelV, 1 - (v * 18 - panelV));
+      const seam = 1 - smoothstepLocal(0, 0.035, Math.min(seamX, seamY));
+      const latShade = 0.9 + (1 - lat) * 0.16;
+      const polished = panelShade * latShade + fine * 0.08 + broad * 0.1 - seam * 0.14;
+
+      const idx = i * 4;
+      data[idx] = Math.max(0, Math.min(255, Math.round(96 * polished + 18)));
+      data[idx + 1] = Math.max(0, Math.min(255, Math.round(112 * polished + 22)));
+      data[idx + 2] = Math.max(0, Math.min(255, Math.round(132 * polished + 34)));
+      data[idx + 3] = 255;
+    }
+    ctx.putImageData(img, 0, 0);
+
+    ctx.save();
+    ctx.globalCompositeOperation = 'screen';
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    const drawDistrict = (cx, cy, radius, blocks, alphaBase) => {
+      const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius * 1.9);
+      glow.addColorStop(0, 'rgba(78, 206, 255, 0.24)');
+      glow.addColorStop(0.42, 'rgba(24, 133, 255, 0.12)');
+      glow.addColorStop(1, 'rgba(8, 89, 255, 0)');
+      ctx.globalAlpha = alphaBase;
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 1.9, 0, Math.PI * 2);
+      ctx.fill();
+
+      for (let i = 0; i < blocks; i++) {
+        const angle = hash(cx * 0.017 + i, cy * 0.019) * Math.PI * 2;
+        const dist = Math.sqrt(hash(i * 7.7 + cx, cy * 0.013)) * radius;
+        const bw = 3 + hash(i * 2.3, cx * 0.01) * 10;
+        const bh = 2 + hash(i * 4.1, cy * 0.01) * 8;
+        const x = cx + Math.cos(angle) * dist;
+        const y = cy + Math.sin(angle) * dist;
+        ctx.globalAlpha = alphaBase * (0.12 + hash(i * 8.3, cy) * 0.28);
+        ctx.fillStyle = '#7fe9ff';
+        ctx.fillRect(x - bw * 0.5, y - bh * 0.5, bw, bh);
+      }
+    };
+    for (let i = 0; i < 896; i++) {
+      const cx = hash(i * 11.7, 3.2) * w;
+      const cy = (0.08 + hash(i * 4.4, 6.8) * 0.84) * h;
+      const radius = 5 + hash(i * 2.7, 9.5) * 18;
+      drawDistrict(cx, cy, radius, 6 + Math.floor(hash(i * 5.1, 2.6) * 18), 0.52);
+    }
+    ctx.restore();
+
+    ctx.drawImage(canvas, 0, 0, 1, h, w - 1, 0, 1, h);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    if (THREE && THREE.SRGBColorSpace) {
+      texture.colorSpace = THREE.SRGBColorSpace;
+    }
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    texture.needsUpdate = true;
+    this._birchWorldTexture = texture;
+    return texture;
+  };
+
   PlanetVisualizer.prototype.generateCraterTexture = function generateCraterTexture(strength, surfaceBaseHex) {
     const { w, h } = this.getSurfaceTextureSize();
     const ringAspect = this.getRingUvAspect();
+    const skipCraters = this.isEarthReconstructionVisualActive();
 
-    if (!this.craterLayer) {
+    if (!skipCraters && !this.craterLayer) {
       const craterCanvas = document.createElement('canvas');
       craterCanvas.width = w; craterCanvas.height = h;
       const cctx = craterCanvas.getContext('2d');
@@ -681,6 +908,16 @@
       this._surfaceCanvasTexture = null;
       this._waterAlpha = null;
       this._iceAlpha = null;
+      if (this._ecumenopolisEmissionTexture && this._ecumenopolisEmissionTexture.dispose) {
+        this._ecumenopolisEmissionTexture.dispose();
+      }
+      this._ecumenopolisEmissionTexture = null;
+      this._ecumenopolisEmissionCanvas = null;
+      if (this._nanoworldEmissionTexture && this._nanoworldEmissionTexture.dispose) {
+        this._nanoworldEmissionTexture.dispose();
+      }
+      this._nanoworldEmissionTexture = null;
+      this._nanoworldEmissionCanvas = null;
     }
     const ctx = canvas.getContext('2d');
 
@@ -702,6 +939,7 @@
     const isRing = this.isRingWorld();
     const isDisk = this.isDiskWorld();
     const rand = createJitterRandom(seed.x, seed.y);
+    const terrainReveal = smoothstep(0, 1, getEarthReconstructionShapeRatio(this));
 
     let gradientBase = baseHex;
     if (palette.tint) {
@@ -736,7 +974,7 @@
     const featureMask = Math.max(0, palette.featureMask ?? 1);
     const shadeBias = palette.shade ?? 1;
 
-    const craterStrength = isArtificial ? 0 : strength;
+    const craterStrength = (isArtificial || skipCraters) ? 0 : strength;
     if (craterStrength > 0) {
       ctx.globalAlpha = Math.max(0, Math.min(1, craterStrength));
       ctx.drawImage(this.craterLayer, 0, 0);
@@ -798,7 +1036,8 @@
       const fOffX = Number(feat.offsetX || 0);
       const fOffY = Number(feat.offsetY || 0);
       const useFeatures = fEnabled && fStrength > 0;
-      const mountainStrength = isArtificial ? 0 : 0.35;
+      const noisyEarthBaseRelief = this.isEarthReconstructionVisualActive() ? 0.16 : 0;
+      const mountainStrength = isArtificial ? 0 : Math.max(noisyEarthBaseRelief, 0.35 * terrainReveal);
       let mountainThreshold = 1;
       if (mountainStrength > 0) {
         const hist0 = this.heightZoneHists[0];
@@ -1103,9 +1342,10 @@
       blendPixel(tdata, idx, iceR, iceG, iceB, alpha);
     }
 
-    const zcLife = this.viz.zonalCoverage || {};
-    const bAny = ((zcLife.tropical?.life || 0) + (zcLife.temperate?.life || 0) + (zcLife.polar?.life || 0)) > 0;
-    if (bAny) {
+    const renderLifeOverlay = (coverageKey, palette) => {
+      const zcLife = this.viz.zonalCoverage || {};
+      const bAny = ((zcLife.tropical?.[coverageKey] || 0) + (zcLife.temperate?.[coverageKey] || 0) + (zcLife.polar?.[coverageKey] || 0)) > 0;
+      if (!bAny) return;
       const bioSeed = this.hashSeedFromPlanet();
       const bioSeedVal = Math.floor((bioSeed.x * 65535) ^ (bioSeed.y * 131071)) >>> 0;
       const bioHash = (x, y) => {
@@ -1132,14 +1372,43 @@
         const detail = bioHash(x * 0.38 + base * 5.2, y * 0.38 - base * 4.1);
         return Math.max(0, Math.min(1, base * 0.9 + detail * 0.1));
       };
+      const boundarySampleCount = isDisk ? 2048 : w;
+      const buildBoundaryField = (seedOffset) => {
+        const field = new Float32Array(boundarySampleCount);
+        const periodicNoise = (position, cells, octaveOffset) => {
+          const scaled = position * cells;
+          const cell = Math.floor(scaled);
+          const fraction = scaled - cell;
+          const blend = fraction * fraction * (3 - 2 * fraction);
+          const a = bioHash(cell % cells, seedOffset + octaveOffset);
+          const b = bioHash((cell + 1) % cells, seedOffset + octaveOffset);
+          return a * (1 - blend) + b * blend;
+        };
+        for (let sample = 0; sample < boundarySampleCount; sample++) {
+          const position = sample / boundarySampleCount;
+          const broad = periodicNoise(position, 5, 0);
+          const medium = periodicNoise(position, 13, 31.7);
+          const detail = periodicNoise(position, 37, 73.1);
+          field[sample] = (broad - 0.5) * 0.9 + (medium - 0.5) * 0.65 + (detail - 0.5) * 0.35;
+        }
+        return field;
+      };
+      const boundaryFields = isRing ? null : [
+        buildBoundaryField(11.3),
+        buildBoundaryField(29.7),
+        buildBoundaryField(47.1),
+        buildBoundaryField(83.9),
+      ];
       const lifeFracs = [
-        Math.max(0, Math.min(1, (zcLife.tropical?.life || 0))),
-        Math.max(0, Math.min(1, (zcLife.temperate?.life || 0))),
-        Math.max(0, Math.min(1, (zcLife.polar?.life || 0))),
+        Math.max(0, Math.min(1, (zcLife.tropical?.[coverageKey] || 0))),
+        Math.max(0, Math.min(1, (zcLife.temperate?.[coverageKey] || 0))),
+        Math.max(0, Math.min(1, (zcLife.polar?.[coverageKey] || 0))),
       ];
       const lifeNoise = this.getLifeNoiseField(w, h);
       if (!this._lifeScore || this._lifeScore.length !== w * h) this._lifeScore = new Float32Array(w * h);
+      if (!this._lifePatch || this._lifePatch.length !== w * h) this._lifePatch = new Float32Array(w * h);
       const lifeScore = this._lifeScore;
+      const lifePatch = this._lifePatch;
       const lifeZoneHists = [
         { counts: new Uint32Array(256), total: 0 },
         { counts: new Uint32Array(256), total: 0 },
@@ -1173,6 +1442,7 @@
         const latAbs = (isRing || isDisk) ? 0.5 : Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
         const patch = patchNoise(x, y);
+        lifePatch[i] = patch;
         let score = lifeNoise[i] * 0.55 + patch * 0.25 + (1 - latAbs) * 0.1 + (1 - hgt) * 0.05 - waterPresence * 0.35;
         if (score < 0) score = 0; else if (score > 1) score = 1;
         lifeScore[i] = score;
@@ -1203,42 +1473,96 @@
         }
         zoneThresholds[zi] = Math.max(0, Math.min(1, thrVal));
       }
-      const softness = 0.1;
+      const tropicalEdge = 23.5 / 90;
+      const polarEdge = 66.5 / 90;
+      const zoneBlend = 0.06;
+      const boundaryWander = 0.04;
+      const softness = 0.16;
       for (let i = 0; i < w * h; i++) {
         const y = Math.floor(i / w);
         const x = i - y * w;
         const zi = this.getTextureZoneIndex(x, y, w, h);
-        const lifeFrac = lifeFracs[zi];
-        if (lifeFrac <= 0) continue;
         const thr = thrIdx[zi];
         if (thr >= 0) {
           const hbin = Math.max(0, Math.min(255, Math.floor((this.heightMap ? this.heightMap[i] : 1) * 255)));
           if (hbin <= thr) continue;
         }
         const idx = i * 4;
-        let alpha = 0;
-        if (lifeFrac >= 1) {
-          alpha = 1;
+        let weights = null;
+        if (isRing) {
+          weights = [1, 0, 0];
+        } else if (isDisk) {
+          const dx = (x / Math.max(1, w - 1)) * 2 - 1;
+          const dy = (y / Math.max(1, h - 1)) * 2 - 1;
+          const radius = Math.sqrt(dx * dx + dy * dy);
+          const inner = this.getDiskInnerRatio();
+          const annulusT = Math.max(0, Math.min(0.999999, (radius - inner) / Math.max(0.001, 1 - inner)));
+          const angle = (Math.atan2(dy, dx) + Math.PI) / (Math.PI * 2);
+          const boundaryIndex = Math.floor(angle * boundarySampleCount) % boundarySampleCount;
+          const localIntrusion = (lifeNoise[i] - 0.5) * 0.12 + (lifePatch[i] - 0.5) * 0.02;
+          const firstPosition = annulusT + boundaryFields[0][boundaryIndex] * 0.04 + localIntrusion;
+          const secondPosition = annulusT + boundaryFields[2][boundaryIndex] * 0.04 + localIntrusion;
+          const firstBlend = smoothstep((1 / 3) - 0.045, (1 / 3) + 0.045, firstPosition);
+          const secondBlend = smoothstep((2 / 3) - 0.045, (2 / 3) + 0.045, secondPosition);
+          weights = [
+            1 - firstBlend,
+            firstBlend * (1 - secondBlend),
+            secondBlend,
+          ];
         } else {
-          const thresh = Math.max(0, zoneThresholds[zi] - 0.02);
-          if (thresh < 0) continue;
-          const lower = Math.max(0, thresh - softness);
-          const upper = Math.min(1, thresh + softness);
-          alpha = smoothstep(lower, upper, lifeScore[i]);
+          const latAbs = Math.min(1, Math.abs((y / (h - 1)) - 0.5) * 2);
+          const hemisphereOffset = y < h / 2 ? 0 : 1;
+          const localIntrusion = (lifeNoise[i] - 0.5) * 0.14 + (lifePatch[i] - 0.5) * 0.12;
+          const tropicalPosition = latAbs + boundaryFields[hemisphereOffset][x] * boundaryWander + localIntrusion;
+          const polarPosition = latAbs + boundaryFields[2 + hemisphereOffset][x] * boundaryWander + localIntrusion;
+          let w0 = 1 - smoothstep(tropicalEdge - zoneBlend, tropicalEdge + zoneBlend, tropicalPosition);
+          let w2 = smoothstep(polarEdge - zoneBlend, polarEdge + zoneBlend, polarPosition);
+          let w1 = 1 - w0 - w2;
+          if (w1 < 0) w1 = 0;
+          const sum = w0 + w1 + w2;
+          if (sum > 0) {
+            const inv = 1 / sum;
+            w0 *= inv; w1 *= inv; w2 *= inv;
+          }
+          weights = [w0, w1, w2];
         }
+        let alphaSum = 0;
+        let weightSum = 0;
+        let lifeFracWeighted = 0;
+        for (let zoneIndex = 0; zoneIndex < 3; zoneIndex++) {
+          const weight = weights[zoneIndex];
+          const lifeFrac = lifeFracs[zoneIndex];
+          if (weight <= 0) continue;
+          weightSum += weight;
+          if (lifeFrac <= 0) continue;
+          const zoneThreshold = zoneThresholds[zoneIndex];
+          if (zoneThreshold < 0) continue;
+          lifeFracWeighted += lifeFrac * weight;
+          let zoneAlpha = 1;
+          if (lifeFrac < 1) {
+            const thresh = Math.max(0, zoneThreshold - 0.02);
+            const lower = Math.max(0, thresh - softness);
+            const upper = Math.min(1, thresh + softness);
+            zoneAlpha = smoothstep(lower, upper, lifeScore[i]);
+          }
+          alphaSum += zoneAlpha * weight;
+        }
+        if (weightSum <= 0) continue;
+        let alpha = alphaSum / weightSum;
+        const lifeFrac = lifeFracWeighted / weightSum;
         const alphaScale = 0.15 + 0.85 * lifeFrac;
         alpha = Math.max(0, Math.min(1, alpha * alphaScale));
         if (alpha < 0.00001) continue;
-        const baseR = 24;
-        const baseG = 105;
-        const baseB = 58;
+        const baseR = palette.base[0];
+        const baseG = palette.base[1];
+        const baseB = palette.base[2];
         const hgt = this.heightMap ? this.heightMap[i] : 0.5;
         const coarse = Math.pow(lifeNoise[i], 1.6);
         const micro = bioHash(x * 2, y * 2);
         const tone = Math.max(0, Math.min(1, 0.1 + 0.9 * (0.55 * coarse + 0.25 * (1 - hgt) + 0.2 * micro)));
-        const messyR = Math.floor(34 * (1 - tone) + 12 * tone);
-        const messyG = Math.floor(110 * (1 - tone) + 150 * tone);
-        const messyB = Math.floor(78 * (1 - tone) + 44 * tone);
+        const messyR = Math.floor(palette.low[0] * (1 - tone) + palette.high[0] * tone);
+        const messyG = Math.floor(palette.low[1] * (1 - tone) + palette.high[1] * tone);
+        const messyB = Math.floor(palette.low[2] * (1 - tone) + palette.high[2] * tone);
         const messiness = 0.2 + 0.8 * lifeFrac;
         let r = Math.floor(baseR * (1 - messiness) + messyR * messiness);
         let g = Math.floor(baseG * (1 - messiness) + messyG * messiness);
@@ -1261,7 +1585,435 @@
         }
         blendPixel(tdata, idx, r, g, b, alpha);
       }
-    }
+    };
+
+    renderLifeOverlay('life', {
+      base: [24, 105, 58],
+      low: [34, 110, 78],
+      high: [12, 150, 44],
+    });
+    renderLifeOverlay('hazardousLife', {
+      base: [130, 24, 24],
+      low: [150, 42, 34],
+      high: [205, 36, 42],
+    });
+
+    const renderEcumenopolisOverlay = () => {
+      const cityRatio = this.getEcumenopolisVisualizerStrength();
+      if (cityRatio <= 0) return;
+
+      if (!this._ecumenopolisScore || this._ecumenopolisScore.length !== w * h) {
+        this._ecumenopolisScore = new Float32Array(w * h);
+      }
+      if (!this._ecumenopolisExposure || this._ecumenopolisExposure.length !== w * h) {
+        this._ecumenopolisExposure = new Float32Array(w * h);
+      }
+
+      const score = this._ecumenopolisScore;
+      const exposure = this._ecumenopolisExposure;
+      if (!this._ecumenopolisEmissionCanvas) {
+        this._ecumenopolisEmissionCanvas = document.createElement('canvas');
+      }
+      const emissionCanvas = this._ecumenopolisEmissionCanvas;
+      if (emissionCanvas.width !== w || emissionCanvas.height !== h) {
+        emissionCanvas.width = w;
+        emissionCanvas.height = h;
+        if (this._ecumenopolisEmissionTexture && this._ecumenopolisEmissionTexture.dispose) {
+          this._ecumenopolisEmissionTexture.dispose();
+        }
+        this._ecumenopolisEmissionTexture = null;
+      }
+      const emissionCtx = emissionCanvas.getContext('2d');
+      const emissionImg = emissionCtx.createImageData(w, h);
+      const emissionData = emissionImg.data;
+      const finishEmissionTexture = () => {
+        emissionCtx.putImageData(emissionImg, 0, 0);
+        if (!this._ecumenopolisEmissionTexture) {
+          this._ecumenopolisEmissionTexture = new THREE.CanvasTexture(emissionCanvas);
+          if (THREE && THREE.SRGBColorSpace) {
+            this._ecumenopolisEmissionTexture.colorSpace = THREE.SRGBColorSpace;
+          }
+          this._ecumenopolisEmissionTexture.wrapS = THREE.RepeatWrapping;
+          this._ecumenopolisEmissionTexture.wrapT = this.isDiskWorld() ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
+        }
+        this._ecumenopolisEmissionTexture.needsUpdate = true;
+      };
+      const citySeedVal = Math.floor((seed.x * 786433) ^ (seed.y * 1572869)) >>> 0;
+      const hashCity = (x, y) => {
+        const n = Math.sin(x * 127.1 + y * 311.7 + citySeedVal * 0.000037) * 43758.5453;
+        return n - Math.floor(n);
+      };
+      const smooth = (t) => t * t * (3 - 2 * t);
+      const valueCity = (x, y) => {
+        const xi = Math.floor(x);
+        const yi = Math.floor(y);
+        const xf = x - xi;
+        const yf = y - yi;
+        const u = smooth(xf);
+        const v = smooth(yf);
+        const a = hashCity(xi, yi);
+        const b = hashCity(xi + 1, yi);
+        const c = hashCity(xi, yi + 1);
+        const d = hashCity(xi + 1, yi + 1);
+        return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+      };
+      const cityFbm = (x, y, octaves) => {
+        let total = 0;
+        let amp = 0.54;
+        let freq = 1;
+        for (let octave = 0; octave < octaves; octave++) {
+          total += valueCity(x * freq, y * freq) * amp;
+          freq *= 2.05;
+          amp *= 0.52;
+        }
+        return clamp01(total);
+      };
+      const fract = (v) => v - Math.floor(v);
+      const lineMask = (v, width) => {
+        const f = fract(v);
+        const d = Math.min(f, 1 - f);
+        return 1 - smoothstep(width * 0.35, width, d);
+      };
+
+      if (isDisk) {
+        const coverageThreshold = 1 - cityRatio;
+        const coverageSoftness = 0.16;
+        const diskScale = 5.4;
+        for (let i = 0; i < w * h; i++) {
+          const y = Math.floor(i / w);
+          const x = i - y * w;
+          const u = x / Math.max(1, w - 1);
+          const v = y / Math.max(1, h - 1);
+          const px = u * diskScale;
+          const py = v * diskScale;
+          const district = valueCity(px * 1.7 + 11.3, py * 1.4 - 5.8);
+          const detail = valueCity(px * 4.8 - 3.2, py * 3.9 + 17.6);
+          const cityScore = clamp01(district * 0.68 + detail * 0.32);
+          const districtAlpha = cityRatio >= 0.995
+            ? 1
+            : smoothstep(coverageThreshold - coverageSoftness, coverageThreshold + coverageSoftness, cityScore);
+          if (districtAlpha <= 0.002) continue;
+
+          const warp = (valueCity(px * 0.85 + 2.4, py * 0.72 - 7.1) - 0.5) * 0.75;
+          const longA = lineMask(px * 4.2 + warp + district * 1.7, 0.022) * smoothstep(0.22, 0.82, valueCity(py * 1.6, px * 0.3 + 4.1));
+          const longB = lineMask(py * 3.8 - warp * 0.8 + detail * 1.4, 0.02) * smoothstep(0.28, 0.86, valueCity(px * 1.5 + 9.2, py * 0.4));
+          const diagonal = lineMask((px + py * 0.58) * 3.1 + district * 2.2, 0.019) * smoothstep(0.36, 0.88, valueCity(px * 0.55 - 8.5, py * 1.2 + 3.3));
+          const cx = Math.floor(px * 1.15 + district) / 1.15 + 0.38;
+          const cy = Math.floor(py * 1.28 + detail) / 1.28 + 0.34;
+          const dx = px - cx;
+          const dy = py - cy;
+          const radius = 0.12 + hashCity(Math.floor(cx * 9.1), Math.floor(cy * 7.7)) * 0.22;
+          const ring = (1 - smoothstep(0.018, 0.05, Math.abs(Math.sqrt(dx * dx + dy * dy) - radius)))
+            * smoothstep(0.24, 0.86, valueCity(Math.atan2(dy, dx) * 2.2 + radius * 3.1, district * 5.4));
+          const alley = Math.max(
+            lineMask((px * 19 + py * 2.8 + detail * 2.4), 0.014),
+            lineMask((py * 17 - px * 2.3 + district * 2.1), 0.014)
+          ) * smoothstep(0.48, 0.9, valueCity(px * 2.8 + 18.4, py * 2.6 - 11.2));
+          const street = Math.max(longA, longB, diagonal * 0.78, ring * 0.86, alley * 0.42);
+          const idx = i * 4;
+          const metalShade = 0.38 + district * 0.22 + detail * 0.12 + street * 0.08;
+          const cityR = Math.round(6 + 18 * metalShade);
+          const cityG = Math.round(7 + 18 * metalShade);
+          const cityB = Math.round(8 + 20 * metalShade);
+          blendPixel(tdata, idx, cityR, cityG, cityB, clamp01(0.9 * districtAlpha));
+
+          const windows = smoothstep(0.88, 0.998, hashCity(x * 0.71 + district * 13.7, y * 0.83 - detail * 9.4)) * districtAlpha * 0.42;
+          const goldAlpha = clamp01(smoothstep(0.3, 0.82, street) * districtAlpha * 0.86 + windows);
+          if (goldAlpha > 0.01) {
+            const whiteGold = windows > 0.24;
+            const goldR = whiteGold ? 255 : 245;
+            const goldG = whiteGold ? 244 : 188;
+            const goldB = whiteGold ? 160 : 24;
+            blendPixel(tdata, idx, goldR, goldG, goldB, goldAlpha);
+            const glow = clamp01(goldAlpha * (0.78 + street * 0.42));
+            emissionData[idx] = Math.max(emissionData[idx], Math.round(goldR * glow));
+            emissionData[idx + 1] = Math.max(emissionData[idx + 1], Math.round(goldG * glow));
+            emissionData[idx + 2] = Math.max(emissionData[idx + 2], Math.round(goldB * glow));
+            emissionData[idx + 3] = 255;
+          }
+        }
+        finishEmissionTexture();
+        return;
+      }
+
+      const segmentGate = (coord, phase) => {
+        const noise = valueCity(coord * 2.4 + phase, phase * 0.37);
+        const slow = valueCity(coord * 0.42 - phase * 0.19, phase * 0.23 + 7.1);
+        return smoothstep(0.32, 0.78, noise * 0.62 + slow * 0.38);
+      };
+      const longCorridorMask = (px, py, angle, offset, width, frequency, phase) => {
+        const ca = Math.cos(angle);
+        const sa = Math.sin(angle);
+        const along = px * ca + py * sa;
+        const across = -px * sa + py * ca;
+        const warp = (cityFbm(along * 0.25 + phase, across * 0.35 - phase, 3) - 0.5) * 0.34;
+        const line = lineMask(across * frequency + offset + warp, width);
+        const broken = segmentGate(along * 0.7, phase);
+        return line * broken;
+      };
+      const ringMask = (px, py, cx, cy, radius, width, phase) => {
+        const dx = px - cx;
+        const dy = py - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx) / (Math.PI * 2);
+        const radial = 1 - smoothstep(width * 0.45, width, Math.abs(dist - radius));
+        const broken = segmentGate(angle * 10.5 + radius * 1.7, phase);
+        return radial * broken;
+      };
+      const hist = new Uint32Array(256);
+      let eligible = 0;
+      const scale = isDisk ? 7.5 : 1;
+      for (let i = 0; i < w * h; i++) {
+        const y = Math.floor(i / w);
+        const x = i - y * w;
+        const u = x / Math.max(1, w - 1);
+        const v = y / Math.max(1, h - 1);
+        const exposed = 1;
+        exposure[i] = exposed;
+        if (exposed <= 0.08) {
+          score[i] = 0;
+          continue;
+        }
+
+        const hgt = this.heightMap ? this.heightMap[i] : 0.5;
+        const latAbs = (isRing || isDisk) ? 0.32 : Math.min(1, Math.abs(v - 0.5) * 2);
+        const ux = u * ringAspect;
+        const continental = cityFbm(ux * 5.7 * scale + 17.3, v * 4.2 * scale - 9.1, 5);
+        const district = cityFbm(ux * 18.5 * scale - 4.6, v * 12.0 * scale + 31.4, 4);
+        const arterial = Math.max(
+          lineMask(ux * 15.0 * scale + district * 1.6, 0.065),
+          lineMask(v * 9.0 * scale + continental * 1.3, 0.06)
+        );
+        const highlandBias = smoothstep(0.18, 0.72, hgt) * 0.08;
+        const equatorBias = (1 - latAbs) * 0.08;
+        const cityScore = clamp01(
+          continental * 0.46 +
+          district * 0.31 +
+          arterial * 0.12 +
+          highlandBias +
+          equatorBias
+        ) * exposed;
+        score[i] = cityScore;
+        const bin = Math.max(0, Math.min(255, Math.floor(cityScore * 255)));
+        hist[bin]++;
+        eligible++;
+      }
+
+      if (eligible === 0) return;
+      const target = Math.max(1, Math.min(eligible, Math.round(eligible * cityRatio)));
+      let acc = 0;
+      let thresholdBin = 0;
+      for (let bin = 255; bin >= 0; bin--) {
+        acc += hist[bin];
+        if (acc >= target) {
+          thresholdBin = bin;
+          break;
+        }
+      }
+      const threshold = thresholdBin / 255;
+      const softness = Math.max(0.035, 0.11 - cityRatio * 0.06);
+      const cityIntensity = smoothstep(0.01, 0.32, cityRatio);
+      for (let i = 0; i < w * h; i++) {
+        const exposed = exposure[i];
+        if (exposed <= 0.08) continue;
+        const districtAlpha = cityRatio >= 0.995
+          ? exposed
+          : smoothstep(threshold - softness, threshold + softness, score[i]) * exposed;
+        if (districtAlpha <= 0.002) continue;
+
+        const y = Math.floor(i / w);
+        const x = i - y * w;
+        const u = x / Math.max(1, w - 1);
+        const v = y / Math.max(1, h - 1);
+        const ux = u * ringAspect;
+        const panelX = Math.floor(ux * 104 * scale);
+        const panelY = Math.floor(v * 56 * scale);
+        const panelHash = hashCity(panelX, panelY);
+        const plazaHash = hashCity(panelX * 0.23 + 91.4, panelY * 0.29 - 18.6);
+        const px = ux * scale;
+        const py = v * scale;
+        const districtWarp = cityFbm(px * 1.9 + 4.1, py * 1.4 - 8.7, 4);
+        const longA = longCorridorMask(px, py, 0.1 + districtWarp * 0.28, plazaHash * 3.2, 0.027, 5.2, 2.1);
+        const longB = longCorridorMask(px, py, 1.42 + panelHash * 0.32, panelHash * 2.8, 0.023, 4.6, 5.7);
+        const longC = longCorridorMask(px, py, -0.82 + plazaHash * 0.42, districtWarp * 3.4, 0.019, 6.8, 9.4);
+        const longD = longCorridorMask(px, py, 0.58 + panelHash * 0.5, plazaHash * 4.1, 0.016, 8.4, 17.8);
+        const longE = longCorridorMask(px, py, -1.18 + districtWarp * 0.44, panelHash * 3.7, 0.015, 9.6, 23.2);
+        const cx = Math.floor(px * 1.45 + panelHash) / 1.45 + 0.32 + panelHash * 0.18;
+        const cy = Math.floor(py * 1.7 + plazaHash) / 1.7 + 0.26 + plazaHash * 0.15;
+        const radius = 0.08 + hashCity(panelX * 0.47 + 12.9, panelY * 0.53 - 6.2) * 0.22;
+        const ring = ringMask(px, py, cx, cy, radius, 0.018 + radius * 0.08, panelHash * 11.3);
+        const radial = Math.max(
+          longCorridorMask(px - cx, py - cy, Math.atan2(py - cy, px - cx), plazaHash * 2.1, 0.018, 3.4, 13.1),
+          longCorridorMask(px - cx, py - cy, Math.atan2(py - cy, px - cx) + Math.PI / 2, panelHash * 2.4, 0.014, 4.2, 16.3)
+        ) * smoothstep(radius * 1.6, radius * 0.35, Math.sqrt((px - cx) * (px - cx) + (py - cy) * (py - cy)));
+        const oldGrid = Math.max(
+          lineMask(ux * 17 * scale + plazaHash * 0.45 + districtWarp * 1.1, 0.025),
+          lineMask(v * 12 * scale + panelHash * 0.42 + districtWarp * 0.9, 0.024)
+        );
+        const fineLine = Math.max(
+          lineMask((ux + districtWarp * 0.02) * 150 * scale + panelHash * 0.65, 0.019),
+          lineMask((v - districtWarp * 0.018) * 92 * scale + plazaHash * 0.58, 0.018)
+        );
+        const alleyGate = segmentGate(ux * 11.5 + v * 7.3, panelHash * 19.1);
+        const alleyLine = Math.max(
+          lineMask((ux * 46 + v * 7.5 + districtWarp * 2.2) * scale + panelHash, 0.018),
+          lineMask((v * 38 - ux * 5.2 + districtWarp * 1.6) * scale + plazaHash, 0.017)
+        ) * alleyGate;
+        const diagonalLine = lineMask((ux + v * (0.44 + panelHash * 0.62)) * 22 * scale + panelHash + districtWarp * 1.8, 0.018);
+        const transit = Math.max(longA, longB, longC, longD * 0.72, longE * 0.68, ring * 0.94, radial * 0.72, diagonalLine * 0.6, oldGrid * 0.5, alleyLine * 0.56);
+        const street = Math.max(transit, fineLine * 0.36, alleyLine * 0.62);
+        const hgt = this.heightMap ? this.heightMap[i] : 0.5;
+        const tower = smoothstep(0.42, 0.92, score[i] + panelHash * 0.22 + hgt * 0.08);
+        const metalShade = 0.36 + panelHash * 0.26 + tower * 0.12 + street * 0.08;
+        const idx = i * 4;
+        const cityR = Math.round(6 + 18 * metalShade);
+        const cityG = Math.round(7 + 18 * metalShade);
+        const cityB = Math.round(8 + 20 * metalShade);
+        const alpha = clamp01((0.8 + cityIntensity * 0.18) * districtAlpha);
+        blendPixel(
+          tdata,
+          idx,
+          cityR,
+          cityG,
+          cityB,
+          alpha
+        );
+
+        const transitGold = smoothstep(0.34, 0.82, street * 0.86 + tower * 0.14) * districtAlpha;
+        const windowHash = hashCity(x * 0.83 + tower * 19.1, y * 0.91 - street * 7.4);
+        const warmWindows = smoothstep(0.82, 0.995, windowHash) * districtAlpha * (0.22 + tower * 0.42);
+        const whiteGoldWindows = smoothstep(0.92, 0.999, hashCity(x * 1.17 - 33.2, y * 0.77 + 10.6)) * districtAlpha * street * 0.42;
+        const goldAlpha = clamp01(transitGold * 0.78 + warmWindows * 0.7 + whiteGoldWindows * 0.95);
+        if (goldAlpha > 0.01) {
+          const goldR = whiteGoldWindows > warmWindows ? 255 : 245;
+          const goldG = whiteGoldWindows > warmWindows ? 244 : 188;
+          const goldB = whiteGoldWindows > warmWindows ? 160 : 24;
+          blendPixel(tdata, idx, goldR, goldG, goldB, goldAlpha);
+          const glow = Math.max(0, Math.min(1, goldAlpha * (0.75 + street * 0.5)));
+          emissionData[idx] = Math.max(emissionData[idx], Math.round(goldR * glow));
+          emissionData[idx + 1] = Math.max(emissionData[idx + 1], Math.round(goldG * glow));
+          emissionData[idx + 2] = Math.max(emissionData[idx + 2], Math.round(goldB * glow));
+          emissionData[idx + 3] = 255;
+        }
+      }
+
+      finishEmissionTexture();
+    };
+
+    const renderNanoworldOverlay = () => {
+      const strength = this.getNanoworldVisualizerStrength();
+      if (strength <= 0) return;
+
+      if (!this._nanoworldEmissionCanvas) {
+        this._nanoworldEmissionCanvas = document.createElement('canvas');
+      }
+      const emissionCanvas = this._nanoworldEmissionCanvas;
+      if (emissionCanvas.width !== w || emissionCanvas.height !== h) {
+        emissionCanvas.width = w;
+        emissionCanvas.height = h;
+        if (this._nanoworldEmissionTexture && this._nanoworldEmissionTexture.dispose) {
+          this._nanoworldEmissionTexture.dispose();
+        }
+        this._nanoworldEmissionTexture = null;
+      }
+      const emissionCtx = emissionCanvas.getContext('2d');
+      const emissionImg = emissionCtx.createImageData(w, h);
+      const emissionData = emissionImg.data;
+      const naniteSeed = Math.floor((seed.x * 104729) ^ (seed.y * 130363)) >>> 0;
+      const hashNanite = (x, y) => {
+        const n = Math.sin(x * 91.731 + y * 159.217 + naniteSeed * 0.000071) * 43758.5453123;
+        return n - Math.floor(n);
+      };
+      const columns = this.isRingWorld() ? 144 : (isDisk ? 76 : 72);
+      const rows = isDisk ? 76 : 38;
+      const wrapColumn = (column) => ((column % columns) + columns) % columns;
+
+      for (let i = 0; i < w * h; i++) {
+        const y = Math.floor(i / w);
+        const x = i - y * w;
+        const u = x / Math.max(1, w - 1);
+        const v = y / Math.max(1, h - 1);
+        const px = u * columns;
+        const py = v * rows;
+        const cellX = Math.floor(px);
+        const cellY = Math.floor(py);
+        let nearest = 10;
+        let secondNearest = 10;
+        let nearestCellX = 0;
+        let nearestCellY = 0;
+
+        for (let offsetY = -1; offsetY <= 1; offsetY += 1) {
+          for (let offsetX = -1; offsetX <= 1; offsetX += 1) {
+            const candidateX = cellX + offsetX;
+            const candidateY = cellY + offsetY;
+            const wrappedX = wrapColumn(candidateX);
+            const pointX = candidateX + 0.18 + hashNanite(wrappedX, candidateY) * 0.64;
+            const pointY = candidateY + 0.18 + hashNanite(wrappedX + 37.4, candidateY - 19.7) * 0.64;
+            const dx = px - pointX;
+            const dy = py - pointY;
+            const distance = dx * dx + dy * dy;
+            if (distance < nearest) {
+              secondNearest = nearest;
+              nearest = distance;
+              nearestCellX = wrappedX;
+              nearestCellY = candidateY;
+            } else if (distance < secondNearest) {
+              secondNearest = distance;
+            }
+          }
+        }
+
+        const cellEdge = 1 - smoothstep(0.018, 0.16, secondNearest - nearest);
+        const broadCurrent = 0.5 + 0.5 * Math.sin(
+          u * Math.PI * 18 +
+          Math.sin(v * Math.PI * 7 + hashNanite(nearestCellX, nearestCellY) * 4) * 2.2 +
+          v * Math.PI * 3
+        );
+        const counterCurrent = 0.5 + 0.5 * Math.sin(
+          v * Math.PI * 31 - u * Math.PI * 11 +
+          Math.sin(u * Math.PI * 9) * 1.7
+        );
+        const filament = smoothstep(0.88, 0.985, broadCurrent * 0.64 + counterCurrent * 0.36);
+        const coreDistance = Math.sqrt(nearest);
+        const nodeChance = hashNanite(nearestCellX * 1.73 + 11.2, nearestCellY * 1.31 - 8.4);
+        const node = nodeChance > 0.82 ? 1 - smoothstep(0.045, 0.16, coreDistance) : 0;
+        const shimmer = 0.5 + 0.5 * Math.sin(
+          (u * 2.4 + v * 1.7) * Math.PI * 2 +
+          hashNanite(nearestCellX, nearestCellY) * Math.PI * 2
+        );
+        const idx = i * 4;
+        const baseNoise = hashNanite(x * 0.071 + nearestCellX, y * 0.067 + nearestCellY);
+        const purple = shimmer * (1 - cellEdge) * 0.55;
+        const cyan = Math.max(cellEdge * 0.82, filament * 0.46, node);
+        const red = Math.round(4 + baseNoise * 7 + purple * 34 + node * 52);
+        const green = Math.round(11 + baseNoise * 11 + cyan * 72 + filament * 20);
+        const blue = Math.round(22 + baseNoise * 18 + purple * 68 + cyan * 108);
+        blendPixel(tdata, idx, red, green, blue, 0.985 * strength);
+
+        const emission = clamp01(cellEdge * 0.34 + filament * 0.22 + node * 0.95) * strength;
+        if (emission > 0.01) {
+          const violetNode = node > 0.45 && nodeChance > 0.92;
+          emissionData[idx] = Math.round((violetNode ? 180 : 32) * emission);
+          emissionData[idx + 1] = Math.round((violetNode ? 92 : 224) * emission);
+          emissionData[idx + 2] = Math.round(255 * emission);
+          emissionData[idx + 3] = 255;
+        }
+      }
+
+      emissionCtx.putImageData(emissionImg, 0, 0);
+      if (!this._nanoworldEmissionTexture) {
+        this._nanoworldEmissionTexture = new THREE.CanvasTexture(emissionCanvas);
+        if (THREE && THREE.SRGBColorSpace) {
+          this._nanoworldEmissionTexture.colorSpace = THREE.SRGBColorSpace;
+        }
+        this._nanoworldEmissionTexture.wrapS = THREE.RepeatWrapping;
+        this._nanoworldEmissionTexture.wrapT = this.isDiskWorld() ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
+      }
+      this._nanoworldEmissionTexture.needsUpdate = true;
+    };
+
+    renderEcumenopolisOverlay();
+    renderNanoworldOverlay();
 
     ctx.putImageData(timg, 0, 0);
     if (!this._surfaceCanvasTexture) {
@@ -1309,15 +2061,26 @@
     const lavaRed = { r: 176, g: 30, b: 12 };
     const lavaOrange = { r: 234, g: 94, b: 18 };
     const lavaYellow = { r: 255, g: 196, b: 84 };
+    const useEarthVolcanicNoise = this.isEarthReconstructionVisualActive();
     for (let i = 0; i < w * h; i++) {
       const x = i % w;
       const y = (i - x) / w;
       const idx = i * 4;
-      const hgt = this.heightMap ? this.heightMap[i] : 0.5;
+      const u = x / w;
+      const v = y / h;
+      const hgt = useEarthVolcanicNoise
+        ? getEarthReconstructionPeriodicLavaNoise(u, v, 7.9)
+        : (this.heightMap ? this.heightMap[i] : 0.5);
       const lowland = 1 - smoothstep(0.42, 0.82, hgt);
-      const fissure = ridgeNoise((x / w) * ringAspect, y / h, 8.5);
-      const patch = smoothstep(0.42, 0.82, patchNoise((x / w) * ringAspect + 3.4, y / h - 1.8, 3.2));
-      const patchDetail = smoothstep(0.46, 0.8, patchNoise((x / w) * ringAspect - 11.2, y / h + 7.6, 5.1));
+      const fissure = useEarthVolcanicNoise
+        ? getEarthReconstructionPeriodicLavaNoise(u, v, 13.5)
+        : ridgeNoise(u * ringAspect, v, 8.5);
+      const patch = useEarthVolcanicNoise
+        ? smoothstep(0.62, 0.94, getEarthReconstructionPeriodicLavaNoise(u, v, 5.4))
+        : smoothstep(0.42, 0.82, patchNoise(u * ringAspect + 3.4, v - 1.8, 3.2));
+      const patchDetail = useEarthVolcanicNoise
+        ? smoothstep(0.58, 0.9, getEarthReconstructionPeriodicLavaNoise(u, v, 9.2))
+        : smoothstep(0.46, 0.8, patchNoise(u * ringAspect - 11.2, v + 7.6, 5.1));
       const crackMask = clamp01(fissure * 0.48 + patch * 0.38 + patchDetail * 0.14);
       const moltenMask = clamp01(lowland * 0.58 + crackMask * 0.82 + patch * 0.18);
       const crustBlend = clamp01(0.5 + lowland * 0.2 + crackMask * 0.14);
@@ -1334,12 +2097,14 @@
       r += lavaRed.r * redBlend * 0.95;
       g += lavaRed.g * redBlend * 0.95;
       b += lavaRed.b * redBlend * 0.95;
-      r += lavaOrange.r * orangeBlend * 0.72;
-      g += lavaOrange.g * orangeBlend * 0.72;
-      b += lavaOrange.b * orangeBlend * 0.72;
-      r += lavaYellow.r * yellowBlend * 0.38;
-      g += lavaYellow.g * yellowBlend * 0.38;
-      b += lavaYellow.b * yellowBlend * 0.38;
+      const orangeWeight = useEarthVolcanicNoise ? 0.82 : 0.72;
+      const yellowWeight = useEarthVolcanicNoise ? 0.58 : 0.38;
+      r += lavaOrange.r * orangeBlend * orangeWeight;
+      g += lavaOrange.g * orangeBlend * orangeWeight;
+      b += lavaOrange.b * orangeBlend * orangeWeight;
+      r += lavaYellow.r * yellowBlend * yellowWeight;
+      g += lavaYellow.g * yellowBlend * yellowWeight;
+      b += lavaYellow.b * yellowBlend * yellowWeight;
 
       data[idx] = Math.max(0, Math.min(255, Math.round(r)));
       data[idx + 1] = Math.max(0, Math.min(255, Math.round(g)));
@@ -1818,7 +2583,78 @@
     return arr;
   };
 
+  PlanetVisualizer.prototype.populateHeightZoneHists = function populateHeightZoneHists(arr, w, h) {
+    if (!this._zoneRowIndex || this._zoneRowIndex.length !== h) {
+      this._zoneRowIndex = this.buildZoneRowIndex(h);
+    }
+    this.heightZoneHists = {
+      0: { counts: new Uint32Array(256), total: 0 },
+      1: { counts: new Uint32Array(256), total: 0 },
+      2: { counts: new Uint32Array(256), total: 0 },
+    };
+    for (let i = 0; i < w * h; i++) {
+      const y = Math.floor(i / w);
+      const x = i - y * w;
+      const zi = this.getTextureZoneIndex(x, y, w, h);
+      const bin = Math.max(0, Math.min(255, Math.floor(arr[i] * 255)));
+      this.heightZoneHists[zi].counts[bin]++;
+      this.heightZoneHists[zi].total++;
+    }
+  };
+
+  PlanetVisualizer.prototype.tryGenerateConfiguredHeightMap = function tryGenerateConfiguredHeightMap(w, h) {
+    if (this.isRingWorld() || this.isDiskWorld()) return false;
+
+    const key = resolveHeightMapKey(this);
+    if (!key) return false;
+    const packed = window.PLANET_VISUALIZER_HEIGHT_MAPS?.[key];
+    if (!packed?.data || !packed.width || !packed.height) return false;
+
+    if (!this._decodedHeightMaps) {
+      this._decodedHeightMaps = {};
+    }
+    if (!this._decodedHeightMaps[key]) {
+      const packedText = packed.data.replace(/\s+/g, '');
+      const binary = atob(packedText);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      this._decodedHeightMaps[key] = bytes;
+    }
+
+    const source = this._decodedHeightMaps[key];
+    const srcW = packed.width;
+    const srcH = packed.height;
+    const arr = new Float32Array(w * h);
+    const shapeRatio = key === 'earth' ? getEarthReconstructionShapeRatio(this) : 1;
+    const reveal = smoothstep(0, 1, shapeRatio);
+    const noisePhase = 2.7;
+    for (let y = 0; y < h; y++) {
+      const sy = Math.min(srcH - 1, Math.max(0, Math.round((y / Math.max(1, h - 1)) * (srcH - 1))));
+      const row = sy * srcW;
+      const v = y / Math.max(1, h - 1);
+      for (let x = 0; x < w; x++) {
+        const sx = Math.min(srcW - 1, Math.max(0, Math.round((x / w) * srcW) % srcW));
+        const sourceHeight = source[row + sx] / 255;
+        if (reveal >= 1) {
+          arr[y * w + x] = sourceHeight;
+        } else {
+          const u = x / Math.max(1, w - 1);
+          const noiseHeight = getEarthReconstructionNoiseHeight(u, v, noisePhase);
+          arr[y * w + x] = noiseHeight + (sourceHeight - noiseHeight) * reveal;
+        }
+      }
+    }
+    this.heightMap = arr;
+    this.populateHeightZoneHists(arr, w, h);
+    this._heightMapSourceKey = `${key}:${w}x${h}`;
+    return true;
+  };
+
   PlanetVisualizer.prototype.generateHeightMap = function generateHeightMap(w, h) {
+    if (this.tryGenerateConfiguredHeightMap(w, h)) return;
+
     const seed = this.hashSeedFromPlanet();
     const ringAspect = this.getRingUvAspect();
     const usePeriodic = this.isRingWorld();
@@ -1909,22 +2745,7 @@
     for (let i = 0; i < w * h; i++) arr[i] = (arr[i] - minH) / span;
 
     this.heightMap = arr;
-
-    if (!this._zoneRowIndex) {
-      this._zoneRowIndex = this.buildZoneRowIndex(h);
-    }
-    this.heightZoneHists = {
-      0: { counts: new Uint32Array(256), total: 0 },
-      1: { counts: new Uint32Array(256), total: 0 },
-      2: { counts: new Uint32Array(256), total: 0 },
-    };
-    for (let i = 0; i < w * h; i++) {
-      const y = Math.floor(i / w);
-      const x = i - y * w;
-      const zi = this.getTextureZoneIndex(x, y, w, h);
-      const bin = Math.max(0, Math.min(255, Math.floor(arr[i] * 255)));
-      this.heightZoneHists[zi].counts[bin]++;
-      this.heightZoneHists[zi].total++;
-    }
+    this.populateHeightZoneHists(arr, w, h);
+    this._heightMapSourceKey = `procedural:${w}x${h}`;
   };
 })();

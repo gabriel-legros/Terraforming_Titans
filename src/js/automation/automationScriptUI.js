@@ -34,7 +34,7 @@ function buildScriptAutomationUI() {
     getAutomationCardText(
       'scriptAutomationTooltip',
       {},
-      'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines, run up to 25 actions, and let one GOTO take effect. These limits keep loops from spending the whole tick in automation.\n\nIF and ELSE IF lines test their condition. WAIT lines also test a condition, but they stay on that line until the condition becomes true. ELSE IF and ELSE lines use Linked to to choose the prior IF or ELSE IF they belong to; if no valid link exists, they behave like ACTIONS. When a linked IF or ELSE IF is false, script execution jumps to its linked ELSE IF or ELSE for free without using the one-GOTO limit. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, research, ship, or life presets and combinations, and can toggle scripting, auto-travel, ship automation, or life automation. GOTO jumps to another line, while GOTO Script jumps to row 1 of another script. Both use the same one-GOTO-per-tick limit.\n\nUse Pause to stop without moving the current line, Step Once to test a single line, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.'
+      'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines and start new lines while fewer than 25 actions have run. Once a line starts, all its actions run even if the total goes over 25. One GOTO can take effect per tick. These limits keep loops from spending the whole tick in automation.\n\nIF and ELSE IF lines test their condition. WAIT lines also test a condition, but they stay on that line until the condition becomes true. ELSE IF and ELSE lines use Linked to to choose the prior IF or ELSE IF they belong to; if no valid link exists, they behave like ACTIONS. When a linked IF or ELSE IF is false, script execution jumps to its linked ELSE IF or ELSE for free without using the one-GOTO limit. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, research, ship, or life presets and combinations, and can toggle scripting, auto-travel, ship automation, or life automation. GOTO jumps to another line, while GOTO Script jumps to row 1 of another script. Both use the same one-GOTO-per-tick limit.\n\nUse Pause to stop without moving the current line, Step Once to execute one action at a time, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.'
     )
   );
 
@@ -127,7 +127,8 @@ function buildScriptAutomationUI() {
   deleteButton.classList.add('script-automation-delete');
   deleteButton.textContent = getAutomationCardText('scriptDelete', {}, 'Delete');
 
-  scriptRow.append(scriptSelect, scriptName, newButton, duplicateButton, deleteButton);
+  const scriptTransferButtons = createAutomationPresetTransferButtons('script-automation-script');
+  scriptRow.append(scriptSelect, scriptName, newButton, duplicateButton, deleteButton, scriptTransferButtons.importButton, scriptTransferButtons.exportButton);
   body.appendChild(scriptRow);
 
   const linesContainer = document.createElement('div');
@@ -158,6 +159,8 @@ function buildScriptAutomationUI() {
   automationElements.scriptDeleteButton = deleteButton;
   automationElements.scriptLinesContainer = linesContainer;
   automationElements.scriptAddLineButton = addLineButton;
+  automationElements.scriptImportButton = scriptTransferButtons.importButton;
+  automationElements.scriptExportButton = scriptTransferButtons.exportButton;
 
   wireScriptAutomationEvents();
 }
@@ -285,6 +288,39 @@ function wireScriptAutomationEvents() {
     forceScriptAutomationRefresh = true;
     queueAutomationUIRefresh();
   });
+
+  els.scriptExportButton.addEventListener('click', () => {
+    const automation = getScriptAutomation();
+    const script = automation?.getSelectedScript();
+    if (!automation || !script) return;
+    exportAutomationPresetToClipboard('script', automation.exportScript(script.id), els.scriptExportButton);
+  });
+
+  els.scriptImportButton.addEventListener('click', () => {
+    openAutomationPresetImportDialog({
+      title: getAutomationCardText('importScriptTitle', {}, 'Import Script'),
+      description: getAutomationCardText(
+        'importPresetDescription',
+        {},
+        'Paste an exported preset string below. Import adds it as a new preset.'
+      ),
+      onImport: (text) => {
+        const parsed = parseAutomationPresetTransferPayload(text, 'script');
+        if (!parsed.ok) {
+          return parsed;
+        }
+        const automation = getScriptAutomation();
+        if (!automation) {
+          return { ok: false, error: getAutomationCardText('importPresetFailed', {}, 'Could not import that preset.') };
+        }
+        automation.importScript(parsed.preset);
+        forceScriptAutomationRefresh = true;
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+        return { ok: true };
+      }
+    });
+  });
 }
 
 function updateScriptAutomationUI() {
@@ -364,6 +400,8 @@ function updateScriptAutomationUI() {
   automationElements.scriptPauseButton.disabled = !automation.running;
   automationElements.scriptStepButton.disabled = !automation.enabled || !script;
   automationElements.scriptResetButton.disabled = !script;
+  automationElements.scriptImportButton.disabled = false;
+  automationElements.scriptExportButton.disabled = !script;
 
   const displayLineId = automation.getDisplayLineId ? automation.getDisplayLineId() : automation.pcLineId;
   const currentLine = script?.lines.find(line => line.id === displayLineId);
@@ -569,7 +607,7 @@ function describeScriptActions(automation, script, actions) {
       return target ? `GOTO ${automation.getLineLabel(script, target)}` : 'GOTO ?';
     }
     if (action.kind === 'gotoScript') {
-      const targetScript = automation.scripts.find(item => item.id === Number(action.targetScriptId));
+      const targetScript = automation.scripts.find(item => item.id === Number(automation.resolveGotoScriptTargetId(action)));
       if (!targetScript) return `${getAutomationCardText('scriptGotoScript', {}, 'GOTO Script')} ?`;
       return `${getAutomationCardText('scriptGotoScript', {}, 'GOTO Script')} ${targetScript.name || `Script ${targetScript.id}`} #1`;
     }
@@ -615,6 +653,38 @@ function normalizeScriptSleepDuration(action) {
   }
 }
 
+function normalizeScriptAction(automation, action) {
+  if (action.kind === 'sleep') {
+    normalizeScriptSleepDuration(action);
+    return;
+  }
+  if (action.kind === 'setVariable') {
+    action.variableType = action.variableType === 'script' ? 'script' : 'number';
+    action.variableId = automation.normalizeVariableId(action.variableId);
+    if (action.variableType === 'script') {
+      const scripts = Array.isArray(automation.scripts) ? automation.scripts : [];
+      if (!scripts.find(script => script.id === Number(action.targetScriptId))) action.targetScriptId = null;
+    } else if (!action.valueExpression || action.valueExpression.constructor !== Object) {
+      action.valueExpression = automation.createDefaultExpression();
+    }
+    return;
+  }
+  if (action.kind === 'gotoScript') {
+    action.scriptTargetMode = action.scriptTargetMode === 'variable' ? 'variable' : 'script';
+    action.scriptVariableId = automation.normalizeVariableId(action.scriptVariableId);
+    if (action.scriptTargetMode === 'script') {
+      const scripts = Array.isArray(automation.scripts) ? automation.scripts : [];
+      if (!scripts.find(script => script.id === Number(action.targetScriptId))) {
+        action.targetScriptId = scripts[0]?.id || null;
+      }
+    }
+    return;
+  }
+  if (action.kind === 'applyPreset') {
+    action.parameterVariableId = automation.normalizeVariableId(action.parameterVariableId);
+  }
+}
+
 function createLineKindSelect(selectedKind) {
   return createSelect([
     { id: 'if', label: getAutomationCardText('scriptLineTypeIf', {}, 'IF') },
@@ -657,13 +727,21 @@ function getScriptLinkedIfSummary(automation, script, line) {
 }
 
 function createLineTargetOptions(script) {
-  return script.lines.map((targetLine, targetIndex) => ({ id: targetLine.id, label: `#${targetIndex + 1} ${targetLine.name || getScriptLineKindLabel(targetLine.kind)}` }));
+  return script.lines.map((targetLine, targetIndex) => ({
+    id: targetLine.id,
+    label: getAutomationCardText(
+      'scriptLineOptionLabel',
+      { number: targetIndex + 1, label: targetLine.name || getScriptLineKindLabel(targetLine.kind) },
+      `#${targetIndex + 1} ${targetLine.name || getScriptLineKindLabel(targetLine.kind)}`
+    )
+  }));
 }
 
 function getScriptActionKinds() {
   return [
     { id: 'applyPreset', label: getAutomationCardText('scriptApplyPreset', {}, 'Apply Preset') },
     { id: 'applyCombination', label: getAutomationCardText('scriptApplyCombination', {}, 'Apply Combination') },
+    { id: 'setVariable', label: getAutomationCardText('scriptSetVariable', {}, 'Set Variable') },
     { id: 'toggleAutomation', label: getAutomationCardText('scriptToggleAutomation', {}, 'Toggle Automation') },
     { id: 'togglePause', label: getAutomationCardText('scriptTogglePause', {}, 'Toggle Pause') },
     { id: 'goto', label: 'GOTO' },
@@ -820,13 +898,13 @@ function renderExpressionEditor(automation, expression, container, titleText) {
   const title = document.createElement('div');
   title.classList.add('script-expression-title');
   const titleLabel = document.createElement('span');
-  titleLabel.textContent = `${titleText} (Current Value: `;
+  titleLabel.textContent = getAutomationCardText('scriptCurrentValuePrefix', { title: titleText }, '{title} (Current Value: ');
   const titleValue = document.createElement('span');
   titleValue.classList.add('script-expression-current-value');
   titleValue._scriptExpression = expression;
   titleValue.textContent = formatNumber(automation.evaluateExpression(expression), false, 3);
   const titleSuffix = document.createElement('span');
-  titleSuffix.textContent = ')';
+  titleSuffix.textContent = getAutomationCardText('scriptCurrentValueSuffix', {}, ')');
   title.append(titleLabel, titleValue, titleSuffix);
   wrap.appendChild(title);
 
@@ -835,9 +913,10 @@ function renderExpressionEditor(automation, expression, container, titleText) {
     row.classList.add('script-term-row');
     if (index > 0) {
       const op = createSelect([
-        { id: 'add', label: 'ADD' },
-        { id: 'subtract', label: 'SUBTRACT' },
-        { id: 'multiply', label: 'MULTIPLY' }
+        { id: 'add', label: automation.getExpressionOperatorLabel('add') },
+        { id: 'subtract', label: automation.getExpressionOperatorLabel('subtract') },
+        { id: 'multiply', label: automation.getExpressionOperatorLabel('multiply') },
+        { id: 'safeDivide', label: automation.getExpressionOperatorLabel('safeDivide') }
       ], term.op || 'add');
       op.addEventListener('change', event => {
         term.op = event.target.value;
@@ -938,6 +1017,18 @@ function renderReferencePicker(automation, ref, row) {
     });
     row.appendChild(target);
 
+    const attributes = registry.getAttributes(ref.source, ref.category, ref.target);
+    const attribute = createSelect(attributes.map(item => ({ id: item.id, label: item.label })), ref.attribute);
+    attribute.addEventListener('change', event => {
+      ref.attribute = event.target.value;
+      forceScriptAutomationRefresh = true;
+      queueAutomationUIRefresh();
+    });
+    appendScriptSelectWithValue(row, attribute, getScriptRefCurrentText(automation, ref), ref);
+    return;
+  }
+
+  if (ref.source === 'artificial') {
     const attributes = registry.getAttributes(ref.source, ref.category, ref.target);
     const attribute = createSelect(attributes.map(item => ({ id: item.id, label: item.label })), ref.attribute);
     attribute.addEventListener('change', event => {
@@ -1090,17 +1181,20 @@ function renderActionsEditor(automation, script, line, container, actions, title
   actions.forEach((action, index) => {
     const row = document.createElement('div');
     row.classList.add('script-action-row');
+    if (action.kind === 'setVariable') row.classList.add('script-set-variable-action');
 
     const kind = createSelect(getScriptActionKinds(), action.kind || 'applyPreset');
     kind.addEventListener('change', event => {
       action.kind = event.target.value;
-      normalizeScriptSleepDuration(action);
+      normalizeScriptAction(automation, action);
       forceScriptAutomationRefresh = true;
       queueAutomationUIRefresh();
     });
     row.appendChild(kind);
 
-    if (action.kind === 'sleep') {
+    if (action.kind === 'setVariable') {
+      renderSetVariableActionEditor(automation, action, row);
+    } else if (action.kind === 'sleep') {
       normalizeScriptSleepDuration(action);
       const duration = document.createElement('input');
       duration.type = 'text';
@@ -1131,19 +1225,7 @@ function renderActionsEditor(automation, script, line, container, actions, title
       });
       row.appendChild(lineSelect);
     } else if (action.kind === 'gotoScript') {
-      const scripts = Array.isArray(automation.scripts) ? automation.scripts : [];
-      const scriptOptions = scripts.map(targetScript => ({
-        id: targetScript.id,
-        label: targetScript.name || `Script ${targetScript.id}`
-      }));
-      const defaultScriptId = action.targetScriptId || script.id || scriptOptions[0]?.id || '';
-      const scriptSelect = createSelect(scriptOptions, defaultScriptId);
-      action.targetScriptId = scriptSelect.value ? Number(scriptSelect.value) : null;
-      scriptSelect.addEventListener('change', event => {
-        action.targetScriptId = Number(event.target.value);
-        queueAutomationUIRefresh();
-      });
-      row.appendChild(scriptSelect);
+      renderGotoScriptActionEditor(automation, script, action, row);
     } else {
       renderActionTargetPicker(action, row);
     }
@@ -1194,6 +1276,100 @@ function renderActionsEditor(automation, script, line, container, actions, title
   });
   section.appendChild(addAction);
   container.appendChild(section);
+}
+
+function renderSetVariableActionEditor(automation, action, row) {
+  normalizeScriptAction(automation, action);
+  const typeSelect = createSelect([
+    { id: 'number', label: getAutomationCardText('scriptVariableTypeNumber', {}, 'Number') },
+    { id: 'script', label: getAutomationCardText('scriptVariableTypeScript', {}, 'Script') }
+  ], action.variableType || 'number');
+  action.variableType = typeSelect.value;
+  typeSelect.addEventListener('change', event => {
+    action.variableType = event.target.value;
+    normalizeScriptAction(automation, action);
+    forceScriptAutomationRefresh = true;
+    queueAutomationUIRefresh();
+  });
+  typeSelect.title = getAutomationCardText('scriptVariableTypeLabel', {}, 'Variable type');
+  row.appendChild(typeSelect);
+
+  const variables = automation.registry.getVariableTargets();
+  const variableSelect = createSelect(variables.map(item => ({ id: item.id, label: item.label })), action.variableId);
+  action.variableId = variableSelect.value || 'A';
+  variableSelect.addEventListener('change', event => {
+    action.variableId = event.target.value;
+    queueAutomationUIRefresh();
+  });
+  variableSelect.title = getAutomationCardText('scriptVariableLabel', {}, 'Variable');
+  row.appendChild(variableSelect);
+
+  if (action.variableType === 'script') {
+    const scriptSelect = createSelect(createScriptTargetOptions(automation, true), action.targetScriptId || '');
+    action.targetScriptId = scriptSelect.value === '' ? null : Number(scriptSelect.value);
+    scriptSelect.addEventListener('change', event => {
+      action.targetScriptId = event.target.value === '' ? null : Number(event.target.value);
+      queueAutomationUIRefresh();
+    });
+    scriptSelect.title = getAutomationCardText('scriptChooseScript', {}, 'Choose Script');
+    row.appendChild(scriptSelect);
+  } else {
+    renderExpressionEditor(
+      automation,
+      action.valueExpression,
+      row,
+      getAutomationCardText('scriptVariableValue', {}, 'Value')
+    );
+  }
+}
+
+function renderGotoScriptActionEditor(automation, script, action, row) {
+  normalizeScriptAction(automation, action);
+  const modeSelect = createSelect([
+    { id: 'script', label: getAutomationCardText('scriptChooseScript', {}, 'Choose Script') },
+    { id: 'variable', label: getAutomationCardText('scriptVariableTypeScriptVariable', {}, 'Script variable') }
+  ], action.scriptTargetMode || 'script');
+  action.scriptTargetMode = modeSelect.value;
+  modeSelect.addEventListener('change', event => {
+    action.scriptTargetMode = event.target.value;
+    normalizeScriptAction(automation, action);
+    forceScriptAutomationRefresh = true;
+    queueAutomationUIRefresh();
+  });
+  row.appendChild(modeSelect);
+
+  if (action.scriptTargetMode === 'variable') {
+    const variables = automation.registry.getVariableTargets();
+    const variableSelect = createSelect(variables.map(item => ({ id: item.id, label: item.label })), action.scriptVariableId);
+    action.scriptVariableId = variableSelect.value || 'A';
+    variableSelect.addEventListener('change', event => {
+      action.scriptVariableId = event.target.value || 'A';
+      queueAutomationUIRefresh();
+    });
+    variableSelect.title = getAutomationCardText('scriptVariableTypeScriptVariable', {}, 'Script variable');
+    row.appendChild(variableSelect);
+  } else {
+    const defaultScriptId = action.targetScriptId || script.id || automation.scripts[0]?.id || '';
+    const scriptSelect = createSelect(createScriptTargetOptions(automation, false), defaultScriptId);
+    action.targetScriptId = scriptSelect.value ? Number(scriptSelect.value) : null;
+    scriptSelect.addEventListener('change', event => {
+      action.targetScriptId = Number(event.target.value);
+      queueAutomationUIRefresh();
+    });
+    row.appendChild(scriptSelect);
+  }
+}
+
+function createScriptTargetOptions(automation, includeNull) {
+  const options = [];
+  if (includeNull) {
+    options.push({ id: '', label: getAutomationCardText('scriptNullTargetOption', {}, '(null)') });
+  }
+  const scripts = Array.isArray(automation.scripts) ? automation.scripts : [];
+  scripts.forEach(targetScript => {
+    options.push({ id: targetScript.id, label: targetScript.name || `Script ${targetScript.id}` });
+  });
+  return options;
 }
 
 function renderActionTargetPicker(action, row) {
@@ -1292,9 +1468,31 @@ function renderActionTargetPicker(action, row) {
     action.presetId = presetSelect.value === '' ? null : Number(presetSelect.value);
     presetSelect.addEventListener('change', event => {
       action.presetId = event.target.value === '' ? null : Number(event.target.value);
+      forceScriptAutomationRefresh = true;
       queueAutomationUIRefresh();
     });
     row.appendChild(presetSelect);
+    const selectedPreset = action.presetId && target?.getPresetById
+      ? target.getPresetById(Number(action.presetId))
+      : null;
+    if (selectedPreset && target.isParameterizedPreset && target.isParameterizedPreset(selectedPreset)) {
+      action.parameterVariableId = automationManager.scriptAutomation.normalizeVariableId(action.parameterVariableId);
+      const variables = automationManager.scriptAutomation.registry.getVariableTargets();
+      const parameterLabel = document.createElement('span');
+      parameterLabel.classList.add('script-action-parameter-label');
+      parameterLabel.textContent = getAutomationCardText('scriptParameterWithValueLabel', {}, 'with value');
+      const variableSelect = createSelect(
+        variables.map(item => ({ id: item.id, label: item.label })),
+        action.parameterVariableId
+      );
+      variableSelect.title = getAutomationCardText('scriptParameterVariableLabel', {}, 'Parameter variable');
+      variableSelect.addEventListener('change', event => {
+        action.parameterVariableId = event.target.value || 'A';
+        queueAutomationUIRefresh();
+      });
+      row.appendChild(parameterLabel);
+      row.appendChild(variableSelect);
+    }
   }
 }
 

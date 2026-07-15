@@ -1,0 +1,552 @@
+/* OLED Black keeps large, static surfaces fully black while using subtle
+   near-black elevation to preserve boundaries and control affordances. */
+body.oled-black-mode {
+    --oled-black: #000;
+    --oled-surface-low: #050505;
+    --oled-surface: #0a0a0a;
+    --oled-surface-high: #121212;
+    --oled-surface-active: #202020;
+    --oled-border: #2c2c2c;
+    --oled-border-strong: #444;
+    --oled-text: #d4d4d4;
+    --oled-text-muted: #a0a0a0;
+    --wgc-bg-dark: #000;
+    --wgc-bg-medium: #080808;
+    --wgc-bg-light: #161616;
+    --rwg-bg: #000;
+    --rwg-card: #080808;
+    --rwg-panel: #101010;
+    --rwg-border: #303030;
+    --rwg-muted: #181818;
+    --rwg-fg: var(--oled-text);
+    --rwg-fg-dim: var(--oled-text-muted);
+    background-color: var(--oled-black);
+    color: var(--oled-text);
+    scrollbar-color: #666 var(--oled-black);
+}
+
+.oled-black-mode ::-webkit-scrollbar-track {
+    background: var(--oled-black);
+    border-left-color: var(--oled-border);
+}
+
+.oled-black-mode ::-webkit-scrollbar-thumb {
+    background: #666;
+    border-color: var(--oled-black);
+}
+
+.oled-black-mode .tabs,
+.oled-black-mode .buildings-subtabs,
+.oled-black-mode .colonies-subtabs,
+.oled-black-mode .research-subtabs,
+.oled-black-mode .projects-subtabs,
+.oled-black-mode .terraforming-subtabs,
+.oled-black-mode .hope-subtabs,
+.oled-black-mode .settings-subtabs,
+.oled-black-mode .space-subtabs {
+    background-color: var(--oled-surface-low);
+}
+
+.oled-black-mode .tab,
+.oled-black-mode .building-subtab,
+.oled-black-mode .colony-subtab,
+.oled-black-mode .research-subtab,
+.oled-black-mode .projects-subtab,
+.oled-black-mode .terraforming-subtab,
+.oled-black-mode .hope-subtab,
+.oled-black-mode .settings-subtab,
+.oled-black-mode .space-subtab {
+    background-color: var(--oled-surface);
+    color: var(--oled-text);
+}
+
+.oled-black-mode .tab.active,
+.oled-black-mode .building-subtab.active,
+.oled-black-mode .colony-subtab.active,
+.oled-black-mode .research-subtab.active,
+.oled-black-mode .projects-subtab.active,
+.oled-black-mode .terraforming-subtab.active,
+.oled-black-mode .hope-subtab.active,
+.oled-black-mode .settings-subtab.active,
+.oled-black-mode .space-subtab.active {
+    background-color: var(--oled-surface-active);
+}
+
+.oled-black-mode .tab-content-wrapper,
+.oled-black-mode .tab-content,
+.oled-black-mode .resource-wrapper {
+    background-color: var(--oled-black);
+}
+
+.oled-black-mode .journal,
+.oled-black-mode .journal-index-world,
+.oled-black-mode .journal-automation-section,
+.oled-black-mode .solis-container,
+.oled-black-mode .ringworld-terraforming-panel,
+.oled-black-mode #nanocolony-container .nanotech-summary-card,
+.oled-black-mode #nanocolony-container .nanotech-slider-card,
+.oled-black-mode .terraforming-graphs-window,
+.oled-black-mode .save-slots th {
+    background-color: var(--oled-surface-low);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode .journal-index-world-header,
+.oled-black-mode .card-header,
+.oled-black-mode .cult-security-panel,
+.oled-black-mode .terraforming-graphs-header {
+    background: var(--oled-surface-high);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode .journal-index-chapters,
+.oled-black-mode .terraforming-graphs-canvas,
+.oled-black-mode .terraforming-graphs-phase-canvas {
+    background: var(--oled-black);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode .project-card,
+.oled-black-mode .info-card,
+.oled-black-mode .mirror-oversight-card,
+.oled-black-mode .dyson-swarm-card,
+.oled-black-mode .stellar-engine-panel,
+.oled-black-mode .research-item,
+.oled-black-mode .terraforming-box,
+.oled-black-mode .solis-quest-area,
+.oled-black-mode .solis-shop-container,
+.oled-black-mode .sliders-box,
+.oled-black-mode .settings-achievement-row,
+.oled-black-mode .stat-item,
+.oled-black-mode .resource-disposal-target-card,
+.oled-black-mode .automation-import-dialog-window,
+.oled-black-mode .load-string-dialog-window,
+.oled-black-mode .space-storage-settings-window {
+    background: var(--oled-surface);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode .card-footer,
+.oled-black-mode .cult-security-row,
+.oled-black-mode .solis-shop-item:hover {
+    background-color: var(--oled-surface);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode button,
+.oled-black-mode select,
+.oled-black-mode textarea,
+.oled-black-mode input[type="text"],
+.oled-black-mode input[type="number"] {
+    background-color: var(--oled-surface-high);
+    border-color: var(--oled-border-strong);
+    color: var(--oled-text);
+}
+
+.oled-black-mode button:hover:not(:disabled),
+.oled-black-mode select:hover:not(:disabled) {
+    background-color: var(--oled-surface-active);
+}
+
+.oled-black-mode button:disabled {
+    background-color: var(--oled-surface-high);
+    border-color: var(--oled-border-strong);
+    color: #777;
+}
+
+.oled-black-mode .toggle-completed-button,
+.oled-black-mode .research-hide-toggle,
+.oled-black-mode .save-slots button,
+.oled-black-mode .terraforming-infographic-button,
+.oled-black-mode .terraforming-graphs-button,
+.oled-black-mode .terraforming-graphs-close,
+.oled-black-mode .terraforming-graphs-menu-button,
+.oled-black-mode .terraforming-graphs-phase-button {
+    background: var(--oled-surface-high);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode .save-slots button:disabled,
+.oled-black-mode #solis-refresh-button:disabled,
+.oled-black-mode #solis-complete-button:disabled,
+.oled-black-mode .solis-shop-item button:disabled {
+    background-color: var(--oled-surface-low);
+}
+
+.oled-black-mode .mirror-details-card.facility-incomplete .mirror-facility-overlay,
+.oled-black-mode .lantern-details-card.facility-incomplete .mirror-facility-overlay {
+    background: rgba(0, 0, 0, 0.94);
+}
+
+.oled-black-mode .auto-travel-loading-popup {
+    background: rgba(5, 5, 5, 0.97);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode .stat-label,
+.oled-black-mode .terraforming-box p,
+.oled-black-mode .solis-shop-item-cost,
+.oled-black-mode .solis-shop-item-count,
+.oled-black-mode #nanocolony-container .nanotech-hint,
+.oled-black-mode #nanocolony-container .nanotech-slider-card .slider-description {
+    color: var(--oled-text-muted);
+}
+
+/* Space: Story, Artificial, Atlas */
+.oled-black-mode #space-story,
+.oled-black-mode #space-artificial,
+.oled-black-mode #space-atlas,
+.oled-black-mode #space-galaxy,
+.oled-black-mode #space-invasion,
+.oled-black-mode #automation-hope {
+    background: var(--oled-black);
+}
+
+.oled-black-mode #space-story .space-card,
+.oled-black-mode #space-artificial .space-card,
+.oled-black-mode #space-atlas .space-card {
+    background: var(--oled-surface-low);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #space-story .details-container,
+.oled-black-mode #space-story .planet-option,
+.oled-black-mode #space-story .space-stat-card,
+.oled-black-mode #space-artificial .artificial-panel,
+.oled-black-mode #space-atlas .details-container,
+.oled-black-mode #space-atlas .planet-option,
+.oled-black-mode #space-atlas .space-stat-card {
+    background: var(--oled-surface);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #space-artificial .artificial-select,
+.oled-black-mode #space-artificial .artificial-radius-input,
+.oled-black-mode #space-artificial .artificial-name,
+.oled-black-mode #space-artificial .artificial-stash-grid input,
+.oled-black-mode #space-artificial .artificial-history-name-input {
+    background: var(--oled-black);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode #space-artificial .artificial-surface-box,
+.oled-black-mode #space-artificial .artificial-stash-row,
+.oled-black-mode #space-artificial .artificial-stash-stock,
+.oled-black-mode #space-artificial .artificial-stash-controls,
+.oled-black-mode #space-artificial .artificial-history-row {
+    background: var(--oled-surface-low);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #space-artificial .artificial-secondary,
+.oled-black-mode #space-artificial .artificial-stash-btn,
+.oled-black-mode #space-artificial .artificial-history-edit-btn,
+.oled-black-mode #space-artificial .artificial-history-travel-btn {
+    background: var(--oled-surface-high);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode #space-artificial .artificial-secondary:hover:not(:disabled),
+.oled-black-mode #space-artificial .artificial-history-edit-btn:hover,
+.oled-black-mode #space-artificial .artificial-history-travel-btn:hover {
+    background: var(--oled-surface-active);
+}
+
+.oled-black-mode #space-artificial .artificial-progress {
+    background: var(--oled-black);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #space-artificial .artificial-primary:disabled {
+    background: var(--oled-surface-high);
+    border: 1px solid var(--oled-border-strong);
+    color: #777;
+}
+
+.oled-black-mode #space-artificial .artificial-supermassive-card {
+    background: linear-gradient(180deg, rgba(40, 60, 90, 0.14), var(--oled-surface-low));
+}
+
+/* Space: Galaxy */
+.oled-black-mode #space-galaxy .galaxy-section,
+.oled-black-mode #space-galaxy .galaxy-section--overview {
+    background: linear-gradient(160deg, var(--oled-surface), var(--oled-black));
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #space-galaxy .galaxy-section__body {
+    background: var(--oled-surface-low);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #space-galaxy .galaxy-map-wrapper {
+    background: radial-gradient(circle at top, rgba(24, 52, 90, 0.28), var(--oled-black) 70%);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode #space-galaxy .galaxy-operations-launch__auto-threshold {
+    background: rgba(5, 5, 5, 0.92);
+    border-color: var(--oled-border-strong);
+}
+
+/* Space: Invasion */
+.oled-black-mode #space-invasion .galactic-invasion__overlay {
+    background: rgba(0, 0, 0, 0.9);
+}
+
+.oled-black-mode #space-invasion .galactic-invasion-section {
+    background: var(--oled-surface-low);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #space-invasion .galactic-invasion-section__header {
+    background: var(--oled-surface-high);
+}
+
+.oled-black-mode #space-invasion .galactic-invasion-subsection,
+.oled-black-mode #space-invasion .galactic-invasion-card {
+    background: var(--oled-surface);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode #space-invasion .galactic-invasion-card.completed {
+    background: rgba(20, 83, 45, 0.24);
+}
+
+.oled-black-mode #space-invasion .galactic-invasion-card__button:disabled {
+    background: var(--oled-surface-high);
+    border-color: var(--oled-border-strong);
+    color: #777;
+}
+
+.oled-black-mode #space-story .space-card-title,
+.oled-black-mode #space-story .space-stat-value,
+.oled-black-mode #space-story .planet-option h3,
+.oled-black-mode #space-artificial .artificial-panel,
+.oled-black-mode #space-artificial .artificial-panel h3,
+.oled-black-mode #space-artificial .artificial-select,
+.oled-black-mode #space-artificial .artificial-radius-input,
+.oled-black-mode #space-artificial .artificial-name,
+.oled-black-mode #space-artificial .artificial-stash-grid input,
+.oled-black-mode #space-artificial .artificial-gravity,
+.oled-black-mode #space-artificial .artificial-cost-value,
+.oled-black-mode #space-artificial .artificial-duration,
+.oled-black-mode #space-artificial .artificial-gains h3,
+.oled-black-mode #space-artificial .artificial-gain-row > span:first-child,
+.oled-black-mode #space-artificial .artificial-effects h3,
+.oled-black-mode #space-artificial .artificial-stash-title,
+.oled-black-mode #space-artificial .artificial-stash-stock,
+.oled-black-mode #space-atlas .space-card-title,
+.oled-black-mode #space-atlas .space-stat-value,
+.oled-black-mode #space-atlas .planet-option h3,
+.oled-black-mode #space-atlas .atlas-world-effects-title,
+.oled-black-mode #space-galaxy,
+.oled-black-mode #space-invasion .galactic-invasion-section__header,
+.oled-black-mode #space-invasion .galactic-invasion-card__name {
+    color: var(--oled-text);
+}
+
+.oled-black-mode #space-story .space-card-subtitle,
+.oled-black-mode #space-story .space-stat-label,
+.oled-black-mode #space-story .space-stat-subvalue,
+.oled-black-mode #space-story .planet-stats,
+.oled-black-mode #space-story .planet-stats strong,
+.oled-black-mode #space-artificial .artificial-radius-row,
+.oled-black-mode #space-artificial .artificial-area,
+.oled-black-mode #space-artificial .artificial-gravity-row,
+.oled-black-mode #space-artificial .artificial-cost-row > span:first-child,
+.oled-black-mode #space-artificial .artificial-gains-list,
+.oled-black-mode #space-artificial .artificial-gain-value,
+.oled-black-mode #space-artificial .artificial-priority,
+.oled-black-mode #space-artificial .artificial-stash-recommend,
+.oled-black-mode #space-artificial .artificial-history-header-row,
+.oled-black-mode #space-atlas .space-card-subtitle,
+.oled-black-mode #space-atlas .space-stat-label,
+.oled-black-mode #space-atlas .space-stat-subvalue,
+.oled-black-mode #space-atlas .planet-stats,
+.oled-black-mode #space-atlas .planet-stats strong,
+.oled-black-mode #space-atlas .atlas-world-effects,
+.oled-black-mode #space-invasion .galactic-invasion-section__description,
+.oled-black-mode #space-invasion .galactic-invasion-card__power,
+.oled-black-mode #space-invasion .galactic-invasion-card__reward,
+.oled-black-mode #space-invasion .galactic-invasion-traits__item,
+.oled-black-mode #space-invasion .galactic-invasion-summary__empty,
+.oled-black-mode #space-invasion .galactic-invasion-summary__item {
+    color: var(--oled-text-muted);
+}
+
+/* H.O.P.E.: Automation */
+.oled-black-mode #automation-hope .automation-card {
+    background: linear-gradient(180deg, var(--oled-surface-low), var(--oled-black));
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #automation-hope .automation-card-header {
+    background: var(--oled-surface-high);
+}
+
+.oled-black-mode #automation-hope .automation-global-toolbar {
+    border-bottom-color: var(--oled-border);
+}
+
+.oled-black-mode #automation-hope .automation-global-export,
+.oled-black-mode #automation-hope .automation-global-import,
+.oled-black-mode #automation-hope .automation-preset-buttons button,
+.oled-black-mode #automation-hope .automation-order-buttons button,
+.oled-black-mode #automation-hope .automation-step-header button,
+.oled-black-mode #automation-hope .automation-entry button,
+.oled-black-mode #automation-hope .automation-entry-scale-controls button,
+.oled-black-mode #automation-hope .life-automation-max-button,
+.oled-black-mode #automation-hope .life-automation-seed-button,
+.oled-black-mode #automation-hope .building-automation-section button,
+.oled-black-mode #automation-hope .script-automation-body button,
+.oled-black-mode #automation-hope .script-line-header button,
+.oled-black-mode #automation-hope .script-line-editor button {
+    background: var(--oled-surface-high);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode #automation-hope .automation-global-export:hover,
+.oled-black-mode #automation-hope .automation-global-import:hover,
+.oled-black-mode #automation-hope .automation-preset-buttons button:hover,
+.oled-black-mode #automation-hope .automation-order-buttons button:hover,
+.oled-black-mode #automation-hope .automation-step-header button:hover,
+.oled-black-mode #automation-hope .automation-entry button:hover,
+.oled-black-mode #automation-hope .automation-entry-scale-controls button:hover,
+.oled-black-mode #automation-hope .life-automation-max-button:hover,
+.oled-black-mode #automation-hope .life-automation-seed-button:hover,
+.oled-black-mode #automation-hope .building-automation-section button:hover,
+.oled-black-mode #automation-hope .script-automation-body button:hover,
+.oled-black-mode #automation-hope .script-line-header button:hover,
+.oled-black-mode #automation-hope .script-line-editor button:hover {
+    background: var(--oled-surface-active);
+}
+
+.oled-black-mode #automation-hope .building-automation-section .building-automation-builder-save,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-apply-add,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-apply-combination,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-combination-save {
+    background: linear-gradient(180deg, #2d63ff 0%, #1d3fb6 100%);
+    border-color: #3f7bf7;
+}
+
+.oled-black-mode #automation-hope .building-automation-section .building-automation-builder-save:hover,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-apply-add:hover,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-apply-combination:hover,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-combination-save:hover {
+    background: linear-gradient(180deg, #3a6bff 0%, #2344c2 100%);
+}
+
+.oled-black-mode #automation-hope .automation-preset-json-details,
+.oled-black-mode #automation-hope .automation-preset-script-usage,
+.oled-black-mode #automation-hope .automation-preset-row,
+.oled-black-mode #automation-hope .auto-travel-section,
+.oled-black-mode #automation-hope .life-automation-section,
+.oled-black-mode #automation-hope .building-automation-section,
+.oled-black-mode #automation-hope .script-automation-status-line,
+.oled-black-mode #automation-hope .script-automation-script-row,
+.oled-black-mode #automation-hope .script-editor-section {
+    background: var(--oled-surface);
+    border-color: var(--oled-border);
+    box-shadow: none;
+}
+
+.oled-black-mode #automation-hope .automation-step,
+.oled-black-mode #automation-hope .script-line-card {
+    background: linear-gradient(180deg, var(--oled-surface), var(--oled-black));
+    border-color: var(--oled-border);
+    border-left-color: #3f7bf7;
+}
+
+.oled-black-mode #automation-hope .automation-entry,
+.oled-black-mode #automation-hope .life-automation-row,
+.oled-black-mode #automation-hope .life-automation-zone-row,
+.oled-black-mode #automation-hope .building-automation-builder-pill,
+.oled-black-mode #automation-hope .building-automation-apply-row,
+.oled-black-mode #automation-hope .script-clause-card,
+.oled-black-mode #automation-hope .script-expression-editor,
+.oled-black-mode #automation-hope .script-term-row,
+.oled-black-mode #automation-hope .script-action-row {
+    background: var(--oled-surface-low);
+    border-color: var(--oled-border);
+}
+
+.oled-black-mode #automation-hope .automation-preset-json-field-input,
+.oled-black-mode #automation-hope .automation-preset-row select,
+.oled-black-mode #automation-hope .automation-preset-row input,
+.oled-black-mode #automation-hope .automation-limit-row select,
+.oled-black-mode #automation-hope .automation-limit-row input,
+.oled-black-mode #automation-hope .automation-entry select,
+.oled-black-mode #automation-hope .automation-entry input,
+.oled-black-mode #automation-hope .life-automation-row input,
+.oled-black-mode #automation-hope .life-automation-row select,
+.oled-black-mode #automation-hope .life-automation-field input,
+.oled-black-mode #automation-hope .life-automation-field select,
+.oled-black-mode #automation-hope .building-automation-row select,
+.oled-black-mode #automation-hope .building-automation-row input,
+.oled-black-mode #automation-hope .building-automation-apply-row select,
+.oled-black-mode #automation-hope .building-automation-next-travel-select,
+.oled-black-mode #automation-hope .auto-travel-automation-body select,
+.oled-black-mode #automation-hope .auto-travel-automation-body input[type="text"],
+.oled-black-mode #automation-hope .auto-travel-random-type-settings,
+.oled-black-mode #automation-hope .script-labeled-node input,
+.oled-black-mode #automation-hope .script-labeled-node select,
+.oled-black-mode #automation-hope .script-automation-script-row input,
+.oled-black-mode #automation-hope .script-automation-script-row select,
+.oled-black-mode #automation-hope .script-term-row input,
+.oled-black-mode #automation-hope .script-term-row select,
+.oled-black-mode #automation-hope .script-action-row input,
+.oled-black-mode #automation-hope .script-action-row select,
+.oled-black-mode #automation-hope .script-editor-row input,
+.oled-black-mode #automation-hope .script-editor-row select,
+.oled-black-mode #automation-hope .script-clause-card select {
+    background: var(--oled-black);
+    border-color: var(--oled-border-strong);
+}
+
+.oled-black-mode #automation-hope .automation-preset-json-field-input-disabled,
+.oled-black-mode #automation-hope .automation-limit-row input:disabled,
+.oled-black-mode #automation-hope .automation-add-entry-row button:disabled,
+.oled-black-mode #automation-hope .automation-add-step:disabled,
+.oled-black-mode #automation-hope .automation-step-order button:disabled,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-builder-save:disabled,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-apply-add:disabled,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-apply-combination:disabled,
+.oled-black-mode #automation-hope .building-automation-section .building-automation-combination-save:disabled,
+.oled-black-mode #automation-hope .script-automation-body button:disabled,
+.oled-black-mode #automation-hope .script-line-header button:disabled,
+.oled-black-mode #automation-hope .script-line-editor button:disabled {
+    background: var(--oled-surface-high);
+    border-color: var(--oled-border);
+    color: #777;
+}
+
+.oled-black-mode #automation-hope .automation-card-header,
+.oled-black-mode #automation-hope .automation-title,
+.oled-black-mode #automation-hope .automation-preset-json-summary,
+.oled-black-mode #automation-hope .life-automation-section-title,
+.oled-black-mode #automation-hope .building-automation-section-title,
+.oled-black-mode #automation-hope .script-line-summary,
+.oled-black-mode #automation-hope .script-editor-section-title,
+.oled-black-mode #automation-hope .script-expression-title {
+    color: var(--oled-text);
+}
+
+.oled-black-mode #automation-hope .automation-description,
+.oled-black-mode #automation-hope .automation-preset-script-usage,
+.oled-black-mode #automation-hope .automation-step-subtitle,
+.oled-black-mode #automation-hope .life-automation-enable,
+.oled-black-mode #automation-hope .life-automation-toggle,
+.oled-black-mode #automation-hope .life-automation-field,
+.oled-black-mode #automation-hope .life-automation-deploy-row,
+.oled-black-mode #automation-hope .life-automation-seed-row,
+.oled-black-mode #automation-hope .building-automation-hint,
+.oled-black-mode #automation-hope .building-automation-apply-hint,
+.oled-black-mode #automation-hope .building-automation-apply-detail,
+.oled-black-mode #automation-hope .auto-travel-section-title,
+.oled-black-mode #automation-hope .auto-travel-hazards-label,
+.oled-black-mode #automation-hope .auto-travel-random-type-settings-description,
+.oled-black-mode #automation-hope .script-labeled-node,
+.oled-black-mode #automation-hope .script-current-value {
+    color: var(--oled-text-muted);
+}

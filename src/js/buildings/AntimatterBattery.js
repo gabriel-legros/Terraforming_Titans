@@ -104,12 +104,17 @@ class AntimatterBattery extends Building {
     const hasResources = antimatter && energy;
     const hasActiveBattery = this.active > 0n;
     const hasWarpLogistics = this.isBooleanFlagSet('antimatterWarpLogistics');
+    const fillDisabled = this.isBooleanFlagSet('antimatterBatteryFillDisabled');
+    if (fillDisabled && this.autoFillingEnabled) {
+      this.autoFillingEnabled = false;
+    }
 
     const now = Date.now();
     const cooldownSecondsRemaining = this.getFillCooldownSecondsRemaining(now);
     const cooldownBlocked = !hasWarpLogistics && cooldownSecondsRemaining > 0;
 
     button.disabled =
+      fillDisabled ||
       !hasResources ||
       !hasActiveBattery ||
       availableAntimatter <= 0 ||
@@ -130,13 +135,13 @@ class AntimatterBattery extends Building {
         );
     }
     if (autoFillLabel) {
-      autoFillLabel.style.display = hasWarpLogistics ? 'inline-flex' : 'none';
+      autoFillLabel.style.display = hasWarpLogistics && !fillDisabled ? 'inline-flex' : 'none';
     }
     if (autoFillCheckbox) {
       autoFillCheckbox.checked = !!this.autoFillingEnabled;
-      autoFillCheckbox.disabled = !hasWarpLogistics;
+      autoFillCheckbox.disabled = !hasWarpLogistics || fillDisabled;
     }
-    button.style.display = this.unlocked && !this.isHidden ? 'inline-block' : 'none';
+    button.style.display = this.unlocked && !this.isHidden && !fillDisabled ? 'inline-block' : 'none';
   }
 
   getFillCooldownSecondsRemaining(now = Date.now()) {
@@ -173,13 +178,17 @@ class AntimatterBattery extends Building {
     return globalThis.ANTIMATTER_PER_TERRAFORMED_WORLD ?? 0;
   }
 
-  fillFromAntimatter() {
+  fillFromAntimatter(options = {}) {
+    const shouldUpdateDisplay = options.updateDisplay !== false;
     const antimatter = resources?.special?.antimatter || null;
     const energy = resources?.colony?.energy || null;
     if (!antimatter || !energy) {
       return null;
     }
     if (this.active <= 0n) {
+      return null;
+    }
+    if (this.isBooleanFlagSet('antimatterBatteryFillDisabled')) {
       return null;
     }
 
@@ -218,22 +227,30 @@ class AntimatterBattery extends Building {
       ? antimatterToSpaceEnergy(antimatterConsumed)
       : 0;
     energy.increase(energyGain);
-    energy.enable?.();
+    if (!energy.unlocked) {
+      energy.enable?.();
+    }
     if (!this.isBooleanFlagSet('antimatterWarpLogistics')) {
       this._fillCooldownEndsAtMs = Date.now() + (FILL_COOLDOWN_SECONDS * 1000);
     }
 
-    globalThis.updateResourceDisplay?.(resources);
-    globalThis.updateStructureDisplay?.(structures);
-    this.updateUI(this._cachedUI || {});
+    if (shouldUpdateDisplay) {
+      globalThis.updateResourceDisplay?.(resources);
+      globalThis.updateStructureDisplay?.(structures);
+      this.updateUI(this._cachedUI || {});
+    }
     return { energyGain, spaceEnergySpent };
   }
 
   updateAutoFillAfterProductionTick(deltaTime) {
-    if (!this.isBooleanFlagSet('antimatterWarpLogistics') || !this.autoFillingEnabled) {
+    if (
+      this.isBooleanFlagSet('antimatterBatteryFillDisabled') ||
+      !this.isBooleanFlagSet('antimatterWarpLogistics') ||
+      !this.autoFillingEnabled
+    ) {
       return;
     }
-    const fillResult = this.fillFromAntimatter();
+    const fillResult = this.fillFromAntimatter({ updateDisplay: false });
     if (!fillResult || deltaTime <= 0) {
       return;
     }

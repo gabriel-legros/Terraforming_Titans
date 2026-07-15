@@ -15,6 +15,80 @@
     }
   }
 
+  function isWorldSpecializationProject(project) {
+    return !!(project && project.attributes && project.attributes.projectGroup === 'specializedWorlds');
+  }
+
+  function getWorldSpecializationProjects() {
+    const list = [];
+    const projects = projectManager.projects;
+    for (const id in projects) {
+      const project = projects[id];
+      if (isWorldSpecializationProject(project)) {
+        list.push(project);
+      }
+    }
+    return list;
+  }
+
+  function isSpecializationStartedOrCompleted(project) {
+    return !!(project && (project.isActive || project.isCompleted));
+  }
+
+  function isBirchWorldCurrentSpecialization() {
+    const birchWorld = projectManager.projects.birchWorld;
+    return !!(birchWorld && birchWorld.unlocked && birchWorld.isCurrentSmbhShellworld());
+  }
+
+  function isHolyWorldCurrentSpecialization() {
+    return !!(followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated());
+  }
+
+  function hasOtherWorldSpecialization(currentProject) {
+    const projects = getWorldSpecializationProjects();
+    for (let i = 0; i < projects.length; i += 1) {
+      const project = projects[i];
+      if (project !== currentProject && isSpecializationStartedOrCompleted(project)) {
+        return true;
+      }
+    }
+    return isBirchWorldCurrentSpecialization() || isHolyWorldCurrentSpecialization();
+  }
+
+  function getActiveWorldSpecializationProject() {
+    const projects = getWorldSpecializationProjects();
+    for (let i = 0; i < projects.length; i += 1) {
+      const project = projects[i];
+      if (project.isActive && !project.isCompleted) {
+        return project;
+      }
+    }
+    return null;
+  }
+
+  function hasCompletedWorldSpecialization() {
+    if (isBirchWorldCurrentSpecialization() || isHolyWorldCurrentSpecialization()) {
+      return true;
+    }
+    const projects = getWorldSpecializationProjects();
+    for (let i = 0; i < projects.length; i += 1) {
+      if (projects[i].isCompleted) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  function hasUnlockedWorldSpecializationProject() {
+    const projects = getWorldSpecializationProjects();
+    for (let i = 0; i < projects.length; i += 1) {
+      if (projects[i].unlocked) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   class SpecializationProject extends ProjectBase {
     constructor(config, name, options) {
       super(config, name);
@@ -60,6 +134,7 @@
       this.shopItems.forEach((item) => {
         const id = item.id;
         shopRows[id] = {
+          row: card.querySelector(`[data-specialization-ui-row="${id}"]`),
           cost: card.querySelector(`[data-specialization-ui-cost="${id}"]`),
           count: card.querySelector(`[data-specialization-ui-count="${id}"]`),
           button: card.querySelector(`[data-specialization-ui-button="${id}"]`),
@@ -98,6 +173,9 @@
     }
 
     canPurchaseUpgrade(item) {
+      if (!this.isShopItemVisible(item)) {
+        return false;
+      }
       const purchases = this.getShopPurchaseCount(item.id);
       if (purchases >= this.getShopItemMaxPurchases(item)) {
         return false;
@@ -106,6 +184,9 @@
     }
 
     getMaxShopPurchases(item) {
+      if (item.costScaling === 'quadratic') {
+        return this.getMaxQuadraticShopPurchases(item);
+      }
       const points = this.getSpecializationPoints();
       const itemCost = this.getShopItemCost(item);
       if (points < itemCost) {
@@ -125,18 +206,77 @@
       if (actualPurchases <= 0) {
         return;
       }
-      this.addSpecializationPoints(-(this.getShopItemCost(item) * actualPurchases));
+      this.addSpecializationPoints(-this.getShopPurchaseCost(item, actualPurchases));
       this.shopPurchases[id] = this.getShopPurchaseCount(id) + actualPurchases;
       this.applySpecializationEffects();
       this.updateUI();
     }
 
     getShopItemCost(item) {
+      if (item.costScaling === 'quadratic') {
+        const purchases = this.getShopPurchaseCount(item.id);
+        return this.getShopItemBaseCost(item) * (purchases + 1) * (purchases + 1);
+      }
       return item.cost;
+    }
+
+    getShopPurchaseCost(item, purchaseCount) {
+      if (item.costScaling === 'quadratic') {
+        return this.getQuadraticShopPurchaseCost(item, purchaseCount);
+      }
+      return this.getShopItemCost(item) * purchaseCount;
+    }
+
+    getShopItemBaseCost(item) {
+      return item.cost || 1;
+    }
+
+    getQuadraticShopPurchaseCost(item, purchaseCount) {
+      if (purchaseCount <= 0) {
+        return 0;
+      }
+      const current = this.getShopPurchaseCount(item.id);
+      const end = current + purchaseCount;
+      return this.getShopItemBaseCost(item) * (this.sumSquares(end) - this.sumSquares(current));
+    }
+
+    getMaxQuadraticShopPurchases(item) {
+      const points = this.getSpecializationPoints();
+      if (points < this.getShopItemCost(item)) {
+        return 0;
+      }
+      const remainingPurchases = this.getShopItemMaxPurchases(item) - this.getShopPurchaseCount(item.id);
+      let low = 0;
+      let high = 1;
+      while (high < remainingPurchases && this.getQuadraticShopPurchaseCost(item, high) <= points) {
+        high *= 2;
+      }
+      high = Math.min(high, remainingPurchases);
+      while (low + 1 < high) {
+        const mid = Math.floor((low + high) / 2);
+        if (this.getQuadraticShopPurchaseCost(item, mid) <= points) {
+          low = mid;
+        } else {
+          high = mid;
+        }
+      }
+      return this.getQuadraticShopPurchaseCost(item, high) <= points ? high : low;
+    }
+
+    sumSquares(value) {
+      return value * (value + 1) * (2 * value + 1) / 6;
     }
 
     getShopItemMaxPurchases(item) {
       return item.maxPurchases;
+    }
+
+    isShopItemVisible(item) {
+      return !item.requiresFlag || this.isBooleanFlagSet(item.requiresFlag);
+    }
+
+    getShopPurchaseCountText(item, purchases, maxPurchases) {
+      return `${purchases}/${maxPurchases}`;
     }
 
     getShopBuyButtonText(item, purchases, maxPurchases) {
@@ -167,6 +307,9 @@
       if (this.isCompleted) {
         return '';
       }
+      if (hasOtherWorldSpecialization(this)) {
+        return getSpecializationText('anotherCompleted', null, 'Another Specialization has been completed');
+      }
       for (let i = 0; i < this.otherSpecializationIds.length; i += 1) {
         const projectId = this.otherSpecializationIds[i];
         const otherSpecialization = projectManager.projects[projectId];
@@ -175,6 +318,10 @@
         }
       }
       return '';
+    }
+
+    canStart() {
+      return super.canStart() && !hasOtherWorldSpecialization(this);
     }
 
     getTravelPointGain() {
@@ -282,6 +429,7 @@
       this.shopItems.forEach((item) => {
         const row = document.createElement('div');
         row.classList.add('bioworld-shop-item');
+        row.dataset.specializationUiRow = item.id;
 
         const labelRow = document.createElement('div');
         labelRow.classList.add('bioworld-shop-item-label');
@@ -331,7 +479,7 @@
         row.append(labelRow, metaRow);
         items.appendChild(row);
 
-        shopRows[item.id] = { cost, count, button, maxButton };
+        shopRows[item.id] = { row, cost, count, button, maxButton };
       });
 
       wrapper.appendChild(items);
@@ -355,10 +503,12 @@
       elements.potentialValue.textContent = formatNumber(this.getTravelPointGain(), true, 2);
       this.shopItems.forEach((item) => {
         const row = elements.shopRows[item.id];
+        const visible = this.isShopItemVisible(item);
+        row.row.style.display = visible ? '' : 'none';
         const purchases = this.getShopPurchaseCount(item.id);
         const maxPurchases = this.getShopItemMaxPurchases(item);
         row.cost.textContent = `${formatNumber(this.getShopItemCost(item), true)} ${this.pointsUnit}`;
-        row.count.textContent = `${purchases}/${maxPurchases}`;
+        row.count.textContent = this.getShopPurchaseCountText(item, purchases, maxPurchases);
         const canBuy = this.canPurchaseUpgrade(item);
         row.button.disabled = !canBuy;
         if (row.maxButton) {
@@ -398,9 +548,23 @@
 
   try {
     window.SpecializationProject = SpecializationProject;
+    window.isWorldSpecializationProject = isWorldSpecializationProject;
+    window.getWorldSpecializationProjects = getWorldSpecializationProjects;
+    window.hasOtherWorldSpecialization = hasOtherWorldSpecialization;
+    window.getActiveWorldSpecializationProject = getActiveWorldSpecializationProject;
+    window.hasCompletedWorldSpecialization = hasCompletedWorldSpecialization;
+    window.hasUnlockedWorldSpecializationProject = hasUnlockedWorldSpecializationProject;
   } catch (error) {}
 
   try {
-    module.exports = SpecializationProject;
+    module.exports = {
+      SpecializationProject,
+      isWorldSpecializationProject,
+      getWorldSpecializationProjects,
+      hasOtherWorldSpecialization,
+      getActiveWorldSpecializationProject,
+      hasCompletedWorldSpecialization,
+      hasUnlockedWorldSpecializationProject,
+    };
   } catch (error) {}
 })();

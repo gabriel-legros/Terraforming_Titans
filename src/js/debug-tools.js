@@ -71,6 +71,7 @@
       oxygenIce: resources.surface.oxygenIce?.value || 0,
       liquidNitrogen: resources.surface.liquidNitrogen?.value || 0,
       nitrogenIce: resources.surface.nitrogenIce?.value || 0,
+      land: resources.surface.land.value || 0,
       co2: resources.atmospheric.carbonDioxide?.value || 0,
       waterVapor: resources.atmospheric.atmosphericWater?.value || 0,
       atmosphericMethane: resources.atmospheric.atmosphericMethane?.value || 0,
@@ -150,7 +151,8 @@
       liquidOxygen: { initialValue: values.global.liquidOxygen },
       oxygenIce: { initialValue: values.global.oxygenIce },
       liquidNitrogen: { initialValue: values.global.liquidNitrogen },
-      nitrogenIce: { initialValue: values.global.nitrogenIce }
+      nitrogenIce: { initialValue: values.global.nitrogenIce },
+      land: { initialValue: values.global.land }
     };
     const atmospheric = {
       carbonDioxide: { initialValue: values.global.co2 },
@@ -284,9 +286,11 @@
     const override = JSON.parse(snippet);
     const oxygenOverride = override.resources.atmospheric.oxygen.initialValue;
     const inertOverride = override.resources.atmospheric.inertGas.initialValue;
+    const landOverride = override.resources.surface.land.initialValue;
     console.log('Override snippet:\n' + snippet);
     console.log('Oxygen override initialValue:', oxygenOverride);
     console.log('Inert gas override initialValue:', inertOverride);
+    console.log('Land override initialValue:', landOverride);
     console.log('Zonal temperature block:\n' + formatZonalTemperatureSnippet(override.zonalTemperatures || {}));
     return snippet;
   }
@@ -561,15 +565,47 @@
     );
   }
 
+  function forceCompleteTerraformingNoChecks() {
+    const alreadyTerraformed = spaceManager.isPlanetTerraformed(spaceManager.getCurrentPlanetKey());
+    const isBetterTime = fastestTerraformDays === null || playTimeSeconds < fastestTerraformDays;
+    const sameTimeMissingReal = playTimeSeconds === fastestTerraformDays && fastestTerraformRealSeconds === null;
+    const sameTimeBetterReal = playTimeSeconds === fastestTerraformDays
+      && fastestTerraformRealSeconds !== null
+      && realPlayTimeSeconds < fastestTerraformRealSeconds;
+
+    if (isBetterTime || sameTimeMissingReal || sameTimeBetterReal) {
+      fastestTerraformDays = playTimeSeconds;
+      fastestTerraformRealSeconds = realPlayTimeSeconds;
+    }
+
+    terraforming.readyForCompletion = true;
+    terraforming.completed = true;
+    spaceManager.updateCurrentPlanetTerraformedStatus(true, {
+      playTimeSeconds,
+      realPlayTimeSeconds
+    });
+
+    if (!alreadyTerraformed) {
+      spaceManager.grantDominionTerraformReward(terraforming.requirementId);
+      patienceManager.onTerraformingComplete();
+    }
+
+    updateSpaceUI();
+    updateCompleteTerraformingButton();
+
+    return true;
+  }
+
 
 
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { fastForwardToEquilibrium, generateOverrideSnippet, logTerraformingOverride, calculateEquilibriumConstants, reconstructJournalState, giveColonyResources };
+    module.exports = { fastForwardToEquilibrium, generateOverrideSnippet, logTerraformingOverride, calculateEquilibriumConstants, reconstructJournalState, giveColonyResources, forceCompleteTerraformingNoChecks };
   } else {
     globalThis.fastForwardToEquilibrium = fastForwardToEquilibrium;
     globalThis.generateOverrideSnippet = generateOverrideSnippet;
     globalThis.logTerraformingOverride = logTerraformingOverride;
     globalThis.reconstructJournalState = reconstructJournalState;
+    globalThis.forceCompleteTerraformingNoChecks = forceCompleteTerraformingNoChecks;
     window.giveColonyResources = giveColonyResources;
     globalThis.runEquilibriumCalculation = function(terraformingInstance) {
       if (terraformingInstance && typeof terraformingInstance.calculateInitialValues === 'function') {

@@ -24,6 +24,9 @@ function buildAutomationLifeUI() {
   card.appendChild(body);
 
   const presetRow = createAutomationPresetRow(body);
+  const lifeTransferButtons = createAutomationPresetTransferButtons('life-automation-preset');
+  presetRow.presetRow.appendChild(lifeTransferButtons.importButton);
+  presetRow.presetRow.appendChild(lifeTransferButtons.exportButton);
 
   const purchaseSection = document.createElement('div');
   purchaseSection.classList.add('life-automation-section');
@@ -110,6 +113,7 @@ function buildAutomationLifeUI() {
   automationElements.lifeCollapseButton = header.collapse;
   automationElements.lifePanelBody = body;
   automationElements.lifePresetSelect = presetRow.presetSelect;
+  automationElements.lifePresetUsage = presetRow.presetUsage;
   automationElements.lifePresetMoveUpButton = presetRow.presetMoveUp;
   automationElements.lifePresetMoveDownButton = presetRow.presetMoveDown;
   automationElements.lifePresetNameInput = presetRow.presetName;
@@ -127,6 +131,8 @@ function buildAutomationLifeUI() {
   automationElements.lifeSeedButton = seedButton;
   automationElements.lifeDesignEnableCheckbox = designEnable;
   automationElements.lifeDeployNowButton = deployNowButton;
+  automationElements.lifeImportPresetButton = lifeTransferButtons.importButton;
+  automationElements.lifeExportPresetButton = lifeTransferButtons.exportButton;
 
   attachLifeAutomationHandlers();
 }
@@ -153,7 +159,9 @@ function updateLifeAutomationUI() {
     lifeDeployInput,
     lifeSeedRow,
     lifeDesignEnableCheckbox,
-    lifeDeployNowButton
+    lifeDeployNowButton,
+    lifeImportPresetButton,
+    lifeExportPresetButton
   } = automationElements;
   const manager = automationManager;
   const automation = manager.lifeAutomation;
@@ -183,6 +191,7 @@ function updateLifeAutomationUI() {
   }
 
   const activePreset = automation.getActivePreset();
+  updateAutomationPresetUsageLine(automationElements.lifePresetUsage, 'life', activePreset);
   if (document.activeElement !== lifePresetNameInput) {
     lifePresetNameInput.value = activePreset.name || '';
   }
@@ -203,14 +212,20 @@ function updateLifeAutomationUI() {
     : null;
   const canDeploy = deployCandidate && deployCandidate.canSurviveAnywhere();
   lifeDeployNowButton.disabled = !canDeploy;
+  lifeImportPresetButton.disabled = false;
+  lifeExportPresetButton.disabled = !activePreset;
 
   // Only rebuild purchase container if no input within is focused
-  const purchaseHasFocus = lifePurchaseContainer.contains(document.activeElement) &&
-    document.activeElement.tagName === 'INPUT';
+  const purchaseActiveElement = document.activeElement;
+  const purchaseHasFocus = !globalGameIsLoadingFromSave &&
+    lifePurchaseContainer.contains(purchaseActiveElement) &&
+    purchaseActiveElement.tagName === 'INPUT' &&
+    purchaseActiveElement.type !== 'checkbox';
   if (!purchaseHasFocus) {
     const purchaseSignature = JSON.stringify(lifeShopCategories.map(category => {
       const settings = activePreset.purchaseSettings[category.name];
       return {
+        presetId: activePreset.id,
         category: category.name,
         unlocked: isLifeShopCategoryUnlocked(category),
         enabled: !!settings.enabled,
@@ -244,6 +259,7 @@ function updateLifeAutomationUI() {
           weight: entry.weight,
           cap: entry.cap,
           capMode: entry.capMode,
+          target: entry.target,
           zones: entry.zones
         }))
       }))
@@ -381,6 +397,33 @@ function attachLifeAutomationHandlers() {
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
+
+  automationElements.lifeExportPresetButton.addEventListener('click', () => {
+    const automation = automationManager.lifeAutomation;
+    const preset = automation.getActivePreset();
+    exportAutomationPresetToClipboard('life', automation.exportPreset(preset.id), automationElements.lifeExportPresetButton);
+  });
+
+  automationElements.lifeImportPresetButton.addEventListener('click', () => {
+    openAutomationPresetImportDialog({
+      title: getAutomationCardText('importLifePresetTitle', {}, 'Import Life Preset'),
+      description: getAutomationCardText(
+        'importPresetDescription',
+        {},
+        'Paste an exported preset string below. Import adds it as a new preset.'
+      ),
+      onImport: (text) => {
+        const parsed = parseAutomationPresetTransferPayload(text, 'life');
+        if (!parsed.ok) {
+          return parsed;
+        }
+        automationManager.lifeAutomation.importPreset(parsed.preset);
+        queueAutomationUIRefresh();
+        updateAutomationUI();
+        return { ok: true };
+      }
+    });
+  });
 }
 
 function getLifeAutomationAttributeOptions() {
@@ -473,12 +516,14 @@ function renderLifeAutomationPurchases(automation, preset, container) {
     row.appendChild(maxLabel);
 
     toggle.addEventListener('change', (event) => {
-      automation.setPurchaseEnabled(preset.id, category.name, event.target.checked);
+      const activePreset = automation.getActivePreset();
+      automation.setPurchaseEnabled(activePreset.id, category.name, event.target.checked);
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
     thresholdInput.addEventListener('change', (event) => {
-      automation.setPurchaseThreshold(preset.id, category.name, event.target.value);
+      const activePreset = automation.getActivePreset();
+      automation.setPurchaseThreshold(activePreset.id, category.name, event.target.value);
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
@@ -491,7 +536,8 @@ function renderLifeAutomationPurchases(automation, preset, container) {
         return value > 0 ? formatNumber(value, true, 3) : '';
       },
       onValue: (parsed) => {
-        automation.setPurchaseMaxCost(preset.id, category.name, parsed > 0 ? parsed : null);
+        const activePreset = automation.getActivePreset();
+        automation.setPurchaseMaxCost(activePreset.id, category.name, parsed > 0 ? parsed : null);
         queueAutomationUIRefresh();
       }
     });
@@ -646,6 +692,27 @@ function renderLifeAutomationSteps(automation, preset, container) {
       let capInput = null;
       let zoneRow = null;
 
+      const shouldShowZoneRow = (attributeName, mode) => {
+        return (mode === 'needed' && (
+          attributeName === 'optimalGrowthTemperature'
+          || attributeName === 'minTemperatureTolerance'
+          || attributeName === 'maxTemperatureTolerance'
+        )) || (mode === 'aiming' && attributeName === 'growthTemperatureTolerance');
+      };
+
+      const updateCapInputForMode = () => {
+        const mode = capMode.value;
+        const aiming = mode === 'aiming';
+        capInput.disabled = mode !== 'fixed' && !aiming;
+        capInput.placeholder = aiming
+          ? getAutomationCardText('lifeAimingTargetPlaceholder', {}, 'Target')
+          : getAutomationCardText('lifeNoMaxPlaceholder', {}, 'No max');
+        capInput.value = aiming
+          ? String(entry.target === undefined ? 0.95 : entry.target)
+          : (entry.cap === null || entry.cap === undefined ? '' : formatNumber(entry.cap, true, 3));
+        zoneRow.style.display = shouldShowZoneRow(entry.attribute, mode) ? '' : 'none';
+      };
+
       const rebuildCapModeOptions = (attributeName) => {
         const currentMode = entry.capMode || 'fixed';
         capMode.textContent = '';
@@ -669,12 +736,17 @@ function renderLifeAutomationSteps(automation, preset, container) {
           neededCapOpt.textContent = getAutomationCardText('lifeModeAsNeeded', {}, 'As needed');
           capMode.appendChild(neededCapOpt);
         }
+        if (attributeName === 'growthTemperatureTolerance') {
+          const aimingCapOpt = document.createElement('option');
+          aimingCapOpt.value = 'aiming';
+          aimingCapOpt.textContent = getAutomationCardText('lifeModeAimingFor', {}, 'Aiming for');
+          capMode.appendChild(aimingCapOpt);
+        }
         capMode.value = currentMode;
         if (capMode.value !== currentMode) {
           capMode.value = 'fixed';
         }
-        capInput.disabled = capMode.value !== 'fixed';
-        zoneRow.style.display = capMode.value === 'needed' && (attributeName === 'optimalGrowthTemperature' || attributeName === 'minTemperatureTolerance' || attributeName === 'maxTemperatureTolerance') ? '' : 'none';
+        updateCapInputForMode();
       };
 
       const attributeSelect = document.createElement('select');
@@ -730,8 +802,10 @@ function renderLifeAutomationSteps(automation, preset, container) {
         const nextMode = event.target.value;
         automation.updateDesignEntry(preset.id, step.id, entry.id, { capMode: nextMode });
         entry.capMode = nextMode;
-        capInput.disabled = nextMode !== 'fixed';
-        zoneRow.style.display = nextMode === 'needed' && (entry.attribute === 'optimalGrowthTemperature' || entry.attribute === 'minTemperatureTolerance' || entry.attribute === 'maxTemperatureTolerance') ? '' : 'none';
+        if (nextMode === 'aiming' && entry.target === undefined) {
+          entry.target = 0.95;
+        }
+        updateCapInputForMode();
         queueAutomationUIRefresh();
         updateAutomationUI();
       });
@@ -739,15 +813,26 @@ function renderLifeAutomationSteps(automation, preset, container) {
         parseValue: (value) => {
           const parsed = parseFlexibleNumber(value);
           if (!Number.isFinite(parsed)) {
-            return 0;
+            return entry.capMode === 'aiming' ? 0.95 : 0;
+          }
+          if (entry.capMode === 'aiming') {
+            return Math.max(0, Math.min(0.999999, parsed));
           }
           return Math.floor(parsed);
         },
         formatValue: (value) => {
+          if (entry.capMode === 'aiming') {
+            return String(value);
+          }
           return value !== 0 ? formatNumber(value, true, 3) : '';
         },
         onValue: (parsed) => {
-          automation.updateDesignEntry(preset.id, step.id, entry.id, { cap: parsed === 0 ? null : parsed });
+          if (entry.capMode === 'aiming') {
+            automation.updateDesignEntry(preset.id, step.id, entry.id, { target: parsed });
+            entry.target = parsed;
+          } else {
+            automation.updateDesignEntry(preset.id, step.id, entry.id, { cap: parsed === 0 ? null : parsed });
+          }
           queueAutomationUIRefresh();
         }
       });

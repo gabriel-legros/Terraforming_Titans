@@ -88,11 +88,13 @@ function computeCloudSpeciesLayer(spec, pBar, mix) {
   };
 }
 
-function calculateAtmosphericPressure(mass, gravity, radius) {
+function calculateAtmosphericPressure(mass, gravity, radius, surfaceAreaOverride) {
   if (mass <= 0){return 0};
   if (gravity <= 0) throw new Error("Gravity must be a positive number.");
-  if (radius <= 0) throw new Error("Radius must be a positive number.");
-  const surfaceArea = 4 * Math.PI * Math.pow(radius*1e3, 2);
+  const surfaceArea = Number.isFinite(surfaceAreaOverride) && surfaceAreaOverride > 0
+    ? surfaceAreaOverride
+    : 4 * Math.PI * Math.pow(radius*1e3, 2);
+  if (surfaceArea <= 0) throw new Error("Surface area must be a positive number.");
   const pressure = (1e3*mass * gravity) / surfaceArea;
   return pressure; // Pa
 }
@@ -592,7 +594,7 @@ function autoSlabHeatCapacity(
 
 function effectiveTemp(albedo, flux, options = {}) {
   const adjustment = (isRingWorld() || isAldersonDiskWorld()) ? 1 : 4;
-  const addedFlux = Math.max(0, options.addedFlux || 0);
+  const addedFlux = options.addedFlux || 0;
   const absorbedFlux = Math.max(0, ((1 - albedo) * flux / adjustment) + addedFlux);
   return Math.pow(absorbedFlux / SIGMA, 0.25);
 }

@@ -64,10 +64,20 @@ class ImportColonistsProject extends Project {
     const previousColonists = resources.colony.colonists.value;
     resources.colony.colonists.increase(amount);
     const importedColonists = Math.max(0, resources.colony.colonists.value - previousColonists);
+    this.withdrawGalacticPopulationForColonists(importedColonists);
     if (followersManager && followersManager.onColonistsImported) {
       followersManager.onColonistsImported(importedColonists);
     }
     return importedColonists;
+  }
+
+  withdrawGalacticPopulationForColonists(amount) {
+    if (!gameSettings.immigrationPool || !(amount > 0)) {
+      return;
+    }
+
+    const available = Math.max(0, spaceManager.galacticPopulation || 0);
+    spaceManager.galacticPopulation = Math.max(0, available - Math.min(amount, available));
   }
 
   updateDurationFromEffects() {

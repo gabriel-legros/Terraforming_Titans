@@ -23,6 +23,17 @@ try {
   }
 }
 
+let rwgBuildFeatures = { steamExclusiveDominions: false };
+try {
+  rwgBuildFeatures = GAME_FEATURES;
+} catch (error) {
+  try {
+    ({ GAME_FEATURES: rwgBuildFeatures } = require('../build-target.js'));
+  } catch (innerError) {
+    rwgBuildFeatures = { steamExclusiveDominions: false };
+  }
+}
+
 let getSpecialSeedDefinitionCatalog;
 let getSpecialSeedParametersCatalog;
 try {
@@ -236,19 +247,19 @@ tuneHazardousMachineryForWorld = tuneHazardousMachineryForWorld || function noop
 
 // World type metadata
 globalThis.RWG_WORLD_TYPES = {
-  "mars-like": { displayName: "Mars-like" },
-  "cold-desert": { displayName: "Desert" },
-  "icy-moon": { displayName: "Water-rich" },
-  "titan-like": { displayName: "Titan-like" },
-  "carbon-planet": { displayName: "Carbon" },
-  "desiccated-desert": { displayName: "Desiccated Desert" },
-  "super-earth": { displayName: "Super-Earth" },
-  "chthonian": { displayName: "Chthonian" },
-  "venus-like": { displayName: "Venus-like" },
-  "rogue": { displayName: "Rogue" },
-  "ammonia-rich": { displayName: "Ammonia-rich" },
-  "molten": { displayName: "Molten" },
-  "jupiter-like": { displayName: "Jupiter-like" },
+  "mars-like": { displayName: t('ui.rwg.worldTypes.marsLike', {}, 'Mars-like') },
+  "cold-desert": { displayName: t('ui.rwg.worldTypes.desert', {}, 'Desert') },
+  "icy-moon": { displayName: t('ui.rwg.worldTypes.waterRich', {}, 'Water-rich') },
+  "titan-like": { displayName: t('ui.rwg.worldTypes.titanLike', {}, 'Titan-like') },
+  "carbon-planet": { displayName: t('ui.rwg.worldTypes.carbon', {}, 'Carbon') },
+  "desiccated-desert": { displayName: t('ui.rwg.worldTypes.desiccatedDesert', {}, 'Desiccated Desert') },
+  "super-earth": { displayName: t('ui.rwg.worldTypes.superEarth', {}, 'Super-Earth') },
+  "chthonian": { displayName: t('ui.rwg.worldTypes.chthonian', {}, 'Chthonian') },
+  "venus-like": { displayName: t('ui.rwg.worldTypes.venusLike', {}, 'Venus-like') },
+  "rogue": { displayName: t('ui.rwg.worldTypes.rogue', {}, 'Rogue') },
+  "ammonia-rich": { displayName: t('ui.rwg.worldTypes.ammoniaRich', {}, 'Ammonia-rich') },
+  "molten": { displayName: t('ui.rwg.worldTypes.molten', {}, 'Molten') },
+  "jupiter-like": { displayName: t('ui.rwg.worldTypes.jupiterLike', {}, 'Jupiter-like') },
 };
 const RWG_WORLD_TYPES = globalThis.RWG_WORLD_TYPES;
 
@@ -284,8 +295,8 @@ const ORBIT_PRESET_TO_FLUX_KEY = {
 };
 
 const ROGUE_STAR_TEMPLATE = {
-  name: 'Rogue Space',
-  spectralType: '—',
+  name: t('ui.rwg.generatedLabels.rogueSpace', {}, 'Rogue Space'),
+  spectralType: '-',
   luminositySolar: 0,
   massSolar: 0,
   radiusSolar: 0,
@@ -762,9 +773,16 @@ const RWG_HAZARD_PRESETS = {
 };
 
 const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage', 'kessler', 'pulsar', 'hazardousMachinery'];
-const RWG_DOMINION_ORDER = ['human', 'gabbagian', 'ammonia', 'oommaa', 'klishy', 'kerati', 'shrilek', 'vanadophore'];
+const RWG_DOMINION_BASE_ORDER = ['human', 'gabbagian', 'ammonia', 'oommaa', 'klishy', 'kerati', 'shrilek', 'vanadophore'];
+const RWG_STEAM_EXCLUSIVE_DOMINIONS = ['yggies'];
 const RWG_DOMINION_BASE_LOCKS = ['gabbagian'];
 const DOMINION_UNLOCK_ALWAYS = { type: 'always' };
+
+function getRwgDominionOrder() {
+  return rwgBuildFeatures.steamExclusiveDominions
+    ? RWG_DOMINION_BASE_ORDER.concat(RWG_STEAM_EXCLUSIVE_DOMINIONS)
+    : RWG_DOMINION_BASE_ORDER.slice();
+}
 
 function getDominionUnlockRule(dominionId) {
   try {
@@ -1012,6 +1030,11 @@ function buildSpecialSeedWorldResult(seedValue, seedInt) {
   const hazardText = formatHazardList(hazards);
   if (hazardText) canonicalParts.push(hazardText);
   const canonicalSeed = canonicalParts.join('|');
+
+  merged.classification = merged.classification || {};
+  merged.classification.archetype = archetype;
+  override.classification = override.classification || {};
+  override.classification.archetype = archetype;
 
   merged.rwgMeta = merged.rwgMeta || {};
   merged.rwgMeta.specialSeedKey = definition.key || null;
@@ -1819,7 +1842,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
 
   const underground = {
     ore: {
-      name: "Ore deposits",
+      name: t('ui.rwg.generatedLabels.oreDeposits', {}, 'Ore deposits'),
       initialValue: moltenOreDisabled ? 0 : oreCaps.initial,
       maxDeposits: moltenOreDisabled ? 0 : oreCaps.max,
       hasCap: true,
@@ -1828,7 +1851,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     },
     ...({
       geothermal: {
-        name: "Geo. vent",
+        name: t('ui.rwg.generatedLabels.geoVent', {}, 'Geo. vent'),
         initialValue: moltenGeothermalAmount ?? geoCaps.initial,
         maxDeposits: moltenGeothermalAmount ?? geoCaps.max,
         hasCap: true,
@@ -1840,10 +1863,10 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
 
   // Specials / collectibles
   const special = {};
-  if (DEFAULT_PARAMS.specials.includeAlbedoUpgrades) special.albedoUpgrades = { name: "Albedo upgrades", hasCap: true, initialValue: 0, unlocked: false };
-  if (DEFAULT_PARAMS.specials.includeSpaceships)    special.spaceships      = { name: "Spaceships", hasCap: false, initialValue: 0, unlocked: false };
-  if (DEFAULT_PARAMS.specials.includeAlienArtifact) special.alienArtifact   = { name: "Alien artifact", hasCap: false, initialValue: 0, unlocked: false };
-  if (DEFAULT_PARAMS.specials.includeCrusaders)     special.crusaders      = { name: "Crusaders", hasCap: false, initialValue: 0, unlocked: false };
+  if (DEFAULT_PARAMS.specials.includeAlbedoUpgrades) special.albedoUpgrades = { name: t('ui.rwg.generatedLabels.albedoUpgrades', {}, 'Albedo upgrades'), hasCap: true, initialValue: 0, unlocked: false };
+  if (DEFAULT_PARAMS.specials.includeSpaceships)    special.spaceships      = { name: t('ui.rwg.generatedLabels.spaceships', {}, 'Spaceships'), hasCap: false, initialValue: 0, unlocked: false };
+  if (DEFAULT_PARAMS.specials.includeAlienArtifact) special.alienArtifact   = { name: t('ui.rwg.generatedLabels.alienArtifact', {}, 'Alien artifact'), hasCap: false, initialValue: 0, unlocked: false };
+  if (DEFAULT_PARAMS.specials.includeCrusaders)     special.crusaders      = { name: t('ui.rwg.generatedLabels.crusaders', {}, 'Crusaders'), hasCap: false, initialValue: 0, unlocked: false };
 
   // Optional parent body for moons
   let parentBody = undefined;
@@ -1878,7 +1901,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     const refDistanceRp = randRange(beltRng, 9.0, 12.0);
 
     parentBody = {
-      name: "Gas Giant",
+      name: t('ui.rwg.generatedLabels.gasGiant', {}, 'Gas Giant'),
       mass: gg.mass,
       radius: gg.radius_km,
       orbitRadius: gg.orbitRadius_km,
@@ -1930,7 +1953,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     );
   }
   const specialAttributes = type === 'jupiter-like'
-    ? { hasSand: false, dynamicMass: true }
+    ? { hasSand: false, dynamicMass: true, gasGiant: true }
     : undefined;
   const overrides = {
     name: planetName(seed, params),
@@ -2067,7 +2090,7 @@ class RwgManager extends EffectableEntity {
     this.lockedFeatures = new Set(['hazards', 'dominions']);
     this.lockedHazards = new Set(['hazardousBiomass', 'hazardousMachinery', 'garbage', 'kessler', 'pulsar']);
     const dominionLocks = RWG_DOMINION_BASE_LOCKS.concat(
-      RWG_DOMINION_ORDER.filter((dominionId) => getDominionUnlockRule(dominionId).type !== 'always')
+      getRwgDominionOrder().filter((dominionId) => getDominionUnlockRule(dominionId).type !== 'always')
     );
     this.lockedDominions = new Set(dominionLocks);
     this.dominionUnlockCacheVersion = -1;
@@ -2090,7 +2113,7 @@ class RwgManager extends EffectableEntity {
   getAvailableTypes(isMoon) {
     const base = isMoon
       ? ["icy-moon", "titan-like"]
-      : ["mars-like", "cold-desert", "titan-like", "venus-like",
+      : ["mars-like", "cold-desert", "icy-moon", "titan-like", "venus-like",
         "carbon-planet", "desiccated-desert", "super-earth", "rogue", "ammonia-rich", "chthonian", "molten", "jupiter-like"];
     return base.filter((t) => !this.lockedTypes.has(t));
   }
@@ -2108,8 +2131,8 @@ class RwgManager extends EffectableEntity {
   unlockHazard(id) { if (id) this.lockedHazards.delete(id); }
   setEnabledHazards(hazards) { this.enabledHazards = orderHazardList(normalizeHazardList(hazards)); }
   getEnabledHazards() { return this.enabledHazards.slice(); }
-  getDominionOrder() { return RWG_DOMINION_ORDER.slice(); }
-  getAvailableDominions() { return RWG_DOMINION_ORDER.filter((d) => !this.lockedDominions.has(d)); }
+  getDominionOrder() { return getRwgDominionOrder(); }
+  getAvailableDominions() { return getRwgDominionOrder().filter((d) => !this.lockedDominions.has(d)); }
   isDominionUnlocked(id) { return !id ? false : !this.lockedDominions.has(id); }
   getDominionUnlockRule(id) { return getDominionUnlockRule(id); }
   getDominionUnlockLabel(id) { return formatDominionUnlockLabel(getDominionUnlockRule(id)); }
@@ -2124,7 +2147,7 @@ class RwgManager extends EffectableEntity {
     }
     this.dominionUnlockCacheVersion = cacheVersion;
     this.dominionUnlockControlledCount = controlledCount;
-    RWG_DOMINION_ORDER.forEach((dominionId) => {
+    getRwgDominionOrder().forEach((dominionId) => {
       const rule = getDominionUnlockRule(dominionId);
       switch (rule.type) {
         case 'fullyControlledSectors': {
@@ -2144,6 +2167,9 @@ class RwgManager extends EffectableEntity {
   }
 
   applyEffect(effect) {
+    if (isCurrentWorldManagerDisabled('rwgManager')) {
+      return;
+    }
     if (effect.type === 'unlockOrbit') {
       this.unlockOrbit(effect.targetId);
     } else if (effect.type === 'lockOrbit') {
@@ -2175,6 +2201,8 @@ class RwgManager extends EffectableEntity {
   generateRandomPlanet(seed, opts = {}) {
     const P = resolveParams(this.params, opts.params);
     const { seedInt: S, baseSeed, ann: seedAnn } = parseSeedSpec(seed);
+    const specialSeedResult = buildSpecialSeedWorldResult(baseSeed, S);
+    if (specialSeedResult) return specialSeedResult;
 
     // Star
     let star = opts.star ?? generateStar(S ^ 0x1234, P);
@@ -2242,11 +2270,14 @@ class RwgManager extends EffectableEntity {
     forcedType = normalizeRwgArchetype(forcedType);
     if (!forcedType || forcedType === "auto") {
       const rngType = mulberry32(S ^ 0xC0FFEE);
-      let candidates = Array.isArray(opts.availableTypes) ? opts.availableTypes.slice() : this.getAvailableTypes(isMoon);
+      const hasExplicitAvailableTypes = Array.isArray(opts.availableTypes);
+      let candidates = hasExplicitAvailableTypes ? opts.availableTypes.slice() : this.getAvailableTypes(isMoon);
       if (Array.isArray(opts.lockedTypes)) candidates = candidates.filter((c) => !opts.lockedTypes.includes(c));
       if (candidates.length === 0) candidates = this.getAvailableTypes(isMoon);
-      const autoCandidates = candidates.filter((c) => c !== "chthonian" && c !== "jupiter-like");
-      if (autoCandidates.length) candidates = autoCandidates;
+      if (!hasExplicitAvailableTypes) {
+        const autoCandidates = candidates.filter((c) => c !== "chthonian" && c !== "jupiter-like");
+        if (autoCandidates.length) candidates = autoCandidates;
+      }
       forcedType = candidates[Math.floor(rngType() * candidates.length)];
     }
 

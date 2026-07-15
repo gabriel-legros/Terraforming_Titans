@@ -3,6 +3,10 @@
   const WORKERS_PER_HEAT_SINK = 1_000_000_000;
   const SECONDS_PER_DAY = 86_400;
   const MEGA_HEAT_SINK_CONTINUOUS_THRESHOLD_MS = 1000;
+  const MEGA_HEAT_SINK_CAP_MODES = {
+    FIXED: 'fixed',
+    GEOMETRIC_LAND_PERCENT: 'geometricLandPercent'
+  };
   const getOrderedZones = () => getZones();
 
   let WorkerCapacityBatchProjectBase;
@@ -30,6 +34,10 @@
       this.autoMax = false;
       this.buildCount = 1;
       this.activeBuildCount = 1;
+      this.capEnabled = false;
+      this.activeCapEnabled = false;
+      this.capValue = 100;
+      this.capMode = MEGA_HEAT_SINK_CAP_MODES.GEOMETRIC_LAND_PERCENT;
     }
 
     hasLiquidHydrogenBlocker() {
@@ -46,11 +54,11 @@
         blocksProgress: false,
         message: getMegaHeatSinkText(
           'ui.projects.megaHeatSink.liquidHydrogenWarning',
-          'Liquid hydrogen insulates the world from Mega Heat Sink core-flux suppression. Heat sinks can still be built, but they provide no core-heat reduction while any liquid hydrogen remains.'
+          'Liquid hydrogen insulates the world from Mega Heat Sink core-flux suppression. Heat sinks can still mitigate factory heat, but they provide no core-heat reduction while any liquid hydrogen remains.'
         ),
         statusText: getMegaHeatSinkText(
           'ui.projects.megaHeatSink.liquidHydrogenStatus',
-          'Blocked: liquid hydrogen prevents heat removal'
+          'Blocked: liquid hydrogen prevents core heat removal'
         )
       };
     }
@@ -143,6 +151,54 @@
       controlElements.content.appendChild(coolingToggle);
 
       body.appendChild(summaryGrid);
+
+      const capRow = document.createElement('div');
+      capRow.classList.add('mega-heat-sink-cap-row');
+      const capCheckbox = document.createElement('input');
+      capCheckbox.type = 'checkbox';
+      capCheckbox.id = `${this.name}-cap-checkbox`;
+      capCheckbox.checked = this.capEnabled;
+      const capLabel = document.createElement('label');
+      capLabel.htmlFor = capCheckbox.id;
+      capLabel.textContent = getMegaHeatSinkText('ui.projects.megaHeatSink.capTo', 'Cap to');
+      const capInput = document.createElement('input');
+      capInput.type = 'text';
+      capInput.inputMode = 'decimal';
+      capInput.classList.add('automation-input', 'mega-heat-sink-cap-input');
+      capInput.value = formatNumber(this.capValue, false, 2);
+      const capModeSelect = document.createElement('select');
+      capModeSelect.classList.add('automation-select');
+      const fixedOption = document.createElement('option');
+      fixedOption.value = MEGA_HEAT_SINK_CAP_MODES.FIXED;
+      fixedOption.textContent = getMegaHeatSinkText('ui.projects.megaHeatSink.capModeFixed', 'fixed');
+      const geometricLandOption = document.createElement('option');
+      geometricLandOption.value = MEGA_HEAT_SINK_CAP_MODES.GEOMETRIC_LAND_PERCENT;
+      geometricLandOption.textContent = getMegaHeatSinkText('ui.projects.megaHeatSink.capModeGeometricLandPercent', '% of geometric land');
+      capModeSelect.append(fixedOption, geometricLandOption);
+      capModeSelect.value = this.capMode;
+      const activeCapCheckbox = document.createElement('input');
+      activeCapCheckbox.type = 'checkbox';
+      activeCapCheckbox.id = `${this.name}-active-cap-checkbox`;
+      activeCapCheckbox.checked = this.activeCapEnabled;
+      const activeCapLabel = document.createElement('label');
+      activeCapLabel.htmlFor = activeCapCheckbox.id;
+      activeCapLabel.textContent = getMegaHeatSinkText(
+        'ui.projects.megaHeatSink.alsoCapActiveToTarget',
+        'Also cap active to target'
+      );
+      const capStatus = document.createElement('span');
+      capStatus.classList.add('mega-heat-sink-cap-status');
+      capRow.append(
+        capCheckbox,
+        capLabel,
+        capInput,
+        capModeSelect,
+        activeCapCheckbox,
+        activeCapLabel,
+        capStatus
+      );
+      body.appendChild(capRow);
+
       card.appendChild(body);
       container.appendChild(card);
 
@@ -152,12 +208,55 @@
         coolingPerHeatSinkValue: coolingPerHeatSinkElements.value,
         fluxMitigationValue: fluxMitigationElements.value,
         coolingValue: coolingElements.value,
-        coolingToggle
+        coolingToggle,
+        capCheckbox,
+        capInput,
+        capModeSelect,
+        activeCapCheckbox,
+        capStatus
       };
 
       coolingToggle.addEventListener('click', () => {
         this.heatSinksActive = !this.heatSinksActive;
         setToggleButtonState(coolingToggle, this.heatSinksActive);
+        updateProjectUI(this.name);
+      });
+      capCheckbox.addEventListener('change', () => {
+        this.capEnabled = capCheckbox.checked;
+        if (this.capEnabled && this.isCapReached()) {
+          this.isActive = false;
+          this.isPaused = false;
+        }
+        updateProjectUI(this.name);
+      });
+      wireStringNumberInput(capInput, {
+        datasetKey: 'megaHeatSinkCap',
+        parseValue: (value) => {
+          const parsed = parseFlexibleNumber(value);
+          return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+        },
+        formatValue: (value) => formatNumber(value, false, 2),
+        onValue: (value) => {
+          this.capValue = Math.max(0, value);
+          if (this.capEnabled && this.isCapReached()) {
+            this.isActive = false;
+            this.isPaused = false;
+          }
+          updateProjectUI(this.name);
+        }
+      });
+      capModeSelect.addEventListener('change', () => {
+        this.capMode = capModeSelect.value === MEGA_HEAT_SINK_CAP_MODES.FIXED
+          ? MEGA_HEAT_SINK_CAP_MODES.FIXED
+          : MEGA_HEAT_SINK_CAP_MODES.GEOMETRIC_LAND_PERCENT;
+        if (this.capEnabled && this.isCapReached()) {
+          this.isActive = false;
+          this.isPaused = false;
+        }
+        updateProjectUI(this.name);
+      });
+      activeCapCheckbox.addEventListener('change', () => {
+        this.activeCapEnabled = activeCapCheckbox.checked;
         updateProjectUI(this.name);
       });
 
@@ -199,6 +298,23 @@
       const coolingActive = this.heatSinksActive;
       const hydrogenBlocked = this.hasLiquidHydrogenBlocker();
       setToggleButtonState(elements.coolingToggle, coolingActive);
+      elements.capCheckbox.checked = this.capEnabled;
+      elements.activeCapCheckbox.checked = this.activeCapEnabled;
+      if (document.activeElement !== elements.capInput) {
+        elements.capInput.value = formatValue(this.capValue, false, 2);
+      }
+      if (elements.capModeSelect.value !== this.capMode) {
+        elements.capModeSelect.value = this.capMode;
+      }
+      const cap = this.getCapLimit();
+      const capReached = this.capEnabled && this.isCapReached(cap);
+      elements.capStatus.textContent = this.capEnabled
+        ? getMegaHeatSinkText(
+          capReached ? 'ui.projects.megaHeatSink.capReached' : 'ui.projects.megaHeatSink.capStatus',
+          capReached ? 'Cap reached' : 'Cap: {value}',
+          { value: formatValue(cap, true, 2) }
+        )
+        : '';
       if (!coolingActive) {
         elements.coolingPerHeatSinkValue.textContent = getMegaHeatSinkText('ui.projects.common.off', 'Off');
       } else if (Number.isFinite(coolingPerHeatSink) && coolingPerHeatSink > 0) {
@@ -342,10 +458,40 @@
 
     getEffectiveHeatSinkCount() {
       const builtHeatSinks = Math.max(0, Math.floor(this.repeatCount || 0));
-      return builtHeatSinks * this.getHeatSinkPowerMultiplier();
+      const activeHeatSinks = this.activeCapEnabled
+        ? Math.min(builtHeatSinks, Math.max(0, Math.floor(this.getCapLimit())))
+        : builtHeatSinks;
+      return activeHeatSinks * this.getHeatSinkPowerMultiplier();
+    }
+
+    getCapLimit() {
+      const value = Math.max(0, this.capValue || 0);
+      if (this.capMode === MEGA_HEAT_SINK_CAP_MODES.FIXED) {
+        return value;
+      }
+      const geometricLand = Math.max(0, resolveWorldGeometricLand(terraforming, resources.surface.land));
+      return geometricLand * value / 100;
+    }
+
+    getRemainingCap(cap = this.getCapLimit()) {
+      if (!this.capEnabled) {
+        return Infinity;
+      }
+      return Math.max(0, cap - Math.max(0, this.repeatCount || 0));
+    }
+
+    isCapReached(cap = this.getCapLimit()) {
+      return this.capEnabled && this.getRemainingCap(cap) <= 0;
+    }
+
+    canStart() {
+      return !this.isCapReached() && super.canStart();
     }
 
     start(resources) {
+      if (this.isCapReached()) {
+        return false;
+      }
       this.activeBuildCount = 1;
       const started = Project.prototype.start.call(this, resources);
       if (!started) {
@@ -361,6 +507,10 @@
 
     update(deltaTime) {
       if (!this.isActive || this.isCompleted || this.isPaused) {
+        return;
+      }
+      if (this.isCapReached()) {
+        this.isActive = false;
         return;
       }
       if (this.isContinuous()) {
@@ -380,10 +530,15 @@
         return totals;
       }
 
-      const progress = (deltaTime / duration) * productivity;
-      const rate = 1000 / duration;
+      const requestedProgress = (deltaTime / duration) * productivity;
+      const progress = Math.min(requestedProgress, this.getRemainingCap());
+      if (!(progress > 0)) {
+        return totals;
+      }
+      const seconds = deltaTime / 1000;
+      const rate = seconds > 0 ? progress / seconds : 0;
       const cost = Project.prototype.getScaledCost.call(this);
-      const storageProj = this.createSpaceStorageAccess('consumption');
+      const storageProj = this.createSpaceStorageAccess('expansions');
       for (const category in cost) {
         if (!totals.cost[category]) {
           totals.cost[category] = {};
@@ -426,10 +581,15 @@
       if (!(requestedProgress > 0)) {
         return;
       }
+      const remainingCap = this.getRemainingCap();
+      if (!(remainingCap > 0)) {
+        this.isActive = false;
+        return;
+      }
 
       const cost = Project.prototype.getScaledCost.call(this);
-      const storageProj = this.createSpaceStorageAccess('consumption', { accumulatedChanges });
-      let paidProgress = requestedProgress;
+      const storageProj = this.createSpaceStorageAccess('expansions', { accumulatedChanges });
+      let paidProgress = Math.min(requestedProgress, remainingCap);
       for (const category in cost) {
         for (const resource in cost[category]) {
           const perSinkCost = cost[category][resource];
@@ -477,17 +637,34 @@
       }
 
       this.repeatCount += paidProgress;
+      if (this.isCapReached()) {
+        this.isActive = false;
+      }
     }
 
     complete() {
+      const completions = Math.min(1, this.getRemainingCap());
+      if (!(completions > 0)) {
+        this.activeBuildCount = 1;
+        this.isActive = false;
+        this.isCompleted = false;
+        return;
+      }
       this.activeBuildCount = 1;
-      Project.prototype.complete.call(this);
+      this.isCompleted = true;
+      this.isActive = false;
+      this.repeatCount += completions;
+      this.resetProject();
     }
 
     saveAutomationSettings() {
       return {
         ...super.saveAutomationSettings(),
-        heatSinksActive: this.heatSinksActive === true
+        heatSinksActive: this.heatSinksActive === true,
+        capEnabled: this.capEnabled === true,
+        activeCapEnabled: this.activeCapEnabled === true,
+        capValue: this.capValue,
+        capMode: this.capMode
       };
     }
 
@@ -496,18 +673,77 @@
       if (Object.prototype.hasOwnProperty.call(settings, 'heatSinksActive')) {
         this.heatSinksActive = settings.heatSinksActive === true;
       }
+      if (Object.prototype.hasOwnProperty.call(settings, 'capEnabled')) {
+        this.capEnabled = settings.capEnabled === true;
+      }
+      if (Object.prototype.hasOwnProperty.call(settings, 'activeCapEnabled')) {
+        this.activeCapEnabled = settings.activeCapEnabled === true;
+      }
+      if (Object.prototype.hasOwnProperty.call(settings, 'capValue')) {
+        const value = Number(settings.capValue);
+        this.capValue = Number.isFinite(value) && value >= 0 ? value : 100;
+      }
+      if (Object.prototype.hasOwnProperty.call(settings, 'capMode')) {
+        this.capMode = settings.capMode === MEGA_HEAT_SINK_CAP_MODES.FIXED
+          ? MEGA_HEAT_SINK_CAP_MODES.FIXED
+          : MEGA_HEAT_SINK_CAP_MODES.GEOMETRIC_LAND_PERCENT;
+      }
+    }
+
+    saveTravelState() {
+      if (!gameSettings.preserveProjectSettingsOnTravel) {
+        return {};
+      }
+      return {
+        capEnabled: this.capEnabled === true,
+        activeCapEnabled: this.activeCapEnabled === true,
+        capValue: this.capValue,
+        capMode: this.capMode
+      };
+    }
+
+    loadTravelState(state = {}) {
+      if (!gameSettings.preserveProjectSettingsOnTravel) {
+        return;
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'capEnabled')) {
+        this.capEnabled = state.capEnabled === true;
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'activeCapEnabled')) {
+        this.activeCapEnabled = state.activeCapEnabled === true;
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'capValue')) {
+        const value = Number(state.capValue);
+        this.capValue = Number.isFinite(value) && value >= 0 ? value : 100;
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'capMode')) {
+        this.capMode = state.capMode === MEGA_HEAT_SINK_CAP_MODES.FIXED
+          ? MEGA_HEAT_SINK_CAP_MODES.FIXED
+          : MEGA_HEAT_SINK_CAP_MODES.GEOMETRIC_LAND_PERCENT;
+      }
     }
 
     saveState() {
       return {
         ...super.saveState(),
-        heatSinksActive: this.heatSinksActive
+        heatSinksActive: this.heatSinksActive,
+        capEnabled: this.capEnabled,
+        activeCapEnabled: this.activeCapEnabled,
+        capValue: this.capValue,
+        capMode: this.capMode
       };
     }
 
     loadState(state) {
       super.loadState(state);
       this.heatSinksActive = state.heatSinksActive ?? true;
+      this.capEnabled = state.capEnabled === true;
+      this.activeCapEnabled = state.activeCapEnabled === true;
+      const value = Number(state.capValue);
+      this.capValue = Number.isFinite(value) && value >= 0 ? value : 100;
+      this.capMode = state.capMode === MEGA_HEAT_SINK_CAP_MODES.FIXED
+        ? MEGA_HEAT_SINK_CAP_MODES.FIXED
+        : MEGA_HEAT_SINK_CAP_MODES.GEOMETRIC_LAND_PERCENT;
     }
   }
 

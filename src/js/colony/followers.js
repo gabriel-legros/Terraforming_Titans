@@ -6,6 +6,9 @@ function getFollowersText(path, fallback, vars) {
   }
 }
 
+const FOLLOWERS_ZEAL_WORKER_EFFECT_SOURCE_ID = 'followersZealWorkerEfficiency';
+const FOLLOWERS_ART_WORKER_EFFECT_SOURCE_ID = 'followersArtWorkerEfficiency';
+
 class FollowersManager extends EffectableEntity {
   constructor() {
     super({ description: getFollowersText('ui.colony.followers.managerDescription', 'Manages followers systems') });
@@ -21,7 +24,12 @@ class FollowersManager extends EffectableEntity {
     this.faithInitialized = false;
     this.worldBelieverRatio = 0.1;
     this.galacticPopulation = 0;
+    this.nonBirchGalacticBelievers = 0;
     this.galacticBelievers = 0;
+    this.birchWorldPopulation = 0;
+    this.birchWorldBelievers = 0;
+    this.smbhGalacticPopulationContribution = 0;
+    this.smbhGalacticBelieversContribution = 0;
     this.galacticBelieverPercentFallback = 0.1;
     this.lastFaithWorldConversionRate = 0;
     this.lastFaithGalacticConversionRate = 0;
@@ -34,7 +42,12 @@ class FollowersManager extends EffectableEntity {
     this.holyWorldCompletions = 0;
     this.holyWorldConsecratedWorlds = {};
     this.holyWorldShopPurchases = this.createEmptyHolyWorldShopPurchases();
+    this.uiDirty = true;
     this.ensureTrackedOrbitals();
+  }
+
+  markUIDirty() {
+    this.uiDirty = true;
   }
 
   createEmptyHolyWorldShopPurchases() {
@@ -100,7 +113,7 @@ class FollowersManager extends EffectableEntity {
       return;
     }
     delete this.holyWorldConsecratedWorlds[key];
-    this.updateUI();
+    this.markUIDirty();
   }
 
   getHolyWorldCostScale() {
@@ -164,12 +177,7 @@ class FollowersManager extends EffectableEntity {
   }
 
   getHolyWorldRequirements() {
-    const foundry = projectManager.projects.foundryWorld;
-    const bioworld = projectManager.projects.bioworld;
-    const manufacturing = projectManager.projects.manufacturingWorld;
-    const noOtherSpecialization = !foundry.isActive && !foundry.isCompleted
-      && !bioworld.isActive && !bioworld.isCompleted
-      && !manufacturing.isActive && !manufacturing.isCompleted;
+    const noOtherSpecialization = !hasOtherWorldSpecialization(null);
     const terraformed = spaceManager.isCurrentWorldTerraformed();
     const ecumenopolisCoverage = this.getHolyWorldEcumenopolisCoverage();
     const occupancyRatio = this.getHolyWorldOccupancyRatio();
@@ -230,7 +238,7 @@ class FollowersManager extends EffectableEntity {
     const key = this.getCurrentWorldHolyKey();
     this.holyWorldConsecratedWorlds[key] = true;
     this.holyWorldCompletions += 1;
-    this.updateUI();
+    this.markUIDirty();
     return true;
   }
 
@@ -279,7 +287,7 @@ class FollowersManager extends EffectableEntity {
     this.holyWorldPoints -= actual * item.cost;
     this.holyWorldShopPurchases[id] = currentPurchases + actual;
     this.applyHolyWorldEffects();
-    this.updateUI();
+    this.markUIDirty();
     return true;
   }
 
@@ -296,7 +304,7 @@ class FollowersManager extends EffectableEntity {
     this.holyWorldPoints += refund;
     this.holyWorldShopPurchases = this.createEmptyHolyWorldShopPurchases();
     this.applyHolyWorldEffects();
-    this.updateUI();
+    this.markUIDirty();
   }
 
   getHolyWorldFestivalDurationBonusMs() {
@@ -347,6 +355,41 @@ class FollowersManager extends EffectableEntity {
       effectId: 'holyworld-patience-max',
       sourceId: 'holyWorld'
     });
+  }
+
+  syncPopulationWorkerEffect(sourceId, effectId, multiplier, name) {
+    if (Math.abs(multiplier - 1) <= 1e-9) {
+      removeEffect({ target: 'population', sourceId });
+      return;
+    }
+    addEffect({
+      target: 'population',
+      type: 'colonistWorkerEfficiencyMultiplier',
+      value: multiplier,
+      effectId,
+      sourceId,
+      name
+    });
+  }
+
+  applyPopulationEffects() {
+    if (!isManagerEffectivelyEnabled(this, 'followersManager') || this.isFaithSuppressed()) {
+      removeEffect({ target: 'population', sourceId: FOLLOWERS_ZEAL_WORKER_EFFECT_SOURCE_ID });
+      removeEffect({ target: 'population', sourceId: FOLLOWERS_ART_WORKER_EFFECT_SOURCE_ID });
+      return;
+    }
+    this.syncPopulationWorkerEffect(
+      FOLLOWERS_ZEAL_WORKER_EFFECT_SOURCE_ID,
+      'followers-zeal-worker-efficiency',
+      1 + this.getZealWorkerEfficiencyBonus(),
+      getFollowersText('ui.colony.followers.faith.bonuses.zeal', 'Zeal (Worker Efficiency)')
+    );
+    this.syncPopulationWorkerEffect(
+      FOLLOWERS_ART_WORKER_EFFECT_SOURCE_ID,
+      'followers-art-worker-efficiency',
+      this.getArtWorkerPerColonistMultiplier(),
+      getFollowersText('ui.colony.followers.art.title', 'Art Gallery')
+    );
   }
 
   getOrbitalConfigs() {
@@ -400,6 +443,18 @@ class FollowersManager extends EffectableEntity {
     return this.clampPercent(this.galacticBelieverPercentFallback);
   }
 
+  syncGalacticBelievers() {
+    const nonBirchBelievers = Math.max(0, this.nonBirchGalacticBelievers || 0);
+    const birchBelievers = Math.max(0, this.birchWorldBelievers || 0);
+    this.galacticPopulation = Math.max(0, spaceManager.galacticPopulation || 0);
+    this.galacticBelievers = this.isCurrentWorldSupermassiveShellworld()
+      ? nonBirchBelievers
+      : nonBirchBelievers + birchBelievers;
+    if (this.galacticPopulation > 0 && this.galacticBelievers > this.galacticPopulation) {
+      this.galacticBelievers = this.galacticPopulation;
+    }
+  }
+
   getWorldBelieverPercent() {
     return this.clampPercent(this.worldBelieverRatio);
   }
@@ -441,13 +496,13 @@ class FollowersManager extends EffectableEntity {
   setArtifactInvestmentStep(step) {
     const next = Math.max(1, step);
     this.artifactInvestmentStep = next;
-    this.updateUI();
+    this.markUIDirty();
   }
 
   setFundingInvestmentStep(step) {
     const next = Math.max(1, step);
     this.fundingInvestmentStep = next;
-    this.updateUI();
+    this.markUIDirty();
   }
 
   divideArtifactInvestmentStep() {
@@ -486,7 +541,7 @@ class FollowersManager extends EffectableEntity {
     }
     artifactResource.decrease(invested);
     this.artifactsInvested += invested;
-    this.updateUI();
+    this.markUIDirty();
     return true;
   }
 
@@ -511,7 +566,7 @@ class FollowersManager extends EffectableEntity {
     }
     fundingResource.decrease(invested);
     this.fundingInvested += invested;
-    this.updateUI();
+    this.markUIDirty();
     return true;
   }
 
@@ -623,6 +678,8 @@ class FollowersManager extends EffectableEntity {
       worldCapPercent: this.getCurrentWorldBelieverCap(),
       galacticPopulation: this.galacticPopulation,
       galacticBelievers: this.galacticBelievers,
+      birchWorldPopulation: this.birchWorldPopulation,
+      birchWorldBelievers: this.birchWorldBelievers,
       galacticPercent,
       rates: {
         worldPerSecond: faithSuppressed ? 0 : this.lastFaithWorldConversionRate,
@@ -717,7 +774,9 @@ class FollowersManager extends EffectableEntity {
 
     if (gains.galacticPercentGain > 0 && this.galacticPopulation > 0) {
       const galacticPercent = Math.min(1, this.getGalacticBelieverPercent() + gains.galacticPercentGain);
-      this.galacticBelievers = galacticPercent * this.galacticPopulation;
+      this.nonBirchGalacticBelievers = galacticPercent * Math.max(0, spaceManager.nonBirchGalacticPopulation || 0);
+      this.birchWorldBelievers = galacticPercent * Math.max(0, spaceManager.birchWorldPopulation || 0);
+      this.syncGalacticBelievers();
       this.galacticBelieverPercentFallback = galacticPercent;
     }
 
@@ -730,43 +789,23 @@ class FollowersManager extends EffectableEntity {
       this.lastFaithGalacticConversionRate = (baseWorldConversionRate / 250) * this.getMissionaryGalacticConversionMultiplier();
     }
     this.lastFaithWorldCap = this.getCurrentWorldBelieverCap();
-    this.updateUI();
+    this.markUIDirty();
     return gains;
   }
 
   recalculateGalacticPopulation() {
-    let total = spaceManager.getRandomWorldDepartedColonistsTotal
-      ? Math.max(0, spaceManager.getRandomWorldDepartedColonistsTotal())
-      : 0;
-    total += spaceManager.getArtificialWorldDepartedColonistsTotal
-      ? Math.max(0, spaceManager.getArtificialWorldDepartedColonistsTotal())
-      : 0;
-    const currentStoryKey = spaceManager.currentPlanetKey;
-    const currentSeed = spaceManager.currentRandomSeed === null ? null : String(spaceManager.currentRandomSeed);
-    const currentArtificialKey = spaceManager.currentArtificialKey === null ? null : String(spaceManager.currentArtificialKey);
-
-    Object.keys(spaceManager.planetStatuses).forEach((key) => {
-      if (currentSeed === null && currentArtificialKey === null && key === currentStoryKey) {
-        return;
-      }
-      total += Math.max(0, spaceManager.planetStatuses[key].colonists || 0);
-    });
-
-    Object.keys(spaceManager.randomWorldStatuses).forEach((key) => {
-      if (currentSeed !== null && key === currentSeed) {
-        return;
-      }
-      total += Math.max(0, spaceManager.randomWorldStatuses[key].colonists || 0);
-    });
-
-    Object.keys(spaceManager.artificialWorldStatuses).forEach((key) => {
-      if (currentArtificialKey !== null && key === currentArtificialKey) {
-        return;
-      }
-      total += Math.max(0, spaceManager.artificialWorldStatuses[key].colonists || 0);
-    });
-
-    this.galacticPopulation = total;
+    const nextPopulation = Math.max(0, spaceManager.galacticPopulation || 0);
+    this.birchWorldPopulation = Math.max(0, spaceManager.birchWorldPopulation || 0);
+    if (nextPopulation === this.galacticPopulation) {
+      this.syncGalacticBelievers();
+      return;
+    }
+    const galacticPercent = this.getGalacticBelieverPercent();
+    this.galacticPopulation = nextPopulation;
+    this.nonBirchGalacticBelievers = galacticPercent * Math.max(0, spaceManager.nonBirchGalacticPopulation || 0);
+    this.galacticBelieverPercentFallback = galacticPercent;
+    this.syncGalacticBelievers();
+    this.markUIDirty();
   }
 
   initializeFaithIfNeeded() {
@@ -774,7 +813,9 @@ class FollowersManager extends EffectableEntity {
       return;
     }
     this.recalculateGalacticPopulation();
-    this.galacticBelievers = this.galacticPopulation * 0.1;
+    this.nonBirchGalacticBelievers = Math.max(0, spaceManager.nonBirchGalacticPopulation || 0) * 0.1;
+    this.birchWorldBelievers = Math.max(0, spaceManager.birchWorldPopulation || 0) * 0.1;
+    this.syncGalacticBelievers();
     this.galacticBelieverPercentFallback = 0.1;
     this.setWorldBelieverPercent(this.getGalacticBelieverPercent());
     this.lastFaithWorldCap = this.getCurrentWorldBelieverCap();
@@ -807,13 +848,47 @@ class FollowersManager extends EffectableEntity {
       return;
     }
     const worldBelievers = worldPopulation * this.getWorldBelieverPercent();
-    this.galacticPopulation += worldPopulation;
-    this.galacticBelievers += worldBelievers;
-    this.galacticBelievers = Math.min(this.galacticBelievers, this.galacticPopulation);
+    if (this.isCurrentWorldSupermassiveShellworld()) {
+      this.birchWorldPopulation = worldPopulation;
+      this.birchWorldBelievers = worldBelievers;
+      this.smbhGalacticPopulationContribution = this.birchWorldPopulation;
+      this.smbhGalacticBelieversContribution = this.birchWorldBelievers;
+      this.syncGalacticBelievers();
+      this.galacticBelieverPercentFallback = this.getGalacticBelieverPercent();
+      this.markUIDirty();
+      return;
+    }
+    this.galacticPopulation = spaceManager.galacticPopulation;
+    this.nonBirchGalacticBelievers += worldBelievers;
+    this.syncGalacticBelievers();
     this.galacticBelieverPercentFallback = this.getGalacticBelieverPercent();
     if (!this.isFaithSuppressed() && this.isCurrentWorldHolyConsecrated()) {
       this.holyWorldPoints += 1;
     }
+  }
+
+  isCurrentWorldSupermassiveShellworld() {
+    if (spaceManager.currentArtificialKey === null) {
+      return false;
+    }
+    const status = spaceManager.getCurrentWorldStatus();
+    const typeCandidates = [
+      status?.type,
+      status?.classification?.type,
+      status?.original?.merged?.classification?.type,
+      status?.original?.classification?.type,
+      status?.artificialSnapshot?.type
+    ];
+    const coreCandidates = [
+      status?.core,
+      status?.classification?.core,
+      status?.original?.merged?.classification?.core,
+      status?.original?.classification?.core,
+      status?.artificialSnapshot?.core
+    ];
+    const type = typeCandidates.find((value) => value && value !== 'unknown');
+    const core = coreCandidates.find((value) => value && value !== 'unknown');
+    return type === 'shell' && core === 'smbh';
   }
 
   updateFaith(deltaTime) {
@@ -861,7 +936,9 @@ class FollowersManager extends EffectableEntity {
     }
 
     galacticPercent += galacticDelta;
-    this.galacticBelievers = galacticPercent * this.galacticPopulation;
+    this.nonBirchGalacticBelievers = galacticPercent * Math.max(0, spaceManager.nonBirchGalacticPopulation || 0);
+    this.birchWorldBelievers = galacticPercent * Math.max(0, spaceManager.birchWorldPopulation || 0);
+    this.syncGalacticBelievers();
     this.galacticBelieverPercentFallback = galacticPercent;
 
     const syncedWorldPercent = Math.min(1, this.getWorldBelieverPercent() + galacticDelta);
@@ -869,9 +946,21 @@ class FollowersManager extends EffectableEntity {
   }
 
   getAvailableOrbitals() {
+    if (this.isBooleanFlagSet('disableOrbitals')) {
+      return 0;
+    }
     const worlds = Math.floor(spaceManager.getTerraformedPlanetCount());
-    const boosted = Math.floor(worlds * this.getApostlesOrbitalsMultiplier());
-    return boosted > 0 ? boosted : 0;
+    const boosted = Math.floor(
+      worlds
+      * this.getApostlesOrbitalsMultiplier()
+      * this.getActiveEffectMultiplier('availableOrbitalsMultiplier')
+    );
+    const available = boosted > 0 ? boosted : 0;
+    if (!gameSettings.orbitalCap) {
+      return available;
+    }
+    const landCap = Math.floor(resources.surface.land.value);
+    return Math.min(available, Math.max(0, landCap));
   }
 
   isKesslerOrbitalsRestricted() {
@@ -888,7 +977,7 @@ class FollowersManager extends EffectableEntity {
 
   setAssignmentMode(mode) {
     this.assignmentMode = mode === 'weight' ? 'weight' : 'manual';
-    this.updateUI();
+    this.markUIDirty();
   }
 
   getAutoAssignId() {
@@ -904,15 +993,15 @@ class FollowersManager extends EffectableEntity {
       if (this.autoAssignId === id) {
         this.autoAssignId = null;
       }
-      this.updateUI();
+      this.markUIDirty();
       return;
     }
     if (this.isOrbitalRestrictedByKessler(id)) {
-      this.updateUI();
+      this.markUIDirty();
       return;
     }
     this.autoAssignId = id;
-    this.updateUI();
+    this.markUIDirty();
   }
 
   getAssignmentStep() {
@@ -922,7 +1011,7 @@ class FollowersManager extends EffectableEntity {
   setAssignmentStep(step) {
     const next = Math.max(1, Math.floor(step));
     this.assignmentStep = next;
-    this.updateUI();
+    this.markUIDirty();
   }
 
   multiplyAssignmentStep() {
@@ -942,7 +1031,7 @@ class FollowersManager extends EffectableEntity {
     this.ensureTrackedOrbitals();
     const next = Math.max(0, Math.floor(value));
     this.weights[id] = next;
-    this.updateUI();
+    this.markUIDirty();
   }
 
   adjustWeight(id, delta) {
@@ -984,7 +1073,7 @@ class FollowersManager extends EffectableEntity {
     this.ensureTrackedOrbitals();
     if (this.isOrbitalRestrictedByKessler(id)) {
       this.manualAssignments[id] = 0;
-      this.updateUI();
+      this.markUIDirty();
       return;
     }
     let next = Math.max(0, Math.floor(value));
@@ -993,7 +1082,7 @@ class FollowersManager extends EffectableEntity {
       next = maxForThis;
     }
     this.manualAssignments[id] = next;
-    this.updateUI();
+    this.markUIDirty();
   }
 
   adjustManualAssignment(id, delta) {
@@ -1205,7 +1294,7 @@ class FollowersManager extends EffectableEntity {
   }
 
   rebuildOrbitalStorageCapBonusCache() {
-    if (!this.enabled) {
+    if (!isManagerEffectivelyEnabled(this, 'followersManager')) {
       this.orbitalStorageCapBonusCache = {};
       return;
     }
@@ -1235,7 +1324,7 @@ class FollowersManager extends EffectableEntity {
   }
 
   getOrbitalStorageCapBonusForResource(category, resourceName) {
-    if (!this.enabled) {
+    if (!isManagerEffectivelyEnabled(this, 'followersManager')) {
       return 0;
     }
     const cacheKey = `${category}:${resourceName}`;
@@ -1248,7 +1337,7 @@ class FollowersManager extends EffectableEntity {
 
   produceOrbitals(deltaTime) {
     this.ensureTrackedOrbitals();
-    if (!this.enabled || deltaTime <= 0) {
+    if (!isManagerEffectivelyEnabled(this, 'followersManager') || deltaTime <= 0) {
       this.lastProductionRates = {};
       this.lastAppliedAssignments = {};
       return;
@@ -1292,7 +1381,9 @@ class FollowersManager extends EffectableEntity {
   }
 
   applyOrbitalProductionRates() {
-    if (!this.enabled) {
+    if (!isManagerEffectivelyEnabled(this, 'followersManager')) {
+      this.lastProductionRates = {};
+      this.lastAppliedAssignments = {};
       return;
     }
 
@@ -1319,13 +1410,16 @@ class FollowersManager extends EffectableEntity {
   }
 
   enable() {
+    if (isCurrentWorldManagerDisabled('followersManager')) {
+      return;
+    }
     const wasEnabled = this.enabled;
     this.enabled = true;
     if (!wasEnabled) {
       this.initializeFaithIfNeeded();
       this.applyHolyWorldEffects();
     }
-    this.updateUI();
+    this.markUIDirty();
   }
 
   prepareTravelState() {
@@ -1333,6 +1427,7 @@ class FollowersManager extends EffectableEntity {
       lastProductionRates: { ...this.lastProductionRates },
       lastAppliedAssignments: { ...this.lastAppliedAssignments }
     };
+    this.clearEffectsOnTravel();
     this.resetTransientState();
     return travelState;
   }
@@ -1343,17 +1438,23 @@ class FollowersManager extends EffectableEntity {
       this.initializeFaithIfNeeded();
       this.setWorldBelieverPercent(this.getGalacticBelieverPercent());
     }
-    this.updateUI();
+    this.markUIDirty();
   }
 
   updateUI() {
+    this.uiDirty = false;
     updateColonySubtabsVisibility();
     updateFollowersUI();
   }
 
   reapplyEffects() {
+    if (isCurrentWorldManagerDisabled('followersManager')) {
+      this.applyPopulationEffects();
+      return;
+    }
     this.applyHolyWorldEffects();
-    this.updateUI();
+    this.applyPopulationEffects();
+    this.markUIDirty();
   }
 
   saveState() {
@@ -1369,7 +1470,12 @@ class FollowersManager extends EffectableEntity {
         faithInitialized: this.faithInitialized,
         worldBelieverRatio: this.worldBelieverRatio,
         galacticPopulation: this.galacticPopulation,
+        nonBirchGalacticBelievers: this.nonBirchGalacticBelievers,
         galacticBelievers: this.galacticBelievers,
+        birchWorldPopulation: this.birchWorldPopulation,
+        birchWorldBelievers: this.birchWorldBelievers,
+        smbhGalacticPopulationContribution: this.smbhGalacticPopulationContribution,
+        smbhGalacticBelieversContribution: this.smbhGalacticBelieversContribution,
         galacticBelieverPercentFallback: this.galacticBelieverPercentFallback
       },
       holyWorld: {
@@ -1423,8 +1529,22 @@ class FollowersManager extends EffectableEntity {
     this.booleanFlags = new Set(Array.isArray(data.booleanFlags) ? data.booleanFlags : []);
     this.faithInitialized = !!faith.faithInitialized;
     this.worldBelieverRatio = this.clampPercent(faith.worldBelieverRatio ?? 0.1);
-    this.galacticPopulation = Math.max(0, faith.galacticPopulation || 0);
-    this.galacticBelievers = Math.max(0, faith.galacticBelievers || 0);
+    this.galacticPopulation = spaceManager.galacticPopulation;
+    const hasSavedBirchWorldBelievers = Object.prototype.hasOwnProperty.call(faith, 'birchWorldBelievers');
+    const legacyBirchWorldPopulation = Math.max(0, faith.smbhGalacticPopulationContribution || 0);
+    const legacyBirchWorldBelievers = Math.max(0, faith.smbhGalacticBelieversContribution || 0);
+    this.birchWorldPopulation = Object.prototype.hasOwnProperty.call(faith, 'birchWorldPopulation')
+      ? Math.max(0, faith.birchWorldPopulation || 0)
+      : Math.max(0, spaceManager.birchWorldPopulation || legacyBirchWorldPopulation || 0);
+    this.birchWorldBelievers = hasSavedBirchWorldBelievers
+      ? Math.max(0, faith.birchWorldBelievers || 0)
+      : legacyBirchWorldBelievers;
+    this.nonBirchGalacticBelievers = Object.prototype.hasOwnProperty.call(faith, 'nonBirchGalacticBelievers')
+      ? Math.max(0, faith.nonBirchGalacticBelievers || 0)
+      : Math.max(0, (faith.galacticBelievers || 0) - this.birchWorldBelievers);
+    this.syncGalacticBelievers();
+    this.smbhGalacticPopulationContribution = this.birchWorldPopulation;
+    this.smbhGalacticBelieversContribution = this.birchWorldBelievers;
     this.galacticBelieverPercentFallback = this.clampPercent(
       faith.galacticBelieverPercentFallback ?? 0.1
     );
@@ -1449,8 +1569,11 @@ class FollowersManager extends EffectableEntity {
     this.fundingInvested = Math.max(0, artGallery.fundingInvested || 0);
     this.artifactInvestmentStep = Math.max(1, artGallery.artifactStep || 1);
     this.fundingInvestmentStep = Math.max(1, artGallery.fundingStep || 1000);
-    if (this.galacticPopulation > 0 && this.galacticBelievers > this.galacticPopulation) {
+    if (hasSavedBirchWorldBelievers && this.galacticPopulation > 0 && this.galacticBelievers > this.galacticPopulation) {
       this.galacticBelievers = this.galacticPopulation;
+    }
+    if (this.birchWorldPopulation > 0 && this.birchWorldBelievers > this.birchWorldPopulation) {
+      this.birchWorldBelievers = this.birchWorldPopulation;
     }
     if (this.enabled && !this.faithInitialized) {
       this.initializeFaithIfNeeded();
@@ -1459,13 +1582,15 @@ class FollowersManager extends EffectableEntity {
   }
 
   update(deltaTime) {
-    if (!this.enabled) {
+    if (!isManagerEffectivelyEnabled(this, 'followersManager')) {
       return;
     }
 
     if (this.assignmentMode === 'weight') {
       this.getAssignmentsSnapshot();
     }
+    this.recalculateGalacticPopulation();
     this.updateFaith(deltaTime);
+    this.applyPopulationEffects();
   }
 }

@@ -52,6 +52,9 @@
     }
 
     getTravelConversionCount() {
+      if (gameSettings.noOverpopulationCylinders) {
+        return 0;
+      }
       return Math.max(0, Math.min(this.getRequiredCylinderCount(), this.getBuiltCylinderCount()));
     }
 

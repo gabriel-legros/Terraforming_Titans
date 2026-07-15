@@ -222,7 +222,8 @@ const researchParameters = {
         disabled: true,
         effects: [
           { target: 'project', targetId: 'dysonSwarmReceiver', type: 'enable' },
-          { target: 'building', targetId: 'dysonReceiver', type: 'enable' }
+          { target: 'building', targetId: 'dysonReceiver', type: 'enable' },
+          { target: 'resource', resourceType: 'space', targetId: 'energy', type: 'enable' }
         ]
       },
       {
@@ -300,6 +301,15 @@ const researchParameters = {
             value: 1.25,
             repeatableAddend: 0.25,
             effectId: 'ai_reactor_overclocking_output'
+          },
+          {
+            target: 'building',
+            targetId: 'superalloyFusionReactor',
+            type: 'consumptionMultiplier',
+            disabledWhenGameSettingEnabled: 'disableFusionConsumptionScaling',
+            value: 1.25,
+            repeatableAddend: 0.25,
+            effectId: 'ai_reactor_overclocking_consumption'
           }
         ]
       },
@@ -605,7 +615,7 @@ const researchParameters = {
         id: 'graphene_factory',
         name: '',
         description: '',
-        cost: { research: 10_000_000 },
+        cost: { research: 5_000_000 },
         prerequisites: [],
         disabled: true,
         effects: [
@@ -1373,6 +1383,14 @@ const researchParameters = {
             onLoad : false
           },
           {
+            target: 'tab',
+            type: 'activateSubtab',
+            subtabClass: 'terraforming-subtab',
+            contentClass: 'terraforming-subtab-content',
+            targetId: 'summary-terraforming',
+            onLoad: false
+          },
+          {
             target: 'terraforming',
             type: 'booleanFlag',
             flagId: 'summaryUnlocked',
@@ -1510,6 +1528,11 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'boschReactor',
+            type: 'enable'
+          },
+          {
+            target: 'building',
+            targetId: 'pyrolyzer',
             type: 'enable'
           },
         ],
@@ -1754,9 +1777,11 @@ const researchParameters = {
         prerequisites: [],
         effects: [
           {
-            target: 'building',
-            targetId: 'hyperionLantern',
-            type: 'enable'
+            target: 'project',
+            targetId: 'spaceMirrorFacility',
+            type: 'booleanFlag',
+            flagId: 'hyperionLanternFacilityAccess',
+            value: true
           }
         ]
       },
@@ -1963,11 +1988,26 @@ const researchParameters = {
         ]
       },
       {
+        id: 'nanoworlds',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 5_000_000_000_000 },
+        prerequisites: ['nanotechnology_stage_4'],
+        requiredGameFeature: 'steamExclusiveResearch',
+        effects: [
+          {
+            target: 'project',
+            targetId: 'nanoworld',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'orbital_rings',
         name: '',
         description: '',
-        cost: { advancedResearch: 150000 },
-        prerequisites: [],
+        cost: { advancedResearch: 200000 },
+        prerequisites: ['super_alloys'],
         effects: [
           {
             target: 'project',
@@ -1994,8 +2034,8 @@ const researchParameters = {
         id: 'mega_heat_sink',
         name: '',
         description: '',
-        cost: { advancedResearch: 400000 },
-        prerequisites: [],
+        cost: { advancedResearch: 150000 },
+        prerequisites: ['super_alloys'],
         effects: [
           {
             target: 'project',
@@ -2083,6 +2123,38 @@ const researchParameters = {
         ]
       },
       {
+        id: 'resort_worlds',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 3_000_000_000 },
+        prerequisites: [],
+        requiredGameFeature: 'steamExclusiveResearch',
+        effects: [
+          {
+            target: 'project',
+            targetId: 'resortWorld',
+            type: 'enable'
+          }
+        ]
+      },
+      {
+        id: 'leviathans',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 500_000_000_000_000_000 },
+        prerequisites: [],
+        requiredGameFeature: 'steamExclusiveResearch',
+        effects: [
+          {
+            target: 'project',
+            targetId: 'bioworld',
+            type: 'booleanFlag',
+            flagId: 'leviathans',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'next_gen_bioengineering',
         name: '',
         description: '',
@@ -2162,7 +2234,7 @@ const researchParameters = {
         id: 'mechanical_assistance',
         name: '',
         description: '',
-        cost: { advancedResearch: 175000 },
+        cost: { advancedResearch: 400000 },
         prerequisites: [],
         effects: [
           {
@@ -2192,7 +2264,7 @@ const researchParameters = {
         id: 'ship_smelting',
         name: '',
         description: '',
-        cost: { advancedResearch: 200000 },
+        cost: { advancedResearch: 175000 },
         prerequisites: [],
         effects: [
           {
@@ -2264,6 +2336,23 @@ const researchParameters = {
             type: 'booleanFlag',
             flagId: 'cylindersHopeCollaborationAgreement',
             effectId: 'research-cylinders-hope-collaboration-space-flag',
+            value: true
+          }
+        ]
+      },
+      {
+        id: 'megaprojects_coordination',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 600000000 },
+        prerequisites: [],
+        requiredGameFeature: 'steamExclusiveResearch',
+        effects: [
+          {
+            target: 'spaceManager',
+            type: 'booleanFlag',
+            flagId: 'megaprojectsCoordination',
+            effectId: 'research-megaprojects-coordination-space-flag',
             value: true
           }
         ]
@@ -2487,10 +2576,26 @@ const researchParameters = {
         ]
       },
       {
+        id: 'teleporters',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 100_000_000_000_000_000 },
+        prerequisites: ['space_storage'],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'spaceStorage',
+            type: 'booleanFlag',
+            flagId: 'teleporters',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'deep_warp_storage',
         name: '',
         description: '',
-        cost: { advancedResearch: 500_000_000_000_000 },
+        cost: { advancedResearch: 50_000_000_000_000 },
         prerequisites: ['warp_storage'],
         effects: [
           {
@@ -2552,6 +2657,43 @@ const researchParameters = {
         ]
       },
       {
+        id: 'silica_phase_out_initiative',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 200_000_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'building',
+            targetId: 'glassSmelter',
+            type: 'booleanFlag',
+            flagId: 'silicaPhaseOutRecipe',
+            value: true
+          },
+          {
+            target: 'building',
+            targetId: 'electronicsFactory',
+            type: 'booleanFlag',
+            flagId: 'silicaPhaseOutRecipe',
+            value: true
+          },
+          {
+            target: 'project',
+            targetId: 'manufacturingWorld',
+            type: 'booleanFlag',
+            flagId: 'silicaPhaseOutRecipe',
+            value: true
+          },
+          {
+            target: 'project',
+            targetId: 'spaceStorage',
+            type: 'booleanFlag',
+            flagId: 'graphiteStorage',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'artificial_ecosystems',
         name: '',
         description: '',
@@ -2563,6 +2705,22 @@ const researchParameters = {
             targetId: 'spaceStorage',
             type: 'booleanFlag',
             flagId: 'artificialEcosystems',
+            value: true
+          }
+        ]
+      },
+      {
+        id: 'solid_biochemistry',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 2_000_000_000_000 },
+        prerequisites: [],
+        requiredGameFeature: 'steamExclusiveResearch',
+        effects: [
+          {
+            target: 'lifeDesigner',
+            type: 'booleanFlag',
+            flagId: 'solidBiochemistry',
             value: true
           }
         ]
@@ -2700,6 +2858,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'birch_world',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 1_000_000_000_000_000_000 },
+        prerequisites: ['alderson_disk_concept'],
+        effects: [
+          {
+            target: 'artificialManager',
+            type: 'unlockCore',
+            targetId: 'smbh'
+          }
+        ]
+      },
+      {
         id: 'planet_cracking',
         name: '',
         description: '',
@@ -2739,6 +2911,34 @@ const researchParameters = {
           {
             target: 'project',
             targetId: 'whiteDwarfHarvesters',
+            type: 'enable'
+          }
+        ]
+      },
+      {
+        id: 'artificial_quasars',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 500_000_000_000_000 },
+        prerequisites: ['star_lifting'],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'artificialQuasars',
+            type: 'enable'
+          }
+        ]
+      },
+      {
+        id: 'matrioshka_brain',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 10_000_000_000_000_000 },
+        prerequisites: ['artificial_quasars'],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'matrioshkaBrain',
             type: 'enable'
           }
         ]

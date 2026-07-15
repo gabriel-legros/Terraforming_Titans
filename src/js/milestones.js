@@ -39,46 +39,7 @@ const festivalEffects = [
       type: 'growthMultiplier',
       value: 3
   },
-    {
-        type: 'booleanFlag',
-        target: 'resource',
-        resourceType: 'colony',
-        targetId: 'funding',
-        flagId: 'festival',
-        value: true
-    },
-    {
-        type: 'booleanFlag',
-        target: 'resource',
-        resourceType: 'colony',
-        targetId: 'metal',
-        flagId: 'festival',
-        value: true
-    },
-    {
-        type: 'booleanFlag',
-        target: 'resource',
-        resourceType: 'colony',
-        targetId: 'components',
-        flagId: 'festival',
-        value: true
-    },
-    {
-        type: 'booleanFlag',
-        target: 'resource',
-        resourceType: 'colony',
-        targetId: 'electronics',
-        flagId: 'festival',
-        value: true
-    },   
-    {
-      type: 'booleanFlag',
-      target: 'resource',
-      resourceType: 'colony',
-      targetId: 'colonists',
-      flagId: 'festival',
-      value: true
-  }
+    ...createResourceFlagEffects('colony', ['funding', 'metal', 'components', 'electronics', 'colonists'], 'festival', 'festival')
 ]
 
 function getGlobalFestivalDurationBonusMs() {
@@ -280,17 +241,7 @@ class MilestonesManager {
         this.countdownActive = false;
         this.countdownRemainingTime = 0;
 
-        if (this.countdownElement) {
-            this.countdownElement.remove();
-            this.countdownElement = null;
-        }
-
-        if (typeof document !== 'undefined') {
-            const festivalContainer = document.getElementById('festival-container');
-            if (festivalContainer && festivalContainer.querySelectorAll) {
-                festivalContainer.querySelectorAll('.festival-countdown').forEach(element => element.remove());
-            }
-        }
+        this.countdownElement = null;
 
         if (state.milestones) {
             this.milestones.forEach(milestone => {
@@ -316,6 +267,9 @@ class MilestonesManager {
 
     // Update which milestones can be completed based on current game state
     update(delta) {
+        if (isCurrentWorldManagerDisabled('milestonesManager')) {
+            return;
+        }
         this.milestones.forEach(milestone => {
             if (!milestone.isCompleted && this.checkIfCanBeCompleted(milestone)) {
                 milestone.canBeCompleted = true;

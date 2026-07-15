@@ -26,7 +26,7 @@ function renderDysonSwarmUI(project, container) {
     </div>
     <div class="card-body">
       <div class="stats-grid three-col">
-        <div class="stat-item"><span class="stat-label">${getDysonSwarmText('ui.projects.dysonSwarm.collectors', 'Collectors:')}</span><span id="ds-collectors" class="stat-value"></span></div>
+        <div class="stat-item"><span class="stat-label" id="ds-collectors-label">${getDysonSwarmText('ui.projects.dysonSwarm.collectors', 'Collectors:')}</span><span id="ds-collectors" class="stat-value"></span></div>
         <div class="stat-item"><span class="stat-label">${getDysonSwarmText('ui.projects.dysonSwarm.powerPerCollector', 'Power/Collector:')}</span><span id="ds-power-per" class="stat-value"></span></div>
         <div class="stat-item"><span class="stat-label">${getDysonSwarmText('ui.projects.dysonSwarm.totalPower', 'Total Power:')}</span><span id="ds-total-power" class="stat-value"></span></div>
       </div>
@@ -53,7 +53,13 @@ function renderDysonSwarmUI(project, container) {
 
   const autoCheckbox = card.querySelector('#ds-auto');
   const travelResetCheckbox = card.querySelector('#ds-auto-travel-reset');
+  const collectorsLabel = card.querySelector('#ds-collectors-label');
   const collectorSettingsRow = card.querySelector('.dyson-collector-settings-row');
+  const collectorsInfo = document.createElement('span');
+  collectorsInfo.classList.add('info-tooltip-icon');
+  collectorsInfo.innerHTML = '&#9432;';
+  collectorsLabel.appendChild(collectorsInfo);
+  const collectorsTooltipContent = attachDynamicInfoTooltip(collectorsInfo, '');
   const advancedSettingsButton = document.createElement('button');
   advancedSettingsButton.type = 'button';
   advancedSettingsButton.classList.add('project-advanced-settings-button');
@@ -67,6 +73,7 @@ function renderDysonSwarmUI(project, container) {
     ...projectElements[project.name],
     swarmCard: card,
     collectorsDisplay: card.querySelector('#ds-collectors'),
+    collectorsTooltipContent,
     powerPerDisplay: card.querySelector('#ds-power-per'),
     totalPowerDisplay: card.querySelector('#ds-total-power'),
     costDisplay: card.querySelector('#ds-collector-cost'),
@@ -90,8 +97,9 @@ function updateCollectorCostDisplay(project, costDisplay) {
   const items = [];
   const storageProj = project.createSpaceStorageAccess('expansions');
 
-  for (const category in project.collectorCost) {
-    const categoryCost = project.collectorCost[category];
+  const collectorCost = project.getCollectorCost();
+  for (const category in collectorCost) {
+    const categoryCost = collectorCost[category];
     for (const resource in categoryCost) {
       const resourceData = resources[category][resource];
       const displayName = resourceData.displayName || `${resource.charAt(0).toUpperCase()}${resource.slice(1)}`;
@@ -146,10 +154,12 @@ function updateDysonSwarmUI(project) {
     const startButton = swarmCard.querySelector('#ds-start');
     const autoCheckbox = swarmCard.querySelector('#ds-auto');
     const travelResetCheckbox = swarmCard.querySelector('#ds-auto-travel-reset');
+    const collectorsInfo = swarmCard.querySelector('#ds-collectors-label .info-tooltip-icon');
     projectElements[project.name] = {
       ...els,
       swarmCard,
       collectorsDisplay: swarmCard.querySelector('#ds-collectors'),
+      collectorsTooltipContent: collectorsInfo ? collectorsInfo.querySelector('.resource-tooltip.dynamic-tooltip') : null,
       powerPerDisplay: swarmCard.querySelector('#ds-power-per'),
       totalPowerDisplay: swarmCard.querySelector('#ds-total-power'),
       costDisplay: swarmCard.querySelector('#ds-collector-cost'),
@@ -168,6 +178,15 @@ function updateDysonSwarmUI(project) {
   if (!showCard) return;
 
   els.collectorsDisplay.textContent = formatNumber(project.collectors, false, 2);
+  if (els.collectorsTooltipContent) {
+    els.collectorsTooltipContent.textContent = getDysonSwarmText(
+      'ui.projects.dysonSwarm.collectorsTooltip',
+      'Collector construction is capped at {max} collectors.',
+      {
+        max: formatNumber(project.getMaxCollectors(), true, 2),
+      }
+    );
+  }
   els.powerPerDisplay.textContent = formatNumber(project.energyPerCollector, false, 2);
   const total = project.energyPerCollector * project.collectors;
   els.totalPowerDisplay.textContent = formatNumber(total, false, 2);
@@ -178,7 +197,7 @@ function updateDysonSwarmUI(project) {
     const active = project.isCollectorContinuous()
       ? project.autoContinuousOperation && (project.isCompleted || project.collectors > 0)
       : project.collectorProgress > 0;
-    const rate = active ? (1000 / project.collectorDuration) : 0;
+    const rate = active && project.getCollectorHeadroom() > 0 ? (1000 / project.collectorDuration) : 0;
     els.expansionRateDisplay.textContent = getDysonSwarmText('ui.projects.dysonSwarm.collectorsPerSecond', '{value} collectors/s', {
       value: formatNumber(rate, true, 3)
     });
@@ -206,22 +225,22 @@ function updateDysonSwarmUI(project) {
   if (project.isCollectorContinuous()) {
     if (project.autoContinuousOperation && (project.isCompleted || project.collectors > 0)) {
       els.startButton.textContent = getDysonSwarmText('ui.projects.status.continuous', 'Continuous');
-      els.startButton.style.background = '#4caf50';
+      els.startButton.style.background = getStatusColor('success');
     } else {
       els.startButton.textContent = getDysonSwarmText('ui.projects.status.stopped', 'Stopped');
-      els.startButton.style.background = '#f44336';
+      els.startButton.style.background = getStatusColor('failure');
     }
     els.startButton.disabled = true;
   } else if (project.collectorProgress > 0) {
     const pct = ((project.collectorDuration - project.collectorProgress) / project.collectorDuration) * 100;
     const secs = Math.max(0, project.collectorProgress / 1000).toFixed(2);
     els.startButton.textContent = getDysonSwarmText('ui.projects.dysonSwarm.deploying', 'Deploying ({time}s)', { time: secs });
-    els.startButton.style.background = `linear-gradient(to right, #4caf50 ${pct}%, #ccc ${pct}%)`;
+    els.startButton.style.background = getStatusProgressBackground(pct);
   } else {
     const can = project.canStartCollector();
-    const dur = Math.round(project.collectorDuration / 1000);
+    const dur = (project.collectorDuration / 1000).toFixed(2);
     els.startButton.textContent = getDysonSwarmText('ui.projects.dysonSwarm.deployCollector', 'Deploy Collector ({time}s)', { time: dur });
-    els.startButton.style.background = can ? '#4caf50' : '#f44336';
+    els.startButton.style.background = can ? getStatusColor('success') : getStatusColor('failure');
     els.startButton.disabled = !can;
   }
   els.autoCheckbox.checked = project.autoContinuousOperation;

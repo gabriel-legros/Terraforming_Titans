@@ -1,3 +1,5 @@
+global.t = global.t || ((key, vars, fallback) => fallback);
+
 const {
   planetParameters,
   defaultPlanetParameters
@@ -29,6 +31,20 @@ function getZonalIceTotal(override) {
 }
 
 describe('RWG zonal ice partitioning', () => {
+  it('honors explicit random type candidates from auto-travel settings', () => {
+    const manager = new RwgManager();
+    manager.unlockType('jupiter-like');
+
+    const result = manager.generateRandomPlanet('123456789', {
+      target: 'planet',
+      orbitPreset: 'hz-mid',
+      type: 'auto',
+      availableTypes: ['jupiter-like']
+    });
+
+    expect(result.archetype).toBe('jupiter-like');
+  });
+
   it('keeps global ice equal to zonal ice + buried ice for generated worlds', () => {
     const manager = new RwgManager();
     const seeds = [

@@ -42,6 +42,18 @@ const SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES = new Set([
   'inertGas',
   'hydrogen'
 ]);
+const SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES = new Set([
+  'liquidWater',
+  'oxygen',
+  'atmosphericMethane',
+  'atmosphericAmmonia',
+  'inertGas',
+  'carbonDioxide',
+  'hydrogen'
+]);
+const SPACE_STORAGE_UI_AMOUNT_LIMIT_RESOURCES = new Set([
+  'graphite'
+]);
 
 function getSpaceStorageResourceLabel(option) {
   return getSpaceStorageUIText(
@@ -348,9 +360,17 @@ function renderSpaceStorageUI(project, container) {
   let reserveValueLabel = cachedCaps.reserveValueLabel;
   let transferWeightInput = cachedCaps.transferWeightInput;
   let transferWeightLabel = cachedCaps.transferWeightLabel;
+  let limitBiomassDensityWithdrawalsRow = cachedCaps.limitBiomassDensityWithdrawalsRow;
+  let limitBiomassDensityWithdrawalsCheckbox = cachedCaps.limitBiomassDensityWithdrawalsCheckbox;
   let respectImportLimitsRow = cachedCaps.respectImportLimitsRow;
   let respectImportLimitsCheckbox = cachedCaps.respectImportLimitsCheckbox;
   let respectImportLimitsLabel = cachedCaps.respectImportLimitsLabel;
+  let pressureWithdrawLimitRow = cachedCaps.pressureWithdrawLimitRow;
+  let pressureWithdrawLimitInput = cachedCaps.pressureWithdrawLimitInput;
+  let pressureWithdrawLimitLabel = cachedCaps.pressureWithdrawLimitLabel;
+  let amountWithdrawLimitRow = cachedCaps.amountWithdrawLimitRow;
+  let amountWithdrawLimitInput = cachedCaps.amountWithdrawLimitInput;
+  let amountWithdrawLimitLabel = cachedCaps.amountWithdrawLimitLabel;
   let scopeExpansionsCheckbox = cachedCaps.scopeExpansionsCheckbox;
   let scopeTransfersCheckbox = cachedCaps.scopeTransfersCheckbox;
   let scopeConsumptionCheckbox = cachedCaps.scopeConsumptionCheckbox;
@@ -580,6 +600,24 @@ function renderSpaceStorageUI(project, container) {
     });
     transferWeightRow.append(transferWeightLabel, transferWeightInput);
 
+    limitBiomassDensityWithdrawalsRow = document.createElement('div');
+    limitBiomassDensityWithdrawalsRow.classList.add('space-storage-settings-row');
+    const limitBiomassDensityWithdrawalsLabel = document.createElement('label');
+    limitBiomassDensityWithdrawalsLabel.classList.add('space-storage-settings-label');
+    limitBiomassDensityWithdrawalsLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.limitWithdrawalsToMaxBiomassDensity', 'Limit withdrawals to maximum biomass density');
+    const limitBiomassDensityInfo = document.createElement('span');
+    limitBiomassDensityInfo.classList.add('info-tooltip-icon');
+    limitBiomassDensityInfo.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      limitBiomassDensityInfo,
+      getSpaceStorageUIText('ui.projects.spaceStorage.limitWithdrawalsToMaxBiomassDensityTooltip', 'When withdrawing biomass from space storage into surface biomass, stop at the current life design maximum biomass density. Uses 0.1 t/m² if no design density is available.')
+    );
+    limitBiomassDensityWithdrawalsLabel.appendChild(limitBiomassDensityInfo);
+    limitBiomassDensityWithdrawalsCheckbox = document.createElement('input');
+    limitBiomassDensityWithdrawalsCheckbox.type = 'checkbox';
+    limitBiomassDensityWithdrawalsCheckbox.id = 'limit-biomass-density-withdrawals';
+    limitBiomassDensityWithdrawalsRow.append(limitBiomassDensityWithdrawalsLabel, limitBiomassDensityWithdrawalsCheckbox);
+
     respectImportLimitsRow = document.createElement('div');
     respectImportLimitsRow.classList.add('space-storage-settings-row');
     respectImportLimitsLabel = document.createElement('label');
@@ -597,6 +635,75 @@ function renderSpaceStorageUI(project, container) {
     respectImportLimitsCheckbox.type = 'checkbox';
     respectImportLimitsCheckbox.id = 'respect-import-project-limits';
     respectImportLimitsRow.append(respectImportLimitsLabel, respectImportLimitsCheckbox);
+
+    pressureWithdrawLimitRow = document.createElement('div');
+    pressureWithdrawLimitRow.classList.add('space-storage-settings-row');
+    pressureWithdrawLimitLabel = document.createElement('label');
+    pressureWithdrawLimitLabel.classList.add('space-storage-settings-label');
+    pressureWithdrawLimitLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.maxWithdrawalPressure', 'Max withdrawal pressure:');
+    const pressureWithdrawLimitInfo = document.createElement('span');
+    pressureWithdrawLimitInfo.classList.add('info-tooltip-icon');
+    pressureWithdrawLimitInfo.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      pressureWithdrawLimitInfo,
+      getSpaceStorageUIText('ui.projects.spaceStorage.maxWithdrawalPressureTooltip', 'When withdrawing this resource from space storage, stop once its atmospheric pressure reaches this value. Set to 0 for no pressure limit.')
+    );
+    pressureWithdrawLimitLabel.appendChild(pressureWithdrawLimitInfo);
+    pressureWithdrawLimitInput = document.createElement('input');
+    pressureWithdrawLimitInput.type = 'text';
+    pressureWithdrawLimitInput.inputMode = 'decimal';
+    pressureWithdrawLimitInput.classList.add('space-storage-settings-input');
+    wireStringNumberInput(pressureWithdrawLimitInput, {
+      datasetKey: 'spaceStoragePressureWithdrawLimit',
+      parseValue: (value) => {
+        const parsed = parseFlexibleNumber(value);
+        return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+      },
+      formatValue: (parsed) => formatNumber(Math.max(0, parsed), true, 2),
+      onValue: (parsed) => {
+        projectElements[project.name].pressureWithdrawLimitDraft = parsed;
+      },
+    });
+    const pressureWithdrawLimitUnit = document.createElement('span');
+    pressureWithdrawLimitUnit.classList.add('space-storage-pressure-unit');
+    pressureWithdrawLimitUnit.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.pa', 'Pa');
+    const pressureWithdrawLimitInputGroup = document.createElement('div');
+    pressureWithdrawLimitInputGroup.classList.add('space-storage-pressure-input-group');
+    pressureWithdrawLimitInputGroup.append(pressureWithdrawLimitInput, pressureWithdrawLimitUnit);
+    pressureWithdrawLimitRow.append(pressureWithdrawLimitLabel, pressureWithdrawLimitInputGroup);
+
+    amountWithdrawLimitRow = document.createElement('div');
+    amountWithdrawLimitRow.classList.add('space-storage-settings-row');
+    amountWithdrawLimitLabel = document.createElement('label');
+    amountWithdrawLimitLabel.classList.add('space-storage-settings-label');
+    amountWithdrawLimitLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.maxWithdrawalAmount', 'Max withdrawal amount:');
+    const amountWithdrawLimitInfo = document.createElement('span');
+    amountWithdrawLimitInfo.classList.add('info-tooltip-icon');
+    amountWithdrawLimitInfo.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      amountWithdrawLimitInfo,
+      getSpaceStorageUIText('ui.projects.spaceStorage.maxWithdrawalAmountTooltip', 'When withdrawing this resource from space storage, stop once the destination amount reaches this value. Set to 0 for no amount limit.')
+    );
+    amountWithdrawLimitLabel.appendChild(amountWithdrawLimitInfo);
+    amountWithdrawLimitInput = document.createElement('input');
+    amountWithdrawLimitInput.type = 'text';
+    amountWithdrawLimitInput.inputMode = 'decimal';
+    amountWithdrawLimitInput.classList.add('space-storage-settings-input');
+    wireStringNumberInput(amountWithdrawLimitInput, {
+      datasetKey: 'spaceStorageAmountWithdrawLimit',
+      parseValue: (value) => {
+        const parsed = parseFlexibleNumber(value);
+        return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+      },
+      formatValue: (parsed) => {
+        const normalized = Math.max(0, parsed);
+        return normalized >= 1e6 ? formatNumber(normalized, true, 3) : String(normalized);
+      },
+      onValue: (parsed) => {
+        projectElements[project.name].amountWithdrawLimitDraft = parsed;
+      },
+    });
+    amountWithdrawLimitRow.append(amountWithdrawLimitLabel, amountWithdrawLimitInput);
 
     const reserveScopeRow = document.createElement('div');
     reserveScopeRow.classList.add('space-storage-settings-row');
@@ -671,7 +778,10 @@ function renderSpaceStorageUI(project, container) {
       capModeRow,
       capValueRow,
       transferWeightRow,
+      limitBiomassDensityWithdrawalsRow,
       respectImportLimitsRow,
+      pressureWithdrawLimitRow,
+      amountWithdrawLimitRow,
       reserveModeRow,
       reserveValueRow,
       reserveScopeRow,
@@ -783,6 +893,9 @@ function renderSpaceStorageUI(project, container) {
       }
       project.setResourceTransferWeight(key, projectElements[project.name].transferWeightDraft);
       project.setRespectImportProjectLimits(key, projectElements[project.name].respectImportLimitsDraft === true);
+      project.setLimitWithdrawalsToMaxBiomassDensity(key, projectElements[project.name].limitBiomassDensityWithdrawalsDraft === true);
+      project.setPressureWithdrawLimitPa(key, projectElements[project.name].pressureWithdrawLimitDraft);
+      project.setAmountWithdrawLimit(key, projectElements[project.name].amountWithdrawLimitDraft);
       projectElements[project.name].capDraftDirty = false;
       projectElements[project.name].reserveDraftDirty = false;
       closeCapWindow();
@@ -850,6 +963,9 @@ function renderSpaceStorageUI(project, container) {
     respectImportLimitsCheckbox.addEventListener('change', () => {
       projectElements[project.name].respectImportLimitsDraft = respectImportLimitsCheckbox.checked;
     });
+    limitBiomassDensityWithdrawalsCheckbox.addEventListener('change', () => {
+      projectElements[project.name].limitBiomassDensityWithdrawalsDraft = limitBiomassDensityWithdrawalsCheckbox.checked;
+    });
   }
 
   const openCapWindow = (resourceKey, label) => {
@@ -865,6 +981,9 @@ function renderSpaceStorageUI(project, container) {
     projectElements[project.name].reserveDraftDirty = false;
     projectElements[project.name].transferWeightDraft = project.getResourceTransferWeight(resourceKey);
     projectElements[project.name].respectImportLimitsDraft = project.shouldRespectImportProjectLimits(resourceKey);
+    projectElements[project.name].limitBiomassDensityWithdrawalsDraft = project.shouldLimitWithdrawalsToMaxBiomassDensity(resourceKey);
+    projectElements[project.name].pressureWithdrawLimitDraft = project.getPressureWithdrawLimitPa(resourceKey);
+    projectElements[project.name].amountWithdrawLimitDraft = project.getAmountWithdrawLimit(resourceKey);
     capModeSelect.value = capSetting.mode;
     capValueInput.dataset.spaceStorageCap = String(capSetting.value || 0);
     capValueInput.value = capSetting.mode === 'percent' || capSetting.mode === 'weight'
@@ -888,7 +1007,20 @@ function renderSpaceStorageUI(project, container) {
     scopeTransfersCheckbox.checked = scope.transfers === true;
     scopeConsumptionCheckbox.checked = scope.consumption === true;
     respectImportLimitsCheckbox.checked = projectElements[project.name].respectImportLimitsDraft === true;
+    limitBiomassDensityWithdrawalsCheckbox.checked = projectElements[project.name].limitBiomassDensityWithdrawalsDraft === true;
+    const pressureWithdrawLimit = projectElements[project.name].pressureWithdrawLimitDraft;
+    pressureWithdrawLimitInput.dataset.spaceStoragePressureWithdrawLimit = String(pressureWithdrawLimit);
+    pressureWithdrawLimitInput.value = formatNumber(Math.max(0, pressureWithdrawLimit), true, 2);
+    const amountWithdrawLimit = projectElements[project.name].amountWithdrawLimitDraft;
+    amountWithdrawLimitInput.dataset.spaceStorageAmountWithdrawLimit = String(amountWithdrawLimit);
+    amountWithdrawLimitInput.value = amountWithdrawLimit >= 1e6
+      ? formatNumber(Math.max(0, amountWithdrawLimit), true, 3)
+      : String(Math.max(0, amountWithdrawLimit));
+    limitBiomassDensityWithdrawalsRow.style.display = resourceKey === 'biomass' ? '' : 'none';
     respectImportLimitsRow.style.display = SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES.has(resourceKey) ? '' : 'none';
+    pressureWithdrawLimitRow.style.display = (SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES.has(resourceKey)
+      && !(resourceKey === 'hydrogen' && project.hydrogenTransferTarget === 'colony')) ? '' : 'none';
+    amountWithdrawLimitRow.style.display = SPACE_STORAGE_UI_AMOUNT_LIMIT_RESOURCES.has(resourceKey) ? '' : 'none';
     updateCapInputState();
     updateReserveInputState();
     updateCapResourceValue();
@@ -970,6 +1102,7 @@ function renderSpaceStorageUI(project, container) {
     });
 
     let waterSelect;
+    let hydrogenSelect;
     if (opt.resource === 'liquidWater') {
       waterSelect = document.createElement('select');
       waterSelect.id = `${project.name}-water-destination`;
@@ -988,6 +1121,23 @@ function renderSpaceStorageUI(project, container) {
         }
       });
       textSpan.append(' ', waterSelect);
+    }
+    if (opt.resource === 'hydrogen') {
+      hydrogenSelect = document.createElement('select');
+      hydrogenSelect.id = `${project.name}-hydrogen-destination`;
+      hydrogenSelect.style.fontSize = '12px';
+      const atmosphereOpt = document.createElement('option');
+      atmosphereOpt.value = 'atmospheric';
+      atmosphereOpt.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.atmosphere', 'Atmosphere');
+      const colonyOpt = document.createElement('option');
+      colonyOpt.value = 'colony';
+      colonyOpt.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.colony', 'Colony');
+      hydrogenSelect.append(atmosphereOpt, colonyOpt);
+      hydrogenSelect.addEventListener('change', e => {
+        project.hydrogenTransferTarget = e.target.value === 'colony' ? 'colony' : 'atmospheric';
+        updateSpaceStorageUI(project);
+      });
+      textSpan.append(' ', hydrogenSelect);
     }
 
     if (biomassInfo) {
@@ -1050,7 +1200,8 @@ function renderSpaceStorageUI(project, container) {
         ...(projectElements[project.name]?.resourceItems || {}),
         [opt.resource]: resourceItem
       },
-      ...(opt.resource === 'liquidWater' ? { waterDestinationSelect: waterSelect } : {})
+      ...(opt.resource === 'liquidWater' ? { waterDestinationSelect: waterSelect } : {}),
+      ...(opt.resource === 'hydrogen' ? { hydrogenDestinationSelect: hydrogenSelect } : {})
     };
   });
 
@@ -1188,9 +1339,17 @@ function renderSpaceStorageUI(project, container) {
     reserveValueLabel,
     transferWeightInput,
     transferWeightLabel,
+    limitBiomassDensityWithdrawalsRow,
+    limitBiomassDensityWithdrawalsCheckbox,
     respectImportLimitsRow,
     respectImportLimitsCheckbox,
     respectImportLimitsLabel,
+    pressureWithdrawLimitRow,
+    pressureWithdrawLimitInput,
+    pressureWithdrawLimitLabel,
+    amountWithdrawLimitRow,
+    amountWithdrawLimitInput,
+    amountWithdrawLimitLabel,
     scopeExpansionsCheckbox,
     scopeTransfersCheckbox,
     scopeConsumptionCheckbox,
@@ -1228,11 +1387,56 @@ function updateSpaceStorageUI(project) {
   if (els.shipAutoStartContainer && els.prioritizeRowContainer) {
     const display = projectManager && typeof projectManager.isBooleanFlagSet === 'function' &&
       projectManager.isBooleanFlagSet('automateSpecialProjects') ? 'flex' : 'none';
-    els.shipAutoStartContainer.style.display = display;
+    els.shipAutoStartContainer.style.display = project.isTeleporterTransferActive() ? 'none' : display;
     els.prioritizeRowContainer.style.display = display;
   }
   if (els.shipAutoStartLabel) {
     els.shipAutoStartLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.autoStartShips', 'Auto Start Ships');
+  }
+  if (els.teleporterRunText) {
+    els.teleporterRunText.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.runTeleporters', 'Run Teleporters');
+  }
+  if (els.transferMethodContainer && els.transferMethodSelect) {
+    const unlocked = project.isTeleporterTransferUnlocked();
+    els.transferMethodContainer.style.display = unlocked ? 'flex' : 'none';
+    if (unlocked) {
+      const method = project.isTeleporterTransferActive() ? 'teleporters' : 'spaceships';
+      if (els.transferMethodSelect.value !== method) {
+        els.transferMethodSelect.value = method;
+      }
+      const showTeleporters = method === 'teleporters';
+      if (els.shipAssignmentContainer) {
+        els.shipAssignmentContainer.style.display = showTeleporters ? 'none' : '';
+      }
+      if (els.teleporterControls) {
+        els.teleporterControls.style.display = showTeleporters ? 'flex' : 'none';
+      }
+      if (els.teleporterRunCheckbox) {
+        els.teleporterRunCheckbox.checked = project.teleporterRun === true;
+      }
+      if (els.teleporterRateInput) {
+        els.teleporterRateInput.dataset.teleporterTransferRate = String(project.teleporterTransferRate || 0);
+        if (document.activeElement !== els.teleporterRateInput) {
+          const rate = project.teleporterTransferRate || 0;
+          els.teleporterRateInput.value = rate >= 1e6 ? formatNumber(rate, true, 3) : String(rate);
+        }
+      }
+      if (els.teleporterRateBasisSelect) {
+        if (els.teleporterRateBasisSelect.value !== project.teleporterTransferRateBasis) {
+          els.teleporterRateBasisSelect.value = project.teleporterTransferRateBasis;
+        }
+      }
+    } else {
+      if (els.shipAssignmentContainer) {
+        els.shipAssignmentContainer.style.display = '';
+      }
+      if (els.teleporterControls) {
+        els.teleporterControls.style.display = 'none';
+      }
+      if (els.teleporterRunCheckbox) {
+        els.teleporterRunCheckbox.checked = project.teleporterRun === true;
+      }
+    }
   }
   if (els.artificialEcosystemsLabel) {
     els.artificialEcosystemsLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.artificialEcosystems', 'Artificial Ecosystems');
@@ -1246,19 +1450,19 @@ function updateSpaceStorageUI(project) {
   if (els.kesslerWarning && els.kesslerWarningText) {
     const hazardActive = hazardManager.parameters.kessler && !hazardManager.kesslerHazard.isCleared();
     const isCollapsed = els.storageCard?.classList?.contains('collapsed');
-    if (hazardActive && !isCollapsed) {
+    if (hazardActive && !isCollapsed && !project.isTeleporterTransferActive()) {
       const failureChance = project.getKesslerFailureChance();
       const percent = Math.max(0, Math.min(1, failureChance)) * 100;
       if (percent <= 0) {
         els.kesslerWarning.style.display = 'none';
-        return;
+      } else {
+        els.kesslerWarningText.textContent = getSpaceStorageUIText(
+          'ui.projects.spaceStorage.kesslerWarning',
+          'Kessler Skies: {value}% chance of project failure.',
+          { value: formatNumber(percent, false, 2) }
+        );
+        els.kesslerWarning.style.display = 'flex';
       }
-      els.kesslerWarningText.textContent = getSpaceStorageUIText(
-        'ui.projects.spaceStorage.kesslerWarning',
-        'Kessler Skies: {value}% chance of project failure.',
-        { value: formatNumber(percent, false, 2) }
-      );
-      els.kesslerWarning.style.display = 'flex';
     } else {
       els.kesslerWarning.style.display = 'none';
     }
@@ -1367,6 +1571,12 @@ function updateSpaceStorageUI(project) {
       && project.selectedResources.some(entry => entry?.resource === 'liquidWater');
     els.waterDestinationSelect.style.display = hasWaterSelected ? '' : 'none';
   }
+  if (els.hydrogenDestinationSelect) {
+    els.hydrogenDestinationSelect.value = project.hydrogenTransferTarget === 'colony' ? 'colony' : 'atmospheric';
+    const hasHydrogenSelected = Array.isArray(project.selectedResources)
+      && project.selectedResources.some(entry => entry?.resource === 'hydrogen');
+    els.hydrogenDestinationSelect.style.display = hasHydrogenSelected ? '' : 'none';
+  }
   if (els.transferButtons) {
     const withdrawalDisabled = project.isWithdrawalDisabled && project.isWithdrawalDisabled();
     storageResourceOptions.forEach(opt => {
@@ -1407,6 +1617,14 @@ function updateSpaceStorageUI(project) {
           tooltipText = project.waterWithdrawTarget === 'surface'
             ? getSpaceStorageUIText('ui.projects.spaceStorage.surfaceStorageFull', 'Surface storage full')
             : getSpaceStorageUIText('ui.projects.spaceStorage.colonyStorageFull', 'Colony storage full');
+        }
+        if (opt.resource === 'hydrogen' && mode === 'withdraw') {
+          res = project.hydrogenTransferTarget === 'colony'
+            ? resources.colony.colonyHydrogen
+            : resources.atmospheric.hydrogen;
+          tooltipText = project.hydrogenTransferTarget === 'colony'
+            ? getSpaceStorageUIText('ui.projects.spaceStorage.colonyStorageFull', 'Colony storage full')
+            : getSpaceStorageUIText('ui.projects.spaceStorage.atmosphereStorageFull', 'Atmosphere storage full');
         }
         if (tooltip) {
           tooltip.textContent = tooltipText;
@@ -1487,6 +1705,29 @@ function updateSpaceStorageUI(project) {
       els.respectImportLimitsCheckbox.checked = els.respectImportLimitsDraft === true;
       els.respectImportLimitsRow.style.display = SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES.has(els.capResourceKey) ? '' : 'none';
     }
+    if (els.pressureWithdrawLimitInput) {
+      const pressureWithdrawLimit = els.pressureWithdrawLimitDraft || 0;
+      if (els.pressureWithdrawLimitInput !== document.activeElement) {
+        els.pressureWithdrawLimitInput.dataset.spaceStoragePressureWithdrawLimit = String(pressureWithdrawLimit);
+        els.pressureWithdrawLimitInput.value = formatNumber(Math.max(0, pressureWithdrawLimit), true, 2);
+      }
+      els.pressureWithdrawLimitRow.style.display = (SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES.has(els.capResourceKey)
+        && !(els.capResourceKey === 'hydrogen' && project.hydrogenTransferTarget === 'colony')) ? '' : 'none';
+    }
+    if (els.amountWithdrawLimitInput) {
+      const amountWithdrawLimit = els.amountWithdrawLimitDraft || 0;
+      if (els.amountWithdrawLimitInput !== document.activeElement) {
+        els.amountWithdrawLimitInput.dataset.spaceStorageAmountWithdrawLimit = String(amountWithdrawLimit);
+        els.amountWithdrawLimitInput.value = amountWithdrawLimit >= 1e6
+          ? formatNumber(Math.max(0, amountWithdrawLimit), true, 3)
+          : String(Math.max(0, amountWithdrawLimit));
+      }
+      els.amountWithdrawLimitRow.style.display = SPACE_STORAGE_UI_AMOUNT_LIMIT_RESOURCES.has(els.capResourceKey) ? '' : 'none';
+    }
+    if (els.limitBiomassDensityWithdrawalsCheckbox) {
+      els.limitBiomassDensityWithdrawalsCheckbox.checked = els.limitBiomassDensityWithdrawalsDraft === true;
+      els.limitBiomassDensityWithdrawalsRow.style.display = els.capResourceKey === 'biomass' ? '' : 'none';
+    }
     els.capValueInput.disabled = els.capModeSelect.value === 'none' || els.capModeSelect.value === 'remaining';
     const reserveIsNone = els.reserveModeSelect.value === 'none';
     els.reserveValueInput.disabled = reserveIsNone;
@@ -1551,18 +1792,36 @@ function updateSpaceStorageUI(project) {
   }
   if (els.shipProgressButton) {
     if (project.isShipOperationContinuous()) {
-      if (project.shipOperationAutoStart) {
-        els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.status.continuous', 'Continuous');
-        els.shipProgressButton.style.background = '#4caf50';
+      const continuousOperationRunning = project.isTeleporterTransferActive()
+        ? project.teleporterRun === true
+        : project.shipOperationAutoStart === true;
+      if (continuousOperationRunning) {
+        const productivity = project.continuousProductivity ?? 1;
+        const activeMethod = project.isTeleporterTransferActive()
+          ? getSpaceStorageUIText('ui.projects.spaceStorage.teleportersActive', 'Teleporters')
+          : getSpaceStorageUIText('ui.projects.status.continuous', 'Continuous');
+        const withdrawalProductivityLabel = getSpaceStorageUIText(
+          'ui.projects.status.withdrawalProductivitySuffix',
+          ' (Withdrawal Productivity: {value}%)',
+          { value: Math.round(productivity * 100) }
+        );
+        els.shipProgressButton.textContent = `${activeMethod}${withdrawalProductivityLabel}`;
+        els.shipProgressButton.style.background = getStatusColor('success');
       } else {
         els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.status.stopped', 'Stopped');
-        els.shipProgressButton.style.background = '#f44336';
+        els.shipProgressButton.style.background = getStatusColor('failure');
       }
     } else {
       const duration = project.getShipOperationDuration();
       const timeRemaining = Math.ceil(project.shipOperationRemainingTime / 1000);
-      if (project.shipOperationIsActive) {
-        const progressPercent = ((project.shipOperationStartingDuration - project.shipOperationRemainingTime) / project.shipOperationStartingDuration) * 100;
+      if (project.assignedSpaceships <= 0) {
+        els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.noShipsAssigned', 'No ships assigned');
+        els.shipProgressButton.style.background = getStatusColor('failure');
+      } else if (project.shipOperationIsActive) {
+        const rawProgressPercent = ((project.shipOperationStartingDuration - project.shipOperationRemainingTime) / project.shipOperationStartingDuration) * 100;
+        const progressPercent = Number.isFinite(rawProgressPercent)
+          ? Math.max(0, Math.min(100, rawProgressPercent))
+          : 0;
         let statusText = getSpaceStorageUIText('ui.projects.status.inProgressPercent', 'In Progress: {time} seconds remaining ({percent}%)', {
           time: timeRemaining,
           percent: progressPercent.toFixed(2)
@@ -1574,16 +1833,16 @@ function updateSpaceStorageUI(project) {
           });
         }
         els.shipProgressButton.textContent = statusText;
-        els.shipProgressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
+        els.shipProgressButton.style.background = getStatusProgressBackground(progressPercent);
       } else if (project.shipOperationIsPaused) {
         els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.resumeShipTransfers', 'Resume ship transfers ({time}s left)', { time: timeRemaining });
-        els.shipProgressButton.style.background = project.canStartShipOperation() ? '#4caf50' : '#f44336';
+        els.shipProgressButton.style.background = project.canStartShipOperation() ? getStatusColor('success') : getStatusColor('failure');
       } else if (project.canStartShipOperation && project.canStartShipOperation()) {
         els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.startShipTransfers', 'Start ship transfers (Duration: {duration} seconds)', { duration: (duration / 1000).toFixed(2) });
-        els.shipProgressButton.style.background = '#4caf50';
+        els.shipProgressButton.style.background = getStatusColor('success');
       } else {
         els.shipProgressButton.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.startShipTransfers', 'Start ship transfers (Duration: {duration} seconds)', { duration: (duration / 1000).toFixed(2) });
-        els.shipProgressButton.style.background = '#f44336';
+        els.shipProgressButton.style.background = getStatusColor('failure');
       }
     }
   }

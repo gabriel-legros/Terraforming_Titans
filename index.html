@@ -6,9 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
     <!-- Update title maybe? -->
-    <title>Terraforming Titans</title>
+    <title data-i18n="meta.documentTitle">Terraforming Titans</title>
     <link rel="icon" type="image/png" href="assets/images/cover_small.png">
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
+    <link rel="preload" as="image" href="assets/images/hope_credits.webp" type="image/webp">
+    <link rel="preload" as="image" href="assets/images/asteroid.png" type="image/png">
+    <link rel="preload" as="image" href="assets/images/team_leader.webp" type="image/webp">
+    <link rel="preload" as="image" href="assets/images/soldier.webp" type="image/webp">
+    <link rel="preload" as="image" href="assets/images/natural_scientist.webp" type="image/webp">
+    <link rel="preload" as="image" href="assets/images/social_scientist.webp" type="image/webp">
+    <script src="vendor/phaser-3.55.2.min.js"></script>
     <!-- Stylesheets -->
     <link rel="stylesheet" href="src/css/style.css">
     <link rel="stylesheet" href="src/css/day-night-cycleUI.css">
@@ -40,12 +46,17 @@
     <link rel="stylesheet" href="src/css/dark-mode.css">
     <link rel="stylesheet" href="src/css/planet-visualizer.css">
     <link rel="stylesheet" href="src/css/automation.css">
+    <link rel="stylesheet" href="src/css/dark-grey-mode.css">
+    <link rel="stylesheet" href="src/css/oled-black-mode.css">
 
     <script src="src/js/lang/localization.js"></script>
     <script src="src/js/lang/current-language.js"></script>
 
     <!-- Parameter Scripts -->
     <script src="src/js/debug_constants.js"></script>
+    <script src="src/js/build-target.js"></script>
+    <script src="src/js/game-version.js"></script>
+    <script src="src/js/electron-crash-reporting.js"></script>
     <script src="src/js/planet-resource-parameters.js"></script>
     <script src="src/js/planet-parameters.js"></script>
     <script src="src/js/special-seeds.js"></script>
@@ -72,6 +83,9 @@
     <script src="src/js/story/styx.js"></script>
     <script src="src/js/story/zeus.js"></script>
     <script src="src/js/story/zeus-battle.js"></script>
+    <script src="src/js/story/olympus.js"></script>
+    <script src="src/js/story/earth.js"></script>
+    <script src="src/js/story/atlasProject.js"></script>
     <script src="src/js/progress-data.js"></script>
     <script src="src/js/effectable-entity.js"></script>
     <script src="src/js/rwg/rwgHazardHelper.js"></script>
@@ -81,7 +95,7 @@
     <script src="src/js/rwg/rwgEffectsUI.js"></script>
 
     <!-- Core Scripts -->
-    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <script src="vendor/three-0.158.0.min.js"></script>
     <script src="src/js/numbers.js"></script>
     <script src="src/js/globals.js"></script>
     <script src="src/js/world-geometry.js"></script>
@@ -92,6 +106,8 @@
     <script src="src/js/subtab-manager.js"></script>
     <script src="src/js/save-settings/settingsSubtab.js"></script>
     <script src="src/js/save-settings/statisticsSubtab.js"></script>
+    <script src="src/js/save-settings/achievements.js"></script>
+    <script src="src/js/save-settings/achievementsSubtab.js"></script>
     <script src="src/js/save-settings/creditsSubtab.js"></script>
     <script src="src/js/save-settings/save.js"></script>
     <script src="src/js/save-settings/saveSubtab.js"></script>
@@ -125,6 +141,7 @@
     <script src="src/js/buildings/GrapheneFactory.js"></script>
     <script src="src/js/buildings/MassDriver.js"></script>
     <script src="src/js/buildings/ChemicalReactor.js"></script>
+    <script src="src/js/buildings/Pyrolyzer.js"></script>
     <script src="src/js/buildings/Biodome.js"></script>
     <script src="src/js/buildings/AndroidFactory.js"></script>
     <script src="src/js/buildings/AndroidHousing.js"></script>
@@ -136,6 +153,7 @@
     <script src="src/js/buildings/SuperalloyFusionReactor.js"></script>
     <script src="src/js/dyson-manager.js"></script>
     <script src="src/js/buildings/WaterTank.js"></script>
+    <script src="src/js/buildings/HydrogenReservoir.js"></script>
     <script src="src/js/buildings/AntimatterBattery.js"></script>
     <script src="src/js/buildings/LaserCannon.js"></script>
     <script src="src/js/colony/colony.js"></script>
@@ -151,6 +169,7 @@
     <script src="src/js/colony/followersUI.js"></script>
     <script src="src/js/automation/spaceship-automation.js"></script>
     <script src="src/js/automation/life-automation.js"></script>
+    <script src="src/js/automation/automation-encounter-manager.js"></script>
     <script src="src/js/automation/automation-preset-manager-base.js"></script>
     <script src="src/js/automation/building-automation.js"></script>
     <script src="src/js/automation/project-automation.js"></script>
@@ -164,6 +183,7 @@
     <script src="src/js/projects/SpaceshipProject.js"></script>
     <script src="src/js/projects/TerraformingDurationProject.js"></script>
     <script src="src/js/projects/ContinuousExpansionProject.js"></script>
+    <script src="src/js/projects/ProjectAssignmentBase.js"></script>
     <script src="src/js/projects/HephaestusMegaconstructionProject.js"></script>
     <script src="src/js/projects/WorkerCapacityBatchProject.js"></script>
     <script src="src/js/projects/ScannerProject.js"></script>
@@ -174,9 +194,12 @@
     <script src="src/js/projects/SpaceExportProject.js"></script>
     <script src="src/js/projects/SpaceDisposalProject.js"></script>
     <script src="src/js/projects/AndroidProject.js"></script>
+    <script src="src/js/story/BattleOfOlympusProject.js"></script>
+    <script src="src/js/projects/MetalSalvagingProject.js"></script>
     <script src="src/js/projects/DeeperMiningProject.js"></script>
     <script src="src/js/projects/UndergroundExpansionProject.js"></script>
     <script src="src/js/projects/ArtificialSkyProject.js"></script>
+    <script src="src/js/story/StellarEngineProject.js"></script>
     <script src="src/js/projects/ArtificialCrustProject.js"></script>
     <script src="src/js/projects/AerostatStructuralNetProject.js"></script>
     <script src="src/js/projects/PlanetaryThrustersProject.js"></script>
@@ -184,12 +207,17 @@
     <script src="src/js/projects/DiskworldTerraformingProject.js"></script>
     <script src="src/js/projects/SpaceStorageProject.js"></script>
     <script src="src/js/projects/OrbitalRingProject.js"></script>
+    <script src="src/js/projects/BirchWorldProject.js"></script>
     <script src="src/js/projects/orbitalRingUI.js"></script>
     <script src="src/js/projects/spaceStorageUI.js"></script>
     <script src="src/js/projects/CargoRocketProject.js"></script>
     <script src="src/js/projects/ImportColonistsProject.js"></script>
-    <script src="src/js/projects/CultSecurityProject.js"></script>
-    <script src="src/js/projects/ZeusBattleProject.js"></script>
+    <script src="src/js/story/CultSecurityProject.js"></script>
+    <script src="src/js/story/OlympusFieldWorkshopProject.js"></script>
+    <script src="src/js/story/SelfImprovementProject.js"></script>
+    <script src="src/js/story/OpenTheBoxProject.js"></script>
+    <script src="src/js/story/OlympusThroneRoomProject.js"></script>
+    <script src="src/js/story/ZeusBattleProject.js"></script>
     <script src="src/js/projects/GalacticMarketProject.js"></script>
     <script src="src/js/projects/dysonswarm.js"></script>
     <script src="src/js/projects/dysonsphere.js"></script>
@@ -197,6 +225,8 @@
     <script src="src/js/projects/dysonsphereUI.js"></script>
     <script src="src/js/projects/LiftersProject.js"></script>
     <script src="src/js/projects/WhiteDwarfHarvestersProject.js"></script>
+    <script src="src/js/projects/ArtificialQuasarsProject.js"></script>
+    <script src="src/js/projects/MatrioshkaBrainProject.js"></script>
     <script src="src/js/projects/liftersUI.js"></script>
     <script src="src/js/projects/NuclearAlchemyFurnaceProject.js"></script>
     <script src="src/js/projects/SpaceChemistryProject.js"></script>
@@ -209,10 +239,13 @@
     <script src="src/js/projects/SpaceAntimatterProject.js"></script>
     <script src="src/js/projects/OverpopulationOneillCylindersProject.js"></script>
     <script src="src/js/projects/KeratiHiveProject.js"></script>
+    <script src="src/js/projects/TreeOfLifeProject.js"></script>
     <script src="src/js/projects/SpecializationProject.js"></script>
     <script src="src/js/projects/FoundryWorldProject.js"></script>
     <script src="src/js/projects/BioworldProject.js"></script>
     <script src="src/js/projects/ManufacturingWorldProject.js"></script>
+    <script src="src/js/projects/NanoworldProject.js"></script>
+    <script src="src/js/projects/ResortWorldProject.js"></script>
     <script src="src/js/projects/ImportResourcesProjectUI.js"></script>
     <script src="src/js/projectsUI.js"></script>
     <script src="src/js/research.js"></script>
@@ -255,12 +288,14 @@
     <script src="src/js/terraforming/hazards/garbageHazard.js"></script>
     <script src="src/js/terraforming/hazards/kesslerHazard.js"></script>
     <script src="src/js/terraforming/hazards/pulsarHazard.js"></script>
+    <script src="src/js/terraforming/hazards/debrisDiskHazard.js"></script>
     <script src="src/js/terraforming/hazard.js"></script>
     <script src="src/js/terraforming/hazards/hazardousBiomassUI.js"></script>
     <script src="src/js/terraforming/hazards/hazardousMachineryUI.js"></script>
     <script src="src/js/terraforming/hazards/garbageHazardUI.js"></script>
     <script src="src/js/terraforming/hazards/kesslerHazardUI.js"></script>
     <script src="src/js/terraforming/hazards/pulsarHazardUI.js"></script>
+    <script src="src/js/terraforming/hazards/debrisDiskHazardUI.js"></script>
     <script src="src/js/terraforming/hazardUI.js"></script>
     <script src="src/js/terraforming/terraformingUI.js"></script>
     <script src="src/js/life.js"></script>
@@ -283,13 +318,14 @@
     <script src="src/js/solis.js"></script>
     <script src="src/js/solisUI.js"></script>
     <script src="src/js/wgc/team-member.js"></script>
-    <script src="assets/wgc_ops/operation_stories.js"></script>
     <script src="src/js/wgc/wgc.js"></script>
     <script src="src/js/wgc/wgcUI.js"></script>
     <script src="src/js/game-speed.js"></script>
     <script src="src/js/autobuild.js"></script>
     <script src="src/js/gold-asteroid.js"></script>
     <script src="src/js/space.js"></script>
+    <script src="src/js/space/smbh-shellworld-snapshot.js"></script>
+    <script src="src/js/space/shellworldGravityHelper.js"></script>
     <script src="src/js/space/artificial.js"></script>
     <script src="src/js/space/artificialUI.js"></script>
     <script src="src/js/spaceUI.js"></script>
@@ -313,11 +349,13 @@
     <script src="src/js/rwg/rwgUI.js"></script>
     <script src="src/js/warning.js"></script>
     <script src="src/js/game-effects.js"></script>
+    <script src="src/js/earth-manager.js"></script>
     <script src="src/js/planet-visualizer/core.js"></script>
     <script src="src/js/planet-visualizer/environment.js"></script>
     <script src="src/js/planet-visualizer/lighting.js"></script>
     <script src="src/js/planet-visualizer/clouds.js"></script>
     <script src="src/js/planet-visualizer/ring-shades.js"></script>
+    <script src="src/js/planet-visualizer/heightmaps.js"></script>
     <script src="src/js/planet-visualizer/surface.js"></script>
     <script src="src/js/planet-visualizer/ships.js"></script>
     <script src="src/js/planet-visualizer/debug.js"></script>
@@ -370,6 +408,7 @@
           <div id="pause-container"></div>
           <div id="festival-container"></div>
           <div id="gold-asteroid-container"></div>
+          <div id="pulsar-storm-container"></div>
         </div>
         <div class="resource-container" id="resources-container">
             <!-- Resources will be dynamically inserted here -->
@@ -572,23 +611,38 @@
                                     </div>
                                     <div id="space-stat-unique-value" class="space-stat-value">0</div>
                                 </div>
-                                <div class="space-stat-card">
-                                    <div class="space-stat-label">
-                                        <span data-i18n="ui.space.effectiveWorldsTerraforming">Effective worlds terraformed</span>
-                                        <span id="space-stat-effective-tooltip" class="info-tooltip-icon">&#9432;</span>
-                                    </div>
-                                    <div id="space-stat-effective-value" class="space-stat-value">0</div>
-                                </div>
-                                <div id="space-stat-oneill-card" class="space-stat-card hidden">
-                                    <div class="space-stat-label">
-                                        <span data-i18n="ui.space.oneillCylinders">O'Neill cylinders</span>
-                                        <span id="space-stat-oneill-tooltip" class="info-tooltip-icon">&#9432;</span>
+	                                <div class="space-stat-card">
+	                                    <div class="space-stat-label">
+	                                        <span data-i18n="ui.space.effectiveWorldsTerraforming">Effective worlds terraformed</span>
+	                                        <span id="space-stat-effective-tooltip" class="info-tooltip-icon">&#9432;</span>
+	                                    </div>
+	                                    <div id="space-stat-effective-value" class="space-stat-value">0</div>
+	                                </div>
+	                                <div id="space-stat-oneill-card" class="space-stat-card hidden">
+	                                    <div class="space-stat-label">
+	                                        <span data-i18n="ui.space.oneillCylinders">O'Neill cylinders</span>
+	                                        <span id="space-stat-oneill-tooltip" class="info-tooltip-icon">&#9432;</span>
                                     </div>
                                     <div class="space-stat-value-row">
                                         <div id="space-stat-oneill-value" class="space-stat-value">0.00</div>
                                         <div id="space-stat-oneill-rate" class="space-stat-subvalue">+0.00/hr</div>
                                     </div>
                                 </div>
+	                            </div>
+	                            <div class="space-stats-grid space-stats-population-grid">
+	                                <div class="space-stat-card">
+	                                    <div class="space-stat-label">
+	                                        <span data-i18n="ui.space.galacticPopulation">Galactic population</span>
+	                                        <span id="space-stat-galactic-population-tooltip" class="info-tooltip-icon">&#9432;</span>
+	                                    </div>
+	                                    <div id="space-stat-galactic-population-value" class="space-stat-value">0</div>
+	                                </div>
+	                                <div class="space-stat-card">
+	                                    <div class="space-stat-label">
+	                                        <span data-i18n="ui.space.galacticPopulationCapacity">Galactic population capacity</span>
+	                                    </div>
+	                                    <div id="space-stat-galactic-capacity-value" class="space-stat-value">0</div>
+	                                </div>
                             </div>
                             <div id="space-sliders-section" class="space-sliders-section hidden">
                                 <div class="space-sliders-header">
@@ -606,8 +660,22 @@
                                         </div>
                                         <span id="space-slider-cylinders-hope-tick" class="space-slider-tick">0</span>
                                     </div>
-                                    <div id="space-slider-cylinders-hope-energy" class="space-slider-energy">0 space energy/s</div>
-                                    <div id="space-slider-cylinders-hope-productivity" class="space-slider-productivity">Productivity: 100%</div>
+                                    <div id="space-slider-cylinders-hope-energy" class="space-slider-energy" data-i18n="ui.space.spaceSliders.cylindersHope.energyOff">0 space energy/s</div>
+                                    <div id="space-slider-cylinders-hope-productivity" class="space-slider-productivity" data-i18n="ui.space.spaceSliders.cylindersHope.productivityFull">Productivity: 100%</div>
+                                </div>
+                                <div id="space-slider-megaprojects-coordination-card" class="space-slider-card hidden">
+                                    <div class="space-slider-topline">
+                                        <span data-i18n="ui.space.spaceSliders.megaprojectsCoordination.label">Megaprojects Coordination</span>
+                                        <span id="space-slider-megaprojects-coordination-tooltip" class="info-tooltip-icon">&#9432;</span>
+                                    </div>
+                                    <div class="space-slider-controls">
+                                        <div class="space-slider-range-wrap">
+                                            <input id="space-slider-megaprojects-coordination-input" type="range" min="25" max="75" step="5" value="50" />
+                                            <div id="space-slider-megaprojects-coordination-notches" class="space-slider-notches"></div>
+                                        </div>
+                                        <span id="space-slider-megaprojects-coordination-allocation" class="space-slider-tick space-slider-allocation">50 / 50</span>
+                                    </div>
+                                    <div id="space-slider-megaprojects-coordination-summary" class="space-slider-energy" data-i18n="ui.space.spaceSliders.megaprojectsCoordination.summaryDefault">Megaprojects: 50% (x1 speed) | Advanced research: 50% (x1 gain)</div>
                                 </div>
                             </div>
                         </section>
@@ -677,7 +745,7 @@
                     <div class="solis-container">
                         <div class="solis-header">
                             <h2 data-i18n="ui.hope.solisQuests">Solis Quests</h2>
-                            <div id="solis-points-display"><span data-i18n="ui.hope.solisPoints">Solis Points:</span> <span id="solis-points-value">0</span></div>
+                            <div id="solis-points-display"><span data-i18n="ui.hope.solisPoints">Solis Points:</span> <span id="solis-points-value">0</span><span id="solis-points-sidebar-toggle-container"></span></div>
                         </div>
                         <div class="solis-quest-area">
                             <div id="solis-quest-text"></div>
@@ -805,11 +873,13 @@
             <div class="settings-subtab active" data-subtab="save-settings-subtab" data-i18n="ui.settings.save">Save</div>
             <div class="settings-subtab" data-subtab="preferences-settings-subtab" data-i18n="ui.settings.settings">Settings</div>
             <div class="settings-subtab" data-subtab="statistics-settings-subtab" data-i18n="ui.settings.statistics">Statistics</div>
+            <div class="settings-subtab" data-subtab="achievements-settings-subtab" data-i18n="ui.settings.achievements.tab">Achievements</div>
             <div class="settings-subtab" data-subtab="credits-settings-subtab" data-i18n="ui.settings.credits">Credits</div>
           </div>
           <div class="subtab-content-wrapper settings-subtab-content-wrapper">
             <div id="save-settings-subtab" class="settings-subtab-content active">
               <h2 data-i18n="ui.settings.save">Save</h2>
+              <p id="save-storage-warning" class="save-storage-warning" data-i18n="ui.settings.saveStorageWarning">Some browsers (especially Brave) or aggressive ad blockers can prevent save to local storage or purge them. Please be careful and use Save To File if you are not sure.</p>
               <div class="save-slots">
                   <!-- ... table ... -->
                   <table>
@@ -821,8 +891,11 @@
                           </tr>
                       </thead>
                       <tbody>
-                          <tr>
-                            <td data-i18n="ui.settings.autosave">Autosave</td>
+                        <tr>
+                            <td class="save-slot-name-cell">
+                                <span id="autosave-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
+                                <span data-i18n="ui.settings.autosave">Autosave</span>
+                            </td>
                             <td id="autosave-date" data-i18n="ui.common.empty">Empty</td>
                             <td>
                                 <button class="save-button" data-slot="autosave" data-i18n="ui.common.save">Save</button>
@@ -830,8 +903,23 @@
                                 <button class="delete-button" data-slot="autosave" data-i18n="ui.common.delete">Delete</button>
                             </td>
                         </tr>
+                        <tr id="exitsave-row" class="build-target-hidden" hidden>
+                            <td class="save-slot-name-cell">
+                                <span id="exitsave-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
+                                <span data-i18n="ui.settings.exitsave">Exit Save</span>
+                            </td>
+                            <td id="exitsave-date" data-i18n="ui.common.empty">Empty</td>
+                            <td>
+                                <button class="save-button" data-slot="exitsave" data-i18n="ui.common.save">Save</button>
+                                <button class="load-button" data-slot="exitsave" data-i18n="ui.common.load">Load</button>
+                                <button class="delete-button" data-slot="exitsave" data-i18n="ui.common.delete">Delete</button>
+                            </td>
+                        </tr>
                         <tr id="pretravel-row" class="hidden">
-                            <td data-i18n="ui.settings.pretravel">Pre-travel</td>
+                            <td class="save-slot-name-cell">
+                                <span id="pretravel-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
+                                <span data-i18n="ui.settings.pretravel">Pre-travel</span>
+                            </td>
                             <td id="pretravel-date" data-i18n="ui.common.empty">Empty</td>
                             <td>
                                 <button class="save-button" data-slot="pretravel" disabled data-i18n="ui.common.save">Save</button>
@@ -845,7 +933,11 @@
                             </td>
                         </tr>
                         <tr>
-                            <td data-i18n="ui.settings.slot1">Slot 1</td>
+                            <td class="save-slot-name-cell">
+                                <span id="slot1-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
+                                <span id="slot1-label" class="save-slot-name-text" data-i18n="ui.settings.slot1">Slot 1</span>
+                                <button type="button" class="save-slot-rename-button" data-slot="slot1" data-i18n-aria-label="ui.settings.renameSaveSlotTitle" aria-label="Rename save slot"></button>
+                            </td>
                             <td id="slot1-date" data-i18n="ui.common.empty">Empty</td>
                             <td>
                                 <button class="save-button" data-slot="slot1" data-i18n="ui.common.save">Save</button>
@@ -855,7 +947,11 @@
                         </tr>
                         <!-- ... other slots ... -->
                          <tr>
-                              <td data-i18n="ui.settings.slot2">Slot 2</td>
+                              <td class="save-slot-name-cell">
+                                  <span id="slot2-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
+                                  <span id="slot2-label" class="save-slot-name-text" data-i18n="ui.settings.slot2">Slot 2</span>
+                                  <button type="button" class="save-slot-rename-button" data-slot="slot2" data-i18n-aria-label="ui.settings.renameSaveSlotTitle" aria-label="Rename save slot"></button>
+                              </td>
                               <td id="slot2-date" data-i18n="ui.common.empty">Empty</td>
                               <td>
                                   <button class="save-button" data-slot="slot2" data-i18n="ui.common.save">Save</button>
@@ -864,7 +960,11 @@
                               </td>
                           </tr>
                           <tr>
-                              <td data-i18n="ui.settings.slot3">Slot 3</td>
+                              <td class="save-slot-name-cell">
+                                  <span id="slot3-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
+                                  <span id="slot3-label" class="save-slot-name-text" data-i18n="ui.settings.slot3">Slot 3</span>
+                                  <button type="button" class="save-slot-rename-button" data-slot="slot3" data-i18n-aria-label="ui.settings.renameSaveSlotTitle" aria-label="Rename save slot"></button>
+                              </td>
                               <td id="slot3-date" data-i18n="ui.common.empty">Empty</td>
                               <td>
                                   <button class="save-button" data-slot="slot3" data-i18n="ui.common.save">Save</button>
@@ -873,7 +973,11 @@
                               </td>
                           </tr>
                           <tr>
-                              <td data-i18n="ui.settings.slot4">Slot 4</td>
+                              <td class="save-slot-name-cell">
+                                  <span id="slot4-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
+                                  <span id="slot4-label" class="save-slot-name-text" data-i18n="ui.settings.slot4">Slot 4</span>
+                                  <button type="button" class="save-slot-rename-button" data-slot="slot4" data-i18n-aria-label="ui.settings.renameSaveSlotTitle" aria-label="Rename save slot"></button>
+                              </td>
                               <td id="slot4-date" data-i18n="ui.common.empty">Empty</td>
                               <td>
                                   <button class="save-button" data-slot="slot4" data-i18n="ui.common.save">Save</button>
@@ -882,7 +986,11 @@
                               </td>
                           </tr>
                           <tr>
-                              <td data-i18n="ui.settings.slot5">Slot 5</td>
+                              <td class="save-slot-name-cell">
+                                  <span id="slot5-completed-star" class="save-slot-completed-star" aria-hidden="true" hidden>&#9733;</span>
+                                  <span id="slot5-label" class="save-slot-name-text" data-i18n="ui.settings.slot5">Slot 5</span>
+                                  <button type="button" class="save-slot-rename-button" data-slot="slot5" data-i18n-aria-label="ui.settings.renameSaveSlotTitle" aria-label="Rename save slot"></button>
+                              </td>
                               <td id="slot5-date" data-i18n="ui.common.empty">Empty</td>
                               <td>
                                   <button class="save-button" data-slot="slot5" data-i18n="ui.common.save">Save</button>
@@ -903,6 +1011,22 @@
                             <tr>
                               <td colspan="3">
                                 <button id="pause-button" data-i18n="ui.common.pause">Pause</button>
+                                <button id="electron-exit-game-button" class="build-target-hidden" hidden data-i18n="ui.settings.exitGame">Exit Game</button>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colspan="3">
+                                <a id="discord-button" class="settings-discord-button" href="https://discord.gg/tXFxzT844n" target="_blank" rel="noopener noreferrer">
+                                  <svg class="settings-discord-icon" viewBox="0 -28.5 256 256" aria-hidden="true" focusable="false">
+                                    <path d="M216.856339,16.5966031 C200.285002,8.84328665 182.566144,3.2084988 164.041564,0 C161.766523,4.11318106 159.108624,9.64549908 157.276099,14.0464379 C137.583995,11.0849896 118.072967,11.0849896 98.7430163,14.0464379 C96.9108417,9.64549908 94.1925838,4.11318106 91.8971895,0 C73.3526068,3.2084988 55.6133949,8.86399117 39.0420583,16.6376612 C5.61752293,67.146514 -3.4433191,116.400813 1.08711069,164.955721 C23.2560196,181.510915 44.7403634,191.567697 65.8621325,198.148576 C71.0772151,190.971126 75.7283628,183.341335 79.7352139,175.300261 C72.104019,172.400575 64.7949724,168.822202 57.8887866,164.667963 C59.7209612,163.310589 61.5131304,161.891452 63.2445898,160.431257 C105.36741,180.133187 151.134928,180.133187 192.754523,160.431257 C194.506336,161.891452 196.298154,163.310589 198.110326,164.667963 C191.183787,168.842556 183.854737,172.420929 176.223542,175.320965 C180.230393,183.341335 184.861538,190.991831 190.096624,198.16893 C211.238746,191.588051 232.743023,181.531619 254.911949,164.955721 C260.227747,108.668201 245.831087,59.8662432 216.856339,16.5966031 Z M85.4738752,135.09489 C72.8290281,135.09489 62.4592217,123.290155 62.4592217,108.914901 C62.4592217,94.5396472 72.607595,82.7145587 85.4738752,82.7145587 C98.3405064,82.7145587 108.709962,94.5189427 108.488529,108.914901 C108.508531,123.290155 98.3405064,135.09489 85.4738752,135.09489 Z M170.525237,135.09489 C157.88039,135.09489 147.510584,123.290155 147.510584,108.914901 C147.510584,94.5396472 157.658606,82.7145587 170.525237,82.7145587 C183.391518,82.7145587 193.761324,94.5189427 193.539891,108.914901 C193.539891,123.290155 183.391518,135.09489 170.525237,135.09489 Z"></path>
+                                  </svg>
+                                  <span data-i18n="ui.settings.discord">Discord</span>
+                                </a>
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colspan="3">
+                                <div id="game-version-label" class="settings-game-version"></div>
                               </td>
                             </tr>
                       </tbody>
@@ -913,7 +1037,13 @@
               <h2 data-i18n="ui.settings.settings">Settings</h2>
               <div class="settings-grid">
                 <label class="settings-option">
-                  <input type="checkbox" id="keep-tab-running-audio-toggle"> <span data-i18n="ui.settings.whiteNoiseLabel">Use white noise to keep tab active</span> <span id="white-noise-tooltip" class="info-tooltip-icon">&#9432;</span>
+                  <span data-i18n="ui.settings.themeMode">Theme</span>
+                  <select id="dark-mode-select">
+                    <option value="light" data-i18n="ui.settings.themeModes.light">Light</option>
+                    <option value="darkGrey" data-i18n="ui.settings.themeModes.darkGrey">Dark grey</option>
+                    <option value="darkBlue" data-i18n="ui.settings.themeModes.darkBlue">Dark blue</option>
+                    <option value="oledBlack" data-i18n="ui.settings.themeModes.oledBlack">OLED Black</option>
+                  </select>
                 </label>
                 <label class="settings-option">
                   <span data-i18n="ui.settings.autosaveInterval">Autosave interval</span>
@@ -929,22 +1059,60 @@
                   </select>
                 </label>
                 <label class="settings-option">
+                  <span data-i18n="ui.settings.framerate">Framerate</span>
+                  <select id="framerate-select">
+                    <option value="10" data-i18n="ui.settings.framerates.fps10">10 FPS</option>
+                    <option value="20" data-i18n="ui.settings.framerates.fps20">20 FPS</option>
+                    <option value="30" selected data-i18n="ui.settings.framerates.fps30">30 FPS</option>
+                  </select>
+                </label>
+                <label id="electron-fullscreen-settings-option" class="settings-option build-target-hidden" hidden>
+                  <input type="checkbox" id="electron-fullscreen-toggle"> <span data-i18n="ui.settings.fullscreen">Fullscreen</span>
+                </label>
+                <label id="electron-ui-scale-settings-option" class="settings-option build-target-hidden" hidden>
+                  <span data-i18n="ui.settings.uiScale">UI scale</span>
+                  <select id="electron-ui-scale-select">
+                    <option value="0.75" data-i18n="ui.settings.uiScales.p75">75%</option>
+                    <option value="0.9" data-i18n="ui.settings.uiScales.p90">90%</option>
+                    <option value="1" selected data-i18n="ui.settings.uiScales.p100">100%</option>
+                    <option value="1.1" data-i18n="ui.settings.uiScales.p110">110%</option>
+                    <option value="1.25" data-i18n="ui.settings.uiScales.p125">125%</option>
+                    <option value="1.5" data-i18n="ui.settings.uiScales.p150">150%</option>
+                  </select>
+                </label>
+                <label id="white-noise-settings-option" class="settings-option build-target-hidden" hidden>
+                  <input type="checkbox" id="keep-tab-running-audio-toggle"> <span data-i18n="ui.settings.whiteNoiseLabel">Use white noise to keep tab active</span> <span id="white-noise-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+                <label class="settings-option">
                   <input type="checkbox" id="terraforming-substeps-toggle"> <span data-i18n="ui.settings.terraformingSubsteps">Use 10ms terraforming substeps</span> <span id="terraforming-substeps-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
                 <label class="settings-option">
                   <input type="checkbox" id="celsius-toggle"> <span data-i18n="ui.settings.celsius">Display temperature in Celsius</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="dark-mode-toggle"> <span data-i18n="ui.settings.darkMode">Enable Dark Mode</span>
+                  <span data-i18n="ui.settings.colorblindPalette">Status colours</span>
+                  <select id="colorblind-palette-select">
+                    <option value="redGreen" data-i18n="ui.settings.colorblindPalettes.redGreen">Red / Green</option>
+                    <option value="blueOrange" data-i18n="ui.settings.colorblindPalettes.blueOrange">Blue / Orange</option>
+                    <option value="purpleYellow" data-i18n="ui.settings.colorblindPalettes.purpleYellow">Purple / Yellow</option>
+                    <option value="cyanMagenta" data-i18n="ui.settings.colorblindPalettes.cyanMagenta">Cyan / Magenta</option>
+                    <option value="grayscale" data-i18n="ui.settings.colorblindPalettes.grayscale">Grayscale</option>
+                  </select>
                 </label>
                 <label class="settings-option">
                   <input type="checkbox" id="show-space-storage-in-default-panel-toggle"> <span data-i18n="ui.settings.showSpaceResources">Show space resources in default resource panel</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="unlock-alert-toggle"> <span data-i18n="ui.settings.disableUnlockAlerts">Disable unlock alerts</span>
+                  <input type="checkbox" id="net-resource-rate-display-toggle"> <span data-i18n="ui.settings.netResourceRateDisplay">Net resource rate display</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="day-night-toggle"> <span data-i18n="ui.settings.disableDayNightCycle">Disable day-night cycle</span> <span id="day-night-tooltip" class="info-tooltip-icon">&#9432;</span>
+                  <input type="checkbox" id="highlight-full-resource-caps-toggle"> <span data-i18n="ui.settings.highlightFullResourceCaps">Colour full resource values and caps</span>
+                </label>
+                <label class="settings-option">
+                  <span data-i18n="ui.settings.resourceDepletionWarningSeconds">Resource depletion warning</span> <input type="text" id="resource-depletion-warning-seconds-input" value="120">
+                </label>
+                <label class="settings-option">
+                  <input type="checkbox" id="unlock-alert-toggle"> <span data-i18n="ui.settings.disableUnlockAlerts">Disable unlock alerts</span>
                 </label>
                 <label class="settings-option">
                   <input type="checkbox" id="preserve-project-auto-start-toggle"> <span data-i18n="ui.settings.preserveProjectAutoStart">Preserve project auto-start between worlds</span> <span id="preserve-project-auto-start-tooltip" class="info-tooltip-icon">&#9432;</span>
@@ -965,7 +1133,10 @@
                   <input type="checkbox" id="autobuild-set-active-toggle" checked> <span data-i18n="ui.settings.autobuildSetActive">Checking autobuild also checks Set Active to Target</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="colony-upgrade-uncheck-autobuild-toggle"> <span data-i18n="ui.settings.colonyUpgradeUnchecksAutobuild">Checking Colony Upgrade unchecks autobuild</span>
+                  <input type="checkbox" id="colony-upgrade-uncheck-autobuild-toggle"> <span data-i18n="ui.settings.colonyUpgradeUnchecksAutobuild">Upgrading any building also unchecks autobuild</span>
+                </label>
+                <label class="settings-option">
+                  <input type="checkbox" id="autobuild-ignore-auto-upgrade-colonies-toggle"> <span data-i18n="ui.settings.autobuildIgnoreAutoUpgradeColonies">Autobuild ignores auto-upgrade colonies</span>
                 </label>
                 <label class="settings-option">
                   <input type="checkbox" id="round-building-toggle"> <span data-i18n="ui.settings.roundBuildingConstruction">Round building construction</span> <span id="round-building-tooltip" class="info-tooltip-icon">&#9432;</span>
@@ -980,23 +1151,195 @@
                   <input type="checkbox" id="suppress-faith-toggle"> <span data-i18n="ui.settings.suppressFaith">Suppress Faith</span> <span id="suppress-faith-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
               </div>
+              <h3 class="settings-section-title" data-i18n="ui.settings.difficultyTitle">Difficulty</h3>
+              <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-lock">
+                <div class="settings-option difficulty-lock-option">
+                  <span id="difficulty-lock-status" data-i18n="ui.settings.difficultyUnlockedStatus">Difficulty settings are not locked.</span>
+                  <button type="button" id="lock-difficulty-settings-button" data-i18n="ui.settings.lockDifficultySettings">Lock difficulty settings</button>
+                </div>
+              </div>
+              <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-toggles">
+                <label class="settings-option difficulty-toggle-option">
+                  <input type="checkbox" id="day-night-toggle"> <span data-i18n="ui.settings.disableDayNightCycle">Disable day-night cycle</span> <span id="day-night-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+                <label class="settings-option difficulty-toggle-option">
+                  <input type="checkbox" id="early-advanced-oversight-toggle"> <span data-i18n="ui.settings.earlyAdvancedOversight">Early Advanced Oversight</span> <span id="early-advanced-oversight-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+                <label class="settings-option difficulty-toggle-option">
+                  <input type="checkbox" id="disable-fusion-consumption-scaling-toggle"> <span data-i18n="ui.settings.disableFusionConsumptionScaling">Disable fusion consumption scaling</span> <span id="disable-fusion-consumption-scaling-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+                <label class="settings-option difficulty-toggle-option">
+                  <input type="checkbox" id="disable-speed-controls-toggle"> <span data-i18n="ui.settings.disableSpeedControls">Disable Speed Controls</span> <span id="disable-speed-controls-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+                <label class="settings-option difficulty-toggle-option">
+                  <input type="checkbox" id="immigration-pool-toggle"> <span data-i18n="ui.settings.immigrationPool">Immigration pool</span> <span id="immigration-pool-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+                <label class="settings-option difficulty-toggle-option">
+                  <input type="checkbox" id="unfulfilled-maintenance-penalties-toggle"> <span data-i18n="ui.settings.unfulfilledMaintenancePenalties">Unfulfilled Maintenance Penalties</span> <span id="unfulfilled-maintenance-penalties-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+                <label class="settings-option difficulty-toggle-option">
+                  <input type="checkbox" id="factory-heating-toggle"> <span data-i18n="ui.settings.factoryHeating">Factory heating</span> <span id="factory-heating-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+                <label class="settings-option difficulty-toggle-option">
+                  <input type="checkbox" id="realistic-factory-energy-consumption-toggle"> <span data-i18n="ui.settings.realisticFactoryEnergyConsumption">Realistic factory energy consumption</span> <span id="realistic-factory-energy-consumption-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+              </div>
+              <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-inputs">
+                <label class="settings-option difficulty-multiplier-option">
+                  <span data-i18n="ui.settings.buildingCostMultiplier">Building Cost Multiplier</span> <input type="text" id="building-cost-multiplier-input" value="1">
+                </label>
+                <label class="settings-option difficulty-multiplier-option">
+                  <span data-i18n="ui.settings.researchCostMultiplier">Research multiplier</span> <input type="text" id="research-cost-multiplier-input" value="1">
+                </label>
+                <label class="settings-option difficulty-multiplier-option">
+                  <span data-i18n="ui.settings.workerRequirementMultiplier">Worker Requirement multiplier</span> <input type="text" id="worker-requirement-multiplier-input" value="1">
+                </label>
+                <label class="settings-option difficulty-multiplier-option">
+                  <span data-i18n="ui.settings.projectDurationMultiplier">Projection duration multiplier</span> <input type="text" id="project-duration-multiplier-input" value="1">
+                </label>
+                <label class="settings-option difficulty-multiplier-option">
+                  <span data-i18n="ui.settings.popGrowthMultiplier">Pop growth multiplier</span> <input type="text" id="pop-growth-multiplier-input" value="1">
+                </label>
+                <label class="settings-option difficulty-multiplier-option">
+                  <span data-i18n="ui.settings.lifeGrowthMultiplier">Life growth multiplier</span> <input type="text" id="life-growth-multiplier-input" value="1">
+                </label>
+                <label class="settings-option difficulty-multiplier-option">
+                  <span data-i18n="ui.settings.maintenanceCostMultiplier">Maintenance Cost Multiplier</span> <input type="text" id="maintenance-cost-multiplier-input" value="1">
+                </label>
+                <label class="settings-option difficulty-multiplier-option">
+                  <span class="difficulty-multiplier-label"><span data-i18n="ui.settings.spaceshipEnergyBeforeSpaceElevatorMultiplier">Spaceship energy before Space Elevator</span> <span id="spaceship-energy-before-space-elevator-tooltip" class="info-tooltip-icon">&#9432;</span></span> <input type="text" id="spaceship-energy-before-space-elevator-multiplier-input" value="1">
+                </label>
+                <label class="settings-option difficulty-multiplier-option">
+                  <span class="difficulty-multiplier-label"><span data-i18n="ui.settings.spaceshipEnergyAfterSpaceElevatorMultiplier">Spaceship energy after Space Elevator</span> <span id="spaceship-energy-after-space-elevator-tooltip" class="info-tooltip-icon">&#9432;</span></span> <input type="text" id="spaceship-energy-after-space-elevator-multiplier-input" value="1">
+                </label>
+              </div>
+              <div class="difficulty-spoiler-sections">
+                <details class="difficulty-spoiler-section">
+                  <summary data-i18n="ui.settings.postMarsDifficulty">Post-Mars</summary>
+                  <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-mixed">
+                    <label class="settings-option difficulty-multiplier-option">
+                      <span data-i18n="ui.settings.advancedResearchMultiplier">Advanced Research Multiplier</span> <input type="text" id="advanced-research-multiplier-input" value="1">
+                    </label>
+                    <label class="settings-option difficulty-multiplier-option">
+                      <span data-i18n="ui.settings.skillPointsGainMultiplier">Skill points gain multiplier</span> <input type="text" id="skill-points-gain-multiplier-input" value="1">
+                    </label>
+                    <label class="settings-option difficulty-multiplier-option">
+                      <span data-i18n="ui.settings.solisPointsGainMultiplier">Solis Points gain multiplier</span> <input type="text" id="solis-points-gain-multiplier-input" value="1">
+                    </label>
+                    <label class="settings-option difficulty-multiplier-option">
+                      <span data-i18n="ui.settings.megaProjectDurationMultiplier">Megaproject duration multiplier</span> <input type="text" id="mega-project-duration-multiplier-input" value="1">
+                    </label>
+                    <label class="settings-option difficulty-multiplier-option">
+                      <span data-i18n="ui.settings.megaProjectCostMultiplier">Megaproject cost multiplier</span> <input type="text" id="mega-project-cost-multiplier-input" value="1">
+                    </label>
+                    <label class="settings-option difficulty-toggle-option">
+                      <input type="checkbox" id="lifters-stripping-cap-toggle"> <span data-i18n="ui.settings.liftersStrippingCap">Lifters stripping cap</span> <span id="lifters-stripping-cap-tooltip" class="info-tooltip-icon">&#9432;</span>
+                    </label>
+                  </div>
+                </details>
+                <details class="difficulty-spoiler-section">
+                  <summary data-i18n="ui.settings.postWorld3Difficulty">Post-World 3</summary>
+                  <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-toggles">
+                    <label class="settings-option difficulty-toggle-option">
+                      <input type="checkbox" id="infinite-patience-toggle"> <span data-i18n="ui.settings.infinitePatience">Infinite patience</span>
+                    </label>
+                  </div>
+                </details>
+                <details class="difficulty-spoiler-section">
+                  <summary data-i18n="ui.settings.postWorld4Difficulty">Post-World 4</summary>
+                  <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-inputs">
+                    <label class="settings-option difficulty-multiplier-option">
+                      <span data-i18n="ui.settings.artifactsGainMultiplier">Artifacts Gain multiplier</span> <input type="text" id="artifacts-gain-multiplier-input" value="1">
+                    </label>
+                    <label class="settings-option difficulty-multiplier-option">
+                      <span class="difficulty-multiplier-label"><span data-i18n="ui.settings.rwgRewardsCap">RWG Rewards cap</span> <span id="rwg-rewards-cap-tooltip" class="info-tooltip-icon">&#9432;</span></span> <input type="text" id="rwg-rewards-cap-input" value="">
+                    </label>
+                  </div>
+                </details>
+                <details class="difficulty-spoiler-section">
+                  <summary data-i18n="ui.settings.postWorld6Difficulty">Post-World 6</summary>
+                  <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-inputs">
+                    <label class="settings-option difficulty-multiplier-option">
+                      <span data-i18n="ui.settings.galaxyFleetCapacityMultiplier">Galaxy fleet capacity</span> <input type="text" id="galaxy-fleet-capacity-multiplier-input" value="1">
+                    </label>
+                    <label class="settings-option difficulty-multiplier-option">
+                      <span class="difficulty-multiplier-label"><span data-i18n="ui.settings.galaxyThreatScalingMultiplier">Galaxy threat scaling</span> <span id="galaxy-threat-scaling-tooltip" class="info-tooltip-icon">&#9432;</span></span> <input type="text" id="galaxy-threat-scaling-multiplier-input" value="1">
+                    </label>
+                  </div>
+                </details>
+                <details class="difficulty-spoiler-section">
+                  <summary data-i18n="ui.settings.postWorld8Difficulty">Post-World 8</summary>
+                  <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-inputs">
+                    <label class="settings-option difficulty-multiplier-option">
+                      <span data-i18n="ui.settings.artificialWorldConstructionTimeMultiplier">Artificial World Construction Time</span> <input type="text" id="artificial-world-construction-time-multiplier-input" value="1">
+                    </label>
+                  </div>
+                </details>
+                <details class="difficulty-spoiler-section">
+                  <summary data-i18n="ui.settings.duringWorld9Difficulty">During World 9</summary>
+                  <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-toggles">
+                    <label class="settings-option difficulty-toggle-option">
+                      <input type="checkbox" id="allow-space-storage-biomass-withdraw-on-non-human-dominion-toggle"> <span data-i18n="ui.settings.allowSpaceStorageBiomassWithdrawOnNonHumanDominion">Allow space storage biomass withdrawal on non-Human dominions</span>
+                    </label>
+                  </div>
+                </details>
+                <details class="difficulty-spoiler-section">
+                  <summary data-i18n="ui.settings.postWorld11Difficulty">Post-World 11</summary>
+                  <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-toggles">
+                    <label class="settings-option difficulty-toggle-option">
+                      <input type="checkbox" id="orbital-cap-toggle"> <span data-i18n="ui.settings.orbitalCap">Orbital cap</span> <span id="orbital-cap-tooltip" class="info-tooltip-icon">&#9432;</span>
+                    </label>
+                  </div>
+                </details>
+                <details class="difficulty-spoiler-section">
+                  <summary data-i18n="ui.settings.duringWorld14Difficulty">During World 14</summary>
+                  <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-toggles">
+                    <label class="settings-option difficulty-toggle-option">
+                      <input type="checkbox" id="no-overpopulation-cylinders-toggle"> <span data-i18n="ui.settings.noOverpopulationCylinders">No overpopulation cylinders</span> <span id="no-overpopulation-cylinders-tooltip" class="info-tooltip-icon">&#9432;</span>
+                    </label>
+                  </div>
+                </details>
+                <details class="difficulty-spoiler-section">
+                  <summary data-i18n="ui.settings.postWorld14Difficulty">Post-World 14</summary>
+                  <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-inputs">
+                    <label class="settings-option difficulty-multiplier-option">
+                      <span class="difficulty-multiplier-label"><span data-i18n="ui.settings.invasionMultiplier">Invasion multiplier</span> <span id="invasion-multiplier-tooltip" class="info-tooltip-icon">&#9432;</span></span> <input type="text" id="invasion-multiplier-input" value="1">
+                    </label>
+                  </div>
+                </details>
+              </div>
               <h3 class="settings-section-title" data-i18n="ui.settings.keybindsTitle">Keybinds</h3>
               <div class="settings-grid settings-grid-keybinds">
                 <label class="settings-option settings-keybind-option">
                   <span data-i18n="ui.settings.pauseKeybindLabel">Pause key</span>
                   <button id="pause-keybind-capture-button" type="button"></button>
                 </label>
+                <label class="settings-option settings-keybind-option">
+                  <span data-i18n="ui.settings.dialogueSkipKeybindLabel">Skip dialogue typing</span>
+                  <button id="dialogue-skip-keybind-capture-button" type="button"></button>
+                </label>
+                <label id="electron-fullscreen-keybind-option" class="settings-option settings-keybind-option build-target-hidden" hidden>
+                  <span data-i18n="ui.settings.fullscreenKeybindLabel">Fullscreen</span>
+                  <button id="fullscreen-keybind-capture-button" type="button"></button>
+                </label>
               </div>
             </div>
             <div id="statistics-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">
               <h2 data-i18n="ui.settings.statisticsTitle">Statistics</h2>
               <p class="settings-stat-line"><span data-i18n="ui.settings.totalPlaytime">Total Playtime:</span> <span id="total-playtime-display"></span></p>
+              <p class="settings-stat-line" id="patience-spent-row" style="display: none;"><span data-i18n="ui.settings.patienceSpent">Patience spent:</span> <span id="patience-spent-display"></span></p>
               <p class="settings-stat-line" id="fastest-terraform-row" style="display: none;"><span data-i18n="ui.settings.fastestTerraform">Fastest Terraform:</span> <span id="fastest-terraform-display"></span></p>
+              <p class="settings-stat-line" id="birch-world-terraform-row" style="display: none;"><span data-i18n="ui.settings.timeToTerraformedBirchWorld">Time to terraformed Birch World:</span> <span id="birch-world-terraform-display"></span></p>
               <h3 id="fastest-terraform-by-type-title" data-i18n="ui.settings.fastestTerraformByTypeTitle" style="display: none;">Fastest Terraform by World Type</h3>
               <div id="fastest-terraform-by-type-list" style="display: none;"></div>
               <h3 id="recent-terraform-history-title" data-i18n="ui.settings.recentTerraformHistoryTitle">Last 10 Terraformed Worlds</h3>
               <p class="settings-stat-line" id="recent-terraform-average-display"></p>
               <div id="recent-terraform-history-list"></div>
+            </div>
+            <div id="achievements-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">
+              <h2 data-i18n="ui.settings.achievements.title">Achievements</h2>
+              <p class="settings-stat-line" id="settings-achievements-summary"></p>
+              <div id="settings-achievements-list"></div>
             </div>
             <div id="credits-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">
               <h2 data-i18n="ui.settings.creditsTitle">Credits</h2>

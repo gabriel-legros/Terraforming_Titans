@@ -1,4 +1,5 @@
 index.zip
+dist/
 assets_in_progress/
 ideas/advanced_research.txt
 node_modules/
@@ -7,3 +8,6 @@ test.log
 test_saves/player_saves/
 ideas/to_do.txt
 npm-ci.log
+scripts/manual-tests/memory-reports/
+artifacts/screenshots/
+src/js/build-target.js

@@ -68,6 +68,10 @@ function showSpaceStorageInDefaultPanel() {
   return gameSettings.showSpaceStorageInDefaultPanel === true;
 }
 
+function shouldShowNetResourceRateWithAutobuild() {
+  return gameSettings.showNetResourceRateWithAutobuild === true;
+}
+
 function isSpaceStorageViewActive() {
   return !showSpaceStorageInDefaultPanel() && gameSettings.showSpaceStorageResources === true;
 }
@@ -85,11 +89,23 @@ function shouldRenderResourceCategory(category) {
   return category !== 'spaceStorage';
 }
 
+function updateResourceFlagClass(resourceObj, resourceNameElement, flagId, className) {
+  if (!resourceNameElement) {
+    return;
+  }
+  if (resourceObj.isBooleanFlagSet(flagId)) {
+    if (!resourceNameElement.classList.contains(className)) {
+      resourceNameElement.classList.add(className);
+    }
+    return;
+  }
+  if (resourceNameElement.classList.contains(className)) {
+    resourceNameElement.classList.remove(className);
+  }
+}
+
 function getResourceCategoriesForDisplay(resourceSet) {
   const categories = Object.keys(resourceSet || {});
-  if (!showSpaceStorageInDefaultPanel()) {
-    return categories;
-  }
   const colonyIndex = categories.indexOf('colony');
   const surfaceIndex = categories.indexOf('surface');
   const spaceStorageIndex = categories.indexOf('spaceStorage');
@@ -132,7 +148,8 @@ function hasUnlockedSpaceStorageResources(resourceSet) {
   const storageResources = resourceSet?.spaceStorage;
   if (storageResources) {
     for (const resourceName in storageResources) {
-      if (storageResources[resourceName]?.unlocked) {
+      const resource = storageResources[resourceName];
+      if (resource?.unlocked && !isCurrentWorldResourceDisabled(resource.category, resource.name)) {
         return true;
       }
     }
@@ -140,7 +157,8 @@ function hasUnlockedSpaceStorageResources(resourceSet) {
   const spaceResources = resourceSet?.space;
   if (spaceResources) {
     for (const resourceName in spaceResources) {
-      if (spaceResources[resourceName]?.unlocked) {
+      const resource = spaceResources[resourceName];
+      if (resource?.unlocked && !isCurrentWorldResourceDisabled(resource.category, resource.name)) {
         return true;
       }
     }
@@ -170,12 +188,19 @@ function updateSpaceStorageCapDisplay(entry, resourceKey) {
   }
   const capLimit = getSpaceStorageResourceCapDisplay(resourceKey);
   const showCap = Number.isFinite(capLimit);
-  entry.rowEl.classList.toggle('no-cap', !showCap);
+  if (entry.rowEl.classList.contains('no-cap') === showCap) {
+    entry.rowEl.classList.toggle('no-cap', !showCap);
+  }
   entry.slashEl.style.display = showCap ? '' : 'none';
   entry.capWrapperEl.style.display = showCap ? '' : 'none';
-  entry.capEl.classList.remove('resource-cap-limited');
+  if (entry.capEl.classList.contains('resource-cap-limited')) {
+    entry.capEl.classList.remove('resource-cap-limited');
+  }
   if (showCap) {
-    entry.capEl.textContent = formatNumber(capLimit);
+    const capText = formatNumber(capLimit, false, 1, false, true);
+    if (entry.capEl.textContent !== capText) {
+      entry.capEl.textContent = capText;
+    }
   }
 }
 
@@ -227,21 +252,6 @@ function getResourceNamesForDisplay(category, resourceMap, resourceSet = null) {
   });
 }
 
-function reorderSpaceStorageElements(container) {
-  if (!container) return;
-  const total = document.getElementById('space-storage-total-container');
-  if (total && container.firstChild !== total) {
-    container.insertBefore(total, container.firstChild);
-  }
-  for (let i = 0; i < SPACE_STORAGE_UI_ORDER.length; i += 1) {
-    const resourceName = SPACE_STORAGE_UI_ORDER[i];
-    const resourceElement = document.getElementById(getResourceDomId('spaceStorage', resourceName, 'container'));
-    if (resourceElement && resourceElement.parentElement === container) {
-      container.appendChild(resourceElement);
-    }
-  }
-}
-
 function ensureSpaceStorageTotalElement(container) {
   if (!container) return;
   let totalElement = document.getElementById('space-storage-total-container');
@@ -265,7 +275,21 @@ function cacheSpaceStorageTotalEntry() {
 
 function setResourceCapLimited(entry, isLimited) {
   if (!entry || !entry.capEl) return;
-  entry.capEl.classList.toggle('resource-cap-limited', isLimited === true);
+  const limited = isLimited === true;
+  if (entry.capEl.classList.contains('resource-cap-limited') !== limited) {
+    entry.capEl.classList.toggle('resource-cap-limited', limited);
+  }
+}
+
+function setResourceAtCap(entry, isAtCap) {
+  if (!entry) return;
+  const atCap = isAtCap === true;
+  if (entry.valueEl && entry.valueEl.classList.contains('resource-at-cap') !== atCap) {
+    entry.valueEl.classList.toggle('resource-at-cap', atCap);
+  }
+  if (entry.capEl && entry.capEl.classList.contains('resource-at-cap') !== atCap) {
+    entry.capEl.classList.toggle('resource-at-cap', atCap);
+  }
 }
 
 function shouldShowCapLimitedWithCooldown(timerKey, isLimited, frameDelta) {
@@ -284,6 +308,9 @@ function shouldShowCapLimitedWithCooldown(timerKey, isLimited, frameDelta) {
 function getActiveResidueDisplayValue(resource, value) {
   const numericValue = Number(value);
   if (!(numericValue > 0)) {
+    return value;
+  }
+  if (resource.hasCap && Number.isFinite(resource.cap) && resource.cap > 0 && numericValue >= resource.cap) {
     return value;
   }
   const productionRate = Math.abs(resource.productionRate || 0);
@@ -315,8 +342,8 @@ function setResourcePanelViewMode(showSpaceStorage) {
     return;
   }
   gameSettings.showSpaceStorageResources = nextMode;
-  invalidateResourceUICache();
-  createResourceDisplay(resources);
+  updateResourceViewToggleState(resources);
+  updateResourceDisplay(resources, 0);
 }
 
 function updateResourceViewToggleState(resourceSet) {
@@ -327,10 +354,7 @@ function updateResourceViewToggleState(resourceSet) {
   if (!showToggle && isSpaceStorageViewActive()) {
     resourceViewModeUpdating = true;
     gameSettings.showSpaceStorageResources = false;
-    invalidateResourceUICache();
-    createResourceDisplay(resourceSet);
     resourceViewModeUpdating = false;
-    return;
   }
   for (const key in toggles) {
     const toggle = toggles[key];
@@ -346,8 +370,12 @@ function isWasteResource(resourceName) {
 }
 
 function swapResourceRateColor(resource, color) {
-  if (resource.reverseColor && color === 'red') return 'green';
-  if (resource.reverseColor && color === 'green') return 'red';
+  if (color === 'red') {
+    return resource.reverseColor ? getStatusColor('success') : getStatusColor('failure');
+  }
+  if (color === 'green') {
+    return resource.reverseColor ? getStatusColor('failure') : getStatusColor('success');
+  }
   return color;
 }
 
@@ -372,6 +400,7 @@ function createResourceContainers(resourcesData) {
   runWithTrackedUIListeners(resourcesContainer, () => {
     for (let i = 0; i < categories.length; i += 1) {
       const category = categories[i];
+      if (category === 'space') continue;
       const resourceListId = `${category}-resources-resources-container`;
       const existingList = document.getElementById(resourceListId);
       if (existingList) {
@@ -672,34 +701,66 @@ function createTooltipElement(category, resourceName) {
   overflowTable.appendChild(overflowTotalRow);
   overflowDiv._info = { table: overflowTable, rows: new Map(), totalRow: overflowTotalRow, totalRight: overflowTotalRightStrong };
 
+  const reserveDiv = document.createElement('div');
+  reserveDiv.id = getResourceDomId(category, resourceName, 'tooltip-reserve');
+  reserveDiv.style.display = 'none';
+  reserveDiv.appendChild(document.createElement('br'));
+  const reserveHeader = document.createElement('strong');
+  reserveHeader.textContent = getResourceUICommonText('strategicReserveTarget', 'Strategic reserve target:');
+  reserveDiv.appendChild(reserveHeader);
+  reserveDiv.appendChild(document.createTextNode(' '));
+  const reserveValue = document.createElement('span');
+  reserveDiv.appendChild(reserveValue);
+  reserveDiv._info = { header: reserveHeader, value: reserveValue };
+
   const autobuildDiv = document.createElement('div');
   autobuildDiv.id = getResourceDomId(category, resourceName, 'tooltip-autobuild');
   autobuildDiv.style.display = 'none';
   autobuildDiv.appendChild(document.createElement('br'));
+  const autoSummaryLine = document.createElement('div');
+  autoSummaryLine.style.whiteSpace = 'nowrap';
   const autoHeader = document.createElement('strong');
   autoHeader.textContent = getResourceUICommonText('autobuildCost', 'Autobuild Cost (avg 10s):');
-  autobuildDiv.appendChild(autoHeader);
-  autobuildDiv.appendChild(document.createTextNode(' '));
+  autoSummaryLine.appendChild(autoHeader);
+  autoSummaryLine.appendChild(document.createTextNode(' '));
   const autoValue = document.createElement('span');
-  autobuildDiv.appendChild(autoValue);
+  autoSummaryLine.appendChild(autoValue);
+  autobuildDiv.appendChild(autoSummaryLine);
   const autoTable = document.createElement('div');
   autoTable.style.display = 'table';
   autoTable.style.width = '100%';
   autobuildDiv.appendChild(autoTable);
   autobuildDiv._info = { header: autoHeader, value: autoValue, table: autoTable, rows: new Map() };
 
+  const overflowLossDiv = document.createElement('div');
+  overflowLossDiv.id = getResourceDomId(category, resourceName, 'tooltip-overflow-loss');
+  overflowLossDiv.style.display = 'none';
+  overflowLossDiv.appendChild(document.createElement('br'));
+  const overflowLossHeader = document.createElement('strong');
+  overflowLossHeader.textContent = getResourceUICommonText('lostToOverflowLast1s', 'Lost to overflow (last 1s):');
+  overflowLossDiv.appendChild(overflowLossHeader);
+  overflowLossDiv.appendChild(document.createTextNode(' '));
+  const overflowLossValue = document.createElement('span');
+  overflowLossDiv.appendChild(overflowLossValue);
+  overflowLossDiv._info = { header: overflowLossHeader, value: overflowLossValue };
+
   const col1 = document.createElement('div');
   col1.appendChild(headerDiv);
   col1.appendChild(productionDiv);
   col1.appendChild(consumptionDiv);
+  col1.appendChild(reserveDiv);
   col1.appendChild(overflowDiv);
   col1.appendChild(autobuildDiv);
+  col1.appendChild(overflowLossDiv);
   tooltip.appendChild(col1);
 
   const col2 = document.createElement('div');
   const col3 = document.createElement('div');
   // Store references needed for dynamic column reflow
-  tooltip._columnsInfo = { headerDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv, col1, col2, col3, timeDiv, netDiv };
+  tooltip._columnsInfo = { headerDiv, productionDiv, consumptionDiv, reserveDiv, overflowDiv, autobuildDiv, overflowLossDiv, col1, col2, col3, timeDiv, netDiv };
+  tooltip._prepareTooltipContent = function() {
+    updateResourceRateDisplay(getDisplayResourceObject(resources, category, resourceName), 0, category, resourceName);
+  };
 
   return tooltip;
 }
@@ -847,7 +908,7 @@ function updateAutobuildRateTable(container, breakdownEntries, shortageBuildings
   });
 }
 
-function updateRateTableWithCooldown(container, entries, formatter, frameDelta) {
+function updateRateTableWithCooldown(container, entries, formatter, frameDelta, valueColor = '') {
   if (!container) return false;
   const info = container._info;
   let cooldown = container._cooldown;
@@ -900,6 +961,10 @@ function updateRateTableWithCooldown(container, entries, formatter, frameDelta) 
   cooldown.totalTimer = totalTimer;
 
   if (info.totalRight) {
+    const totalColor = totalTimer > 0 ? valueColor : '';
+    if (info.totalRight.style.color !== totalColor) {
+      info.totalRight.style.color = totalColor;
+    }
     if (Math.abs(total) >= 1e-12) {
       info.totalRight.textContent = formatter(total);
       info.totalRow.style.display = 'table-row';
@@ -942,6 +1007,7 @@ function updateRateTableWithCooldown(container, entries, formatter, frameDelta) 
       : formatter(val);
     if (rowInfo.left.textContent !== name) rowInfo.left.textContent = name;
     if (rowInfo.right.textContent !== text) rowInfo.right.textContent = text;
+    if (rowInfo.right.style.color !== valueColor) rowInfo.right.style.color = valueColor;
     rowInfo.row.style.display = 'table-row';
     orderedRows.push(rowInfo.row);
     used.add(name);
@@ -962,18 +1028,74 @@ function updateRateTableWithCooldown(container, entries, formatter, frameDelta) 
   return displayEntries.length > 0 || totalTimer > 0;
 }
 
+function clearRateTableCooldown(container) {
+  if (!container) return;
+  container._cooldown = null;
+  container.style.display = 'none';
+  const info = container._info;
+  info.totalRow.style.display = 'none';
+  info.totalRight.textContent = '';
+  info.rows.forEach((rowInfo) => {
+    rowInfo.row.style.display = 'none';
+    rowInfo.right.textContent = '';
+  });
+}
+
+function clearResourceTooltipRateCooldownsForTravel(resourceSet) {
+  for (const category in resourceSet) {
+    if (category === 'special' || category === 'space' || category === 'spaceStorage') {
+      continue;
+    }
+    for (const resourceName in resourceSet[category]) {
+      const entry = resourceUICache.resources[getResourceUIKey(category, resourceName)];
+      if (!entry) continue;
+      clearRateTableCooldown(entry.tooltip.productionDiv);
+      clearRateTableCooldown(entry.tooltip.consumptionDiv);
+    }
+  }
+}
+
 function isAutobuildTrackedResource(resource) {
   return resource.category === 'colony'
+    || resource.category === 'spaceStorage'
     || (resource.category === 'special' && resource.name === 'orbitalDebris');
+}
+
+function getAutobuildResourceRate(resource) {
+  if (!isAutobuildTrackedResource(resource)) {
+    return 0;
+  }
+  return autobuildCostTracker.getAverageCost(resource.category, resource.name);
+}
+
+function getConstructionOfficeResourceReserveTarget(resource) {
+  if (resource.name === 'workers') {
+    return 0;
+  }
+  const reservePercent = getConstructionOfficeReservePercentForResource(
+    getConstructionOfficeReserveSettings(),
+    resource.category,
+    resource.name
+  );
+  const cap = resource.cap;
+  return reservePercent > 0 && Number.isFinite(cap) ? (reservePercent / 100) * cap : 0;
+}
+
+function getDisplayedNetResourceRate(resource, consumptionDisplay) {
+  const rawNetRate = resource.productionRate - consumptionDisplay.total;
+  if (!shouldShowNetResourceRateWithAutobuild()) {
+    return rawNetRate;
+  }
+  return rawNetRate - getAutobuildResourceRate(resource);
 }
 
 function setResourceTooltipColumns(tooltip, cols) {
   if (!tooltip || !tooltip._columnsInfo) return;
-  const { headerDiv, productionDiv, consumptionDiv, overflowDiv, autobuildDiv, col1, col2, col3, timeDiv, netDiv } = tooltip._columnsInfo;
+  const { headerDiv, productionDiv, consumptionDiv, reserveDiv, overflowDiv, autobuildDiv, overflowLossDiv, col1, col2, col3, timeDiv, netDiv } = tooltip._columnsInfo;
   col1.innerHTML = '';
-  if (cols === 3) {
+  if (cols >= 2) {
     col2.innerHTML = '';
-    col3.innerHTML = '';
+    if (cols === 3) col3.innerHTML = '';
     // Move time and net panels into their columns
     if (timeDiv.parentNode !== col2) {
       if (timeDiv.parentNode) timeDiv.parentNode.removeChild(timeDiv);
@@ -994,28 +1116,46 @@ function setResourceTooltipColumns(tooltip, cols) {
     col2.appendChild(timeDiv);
     col2.appendChild(consumptionDiv);
     col2.appendChild(overflowDiv);
-    // Net rate above autobuild
+    // Net rate above reserve/autobuild
     // Remove any leading <br> so the header aligns cleanly at the top of its column
+    if (reserveDiv.firstChild && reserveDiv.firstChild.tagName === 'BR') {
+      reserveDiv.removeChild(reserveDiv.firstChild);
+    }
     if (autobuildDiv.firstChild && autobuildDiv.firstChild.tagName === 'BR') {
       autobuildDiv.removeChild(autobuildDiv.firstChild);
     }
-    col3.appendChild(netDiv);
-    col3.appendChild(autobuildDiv);
+    if (cols === 3) {
+      col3.appendChild(netDiv);
+      col3.appendChild(reserveDiv);
+      col3.appendChild(autobuildDiv);
+      col3.appendChild(overflowLossDiv);
+    } else {
+      col2.appendChild(netDiv);
+      col2.appendChild(reserveDiv);
+      col2.appendChild(autobuildDiv);
+      col2.appendChild(overflowLossDiv);
+    }
     if (!col2.parentNode) tooltip.appendChild(col2);
-    if (!col3.parentNode) tooltip.appendChild(col3);
+    if (cols === 3) {
+      if (!col3.parentNode) tooltip.appendChild(col3);
+    } else if (col3.parentNode) {
+      col3.parentNode.removeChild(col3);
+    }
 
     // Align headers (Production / Consumption / Autobuild) on the same baseline
     // by adding top margins so that each column's pre-header block height matches the max.
     const headerHeight = headerDiv.getBoundingClientRect().height || 0;
     const timeHeight = timeDiv ? (timeDiv.getBoundingClientRect().height || 0) : 0;
-    const netHeight = netDiv ? (netDiv.getBoundingClientRect().height || 0) : 0;
+    const netHeight = cols === 3 ? (netDiv.getBoundingClientRect().height || 0) : 0;
     const maxPreHeader = Math.max(headerHeight, timeHeight, netHeight);
     const prodMargin = Math.max(maxPreHeader - headerHeight, 0);
     const consMargin = Math.max(maxPreHeader - timeHeight, 0);
-    const autoMargin = Math.max(maxPreHeader - netHeight, 0);
+    const autoMargin = cols === 3 ? Math.max(maxPreHeader - netHeight, 0) : 0;
+    const reserveVisible = reserveDiv.style.display !== 'none';
     productionDiv.style.marginTop = prodMargin ? prodMargin + 'px' : '0px';
     consumptionDiv.style.marginTop = consMargin ? consMargin + 'px' : '0px';
-    autobuildDiv.style.marginTop = autoMargin ? autoMargin + 'px' : '0px';
+    reserveDiv.style.marginTop = reserveVisible && autoMargin ? autoMargin + 'px' : '0px';
+    autobuildDiv.style.marginTop = !reserveVisible && autoMargin ? autoMargin + 'px' : '0px';
   } else {
     // Restore time and net into the header for single-column layout
     if (timeDiv.parentNode && timeDiv.parentNode !== headerDiv) timeDiv.parentNode.removeChild(timeDiv);
@@ -1037,17 +1177,23 @@ function setResourceTooltipColumns(tooltip, cols) {
     if (!consumptionDiv.firstChild || consumptionDiv.firstChild.tagName !== 'BR') {
       consumptionDiv.insertBefore(document.createElement('br'), consumptionDiv.firstChild || null);
     }
+    if (!reserveDiv.firstChild || reserveDiv.firstChild.tagName !== 'BR') {
+      reserveDiv.insertBefore(document.createElement('br'), reserveDiv.firstChild || null);
+    }
     if (!autobuildDiv.firstChild || autobuildDiv.firstChild.tagName !== 'BR') {
       autobuildDiv.insertBefore(document.createElement('br'), autobuildDiv.firstChild || null);
     }
     // Reset margins that were applied for alignment in 3-column mode
     productionDiv.style.marginTop = '';
     consumptionDiv.style.marginTop = '';
+    reserveDiv.style.marginTop = '';
     autobuildDiv.style.marginTop = '';
 
     col1.appendChild(consumptionDiv);
+    col1.appendChild(reserveDiv);
     col1.appendChild(overflowDiv);
     col1.appendChild(autobuildDiv);
+    col1.appendChild(overflowLossDiv);
     if (col2.parentNode) tooltip.removeChild(col2);
     if (col3.parentNode) tooltip.removeChild(col3);
   }
@@ -1550,68 +1696,70 @@ function createResourceElement(category, resourceObj, resourceName) {
   return resourceElement;
 }
 
-function populateResourceElements(resources) {
-  const categories = getResourceCategoriesForDisplay(resources);
-  for (let i = 0; i < categories.length; i += 1) {
-    const category = categories[i];
-    if (!shouldRenderResourceCategory(category)) continue;
-    const containerId = `${category}-resources-resources-container`;
-    const container = document.getElementById(containerId);
+function syncResourceElementsForCategory(category, resourceSet) {
+  if (category === 'space') return;
+  const container = document.getElementById(`${category}-resources-resources-container`);
+  if (!container) return;
 
-    if (container) {
-      if (category === 'spaceStorage') {
-        ensureSpaceStorageTotalElement(container);
+  const currentIds = new Set();
+  let previousElement = null;
+  if (category === 'spaceStorage') {
+    ensureSpaceStorageTotalElement(container);
+    previousElement = document.getElementById('space-storage-total-container');
+    currentIds.add('space-storage-total-container');
+  }
+
+  const resourceNames = getResourceNamesForDisplay(category, resourceSet[category], resourceSet);
+  for (let i = 0; i < resourceNames.length; i += 1) {
+    const resourceName = resourceNames[i];
+    const resourceObj = getDisplayResourceObject(resourceSet, category, resourceName);
+    if (!resourceObj) continue;
+    const resourceContainerId = getResourceDomId(category, resourceName, 'container');
+    currentIds.add(resourceContainerId);
+
+    let resourceElement = document.getElementById(resourceContainerId);
+    if (!resourceElement) {
+      resourceElement = createResourceElement(category, resourceObj, resourceName);
+    }
+
+    if (previousElement) {
+      if (previousElement.nextSibling !== resourceElement) {
+        container.insertBefore(resourceElement, previousElement.nextSibling);
       }
-      const resourceNames = getResourceNamesForDisplay(category, resources[category], resources);
-      const currentIds = new Set();
-      if (category === 'spaceStorage') {
-        currentIds.add('space-storage-total-container');
-      }
-      for (let i = 0; i < resourceNames.length; i += 1) {
-        const resourceName = resourceNames[i];
-        const resourceObj = getDisplayResourceObject(resources, category, resourceName);
-        if (!resourceObj) continue;
-        const resourceContainerId = getResourceDomId(category, resourceName, 'container');
-        currentIds.add(resourceContainerId);
-        if (!document.getElementById(resourceContainerId)) {
-          const resourceElement = createResourceElement(category, resourceObj, resourceName);
-          container.appendChild(resourceElement);
-        }
-      }
-      const existingResourceElements = container.querySelectorAll('.resource-item');
-      for (let j = 0; j < existingResourceElements.length; j += 1) {
-        const element = existingResourceElements[j];
-        if (!currentIds.has(element.id)) {
-          cleanupTrackedUIListeners(element);
-          cleanupDynamicTooltipsIn(element);
-          element.remove();
-        }
-      }
-      if (category === 'spaceStorage') {
-        reorderSpaceStorageElements(container);
-      }
+    } else if (container.firstChild !== resourceElement) {
+      container.insertBefore(resourceElement, container.firstChild);
+    }
+    previousElement = resourceElement;
+  }
+
+  const existingResourceElements = container.querySelectorAll('.resource-item');
+  for (let i = 0; i < existingResourceElements.length; i += 1) {
+    const element = existingResourceElements[i];
+    if (!currentIds.has(element.id)) {
+      cleanupTrackedUIListeners(element);
+      cleanupDynamicTooltipsIn(element);
+      element.remove();
     }
   }
 }
 
+function populateResourceElements(resources) {
+  const categories = getResourceCategoriesForDisplay(resources);
+  for (let i = 0; i < categories.length; i += 1) {
+    syncResourceElementsForCategory(categories[i], resources);
+  }
+}
+
 function unlockResource(resource) {
-  if (!shouldRenderResourceCategory(resource.category)) return;
-  if (resource.unlocked && !document.getElementById(getResourceDomId(resource.category, resource.name, 'container'))) {
+  if (resource.category === 'space') return;
+  if (resource.unlocked && resource.showInSidebar && !isCurrentWorldResourceDisabled(resource.category, resource.name)) {
     const containerId = `${resource.category}-resources-resources-container`;
     const categoryContainer = document.getElementById(containerId).parentElement;
-    const container = document.getElementById(containerId);
 
-    if (container) {
-      if (resource.category === 'spaceStorage') {
-        ensureSpaceStorageTotalElement(container);
+    if (categoryContainer) {
+      if (!document.getElementById(getResourceDomId(resource.category, resource.name, 'container'))) {
+        syncResourceElementsForCategory(resource.category, resources);
       }
-      // Use helper function to create the resource element
-      const resourceElement = createResourceElement(resource.category, resource, resource.name);
-      container.appendChild(resourceElement);
-      if (resource.category === 'spaceStorage') {
-        reorderSpaceStorageElements(container);
-      }
-
       // Ensure the category container is visible
       categoryContainer.style.display = 'block';
 
@@ -1634,6 +1782,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
   const categories = getResourceCategoriesForDisplay(resources);
   for (let i = 0; i < categories.length; i += 1) {
     const category = categories[i];
+    if (category === 'space') continue;
     const cat = resourceUICache.categories[category] || cacheResourceCategory(category);
     const container = cat ? cat.container : null;
     const header = cat ? cat.header : null;
@@ -1646,13 +1795,11 @@ function updateResourceDisplay(resources, deltaSeconds) {
       if (header) header.style.display = 'none';
       continue;
     }
-    if (category === 'spaceStorage') {
-      reorderSpaceStorageElements(container);
-    }
 
     let hasUnlockedResources = false;
     let spaceStorageTotalEntry = null;
     let spaceStorageTotalCapLimited = false;
+    let spaceStorageTotalAtCap = false;
     let spaceStorageTotalHeadroom = 0;
     let spaceStorageTotalOpenPositiveRate = 0;
     if (category === 'spaceStorage') {
@@ -1671,12 +1818,19 @@ function updateResourceDisplay(resources, deltaSeconds) {
         }
       }
       const maxStorage = storageProject ? Math.max(0, storageProject.maxStorage || 0) : 0;
+      spaceStorageTotalAtCap = maxStorage > 0 && usedStorage >= maxStorage;
       spaceStorageTotalHeadroom = Math.max(0, maxStorage - usedStorage);
       if (spaceStorageTotalEntry?.valueEl) {
-        spaceStorageTotalEntry.valueEl.textContent = formatNumber(usedStorage);
+        const usedStorageText = formatNumber(usedStorage, false, 1, false, true);
+        if (spaceStorageTotalEntry.valueEl.textContent !== usedStorageText) {
+          spaceStorageTotalEntry.valueEl.textContent = usedStorageText;
+        }
       }
       if (spaceStorageTotalEntry?.capEl) {
-        spaceStorageTotalEntry.capEl.textContent = formatNumber(maxStorage);
+        const maxStorageText = formatNumber(maxStorage, false, 1, false, true);
+        if (spaceStorageTotalEntry.capEl.textContent !== maxStorageText) {
+          spaceStorageTotalEntry.capEl.textContent = maxStorageText;
+        }
       }
       setResourceCapLimited(spaceStorageTotalEntry, false);
     }
@@ -1686,6 +1840,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
       const resourceName = resourceNames[i];
       const resourceObj = getDisplayResourceObject(resources, category, resourceName);
       if (!resourceObj) continue;
+      const roundResourceBarAmountDown = category === 'colony' || category === 'spaceStorage';
       const resourceKey = getResourceUIKey(category, resourceName);
       const entry = resourceUICache.resources[resourceKey] || cacheSingleResource(category, resourceName);
       const resourceElement = entry ? entry.container : null;
@@ -1696,8 +1851,24 @@ function updateResourceDisplay(resources, deltaSeconds) {
         updateSpaceStorageCapDisplay(entry, resourceName);
       }
 
+      const resourceCap = category === 'spaceStorage' && resourceName !== 'energy'
+        ? getSpaceStorageResourceCapDisplay(resourceName)
+        : resourceObj.cap;
+      const consumptionDisplay = getDisplayConsumptionRates(resourceObj);
+      const hasPositiveRate = getDisplayedNetResourceRate(resourceObj, consumptionDisplay) > 1e-9;
+      setResourceAtCap(
+        entry,
+        gameSettings.highlightFullResourceCaps
+          && Number.isFinite(resourceCap)
+          && resourceCap > 0
+          && resourceObj.value >= resourceCap
+          && hasPositiveRate
+      );
+
       let timer = smallValueTimers[resourceKey] || 0;
-      let showResource = resourceObj.unlocked;
+      let showResource = resourceObj.unlocked
+        && resourceObj.showInSidebar
+        && !isCurrentWorldResourceDisabled(resourceObj.category, resourceObj.name);
 
       if (showResource) {
         const activityRate = (resourceObj.productionRate || 0) + (resourceObj.consumptionRate || 0);
@@ -1738,8 +1909,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
       }
 
       if (category === 'spaceStorage' && resourceName !== 'energy') {
-        const consumptionDisplay = getDisplayConsumptionRates(resourceObj);
-        const netRate = resourceObj.productionRate - consumptionDisplay.total;
+        const netRate = getDisplayedNetResourceRate(resourceObj, consumptionDisplay);
         const positiveRate = netRate > 1e-9;
         const capLimit = getSpaceStorageResourceCapDisplay(resourceName);
         const resourceCapRemaining = Number.isFinite(capLimit) ? (capLimit - resourceObj.value) : Infinity;
@@ -1749,11 +1919,8 @@ function updateResourceDisplay(resources, deltaSeconds) {
         }
       }
 
-      if (resourceObj.isBooleanFlagSet('festival') && resourceNameElement) {
-        resourceNameElement.classList.add('resource-festival');
-      } else if (resourceNameElement) {
-        resourceNameElement.classList.remove('resource-festival');
-      }
+      updateResourceFlagClass(resourceObj, resourceNameElement, 'festival', 'resource-festival');
+      updateResourceFlagClass(resourceObj, resourceNameElement, 'resortVacation', 'resource-resort-vacation');
 
       if (resourceNameElement && resourceNameElement.textContent !== resourceObj.displayName) {
         resourceNameElement.textContent = resourceObj.displayName;
@@ -1769,12 +1936,7 @@ function updateResourceDisplay(resources, deltaSeconds) {
         }
       }
 
-      // Check if the resource has the "golden" flag set
-      if (resourceObj.isBooleanFlagSet('golden') && resourceNameElement) {
-        resourceNameElement.classList.add('sparkling-gold');
-      } else if (resourceNameElement) {
-        resourceNameElement.classList.remove('sparkling-gold');
-      }
+      updateResourceFlagClass(resourceObj, resourceNameElement, 'golden', 'sparkling-gold');
 
       let stormActive = false;
       try {
@@ -1783,9 +1945,13 @@ function updateResourceDisplay(resources, deltaSeconds) {
         stormActive = false;
       }
       if (resourceNameElement && (resourceName === 'androids' || resourceName === 'electronics') && stormActive) {
-        resourceNameElement.classList.add('resource-electromagnetic-storm');
+        if (!resourceNameElement.classList.contains('resource-electromagnetic-storm')) {
+          resourceNameElement.classList.add('resource-electromagnetic-storm');
+        }
       } else if (resourceNameElement) {
-        resourceNameElement.classList.remove('resource-electromagnetic-storm');
+        if (resourceNameElement.classList.contains('resource-electromagnetic-storm')) {
+          resourceNameElement.classList.remove('resource-electromagnetic-storm');
+        }
       }
 
       if (allowRegularWarnings && resourceName === 'biomass' && entry.warningEl) {
@@ -1844,12 +2010,18 @@ function updateResourceDisplay(resources, deltaSeconds) {
         // Update population as an integer
         const valEl = entry ? entry.valueEl : null;
         if (valEl) {
-          valEl.textContent = formatNumber(Math.floor(resourceObj.value), true);
+          const valueText = formatNumber(Math.floor(resourceObj.value), true);
+          if (valEl.textContent !== valueText) {
+            valEl.textContent = valueText;
+          }
         }
 
         const capElement = entry ? entry.capEl : null;
         if (capElement) {
-          capElement.textContent = formatNumber(Math.floor(resourceObj.cap), true);
+          const capText = formatNumber(Math.floor(resourceObj.cap), true);
+          if (capElement.textContent !== capText) {
+            capElement.textContent = capText;
+          }
         }
 
         if (entry?.warningEl) {
@@ -1873,11 +2045,17 @@ function updateResourceDisplay(resources, deltaSeconds) {
 
         if (availableElement) {
           const available = resourceObj.getAvailableAmount ? resourceObj.getAvailableAmount() : (resourceObj.value - resourceObj.reserved);
-          availableElement.textContent = formatNumber(Math.floor(available), true);
+          const availableText = formatNumber(Math.floor(available), true);
+          if (availableElement.textContent !== availableText) {
+            availableElement.textContent = availableText;
+          }
         }
 
         if (totalElement) {
-          totalElement.textContent = formatNumber(Math.floor(resourceObj.value), true);
+          const totalText = formatNumber(Math.floor(resourceObj.value), true);
+          if (totalElement.textContent !== totalText) {
+            totalElement.textContent = totalText;
+          }
         }
 
         // Update scanning progress if there is scanning strength using ScannerProject instance
@@ -1900,9 +2078,12 @@ function updateResourceDisplay(resources, deltaSeconds) {
           scanningProgressElement
         ) {
           scanningProgressElement.style.display = 'block';
-          scanningProgressElement.textContent = getResourceUICommonText('scanningProgress', 'Scanning Progress: {value}%', {
+          const scanningText = getResourceUICommonText('scanningProgress', 'Scanning Progress: {value}%', {
             value: (scanData.currentScanProgress * 100).toFixed(2),
           });
+          if (scanningProgressElement.textContent !== scanningText) {
+            scanningProgressElement.textContent = scanningText;
+          }
         } else if (scanningProgressElement) {
           scanningProgressElement.style.display = 'none'; // Hide progress element if scanning inactive
         }
@@ -1916,15 +2097,27 @@ function updateResourceDisplay(resources, deltaSeconds) {
           const displayValue = category === 'special' && resourceName === 'antimatter' && isAntimatterSpaceEnergySyncActive()
             ? getAntimatterEquivalentValue(resources)
             : resourceObj.value;
-          valEl.textContent = formatNumber(getActiveResidueDisplayValue(resourceObj, displayValue));
+          const valueText = formatNumber(
+            getActiveResidueDisplayValue(resourceObj, displayValue),
+            false,
+            1,
+            false,
+            roundResourceBarAmountDown
+          );
+          if (valEl.textContent !== valueText) {
+            valEl.textContent = valueText;
+          }
         }
-      
+
         const capElement = entry ? entry.capEl : null;
         if (capElement && (category !== 'spaceStorage' || resourceName === 'energy')) {
           const displayCap = category === 'special' && resourceName === 'antimatter' && isAntimatterSpaceEnergySyncActive()
             ? getAntimatterEquivalentCap(resources)
             : resourceObj.cap;
-          capElement.textContent = formatNumber(displayCap);
+          const capText = formatNumber(displayCap, false, 1, false, roundResourceBarAmountDown);
+          if (capElement.textContent !== capText) {
+            capElement.textContent = capText;
+          }
         }
       
         updateResourceRateDisplay(resourceObj, frameDelta, category, resourceName);
@@ -1935,6 +2128,12 @@ function updateResourceDisplay(resources, deltaSeconds) {
     if (category === 'spaceStorage') {
       const totalCapLimitedNow = spaceStorageTotalOpenPositiveRate > spaceStorageTotalHeadroom;
       spaceStorageTotalCapLimited = shouldShowCapLimitedWithCooldown('spaceStorage:total', totalCapLimitedNow, frameDelta);
+      setResourceAtCap(
+        spaceStorageTotalEntry,
+        gameSettings.highlightFullResourceCaps
+          && spaceStorageTotalAtCap
+          && spaceStorageTotalOpenPositiveRate > 1e-9
+      );
     }
     if (category === 'spaceStorage' && spaceStorageTotalEntry?.container) {
       spaceStorageTotalEntry.container.style.display = hasUnlockedResources ? 'block' : 'none';
@@ -1953,7 +2152,16 @@ function updateResourceDisplay(resources, deltaSeconds) {
 function getDisplayConsumptionRates(resource) {
   const baseBySource = resource.consumptionRateBySource || {};
   let total = resource.consumptionRate;
-  const adjustedBySource = { ...baseBySource };
+  const cached = resource._displayConsumptionRates || (resource._displayConsumptionRates = { total: 0, bySource: {} });
+  const adjustedBySource = cached.bySource;
+  for (const sourceName in adjustedBySource) {
+    if (baseBySource[sourceName] === undefined) {
+      delete adjustedBySource[sourceName];
+    }
+  }
+  for (const sourceName in baseBySource) {
+    adjustedBySource[sourceName] = baseBySource[sourceName];
+  }
 
   for (const name in buildings) {
     const building = buildings[name];
@@ -1964,20 +2172,28 @@ function getDisplayConsumptionRates(resource) {
     if (amount <= 0 || building.active <= 0n) {
       continue;
     }
-    const baseRate = building.activeNumber * amount * building.getEffectiveConsumptionMultiplier() * building.getEffectiveResourceConsumptionMultiplier(resource.category, resource.name);
     const sourceName = building.displayName || name;
     const current = adjustedBySource[sourceName] || 0;
     const displayFactor = building.ignoreResourceForProductivityResourceDisplay
       ? building.displayProductivity
       : 1;
-    const displayRate = ignoreProductivity ? current : baseRate * displayFactor;
+    const displayRate = ignoreProductivity
+      ? current
+      : building.getProjectedConsumptionRate(resource.category, resource.name, {
+          includeConsumptionRatio: false,
+          includeAutomation: false,
+          includeWorkerRatio: false,
+          useProductivity: true,
+          productivity: displayFactor
+        });
     if (displayRate !== current) {
       adjustedBySource[sourceName] = displayRate;
       total += displayRate - current;
     }
   }
 
-  return { total, bySource: adjustedBySource };
+  cached.total = total;
+  return cached;
 }
 
 function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = resource.category, displayName = resource.name){
@@ -1993,12 +2209,29 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
     if (resource.name === 'workers') {
       const cap = resource.cap || 0;
       const freePercent = cap > 0 ? (resource.value / cap) * 100 : 0;
-      ppsElement.textContent = `${freePercent >= 0 ? '+' : ''}${formatNumber(freePercent, false, 2)}%`;
-      ppsElement.style.color = swapResourceRateColor(resource, '');
+      const workerRateText = `${freePercent >= 0 ? '+' : ''}${formatNumber(freePercent, false, 2)}%`;
+      if (ppsElement.textContent !== workerRateText) {
+        ppsElement.textContent = workerRateText;
+      }
+      const workerRateColor = swapResourceRateColor(resource, '');
+      if (ppsElement.style.color !== workerRateColor) {
+        ppsElement.style.color = workerRateColor;
+      }
+    } else if (
+      resource.category === 'special' &&
+      resource.name === 'antimatter' &&
+      isAntimatterSpaceEnergySyncActive()
+    ) {
+      if (ppsElement.textContent !== '') {
+        ppsElement.textContent = '';
+      }
+      if (ppsElement.style.color) {
+        ppsElement.style.color = '';
+      }
     } else {
       const elapsed = Math.max(0, Math.min(1, Number.isFinite(frameDelta) ? frameDelta : 0));
       const consumptionDisplay = getDisplayConsumptionRates(resource);
-      const rawNetRate = resource.productionRate - consumptionDisplay.total;
+      const rawNetRate = getDisplayedNetResourceRate(resource, consumptionDisplay);
       const activityRate = Math.max(Math.abs(resource.productionRate), Math.abs(consumptionDisplay.total));
       const netRate = activityRate > 0 && Math.abs(rawNetRate) <= activityRate * 1e-12
         ? 0
@@ -2047,19 +2280,32 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       unstableTimers[resourceKey] = timer;
 
       if (baseUnstable || timer > 0) {
-        ppsElement.textContent = getResourceUICommonText('unstable', 'Unstable');
-        ppsElement.style.color = '';
+        const unstableText = getResourceUICommonText('unstable', 'Unstable');
+        if (ppsElement.textContent !== unstableText) {
+          ppsElement.textContent = unstableText;
+        }
+        if (ppsElement.style.color) {
+          ppsElement.style.color = '';
+        }
       } else {
+        let rateText;
         if (Math.abs(netRate) < 1e-3) {
-          ppsElement.textContent = `0`;
+          rateText = '0';
         } else {
-          ppsElement.textContent = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}`;
+          rateText = `${netRate >= 0 ? '+' : ''}${formatNumber(netRate, false, 2)}`;
+        }
+        if (ppsElement.textContent !== rateText) {
+          ppsElement.textContent = rateText;
         }
         let ppsColor = '';
-        if (netRate < 0 && Math.abs(netRate) > resource.value) {
-          ppsColor = 'red';
-        } else if (netRate < 0 && Math.abs(netRate) > resource.value / 120) {
-          ppsColor = 'orange';
+        if (netRate < 0) {
+          if (Math.abs(netRate) > resource.value) {
+            ppsColor = 'red';
+          } else if (Math.abs(netRate) > resource.value / gameSettings.resourceDepletionWarningSeconds) {
+            ppsColor = 'orange';
+          } else {
+            ppsColor = '';
+          }
         }
         ppsElement.style.color = swapResourceRateColor(resource, ppsColor);
       }
@@ -2078,8 +2324,10 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   const limitDiv = entry?.tooltip?.limitDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-limit'));
   const productionDiv = entry?.tooltip?.productionDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-production'));
   const consumptionDiv = entry?.tooltip?.consumptionDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-consumption'));
+  const reserveDiv = entry?.tooltip?.reserveDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-reserve'));
   const overflowDiv = entry?.tooltip?.overflowDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-overflow'));
   const autobuildDiv = entry?.tooltip?.autobuildDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-autobuild'));
+  const overflowLossDiv = entry?.tooltip?.overflowLossDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-overflow-loss'));
   const warningDiv = entry?.tooltip?.warningDiv || document.getElementById(getResourceDomId(displayCategory, displayName, 'tooltip-warning'));
 
   const consumptionDisplay = getDisplayConsumptionRates(resource);
@@ -2218,7 +2466,8 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
           const currentPressurePa = calculateAtmosphericPressure(
             resource.value || 0,
             terraforming.celestialParameters.gravity,
-            terraforming.celestialParameters.radius
+            terraforming.celestialParameters.radius,
+            terraforming.celestialParameters.surfaceArea
           );
           if (currentPressurePa < target.min) {
             const targetMass = (target.min * terraforming.celestialParameters.surfaceArea)
@@ -2410,7 +2659,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       if (warningInfo.text && warningInfo.text.textContent !== joinedText) {
         warningInfo.text.textContent = joinedText;
       }
-      const showTooltipIcon = joinedTitle !== joinedText;
+      const showTooltipIcon = resource.name !== 'hydrogen' && joinedTitle !== joinedText;
       if (warningInfo.icon) {
         warningInfo.icon.style.display = showTooltipIcon ? 'inline-flex' : 'none';
       }
@@ -2504,9 +2753,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   } else if (zonesDiv) {
     zonesDiv.style.display = 'none';
   }
-  const autobuildAvg = (typeof autobuildCostTracker !== 'undefined' && isAutobuildTrackedResource(resource))
-    ? autobuildCostTracker.getAverageCost(resource.category, resource.name)
-    : 0;
+  const autobuildAvg = getAutobuildResourceRate(resource);
   if (netDiv) {
     const autoLine = netDiv._lineAuto || netDiv.firstChild;
     const baseLine = netDiv._lineBase || netDiv.lastChild;
@@ -2565,6 +2812,16 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
     consumptionDiv.style.display = showConsumption ? 'block' : 'none';
   }
 
+  if (reserveDiv) {
+    const reserveTarget = getConstructionOfficeResourceReserveTarget(resource);
+    if (reserveTarget > 0) {
+      reserveDiv.style.display = 'block';
+      reserveDiv._info.value.textContent = `${formatNumber(reserveTarget, false, 2)}${resource.unit ? ' ' + resource.unit : ''}`;
+    } else {
+      reserveDiv.style.display = 'none';
+    }
+  }
+
   if (overflowDiv) {
     const overflowEntries = antimatterSynced ? [] : [
       ...Object.entries(resource.consumptionRateByType?.overflow || {}),
@@ -2589,7 +2846,8 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
         autobuildDiv._info.header.textContent = isOrbitalDebris
           ? getResourceUICommonText('autobuildGain', 'Autobuild Gain (avg 10s):')
           : getResourceUICommonText('autobuildCost', 'Autobuild Cost (avg 10s):');
-        autobuildDiv._info.value.textContent = `${formatNumber(autobuildDisplayRate, false, 2)}${resource.unit ? ' ' + resource.unit : ''}/s`;
+        const autobuildUnitPart = resource.unit ? ` ${resource.unit}/s` : '/s';
+        autobuildDiv._info.value.textContent = `${formatNumber(autobuildDisplayRate, false, 2)}${autobuildUnitPart}`;
         const breakdown = autobuildCostTracker.getAverageCostBreakdown(resource.category, resource.name);
         updateAutobuildRateTable(
           autobuildDiv,
@@ -2602,6 +2860,17 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       }
     } else {
       autobuildDiv.style.display = 'none';
+    }
+  }
+
+  if (overflowLossDiv) {
+    const isColonyWater = resource.category === 'colony' && resource.name === 'water';
+    if (resource.hasCap && !isColonyWater) {
+      const overflowLost = resource.overflowLostLast1s || 0;
+      overflowLossDiv.style.display = 'block';
+      overflowLossDiv._info.value.textContent = `${formatNumber(overflowLost, false, 2)}${resource.unit ? ' ' + resource.unit : ''}`;
+    } else {
+      overflowLossDiv.style.display = 'none';
     }
   }
 }
@@ -2675,8 +2944,10 @@ function cacheSingleResource(category, resourceName) {
       limitDiv: document.getElementById(`${domPrefix}-tooltip-limit`),
       productionDiv: document.getElementById(`${domPrefix}-tooltip-production`),
       consumptionDiv: document.getElementById(`${domPrefix}-tooltip-consumption`),
+      reserveDiv: document.getElementById(`${domPrefix}-tooltip-reserve`),
       overflowDiv: document.getElementById(`${domPrefix}-tooltip-overflow`),
       autobuildDiv: document.getElementById(`${domPrefix}-tooltip-autobuild`),
+      overflowLossDiv: document.getElementById(`${domPrefix}-tooltip-overflow-loss`),
       warningDiv: document.getElementById(`${domPrefix}-tooltip-warning`),
     }
   };
@@ -2689,7 +2960,7 @@ function cacheResourceElements(resources) {
   const categories = getResourceCategoriesForDisplay(resources);
   for (let i = 0; i < categories.length; i += 1) {
     const category = categories[i];
-    if (!shouldRenderResourceCategory(category)) continue;
+    if (category === 'space') continue;
     cacheResourceCategory(category);
     if (category === 'spaceStorage') {
       cacheSpaceStorageTotalEntry();

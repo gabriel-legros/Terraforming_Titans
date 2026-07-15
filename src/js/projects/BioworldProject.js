@@ -7,9 +7,9 @@
     ({ SpecializationProject: SpecializationBase } = require('./SpecializationProject.js'));
   } catch (error) {}
 
-  function getBioworldText(path) {
+  function getBioworldText(path, vars) {
     try {
-      return t(path, null, '');
+      return t(path, vars, '');
     } catch (error) {
       return '';
     }
@@ -20,6 +20,7 @@
   const MAX_EVOLUTION_UPGRADES = 400;
   const MAX_BIOWORKERS_UPGRADES = 200;
   const MAX_LIFE_POINT_GAIN_UPGRADES = 900;
+  const LEVIATHAN_ORBITAL_SOURCE_ID = 'bioworld-leviathans';
 
   const BIOWORLD_SHOP_ITEMS = [
     {
@@ -71,6 +72,15 @@
       maxPurchases: MAX_BIOWORKERS_UPGRADES,
       description: getBioworldText('catalogs.specializations.bioworld.shopItems.bioworkersMax.description'),
     },
+    {
+      id: 'leviathans',
+      label: getBioworldText('catalogs.specializations.bioworld.shopItems.leviathans.label'),
+      cost: 1,
+      costScaling: 'quadratic',
+      maxPurchases: Infinity,
+      requiresFlag: 'leviathans',
+      description: getBioworldText('catalogs.specializations.bioworld.shopItems.leviathans.description'),
+    },
   ];
 
   const BIOWORLD_SHOP_ITEM_MAP = BIOWORLD_SHOP_ITEMS.reduce((acc, item) => {
@@ -90,7 +100,7 @@
         shopItems: BIOWORLD_SHOP_ITEMS,
         shopItemMap: BIOWORLD_SHOP_ITEM_MAP,
         specializationSourceId: 'bioworld',
-        otherSpecializationIds: ['foundryWorld', 'manufacturingWorld'],
+        otherSpecializationIds: [],
         ecumenopolisEffectPrefix: 'bioworld',
         hazardPointBonusPerHazard: 0.1,
       });
@@ -106,6 +116,14 @@
       return resources.surface.biomass.value / landArea;
     }
 
+    getEcumenopolisLimit() {
+      return Math.max(0, resolveWorldGeometricLand(terraforming, resources.surface.land) / 1000000);
+    }
+
+    isEcumenopolisCountWithinLimit() {
+      return colonies.t7_colony.count <= this.getEcumenopolisLimit();
+    }
+
     getEvolutionPointGain(totalBiomass) {
       const normalized = Math.max(totalBiomass / EVOLUTION_POINT_DIVISOR, 1);
       return ((Math.log10(normalized) * 3) + 1);
@@ -116,10 +134,16 @@
       return this.applyHazardPointBonus(basePoints);
     }
 
+    getShopPurchaseCountText(item, purchases, maxPurchases) {
+      if (item.id === 'leviathans') {
+        return getBioworldText('catalogs.specializations.bioworld.shop.purchases', {
+          value: formatNumber(purchases, true),
+        });
+      }
+      return super.getShopPurchaseCountText(item, purchases, maxPurchases);
+    }
+
     getSpecializationRequirements() {
-      const foundry = projectManager.projects.foundryWorld;
-      const manufacturing = projectManager.projects.manufacturingWorld;
-      const holyWorldBlocked = followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated();
       return [
         {
           id: 'terraformed',
@@ -133,33 +157,25 @@
         },
         {
           id: 'ecumenopolisCount',
-          label: getBioworldText('catalogs.specializations.bioworld.requirements.ecumenopolisCount'),
-          met: colonies.t7_colony.count < 1000,
+          label: getBioworldText('catalogs.specializations.bioworld.requirements.ecumenopolisCount', {
+            value: formatNumber(this.getEcumenopolisLimit(), true, 2),
+          }),
+          met: this.isEcumenopolisCountWithinLimit(),
         },
         {
           id: 'otherSpecialization',
           label: getBioworldText('catalogs.specializations.bioworld.requirements.otherSpecialization'),
-          met: !holyWorldBlocked
-            && !foundry.isActive
-            && !foundry.isCompleted
-            && !manufacturing.isActive
-            && !manufacturing.isCompleted,
+          met: !hasOtherWorldSpecialization(this),
         },
       ];
     }
 
     getSpecializationLockedText() {
-      if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) {
-        return getBioworldText('catalogs.specializations.bioworld.lockedByHolyWorld');
-      }
       return super.getSpecializationLockedText();
     }
 
     canStart() {
       if (!super.canStart()) {
-        return false;
-      }
-      if (followersManager && followersManager.isCurrentWorldHolyConsecrated && followersManager.isCurrentWorldHolyConsecrated()) {
         return false;
       }
       if (!spaceManager.isCurrentWorldTerraformed()) {
@@ -168,15 +184,7 @@
       if (this.getBiomassDensity() <= 1) {
         return false;
       }
-      const foundry = projectManager.projects.foundryWorld;
-      const manufacturing = projectManager.projects.manufacturingWorld;
-      if (foundry.isActive || foundry.isCompleted) {
-        return false;
-      }
-      if (manufacturing.isActive || manufacturing.isCompleted) {
-        return false;
-      }
-      return colonies.t7_colony.count < 1000;
+      return this.isEcumenopolisCountWithinLimit();
     }
 
     complete() {
@@ -225,9 +233,26 @@
         researchManager.completeResearchInstant('life');
       }
 
+      this.applyLeviathanOrbitalEffect();
+
       if (this.ecumenopolisDisabled) {
         this.applyEcumenopolisDisable();
       }
+    }
+
+    applyLeviathanOrbitalEffect() {
+      const purchases = this.getShopPurchaseCount('leviathans');
+      if (!this.isBooleanFlagSet('leviathans') || purchases <= 0) {
+        removeEffect({ target: 'orbitalManager', sourceId: LEVIATHAN_ORBITAL_SOURCE_ID });
+        return;
+      }
+      addEffect({
+        target: 'orbitalManager',
+        type: 'availableOrbitalsMultiplier',
+        value: 1 + purchases * 0.05,
+        effectId: 'bioworld-leviathans-orbitals',
+        sourceId: LEVIATHAN_ORBITAL_SOURCE_ID,
+      });
     }
 
     applyEffects() {

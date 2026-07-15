@@ -1,24 +1,29 @@
 const EARTH_AREA_HA = Math.round(4 * Math.PI * (EARTH_RADIUS_KM * 1000) * (EARTH_RADIUS_KM * 1000) / 10_000);
 const DEFAULT_RADIUS_BOUNDS = { min: 2, max: 8 };
+const SAGITTARIUS_A_STAR_MASS_SOLAR = 4.3e6;
+const SUPERMASSIVE_SHELLWORLD_RADIUS_EARTH = ShellworldGravityHelper.solveShellRadiusForSurfaceGravity({
+    coreMassSolar: SAGITTARIUS_A_STAR_MASS_SOLAR,
+    preferRoot: 'inner'
+}).radiusEarth;
 const ARTIFICIAL_TYPES = [
-    { value: 'shell', label: 'Shellworld', disabled: false },
-    { value: 'ring', label: 'Ringworld', disabled: true, disabledSource: 'World 10' },
-    { value: 'disk', label: 'Alderson disk', disabled: true, disabledSource: 'Advanced Research & Galactic Conquest' }
+    { value: 'shell', label: t('ui.artificial.options.types.shell', {}, 'Shellworld'), disabled: false },
+    { value: 'ring', label: t('ui.artificial.options.types.ring', {}, 'Ringworld'), disabled: true, disabledSource: t('ui.artificial.options.sources.world10', {}, 'World 10') },
+    { value: 'disk', label: t('ui.artificial.options.types.disk', {}, 'Alderson disk'), disabled: true, disabledSource: t('ui.artificial.options.sources.advancedResearchGalacticConquest', {}, 'Advanced Research & Galactic Conquest') }
 ];
 const ARTIFICIAL_CORES = [
-    { value: 'super-earth', label: 'Super Earth', disabled: false, minRadiusEarth: 1.4, maxRadiusEarth: 3.2, allowStar: true, minFlux: 800, maxFlux: 1600 },
-    { value: 'ice-giant', label: 'Ice giant', disabled: false, minRadiusEarth: 3.2, maxRadiusEarth: 4.5, allowStar: true, minFlux: 50, maxFlux: 500 },
-    { value: 'intermediate-giant', label: 'Intermediate giant', disabled: false, minRadiusEarth: 4.5, maxRadiusEarth: 20, allowStar: true, minFlux: 50, maxFlux: 800 },
-    { value: 'gas-giant', label: 'Gas giant', disabled: true, disabledSource : "World 9", minRadiusEarth: 20, maxRadiusEarth: 70, allowStar: true, minFlux: 50, maxFlux: 800 },
-    { value: 'brown-dwarf', label: 'Brown Dwarf', disabled: true, disabledSource : "World 10", minRadiusEarth: 70, maxRadiusEarth: 160, allowStar: false},
-    { value: 'white-dwarf', label: 'White Dwarf', disabled: true, disabledSource : "World 12", minRadiusEarth: 360, maxRadiusEarth: 600, allowStar: false},
-    { value: 'neutron-star', label: 'Neutron Star', disabled: true, disabledSource : "World 13", minRadiusEarth: 600, maxRadiusEarth: 900, allowStar: false},
-    { value: 'stellar-bh', label: 'Stellar Black Hole', disabled: true, disabledSource : "World 14", minRadiusEarth: 900, maxRadiusEarth: 10000, allowStar: false},
-    { value: 'smbh', label: 'Supermassive Black Hole (Coming Soon)', disabled: true, disabledSource : "World 14 & Galactic Conquest", minRadiusEarth: 1200000, maxRadiusEarth: 1200000, allowStar: false}
+    { value: 'super-earth', label: t('ui.artificial.options.cores.superEarth', {}, 'Super Earth'), disabled: false, minRadiusEarth: 1.4, maxRadiusEarth: 3.2, allowStar: true, minFlux: 800, maxFlux: 1600 },
+    { value: 'ice-giant', label: t('ui.artificial.options.cores.iceGiant', {}, 'Ice giant'), disabled: false, minRadiusEarth: 3.2, maxRadiusEarth: 4.5, allowStar: true, minFlux: 50, maxFlux: 500 },
+    { value: 'intermediate-giant', label: t('ui.artificial.options.cores.intermediateGiant', {}, 'Intermediate giant'), disabled: false, minRadiusEarth: 4.5, maxRadiusEarth: 20, allowStar: true, minFlux: 50, maxFlux: 800 },
+    { value: 'gas-giant', label: t('ui.artificial.options.cores.gasGiant', {}, 'Gas giant'), disabled: true, disabledSource : t('ui.artificial.options.sources.world9', {}, 'World 9'), minRadiusEarth: 20, maxRadiusEarth: 70, allowStar: true, minFlux: 50, maxFlux: 800 },
+    { value: 'brown-dwarf', label: t('ui.artificial.options.cores.brownDwarf', {}, 'Brown Dwarf'), disabled: true, disabledSource : t('ui.artificial.options.sources.world10', {}, 'World 10'), minRadiusEarth: 70, maxRadiusEarth: 160, allowStar: false},
+    { value: 'white-dwarf', label: t('ui.artificial.options.cores.whiteDwarf', {}, 'White Dwarf'), disabled: true, disabledSource : t('ui.artificial.options.sources.world12', {}, 'World 12'), minRadiusEarth: 360, maxRadiusEarth: 600, allowStar: false},
+    { value: 'neutron-star', label: t('ui.artificial.options.cores.neutronStar', {}, 'Neutron Star'), disabled: true, disabledSource : t('ui.artificial.options.sources.world13', {}, 'World 13'), minRadiusEarth: 600, maxRadiusEarth: 900, allowStar: false},
+    { value: 'stellar-bh', label: t('ui.artificial.options.cores.stellarBlackHole', {}, 'Stellar Black Hole'), disabled: true, disabledSource : t('ui.artificial.options.sources.world14', {}, 'World 14'), minRadiusEarth: 900, maxRadiusEarth: 10000, allowStar: false},
+    { value: 'smbh', label: t('ui.artificial.options.cores.supermassiveBlackHole', {}, 'Supermassive Black Hole'), disabled: true, disabledSource : t('ui.artificial.options.sources.birchWorldResearch', {}, 'Birch World advanced research'), minRadiusEarth: SUPERMASSIVE_SHELLWORLD_RADIUS_EARTH, maxRadiusEarth: SUPERMASSIVE_SHELLWORLD_RADIUS_EARTH, allowStar: false}
 ];
 const ARTIFICIAL_STAR_CONTEXTS = [
-    { value: 'with-star', label: 'Star in system', hasStar: true, disabled: false },
-    { value: 'starless', label: 'Starless deep space', hasStar: false, disabled: false }
+    { value: 'with-star', label: t('ui.artificial.options.starContexts.withStar', {}, 'Star in system'), hasStar: true, disabled: false },
+    { value: 'starless', label: t('ui.artificial.options.starContexts.starless', {}, 'Starless deep space'), hasStar: false, disabled: false }
 ];
 const SOLAR_CONSTANT_WM2 = 1361;
 const AU_IN_KM = 149_597_870.7;
@@ -27,22 +32,22 @@ const RINGWORLD_WIDTH_BOUNDS_KM = { min: 1_000, max: 1_000_000 };
 const RINGWORLD_TARGET_FLUX_WM2 = 1_300;
 const RINGWORLD_FLUX_BOUNDS_WM2 = { min: 1_000, max: 1_400 };
 const RINGWORLD_STAR_CORES = [
-    { value: 'm-dwarf', label: 'Red Dwarf (M‑class)', spectralType: 'M', disabled: false, minRadiusAU: 0.03, maxRadiusAU: 0.25, minPeriodDays_1g: 1.56, maxPeriodDays_1g: 4.49, maxWidthKm: 80_000 },
-    { value: 'k-dwarf', label: 'Orange Dwarf (K‑class)', spectralType: 'K', disabled: true, disabledSource: "World 11", minRadiusAU: 0.30, maxRadiusAU: 0.80, minPeriodDays_1g: 4.92, maxPeriodDays_1g: 8.03, maxWidthKm: 110_000 },
-    { value: 'g-dwarf', label: 'Yellow Dwarf (G‑class)', spectralType: 'G', disabled: true, disabledSource: "World 12", minRadiusAU: 0.85, maxRadiusAU: 1.60, minPeriodDays_1g: 8.28, maxPeriodDays_1g: 11.36, maxWidthKm: 150_000 },
-    { value: 'f-dwarf', label: 'Yellow‑White (F‑class)', spectralType: 'F', disabled: true, disabledSource: "World 13", minRadiusAU: 1.70, maxRadiusAU: 3.00, minPeriodDays_1g: 11.71, maxPeriodDays_1g: 15.56, maxWidthKm: 180_000 },
-    { value: 'a-star', label: 'White Star (A‑class)', spectralType: 'A', disabled: true, disabledSource: "World 14", minRadiusAU: 3.20, maxRadiusAU: 8.00, minPeriodDays_1g: 16.07, maxPeriodDays_1g: 25.40, maxWidthKm: 300_000 },
-    { value: 'b-star', label: 'Blue Star (B‑class)', spectralType: 'B', disabled: true, disabledSource: "World 14", minRadiusAU: 8.50, maxRadiusAU: 120, minPeriodDays_1g: 26.19, maxPeriodDays_1g: 98.39, maxWidthKm: 2_000_000 },
-    { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: true, disabledSource: "World 14 & Galactic Conquest", baseDisabledSource: "World 14 & Galactic Conquest", requiresFullGalaxyControl: true, minRadiusAU: 130, maxRadiusAU: 600, minPeriodDays_1g: 102.41, maxPeriodDays_1g: 220.01, maxWidthKm: 10_000_000 }
+    { value: 'm-dwarf', label: t('ui.artificial.options.starCores.mDwarf', {}, 'Red Dwarf (M-class)'), spectralType: 'M', disabled: false, minRadiusAU: 0.03, maxRadiusAU: 0.25, minPeriodDays_1g: 1.56, maxPeriodDays_1g: 4.49, maxWidthKm: 80_000 },
+    { value: 'k-dwarf', label: t('ui.artificial.options.starCores.kDwarf', {}, 'Orange Dwarf (K-class)'), spectralType: 'K', disabled: true, disabledSource: t('ui.artificial.options.sources.world11', {}, 'World 11'), minRadiusAU: 0.30, maxRadiusAU: 0.80, minPeriodDays_1g: 4.92, maxPeriodDays_1g: 8.03, maxWidthKm: 110_000 },
+    { value: 'g-dwarf', label: t('ui.artificial.options.starCores.gDwarf', {}, 'Yellow Dwarf (G-class)'), spectralType: 'G', disabled: true, disabledSource: t('ui.artificial.options.sources.world12', {}, 'World 12'), minRadiusAU: 0.85, maxRadiusAU: 1.60, minPeriodDays_1g: 8.28, maxPeriodDays_1g: 11.36, maxWidthKm: 150_000 },
+    { value: 'f-dwarf', label: t('ui.artificial.options.starCores.fDwarf', {}, 'Yellow-White (F-class)'), spectralType: 'F', disabled: true, disabledSource: t('ui.artificial.options.sources.world13', {}, 'World 13'), minRadiusAU: 1.70, maxRadiusAU: 3.00, minPeriodDays_1g: 11.71, maxPeriodDays_1g: 15.56, maxWidthKm: 180_000 },
+    { value: 'a-star', label: t('ui.artificial.options.starCores.aStar', {}, 'White Star (A-class)'), spectralType: 'A', disabled: true, disabledSource: t('ui.artificial.options.sources.world14', {}, 'World 14'), minRadiusAU: 3.20, maxRadiusAU: 8.00, minPeriodDays_1g: 16.07, maxPeriodDays_1g: 25.40, maxWidthKm: 300_000 },
+    { value: 'b-star', label: t('ui.artificial.options.starCores.bStar', {}, 'Blue Star (B-class)'), spectralType: 'B', disabled: true, disabledSource: t('ui.artificial.options.sources.world14', {}, 'World 14'), minRadiusAU: 8.50, maxRadiusAU: 120, minPeriodDays_1g: 26.19, maxPeriodDays_1g: 98.39, maxWidthKm: 2_000_000 },
+    { value: 'o-star', label: t('ui.artificial.options.starCores.oStar', {}, 'O-class (very massive)'), spectralType: 'O', disabled: true, disabledSource: t('ui.artificial.options.sources.world14GalacticConquest', {}, 'World 14 & Galactic Conquest'), baseDisabledSource: t('ui.artificial.options.sources.world14GalacticConquest', {}, 'World 14 & Galactic Conquest'), requiresFullGalaxyControl: true, minRadiusAU: 130, maxRadiusAU: 600, minPeriodDays_1g: 102.41, maxPeriodDays_1g: 220.01, maxWidthKm: 10_000_000 }
 ];
 const DISK_STAR_CORES = [
-    { value: 'm-dwarf', label: 'Red Dwarf (M‑class)', spectralType: 'M', disabled: false, minRadiusAU: 0.042, maxRadiusAU: 0.354, minInnerRadiusAU: 0.031 },
-    { value: 'k-dwarf', label: 'Orange Dwarf (K‑class)', spectralType: 'K', disabled: false, minRadiusAU: 0.424, maxRadiusAU: 1.131, minInnerRadiusAU: 0.043 },
-    { value: 'g-dwarf', label: 'Yellow Dwarf (G‑class)', spectralType: 'G', disabled: false, minRadiusAU: 1.202, maxRadiusAU: 2.263, minInnerRadiusAU: 0.050 },
-    { value: 'f-dwarf', label: 'Yellow‑White (F‑class)', spectralType: 'F', disabled: false, minRadiusAU: 2.404, maxRadiusAU: 4.243, minInnerRadiusAU: 0.061 },
-    { value: 'a-star', label: 'White Star (A‑class)', spectralType: 'A', disabled: false, minRadiusAU: 4.525, maxRadiusAU: 11.314, minInnerRadiusAU: 0.084 },
-    { value: 'b-star', label: 'Blue Star (B‑class)', spectralType: 'B', disabled: false, minRadiusAU: 12.021, maxRadiusAU: 169.706, minInnerRadiusAU: 0.427 },
-    { value: 'o-star', label: 'O‑class (very massive)', spectralType: 'O', disabled: false, minRadiusAU: 180, maxRadiusAU: 250, minInnerRadiusAU: 1.230 }
+    { value: 'm-dwarf', label: t('ui.artificial.options.starCores.mDwarf', {}, 'Red Dwarf (M-class)'), spectralType: 'M', disabled: false, minRadiusAU: 0.042, maxRadiusAU: 0.354, minInnerRadiusAU: 0.031 },
+    { value: 'k-dwarf', label: t('ui.artificial.options.starCores.kDwarf', {}, 'Orange Dwarf (K-class)'), spectralType: 'K', disabled: false, minRadiusAU: 0.424, maxRadiusAU: 1.131, minInnerRadiusAU: 0.043 },
+    { value: 'g-dwarf', label: t('ui.artificial.options.starCores.gDwarf', {}, 'Yellow Dwarf (G-class)'), spectralType: 'G', disabled: false, minRadiusAU: 1.202, maxRadiusAU: 2.263, minInnerRadiusAU: 0.050 },
+    { value: 'f-dwarf', label: t('ui.artificial.options.starCores.fDwarf', {}, 'Yellow-White (F-class)'), spectralType: 'F', disabled: false, minRadiusAU: 2.404, maxRadiusAU: 4.243, minInnerRadiusAU: 0.061 },
+    { value: 'a-star', label: t('ui.artificial.options.starCores.aStar', {}, 'White Star (A-class)'), spectralType: 'A', disabled: false, minRadiusAU: 4.525, maxRadiusAU: 11.314, minInnerRadiusAU: 0.084 },
+    { value: 'b-star', label: t('ui.artificial.options.starCores.bStar', {}, 'Blue Star (B-class)'), spectralType: 'B', disabled: false, minRadiusAU: 12.021, maxRadiusAU: 169.706, minInnerRadiusAU: 0.427 },
+    { value: 'o-star', label: t('ui.artificial.options.starCores.oStar', {}, 'O-class (very massive)'), spectralType: 'O', disabled: false, minRadiusAU: 180, maxRadiusAU: 250, minInnerRadiusAU: 1.230 }
 ];
 const ARTIFICIAL_STAR_SYLLABLES = [
     'al', 'be', 'ce', 'do', 'er', 'fi', 'ga', 'ha', 'io', 'ju', 'ka', 'lu', 'me', 'no', 'or', 'pi', 'qu', 'ra', 'su', 'ta', 'ul', 've', 'wo', 'xi', 'ya', 'zo'
@@ -410,13 +415,23 @@ function calculateDiskLandHectares(radiusAU, innerRadiusAU = 0) {
 const TERRAFORM_WORLD_DIVISOR = 50_000_000_000;
 const ARTIFICIAL_FLEET_CAPACITY_WORLDS = 5;
 const ARTIFICIAL_FLEET_CAPACITY_UNCAPPED = 'uncapped';
+const ARTIFICIAL_STORED_WORLD_LIMIT = 50;
+const SUPERMASSIVE_SHELL_CORE = 'smbh';
+const SUPERMASSIVE_SHELL_SECTOR = 'Core';
 class ArtificialManager extends EffectableEntity {
     constructor() {
         super({ description: 'Manages artificial constructs' });
         this.enabled = false;
+        this.uiDirty = true;
+        this.forceUIRefresh = false;
         this.constructionHoursPer50B = CONSTRUCTION_HOURS_PER_50B;
+        this.allowSpaceStoragePayments = true;
         this.prioritizeSpaceStorage = true;
+        this.autoStart = false;
+        this.autoStore = false;
+        this.autoStoreWithMaxStockpile = true;
         this.nextId = 1;
+        this.constructedCounts = { shell: 0, ring: 0, disk: 0 };
         this.activeProject = null;
         this.unlockedTypes = new Set(
             ARTIFICIAL_TYPES
@@ -482,6 +497,76 @@ class ArtificialManager extends EffectableEntity {
         return this.unlockedCores.has(coreId);
     }
 
+    isSupermassiveShellworldEntry(entry) {
+        if (!entry) return false;
+        const type = entry.type
+            || entry.classification?.type
+            || entry.original?.merged?.classification?.type
+            || entry.original?.classification?.type
+            || entry.artificialSnapshot?.type;
+        const core = entry.core
+            || entry.classification?.core
+            || entry.original?.merged?.classification?.core
+            || entry.original?.classification?.core
+            || entry.artificialSnapshot?.core;
+        return type === 'shell' && core === SUPERMASSIVE_SHELL_CORE;
+    }
+
+    getSupermassiveShellworldStatus() {
+        const statuses = spaceManager?.artificialWorldStatuses || {};
+        const currentKey = spaceManager?.currentArtificialKey !== null && spaceManager?.currentArtificialKey !== undefined
+            ? String(spaceManager.currentArtificialKey)
+            : null;
+        const active = this.activeProject && this.isSupermassiveShellworldEntry(this.activeProject)
+            ? {
+                id: this.activeProject.seed || String(this.activeProject.id),
+                renameId: this.activeProject.id,
+                seed: this.activeProject.seed,
+                name: this.activeProject.name,
+                status: this.activeProject.status || 'building',
+                current: false,
+                canTravel: this.activeProject.status === 'completed',
+                canDiscard: false,
+                travelKind: 'constructed',
+                project: this.activeProject
+            }
+            : null;
+        if (active) return active;
+
+        let found = null;
+        Object.entries(statuses).forEach(([key, status]) => {
+            if (found || !this.isSupermassiveShellworldEntry(status)) return;
+            found = { key, status };
+        });
+        if (!found) return null;
+
+        const status = found.status;
+        const isCurrent = currentKey === found.key;
+        const hasSnapshot = !!status.artificialSnapshot;
+        return {
+            id: found.key,
+            renameId: found.key,
+            seed: found.key,
+            name: status.name || status.artificialSnapshot?.name || `Artificial ${found.key}`,
+            type: status.type || status.artificialSnapshot?.type || 'shell',
+            core: status.core || status.artificialSnapshot?.core || SUPERMASSIVE_SHELL_CORE,
+            terraformed: !!status.terraformed,
+            stored: !!status.stored,
+            abandoned: !!status.abandoned,
+            current: isCurrent,
+            canTravel: !isCurrent && hasSnapshot,
+            canDiscard: !isCurrent && (status.stored || status.abandoned),
+            travelKind: 'stored',
+            status: isCurrent ? 'current' : (status.stored ? 'stored' : (status.abandoned ? 'abandoned' : (status.terraformed ? 'terraformed' : 'constructed')))
+        };
+    }
+
+    hasSupermassiveShellworld() {
+        if (this.activeProject && this.isSupermassiveShellworldEntry(this.activeProject)) return true;
+        const statuses = spaceManager?.artificialWorldStatuses || {};
+        return Object.values(statuses).some((status) => this.isSupermassiveShellworldEntry(status));
+    }
+
     isRingStarCoreUnlocked(coreId) {
         const entry = RINGWORLD_STAR_CORES.find((core) => core.value === coreId);
         if (!entry) {
@@ -498,6 +583,9 @@ class ArtificialManager extends EffectableEntity {
         const entry = DISK_STAR_CORES.find((core) => core.value === coreId);
         if (!entry) {
             return false;
+        }
+        if (entry.disabled !== true && entry.requiresFullGalaxyControl !== true) {
+            return true;
         }
         if (entry.requiresFullGalaxyControl) {
             return this.storyUnlockedDiskStarCores.has(coreId)
@@ -649,34 +737,35 @@ class ArtificialManager extends EffectableEntity {
     }
 
     enable() {
+        if (isCurrentWorldManagerDisabled('artificialManager')) return;
         if (this.enabled) return;
         this.enabled = true;
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     disable() {
         if (!this.enabled) return;
         this.enabled = false;
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     enableRingworld() {
         if (this.unlockedTypes.has('ring')) return;
         this.unlockedTypes.add('ring');
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     enableAldersonDisk() {
         if (this.unlockedTypes.has('disk')) return;
         this.unlockedTypes.add('disk');
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     unlockCore(coreId) {
         if (!ARTIFICIAL_CORES.some((core) => core.value === coreId)) return;
         if (this.unlockedCores.has(coreId)) return;
         this.unlockedCores.add(coreId);
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     unlockRingStarCore(coreId) {
@@ -689,7 +778,7 @@ class ArtificialManager extends EffectableEntity {
         }
         if (this.unlockedRingStarCores.has(coreId)) return;
         this.unlockedRingStarCores.add(coreId);
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     unlockDiskStarCore(coreId) {
@@ -702,14 +791,16 @@ class ArtificialManager extends EffectableEntity {
         }
         if (this.unlockedDiskStarCores.has(coreId)) return;
         this.unlockedDiskStarCores.add(coreId);
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
-    refreshConditionalRingStarCoreUnlocks() {
+    refreshConditionalRingStarCoreUnlocks(options = {}) {
         const hasGalaxyConquest = galaxyManager?.hasEverControlledWholeGalaxy?.() === true;
         this._lastGalaxyConquestUnlockState = hasGalaxyConquest;
         this.draftSelection = this.normalizeDraftSelection(this.draftSelection);
-        this.updateUI(true);
+        if (options.updateUI !== false) {
+            this.markUIDirty(true);
+        }
     }
 
     isFleetCapacityWorldCapUncapped() {
@@ -736,29 +827,35 @@ class ArtificialManager extends EffectableEntity {
                 terraformedValue
             );
         }
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     update(delta) {
+        if (isCurrentWorldManagerDisabled('artificialManager')) return;
         const hasGalaxyConquest = galaxyManager?.hasEverControlledWholeGalaxy?.() === true;
         if (hasGalaxyConquest !== this._lastGalaxyConquestUnlockState) {
-            this.refreshConditionalRingStarCoreUnlocks();
+            this.refreshConditionalRingStarCoreUnlocks({ updateUI: false });
         }
-        if (!this.enabled || !this.activeProject) return;
-        if (this.activeProject.status === 'building') {
+        if (!this.enabled) return;
+        if (this.activeProject && this.activeProject.status === 'building') {
+            this.refreshActiveProjectDuration();
             this.setRemainingTime(this.activeProject.remainingMs - delta, false);
-            if (this.activeProject && this.activeProject.status === 'completed') return;
+            if (this.activeProject && this.activeProject.status === 'completed') {
+                this.runAutomation();
+                return;
+            }
         }
+        this.runAutomation();
         this._tickTimer += delta;
         if (this._tickTimer >= 500) {
             this._tickTimer = 0;
-            this.updateUI();
         }
     }
 
     applyEffect(effect) {
         if (!effect) return;
         if (effect.type === 'enable') {
+            if (isCurrentWorldManagerDisabled('artificialManager')) return;
             this.enable(effect.targetId);
             return;
         }
@@ -873,15 +970,41 @@ class ArtificialManager extends EffectableEntity {
         const hectares = this.calculateAreaHectares(radiusEarth);
         const batches = hectares / 50_000_000_000;
         const hours = this.constructionHoursPer50B * Math.max(batches, 0);
-        return hours * 3_600_000;
+        return hours * 3_600_000
+            * this.getConstructionTimeMultiplier()
+            / getMegaprojectsCoordinationMegaprojectSpeedMultiplier(spaceManager);
+    }
+
+    getConstructionTimeMultiplier() {
+        let multiplier = 1;
+        for (const effect of this.activeEffects) {
+            if (effect.type === 'artificialWorldConstructionTimeMultiplier') {
+                multiplier *= effect.value;
+            }
+        }
+        return multiplier;
     }
 
     getDurationContext(radiusEarth) {
         const base = this.calculateDurationMs(radiusEarth);
-        const worlds = spaceManager && spaceManager.getTerraformedPlanetCount
-            ? Math.max(spaceManager.getTerraformedPlanetCount(), 1)
-            : 1;
+        const worlds = Math.max(spaceManager.getTerraformedPlanetCount(), 1);
         return { durationMs: base / worlds, worldCount: worlds };
+    }
+
+    refreshActiveProjectDuration() {
+        if (!this.activeProject || this.activeProject.status !== 'building') return false;
+        const previousDuration = Math.max(this.activeProject.durationMs || 0, 0);
+        const previousRemaining = Math.max(this.activeProject.remainingMs || 0, 0);
+        const context = this.getDurationContext(this.activeProject.radiusEarth);
+        if (context.durationMs === previousDuration) return false;
+        const progress = previousDuration > 0
+            ? Math.max(0, Math.min(1, 1 - previousRemaining / previousDuration))
+            : 0;
+        this.activeProject.durationMs = context.durationMs;
+        this.activeProject.remainingMs = context.durationMs * (1 - progress);
+        this.activeProject.worldDivisor = context.worldCount;
+        this.markUIDirty(false);
+        return true;
     }
 
     getAutoRadius(bounds) {
@@ -1028,12 +1151,104 @@ class ArtificialManager extends EffectableEntity {
         return Math.max(durationMs || 0, 0) > MAX_SHELL_DURATION_MS;
     }
 
+    setAllowSpaceStoragePayments(value) {
+        this.allowSpaceStoragePayments = !!value;
+    }
+
+    getAllowSpaceStoragePayments() {
+        return this.allowSpaceStoragePayments;
+    }
+
     setPrioritizeSpaceStorage(value) {
         this.prioritizeSpaceStorage = !!value;
     }
 
     getPrioritizeSpaceStorage() {
         return this.prioritizeSpaceStorage;
+    }
+
+    setAutoStart(value) {
+        this.autoStart = !!value;
+        this.runAutomation();
+    }
+
+    clearAutoStart() {
+        if (!this.autoStart) return false;
+        this.autoStart = false;
+        return true;
+    }
+
+    getAutoStart() {
+        return this.autoStart;
+    }
+
+    setAutoStore(value) {
+        this.autoStore = !!value;
+        this.runAutomation();
+    }
+
+    getAutoStore() {
+        return this.autoStore;
+    }
+
+    setAutoStoreWithMaxStockpile(value) {
+        this.autoStoreWithMaxStockpile = !!value;
+        this.runAutomation();
+    }
+
+    getAutoStoreWithMaxStockpile() {
+        return this.autoStoreWithMaxStockpile;
+    }
+
+    startDraftConstruction() {
+        if (!this.enabled || this.activeProject) return false;
+        const selection = this.getDraftSelection();
+        const chosenName = selection.name && String(selection.name).trim()
+            ? String(selection.name).trim()
+            : '';
+        if (selection.type === 'shell') {
+            return this.startShellConstruction({
+                radiusEarth: selection.radiusEarth,
+                core: selection.core,
+                starContext: selection.starContext,
+                name: chosenName,
+                sector: selection.sector,
+                sectorFilter: selection.sectorFilter
+            });
+        }
+        if (selection.type === 'ring') {
+            return this.startRingConstruction({
+                starCore: selection.ringStarCore,
+                orbitRadiusAU: selection.orbitRadiusAU,
+                widthKm: selection.widthKm,
+                targetFluxWm2: selection.targetFluxWm2,
+                name: chosenName,
+                sector: selection.sector,
+                sectorFilter: selection.sectorFilter
+            });
+        }
+        if (selection.type === 'disk') {
+            return this.startDiskConstruction({
+                starCore: selection.diskStarCore,
+                diskInnerRadiusAU: selection.diskInnerRadiusAU,
+                diskRadiusAU: selection.diskRadiusAU,
+                name: chosenName,
+                sector: selection.sector,
+                sectorFilter: selection.sectorFilter
+            });
+        }
+        return false;
+    }
+
+    runAutomation() {
+        if (!this.enabled) return;
+        if (this.autoStore && this.activeProject && this.activeProject.status === 'completed') {
+            if (this.autoStoreWithMaxStockpile && !this.fillMaxStockpile()) return;
+            this.storeConstructedWorld();
+        }
+        if (this.autoStart && !this.activeProject) {
+            this.startDraftConstruction();
+        }
     }
 
     createSeed() {
@@ -1043,34 +1258,52 @@ class ArtificialManager extends EffectableEntity {
 
     getDefaultWorldName(type) {
         const baseName = type === 'ring' ? 'Ringworld' : (type === 'disk' ? 'Alderson Disk' : 'Shellworld');
-        const pattern = new RegExp(`^${baseName} \\d+$`);
-        const statuses = spaceManager?.artificialWorldStatuses || {};
-        const count = Object.values(statuses).reduce((total, status) => {
-            const name = status?.name
-                || status?.original?.merged?.name
-                || status?.artificialSnapshot?.name
-                || '';
-            return pattern.test(name) ? total + 1 : total;
-        }, 0);
-        return `${baseName} ${count + 1}`;
+        return `${baseName} ${this.constructedCounts[type] + 1}`;
     }
 
-    getTotalPaymentAvailability(resourceKey) {
+    incrementConstructedCount(type) {
+        this.constructedCounts[type] += 1;
+    }
+
+    migrateConstructedCounts(savedCounts, activeProject) {
+        const counts = {
+            shell: Math.max(0, Math.floor(savedCounts?.shell || 0)),
+            ring: Math.max(0, Math.floor(savedCounts?.ring || 0)),
+            disk: Math.max(0, Math.floor(savedCounts?.disk || 0))
+        };
+        if (savedCounts) {
+            this.constructedCounts = counts;
+            return;
+        }
+        const statuses = spaceManager?.artificialWorldStatuses || {};
+        Object.values(statuses).forEach((status) => {
+            const type = status?.type || status?.artificialSnapshot?.type || status?.original?.merged?.classification?.type || status?.original?.classification?.type || 'shell';
+            if (counts[type] !== undefined) {
+                counts[type] += 1;
+            }
+        });
+        if (activeProject && counts[activeProject.type] !== undefined) {
+            counts[activeProject.type] += 1;
+        }
+        this.constructedCounts = counts;
+    }
+
+    getTotalPaymentAvailability(resourceKey, allowStorage = this.getAllowSpaceStoragePayments()) {
         const storageProj = projectManager && projectManager.projects && projectManager.projects.spaceStorage;
         const colonyRes = resources.colony[resourceKey];
         const colonyAvailable = colonyRes ? colonyRes.value : 0;
         const storageKey = resourceKey === 'water' ? 'liquidWater' : resourceKey;
-        const storageAvailable = storageProj && storageProj.getAvailableStoredResource
+        const storageAvailable = allowStorage && storageProj && storageProj.getAvailableStoredResource
             ? storageProj.getAvailableStoredResource(storageKey)
             : 0;
         return colonyAvailable + storageAvailable;
     }
 
-    canCoverCost(cost) {
+    canCoverCost(cost, allowStorage = this.getAllowSpaceStoragePayments()) {
         for (const key of Object.keys(cost)) {
             const required = Math.max(cost[key] || 0, 0);
             if (!required) continue;
-            const total = this.getTotalPaymentAvailability(key);
+            const total = this.getTotalPaymentAvailability(key, allowStorage);
             if (total < required) {
                 return false;
             }
@@ -1105,7 +1338,7 @@ class ArtificialManager extends EffectableEntity {
 
     clearPrepay() {
         this.resetPrepay();
-        this.updateUI(true);
+        this.markUIDirty(true);
     }
 
     getRemainingCost(cost, paid) {
@@ -1118,7 +1351,7 @@ class ArtificialManager extends EffectableEntity {
         return remaining;
     }
 
-    getResourceAvailability(cost) {
+    getResourceAvailability(cost, allowStorage = this.getAllowSpaceStoragePayments()) {
         const availability = {};
         Object.keys(cost).forEach((key) => {
             const required = Math.max(cost[key] || 0, 0);
@@ -1126,7 +1359,7 @@ class ArtificialManager extends EffectableEntity {
                 availability[key] = 0;
                 return;
             }
-            availability[key] = this.getTotalPaymentAvailability(key);
+            availability[key] = this.getTotalPaymentAvailability(key, allowStorage);
         });
         return availability;
     }
@@ -1190,13 +1423,13 @@ class ArtificialManager extends EffectableEntity {
             this.prepay.paid[key] = (this.prepay.paid[key] || 0) + payload[key];
         });
         const nextState = this.getPrepayState(selection, cost);
-        this.updateUI(false);
+        this.markUIDirty(false);
         return { status: nextState.canStart ? 'ready' : 'prepaid', state: nextState };
     }
 
-    pullResources(cost, prioritizeStorage = this.getPrioritizeSpaceStorage()) {
+    pullResources(cost, allowStorage = this.getAllowSpaceStoragePayments(), prioritizeStorage = this.getPrioritizeSpaceStorage()) {
         const storageProj = projectManager && projectManager.projects && projectManager.projects.spaceStorage;
-        const useStorage = !!storageProj;
+        const useStorage = allowStorage && !!storageProj;
         const plan = {};
 
         for (const key of Object.keys(cost)) {
@@ -1237,9 +1470,6 @@ class ArtificialManager extends EffectableEntity {
             }
         });
 
-        if (useStorage && typeof updateSpaceStorageUI === 'function') {
-            updateSpaceStorageUI(storageProj);
-        }
         return plan;
     }
 
@@ -1248,6 +1478,7 @@ class ArtificialManager extends EffectableEntity {
       if (!this.isArtificialTypeUnlocked('shell')) return false;
       const core = options?.core || 'super-earth';
       if (!this.isArtificialCoreUnlocked(core)) return false;
+      if (core === SUPERMASSIVE_SHELL_CORE && this.hasSupermassiveShellworld()) return false;
       const coreConfig = getArtificialCoreConfig(core);
       const bounds = getArtificialCoreBounds(core);
       const starContext = options?.starContext || ARTIFICIAL_STAR_CONTEXTS[0].value;
@@ -1287,7 +1518,7 @@ class ArtificialManager extends EffectableEntity {
         return false;
       }
       const now = Date.now();
-      let sector = options?.sector || 'auto';
+      let sector = core === SUPERMASSIVE_SHELL_CORE ? SUPERMASSIVE_SHELL_SECTOR : (options?.sector || 'auto');
       if (sector === 'auto') {
         sector = this.resolveAutoSector(options?.sectorFilter || 'all');
       }
@@ -1332,8 +1563,9 @@ class ArtificialManager extends EffectableEntity {
           worldDivisor: worldCount
       };
 
+      this.incrementConstructedCount('shell');
       this.nextId += 1;
-      this.updateUI(true);
+      this.markUIDirty(true);
       return true;
     }
 
@@ -1424,8 +1656,9 @@ class ArtificialManager extends EffectableEntity {
           worldDivisor: worldCount
       };
 
+      this.incrementConstructedCount('ring');
       this.nextId += 1;
-      this.updateUI(true);
+      this.markUIDirty(true);
       return true;
     }
 
@@ -1513,8 +1746,9 @@ class ArtificialManager extends EffectableEntity {
           worldDivisor: worldCount
       };
 
+      this.incrementConstructedCount('disk');
       this.nextId += 1;
-      this.updateUI(true);
+      this.markUIDirty(true);
       return true;
     }
 
@@ -1522,7 +1756,8 @@ class ArtificialManager extends EffectableEntity {
         if (!this.activeProject || this.activeProject.status !== 'building') return false;
         this.recordHistoryEntry('cancelled');
         this.activeProject = null;
-        this.updateUI(true);
+        this.clearAutoStart();
+        this.markUIDirty(true);
         return true;
     }
 
@@ -1538,8 +1773,27 @@ class ArtificialManager extends EffectableEntity {
         if (!this.activeProject || this.activeProject.status !== 'completed') return false;
         this.recordHistoryEntry('discarded');
         this.activeProject = null;
-        this.updateUI(true);
+        this.clearAutoStart();
+        this.markUIDirty(true);
         return true;
+    }
+
+    getStoredArtificialWorldCount(excludedSeed = null) {
+        const statuses = spaceManager?.artificialWorldStatuses || {};
+        const excluded = excludedSeed === null ? null : String(excludedSeed);
+        return Object.keys(statuses).reduce((count, seed) => {
+            if (seed === excluded) return count;
+            return statuses[seed]?.stored ? count + 1 : count;
+        }, 0);
+    }
+
+    hasStoredArtificialWorldCapacity(excludedSeed = null) {
+        return this.getStoredArtificialWorldCount(excludedSeed) < ARTIFICIAL_STORED_WORLD_LIMIT;
+    }
+
+    canStoreConstructedWorld() {
+        if (!this.activeProject || this.activeProject.status !== 'completed') return false;
+        return this.hasStoredArtificialWorldCapacity(this.activeProject.seed);
     }
 
     storeConstructedWorld() {
@@ -1548,6 +1802,7 @@ class ArtificialManager extends EffectableEntity {
 
         const project = this.activeProject;
         const seed = String(project.seed);
+        if (!this.hasStoredArtificialWorldCapacity(seed)) return false;
         const override = this.buildOverride(project);
         const snapshot = this.buildSnapshotFromParams(override);
         const now = Date.now();
@@ -1559,6 +1814,7 @@ class ArtificialManager extends EffectableEntity {
         status.name = project.name;
         status.terraformed = false;
         status.colonists = 0;
+        status.populationCapacity = 0;
         status.visited = false;
         status.orbitalRing = false;
         status.departedAt = null;
@@ -1584,9 +1840,10 @@ class ArtificialManager extends EffectableEntity {
         delete status.original;
 
         spaceManager.artificialWorldStatuses[seed] = status;
+        spaceManager._ensureGalacticPopulationTotals();
         this.recordHistoryEntry('stored');
         this.activeProject = null;
-        this.updateUI(true);
+        this.markUIDirty(true);
         return true;
     }
 
@@ -1615,12 +1872,43 @@ class ArtificialManager extends EffectableEntity {
         }
         if (!request.metal && !request.silicon) return false;
 
-        const deduction = this.pullResources(request, prioritizeStorage);
+        const deduction = this.pullResources(request, this.getAllowSpaceStoragePayments(), prioritizeStorage);
         if (!deduction) return false;
         this.activeProject.stockpile.metal += request.metal || 0;
         this.activeProject.stockpile.silicon += request.silicon || 0;
         this.activeProject.override = null;
-        this.updateUI(true);
+        this.markUIDirty(true);
+        return true;
+    }
+
+    getMissingMaxStockpile(project = this.activeProject) {
+        if (!project) return { metal: 0, silicon: 0 };
+        const stockpile = project.stockpile || project.initialDeposit || {};
+        const cap = this.getStockpileCap(project);
+        return {
+            metal: Math.max(0, cap - (stockpile.metal || 0)),
+            silicon: Math.max(0, cap - (stockpile.silicon || 0))
+        };
+    }
+
+    fillMaxStockpile() {
+        if (!this.activeProject) return false;
+        if (!this.activeProject.stockpile) {
+            const legacyDeposit = this.activeProject.initialDeposit || {};
+            this.activeProject.stockpile = {
+                metal: legacyDeposit.metal || 0,
+                silicon: legacyDeposit.silicon || 0
+            };
+        }
+        const request = this.getMissingMaxStockpile(this.activeProject);
+        if (!request.metal && !request.silicon) return true;
+        if (!this.canCoverCost(request)) return false;
+        const deduction = this.pullResources(request);
+        if (!deduction) return false;
+        this.activeProject.stockpile.metal += request.metal || 0;
+        this.activeProject.stockpile.silicon += request.silicon || 0;
+        this.activeProject.override = null;
+        this.markUIDirty(true);
         return true;
     }
 
@@ -1643,7 +1931,7 @@ class ArtificialManager extends EffectableEntity {
             resources?.colony?.metal?.increase?.(payout, true);
             resources?.colony?.silicon?.increase?.(payout, true);
         }
-        this.updateUI(true);
+        this.markUIDirty(true);
         return true;
     }
 
@@ -1829,6 +2117,7 @@ class ArtificialManager extends EffectableEntity {
                     target: 'researchManager',
                     targetId: 'space_elevator',
                     type: 'researchDisable',
+                    clearOnTravel: true,
                     effectId: 'ringworld-disable-space-elevator-research'
                 },
                 {
@@ -1863,6 +2152,12 @@ class ArtificialManager extends EffectableEntity {
                 }
             ]
             : [
+                ...(project.core === SUPERMASSIVE_SHELL_CORE ? [{
+                    target: 'project',
+                    targetId: 'birchWorld',
+                    type: 'enable',
+                    effectId: 'smbh-shellworld-enable-birch-world'
+                }] : []),
                 {
                     target: 'project',
                     targetId: 'planetaryThruster',
@@ -1979,7 +2274,7 @@ class ArtificialManager extends EffectableEntity {
                 currentPlanetParameters.name = nextName;
             }
         }
-        this.updateUI(true);
+        this.markUIDirty(true);
         return true;
     }
 
@@ -2010,7 +2305,7 @@ class ArtificialManager extends EffectableEntity {
         if (!traveled) return false;
         this.recordHistoryEntry('traveled');
         this.activeProject = null;
-        this.updateUI(true);
+        this.markUIDirty(true);
         resetGameFrameClock(true);
         return true;
     }
@@ -2020,6 +2315,11 @@ class ArtificialManager extends EffectableEntity {
         if (!spaceManager || !spaceManager.artificialWorldStatuses) return false;
         const status = spaceManager.artificialWorldStatuses[seed];
         if (!status) return false;
+        if (spaceManager.currentArtificialKey !== null && String(spaceManager.currentArtificialKey) === seed) return false;
+        const canTravelStatus = status.stored
+            || status.abandoned
+            || (status.terraformed && this.isSupermassiveShellworldEntry(status));
+        if (!canTravelStatus) return false;
         let snapshot = status.artificialSnapshot || null;
         if (!snapshot) {
             const merged = status.original?.merged || status.original?.override || status.original;
@@ -2055,7 +2355,7 @@ class ArtificialManager extends EffectableEntity {
         if (!status || (!status.stored && !status.abandoned)) return false;
         const discarded = spaceManager.discardStoredArtificialWorld(seed);
         if (!discarded) return false;
-        this.updateUI(true);
+        this.markUIDirty(true);
         return true;
     }
 
@@ -2074,7 +2374,7 @@ class ArtificialManager extends EffectableEntity {
             this.activeProject.override = null;
         }
         if (triggerUpdate) {
-            this.updateUI(true);
+            this.markUIDirty(true);
         }
         return true;
     }
@@ -2228,9 +2528,14 @@ class ArtificialManager extends EffectableEntity {
         }
         return {
             enabled: this.enabled,
+            allowSpaceStoragePayments: this.allowSpaceStoragePayments,
             prioritizeSpaceStorage: this.prioritizeSpaceStorage,
+            autoStart: this.autoStart,
+            autoStore: this.autoStore,
+            autoStoreWithMaxStockpile: this.autoStoreWithMaxStockpile,
             fleetCapacityWorldCap: this.fleetCapacityWorldCap,
             nextId: this.nextId,
+            constructedCounts: { ...this.constructedCounts },
             activeProject: project,
             unlockedTypes: Array.from(this.unlockedTypes),
             unlockedCores: Array.from(this.unlockedCores),
@@ -2245,7 +2550,14 @@ class ArtificialManager extends EffectableEntity {
 
     loadState(state) {
         if (!state) return;
+        this.allowSpaceStoragePayments = Object.prototype.hasOwnProperty.call(state, 'allowSpaceStoragePayments')
+            ? state.allowSpaceStoragePayments !== false
+            : state.prioritizeSpaceStorage !== false;
         this.prioritizeSpaceStorage = state.prioritizeSpaceStorage !== false;
+        this.autoStart = state.autoStart === true;
+        this.autoStore = state.autoStore === true;
+        this.autoStoreWithMaxStockpile = state.autoStoreWithMaxStockpile !== false;
+        this.migrateConstructedCounts(state.constructedCounts, state.activeProject || null);
         if (Array.isArray(state.unlockedTypes)) {
             this.unlockedTypes = new Set(state.unlockedTypes);
         }
@@ -2425,12 +2737,20 @@ class ArtificialManager extends EffectableEntity {
             }
         }
         this.nextId = Math.max(state.nextId || this.nextId, (this.activeProject?.id || 0) + 1, 1);
-        this.updateUI(true);
+        this.markUIDirty(true);
+    }
+
+    markUIDirty(force = false) {
+        this.uiDirty = true;
+        this.forceUIRefresh = this.forceUIRefresh || force === true || force?.force === true;
     }
 
     updateUI(force = false) {
+        const forceRefresh = force === true || force?.force === true;
+        this.uiDirty = false;
+        this.forceUIRefresh = false;
         if (typeof updateArtificialUI === 'function') {
-            updateArtificialUI({ force });
+            updateArtificialUI({ force: forceRefresh });
         }
     }
 }

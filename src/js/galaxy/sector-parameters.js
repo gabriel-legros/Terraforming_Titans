@@ -2,7 +2,7 @@ const DEFAULT_SECTOR_VALUE = 1000;
 const DEFAULT_SECTOR_REWARD = [
     {
         type: 'habitableWorld',
-        label: 'Habitable World',
+        label: t('ui.galaxy.sector.habitableWorld', {}, 'Habitable World'),
         amount: 1
     }
 ];

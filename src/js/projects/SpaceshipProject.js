@@ -82,6 +82,30 @@ class SpaceshipProject extends Project {
     this.applyingContinuousPlanGain = false;
   }
 
+  recalculateShipCapacityMultiplier() {
+    let multiplier = 1;
+    this.activeEffects.forEach((effect) => {
+      if (effect.type === 'shipCapacityMultiplier') {
+        multiplier *= effect.value;
+      }
+    });
+    this.shipCapacityMultiplier = multiplier;
+  }
+
+  applyShipCapacityMultiplier(effect) {
+    this.recalculateShipCapacityMultiplier();
+  }
+
+  removeEffect(effect) {
+    super.removeEffect(effect);
+    this.recalculateShipCapacityMultiplier();
+  }
+
+  applyActiveEffects(firstTime = true) {
+    super.applyActiveEffects(firstTime);
+    this.recalculateShipCapacityMultiplier();
+  }
+
   getActiveShipCount() {
     return this.assignedSpaceships ?? 0;
   }
@@ -718,13 +742,23 @@ class SpaceshipProject extends Project {
     autoAssignLabel.htmlFor = `${this.name}-auto-assign-spaceships`;
     autoAssignLabel.textContent = getSpaceshipProjectText('ui.projects.common.autoAssign', 'Auto assign');
 
+    const autoAssignAutomationLockInfo = document.createElement('span');
+    autoAssignAutomationLockInfo.classList.add('info-tooltip-icon', 'automation-control-lock-tooltip');
+    autoAssignAutomationLockInfo.hidden = true;
+    attachDynamicInfoTooltip(
+      autoAssignAutomationLockInfo,
+      getSpaceshipProjectText('ui.projects.spaceship.controlledByAutomation', 'controlled by automation')
+    );
+
     autoAssignCheckboxContainer.appendChild(autoAssignCheckbox);
     autoAssignCheckboxContainer.appendChild(autoAssignLabel);
+    autoAssignCheckboxContainer.appendChild(autoAssignAutomationLockInfo);
 
     projectElements[this.name] = {
       ...projectElements[this.name],
       autoAssignCheckbox,
       autoAssignCheckboxContainer,
+      autoAssignAutomationLockInfo,
       assignmentButtons,
       assignmentContainer,
     };
@@ -1390,7 +1424,7 @@ class SpaceshipProject extends Project {
     }
 
     const disposalEntries = this.attributes.spaceExport
-      ? this.getContinuousDisposalEntries(context, productivity)
+      ? this.getContinuousDisposalEntries(context, productivity, accumulatedChanges)
       : [];
 
     const gainBase = {};
@@ -1544,7 +1578,8 @@ class SpaceshipProject extends Project {
     const gainFraction = context.fraction * context.successChance * ratio;
     const failedGainFraction = context.fraction * context.failureChance * ratio;
     const resourceGain = {};
-    this.addScaledResourceMap(resourceGain, gainBase, gainFraction * productivity);
+    // Keep reported continuous gain rates aligned with applied gains, which use worker-adjusted productivity.
+    this.addScaledResourceMap(resourceGain, gainBase, gainFraction * context.productivity);
 
     let fundingGain = 0;
     if (appliedDisposal > 0 && this.attributes.fundingGainAmount > 0) {

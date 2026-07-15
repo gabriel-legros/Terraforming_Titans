@@ -31,7 +31,7 @@ class SolisManager extends EffectableEntity {
       superconductors: 100,
       food: 5,
     }, resourceValues);
-    this.solisPoints = 0;
+    this.showPointsInSidebar = false;
     this.rewardMultiplier = 1;
     this.currentQuest = null;
     this.lastQuestTime = 0;
@@ -72,6 +72,38 @@ class SolisManager extends EffectableEntity {
       automationScripting: { baseCost: 10000, purchases: 0, max: 1, enabled: false },
       autoTravel: { baseCost: 100000, purchases: 0, max: 1, enabled: false }
     };
+  }
+
+  ensureSolisPointsResource() {
+    if (!resources.special.solisPoints) {
+      const config = defaultPlanetParameters.resources.special.solisPoints;
+      resources.special.solisPoints = new Resource({
+        ...config,
+        name: 'solisPoints',
+        category: 'special',
+        displayName: config.displayName || config.name || t('catalogs.resources.special.solisPoints.name', {}, 'Solis Points')
+      });
+    }
+    return resources.special.solisPoints;
+  }
+
+  get solisPoints() {
+    return this.ensureSolisPointsResource().value;
+  }
+
+  set solisPoints(value) {
+    this.ensureSolisPointsResource().value = value;
+  }
+
+  syncSolisPointsResourceVisibility() {
+    const resource = this.ensureSolisPointsResource();
+    resource.unlocked = this.enabled && !isCurrentWorldManagerDisabled('solisManager');
+    resource.showInSidebar = this.showPointsInSidebar;
+  }
+
+  setPointsSidebarVisibility(show) {
+    this.showPointsInSidebar = show === true;
+    this.syncSolisPointsResourceVisibility();
   }
 
   isUpgradeEnabled(key) {
@@ -134,7 +166,8 @@ class SolisManager extends EffectableEntity {
   }
 
   getCurrentReward() {
-    return this.rewardMultiplier * this.getTerraformedWorldBonus();
+    const gainMultiplier = normalizeDifficultySettingValue('solisPointsGainMultiplier', gameSettings.solisPointsGainMultiplier);
+    return this.rewardMultiplier * this.getTerraformedWorldBonus() * gainMultiplier;
   }
 
   clampRewardMultiplier(multiplier) {
@@ -247,9 +280,7 @@ class SolisManager extends EffectableEntity {
   }
 
   getBaseQuestQuantity() {
-    if (!this.currentQuest) return 0;
-    const factor = Math.pow(10, Math.max(0, this.rewardMultiplier - 1));
-    return Math.ceil(this.currentQuest.quantity / factor);
+    return this.getQuestBaseQuantityForMultiplier(this.currentQuest);
   }
 
   applyMultiplier(multiplier, baseQuantity) {
@@ -532,12 +563,12 @@ class SolisManager extends EffectableEntity {
     return purchased;
   }
 
-  applyResearchUpgrade() {
+  applyResearchUpgrade(options = {}) {
     const upgrade = this.shopUpgrades.researchUpgrade;
     if (!upgrade || upgrade.purchases <= 0) return;
     if (!researchManager || typeof researchManager.completeResearchInstant !== 'function') return;
     for (let i = 0; i < upgrade.purchases && i < RESEARCH_UPGRADE_ORDER.length; i++) {
-      researchManager.completeResearchInstant(RESEARCH_UPGRADE_ORDER[i]);
+      researchManager.completeResearchInstant(RESEARCH_UPGRADE_ORDER[i], options);
     }
   }
 
@@ -580,11 +611,17 @@ class SolisManager extends EffectableEntity {
     } else {
       res.value -= count;
     }
-    this.solisPoints += count * 25;
+    const gainMultiplier = normalizeDifficultySettingValue('solisPointsGainMultiplier', gameSettings.solisPointsGainMultiplier);
+    this.solisPoints += count * 25 * gainMultiplier;
     return true;
   }
 
-  reapplyEffects() {
+  reapplyEffects(options = {}) {
+    this.syncSolisPointsResourceVisibility();
+    if (isCurrentWorldManagerDisabled('solisManager')) {
+      return;
+    }
+    const grantStartingResources = options.grantStartingResources === true;
     this.setUpgradeEnabled('autoResearch', this.isBooleanFlagSet('solisAutoResearch'));
     this.setUpgradeEnabled('shipAssignment', this.isBooleanFlagSet('solisShipAssignment'));
     this.setUpgradeEnabled('lifeAutomation', this.isBooleanFlagSet('solisLifeAutomation'));
@@ -634,7 +671,7 @@ class SolisManager extends EffectableEntity {
       });
     }
 
-    this.applyResearchUpgrade();
+    this.applyResearchUpgrade({ showConstructionOfficeGuidePrompt: false });
     this.applyTerraformingMeasurementUpgrade();
     this.applyShipbuildingPermanentResearch();
     this.applyAndroidsPermanentResearch();
@@ -782,7 +819,7 @@ class SolisManager extends EffectableEntity {
             ships.unlocked = true;
           }
         }
-        if (!globalGameIsLoadingFromSave) {
+        if (grantStartingResources) {
           if (ships.increase) {
             ships.increase(startingShipsUpgrade.purchases);
           } else {
@@ -809,7 +846,7 @@ class SolisManager extends EffectableEntity {
             sourceId: 'solisShop'
           });
         }
-        if (!globalGameIsLoadingFromSave) {
+        if (grantStartingResources) {
           res.increase(amount);
         }
       }
@@ -817,6 +854,9 @@ class SolisManager extends EffectableEntity {
   }
 
   update(delta) {
+    if (isCurrentWorldManagerDisabled('solisManager')) {
+      return;
+    }
     const elapsed = Math.max(0, delta);
     if (this.questCooldownRemaining > 0) {
       this.questCooldownRemaining = Math.max(0, this.questCooldownRemaining - elapsed);
@@ -831,6 +871,7 @@ class SolisManager extends EffectableEntity {
     const now = Date.now();
     return {
       solisPoints: this.solisPoints,
+      showPointsInSidebar: this.showPointsInSidebar,
       rewardMultiplier: this.rewardMultiplier,
       currentQuest: this.currentQuest,
       lastQuestTime: this.hasGeneratedQuest ? now : 0,
@@ -856,6 +897,7 @@ class SolisManager extends EffectableEntity {
 
   loadState(data) {
     this.solisPoints = data.solisPoints || 0;
+    this.setPointsSidebarVisibility(data.showPointsInSidebar === true);
     this.rewardMultiplier = this.clampRewardMultiplier(data.rewardMultiplier || 1);
     this.currentQuest = data.currentQuest;
     this.normalizeCurrentQuestQuantity();
@@ -900,7 +942,11 @@ class SolisManager extends EffectableEntity {
   }
 
   enable() {
+    if (isCurrentWorldManagerDisabled('solisManager')) {
+      return;
+    }
     this.enabled = true;
+    this.syncSolisPointsResourceVisibility();
     if (typeof showSolisTab === 'function') {
       showSolisTab();
     }

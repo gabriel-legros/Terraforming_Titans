@@ -13,6 +13,8 @@ const solisUIElements = {
   maxButton: null,
   silenceToggle: null,
   pointsValue: null,
+  pointsSidebarToggleContainer: null,
+  pointsSidebarToggle: null,
   rewardValue: null,
   rewardTooltip: null,
   rewardTooltipContent: null,
@@ -94,6 +96,7 @@ const solisShopRepeatableKeys = [
   'startingShips',
   'research'
 ];
+const SOLIS_SHOP_MAX_PURCHASE_MULTIPLIER = 1e50;
 const solisShopControls = {
   multiplier: 1,
   divideButton: null,
@@ -106,7 +109,7 @@ function isRepeatableSolisShopUpgrade(key) {
 }
 
 function setSolisShopMultiplier(nextValue) {
-  solisShopControls.multiplier = Math.max(1, Math.floor(nextValue));
+  solisShopControls.multiplier = Math.min(SOLIS_SHOP_MAX_PURCHASE_MULTIPLIER, Math.max(1, Math.floor(nextValue)));
 }
 
 function updateSolisShopMultiplierControls() {
@@ -115,11 +118,12 @@ function updateSolisShopMultiplierControls() {
   }
   if (solisShopControls.multiplyButton) {
     solisShopControls.multiplyButton.textContent = 'x10';
+    solisShopControls.multiplyButton.disabled = getSolisShopPurchaseMultiplier() >= SOLIS_SHOP_MAX_PURCHASE_MULTIPLIER;
   }
 }
 
 function getSolisShopPurchaseMultiplier() {
-  return solisShopControls.multiplier;
+  return Math.min(solisShopControls.multiplier, SOLIS_SHOP_MAX_PURCHASE_MULTIPLIER);
 }
 
 function cacheSolisTabElements() {
@@ -157,6 +161,9 @@ function cacheSolisUIElements() {
   }
   if (!solisUIElements.pointsValue || !solisUIElements.pointsValue.isConnected) {
     solisUIElements.pointsValue = document.getElementById('solis-points-value');
+  }
+  if (!solisUIElements.pointsSidebarToggleContainer || !solisUIElements.pointsSidebarToggleContainer.isConnected) {
+    solisUIElements.pointsSidebarToggleContainer = document.getElementById('solis-points-sidebar-toggle-container');
   }
   if (!solisUIElements.rewardValue || !solisUIElements.rewardValue.isConnected) {
     solisUIElements.rewardValue = document.getElementById('solis-reward');
@@ -256,6 +263,10 @@ function ensureSolisCooldownElements() {
 }
 
 function showSolisTab() {
+  if (isCurrentWorldSubtabDisabled('solis-hope')) {
+    hideSolisTab();
+    return;
+  }
   solisTabVisible = true;
   if (hopeSubtabManager) {
     hopeSubtabManager.show('solis-hope');
@@ -612,6 +623,20 @@ function ensureSolisSections() {
 
 function initializeSolisControls() {
   const refs = cacheSolisUIElements();
+  if (!refs.pointsSidebarToggle) {
+    refs.pointsSidebarToggle = createToggleButton({
+      onLabel: getSolisUIText('showPointsInSidebar', {}, 'Show in sidebar'),
+      offLabel: getSolisUIText('showPointsInSidebar', {}, 'Show in sidebar'),
+      isOn: solisManager.showPointsInSidebar
+    });
+    refs.pointsSidebarToggle.classList.add('solis-points-sidebar-toggle');
+    refs.pointsSidebarToggle.addEventListener('click', () => {
+      solisManager.setPointsSidebarVisibility(!solisManager.showPointsInSidebar);
+      setToggleButtonState(refs.pointsSidebarToggle, solisManager.showPointsInSidebar);
+      updateResourceDisplay(resources, 0);
+    });
+    refs.pointsSidebarToggleContainer.appendChild(refs.pointsSidebarToggle);
+  }
   if (refs.refreshButton) {
     refs.refreshButton.addEventListener('click', () => {
       solisManager.refreshQuest();
@@ -732,6 +757,9 @@ function updateSolisDynamicShopItems(refs) {
 function updateSolisHeader(refs) {
   if (refs.pointsValue) {
     refs.pointsValue.textContent = formatSolisValue(solisManager.solisPoints, false, 2);
+  }
+  if (refs.pointsSidebarToggle) {
+    setToggleButtonState(refs.pointsSidebarToggle, solisManager.showPointsInSidebar);
   }
   if (refs.rewardValue) {
     refs.rewardValue.textContent = formatSolisValue(solisManager.getCurrentReward(), false, 2);

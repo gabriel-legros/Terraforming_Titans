@@ -48,12 +48,30 @@ const projectParameters = {
           food: 1,
           components: 10,
           electronics: 10,
+          superconductors: 100,
           androids: 200,
         },
         special: {
           spaceships: 25000,
         },
       },
+    }
+  },
+  metalSalvaging: {
+    type: 'MetalSalvagingProject',
+    name: '',
+    category: 'resources',
+    cost: {},
+    duration: 10_000,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      planet: 'olympus',
+      continuousAsBuilding: true,
+      resourceGain: { surface: { scrapMetal: 1 } },
+      showInResourcesRate: true
     }
   },
   import_colonists_1: {
@@ -163,12 +181,13 @@ const projectParameters = {
     unlocked: false,
     kesslerDebrisSize: 'large',
     attributes: {
-      disableWhenHazard: ['pulsar'],
+      disableWhenHazard: ['pulsar', 'debrisDisk'],
       spaceMirrorFacility: true,
       completionEffect: [
         {
           target: 'building',
           targetId: 'spaceMirror',
+          effectId: 'space-mirror-facility-enable-space-mirror',
           type: 'enable'
         }
       ]
@@ -396,6 +415,7 @@ const projectParameters = {
         {
           target : 'building',
           targetId : 'spaceMirror',
+          effectId: 'space-elevator-space-mirror-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -404,6 +424,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'oreSpaceMining',
+          effectId: 'space-elevator-ore-space-mining-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -412,6 +433,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'siliconSpaceMining',
+          effectId: 'space-elevator-silicon-space-mining-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -420,6 +442,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'carbonSpaceMining',
+          effectId: 'space-elevator-carbon-space-mining-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -428,6 +451,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'nitrogenSpaceMining',
+          effectId: 'space-elevator-nitrogen-space-mining-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -436,6 +460,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'hydrogenSpaceMining',
+          effectId: 'space-elevator-hydrogen-space-mining-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -444,6 +469,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'waterSpaceMining',
+          effectId: 'space-elevator-water-space-mining-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -452,6 +478,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'disposeResources',
+          effectId: 'space-elevator-dispose-resources-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -460,6 +487,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'exportResources',
+          effectId: 'space-elevator-export-resources-metal-cost',
           type : 'resourceCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -468,6 +496,7 @@ const projectParameters = {
         {
           target : 'project',
           targetId : 'spaceStorage',
+          effectId: 'space-elevator-space-storage-spaceship-metal-cost',
           type : 'spaceshipCostMultiplier',
           resourceCategory : 'colony',
           resourceId : 'metal',
@@ -500,11 +529,13 @@ const projectParameters = {
         {
           type: 'booleanFlag',
           target: 'terraforming',
+          effectId: 'magnetic-shield-terraforming-flag',
           flagId: 'magneticShield',
           value: true
         },
         {
           target: 'terraforming',
+          effectId: 'magnetic-shield-life-growth',
           type: 'lifeGrowthMultiplier',
           value: 1.5
         }
@@ -614,6 +645,19 @@ const projectParameters = {
       }
     }
   },
+  treeOfLife: {
+    type: 'TreeOfLifeProject',
+    name: '',
+    category: 'infrastructure',
+    cost: {},
+    duration: 0,
+    description: '',
+    repeatable: false,
+    unlocked: false,
+    buildTargets: ['steam'],
+    automationRequiresEverEnabled: true,
+    attributes: {}
+  },
   artificialSky: {
     type: 'ArtificialSkyProject',
     name: '',
@@ -633,7 +677,8 @@ const projectParameters = {
     kesslerDebrisSize: 'large',
     attributes: {
       spaceMining: true,
-      showInResourcesRate: false
+      showInResourcesRate: false,
+      disableWhenHazard: ['debrisDisk']
     }
   },
   artificialCrust: {
@@ -681,7 +726,7 @@ const projectParameters = {
   planetaryThruster: {
     type: 'PlanetaryThrustersProject',
     name: '',
-    category: 'mega',
+    category: 'infrastructure',
     requireStar: true,
     cost: {
       colony: {
@@ -936,6 +981,15 @@ const projectParameters = {
               carbon: 0,
               water: 5_000_000_000
             }
+          },
+          rocky: {
+            label: '',
+            complexity: 10,
+            total: 200_000_000_000,
+            capBonuses: {
+              metal: 3_000_000_000,
+              silicon: 7_000_000_000
+            }
           }
         }
       }
@@ -983,6 +1037,70 @@ const projectParameters = {
       }
     }
   },
+  artificialQuasars: {
+    type: 'ArtificialQuasarsProject',
+    name: '',
+    category: 'tera',
+    cost: {
+      colony: {
+        superalloys: 30_000_000_000_000_000_000_000_000,
+        superconductors: 15_000_000_000_000_000_000_000_000,
+        components: 300_000_000_000_000_000_000_000,
+        electronics: 150_000_000_000_000_000_000_000
+      }
+    },
+    duration: 4_000_000_000_000_000_000,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      lifterUnitRate: 1.6416e36,
+      lifterEnergyPerUnit: 0,
+      spaceBuilding: true,
+      spaceBuildingProductivity: true,
+      spaceEnergyProducer: true,
+      preserveProgressOnTravel: true,
+      lifterStripRecipe: {
+        label: '',
+        complexity: 1,
+        displayOrder: 2
+      },
+      lifterHarvestRecipes: {
+        blackHoleSpinEnergy: {
+          label: '',
+          storageKey: 'spaceEnergy',
+          outputMultiplier: 1,
+          complexity: 1,
+          displayOrder: 1
+        }
+      }
+    }
+  },
+  matrioshkaBrain: {
+    type: 'MatrioshkaBrainProject',
+    name: '',
+    category: 'tera',
+    cost: {
+      colony: {
+        electronics: 10_000_000_000_000_000_000_000_000_000,
+        superconductors: 1_000_000_000_000_000_000_000_000_000,
+        superalloys: 500_000_000_000_000_000_000_000_000,
+        components: 100_000_000_000_000_000_000_000_000
+      }
+    },
+    duration: 20 * 60 * 60 * 1000,
+    description: '',
+    repeatable: false,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      preserveProgressOnTravel: true,
+      spaceBuilding: true,
+      spaceBuildingProductivity: true
+    }
+  },
   orbitalRing: {
     type: 'OrbitalRingProject',
     name: '',
@@ -1000,6 +1118,22 @@ const projectParameters = {
     maxRepeatCount: Infinity,
     unlocked: false,
     attributes: { canUseSpaceStorage: true, showInResourcesRate: false }
+  },
+  birchWorld: {
+    type: 'BirchWorldProject',
+    name: '',
+    category: 'infrastructure',
+    cost: {},
+    duration: 300000,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      showInResourcesRate: false,
+      ignoreDurationModifiers: true
+    }
   },
   spaceStorage : {
     type: 'SpaceStorageProject',
@@ -1087,7 +1221,7 @@ const projectParameters = {
   megaHeatSink: {
     type: 'MegaHeatSinkProject',
     name: '',
-    category: 'mega',
+    category: 'infrastructure',
     cost: {
       colony: {
         superalloys: 1_000_000_000,
@@ -1100,7 +1234,7 @@ const projectParameters = {
     maxRepeatCount: Infinity,
     unlocked: false,
     attributes: {
-      disableWhenHazard: ['kessler', 'pulsar'],
+      disableWhenHazard: ['kessler', 'pulsar', 'debrisDisk'],
       canUseSpaceStorage: true,
       megaHeatSink: true,
       workersPerCompletion: 1_000_000_000,
@@ -1267,6 +1401,35 @@ const projectParameters = {
       spaceBuildingProductivity: true
     }
   },
+  nanoworld: {
+    type: 'NanoworldProject',
+    name: '',
+    category: 'mega',
+    cost: {},
+    duration: 300000,
+    description: '',
+    repeatable: false,
+    unlocked: false,
+    attributes: {
+      projectGroup: 'specializedWorlds',
+      keepStartBarVisible: true
+    }
+  },
+  resortWorld: {
+    type: 'ResortWorldProject',
+    buildTargets: ['steam'],
+    name: '',
+    category: 'mega',
+    cost: {},
+    duration: 300000,
+    description: '',
+    repeatable: false,
+    unlocked: false,
+    attributes: {
+      projectGroup: 'specializedWorlds',
+      keepStartBarVisible: true
+    }
+  },
   disposeResources : {
     type: 'SpaceDisposalProject',
     name : '',
@@ -1283,9 +1446,10 @@ const projectParameters = {
       continuousAsBuilding: true,
       costPerShip : {colony : {metal : 100000, energy : 10_000_000_000}},
       disposable : {
-        colony: ['water'],
+        colony: ['water', 'colonyHydrogen'],
         surface: [
           'liquidWater',
+          'liquidHydrogen',
           'ice',
           'dryIce',
           'liquidCO2',

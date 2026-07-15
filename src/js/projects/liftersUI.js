@@ -136,19 +136,15 @@ function renderLiftersUI(project, container) {
   const assignmentGrid = document.createElement('div');
   assignmentGrid.classList.add('hephaestus-assignment-list', 'nuclear-alchemy-assignment-list', 'lifters-assignment-list');
 
-  const stepDownButton = document.createElement('button');
-  stepDownButton.textContent = getLiftersUIText('ui.projects.common.divideTen', '/10');
-  stepDownButton.addEventListener('click', () => {
-    project.divideAssignmentStepByTen();
-    project.updateUI();
+  const stepButtons = project.createAssignmentStepButtons((key, fallback) => {
+    const paths = {
+      divideTen: 'ui.projects.common.divideTen',
+      timesTen: 'ui.projects.common.timesTen'
+    };
+    return getLiftersUIText(paths[key], fallback);
   });
-
-  const stepUpButton = document.createElement('button');
-  stepUpButton.textContent = getLiftersUIText('ui.projects.common.timesTen', 'x10');
-  stepUpButton.addEventListener('click', () => {
-    project.multiplyAssignmentStepByTen();
-    project.updateUI();
-  });
+  const stepDownButton = stepButtons.stepDownButton;
+  const stepUpButton = stepButtons.stepUpButton;
 
   const headerRow = document.createElement('div');
   headerRow.classList.add('hephaestus-assignment-row', 'hephaestus-assignment-header-row', 'nuclear-alchemy-assignment-row');
@@ -226,69 +222,21 @@ function renderLiftersUI(project, container) {
     const maxTooltip = attachDynamicInfoTooltip(maxInfo, '');
     maxWrap.append(maxEl, maxInfo);
 
-    const zeroButton = document.createElement('button');
-    zeroButton.textContent = getLiftersUIText('ui.projects.common.zero', '0');
-    zeroButton.addEventListener('click', () => {
-      project.clearAssignment(key);
+    const assignmentControls = project.createAssignmentControls(key, {
+      textProvider: (controlKey, fallback) => {
+        const paths = {
+          zero: 'ui.projects.common.zero',
+          max: 'ui.projects.common.max',
+          auto: 'ui.projects.common.auto'
+        };
+        return getLiftersUIText(paths[controlKey], fallback);
+      }
     });
-
-    const minusButton = document.createElement('button');
-    minusButton.addEventListener('click', () => {
-      project.adjustAssignment(key, -project.getAssignmentStep());
-    });
-
-    const plusButton = document.createElement('button');
-    plusButton.addEventListener('click', () => {
-      project.adjustAssignment(key, project.getAssignmentStep());
-    });
-
-    const maxButton = document.createElement('button');
-    maxButton.textContent = getLiftersUIText('ui.projects.common.max', 'Max');
-    maxButton.addEventListener('click', () => {
-      project.maximizeAssignment(key);
-    });
-
-    const autoAssignContainer = document.createElement('div');
-    autoAssignContainer.classList.add('hephaestus-auto-assign');
-    const autoAssign = document.createElement('input');
-    autoAssign.type = 'checkbox';
-    autoAssign.addEventListener('change', () => {
-      project.setAutoAssignTarget(key, autoAssign.checked);
-    });
-    const autoAssignLabel = document.createElement('span');
-    autoAssignLabel.textContent = getLiftersUIText('ui.projects.common.auto', 'Auto');
-    autoAssignLabel.addEventListener('click', () => {
-      autoAssign.checked = !autoAssign.checked;
-      project.setAutoAssignTarget(key, autoAssign.checked);
-    });
-    autoAssignContainer.append(autoAssign, autoAssignLabel);
-
-    const weightInput = document.createElement('input');
-    weightInput.type = 'number';
-    weightInput.min = '0';
-    weightInput.step = '0.1';
-    weightInput.value = String(
-      Object.prototype.hasOwnProperty.call(project.autoAssignWeights, key) ? project.autoAssignWeights[key] : 1
-    );
-    weightInput.classList.add('hephaestus-weight-input');
-    weightInput.addEventListener('input', () => {
-      const value = Number(weightInput.value);
-      project.autoAssignWeights[key] = Number.isFinite(value) ? Math.max(0, value) : 1;
-      project.normalizeAssignments();
-      project.updateUI();
-    });
-
-    const controls = document.createElement('div');
-    controls.classList.add('hephaestus-assignment-controls');
-    const controlButtons = document.createElement('div');
-    controlButtons.classList.add('hephaestus-control-buttons');
-    controlButtons.append(zeroButton, minusButton, plusButton, maxButton, autoAssignContainer);
-    controls.append(controlButtons, weightInput);
 
     const rateEl = document.createElement('div');
     rateEl.classList.add('stat-value', 'nuclear-alchemy-rate-cell');
 
-    row.append(nameWrap, complexityEl, amountEl, maxWrap, controls, rateEl);
+    row.append(nameWrap, complexityEl, amountEl, maxWrap, assignmentControls.controls, rateEl);
     assignmentGrid.appendChild(row);
 
     rowElements[key] = {
@@ -299,12 +247,12 @@ function renderLiftersUI(project, container) {
       maxValue: maxEl,
       maxInfo,
       maxTooltip,
-      zeroButton,
-      minusButton,
-      plusButton,
-      maxButton,
-      autoAssign,
-      weightInput,
+      zeroButton: assignmentControls.zeroButton,
+      minusButton: assignmentControls.minusButton,
+      plusButton: assignmentControls.plusButton,
+      maxButton: assignmentControls.maxButton,
+      autoAssign: assignmentControls.autoAssign,
+      weightInput: assignmentControls.weightInput,
       rate: rateEl,
     };
   });
@@ -360,17 +308,23 @@ function updateLiftersUI(project) {
   }
 
   project.normalizeAssignments();
-  const assigned = project.getAssignedTotal();
-  const totalBigInt = project.getAvailableLifters() + assigned;
-  const available = project.getAvailableLifters();
+  const assigned = project.getAssignedTotal(true);
+  const available = project.getAvailableLifters(true, assigned);
+  const totalBigInt = available + assigned;
   const step = project.getAssignmentStep();
 
   elements.totalValue.textContent = formatNumber(totalBigInt, true, 2);
   elements.assignedValue.textContent = formatNumber(assigned, true, 2);
   elements.unassignedValue.textContent = formatNumber(available, true, 2);
   elements.statusValue.textContent = project.statusText || 'Idle';
-  elements.energyPerLifterValue.textContent = formatPerSecond(project.getEffectiveEnergyPerUnit());
-  elements.energyRateValue.textContent = formatPerSecond(project.lastEnergyPerSecond);
+  const energyPerLifterDisplay = project.getEnergyPerLifterDisplayValue
+    ? project.getEnergyPerLifterDisplayValue()
+    : project.getEffectiveEnergyPerUnit();
+  const energyRateDisplay = project.getEnergyRateDisplayValue
+    ? project.getEnergyRateDisplayValue()
+    : project.lastEnergyPerSecond;
+  elements.energyPerLifterValue.textContent = formatPerSecond(energyPerLifterDisplay);
+  elements.energyRateValue.textContent = formatPerSecond(energyRateDisplay);
   const expansionRate = project.isActive ? (1000 / project.getEffectiveDuration()) : 0;
   elements.expansionRateValue.textContent = getProjectLiftersUIText(project, 'expansionRate', '{value} lifters/s', {
     value: formatNumber(expansionRate, true, 3)
@@ -382,7 +336,11 @@ function updateLiftersUI(project) {
   elements.superchargeValue.textContent = `x${formatNumber(project.getEffectiveSuperchargeMultiplier(), true, 0)}`;
   elements.superchargeSlider.value = String(project.getEffectiveSuperchargeMultiplier());
   elements.superchargeSlider.disabled = !project.hasSuperchargeUnlocked();
-  elements.superchargeEnergyValue.textContent = `Energy x${formatNumber(energyMultiplier, false, 2)}`;
+  elements.superchargeEnergyValue.textContent = getLiftersProjectText(
+    'superchargeEnergy',
+    { value: formatNumber(energyMultiplier, false, 2) },
+    'Energy x{value}'
+  );
 
   elements.runCheckbox.checked = project.isRunning;
   elements.runCheckbox.disabled = totalBigInt <= 0n;
@@ -406,7 +364,7 @@ function updateLiftersUI(project) {
     const storedCurrent = project.getStoredAssignmentAmount(key);
     const displayedCurrent = project.getDisplayedAssignmentAmount(key);
     const maxForKey = project.getAssignmentMaxTarget(key);
-    const displayedCap = isUnassigned ? null : project.getGasGiantMaxAssignmentForRecipe(key, recipe);
+    const displayedCap = isUnassigned ? null : project.getMaxAssignmentForRecipe(key, recipe);
     const showMaxTooltip = displayedCap !== null && displayedCap > 0n;
 
     row.complexity.textContent = isUnassigned ? '' : formatNumber(project.getRecipeComplexity(recipe), true);
@@ -414,23 +372,10 @@ function updateLiftersUI(project) {
     row.maxValue.textContent = displayedCap === null ? '' : formatNumber(displayedCap, true, 2);
     row.maxInfo.style.display = showMaxTooltip ? '' : 'none';
     if (showMaxTooltip) {
-      row.maxTooltip.textContent = project.getGasGiantMaxAssignmentTooltipText(key, recipe);
+      row.maxTooltip.textContent = project.getMaxAssignmentTooltipText(key, recipe);
       row.maxTooltip.style.whiteSpace = 'pre-line';
     }
-    row.minusButton.textContent = `-${formatNumber(step, true)}`;
-    row.plusButton.textContent = `+${formatNumber(step, true)}`;
-    row.autoAssign.checked = project.autoAssignFlags[key] === true;
-    row.autoAssign.disabled = totalBigInt <= 0n;
-    if (document.activeElement !== row.weightInput) {
-      row.weightInput.value = String(
-        Object.prototype.hasOwnProperty.call(project.autoAssignWeights, key) ? project.autoAssignWeights[key] : 1
-      );
-    }
-    row.weightInput.disabled = totalBigInt <= 0n;
-    row.zeroButton.disabled = storedCurrent <= 0n || project.autoAssignFlags[key];
-    row.maxButton.disabled = storedCurrent >= maxForKey || totalBigInt <= 0n || project.autoAssignFlags[key];
-    row.minusButton.disabled = storedCurrent <= 0n || project.autoAssignFlags[key];
-    row.plusButton.disabled = storedCurrent >= maxForKey || totalBigInt <= 0n || project.autoAssignFlags[key];
+    project.updateAssignmentControls(row, key, totalBigInt, step);
 
     const rate = isUnassigned ? 0 : (project.lastDisplayedRatesByRecipe?.[key] || 0);
     row.rate.textContent = isUnassigned ? '' : formatPerSecond(rate);
@@ -444,7 +389,7 @@ function updateLiftersUI(project) {
     elements.note.textContent = getProjectLiftersUIText(
       project,
       'operationNote',
-      `Per recipe rate uses (Assigned / Complexity) x ${unitRate} units/s. Max is the current assignment cap after Warp Gate Network access, complexity, throughput, and supercharge.`,
+      `Per recipe rate uses (Assigned / Complexity) x ${unitRate} units/s. Max is the current assignment cap after Warp Gate Network access, lifter stripping cap, complexity, throughput, and supercharge.`,
       { value: unitRate }
     );
   }

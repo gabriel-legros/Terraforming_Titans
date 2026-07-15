@@ -62,15 +62,25 @@ const artificialUICache = {
   effectShipEnergy: null,
   effectShipEnergyRow: null,
   effectShipEnergyLabel: null,
+  supermassiveLimitWarning: null,
   sector: null,
   sectorFilter: null,
   priority: null,
+  autoStart: null,
+  autoStore: null,
+  autoStoreWithMaxStockpile: null,
   startBtn: null,
   travelBtn: null,
   storeBtn: null,
   stopBtn: null,
   progressFill: null,
   progressLabel: null,
+  supermassivePanel: null,
+  supermassiveName: null,
+  supermassiveNameText: null,
+  supermassiveEditBtn: null,
+  supermassiveStatus: null,
+  supermassiveTravelBtn: null,
   stashSummary: null,
   stashRecommend: null,
   stashControls: {},
@@ -113,6 +123,8 @@ const ARTIFICIAL_DISKWORLD_GRAVITATIONAL_CONSTANT = 6.67430e-11;
 const ARTIFICIAL_WATT_DAY_SECONDS = 86400;
 const ARTIFICIAL_TON_KG = 1000;
 const ARTIFICIAL_SHIP_ENERGY_PENALTY_PER_TON_PER_RADIUS = 25_000;
+const ARTIFICIAL_SUPERMASSIVE_SHELL_CORE = 'smbh';
+const ARTIFICIAL_SUPERMASSIVE_SHELL_SECTOR = 'Core';
 
 function getArtificialText(path, fallback, vars) {
   try {
@@ -306,6 +318,13 @@ function syncHistoryActionButtons(row, entry) {
   }
 }
 
+function getArtificialHistoryTypeLabel(type, core) {
+  if (type === 'shell' && core === 'smbh') {
+    return getArtificialText('history.typeLabels.supermassiveShellworld', 'SMBH Shellworld');
+  }
+  return type ? type.charAt(0).toUpperCase() + type.slice(1) : '—';
+}
+
 function buildHistoryRow(entry) {
   const row = document.createElement('div');
   row.className = 'artificial-history-row';
@@ -323,7 +342,7 @@ function buildHistoryRow(entry) {
   name.appendChild(nameText);
   name.appendChild(editBtn);
   const type = document.createElement('span');
-  const typeLabel = entry.type ? entry.type.charAt(0).toUpperCase() + entry.type.slice(1) : '—';
+  const typeLabel = getArtificialHistoryTypeLabel(entry.type, entry.core);
   type.textContent = typeLabel;
   const sector = document.createElement('span');
   const sectorValue = entry.sector || '';
@@ -408,7 +427,7 @@ function updateHistoryRow(row, entry) {
   if (!cells) return;
   row.dataset.historyId = String(entry.id);
   if (cells.nameText.textContent !== entry.name) cells.nameText.textContent = entry.name;
-  const typeLabel = entry.type ? entry.type.charAt(0).toUpperCase() + entry.type.slice(1) : '—';
+  const typeLabel = getArtificialHistoryTypeLabel(entry.type, entry.core);
   if (cells.type.textContent !== typeLabel) cells.type.textContent = typeLabel;
   const sectorValue = entry.sector || '';
   const sectorLabel = sectorValue && sectorValue.getDisplayName
@@ -495,6 +514,12 @@ const ARTIFICIAL_AU_TO_EARTH_RADII = 23_481.07;
 
 function getSelectedArtificialType(project) {
   return project?.type || (artificialUICache.type ? artificialUICache.type.value : 'shell') || 'shell';
+}
+
+function isSupermassiveShellSelection(project, draft = null) {
+  const type = project?.type || (artificialUICache.type ? artificialUICache.type.value : draft?.type || 'shell');
+  const core = project?.core || (artificialUICache.core ? artificialUICache.core.value : draft?.core || '');
+  return type === 'shell' && core === ARTIFICIAL_SUPERMASSIVE_SHELL_CORE;
 }
 
 function getRadiusBounds() {
@@ -663,6 +688,14 @@ function updateArtificialTextNodeLabel(node, text) {
   }
 }
 
+function clearArtificialAutoStartForBlueprintChange() {
+  const manager = artificialManager;
+  if (!manager) return;
+  if (manager.clearAutoStart()) {
+    artificialUICache.autoStart.checked = false;
+  }
+}
+
 function storeDraftSelection(manager, options = {}) {
   const preserveSector = !!options.preserveSector;
   const preserveFilter = !!options.preserveFilter;
@@ -684,10 +717,14 @@ function storeDraftSelection(manager, options = {}) {
   if (!preserveSector) {
     const currentSector = artificialUICache.sector ? artificialUICache.sector.value : 'auto';
     const draft = manager.getDraftSelection();
-    payload.sector = (currentSector === 'auto' && draft.sector) ? draft.sector : currentSector;
+    payload.sector = isSupermassiveShellSelection(null, draft)
+      ? ARTIFICIAL_SUPERMASSIVE_SHELL_SECTOR
+      : ((currentSector === 'auto' && draft.sector) ? draft.sector : currentSector);
   }
   if (!preserveFilter) {
-    payload.sectorFilter = artificialUICache.sectorFilter ? artificialUICache.sectorFilter.value : 'all';
+    payload.sectorFilter = isSupermassiveShellSelection(null, manager.getDraftSelection())
+      ? 'all'
+      : (artificialUICache.sectorFilter ? artificialUICache.sectorFilter.value : 'all');
   }
   manager.setDraftSelection(payload);
 }
@@ -836,11 +873,11 @@ function getMaxStashAmount(resource, project, manager) {
   const colonyRes = resources && resources.colony ? resources.colony[resource] : null;
   const colonyAvailable = colonyRes ? colonyRes.value : 0;
   const storageProj = projectManager && projectManager.projects ? projectManager.projects.spaceStorage : null;
-  const storageAvailable = storageProj && storageProj.getAvailableStoredResource
+  const allowStorage = manager.getAllowSpaceStoragePayments();
+  const storageAvailable = allowStorage && storageProj && storageProj.getAvailableStoredResource
     ? storageProj.getAvailableStoredResource(resource)
     : 0;
-  const prioritize = manager.getPrioritizeSpaceStorage();
-  const total = prioritize ? storageAvailable + colonyAvailable : colonyAvailable + storageAvailable;
+  const total = colonyAvailable + storageAvailable;
   return Math.min(remaining, total);
 }
 
@@ -1273,17 +1310,73 @@ function ensureArtificialLayout() {
   durationRow.appendChild(durationInfo);
   costs.appendChild(durationRow);
 
-  const priorityLabel = document.createElement('label');
+  const priorityLabel = document.createElement('div');
   priorityLabel.className = 'artificial-priority';
+  const allowStorageLabel = document.createElement('label');
+  allowStorageLabel.className = 'artificial-inline-checkbox';
+  const allowStorageCheckbox = document.createElement('input');
+  allowStorageCheckbox.type = 'checkbox';
+  allowStorageCheckbox.checked = true;
+  artificialUICache.allowSpaceStoragePayments = allowStorageCheckbox;
+  allowStorageLabel.appendChild(allowStorageCheckbox);
+  const allowStorageText = document.createElement('span');
+  allowStorageText.textContent = getArtificialText('costs.allowSpaceStorage', 'Allow');
+  allowStorageLabel.appendChild(allowStorageText);
+  priorityLabel.appendChild(allowStorageLabel);
+  const priorityJoinText = document.createElement('span');
+  priorityJoinText.textContent = getArtificialText('costs.allowAndPrioritizeJoin', 'and');
+  priorityLabel.appendChild(priorityJoinText);
+  const priorityCheckboxLabel = document.createElement('label');
+  priorityCheckboxLabel.className = 'artificial-inline-checkbox';
   const priorityCheckbox = document.createElement('input');
   priorityCheckbox.type = 'checkbox';
   priorityCheckbox.checked = true;
   artificialUICache.priority = priorityCheckbox;
-  priorityLabel.appendChild(priorityCheckbox);
+  priorityCheckboxLabel.appendChild(priorityCheckbox);
   const priorityText = document.createElement('span');
-  priorityText.textContent = getArtificialText('costs.prioritizeSpaceStorage', 'Allow and prioritize space storage payments');
-  priorityLabel.appendChild(priorityText);
+  priorityText.textContent = getArtificialText('costs.prioritizeSpaceStorage', 'prioritize');
+  priorityCheckboxLabel.appendChild(priorityText);
+  priorityLabel.appendChild(priorityCheckboxLabel);
+  const prioritySuffix = document.createElement('span');
+  prioritySuffix.textContent = getArtificialText('costs.spaceStoragePayments', 'space storage payments');
+  priorityLabel.appendChild(prioritySuffix);
   costs.appendChild(priorityLabel);
+
+  const automationRow = document.createElement('div');
+  automationRow.className = 'artificial-automation-options';
+  const autoStartLabel = document.createElement('label');
+  autoStartLabel.className = 'artificial-priority artificial-automation-option';
+  const autoStartCheckbox = document.createElement('input');
+  autoStartCheckbox.type = 'checkbox';
+  artificialUICache.autoStart = autoStartCheckbox;
+  autoStartLabel.appendChild(autoStartCheckbox);
+  const autoStartText = document.createElement('span');
+  autoStartText.textContent = getArtificialText('costs.autoStart', 'Auto Start');
+  autoStartLabel.appendChild(autoStartText);
+  automationRow.appendChild(autoStartLabel);
+
+  const autoStoreLabel = document.createElement('label');
+  autoStoreLabel.className = 'artificial-priority artificial-automation-option';
+  const autoStoreCheckbox = document.createElement('input');
+  autoStoreCheckbox.type = 'checkbox';
+  artificialUICache.autoStore = autoStoreCheckbox;
+  autoStoreLabel.appendChild(autoStoreCheckbox);
+  const autoStoreText = document.createElement('span');
+  autoStoreText.textContent = getArtificialText('costs.autoStore', 'Auto Store');
+  autoStoreLabel.appendChild(autoStoreText);
+  automationRow.appendChild(autoStoreLabel);
+
+  const autoStoreWithMaxLabel = document.createElement('label');
+  autoStoreWithMaxLabel.className = 'artificial-priority artificial-automation-option';
+  const autoStoreWithMaxCheckbox = document.createElement('input');
+  autoStoreWithMaxCheckbox.type = 'checkbox';
+  artificialUICache.autoStoreWithMaxStockpile = autoStoreWithMaxCheckbox;
+  autoStoreWithMaxLabel.appendChild(autoStoreWithMaxCheckbox);
+  const autoStoreWithMaxText = document.createElement('span');
+  autoStoreWithMaxText.textContent = getArtificialText('costs.autoStoreWithMaxStockpile', 'with max stockpile');
+  autoStoreWithMaxLabel.appendChild(autoStoreWithMaxText);
+  automationRow.appendChild(autoStoreWithMaxLabel);
+  costs.appendChild(automationRow);
 
   const startBtn = document.createElement('button');
   startBtn.className = 'artificial-primary';
@@ -1374,6 +1467,11 @@ function ensureArtificialLayout() {
   shipRow.appendChild(shipLabel);
   shipRow.appendChild(shipValue);
   effectsList.appendChild(shipRow);
+  const supermassiveLimitWarning = document.createElement('div');
+  supermassiveLimitWarning.className = 'artificial-effect-warning hidden';
+  supermassiveLimitWarning.textContent = getArtificialText('supermassive.singleWarning', 'Only one supermassive black hole shellworld can exist.');
+  effectsList.appendChild(supermassiveLimitWarning);
+  artificialUICache.supermassiveLimitWarning = supermassiveLimitWarning;
   effects.appendChild(effectsList);
   gains.appendChild(effects);
 
@@ -1500,7 +1598,6 @@ function ensureArtificialLayout() {
   bailoutRow.appendChild(bailoutBody);
 
   artificialUICache.bailoutBtn = bailoutBtn;
-  artificialUICache.bailoutBtnTooltipContent = attachDynamicInfoTooltip(bailoutBtn, '', false);
   artificialUICache.bailoutStock = bailoutStock;
 
   stashList.appendChild(bailoutRow);
@@ -1552,6 +1649,49 @@ function ensureArtificialLayout() {
 
   card.appendChild(progressPanel);
 
+  const supermassivePanel = document.createElement('div');
+  supermassivePanel.className = 'artificial-panel artificial-supermassive-card hidden';
+  const supermassiveHeader = document.createElement('div');
+  supermassiveHeader.className = 'artificial-supermassive-header';
+  const supermassiveMain = document.createElement('div');
+  supermassiveMain.className = 'artificial-supermassive-main';
+  const supermassiveTitle = document.createElement('h3');
+  supermassiveTitle.textContent = getArtificialText('supermassive.title', 'Supermassive Black Hole Shellworld');
+  const supermassiveName = document.createElement('div');
+  supermassiveName.className = 'artificial-supermassive-name';
+  const supermassiveNameText = document.createElement('span');
+  supermassiveNameText.className = 'artificial-supermassive-name-text';
+  const supermassiveEditBtn = document.createElement('button');
+  supermassiveEditBtn.type = 'button';
+  supermassiveEditBtn.className = 'artificial-history-edit-btn artificial-supermassive-edit-btn';
+  supermassiveEditBtn.setAttribute('aria-label', getArtificialText('history.renameTitle', 'Rename this artificial world'));
+  supermassiveName.appendChild(supermassiveNameText);
+  supermassiveName.appendChild(supermassiveEditBtn);
+  supermassiveMain.appendChild(supermassiveTitle);
+  supermassiveMain.appendChild(supermassiveName);
+  const supermassiveAside = document.createElement('div');
+  supermassiveAside.className = 'artificial-supermassive-aside';
+  const supermassiveStatus = document.createElement('span');
+  supermassiveStatus.className = 'artificial-supermassive-status';
+  const supermassiveActions = document.createElement('div');
+  supermassiveActions.className = 'artificial-actions';
+  const supermassiveTravelBtn = document.createElement('button');
+  supermassiveTravelBtn.className = 'artificial-primary';
+  supermassiveTravelBtn.textContent = getArtificialText('supermassive.travel', 'Travel');
+  supermassiveActions.appendChild(supermassiveTravelBtn);
+  supermassiveAside.appendChild(supermassiveStatus);
+  supermassiveAside.appendChild(supermassiveActions);
+  supermassiveHeader.appendChild(supermassiveMain);
+  supermassiveHeader.appendChild(supermassiveAside);
+  supermassivePanel.appendChild(supermassiveHeader);
+  artificialUICache.supermassivePanel = supermassivePanel;
+  artificialUICache.supermassiveName = supermassiveName;
+  artificialUICache.supermassiveNameText = supermassiveNameText;
+  artificialUICache.supermassiveEditBtn = supermassiveEditBtn;
+  artificialUICache.supermassiveStatus = supermassiveStatus;
+  artificialUICache.supermassiveTravelBtn = supermassiveTravelBtn;
+  card.appendChild(supermassivePanel);
+
   // History panel
   const history = document.createElement('div');
   history.className = 'artificial-panel artificial-history-card';
@@ -1589,6 +1729,7 @@ function ensureArtificialLayout() {
 
   // Bind events
   typeSelect.addEventListener('change', () => {
+    clearArtificialAutoStartForBlueprintChange();
     applyRadiusBounds();
     applyStarContextBounds();
     applyRingBounds();
@@ -1597,12 +1738,14 @@ function ensureArtificialLayout() {
   });
 
   radiusRange.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     const value = clampRadiusValue(parseFloat(radiusRange.value) || 0);
     radiusRange.value = value;
     radiusInput.value = value;
     updateArtificialUI();
   });
   radiusInput.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     if (artificialUICache.radiusRange) {
       const value = parseFloat(radiusInput.value) || 0;
       const clamped = clampRadiusValue(value);
@@ -1619,6 +1762,7 @@ function ensureArtificialLayout() {
     updateArtificialUI();
   });
   radiusAuto.addEventListener('click', () => {
+    clearArtificialAutoStartForBlueprintChange();
     artificialRadiusEditing = false;
     const value = getAutoRadiusValue();
     setRadiusFields(value, true);
@@ -1626,10 +1770,12 @@ function ensureArtificialLayout() {
   });
 
   ringStarCoreSelect.addEventListener('change', () => {
+    clearArtificialAutoStartForBlueprintChange();
     applyRingBounds();
     updateArtificialUI();
   });
   ringOrbitRange.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     const value = clampRingOrbitValue(parseFloat(ringOrbitRange.value) || 0);
     ringOrbitRange.value = value;
     ringOrbitInput.value = value;
@@ -1639,6 +1785,7 @@ function ensureArtificialLayout() {
     updateArtificialUI();
   });
   ringOrbitInput.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     if (artificialUICache.ringOrbitRange) {
       const value = parseFloat(ringOrbitInput.value) || 0;
       artificialUICache.ringOrbitRange.value = clampRingOrbitValue(value);
@@ -1657,6 +1804,7 @@ function ensureArtificialLayout() {
     updateArtificialUI();
   });
   ringAuto.addEventListener('click', () => {
+    clearArtificialAutoStartForBlueprintChange();
     artificialRingOrbitEditing = false;
     artificialRingWidthEditing = false;
     if (getSelectedArtificialType(null) === 'disk') {
@@ -1674,12 +1822,14 @@ function ensureArtificialLayout() {
     updateArtificialUI();
   });
   ringWidthRange.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     const value = clampRingWidthValue(parseFloat(ringWidthRange.value) || 0);
     ringWidthRange.value = value;
     ringWidthInput.value = value;
     updateArtificialUI();
   });
   ringWidthInput.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     if (artificialUICache.ringWidthRange) {
       const value = parseFloat(ringWidthInput.value) || 0;
       artificialUICache.ringWidthRange.value = clampRingWidthValue(value);
@@ -1695,12 +1845,14 @@ function ensureArtificialLayout() {
     updateArtificialUI();
   });
   diskInnerRange.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     const value = clampDiskInnerValue(parseFloat(diskInnerRange.value) || 0);
     diskInnerRange.value = value;
     diskInnerInput.value = value;
     updateArtificialUI();
   });
   diskInnerInput.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     if (artificialUICache.diskInnerRange) {
       const value = parseFloat(diskInnerInput.value) || 0;
       artificialUICache.diskInnerRange.value = clampDiskInnerValue(value);
@@ -1716,12 +1868,14 @@ function ensureArtificialLayout() {
     updateArtificialUI();
   });
   ringFluxRange.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     const value = clampRingFluxValue(parseFloat(ringFluxRange.value) || 0);
     ringFluxRange.value = value;
     ringFluxInput.value = value;
     updateArtificialUI();
   });
   ringFluxInput.addEventListener('input', () => {
+    clearArtificialAutoStartForBlueprintChange();
     const value = parseFloat(ringFluxInput.value) || 0;
     artificialUICache.ringFluxRange.value = clampRingFluxValue(value);
   });
@@ -1747,17 +1901,38 @@ function ensureArtificialLayout() {
     project && manager.setActiveProjectName(nameInput.value);
     project || manager.setDraftSelection({ name: nameInput.value });
   });
+  allowStorageCheckbox.addEventListener('change', () => {
+    if (artificialManager) {
+      artificialManager.setAllowSpaceStoragePayments(allowStorageCheckbox.checked);
+    }
+    updateArtificialUI();
+  });
   priorityCheckbox.addEventListener('change', () => {
     if (artificialManager) {
       artificialManager.setPrioritizeSpaceStorage(priorityCheckbox.checked);
     }
     updateArtificialUI();
   });
+  autoStartCheckbox.addEventListener('change', () => {
+    if (artificialManager) {
+      artificialManager.setAutoStart(autoStartCheckbox.checked);
+    }
+    updateArtificialUI();
+  });
+  autoStoreCheckbox.addEventListener('change', () => {
+    if (artificialManager) {
+      artificialManager.setAutoStore(autoStoreCheckbox.checked);
+    }
+    updateArtificialUI();
+  });
+  autoStoreWithMaxCheckbox.addEventListener('change', () => {
+    if (artificialManager) {
+      artificialManager.setAutoStoreWithMaxStockpile(autoStoreWithMaxCheckbox.checked);
+    }
+    updateArtificialUI();
+  });
   startBtn.addEventListener('click', () => {
     if (!artificialManager) return;
-    const rawName = artificialUICache.nameInput ? artificialUICache.nameInput.value.trim() : '';
-    const isLegacyDefaultName = /^Artificial World(?: \\d+)?$/.test(rawName);
-    const chosenName = rawName && !isLegacyDefaultName ? rawName : '';
     const type = artificialUICache.type ? artificialUICache.type.value : 'shell';
     const manager = artificialManager;
     const selection = buildArtificialSelection(null, manager);
@@ -1773,50 +1948,25 @@ function ensureArtificialLayout() {
       }
       return;
     }
-    if (type === 'shell') {
-      artificialManager.startShellConstruction({
-        radiusEarth: selection.radiusEarth,
-        core: artificialUICache.core.value,
-        starContext: artificialUICache.starContext ? artificialUICache.starContext.value : undefined,
-        name: chosenName,
-        sector: artificialUICache.sector ? artificialUICache.sector.value : undefined,
-        sectorFilter: artificialUICache.sectorFilter ? artificialUICache.sectorFilter.value : 'all'
-      });
-      return;
-    }
-    if (type === 'ring') {
-      artificialManager.startRingConstruction({
-        starCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : undefined,
-        orbitRadiusAU: selection.orbitRadiusAU,
-        widthKm: selection.widthKm,
-        targetFluxWm2: selection.targetFluxWm2,
-        name: chosenName,
-        sector: artificialUICache.sector ? artificialUICache.sector.value : undefined,
-        sectorFilter: artificialUICache.sectorFilter ? artificialUICache.sectorFilter.value : 'all'
-      });
-      return;
-    }
-    if (type === 'disk') {
-      artificialManager.startDiskConstruction({
-        starCore: artificialUICache.ringStarCore ? artificialUICache.ringStarCore.value : undefined,
-        diskInnerRadiusAU: selection.diskInnerRadiusAU,
-        diskRadiusAU: selection.diskRadiusAU,
-        name: chosenName,
-        sector: artificialUICache.sector ? artificialUICache.sector.value : undefined,
-        sectorFilter: artificialUICache.sectorFilter ? artificialUICache.sectorFilter.value : 'all'
-      });
-    }
+    artificialManager.startDraftConstruction();
   });
   coreSelect.addEventListener('change', () => {
+    clearArtificialAutoStartForBlueprintChange();
     applyRadiusBounds();
     applyStarContextBounds();
     updateArtificialUI();
   });
+  starSelect.addEventListener('change', () => {
+    clearArtificialAutoStartForBlueprintChange();
+    updateArtificialUI();
+  });
   sectorSelect.addEventListener('change', () => {
+    clearArtificialAutoStartForBlueprintChange();
     artificialManager && artificialManager.setDraftSelection({ sector: sectorSelect.value });
     updateArtificialUI({ force: true });
   });
   sectorFilterSelect.addEventListener('change', () => {
+    clearArtificialAutoStartForBlueprintChange();
     artificialUICache.sector.value = 'auto';
     artificialManager && artificialManager.setDraftSelection({ sectorFilter: sectorFilterSelect.value, sector: 'auto' });
     updateArtificialUI({ force: true });
@@ -1864,6 +2014,59 @@ function ensureArtificialLayout() {
       return;
     }
     artificialManager.storeConstructedWorld();
+  });
+  supermassiveEditBtn.addEventListener('click', () => {
+    if (!artificialManager) return;
+    const entry = artificialManager.getSupermassiveShellworldStatus?.();
+    if (!entry || supermassiveName.dataset.editing === 'true') return;
+    supermassiveName.dataset.editing = 'true';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'artificial-history-name-input artificial-supermassive-name-input';
+    input.value = entry.name || getArtificialText('supermassive.unnamed', 'Supermassive Shellworld');
+    supermassiveName.replaceChild(input, supermassiveNameText);
+    supermassiveEditBtn.disabled = true;
+    input.focus();
+    input.select();
+    input.addEventListener('keydown', (keyEvent) => {
+      if (keyEvent.key === 'Enter') {
+        input.blur();
+      }
+      if (keyEvent.key === 'Escape') {
+        input.value = entry.name || '';
+        input.blur();
+      }
+    });
+    input.addEventListener('blur', () => {
+      const nextName = String(input.value || '').trim() || getArtificialText('supermassive.unnamed', 'Supermassive Shellworld');
+      const renameId = entry.renameId || entry.id;
+      artificialManager.setWorldNameById(renameId, nextName);
+      supermassiveNameText.textContent = nextName;
+      supermassiveName.replaceChild(supermassiveNameText, input);
+      supermassiveEditBtn.disabled = false;
+      supermassiveName.dataset.editing = '';
+    });
+  });
+  supermassiveTravelBtn.addEventListener('click', () => {
+    if (!artificialManager) return;
+    const entry = artificialManager.getSupermassiveShellworldStatus?.();
+    if (!entry || !entry.canTravel) return;
+    const attemptTravel = (skipCurrentWorldWarnings) => {
+      if (!skipCurrentWorldWarnings && handleCurrentWorldTravelWarnings(() => attemptTravel(true))) {
+        return;
+      }
+      if (entry.travelKind === 'constructed') {
+        const warning = artificialManager.getTravelWarning?.();
+        if (warning) {
+          showTravelWarningPopup(warning, () => artificialManager.travelToConstructedWorld());
+          return;
+        }
+        artificialManager.travelToConstructedWorld();
+        return;
+      }
+      artificialManager.travelToStoredWorld(entry.id);
+    };
+    attemptTravel(false);
   });
   prev.addEventListener('click', () => {
     if (artificialHistoryPage > 0) {
@@ -1922,7 +2125,7 @@ function toggleArtificialTabVisibility(isEnabled) {
   const { button, content, storyButton, storyContent } = cacheArtificialUIElements();
   if (!button || !content) return;
 
-  const shouldHide = !isEnabled;
+  const shouldHide = !isEnabled || isCurrentWorldSubtabDisabled('space-artificial');
   button.classList.toggle('hidden', shouldHide);
   content.classList.toggle('hidden', shouldHide);
 
@@ -2069,6 +2272,7 @@ function renderProgress(project, prepayState) {
     artificialUICache.travelBtn.disabled = true;
     if (artificialUICache.storeBtn) {
       artificialUICache.storeBtn.disabled = true;
+      artificialUICache.storeBtn.textContent = getArtificialText('actions.storeWorld', 'Store World');
     }
     return;
   }
@@ -2087,6 +2291,7 @@ function renderProgress(project, prepayState) {
     artificialUICache.travelBtn.disabled = true;
     if (artificialUICache.storeBtn) {
       artificialUICache.storeBtn.disabled = true;
+      artificialUICache.storeBtn.textContent = getArtificialText('actions.storeWorld', 'Store World');
     }
     return;
   }
@@ -2101,7 +2306,11 @@ function renderProgress(project, prepayState) {
     );
     artificialUICache.travelBtn.disabled = false;
     if (artificialUICache.storeBtn) {
-      artificialUICache.storeBtn.disabled = false;
+      const canStore = artificialManager.canStoreConstructedWorld();
+      artificialUICache.storeBtn.disabled = !canStore;
+      artificialUICache.storeBtn.textContent = canStore
+        ? getArtificialText('actions.storeWorld', 'Store World')
+        : getArtificialText('actions.storeLimitReached', 'Storage Full');
     }
     return;
   }
@@ -2112,6 +2321,39 @@ function renderProgress(project, prepayState) {
   artificialUICache.travelBtn.disabled = true;
   if (artificialUICache.storeBtn) {
     artificialUICache.storeBtn.disabled = true;
+    artificialUICache.storeBtn.textContent = getArtificialText('actions.storeWorld', 'Store World');
+  }
+}
+
+function renderSupermassiveShellworld(manager) {
+  const panel = artificialUICache.supermassivePanel;
+  if (!panel || !manager) return;
+  const entry = manager.getSupermassiveShellworldStatus?.();
+  const visible = !!entry;
+  panel.classList.toggle('hidden', !visible);
+  panel.style.display = visible ? '' : 'none';
+  if (!visible) return;
+
+  if (artificialUICache.supermassiveNameText && artificialUICache.supermassiveName?.dataset.editing !== 'true') {
+    artificialUICache.supermassiveNameText.textContent = entry.name || getArtificialText('supermassive.unnamed', 'Supermassive Shellworld');
+  }
+  if (artificialUICache.supermassiveStatus) {
+    const statusLabels = {
+      building: getArtificialText('supermassive.status.building', 'Building'),
+      completed: getArtificialText('supermassive.status.completed', 'Ready'),
+      current: getArtificialText('supermassive.status.current', 'Current'),
+      stored: getArtificialText('supermassive.status.stored', 'Stored'),
+      abandoned: getArtificialText('supermassive.status.abandoned', 'Abandoned'),
+      terraformed: getArtificialText('supermassive.status.terraformed', 'Terraformed'),
+      constructed: getArtificialText('supermassive.status.constructed', 'Constructed')
+    };
+    artificialUICache.supermassiveStatus.textContent = statusLabels[entry.status] || entry.status || '';
+  }
+  if (artificialUICache.supermassiveTravelBtn) {
+    artificialUICache.supermassiveTravelBtn.disabled = !entry.canTravel;
+    artificialUICache.supermassiveTravelBtn.textContent = entry.current
+      ? getArtificialText('supermassive.current', 'Current')
+      : getArtificialText('supermassive.travel', 'Travel');
   }
 }
 
@@ -2203,14 +2445,6 @@ function renderBailout(project, manager) {
   const allowed = onArtificial && canAfford;
   btn.disabled = !allowed;
   btn.classList.toggle('artificial-stash-unaffordable', !allowed);
-  setTooltipText(artificialUICache.bailoutBtnTooltipContent, '');
-  if (!allowed) {
-    if (!onArtificial) {
-      setTooltipText(artificialUICache.bailoutBtnTooltipContent, getArtificialText('bailout.availableOnlyOnArtificial', 'Available only on an artificial world.'));
-    } else if (!canAfford) {
-      setTooltipText(artificialUICache.bailoutBtnTooltipContent, getArtificialText('bailout.needArtifacts', 'Need 10 alien artifacts.'));
-    }
-  }
 }
 
 function buildArtificialSelection(project, manager) {
@@ -2407,6 +2641,7 @@ function renderGains(project, selection, manager) {
 
 function renderEffects(project, selection) {
   const type = project?.type || selection?.type || 'shell';
+  const core = project?.core || selection?.core || '';
   const r = project ? project.radiusEarth : selection.radiusEarth;
   const shellShipPenalty = Math.max(r - 1, 0) * ARTIFICIAL_SHIP_ENERGY_PENALTY_PER_TON_PER_RADIUS;
   if (artificialUICache.effectShipEnergyRow) {
@@ -2452,6 +2687,12 @@ function renderEffects(project, selection) {
   if (artificialUICache.effectShipEnergy) {
     artificialUICache.effectShipEnergy.textContent = (type === 'ring' || type === 'disk') ? '' : `${formatNumber(shellShipPenalty, true)} /ton`;
   }
+  if (artificialUICache.supermassiveLimitWarning) {
+    const visible = type === 'shell' && core === ARTIFICIAL_SUPERMASSIVE_SHELL_CORE;
+    artificialUICache.supermassiveLimitWarning.classList.toggle('hidden', !visible);
+    artificialUICache.supermassiveLimitWarning.style.display = visible ? '' : 'none';
+    artificialUICache.supermassiveLimitWarning.textContent = getArtificialText('supermassive.singleWarning', 'Only one supermassive black hole shellworld can exist.');
+  }
 }
 
 function renderStartButton(project, manager, preview) {
@@ -2469,8 +2710,16 @@ function renderStartButton(project, manager, preview) {
   const durationBlocked = preview.exceedsLimit;
   const type = artificialUICache.type ? artificialUICache.type.value : 'shell';
   const supported = type === 'shell' || type === 'ring' || type === 'disk';
-  btn.disabled = durationBlocked || !supported || (!canStart && !canPrepay);
-  if (durationBlocked) {
+  const core = artificialUICache.core ? artificialUICache.core.value : '';
+  const supermassiveBlocked = type === 'shell' && core === 'smbh' && manager.hasSupermassiveShellworld?.();
+  btn.disabled = durationBlocked || supermassiveBlocked || !supported || (!canStart && !canPrepay);
+  if (supermassiveBlocked) {
+    btn.textContent = getArtificialText('actions.supermassiveExists', 'Already exists');
+    setTooltipText(
+      artificialUICache.startBtnTooltipContent,
+      getArtificialText('supermassive.singleWarning', 'Only one supermassive black hole shellworld can exist.')
+    );
+  } else if (durationBlocked) {
     btn.textContent = getArtificialText('actions.exceedsLimit', 'Exceeds 5-hour limit');
     setTooltipText(
       artificialUICache.startBtnTooltipContent,
@@ -2496,7 +2745,7 @@ function renderStartButton(project, manager, preview) {
 function updateArtificialUI(options = {}) {
   const force = !!options.force;
   const manager = artificialManager;
-  const enabled = !!(manager && manager.enabled);
+  const enabled = isManagerEffectivelyEnabled(manager, 'artificialManager');
   toggleArtificialTabVisibility(enabled);
   if (!enabled) return;
 
@@ -2507,6 +2756,7 @@ function updateArtificialUI(options = {}) {
   let filterReady = false;
   const sectorFocused = document.activeElement === artificialUICache.sector;
   const filterFocused = document.activeElement === artificialUICache.sectorFilter;
+  const supermassiveSectorLocked = isSupermassiveShellSelection(project, draft);
 
   // Populate sector selector
   if (artificialUICache.sector) {
@@ -2597,8 +2847,23 @@ function updateArtificialUI(options = {}) {
         artificialUICache.sector.appendChild(opt);
       }
     }
+    if (supermassiveSectorLocked) {
+      const hasCoreOption = Array.from(artificialUICache.sector.options).some(option => option.value === ARTIFICIAL_SUPERMASSIVE_SHELL_SECTOR);
+      if (!hasCoreOption) {
+        const opt = document.createElement('option');
+        opt.value = ARTIFICIAL_SUPERMASSIVE_SHELL_SECTOR;
+        opt.textContent = getArtificialText('controls.coreSector', 'Core sector');
+        artificialUICache.sector.appendChild(opt);
+      }
+      artificialUICache.sector.value = ARTIFICIAL_SUPERMASSIVE_SHELL_SECTOR;
+      if (artificialUICache.sectorFilter) {
+        artificialUICache.sectorFilter.value = 'all';
+      }
+    }
     // Set default or project value
-    if (project && project.sector) {
+    if (supermassiveSectorLocked) {
+      artificialUICache.sector.value = ARTIFICIAL_SUPERMASSIVE_SHELL_SECTOR;
+    } else if (project && project.sector) {
       artificialUICache.sector.value = project.sector;
     } else if (!project && draft.sector && sectorsReady) {
       const shouldApplyDraft = (force || !sectorFocused)
@@ -2625,8 +2890,8 @@ function updateArtificialUI(options = {}) {
         artificialUICache.sector.dataset.lastDraftApplied = draft.sector;
       }
     }
-    artificialUICache.sector.disabled = !!project;
-    artificialUICache.sectorFilter.disabled = !!project;
+    artificialUICache.sector.disabled = !!project || supermassiveSectorLocked;
+    artificialUICache.sectorFilter.disabled = !!project || supermassiveSectorLocked;
   }
 
   if (artificialUICache.status) {
@@ -2848,8 +3113,21 @@ function updateArtificialUI(options = {}) {
   applyStarContextBounds(force);
   applyRadiusBounds();
   applyRingBounds();
+  if (artificialUICache.allowSpaceStoragePayments) {
+    artificialUICache.allowSpaceStoragePayments.checked = manager.getAllowSpaceStoragePayments();
+  }
   if (artificialUICache.priority) {
     artificialUICache.priority.checked = manager.getPrioritizeSpaceStorage();
+    artificialUICache.priority.disabled = !manager.getAllowSpaceStoragePayments();
+  }
+  if (artificialUICache.autoStart) {
+    artificialUICache.autoStart.checked = manager.getAutoStart();
+  }
+  if (artificialUICache.autoStore) {
+    artificialUICache.autoStore.checked = manager.getAutoStore();
+  }
+  if (artificialUICache.autoStoreWithMaxStockpile) {
+    artificialUICache.autoStoreWithMaxStockpile.checked = manager.getAutoStoreWithMaxStockpile();
   }
 
   if (!project) {
@@ -2869,8 +3147,8 @@ function updateArtificialUI(options = {}) {
     artificialUICache.ringFluxRange.disabled = !isRing;
     artificialUICache.ringFluxInput.disabled = !isRing;
     artificialUICache.ringAuto.disabled = !(isRing || isDisk);
-    artificialUICache.sector.disabled = false;
-    artificialUICache.sectorFilter.disabled = false;
+    artificialUICache.sector.disabled = supermassiveSectorLocked;
+    artificialUICache.sectorFilter.disabled = supermassiveSectorLocked;
     if (force && !artificialRadiusEditing) {
       setRadiusFields(draft.radiusEarth, true);
     }
@@ -2920,6 +3198,7 @@ function updateArtificialUI(options = {}) {
   renderEffects(project, selection);
   renderStartButton(project, manager, preview);
   renderProgress(project, preview.prepayState);
+  renderSupermassiveShellworld(manager);
   if (!project) {
     const paid = preview.prepayState.paid;
     const prepayLocked = (paid.metal || 0) + (paid.superalloys || 0) > 0;
@@ -2939,8 +3218,8 @@ function updateArtificialUI(options = {}) {
     artificialUICache.ringFluxRange.disabled = prepayLocked || !isRing;
     artificialUICache.ringFluxInput.disabled = prepayLocked || !isRing;
     artificialUICache.ringAuto.disabled = prepayLocked || !(isRing || isDisk);
-    artificialUICache.sector.disabled = prepayLocked;
-    artificialUICache.sectorFilter.disabled = prepayLocked;
+    artificialUICache.sector.disabled = prepayLocked || supermassiveSectorLocked;
+    artificialUICache.sectorFilter.disabled = prepayLocked || supermassiveSectorLocked;
     const sectorHasOption = artificialUICache.sector
       ? Array.from(artificialUICache.sector.options).some(option => option.value === draft.sector)
       : false;

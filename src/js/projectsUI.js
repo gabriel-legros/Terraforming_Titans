@@ -15,6 +15,18 @@ function getProjectsUIText(path, fallback, vars) {
   }
 }
 
+function createProjectCostItem(leadingComma) {
+  const span = document.createElement('span');
+  const separator = document.createElement('span');
+  const text = document.createElement('span');
+  if (leadingComma) {
+    span.dataset.leadingComma = 'true';
+  }
+  span.append(separator, text);
+  span._refs = { separator, text };
+  return span;
+}
+
 // Centralized, browser-friendly caches for Projects UI
 const projectsUICache = {
   contentWrapper: null,
@@ -427,6 +439,18 @@ function renderProjects(activeSubtabId) {
     }
   });
 
+  const activeCategories = new Set();
+  projectsArray.forEach(project => {
+    if (!activeId || getProjectSubtabIdForProject(project) === activeId) {
+      activeCategories.add(project.category || 'resources');
+    }
+  });
+  activeCategories.forEach(category => {
+    const entries = getCategoryEntries(category);
+    syncCategoryDomOrder(category, entries);
+    updateCategoryReorderButtons(category, entries);
+  });
+
   // Update the UI for each project
   projectsArray.forEach(project => {
     const isActive = !activeId || getProjectSubtabIdForProject(project) === activeId;
@@ -748,10 +772,7 @@ function createProjectItem(project) {
       }
     }
     items.forEach((item, idx) => {
-      const span = document.createElement('span');
-      if (idx > 0) {
-        span.dataset.leadingComma = 'true';
-      }
+      const span = createProjectCostItem(idx > 0);
       list.appendChild(span);
       costItems[`${item.category}.${item.resource}`] = span;
     });
@@ -887,6 +908,7 @@ function createProjectItem(project) {
   }
 
   const showTravelReset = project.name !== 'dysonSwarmReceiver' &&
+    project.name !== 'spaceAntimatter' &&
     (project.attributes?.spaceStorage ||
     project.attributes?.canUseSpaceStorage ||
     project.attributes?.projectGroup === 'specializedWorlds');
@@ -1112,6 +1134,7 @@ function getEntryCards(entry) {
 function syncCategoryDomOrder(category, entries) {
   const container = getOrCreateCategoryContainer(category || 'general');
   const seen = new Set();
+  const orderedCards = [];
 
   entries.forEach((entry) => {
     const cards = getEntryCards(entry);
@@ -1120,8 +1143,26 @@ function syncCategoryDomOrder(category, entries) {
         return;
       }
       seen.add(card);
-      container.appendChild(card);
+      orderedCards.push(card);
     });
+  });
+
+  const currentCards = Array.from(container.children).filter(card => seen.has(card));
+  let alreadyOrdered = currentCards.length === orderedCards.length;
+  if (alreadyOrdered) {
+    for (let index = 0; index < orderedCards.length; index += 1) {
+      if (currentCards[index] !== orderedCards[index] || orderedCards[index].parentElement !== container) {
+        alreadyOrdered = false;
+        break;
+      }
+    }
+  }
+  if (alreadyOrdered) {
+    return;
+  }
+
+  orderedCards.forEach((card) => {
+    container.appendChild(card);
   });
 }
 
@@ -1192,12 +1233,12 @@ function getUpdatedResourceGain(project) {
   return updatedResourceGain;
 }
 
-function getAvailableProjectCostAmount(project, category, resource) {
+function getAvailableProjectCostAmount(project, category, resource, storageAccess = null) {
   const colonyAvailable = resources[category][resource].value;
   if (project && project.attributes?.canUseSpaceStorage) {
     const storageKey = resource === 'water' ? 'liquidWater' : resource;
-    const storageProj = projectManager?.projects?.spaceStorage;
-    return getMegaProjectResourceAvailability(storageProj, storageKey, colonyAvailable);
+    const effectiveStorageAccess = storageAccess || project.createSpaceStorageAccess('expansions');
+    return getMegaProjectResourceAvailability(effectiveStorageAccess, storageKey, colonyAvailable);
   }
   return colonyAvailable;
 }
@@ -1213,6 +1254,23 @@ function updateCostDisplay(project) {
   const elements = projectElements[project.name];
   if (elements && elements.costItems) {
     const cost = project.getScaledCost();
+    let costItemCount = Object.keys(elements.costItems).length;
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        if (cost[category][resource] > 0) {
+          const key = `${category}.${resource}`;
+          if (!elements.costItems[key]) {
+            const item = createProjectCostItem(costItemCount > 0);
+            elements.costList.appendChild(item);
+            elements.costItems[key] = item;
+            costItemCount += 1;
+          }
+        }
+      }
+    }
+    const storageAccess = project && project.attributes?.canUseSpaceStorage
+      ? project.createSpaceStorageAccess('expansions')
+      : null;
     let hasItem = false;
     for (const key in elements.costItems) {
       const [category, resource] = key.split('.');
@@ -1221,13 +1279,14 @@ function updateCostDisplay(project) {
       if (requiredAmount > 0) {
         const hasPreviousItem = hasItem;
         hasItem = true;
-        const availableAmount = getAvailableProjectCostAmount(project, category, resource);
+        const availableAmount = getAvailableProjectCostAmount(project, category, resource, storageAccess);
         const resourceDisplayName = resources[category]?.[resource]?.displayName ||
           resource.charAt(0).toUpperCase() + resource.slice(1);
         const prefix = item.dataset.leadingComma === 'true' && hasPreviousItem ? ', ' : '';
-        item.textContent = `${prefix}${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
+        item._refs.separator.textContent = prefix;
+        item._refs.text.textContent = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
         const highlight = shouldHighlightProjectCost(project, category, resource, availableAmount, requiredAmount);
-        item.style.color = highlight ? 'red' : '';
+        item._refs.text.style.color = highlight ? 'red' : '';
         item.style.display = '';
       } else {
         item.style.display = 'none';
@@ -1449,11 +1508,16 @@ function updateTotalCostDisplay(project) {
 
   const totalCostValue = elements.totalCostValue;
   if (totalCostValue) {
-    totalCostValue.textContent = formatNumber(totalCost, true);
     const available = resources.colony?.funding?.value || 0;
     const highlight = project.isContinuous()
       ? project.shortfallLastTick
       : available < totalCost;
+    let totalCostText = formatNumber(totalCost, true);
+    if (highlight && available < totalCost && project.name === 'cargo_rocket') {
+      const missing = formatNumber(totalCost - available, true);
+      totalCostText += ` (${getProjectsUIText('ui.projects.cargoRocket.fundingMissing', 'Need {value} more', { value: missing })})`;
+    }
+    totalCostValue.textContent = totalCostText;
     totalCostValue.style.color = highlight ? 'red' : '';
   }
 }
@@ -1498,6 +1562,10 @@ function updateProjectGroupNavigation(project, elements) {
 }
 
 function updateProjectUI(projectName) {
+  if (globalGameIsLoadingFromSave) {
+    return;
+  }
+
   const project = projectManager.projects[projectName]; // Use projectManager to get project
   const elements = projectElements[projectName];
   const importUI = getImportResourcesUI();
@@ -1512,11 +1580,7 @@ function updateProjectUI(projectName) {
   if (projectItem) {
     const groupId = elements.groupId;
     const isGroupActive = !groupId || getActiveGroupProjectName(groupId) === project.name;
-    const planetOk =
-      !project.attributes.planet ||
-      (typeof spaceManager !== 'undefined' &&
-        spaceManager.getCurrentPlanetKey &&
-        spaceManager.getCurrentPlanetKey() === project.attributes.planet);
+    const planetOk = projectManager.isProjectRelevantToCurrentPlanet(project);
     const visible = !(project.isPermanentlyDisabled?.()) && (typeof project.isVisible === 'function' ? project.isVisible() : project.unlocked);
 
     if (isImportProject && importUI) {
@@ -1562,11 +1626,25 @@ function updateProjectUI(projectName) {
   // Update Repeat Count / Depth display if applicable
   if (elements.repeatCountElement) {
     if (typeof DeeperMiningProject !== 'undefined' && project instanceof DeeperMiningProject) {
-      elements.repeatCountElement.textContent = `Average depth: ${formatNumber(project.averageDepth, true)} / ${formatNumber(project.maxDepth, true)}`;
+      elements.repeatCountElement.textContent = getProjectsUIText(
+        'ui.projects.status.averageDepth',
+        'Average depth: {current} / {max}',
+        {
+          current: formatNumber(project.averageDepth, true),
+          max: formatNumber(project.maxDepth, true),
+        }
+      );
       project.updateUnderworldMiningUI(elements);
       elements.underworldSection.style.display = project.isBooleanFlagSet('underworld_mining') ? 'flex' : 'none';
     } else {
-      elements.repeatCountElement.textContent = `Completed: ${project.repeatCount} / ${project.maxRepeatCount}`;
+      elements.repeatCountElement.textContent = getProjectsUIText(
+        'ui.projects.status.completedCount',
+        'Completed: {current} / {max}',
+        {
+          current: project.repeatCount,
+          max: project.maxRepeatCount,
+        }
+      );
     }
   }
 
@@ -1658,7 +1736,7 @@ function updateProjectUI(projectName) {
     if (elements.costElement) {
       if (keepStartBarVisible) {
         elements.costElement.style.display = 'block';
-        elements.costElement.style.color = '#f44336';
+        elements.costElement.style.color = getStatusColor('success');
       } else {
         elements.costElement.style.display = 'none';
       }
@@ -1668,7 +1746,7 @@ function updateProjectUI(projectName) {
         const statusText = isMaxRepeatReached
           ? getProjectsUIText('ui.projects.status.maxDepthReached', 'Max depth reached')
           : getProjectsUIText('ui.projects.status.completed', 'Completed');
-        const statusColor = isMaxRepeatReached ? '#f44336' : '#4caf50';
+        const statusColor = getStatusColor('success');
         if (isImportProject && importUI) {
           importUI.setProgressLabel(elements, project, statusText);
         } else {
@@ -1711,7 +1789,7 @@ function updateProjectUI(projectName) {
           } else {
             elements.progressButton.textContent = specializationLockedText;
           }
-          elements.progressButton.style.background = '#f44336';
+          elements.progressButton.style.background = getStatusColor('failure');
         } else if (!project.isActive && !project.isCompleted && project.isHazardDisabled()) {
           const hazardLabel = project.getHazardDisableLabel();
           const statusText = hazardLabel
@@ -1722,7 +1800,7 @@ function updateProjectUI(projectName) {
           } else {
             elements.progressButton.textContent = statusText;
           }
-          elements.progressButton.style.background = '#f44336';
+          elements.progressButton.style.background = getStatusColor('failure');
         } else if (isContinuousProject) {
           if (typeof project.isTemporarilyPaused === 'function' && project.isTemporarilyPaused()) {
             const statusText = getProjectsUIText('ui.projects.status.pausedByPulsar', 'Paused by pulsar');
@@ -1731,14 +1809,14 @@ function updateProjectUI(projectName) {
             } else {
               elements.progressButton.textContent = statusText;
             }
-            elements.progressButton.style.background = '#f44336';
+            elements.progressButton.style.background = getStatusColor('failure');
           } else {
             const showProductivity = project.attributes?.continuousAsBuilding;
             const productivity = project.continuousProductivity ?? 1;
             const productivityLabel = showProductivity
               ? getProjectsUIText('ui.projects.status.productivitySuffix', ' ({value}% productivity)', { value: Math.round(productivity * 100) })
               : '';
-            if (project.autoStart && project.isActive && !project.isPaused) {
+            if ((project.autoStart || project.manualContinuousRun) && project.isActive && !project.isPaused) {
               const etaSeconds = getContinuousEtaSeconds(project);
               const etaLabel = Number.isFinite(etaSeconds)
                 ? getProjectsUIText(
@@ -1753,14 +1831,19 @@ function updateProjectUI(projectName) {
               } else {
                 elements.progressButton.textContent = statusText;
               }
-              elements.progressButton.style.background = '#4caf50';
+              elements.progressButton.style.background = getStatusColor('success');
             } else {
+              const statusText = project.autoStart
+                ? getProjectsUIText('ui.projects.status.stopped', 'Stopped')
+                : getProjectsUIText('ui.projects.status.runOnce', 'Run once');
               if (isImportProject && importUI) {
-                importUI.setProgressLabel(elements, project, getProjectsUIText('ui.projects.status.stopped', 'Stopped'));
+                importUI.setProgressLabel(elements, project, statusText);
               } else {
-                elements.progressButton.textContent = getProjectsUIText('ui.projects.status.stopped', 'Stopped');
+                elements.progressButton.textContent = statusText;
               }
-              elements.progressButton.style.background = '#f44336';
+              elements.progressButton.style.background = project.autoStart || !project.canStart()
+                ? getStatusColor('failure')
+                : getStatusColor('success');
             }
           }
         } else if (project.isActive) {
@@ -1772,7 +1855,7 @@ function updateProjectUI(projectName) {
             } else {
               elements.progressButton.textContent = statusText;
             }
-            elements.progressButton.style.background = '#f44336';
+            elements.progressButton.style.background = getStatusColor('failure');
           } else if (typeof project.isTemporarilyPaused === 'function' && project.isTemporarilyPaused()) {
             const statusText = getProjectsUIText('ui.projects.status.pausedStorm', 'Paused: Electromagnetic Storm');
             if (isImportProject && importUI) {
@@ -1780,7 +1863,7 @@ function updateProjectUI(projectName) {
             } else {
               elements.progressButton.textContent = statusText;
             }
-            elements.progressButton.style.background = '#f44336';
+            elements.progressButton.style.background = getStatusColor('failure');
           } else {
           const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
           const progressPercent = project.getProgress();
@@ -1792,7 +1875,7 @@ function updateProjectUI(projectName) {
               elements.progressButton.textContent = statusText;
             }
             // Avoid flashy gradients for instant projects
-            elements.progressButton.style.background = '#4caf50';
+            elements.progressButton.style.background = getStatusColor('success');
           } else {
             const statusText = getProjectsUIText('ui.projects.status.inProgressPercent', 'In Progress: {time} seconds remaining ({percent}%)', { time: timeRemaining, percent: progressPercent });
             if (isImportProject && importUI) {
@@ -1800,7 +1883,7 @@ function updateProjectUI(projectName) {
             } else {
               elements.progressButton.textContent = statusText;
             }
-            elements.progressButton.style.background = `linear-gradient(to right, #4caf50 ${progressPercent}%, #ccc ${progressPercent}%)`;
+            elements.progressButton.style.background = getStatusProgressBackground(progressPercent);
           }
           }
         } else if (project.isCompleted) {
@@ -1809,7 +1892,7 @@ function updateProjectUI(projectName) {
           } else {
             elements.progressButton.textContent = getProjectsUIText('ui.projects.status.completedNamed', 'Completed: {name}', { name: project.displayName });
           }
-          elements.progressButton.style.background = '#4caf50';
+          elements.progressButton.style.background = getStatusColor('success');
         } else if (project.isPaused) {
           const timeRemaining = Math.max(0, project.remainingTime / 1000).toFixed(2);
           if (typeof SpaceStorageProject !== 'undefined' && project instanceof SpaceStorageProject) {
@@ -1827,7 +1910,7 @@ function updateProjectUI(projectName) {
               elements.progressButton.textContent = statusText;
             }
           }
-          elements.progressButton.style.background = project.canStart() ? '#4caf50' : '#f44336';
+          elements.progressButton.style.background = project.canStart() ? getStatusColor('success') : getStatusColor('failure');
         } else {
           if (typeof project.isTemporarilyPaused === 'function' && project.isTemporarilyPaused()) {
             const statusText = getProjectsUIText('ui.projects.status.pausedStorm', 'Paused: Electromagnetic Storm');
@@ -1836,7 +1919,7 @@ function updateProjectUI(projectName) {
             } else {
               elements.progressButton.textContent = statusText;
             }
-            elements.progressButton.style.background = '#f44336';
+            elements.progressButton.style.background = getStatusColor('failure');
           } else {
             // Update dynamic duration for spaceMining projects
             let duration = project.getEffectiveDuration();
@@ -1866,9 +1949,9 @@ function updateProjectUI(projectName) {
 
             // Set background color based on whether the project can start
             if (project.canStart()) {
-              elements.progressButton.style.background = '#4caf50'; // Green if it can be started
+              elements.progressButton.style.background = getStatusColor('success');
             } else {
-              elements.progressButton.style.background = '#f44336'; // Red if it cannot be started
+              elements.progressButton.style.background = getStatusColor('failure');
             }
           }
         }
@@ -1949,12 +2032,14 @@ function updateProjectUI(projectName) {
 
 
 function startProjectWithSelectedResources(project) {
+  const manualContinuousRun = project.isContinuous() && !project.autoStart;
   if (project.isPaused) {
-    if (!project.resume()) {
+    if (project.resume()) {
+      project.manualContinuousRun = manualContinuousRun;
+    } else {
     }
-  } else if (project.canStart()) {
-    projectManager.startProject(project.name);
   } else {
+    projectManager.startProject(project.name, { manualContinuousRun });
   }
 }
 
@@ -2085,8 +2170,8 @@ function formatTotalResourceGainDisplay(totalResourceGain, perSecond = false) {
       const amount = totalResourceGain[category][resource];
       let entry = `${resourceDisplayName}: ${formatNumber(amount, true, 2)}${suffix}`;
       if (category === 'atmospheric' && ATMOSPHERIC_GAS_IMPORTS.has(resource)) {
-        const { gravity, radius } = terraforming.celestialParameters;
-        const pressure = calculateAtmosphericPressure(amount, gravity, radius);
+        const { gravity, radius, surfaceArea } = terraforming.celestialParameters;
+        const pressure = calculateAtmosphericPressure(amount, gravity, radius, surfaceArea);
         entry += ` / ${formatNumber(pressure, true, 2, true)}${pressureSuffix}`;
       }
       gainArray.push(entry);
@@ -2121,15 +2206,16 @@ function updateEmptyProjectMessages(activeSubtabId) {
 }
 
 function updateCategoryProjectsVisibility(category, subtabId) {
+  if (isCurrentWorldProjectCategoryDisabled(category)) {
+    setProjectSubtabVisibility(subtabId, false);
+    return;
+  }
   let visible = false;
   if (typeof projectManager !== 'undefined' && projectManager.projects) {
     visible = Object.values(projectManager.projects).some(p => {
-      const planetOk = !p.attributes.planet ||
-        (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
-         spaceManager.getCurrentPlanetKey() === p.attributes.planet);
       return (
         p.category === category &&
-        planetOk &&
+        projectManager.isProjectRelevantToCurrentPlanet(p) &&
         !(p.isPermanentlyDisabled?.()) &&
         (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked)
       );
@@ -2142,14 +2228,11 @@ function updateStoryProjectsVisibility() {
   let visible = false;
   if (typeof projectManager !== 'undefined' && projectManager.projects) {
     visible = Object.values(projectManager.projects).some(p => {
-      const planetOk = !p.attributes.planet ||
-        (typeof spaceManager !== 'undefined' && spaceManager.getCurrentPlanetKey &&
-         spaceManager.getCurrentPlanetKey() === p.attributes.planet);
       return (
         p.category === 'story' &&
         !(p.isPermanentlyDisabled?.()) &&
         (typeof p.isVisible === 'function' ? p.isVisible() : p.unlocked) &&
-        planetOk
+        projectManager.isProjectRelevantToCurrentPlanet(p)
       );
     });
   }
@@ -2173,9 +2256,9 @@ function activateProjectSubtab(subtabId) {
   projectsSubtabState.preferredSubtabId = subtabId;
   if (projectsSubtabManager) {
     projectsSubtabManager.activate(subtabId);
-  } else {
-    activateSubtab('projects-subtab', 'projects-subtab-content', subtabId, true);
+    return;
   }
+  activateSubtab('projects-subtab', 'projects-subtab-content', subtabId, true);
   if (typeof markProjectSubtabViewed === 'function') {
     markProjectSubtabViewed(subtabId);
   }
@@ -2183,6 +2266,7 @@ function activateProjectSubtab(subtabId) {
 }
 
 let projectTabAlertNeeded = false;
+const projectAlertElements = {};
 const projectSubtabAlerts = {
   'resources-projects': false,
   'infrastructure-projects': false,
@@ -2206,13 +2290,21 @@ function registerProjectUnlockAlert(subtabId) {
 }
 
 function updateProjectAlert() {
-  const alertEl = document.getElementById('projects-alert');
+  let alertEl = projectAlertElements.main;
+  if (!alertEl || !alertEl.isConnected) {
+    alertEl = document.getElementById('projects-alert');
+    projectAlertElements.main = alertEl;
+  }
   if (alertEl) {
     const display = (!gameSettings.silenceUnlockAlert && projectTabAlertNeeded) ? 'inline' : 'none';
     alertEl.style.display = display;
   }
   for (const key in projectSubtabAlerts) {
-    const el = document.getElementById(`${key}-alert`);
+    let el = projectAlertElements[key];
+    if (!el || !el.isConnected) {
+      el = document.getElementById(`${key}-alert`);
+      projectAlertElements[key] = el;
+    }
     if (el) {
       const display = (!gameSettings.silenceUnlockAlert && projectSubtabAlerts[key]) ? 'inline' : 'none';
       el.style.display = display;

@@ -11,8 +11,12 @@ function cacheStatisticsElements() {
 
   statisticsElements = {
     totalPlaytime: document.getElementById('total-playtime-display'),
+    patienceSpentRow: document.getElementById('patience-spent-row'),
+    patienceSpent: document.getElementById('patience-spent-display'),
     fastestTerraformRow: document.getElementById('fastest-terraform-row'),
     fastestTerraform: document.getElementById('fastest-terraform-display'),
+    birchWorldTerraformRow: document.getElementById('birch-world-terraform-row'),
+    birchWorldTerraform: document.getElementById('birch-world-terraform-display'),
     fastestTerraformByTypeTitle: document.getElementById('fastest-terraform-by-type-title'),
     fastestTerraformByTypeList: document.getElementById('fastest-terraform-by-type-list'),
     recentTerraformHistoryTitle: document.getElementById('recent-terraform-history-title'),
@@ -23,16 +27,44 @@ function cacheStatisticsElements() {
   return statisticsElements;
 }
 
+function getTerraformHistoryArtificialTypeLabel(typeKey) {
+  if (typeKey === 'shell') {
+    return t('ui.settings.terraformWorldTypeShell', null, 'Shellworld');
+  }
+  if (typeKey === 'ring') {
+    return t('ui.settings.terraformWorldTypeRing', null, 'Ringworld');
+  }
+  if (typeKey === 'disk') {
+    return t('ui.settings.terraformWorldTypeDisk', null, 'Alderson disk');
+  }
+  return t('ui.settings.terraformWorldTypeArtificial', null, 'Artificial');
+}
+
+function getTerraformHistoryWorldTypeLabel(entry) {
+  const worldArchetype = entry.worldArchetype || '';
+  if (worldArchetype.indexOf('artificial:') === 0) {
+    return getTerraformHistoryArtificialTypeLabel(worldArchetype.slice('artificial:'.length));
+  }
+  if (worldArchetype) {
+    return RWG_WORLD_TYPES[worldArchetype]?.displayName || worldArchetype;
+  }
+  if (entry.worldType === 'artificial') {
+    return t('ui.settings.terraformWorldTypeArtificial', null, 'Artificial');
+  }
+  return t('ui.settings.terraformWorldTypeUnknown', null, 'Unknown');
+}
+
 function buildTerraformHistoryText(entry) {
   const vars = {
     name: entry.name,
+    type: getTerraformHistoryWorldTypeLabel(entry),
     game: formatPlayTime(entry.playTimeSeconds),
     real: formatDurationDetailed(entry.realTimeSeconds),
   };
   return t(
     'ui.settings.recentTerraformHistoryEntry',
     vars,
-    '{name}: {game} ({real} real time)'
+    '{name} ({type}): {game} ({real} real time)'
   );
 }
 
@@ -103,7 +135,7 @@ function updateStatisticsDisplay() {
 
   const gameTime = formatPlayTime(totalPlayTimeSeconds);
   const realTime = formatDurationDetailed(totalRealPlayTimeSeconds);
-  playtimeElement.textContent = `${gameTime} (${realTime} real time)`;
+  playtimeElement.textContent = t('ui.settings.realTimeLine', { game: gameTime, real: realTime }, '{game} ({real} real time)');
 
   if (cached.fastestTerraformRow && cached.fastestTerraform) {
     if (fastestTerraformDays === null) {
@@ -111,15 +143,38 @@ function updateStatisticsDisplay() {
     } else {
       cached.fastestTerraformRow.style.display = '';
       if (fastestTerraformRealSeconds === null) {
-        cached.fastestTerraform.textContent = `${formatPlayTime(fastestTerraformDays)} (real time unavailable)`;
+        cached.fastestTerraform.textContent = t('ui.settings.realTimeUnavailableLine', { game: formatPlayTime(fastestTerraformDays) }, '{game} (real time unavailable)');
       } else {
         const fastestRealTime = formatDurationDetailed(fastestTerraformRealSeconds);
-        cached.fastestTerraform.textContent = `${formatPlayTime(fastestTerraformDays)} (${fastestRealTime} real time)`;
+        cached.fastestTerraform.textContent = t('ui.settings.realTimeLine', { game: formatPlayTime(fastestTerraformDays), real: fastestRealTime }, '{game} ({real} real time)');
+      }
+    }
+  }
+  if (cached.birchWorldTerraformRow && cached.birchWorldTerraform) {
+    if (birchWorldTerraformTimeSeconds === null) {
+      cached.birchWorldTerraformRow.style.display = 'none';
+    } else {
+      cached.birchWorldTerraformRow.style.display = '';
+      if (birchWorldTerraformRealTimeSeconds === null) {
+        cached.birchWorldTerraform.textContent = t('ui.settings.realTimeUnavailableLine', { game: formatPlayTime(birchWorldTerraformTimeSeconds) }, '{game} (real time unavailable)');
+      } else {
+        const birchRealTime = formatDurationDetailed(birchWorldTerraformRealTimeSeconds);
+        cached.birchWorldTerraform.textContent = t('ui.settings.realTimeLine', { game: formatPlayTime(birchWorldTerraformTimeSeconds), real: birchRealTime }, '{game} ({real} real time)');
       }
     }
   }
 
   if (!cached.recentTerraformHistoryList || !cached.recentTerraformHistoryTitle || typeof spaceManager === 'undefined') return;
+
+  if (cached.patienceSpentRow && cached.patienceSpent) {
+    const patienceSpent = patienceManager.totalSpentHours;
+    if (patienceSpent > 0) {
+      cached.patienceSpentRow.style.display = '';
+      cached.patienceSpent.textContent = t('ui.settings.patienceSpentValue', { value: patienceSpent.toFixed(1) }, '{value}h');
+    } else {
+      cached.patienceSpentRow.style.display = 'none';
+    }
+  }
 
   if (cached.fastestTerraformByTypeTitle && cached.fastestTerraformByTypeList) {
     const byType = spaceManager.getFastestTerraformByWorldType();

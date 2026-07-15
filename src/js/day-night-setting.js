@@ -12,7 +12,7 @@
         targetId: id,
         type: 'productionMultiplier',
         value: 0.5,
-        name: 'Day/Night cycle disabled',
+        name: t('ui.terraforming.dayNight.disabledEffect', {}, 'Day/Night cycle disabled'),
         effectId: `disable-day-night-production-${id}`,
         sourceId: 'settings'
       };
@@ -23,7 +23,7 @@
         targetId: id,
         type: 'consumptionMultiplier',
         value: 0.5,
-        name: 'Day/Night cycle disabled',
+        name: t('ui.terraforming.dayNight.disabledEffect', {}, 'Day/Night cycle disabled'),
         effectId: `disable-day-night-consumption-${id}`,
         sourceId: 'settings'
       };
@@ -38,7 +38,7 @@
           resourceCategory: 'colony',
           resourceId: resource,
           value: 0.5,
-          name: 'Day/Night cycle disabled',
+          name: t('ui.terraforming.dayNight.disabledEffect', {}, 'Day/Night cycle disabled'),
           effectId: `disable-day-night-maintenance-${id}-${resource}`,
           sourceId: 'settings'
         });

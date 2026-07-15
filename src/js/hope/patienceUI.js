@@ -20,6 +20,7 @@ const PatienceUI = {
     timerValueEl: null,
     spendInputEl: null,
     spendButtonEl: null,
+    spendHeaderEl: null,
     spendPreviewEl: null,
     meterFillEl: null,
     gainValueEl: null,
@@ -29,6 +30,7 @@ const PatienceUI = {
     worldMetaEl: null,
     saveFileButtonEl: null,
     saveClipboardButtonEl: null,
+    dailyClaimButtonEl: null,
 
     /**
      * Initialize the patience UI
@@ -73,6 +75,7 @@ const PatienceUI = {
         this.timerMetaEl = cards[2] ? cards[2].querySelector('.patience-card-meta') : null;
         this.spendInputEl = document.getElementById('patience-spend-input');
         this.spendButtonEl = document.getElementById('patience-spend-button');
+        this.spendHeaderEl = this.container.querySelector('.patience-spend-card .patience-card-label');
         this.spendPreviewEl = document.getElementById('patience-spend-preview');
         this.meterFillEl = this.container.querySelector('.patience-meter-fill');
         this.gainValueEl = cards[1] ? cards[1].querySelector('.patience-card-value') : null;
@@ -81,6 +84,7 @@ const PatienceUI = {
         this.worldMetaEl = cards[3] ? cards[3].querySelector('.patience-card-meta') : null;
         this.saveFileButtonEl = document.getElementById('patience-save-file-button');
         this.saveClipboardButtonEl = document.getElementById('patience-save-clipboard-button');
+        this.dailyClaimButtonEl = document.getElementById('patience-daily-claim-button');
     },
 
     /**
@@ -115,20 +119,30 @@ const PatienceUI = {
         tooltip.className = 'info-tooltip-icon';
         attachDynamicInfoTooltip(
             tooltip,
-            getPatienceText(
-                'ui.hope.patiencePanel.titleTooltip',
-                'Save to file or export to clipboard once per day to claim patience. Each world banks patience at 2 seconds per second; completing terraforming claims the bank and keeps earning until the 3 hour world cap is reached.'
-            )
+            GAME_FEATURES.patienceDailyClaimButton
+                ? getPatienceText(
+                    'ui.hope.patiencePanel.titleTooltipSteam',
+                    'Claim patience once per day. Each world banks patience at 2 seconds per second; completing terraforming claims the bank and keeps earning until the 3 hour world cap is reached.'
+                )
+                : getPatienceText(
+                    'ui.hope.patiencePanel.titleTooltip',
+                    'Save to file or export to clipboard once per day to claim patience. Each world banks patience at 2 seconds per second; completing terraforming claims the bank and keeps earning until the 3 hour world cap is reached.'
+                )
         );
         titleRow.appendChild(tooltip);
         header.appendChild(titleRow);
 
         const subtitle = document.createElement('p');
         subtitle.className = 'patience-subtitle';
-        subtitle.textContent = getPatienceText(
-            'ui.hope.patiencePanel.subtitle',
-            'Claim daily patience by saving or exporting. Each world banks patience until terraforming completes, then continues earning up to 3 hours total. Use patience to gain equivalent hours of production for various things.'
-        );
+        subtitle.textContent = GAME_FEATURES.patienceDailyClaimButton
+            ? getPatienceText(
+                'ui.hope.patiencePanel.subtitleSteam',
+                'Claim daily patience directly. Each world banks patience until terraforming completes, then continues earning up to 3 hours total. Use patience to gain equivalent hours of production for various things.'
+            )
+            : getPatienceText(
+                'ui.hope.patiencePanel.subtitle',
+                'Claim daily patience by saving or exporting. Each world banks patience until terraforming completes, then continues earning up to 3 hours total. Use patience to gain equivalent hours of production for various things.'
+            );
         header.appendChild(subtitle);
         shell.appendChild(header);
 
@@ -175,7 +189,9 @@ const PatienceUI = {
 
         const gainMeta = document.createElement('div');
         gainMeta.className = 'patience-card-meta';
-        gainMeta.textContent = getPatienceText('ui.hope.patiencePanel.dailyMeta', 'Save/export daily');
+        gainMeta.textContent = GAME_FEATURES.patienceDailyClaimButton
+            ? getPatienceText('ui.hope.patiencePanel.dailyMetaSteam', 'Claim daily')
+            : getPatienceText('ui.hope.patiencePanel.dailyMeta', 'Save/export daily');
         gainCard.appendChild(gainMeta);
 
         statsRow.appendChild(gainCard);
@@ -185,7 +201,9 @@ const PatienceUI = {
 
         const timerLabel = document.createElement('div');
         timerLabel.className = 'patience-card-label';
-        timerLabel.textContent = getPatienceText('ui.hope.patiencePanel.saveBonusStatus', 'Save bonus status');
+        timerLabel.textContent = GAME_FEATURES.patienceDailyClaimButton
+            ? getPatienceText('ui.hope.patiencePanel.dailyClaimStatus', 'Daily claim status')
+            : getPatienceText('ui.hope.patiencePanel.saveBonusStatus', 'Save bonus status');
         timerCard.appendChild(timerLabel);
 
         const timerValue = document.createElement('div');
@@ -256,10 +274,6 @@ const PatienceUI = {
 
         const spendHeader = document.createElement('div');
         spendHeader.className = 'patience-card-label';
-        spendHeader.textContent = getPatienceText(
-            'ui.hope.patiencePanel.spendDescription',
-            'Convert patience into net metal, superalloys, superconductors, advanced research, O\'Neill cylinders, faith conversion, and Warp Gate Command/Network progress based on current production.'
-        );
         spendCard.appendChild(spendHeader);
 
         const spendRow = document.createElement('div');
@@ -291,15 +305,25 @@ const PatienceUI = {
         const saveRow = document.createElement('div');
         saveRow.className = 'patience-save-row';
 
-        const saveFileButton = document.createElement('button');
-        saveFileButton.id = 'patience-save-file-button';
-        saveFileButton.textContent = getPatienceText('ui.hope.patiencePanel.saveToFile', 'Save to file');
-        saveRow.appendChild(saveFileButton);
+        let saveFileButton = null;
+        let saveClipboardButton = null;
+        let dailyClaimButton = null;
+        if (GAME_FEATURES.patienceDailyClaimButton) {
+            dailyClaimButton = document.createElement('button');
+            dailyClaimButton.id = 'patience-daily-claim-button';
+            dailyClaimButton.textContent = getPatienceText('ui.hope.patiencePanel.claimDaily', 'Claim daily patience');
+            saveRow.appendChild(dailyClaimButton);
+        } else {
+            saveFileButton = document.createElement('button');
+            saveFileButton.id = 'patience-save-file-button';
+            saveFileButton.textContent = getPatienceText('ui.hope.patiencePanel.saveToFile', 'Save to file');
+            saveRow.appendChild(saveFileButton);
 
-        const saveClipboardButton = document.createElement('button');
-        saveClipboardButton.id = 'patience-save-clipboard-button';
-        saveClipboardButton.textContent = getPatienceText('ui.hope.patiencePanel.exportToClipboard', 'Export to clipboard');
-        saveRow.appendChild(saveClipboardButton);
+            saveClipboardButton = document.createElement('button');
+            saveClipboardButton.id = 'patience-save-clipboard-button';
+            saveClipboardButton.textContent = getPatienceText('ui.hope.patiencePanel.exportToClipboard', 'Export to clipboard');
+            saveRow.appendChild(saveClipboardButton);
+        }
 
         shell.appendChild(saveRow);
 
@@ -312,6 +336,7 @@ const PatienceUI = {
         this.timerMetaEl = timerMeta;
         this.spendInputEl = spendInput;
         this.spendButtonEl = spendButton;
+        this.spendHeaderEl = spendHeader;
         this.spendPreviewEl = spendPreview;
         this.meterFillEl = meterFill;
         this.gainValueEl = gainValue;
@@ -320,7 +345,9 @@ const PatienceUI = {
         this.worldMetaEl = worldMeta;
         this.saveFileButtonEl = saveFileButton;
         this.saveClipboardButtonEl = saveClipboardButton;
+        this.dailyClaimButtonEl = dailyClaimButton;
         this.updateSpendPreview();
+        this.updateSpendDescription();
     },
 
     /**
@@ -338,6 +365,9 @@ const PatienceUI = {
         }
         if (this.saveClipboardButtonEl) {
             this.saveClipboardButtonEl.addEventListener('click', () => this.handleSaveClipboard());
+        }
+        if (this.dailyClaimButtonEl) {
+            this.dailyClaimButtonEl.addEventListener('click', () => this.handleDailyClaim());
         }
     },
 
@@ -368,6 +398,15 @@ const PatienceUI = {
     handleSaveClipboard() {
         if (typeof saveGameToClipboard === 'function') {
             saveGameToClipboard();
+        }
+    },
+
+    /**
+     * Handle daily patience claim shortcut
+     */
+    handleDailyClaim() {
+        if (patienceManager.claimDailyPatience()) {
+            this.render();
         }
     },
 
@@ -431,9 +470,11 @@ const PatienceUI = {
             advancedResearchGain,
             metalGain,
             oneillGain,
-            faithGains
+            faithGains,
+            warpGateCommandAdvance,
+            warpGateNetworkAdvance
         } = patienceManager.calculateSpendGains(hours);
-        const wgcAdvance = this.getWgcAdvancePreview(hours);
+        const wgcAdvance = this.getWgcAdvancePreview(warpGateCommandAdvance, warpGateNetworkAdvance);
         const lines = [];
 
         const metalResource = resources.colony.metal;
@@ -556,7 +597,7 @@ const PatienceUI = {
      * Update subtab visibility based on manager state
      */
     updateSubtabVisibility() {
-        setHopeSubtabVisibility('patience-hope', patienceManager && patienceManager.enabled);
+        setHopeSubtabVisibility('patience-hope', isManagerEffectivelyEnabled(patienceManager, 'patienceManager'));
     },
 
     /**
@@ -607,9 +648,15 @@ const PatienceUI = {
 
         if (this.gainMetaEl) {
             const claimedToday = patienceManager.hasClaimedToday();
-            this.gainMetaEl.textContent = claimedToday
-                ? getPatienceText('ui.hope.patiencePanel.status.claimedToday', 'Claimed today via save/export')
-                : getPatienceText('ui.hope.patiencePanel.status.claimViaSave', 'Save to file or export to claim');
+            if (GAME_FEATURES.patienceDailyClaimButton) {
+                this.gainMetaEl.textContent = claimedToday
+                    ? getPatienceText('ui.hope.patiencePanel.status.claimedTodayButton', 'Claimed today')
+                    : getPatienceText('ui.hope.patiencePanel.status.claimViaButton', 'Use the daily claim button');
+            } else {
+                this.gainMetaEl.textContent = claimedToday
+                    ? getPatienceText('ui.hope.patiencePanel.status.claimedToday', 'Claimed today via save/export')
+                    : getPatienceText('ui.hope.patiencePanel.status.claimViaSave', 'Save to file or export to claim');
+            }
         }
 
         if (this.timerMetaEl) {
@@ -659,7 +706,9 @@ const PatienceUI = {
                 gains.advancedResearchGain > 0 ||
                 gains.oneillGain > 0 ||
                 gains.faithGains.worldBelieverGain > 0 ||
-                gains.faithGains.galacticBelieverGain > 0
+                gains.faithGains.galacticBelieverGain > 0 ||
+                gains.warpGateCommandAdvance ||
+                gains.warpGateNetworkAdvance
             );
             this.spendButtonEl.disabled = !canSpend;
         }
@@ -670,20 +719,79 @@ const PatienceUI = {
             this.meterFillEl.style.width = `${ratio * 100}%`;
         }
 
+        if (this.dailyClaimButtonEl) {
+            const claimedToday = patienceManager.hasClaimedToday();
+            this.dailyClaimButtonEl.disabled = claimedToday;
+            this.dailyClaimButtonEl.textContent = claimedToday
+                ? getPatienceText('ui.hope.patiencePanel.claimedDaily', 'Daily patience claimed')
+                : getPatienceText('ui.hope.patiencePanel.claimDaily', 'Claim daily patience');
+        }
+
         // Update preview on each render
         this.updateSpendPreview();
+        this.updateSpendDescription();
+    },
+
+    getSpendGainLabel(id) {
+        const labels = {
+            metal: getPatienceText('ui.hope.patiencePanel.spendGainLabels.metal', 'net metal'),
+            superalloys: getPatienceText('ui.hope.patiencePanel.spendGainLabels.superalloys', 'superalloys'),
+            superconductors: getPatienceText('ui.hope.patiencePanel.spendGainLabels.superconductors', 'superconductors'),
+            advancedResearch: getPatienceText('ui.hope.patiencePanel.spendGainLabels.advancedResearch', 'advanced research'),
+            oneillCylinders: getPatienceText('ui.hope.patiencePanel.spendGainLabels.oneillCylinders', 'O\'Neill cylinders'),
+            faithConversion: getPatienceText('ui.hope.patiencePanel.spendGainLabels.faithConversion', 'faith conversion'),
+            warpGateProgress: getPatienceText('ui.hope.patiencePanel.spendGainLabels.warpGateProgress', 'Warp Gate Command/Network progress')
+        };
+        return labels[id];
+    },
+
+    formatSpendGainList(labels) {
+        if (labels.length === 1) {
+            return labels[0];
+        }
+        if (labels.length === 2) {
+            return getPatienceText('ui.hope.patiencePanel.spendGainListPair', '{first} and {second}', {
+                first: labels[0],
+                second: labels[1]
+            });
+        }
+        let list = labels[0];
+        for (let i = 1; i < labels.length - 1; i += 1) {
+            list = getPatienceText('ui.hope.patiencePanel.spendGainListAppend', '{list}, {item}', {
+                list,
+                item: labels[i]
+            });
+        }
+        return getPatienceText('ui.hope.patiencePanel.spendGainListFinal', '{list}, and {item}', {
+            list,
+            item: labels[labels.length - 1]
+        });
+    },
+
+    updateSpendDescription() {
+        if (!this.spendHeaderEl || !patienceManager) return;
+
+        const gainIds = patienceManager.getEverPossibleSpendGainIds();
+        const labels = [];
+        for (let i = 0; i < gainIds.length; i += 1) {
+            labels.push(this.getSpendGainLabel(gainIds[i]));
+        }
+
+        const text = labels.length
+            ? getPatienceText('ui.hope.patiencePanel.spendDescriptionKnown', 'Convert patience into {gains} based on current production.', {
+                gains: this.formatSpendGainList(labels)
+            })
+            : getPatienceText('ui.hope.patiencePanel.spendDescriptionEmpty', 'Convert patience based on current production.');
+        if (this.spendHeaderEl.textContent !== text) {
+            this.spendHeaderEl.textContent = text;
+        }
     }
 };
 
 /**
  * Build the Warp Gate Command fast-forward preview text
  */
-PatienceUI.getWgcAdvancePreview = function(hours) {
-    if (hours <= 0) return '';
-
-    const wgcAdvance = warpGateCommand.enabled;
-    const wgnAdvance = warpGateNetworkManager.isBooleanFlagSet('warpGateFabrication') && galaxyManager.enabled;
-
+PatienceUI.getWgcAdvancePreview = function(wgcAdvance, wgnAdvance) {
     if (!wgcAdvance && !wgnAdvance) return '';
 
     if (wgcAdvance && wgnAdvance) {

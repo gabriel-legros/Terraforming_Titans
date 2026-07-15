@@ -1,3 +1,53 @@
+function effectsAreShallowEqual(a, b) {
+  if (a === b) {
+    return true;
+  }
+  if (!a || !b) {
+    return false;
+  }
+  const aKeys = Object.keys(a);
+  const bKeys = Object.keys(b);
+  if (aKeys.length !== bKeys.length) {
+    return false;
+  }
+  for (let i = 0; i < aKeys.length; i += 1) {
+    const key = aKeys[i];
+    if (a[key] !== b[key]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+const SHALLOW_EQUAL_REAPPLY_SAFE_EFFECT_TYPES = new Set([
+  'increaseResourceGain',
+  'productionMultiplier',
+  'consumptionMultiplier',
+  'maintenanceMultiplier',
+  'resourceConsumptionMultiplier',
+  'resourceProductionMultiplier',
+  'resourceCostMultiplier',
+  'spaceshipCostMultiplier',
+  'spaceshipCostPerTon',
+  'maintenanceCostMultiplier',
+  'addedWorkerNeed',
+  'workerMultiplier',
+  'workerRatio',
+  'colonistWorkerEfficiencyMultiplier',
+  'availableOrbitalsMultiplier',
+  'addResourceConsumption',
+  'lifeGrowthMultiplier',
+  'nanoColonyGrowthMultiplier',
+  'happinessPenalty',
+  'throughputMultiplier'
+]);
+
+function canSkipShallowEqualReapply(effect) {
+  return effect
+    && effect.reapplyAlways !== true
+    && SHALLOW_EQUAL_REAPPLY_SAFE_EFFECT_TYPES.has(effect.type);
+}
+
 class EffectableEntity {
     constructor(config) {
       this.description = config.description;
@@ -9,6 +59,9 @@ class EffectableEntity {
     addEffect(effect) {
       if (this.clearTickEffectCache) {
         this.clearTickEffectCache();
+      }
+      if (!this.shouldApplyEffect(effect)) {
+        return;
       }
       this.activeEffects.push(effect);
       this.applyEffect(effect);
@@ -24,6 +77,17 @@ class EffectableEntity {
       );
 
       if (existingEffectIndex !== -1) {
+        if (!this.shouldApplyEffect(effect)) {
+          const existingEffect = this.activeEffects[existingEffectIndex];
+          if (existingEffect && existingEffect.type === 'booleanFlag') {
+            this.booleanFlags.delete(existingEffect.flagId);
+            if (typeof this[existingEffect.flagId] === 'boolean') {
+              this[existingEffect.flagId] = false;
+            }
+          }
+          this.activeEffects.splice(existingEffectIndex, 1);
+          return;
+        }
         this.activeEffects[existingEffectIndex] = effect;
         this.applyEffect(effect);
       } else {
@@ -44,19 +108,32 @@ class EffectableEntity {
       const effectsToRemove = this.activeEffects.filter(effect => effect.sourceId === sourceId);
     
       if (effectsToRemove.length != 0) {
-        
-        // Remove boolean flags associated with the effects
+        const booleanFlagsToReconcile = new Set();
         effectsToRemove.forEach(effect => {
           if (effect.type === 'booleanFlag') {
-            this.booleanFlags.delete(effect.flagId);
-            if (typeof this[effect.flagId] === 'boolean') {
-              this[effect.flagId] = false;
-            }
+            booleanFlagsToReconcile.add(effect.flagId);
           }
         });
-    
-        // Update the active effects array
+
         this.activeEffects = this.activeEffects.filter(effect => effect.sourceId !== sourceId);
+        booleanFlagsToReconcile.forEach(flagId => {
+          let enabled = false;
+          for (let i = 0; i < this.activeEffects.length; i += 1) {
+            const activeEffect = this.activeEffects[i];
+            if (activeEffect.type === 'booleanFlag' && activeEffect.flagId === flagId && activeEffect.value) {
+              enabled = true;
+              break;
+            }
+          }
+          if (enabled) {
+            this.booleanFlags.add(flagId);
+          } else {
+            this.booleanFlags.delete(flagId);
+          }
+          if (this[flagId] === true || this[flagId] === false) {
+            this[flagId] = enabled;
+          }
+        });
       }
     
       return this; // Enables chaining
@@ -72,17 +149,128 @@ class EffectableEntity {
       const existingEffect = this.activeEffects.find((activeEffect) => activeEffect.effectId === effect.effectId);
 
       if (existingEffect && effect.effectId) {
+        if (
+          effectsAreShallowEqual(existingEffect, effect) &&
+          canSkipShallowEqualReapply(effect)
+        ) {
+          return;
+        }
         this.replaceEffect(effect);
       } else {
         this.addEffect(effect);
       }
     }
+
+  shouldApplyEffect(effect) {
+    if (isCurrentWorldAdvancedResearchDisabled() && effect.sourceId && researchManager) {
+      const sourceResearch = researchManager.getResearchById(effect.sourceId);
+      if (sourceResearch && sourceResearch.category === 'advanced') {
+        return false;
+      }
+    }
+    if ('onLoad' in effect && effect.onLoad == false && globalGameIsLoadingFromSave) {
+      return false;
+    }
+    if ('onTravel' in effect && effect.onTravel == false && globalGameIsTraveling) {
+      return false;
+    }
+    if (
+      autoTravelContext
+      && autoTravelContext.suppressTabSwitch
+      && (effect.type === 'activateTab' || effect.type === 'activateSubtab')
+      && effect.onTravel !== true
+    ) {
+      return false;
+    }
+    const disabledWhenSetting = effect.disabledWhenGameSettingEnabled;
+    if (disabledWhenSetting) {
+      if (Array.isArray(disabledWhenSetting)) {
+        for (let i = 0; i < disabledWhenSetting.length; i += 1) {
+          if (gameSettings[disabledWhenSetting[i]] === true) {
+            return false;
+          }
+        }
+      } else if (gameSettings[disabledWhenSetting] === true) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  reconcileConditionalEffects() {
+    if (!this.activeEffects || this.activeEffects.length === 0) {
+      return;
+    }
+    const filtered = [];
+    for (let i = 0; i < this.activeEffects.length; i += 1) {
+      const effect = this.activeEffects[i];
+      if (this.shouldApplyEffect(effect)) {
+        filtered.push(effect);
+        continue;
+      }
+      if (effect.type === 'booleanFlag') {
+        this.booleanFlags.delete(effect.flagId);
+        if (typeof this[effect.flagId] === 'boolean') {
+          this[effect.flagId] = false;
+        }
+      }
+    }
+    this.activeEffects = filtered;
+    if (this.clearTickEffectCache) {
+      this.clearTickEffectCache();
+    }
+  }
+
+  clearEffectsOnTravel() {
+    if (!this.activeEffects || this.activeEffects.length === 0) {
+      return;
+    }
+
+    const booleanFlagsToReconcile = new Set();
+    const filtered = [];
+    let removed = false;
+    for (let i = 0; i < this.activeEffects.length; i += 1) {
+      const effect = this.activeEffects[i];
+      if (effect.clearOnTravel === true) {
+        removed = true;
+        if (effect.type === 'booleanFlag') {
+          booleanFlagsToReconcile.add(effect.flagId);
+        }
+      } else {
+        filtered.push(effect);
+      }
+    }
+    if (!removed) {
+      return;
+    }
+
+    this.activeEffects = filtered;
+    booleanFlagsToReconcile.forEach(flagId => {
+      let enabled = false;
+      for (let i = 0; i < this.activeEffects.length; i += 1) {
+        const activeEffect = this.activeEffects[i];
+        if (activeEffect.type === 'booleanFlag' && activeEffect.flagId === flagId && activeEffect.value) {
+          enabled = true;
+          break;
+        }
+      }
+      if (enabled) {
+        this.booleanFlags.add(flagId);
+      } else {
+        this.booleanFlags.delete(flagId);
+      }
+      if (this[flagId] === true || this[flagId] === false) {
+        this[flagId] = enabled;
+      }
+    });
+    if (this.clearTickEffectCache) {
+      this.clearTickEffectCache();
+    }
+  }
   
   // Method to apply a specific effect
   applyEffect(effect) {
-    if(!('onLoad' in effect && effect.onLoad == false && globalGameIsLoadingFromSave)
-      && !('onTravel' in effect && effect.onTravel == false && globalGameIsTraveling))
-    {
+    if (this.shouldApplyEffect(effect)) {
       switch (effect.type) {
         case 'increaseResourceGain':
           this.applyIncreaseResourceGain(effect);
@@ -122,6 +310,12 @@ class EffectableEntity {
           break;
         case 'workerRatio':
           this.applyWorkerRatio(effect);
+          break;
+        case 'colonistWorkerEfficiencyMultiplier':
+          this.applyColonistWorkerEfficiencyMultiplier(effect);
+          break;
+        case 'availableOrbitalsMultiplier':
+          this.applyAvailableOrbitalsMultiplier(effect);
           break;
         case 'addResourceConsumption':
           if (typeof this.applyAddResourceConsumption === 'function') {
@@ -286,7 +480,10 @@ class EffectableEntity {
     }
 
     applyInstantResourceGain(effect) {
-      const amount = effect.quantity !== undefined ? effect.quantity : effect.value;
+      let amount = effect.quantity !== undefined ? effect.quantity : effect.value;
+      if (typeof amount === 'number' && effect.target === 'resource' && effect.resourceType === 'special' && effect.targetId === 'alienArtifact') {
+        amount = getArtifactGainAmount(amount);
+      }
       if (typeof amount === 'number') {
         if (effect.ignoreCap) {
           this.value += amount;
@@ -419,7 +616,8 @@ class EffectableEntity {
           type: 'workerMultiplier',
           value: multiplier,
           effectId,
-          sourceId: effect.sourceId
+          sourceId: effect.sourceId,
+          name: effect.name
         });
       }
     }
@@ -601,6 +799,25 @@ class EffectableEntity {
     // throughput multipliers are computed on demand by consumers
   }
 
+  applyColonistWorkerEfficiencyMultiplier(effect) {
+    // colonist worker efficiency multipliers are computed on demand in PopulationModule
+  }
+
+  applyAvailableOrbitalsMultiplier(effect) {
+    // available orbitals multipliers are computed on demand in FollowersManager
+  }
+
+  getActiveEffectMultiplier(type) {
+    let multiplier = 1;
+    for (let i = 0; i < this.activeEffects.length; i += 1) {
+      const effect = this.activeEffects[i];
+      if (effect.type === type) {
+        multiplier *= effect.value;
+      }
+    }
+    return multiplier;
+  }
+
 
     applyPermanentProjectDisable(effect) {
     }
@@ -635,7 +852,25 @@ class EffectableEntity {
 
     // Method to check if a boolean flag is set
     isBooleanFlagSet(flag) {
-      return this.booleanFlags.has(flag);
+      if (!this.booleanFlags.has(flag)) {
+        return false;
+      }
+
+      if (!isCurrentWorldAdvancedResearchDisabled()) {
+        return true;
+      }
+
+      for (let i = 0; i < this.activeEffects.length; i += 1) {
+        const effect = this.activeEffects[i];
+        if (effect.type !== 'booleanFlag' || effect.flagId !== flag || !effect.sourceId || !researchManager) {
+          continue;
+        }
+        const sourceResearch = researchManager.getResearchById(effect.sourceId);
+        if (sourceResearch && sourceResearch.category === 'advanced') {
+          return false;
+        }
+      }
+      return true;
     }
 
     // Retrieves the effective cost multiplier for a specific resource based on active effects
@@ -695,6 +930,12 @@ class EffectableEntity {
     }
 
     shouldSkipSpaceshipCostEffect(effect) {
+      if (effect.appliesBeforeSpaceElevator === true && isSpaceElevatorCostProfileActiveForEffects()) {
+        return true;
+      }
+      if (effect.appliesAfterSpaceElevator === true && !isSpaceElevatorCostProfileActiveForEffects()) {
+        return true;
+      }
       return false;
     }
 
@@ -729,6 +970,188 @@ class EffectableEntity {
     }
 }
 
+function getCurrentWorldDisabledFeatures() {
+  return currentPlanetParameters?.specialAttributes?.disabledFeatures || {};
+}
+
+const WORLD_FEATURE_DEFAULT_DISABLE_PRIORITY = 2;
+const WORLD_FEATURE_DEFAULT_ENABLE_PRIORITY = 1;
+
+const WORLD_FEATURE_ENABLE_LINKS = {
+  nanotechManager: {
+    managers: ['nanotechManager'],
+    tabs: ['colonies'],
+    subtabs: ['nanocolony-colonies']
+  }
+};
+
+function getWorldFeatureDisablePriority(featureType, featureId) {
+  const disabledFeatures = getCurrentWorldDisabledFeatures();
+  const disabledList = disabledFeatures[featureType];
+  if (Array.isArray(disabledList)) {
+    for (let i = 0; i < disabledList.length; i += 1) {
+      const entry = disabledList[i];
+      if (entry === featureId) {
+        return WORLD_FEATURE_DEFAULT_DISABLE_PRIORITY;
+      }
+      if (entry && entry.id === featureId) {
+        return Number.isFinite(entry.priority) ? entry.priority : WORLD_FEATURE_DEFAULT_DISABLE_PRIORITY;
+      }
+    }
+    return 0;
+  }
+  if (disabledList && disabledList[featureId] !== undefined) {
+    const entry = disabledList[featureId];
+    if (entry === true) {
+      return WORLD_FEATURE_DEFAULT_DISABLE_PRIORITY;
+    }
+    if (Number.isFinite(entry)) {
+      return entry;
+    }
+    if (entry && Number.isFinite(entry.priority)) {
+      return entry.priority;
+    }
+    return 0;
+  }
+  return disabledList === featureId ? WORLD_FEATURE_DEFAULT_DISABLE_PRIORITY : 0;
+}
+
+function getWorldFeatureEffectPriority(effect) {
+  if (!effect || effect.value === false) {
+    return 0;
+  }
+  if (Number.isFinite(effect.priority)) {
+    return effect.priority;
+  }
+  if (Number.isFinite(effect.enablePriority)) {
+    return effect.enablePriority;
+  }
+  if (Number.isFinite(effect.level)) {
+    return effect.level;
+  }
+  return WORLD_FEATURE_DEFAULT_ENABLE_PRIORITY;
+}
+
+function normalizeWorldFeatureId(featureType, featureId) {
+  if (featureType === 'tabs') {
+    return extractTabId(featureId);
+  }
+  return featureId;
+}
+
+function getWorldResourceFeatureId(category, resourceName) {
+  return `${category}:${resourceName}`;
+}
+
+function doesEnableEffectTargetFeature(effect, featureType, featureId) {
+  if (!effect || effect.type !== 'enable') {
+    return false;
+  }
+  const normalizedFeatureId = normalizeWorldFeatureId(featureType, featureId);
+  if (effect.featureType === featureType && normalizeWorldFeatureId(featureType, effect.featureId || effect.targetId) === normalizedFeatureId) {
+    return true;
+  }
+  const linked = WORLD_FEATURE_ENABLE_LINKS[effect.target];
+  if (linked && linked[featureType] && linked[featureType].includes(normalizedFeatureId)) {
+    return true;
+  }
+  if (featureType === 'managers') {
+    return effect.target === normalizedFeatureId;
+  }
+  if (featureType === 'tabs') {
+    return effect.target === 'tab' && normalizeWorldFeatureId('tabs', effect.targetId) === normalizedFeatureId;
+  }
+  if (featureType === 'subtabs') {
+    return effect.targetId === normalizedFeatureId || effect.subtabId === normalizedFeatureId;
+  }
+  if (featureType === 'projectCategories') {
+    return effect.projectCategory === normalizedFeatureId;
+  }
+  if (featureType === 'researchCategories') {
+    return effect.researchCategory === normalizedFeatureId;
+  }
+  if (featureType === 'resources') {
+    return getWorldResourceFeatureId(effect.resourceType, effect.targetId) === normalizedFeatureId
+      || getWorldResourceFeatureId(effect.resourceCategory, effect.resourceId) === normalizedFeatureId;
+  }
+  return false;
+}
+
+function getWorldFeatureEnablePriority(featureType, featureId) {
+  const effectSources = [
+    globalEffects,
+    tabManager,
+    projectManager,
+    researchManager,
+    skillManager,
+    solisManager,
+    warpGateCommand,
+    patienceManager,
+    automationManager,
+    rwgManager,
+    artificialManager,
+    atlasManager,
+    galaxyManager,
+    galaxyInvasionManager,
+    earthManager,
+    lifeDesigner,
+    hazardManager,
+    milestonesManager,
+    nanotechManager,
+    followersManager
+  ];
+  let priority = 0;
+  for (let sourceIndex = 0; sourceIndex < effectSources.length; sourceIndex += 1) {
+    const source = effectSources[sourceIndex];
+    if (!source || !Array.isArray(source.activeEffects)) {
+      continue;
+    }
+    for (let i = 0; i < source.activeEffects.length; i += 1) {
+      const effect = source.activeEffects[i];
+      if (doesEnableEffectTargetFeature(effect, featureType, featureId)) {
+        priority = Math.max(priority, getWorldFeatureEffectPriority(effect));
+      }
+    }
+  }
+  return priority;
+}
+
+function isWorldFeatureDisabled(featureType, featureId) {
+  const disablePriority = getWorldFeatureDisablePriority(featureType, normalizeWorldFeatureId(featureType, featureId));
+  if (disablePriority <= 0) {
+    return false;
+  }
+  return disablePriority >= getWorldFeatureEnablePriority(featureType, featureId);
+}
+
+function isCurrentWorldTabDisabled(tabId) {
+  return isWorldFeatureDisabled('tabs', extractTabId(tabId));
+}
+
+function isCurrentWorldSubtabDisabled(subtabId) {
+  return isWorldFeatureDisabled('subtabs', subtabId);
+}
+
+function isCurrentWorldManagerDisabled(managerId) {
+  return isWorldFeatureDisabled('managers', managerId);
+}
+
+function isCurrentWorldProjectCategoryDisabled(category) {
+  return isWorldFeatureDisabled('projectCategories', category);
+}
+
+function isCurrentWorldAdvancedResearchDisabled() {
+  return isWorldFeatureDisabled('researchCategories', 'advanced');
+}
+
+function isCurrentWorldResourceDisabled(category, resourceName) {
+  return isWorldFeatureDisabled('resources', getWorldResourceFeatureId(category, resourceName));
+}
+
+function isManagerEffectivelyEnabled(manager, managerId) {
+  return !!(manager && manager.enabled && !isCurrentWorldManagerDisabled(managerId));
+}
+
 function addOrRemoveEffect(effect, action) {
   const targetHandlers = {
     'fundingModule': fundingModule,
@@ -757,7 +1180,8 @@ function addOrRemoveEffect(effect, action) {
     'atlasManager': atlasManager,
     'artificialManager': typeof artificialManager !== 'undefined' ? artificialManager : undefined,
     'colonySliders': typeof colonySliderSettings !== 'undefined' ? colonySliderSettings : undefined,
-    'patienceManager': typeof patienceManager !== 'undefined' ? patienceManager : undefined
+    'patienceManager': typeof patienceManager !== 'undefined' ? patienceManager : undefined,
+    'earthManager': earthManager
   };
 
   if (effect.target in targetHandlers &&
@@ -796,6 +1220,18 @@ function removeEffect(effect) {
   addOrRemoveEffect(effect, 'removeEffect');
 }
 
+function createResourceFlagEffects(resourceType, resourceIds, flagId, effectPrefix) {
+  return resourceIds.map(resourceId => ({
+    effectId: `${effectPrefix}-${resourceId}-${flagId}`,
+    type: 'booleanFlag',
+    target: 'resource',
+    resourceType,
+    targetId: resourceId,
+    flagId,
+    value: true
+  }));
+}
+
 function applyPlanetParameterEffects() {
   const effects = currentPlanetParameters.effects || [];
   for (let i = 0; i < effects.length; i += 1) {
@@ -805,8 +1241,77 @@ function applyPlanetParameterEffects() {
     addEffect({
       ...baseEffect,
       effectId,
-      sourceId
+      sourceId,
+      worldEffect: true,
+      clearOnTravel: true
     });
+  }
+}
+
+function reapplySharedManagerEffects(options = {}) {
+  const includeConditionalReconcile = options.includeConditionalReconcile === true;
+  const includeStory = options.includeStory === true;
+  const includeProject = options.includeProject === true;
+  const includeAutomation = options.includeAutomation === true;
+  const includePlanetParameterEffects = options.includePlanetParameterEffects === true;
+  const includeRWGEffects = options.includeRWGEffects === true;
+  const solisOptions = options.solisOptions;
+
+  if (includeConditionalReconcile) {
+    if (globalEffects && globalEffects.reconcileConditionalEffects) {
+      globalEffects.reconcileConditionalEffects();
+    }
+    for (const structureName in structures) {
+      const structure = structures[structureName];
+      if (structure && structure.reconcileConditionalEffects) {
+        structure.reconcileConditionalEffects();
+      }
+    }
+  }
+
+  if (includeStory && storyManager && storyManager.reapplyEffects) {
+    storyManager.reapplyEffects();
+  }
+  if (skillManager && skillManager.reapplyEffects) {
+    skillManager.reapplyEffects();
+  }
+  applyDifficultySettingEffects();
+  if (researchManager && researchManager.reapplyEffects) {
+    researchManager.reapplyEffects();
+  }
+  if (includeProject) {
+    projectManager.applyEffects();
+  }
+  if (includeAutomation && automationManager && automationManager.reapplyEffects) {
+    automationManager.reapplyEffects();
+  }
+  if (solisManager && solisManager.reapplyEffects) {
+    solisManager.reapplyEffects(solisOptions);
+  }
+  if (warpGateCommand && warpGateCommand.reapplyEffects) {
+    warpGateCommand.reapplyEffects();
+  }
+  if (patienceManager && patienceManager.reapplyEffects) {
+    patienceManager.reapplyEffects();
+  }
+  if (followersManager && followersManager.reapplyEffects) {
+    followersManager.reapplyEffects();
+  }
+  if (atlasManager && atlasManager.reapplyEffects) {
+    atlasManager.reapplyEffects();
+  }
+  if (galaxyInvasionManager && galaxyInvasionManager.reapplyEffects) {
+    galaxyInvasionManager.reapplyEffects();
+  }
+  if (nanotechManager && nanotechManager.reapplyEffects) {
+    nanotechManager.reapplyEffects();
+  }
+
+  if (includePlanetParameterEffects) {
+    applyPlanetParameterEffects();
+  }
+  if (includeRWGEffects) {
+    applyRWGEffects();
   }
 }
 if (typeof globalThis !== "undefined") {

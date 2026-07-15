@@ -12,6 +12,7 @@ class SubtabManager {
     this.activeId = null;
     this.activateListeners = [];
     this.tabClickHandlers = new Map();
+    this.worldDisabledIds = new Set();
     this._register();
   }
 
@@ -72,12 +73,36 @@ class SubtabManager {
     });
   }
 
+  _setWorldDisabled(id, disabled) {
+    const tab = this.getSubtab(id);
+    const content = document.getElementById(id);
+    if (disabled) {
+      if (tab) tab.classList.add('hidden');
+      if (content) content.classList.add('hidden');
+      this.worldDisabledIds.add(id);
+      return;
+    }
+    if (!this.worldDisabledIds.has(id)) return;
+    if (tab) tab.classList.remove('hidden');
+    if (content) content.classList.remove('hidden');
+    this.worldDisabledIds.delete(id);
+  }
+
+  _reconcileWorldDisabledSubtabs() {
+    this.worldDisabledIds.forEach(id => {
+      if (!isCurrentWorldSubtabDisabled(id)) {
+        this._setWorldDisabled(id, false);
+      }
+    });
+  }
+
   _getFirstVisibleId() {
     if (!this.subtabs) this._cacheSubtabs();
     for (let i = 0; i < this.subtabs.length; i += 1) {
       const tab = this.subtabs[i];
       const id = tab.dataset.subtab;
       const content = document.getElementById(id);
+      if (isCurrentWorldSubtabDisabled(id)) continue;
       if (tab.classList.contains('hidden')) continue;
       if (content && content.classList.contains('hidden')) continue;
       return id;
@@ -94,7 +119,12 @@ class SubtabManager {
     if (!this.subtabs) this._cacheSubtabs();
     const tab = this.getSubtab(id);
     const content = document.getElementById(id);
-    if (tab && tab.classList.contains('hidden')) {
+    if (isCurrentWorldSubtabDisabled(id)) {
+      this._setWorldDisabled(id, true);
+      const fallbackId = this._getFirstVisibleId();
+      if (!fallbackId) return;
+      id = fallbackId;
+    } else if (tab && tab.classList.contains('hidden')) {
       const fallbackId = this._getFirstVisibleId();
       if (!fallbackId) return;
       id = fallbackId;
@@ -133,6 +163,11 @@ class SubtabManager {
   show(id) {
     const tab = this.getSubtab(id);
     const content = document.getElementById(id);
+    if (isCurrentWorldSubtabDisabled(id)) {
+      this._setWorldDisabled(id, true);
+      return;
+    }
+    this.worldDisabledIds.delete(id);
     if (tab) tab.classList.remove('hidden');
     if (content) content.classList.remove('hidden');
   }
@@ -151,6 +186,7 @@ class SubtabManager {
   reset() {
     this.subtabs = null;
     this._register();
+    this._reconcileWorldDisabledSubtabs();
   }
 
   getSubtab(id) {

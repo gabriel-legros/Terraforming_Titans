@@ -629,19 +629,27 @@ class RingworldTerraformingProject extends Project {
     const surfacePressurePa = calculateAtmosphericPressure(
       (compositionData.totalMass || 0) / 1000,
       gSurface,
-      terraforming.celestialParameters.radius
+      terraforming.celestialParameters.radius,
+      terraforming.celestialParameters.surfaceArea
     );
-    const surfacePressureBar = surfacePressurePa / 1e5;
+    const atmosphereInEffect = this.getSurfaceGravityRatio() >= RINGWORLD_MIN_GRAVITY_RATIO;
+    const effectiveComposition = atmosphereInEffect ? composition : {};
+    const effectiveSurfacePressurePa = atmosphereInEffect ? surfacePressurePa : 0;
+    const effectiveSurfacePressureBar = effectiveSurfacePressurePa / 1e5;
     const aerosolsSW = {};
     const area_m2 = 4 * Math.PI * Math.pow((terraforming.celestialParameters.radius || 1) * 1000, 2);
-    const calciteAerosol = terraforming.resources.atmospheric.calciteAerosol;
-    const mass_ton = calciteAerosol.value || 0;
-    aerosolsSW.calcite = area_m2 > 0 ? (mass_ton * 1000) / area_m2 : 0;
+    if (atmosphereInEffect) {
+      const calciteAerosol = terraforming.resources.atmospheric.calciteAerosol;
+      const mass_ton = calciteAerosol.value || 0;
+      aerosolsSW.calcite = area_m2 > 0 ? (mass_ton * 1000) / area_m2 : 0;
+    }
 
     const pct = terraforming.getZoneWeight('tropical');
     const zoneArea = (terraforming.celestialParameters.surfaceArea || 0) * pct;
     const zoneLiquidWater = terraforming.zonalSurface.tropical.liquidWater || 0;
-    const atmosphericHeatCapacity = calculateEffectiveAtmosphericHeatCapacityHelper(terraforming.resources.atmospheric, surfacePressurePa, gSurface);
+    const atmosphericHeatCapacity = atmosphereInEffect
+      ? calculateEffectiveAtmosphericHeatCapacityHelper(terraforming.resources.atmospheric, effectiveSurfacePressurePa, gSurface)
+      : 0;
     const zoneFractions = calculateZonalSurfaceFractions(terraforming, 'tropical');
     const flux = terraforming.luminosity.solarFlux * (1 - shadingStrength);
 
@@ -649,8 +657,8 @@ class RingworldTerraformingProject extends Project {
       groundAlbedo,
       flux,
       rotationPeriodH,
-      surfacePressureBar,
-      composition,
+      surfacePressureBar: effectiveSurfacePressureBar,
+      composition: effectiveComposition,
       gSurface,
       aerosolsSW,
       surfaceFractions: zoneFractions,
@@ -696,6 +704,7 @@ class RingworldTerraformingProject extends Project {
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
     const totals = { cost: {}, gain: {} };
+    this.syncPowerFromMode();
     if (!this.unlocked || !this.investing || this.isCompleted || this.power <= 0) {
       return totals;
     }
@@ -707,6 +716,7 @@ class RingworldTerraformingProject extends Project {
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
+    this.syncPowerFromMode();
     if (!this.unlocked || !this.investing || this.isCompleted || this.power <= 0) {
       this.shortfallLastTick = false;
       this.actualInvestRate = 0;
@@ -761,6 +771,7 @@ class RingworldTerraformingProject extends Project {
       removeEffect(this.lowGravityLifeEffect);
       return;
     }
+    this.syncPowerFromMode();
     if (this.autoShadeEnabled) {
       this.applyAutoShade();
     }

@@ -14,12 +14,25 @@ let mechanicalAssistanceEffect;
 let mechanicalAssistanceValue;
 let mechanicalAssistanceInput;
 let mechanicalAssistanceRefresh;
+let workforceInputRef;
+let workforceValueRef;
+let workforceEffectRef;
+let foodInputRef;
+let foodValueRef;
+let foodEffectRef;
+let waterInputRef;
+let waterValueRef;
+let waterEffectRef;
+let oreInputRef;
+let oreValueRef;
+let oreEffectRef;
 let warpnetRow;
 let warpnetInfo;
 let warpnetEffect;
 let warpnetValue;
 let warpnetInput;
 let warpnetRefresh;
+let colonySlidersContainer;
 
 function refreshColonySliderInputs() {
   setWorkforceRatio(colonySliderSettings.workerRatio);
@@ -31,8 +44,32 @@ function refreshColonySliderInputs() {
   updateColonySlidersUI();
 }
 
+function getColonySliderDisplayValue(input, committedValue) {
+  if (input && input._colonySliderHasPreviewValue) {
+    const previewValue = parseFloat(input.value);
+    if (!isNaN(previewValue)) {
+      return previewValue;
+    }
+  }
+  return committedValue;
+}
+
+function wireColonySliderPreview(container, input) {
+  input._colonySliderHasPreviewValue = false;
+  addTrackedUIListener(container, input, 'input', () => {
+    input._colonySliderHasPreviewValue = true;
+  });
+  addTrackedUIListener(container, input, 'change', () => {
+    input._colonySliderHasPreviewValue = false;
+  });
+  addTrackedUIListener(container, input, 'blur', () => {
+    input._colonySliderHasPreviewValue = false;
+  });
+}
+
 function initializeColonySlidersUI() {
   const container = document.getElementById('colony-sliders-container');
+  colonySlidersContainer = container;
   if (!container) return;
   // Always reset to hidden; research effects re-enable this when unlocked.
   container.classList.add('invisible');
@@ -81,6 +118,7 @@ function initializeColonySlidersUI() {
   input.value = colonySliderSettings.workerRatio * 100;
   input.setAttribute('list', 'workforce-slider-ticks');
   input.classList.add('pretty-slider');
+  wireColonySliderPreview(container, input);
 
   const sliderContainer = document.createElement('div');
   sliderContainer.classList.add('slider-container');
@@ -99,6 +137,9 @@ function initializeColonySlidersUI() {
   effectSpan.id = 'workforce-slider-effect';
   effectSpan.classList.add('slider-effect');
   sliderRow.appendChild(effectSpan);
+  workforceInputRef = input;
+  workforceValueRef = valueSpan;
+  workforceEffectRef = effectSpan;
 
   const datalist = document.createElement('datalist');
   datalist.id = 'workforce-slider-ticks';
@@ -161,6 +202,7 @@ function initializeColonySlidersUI() {
   foodInput.value = colonySliderSettings.foodConsumption;
   foodInput.setAttribute('list', 'food-slider-ticks');
   foodInput.classList.add('pretty-slider');
+  wireColonySliderPreview(container, foodInput);
 
   const foodSliderContainer = document.createElement('div');
   foodSliderContainer.classList.add('slider-container');
@@ -179,6 +221,9 @@ function initializeColonySlidersUI() {
   foodEffect.id = 'food-slider-effect';
   foodEffect.classList.add('slider-effect');
   foodRow.appendChild(foodEffect);
+  foodInputRef = foodInput;
+  foodValueRef = foodValue;
+  foodEffectRef = foodEffect;
   const foodList = document.createElement('datalist');
   foodList.id = 'food-slider-ticks';
   for (let i = 1; i <= 6; i += 0.5) {
@@ -235,6 +280,7 @@ function initializeColonySlidersUI() {
   waterInput.value = colonySliderSettings.luxuryWater;
   waterInput.setAttribute('list', 'water-slider-ticks');
   waterInput.classList.add('pretty-slider');
+  wireColonySliderPreview(container, waterInput);
 
   const waterSliderContainer = document.createElement('div');
   waterSliderContainer.classList.add('slider-container');
@@ -262,6 +308,9 @@ function initializeColonySlidersUI() {
   }
   container.appendChild(waterList);
   body.appendChild(waterRow);
+  waterInputRef = waterInput;
+  waterValueRef = waterValue;
+  waterEffectRef = waterEffect;
 
   const updateWaterValue = (val) => {
     if (waterValue && waterEffect) {
@@ -310,6 +359,7 @@ function initializeColonySlidersUI() {
   oreInput.value = colonySliderSettings.oreMineWorkers;
   oreInput.setAttribute('list', 'ore-worker-slider-ticks');
   oreInput.classList.add('pretty-slider');
+  wireColonySliderPreview(container, oreInput);
 
   const oreSliderContainer = document.createElement('div');
   oreSliderContainer.classList.add('slider-container');
@@ -338,6 +388,9 @@ function initializeColonySlidersUI() {
   }
   container.appendChild(oreList);
   body.appendChild(oreRow);
+  oreInputRef = oreInput;
+  oreValueRef = oreValue;
+  oreEffectRef = oreEffect;
 
   // Mechanical assistance slider
   mechanicalAssistanceRow = document.createElement('div');
@@ -370,6 +423,7 @@ function initializeColonySlidersUI() {
   mechInput.value = colonySliderSettings.mechanicalAssistance;
   mechInput.setAttribute('list', 'mechanical-assistance-slider-ticks');
   mechInput.classList.add('pretty-slider');
+  wireColonySliderPreview(container, mechInput);
 
   const mechSliderContainer = document.createElement('div');
   mechSliderContainer.classList.add('slider-container');
@@ -408,7 +462,7 @@ function initializeColonySlidersUI() {
   const refreshMechanicalAssistanceDetails = () => {
     let sliderValue;
     try {
-      sliderValue = parseFloat(mechanicalAssistanceInput.value);
+      sliderValue = getColonySliderDisplayValue(mechanicalAssistanceInput, colonySliderSettings.mechanicalAssistance);
     } catch (e) {
       sliderValue = NaN;
     }
@@ -505,6 +559,7 @@ function initializeColonySlidersUI() {
   warpnetRange.value = colonySliderSettings.warpnetLevel;
   warpnetRange.setAttribute('list', 'warpnet-slider-ticks');
   warpnetRange.classList.add('pretty-slider');
+  wireColonySliderPreview(container, warpnetRange);
 
   const warpnetSliderContainer = document.createElement('div');
   warpnetSliderContainer.classList.add('slider-container');
@@ -546,13 +601,14 @@ function initializeColonySlidersUI() {
   const refreshWarpnetDetails = () => {
     let sliderValue;
     try {
-      sliderValue = parseInt(warpnetInput.value, 10);
+      sliderValue = getColonySliderDisplayValue(warpnetInput, colonySliderSettings.warpnetLevel);
     } catch (e) {
       sliderValue = NaN;
     }
     if (isNaN(sliderValue)) {
       sliderValue = colonySliderSettings.warpnetLevel;
     }
+    sliderValue = Math.round(sliderValue);
 
     const energyMultiplier = sliderValue === 0 ? 1 : Math.pow(10, sliderValue);
     const label = `x${formatNumber(energyMultiplier, true, 0)}`;
@@ -658,15 +714,81 @@ function initializeColonySlidersUI() {
 }
 
 function updateColonySlidersUI() {
+  if (!colonySlidersContainer) {
+    colonySlidersContainer = document.getElementById('colony-sliders-container');
+  }
+  const slidersUnlocked = researchManager.getResearchById('colony_sliders').isResearched;
+  colonySlidersContainer.classList.toggle('invisible', !slidersUnlocked);
+
   if (!mechanicalAssistanceRow) {
     mechanicalAssistanceRow = document.getElementById('mechanical-assistance-row');
   }
   const manager = colonySliderSettings;
+  const workforcePercent = getColonySliderDisplayValue(workforceInputRef, manager.workerRatio * 100);
+  if (workforceInputRef && !workforceInputRef._colonySliderHasPreviewValue) {
+    workforceInputRef.value = manager.workerRatio * 100;
+  }
+  if (workforceValueRef) {
+    const workers = Math.round(workforcePercent);
+    workforceValueRef.textContent = getColonySlidersText('ui.colony.sliders.workersValue', 'Workers: {value}%', { value: workers });
+  }
+  if (workforceEffectRef) {
+    workforceEffectRef.textContent = getColonySlidersText('ui.colony.sliders.scientistsValue', 'Scientists: {value}%', { value: 100 - Math.round(workforcePercent) });
+  }
+
+  if (foodInputRef && !foodInputRef._colonySliderHasPreviewValue) {
+    foodInputRef.value = manager.foodConsumption;
+  }
+  const foodConsumption = getColonySliderDisplayValue(foodInputRef, manager.foodConsumption);
+  if (foodValueRef) {
+    foodValueRef.textContent = `${foodConsumption.toFixed(1)}x`;
+  }
+  if (foodEffectRef) {
+    const growthVal = 1 + (foodConsumption - 1) * 0.02;
+    const percent = ((growthVal - 1) * 100).toFixed(1);
+    foodEffectRef.textContent = getColonySlidersText('ui.colony.sliders.growthEffect', 'Growth: +{value}%', { value: percent });
+  }
+
+  if (waterInputRef && !waterInputRef._colonySliderHasPreviewValue) {
+    waterInputRef.value = manager.luxuryWater;
+  }
+  const luxuryWater = getColonySliderDisplayValue(waterInputRef, manager.luxuryWater);
+  if (waterValueRef) {
+    waterValueRef.textContent = `${luxuryWater.toFixed(1)}x`;
+  }
+  if (waterEffectRef) {
+    const growthVal = 1 + (luxuryWater - 1) * 0.01;
+    const percent = ((growthVal - 1) * 100).toFixed(1);
+    waterEffectRef.textContent = getColonySlidersText('ui.colony.sliders.growthEffect', 'Growth: +{value}%', { value: percent });
+  }
+
+  if (oreInputRef && !oreInputRef._colonySliderHasPreviewValue) {
+    oreInputRef.value = manager.oreMineWorkers;
+  }
+  const oreMineWorkers = getColonySliderDisplayValue(oreInputRef, manager.oreMineWorkers);
+  if (oreValueRef || oreEffectRef) {
+    const minesBuilt = Number.isFinite(buildings?.oreMine?.countNumber)
+      ? buildings.oreMine.countNumber
+      : (typeof buildingCountToNumber === 'function'
+        ? buildingCountToNumber(buildings?.oreMine?.count)
+        : Math.max(0, Math.floor(Number(buildings?.oreMine?.count) || 0)));
+    if (oreValueRef) {
+      oreValueRef.textContent = `${oreMineWorkers * 10 * minesBuilt}`;
+    }
+    if (oreEffectRef) {
+      const percent = ((oreMineWorkers === 0 ? 0 : oreMineWorkers) * 100).toFixed(0);
+      oreEffectRef.textContent = getColonySlidersText('ui.colony.sliders.boostEffect', 'Boost: {value}%', { value: percent });
+    }
+  }
+
   if (mechanicalAssistanceRow) {
     const unlocked = manager.isBooleanFlagSet('mechanicalAssistance');
     const gravity = terraforming.celestialParameters.gravity;
     const hasPenalty = gravity > 10;
     mechanicalAssistanceRow.style.display = unlocked && hasPenalty ? 'grid' : 'none';
+    if (mechanicalAssistanceInput && !mechanicalAssistanceInput._colonySliderHasPreviewValue) {
+      mechanicalAssistanceInput.value = manager.mechanicalAssistance;
+    }
     if (mechanicalAssistanceRefresh) {
       mechanicalAssistanceRefresh();
     }
@@ -678,10 +800,14 @@ function updateColonySlidersUI() {
   if (warpnetRow) {
     const warpnetUnlocked = manager && manager.isBooleanFlagSet && manager.isBooleanFlagSet('warpnet');
     warpnetRow.style.display = warpnetUnlocked ? 'grid' : 'none';
+    if (warpnetInput && !warpnetInput._colonySliderHasPreviewValue) {
+      warpnetInput.value = manager.warpnetLevel;
+    }
     if (warpnetUnlocked && warpnetRefresh) {
       warpnetRefresh();
     }
   }
+  manager.uiDirty = false;
 }
 
 if (typeof module !== "undefined" && module.exports) {

@@ -233,43 +233,56 @@ class WorkerCapacityBatchProject extends Project {
     }
     amountDisplay.appendChild(info);
 
-    const controls = document.createElement('div');
-    controls.className = 'amount-controls';
-    const mainControls = document.createElement('div');
-    mainControls.className = 'scanner-main-controls';
-    const bMin = document.createElement('button');
-    bMin.textContent = getProjectFolderText('ui.projects.common.one', '1');
-    const bMinus = document.createElement('button');
-    bMinus.textContent = getProjectFolderText('ui.projects.common.minus', '-');
-    const bPlus = document.createElement('button');
-    bPlus.textContent = getProjectFolderText('ui.projects.common.plus', '+');
-    const bMax = document.createElement('button');
-    bMax.textContent = getProjectFolderText('ui.projects.common.max', 'Max');
-    mainControls.append(bMin, bMinus, bPlus, bMax);
+    let controls = null;
+    let bMin = null;
+    let bMinus = null;
+    let bPlus = null;
+    let bMax = null;
+    let bDiv = null;
+    let bMul = null;
+    if (showControls) {
+      controls = document.createElement('div');
+      controls.className = 'amount-controls';
+      const mainControls = document.createElement('div');
+      mainControls.className = 'scanner-main-controls';
+      bMin = document.createElement('button');
+      bMin.textContent = getProjectFolderText('ui.projects.common.one', '1');
+      bMinus = document.createElement('button');
+      bMinus.textContent = getProjectFolderText('ui.projects.common.minus', '-');
+      bPlus = document.createElement('button');
+      bPlus.textContent = getProjectFolderText('ui.projects.common.plus', '+');
+      bMax = document.createElement('button');
+      bMax.textContent = getProjectFolderText('ui.projects.common.max', 'Max');
+      mainControls.append(bMin, bMinus, bPlus, bMax);
 
-    const multControls = document.createElement('div');
-    multControls.className = 'scanner-mult-controls';
-    const bDiv = document.createElement('button');
-    bDiv.textContent = getProjectFolderText('ui.projects.common.divideTen', '/10');
-    const bMul = document.createElement('button');
-    bMul.textContent = getProjectFolderText('ui.projects.common.timesTen', 'x10');
-    multControls.append(bDiv, bMul);
+      const multControls = document.createElement('div');
+      multControls.className = 'scanner-mult-controls';
+      bDiv = document.createElement('button');
+      bDiv.textContent = getProjectFolderText('ui.projects.common.divideTen', '/10');
+      bMul = document.createElement('button');
+      bMul.textContent = getProjectFolderText('ui.projects.common.timesTen', 'x10');
+      multControls.append(bDiv, bMul);
 
-    controls.append(mainControls, multControls);
+      controls.append(mainControls, multControls);
+    }
 
-    const autoContainer = document.createElement('div');
-    autoContainer.className = 'checkbox-container';
-    const autoMaxCheckbox = document.createElement('input');
-    autoMaxCheckbox.type = 'checkbox';
-    autoMaxCheckbox.id = `${this.name}-auto-max`;
-    autoMaxCheckbox.checked = this.autoMax;
-    autoMaxCheckbox.addEventListener('change', (event) => {
-      this.autoMax = event.target.checked;
-    });
-    const autoLabel = document.createElement('label');
-    autoLabel.htmlFor = autoMaxCheckbox.id;
-    autoLabel.textContent = autoMaxLabel;
-    autoContainer.append(autoMaxCheckbox, autoLabel);
+    let autoContainer = null;
+    let autoMaxCheckbox = null;
+    if (showAutoMax) {
+      autoContainer = document.createElement('div');
+      autoContainer.className = 'checkbox-container';
+      autoMaxCheckbox = document.createElement('input');
+      autoMaxCheckbox.type = 'checkbox';
+      autoMaxCheckbox.id = `${this.name}-auto-max`;
+      autoMaxCheckbox.checked = this.autoMax;
+      autoMaxCheckbox.addEventListener('change', (event) => {
+        this.autoMax = event.target.checked;
+      });
+      const autoLabel = document.createElement('label');
+      autoLabel.htmlFor = autoMaxCheckbox.id;
+      autoLabel.textContent = autoMaxLabel;
+      autoContainer.append(autoMaxCheckbox, autoLabel);
+    }
 
     const amountRow = document.createElement('div');
     amountRow.className = 'worker-capacity-row';

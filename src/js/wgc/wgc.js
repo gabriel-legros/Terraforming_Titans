@@ -36,74 +36,17 @@ const facilityLabels = {
   library: 'Library'
 };
 
-const baseEventTemplatesByName = baseOperationEvents.reduce((map, evt) => {
-  const { aliases, ...template } = evt;
-  map[evt.name] = template;
-  if (Array.isArray(aliases)) {
-    aliases.map(String).forEach(alias => {
-      if (!(alias in map)) {
-        map[alias] = template;
-      }
-    });
-  }
-  return map;
-}, Object.create(null));
-
-const operationStoriesModulePaths = [
-  '../../../assets/wgc_ops/operation_stories.js',
-  '../../../assets/wgc_ops/operation_stories.json'
-];
-let cachedOperationStories = null;
-
-function ensureOperationStoriesLoaded() {
-  if (Array.isArray(cachedOperationStories)) {
-    return cachedOperationStories;
-  }
-  if (typeof window !== 'undefined' && window && Array.isArray(window.WGC_OPERATION_STORIES)) {
-    cachedOperationStories = window.WGC_OPERATION_STORIES;
-    return cachedOperationStories;
-  }
-  if (isNodeWGC) {
-    for (const path of operationStoriesModulePaths) {
-      try {
-        const data = require(path);
-        cachedOperationStories = Array.isArray(data) ? data : [];
-        return cachedOperationStories;
-      } catch (err) {}
-    }
-    cachedOperationStories = [];
-    return cachedOperationStories;
-  }
-  cachedOperationStories = [];
-  return cachedOperationStories;
-}
-
-function getOperationStories() {
-  const stories = ensureOperationStoriesLoaded();
-  if (Array.isArray(stories) && stories.length > 0) {
-    return stories;
-  }
-  return null;
-}
-
-function replaceStoryPlaceholders(line, team, selected) {
-  if (!line) return '';
-  const roster = Array.isArray(team) ? team : [];
-  let formatted = line.replace(/\$TEAM_MEMBER_([1-4])/g, (_, rawIndex) => {
-    const index = parseInt(rawIndex, 10) - 1;
-    const member = roster[index];
-    if (member && member.firstName) return member.firstName;
-    return `Member ${rawIndex}`;
-  });
-  const preferred = selected && selected.firstName ? selected.firstName : (roster[0] && roster[0].firstName ? roster[0].firstName : 'Operative');
-  formatted = formatted.replace(/\$TEAM_MEMBER_SELECTED/g, preferred);
-  return formatted;
-}
-
 function formatOperationLogHeader(op) {
   const number = op && op.number ? op.number : 0;
   const difficulty = op ? (op.activeDifficulty ?? op.difficulty ?? 0) : 0;
   return `=== Operation #${number} (DC ${formatNumber(difficulty, false, 0)}) ===`;
+}
+
+function sanitizeOperationEvent(event) {
+  const sanitized = { ...event };
+  delete sanitized.storyLines;
+  delete sanitized.storyStep;
+  return sanitized;
 }
 
 class WarpGateCommand extends EffectableEntity {
@@ -156,6 +99,7 @@ class WarpGateCommand extends EffectableEntity {
     this.totalOperations = 0;
     this.totalArtifacts = 0;
     this.highestDifficulty = -1;
+    this.showArtifactsInSidebar = true;
     this.rdUpgrades = {
       wgtEquipment: { purchases: 0, max: 900 },
       componentsEfficiency: { purchases: 0, max: 400 },
@@ -175,10 +119,116 @@ class WarpGateCommand extends EffectableEntity {
     };
     this.facilityCooldown = 0;
     this.teamNames = defaultTeamNames.slice();
-    this.hideStoryLogs = false;
     this.teamUnlocks = WGC_TEAM_UNLOCKS.slice();
     this.unlockedTeams = this.teamUnlocks.map(threshold => this.totalOperations >= threshold);
-    ensureOperationStoriesLoaded();
+    this.presets = [];
+  }
+
+  _generatePresetId() {
+    return `preset_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
+  }
+
+  addPreset(name, scope, ratios) {
+    const id = this._generatePresetId();
+    this.presets.push({
+      id,
+      name: String(name).trim() || 'Preset',
+      scope: scope || { type: 'global' },
+      ratios: {
+        power: Math.max(0, parseInt(ratios.power, 10) || 0),
+        athletics: Math.max(0, parseInt(ratios.athletics, 10) || 0),
+        wit: Math.max(0, parseInt(ratios.wit, 10) || 0)
+      }
+    });
+    return id;
+  }
+
+  updatePreset(id, name, scope, ratios) {
+    const preset = this.presets.find(p => p.id === id);
+    if (!preset) return false;
+    preset.name = String(name).trim() || preset.name;
+    preset.scope = scope || preset.scope;
+    preset.ratios = {
+      power: Math.max(0, parseInt(ratios.power, 10) || 0),
+      athletics: Math.max(0, parseInt(ratios.athletics, 10) || 0),
+      wit: Math.max(0, parseInt(ratios.wit, 10) || 0)
+    };
+    return true;
+  }
+
+  deletePreset(id) {
+    const idx = this.presets.findIndex(p => p.id === id);
+    if (idx === -1) return false;
+    this.presets.splice(idx, 1);
+    return true;
+  }
+
+  _presetScopePriority(scope) {
+    if (!scope) return 0;
+    if (scope.type === 'class') return 3;
+    if (scope.type === 'team') return 2;
+    return 1;
+  }
+
+  getPresetForMember(member, teamIndex) {
+    if (!member || !Array.isArray(this.presets)) return null;
+    let best = null;
+    let bestPriority = -1;
+    for (const preset of this.presets) {
+      const s = preset.scope || { type: 'global' };
+      let matches = false;
+      if (s.type === 'global') matches = true;
+      else if (s.type === 'team') matches = s.value === teamIndex;
+      else if (s.type === 'class') matches = s.value === member.classType;
+      if (matches) {
+        const priority = this._presetScopePriority(s);
+        if (priority > bestPriority) {
+          bestPriority = priority;
+          best = preset;
+        }
+      }
+    }
+    return best;
+  }
+
+  applyPresetToMember(member, teamIndex) {
+    const preset = this.getPresetForMember(member, teamIndex);
+    if (!preset) return false;
+    const points = member.getPointsToAllocate();
+    if (points <= 0) return false;
+    const { power = 0, athletics = 0, wit = 0 } = preset.ratios;
+    const ratioSum = power + athletics + wit;
+    if (ratioSum <= 0) return false;
+    const base = WGCTeamMember.getBaseStats(member.classType);
+    const current = {
+      power: member.power - base.power,
+      athletics: member.athletics - base.athletics,
+      wit: member.wit - base.wit
+    };
+    let remaining = points;
+    let total = current.power + current.athletics + current.wit;
+    const stats = ['power', 'athletics', 'wit'].filter(s => preset.ratios[s] > 0);
+    while (remaining > 0) {
+      let best = '';
+      let bestErr = Infinity;
+      for (const stat of stats) {
+        const nextTotal = total + 1;
+        let mse = 0;
+        for (const s of stats) {
+          const desired = preset.ratios[s] / ratioSum;
+          const actual = (current[s] + (s === stat ? 1 : 0)) / nextTotal;
+          mse += (desired - actual) ** 2;
+        }
+        const err = mse / stats.length;
+        if (err + 1e-9 < bestErr) { bestErr = err; best = stat; }
+      }
+      if (!best) break;
+      current[best] += 1;
+      member[best] += 1;
+      total += 1;
+      remaining -= 1;
+    }
+    return remaining < points;
   }
 
   refreshUnlockedTeams() {
@@ -201,8 +251,8 @@ class WarpGateCommand extends EffectableEntity {
       const name = this.teamNames[teamIndex] || `Team ${teamIndex + 1}`;
       this.addLog(teamIndex, `${name} unlocked`);
     });
-    if (newlyUnlockedTeams.length > 0 && typeof updateWGCUI === 'function') {
-      updateWGCUI();
+    if (newlyUnlockedTeams.length > 0) {
+      this.uiDirty = true;
     }
   }
 
@@ -267,63 +317,14 @@ class WarpGateCommand extends EffectableEntity {
 
   generateOperationEvents(op, teamIndex, count = 10) {
     const list = [];
-    const stories = getOperationStories();
-    if (stories && stories.length > 0) {
-      const selected = stories[Math.floor(Math.random() * stories.length)];
-      const storyEvents = selected && Array.isArray(selected.events) ? selected.events.slice(0, count) : [];
-      if (storyEvents.length === count) {
-        let invalid = false;
-        for (let i = 0; i < storyEvents.length; i += 1) {
-          const storyEvent = storyEvents[i];
-          const template = baseEventTemplatesByName[storyEvent.name] || null;
-          const event = template ? { ...template } : { name: storyEvent.name };
-          const usedAlias = !!template && event.name !== storyEvent.name;
-          if (storyEvent.type && !usedAlias) event.type = storyEvent.type;
-          if (storyEvent.skill && !usedAlias) event.skill = storyEvent.skill;
-          if (storyEvent.specialty && !usedAlias) event.specialty = storyEvent.specialty;
-          if (Array.isArray(storyEvent.lines) && storyEvent.lines.length > 0) {
-            event.storyLines = storyEvent.lines.slice();
-          }
-          event.storyStep = storyEvent.step || (list.length + 1);
-          event.isBase = true;
-          if (!event.type) {
-            invalid = true;
-            break;
-          }
-          this.applyStanceDifficulty(event, teamIndex);
-          list.push(event);
-        }
-        if (invalid) {
-          list.length = 0;
-        }
-      }
-    }
-    if (list.length !== count) {
-      list.length = 0;
-      for (let i = 0; i < count; i++) {
-        const event = this.cloneEvent(this.chooseEvent(teamIndex));
-        if (event) {
-          event.isBase = true;
-          list.push(event);
-        }
+    for (let i = 0; i < count; i++) {
+      const event = this.cloneEvent(this.chooseEvent(teamIndex));
+      if (event) {
+        event.isBase = true;
+        list.push(event);
       }
     }
     return list;
-  }
-
-  logStoryStep(teamIndex, op, event, roller) {
-    if (this.hideStoryLogs) return;
-    if (!event || !Array.isArray(event.storyLines) || event.storyLines.length === 0) return;
-    const team = this.teams[teamIndex];
-    const operationNumber = op && op.number ? op.number : '?';
-    const baseStep = Number.isFinite(event.storyStep) ? event.storyStep : (op && Number.isFinite(op.baseEventsCompleted) ? op.baseEventsCompleted + 1 : 1);
-    const formattedLines = event.storyLines.map(line => {
-      const formatted = replaceStoryPlaceholders(line, team, roller);
-      return formatted ? formatted.trim() : '';
-    }).filter(text => text);
-    if (formattedLines.length === 0) return;
-    const paragraph = formattedLines.join(' ');
-    this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${operationNumber} - Story Step ${baseStep}: ${paragraph}`);
   }
 
   getEventDelay(event, teamIndex) {
@@ -680,7 +681,6 @@ class WarpGateCommand extends EffectableEntity {
     }
     const total = rollResult.sum + skillTotal;
     const damageText = damageDetail ? ` | ${damageDetail}` : '';
-    this.logStoryStep(teamIndex, op, event, roller);
     const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillDetail} (total ${formatNumber(total, false, 2)}) vs DC ${formatNumber(dc, false, 2)} => ${outcome}${artText}${damageText}${rerollNote}${criticalNote}`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${op.number} - ${summary}`);
@@ -714,7 +714,11 @@ class WarpGateCommand extends EffectableEntity {
   }
 
   enable() {
+    if (isCurrentWorldManagerDisabled('warpGateCommand')) {
+      return;
+    }
     this.enabled = true;
+    this.syncArtifactResourceVisibility();
     warpGateNetworkManager.setWarpGateUnlocked(true);
     if (typeof showWGCTab === 'function') {
       showWGCTab();
@@ -791,15 +795,39 @@ class WarpGateCommand extends EffectableEntity {
         effectId,
         sourceId: 'wgcRD'
       });
+      if (key === 'superalloyFusionEfficiency') {
+        addEffect({
+          target: 'building',
+          targetId: mapping[key],
+          type: 'consumptionMultiplier',
+          disabledWhenGameSettingEnabled: 'disableFusionConsumptionScaling',
+          value: mult,
+          effectId: `${effectId}-consumption`,
+          sourceId: 'wgcRD'
+        });
+      }
     }
   }
 
   reapplyEffects() {
+    this.syncArtifactResourceVisibility();
+    if (isCurrentWorldManagerDisabled('warpGateCommand')) {
+      return;
+    }
     for (const key in this.rdUpgrades) {
       if (this.rdUpgrades[key].purchases > 0) {
         this.applyUpgradeEffect(key);
       }
     }
+  }
+
+  syncArtifactResourceVisibility() {
+    resources.special.alienArtifact.showInSidebar = this.showArtifactsInSidebar;
+  }
+
+  setArtifactSidebarVisibility(show) {
+    this.showArtifactsInSidebar = show === true;
+    this.syncArtifactResourceVisibility();
   }
 
   update(_delta) {
@@ -931,8 +959,8 @@ class WarpGateCommand extends EffectableEntity {
         }
       });
     });
-    if (autoChanged && typeof updateWGCUI === 'function') {
-      updateWGCUI();
+    if (autoChanged) {
+      this.uiDirty = true;
     }
   }
 
@@ -944,11 +972,12 @@ class WarpGateCommand extends EffectableEntity {
     const op = this.operations[teamIndex];
     if (!op) return;
     const art = op.artifacts;
+    const artifactGain = getArtifactGainAmount(art);
     const successes = op.successes;
     if (art > 0 && typeof resources !== 'undefined' && resources.special && resources.special.alienArtifact) {
-      resources.special.alienArtifact.increase(art);
+      resources.special.alienArtifact.increase(artifactGain);
     }
-    this.totalArtifacts += art;
+    this.totalArtifacts += artifactGain;
     const team = this.teams[teamIndex];
     if (team) {
       const barracksBase = 1 + this.facilities.barracks * 0.01;
@@ -966,6 +995,7 @@ class WarpGateCommand extends EffectableEntity {
         let gain = xpGain;
         if (m.xp < currentMax) gain *= 1.5;
         m.xp = Math.min(m.xp + gain, newMax);
+        const tIdx = this.teams.indexOf(team);
         let req = m.getXPForNextLevel();
         while (m.xp >= req && req > 0) {
           m.xp -= req;
@@ -973,10 +1003,11 @@ class WarpGateCommand extends EffectableEntity {
           m.maxHealth = 100 + (m.level - 1) * 10;
           m.health = Math.min(m.health, m.maxHealth);
           req = m.getXPForNextLevel();
+          this.applyPresetToMember(m, tIdx);
         }
       });
     }
-    const summary = `Operation ${op.number} Complete: ${successes} success(es), ${formatNumber(art, false, 2)} artifact(s)`;
+    const summary = `Operation ${op.number} Complete: ${successes} success(es), ${formatNumber(artifactGain, false, 2)} artifact(s)`;
     op.summary = summary;
     this.addLog(teamIndex, `Team ${teamIndex + 1} - ${summary}`);
 
@@ -987,11 +1018,12 @@ class WarpGateCommand extends EffectableEntity {
         bonus += lvl <= 0 ? 1 : lvl;
       }
       this.highestDifficulty = opDifficulty;
+      const bonusGain = getArtifactGainAmount(bonus);
       if (typeof resources !== 'undefined' && resources.special && resources.special.alienArtifact) {
-        resources.special.alienArtifact.increase(bonus);
+        resources.special.alienArtifact.increase(bonusGain);
       }
-      this.totalArtifacts += bonus;
-      this.addLog(teamIndex, `Team ${teamIndex + 1} - Highest difficulty ${opDifficulty} reached +${bonus} Artifact${bonus === 1 ? '' : 's'}`);
+      this.totalArtifacts += bonusGain;
+      this.addLog(teamIndex, `Team ${teamIndex + 1} - Highest difficulty ${opDifficulty} reached +${formatNumber(bonusGain, false, 2)} Artifact${bonusGain === 1 ? '' : 's'}`);
     }
 
     this.teamOperationCounts[teamIndex] += 1;
@@ -1244,7 +1276,7 @@ class WarpGateCommand extends EffectableEntity {
         summary: op.summary,
         number: op.number,
         nextEvent: op.nextEvent,
-        eventQueue: Array.isArray(op.eventQueue) ? op.eventQueue.map(evt => ({ ...evt })) : [],
+        eventQueue: Array.isArray(op.eventQueue) ? op.eventQueue.map(sanitizeOperationEvent) : [],
         currentEventIndex: Number.isFinite(op.currentEventIndex) ? op.currentEventIndex : 0,
         baseEventsTotal: Number.isFinite(op.baseEventsTotal) ? op.baseEventsTotal : 10,
         baseEventsCompleted: Number.isFinite(op.baseEventsCompleted) ? op.baseEventsCompleted : 0,
@@ -1282,18 +1314,18 @@ class WarpGateCommand extends EffectableEntity {
       totalOperations: this.totalOperations,
       totalArtifacts: this.totalArtifacts,
       highestDifficulty: this.highestDifficulty,
+      showArtifactsInSidebar: this.showArtifactsInSidebar,
       stances: this.stances.map(s => ({ hazardousBiomass: s.hazardousBiomass, artifact: s.artifact })),
       facilities: { ...this.facilities },
       facilityCooldown: this.facilityCooldown,
       teamNames: this.teamNames.slice(),
-      hideStoryLogs: !!this.hideStoryLogs
+      presets: (this.presets || []).map(p => ({ ...p, ratios: { ...p.ratios }, scope: { ...p.scope } }))
     };
   }
 
   loadState(data = {}) {
     this.enabled = data.enabled || false;
     warpGateNetworkManager.setWarpGateUnlocked(this.enabled);
-    this.hideStoryLogs = !!data.hideStoryLogs;
     if (data.upgrades) {
       for (const k in data.upgrades) {
         if (this.rdUpgrades[k]) {
@@ -1326,7 +1358,7 @@ class WarpGateCommand extends EffectableEntity {
         summary: op.summary || '',
         number: op.number || 1,
         nextEvent: op.nextEvent || 60,
-        eventQueue: Array.isArray(op.eventQueue) ? op.eventQueue.map(evt => ({ ...evt })) : [],
+        eventQueue: Array.isArray(op.eventQueue) ? op.eventQueue.map(sanitizeOperationEvent) : [],
         currentEventIndex: Number.isFinite(op.currentEventIndex) ? op.currentEventIndex : 0,
         baseEventsTotal: Number.isFinite(op.baseEventsTotal) ? op.baseEventsTotal : 10,
         baseEventsCompleted: Number.isFinite(op.baseEventsCompleted) ? op.baseEventsCompleted : 0,
@@ -1389,9 +1421,22 @@ class WarpGateCommand extends EffectableEntity {
     if (typeof data.facilityCooldown === 'number') {
       this.facilityCooldown = data.facilityCooldown;
     }
+    this.presets = Array.isArray(data.presets)
+      ? data.presets.filter(p => p && p.id && p.name).map(p => ({
+          id: p.id,
+          name: p.name,
+          scope: p.scope && p.scope.type ? { type: p.scope.type, value: p.scope.value } : { type: 'global' },
+          ratios: {
+            power: Math.max(0, parseInt(p.ratios && p.ratios.power, 10) || 0),
+            athletics: Math.max(0, parseInt(p.ratios && p.ratios.athletics, 10) || 0),
+            wit: Math.max(0, parseInt(p.ratios && p.ratios.wit, 10) || 0)
+          }
+        }))
+      : [];
     this.totalOperations = data.totalOperations || 0;
     this.totalArtifacts = data.totalArtifacts || 0;
     this.highestDifficulty = typeof data.highestDifficulty === 'number' ? data.highestDifficulty : -1;
+    this.setArtifactSidebarVisibility(data.showArtifactsInSidebar !== false);
     this.operations.forEach((op, i) => {
       if (!Number.isFinite(op.baseEventsTotal) || op.baseEventsTotal <= 0) {
         op.baseEventsTotal = 10;

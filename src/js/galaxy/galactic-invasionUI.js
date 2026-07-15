@@ -24,6 +24,10 @@ function formatGalacticInvasionDuration(milliseconds) {
 }
 
 function showSpaceInvasionTab() {
+  if (isCurrentWorldSubtabDisabled('space-invasion')) {
+    hideSpaceInvasionTab();
+    return;
+  }
   const button = document.querySelector('[data-subtab="space-invasion"]');
   const content = document.getElementById('space-invasion');
   if (spaceSubtabManager) {
@@ -270,7 +274,7 @@ function updateGalacticInvasionUI() {
         ? getGalacticInvasionText('active', 'Active')
         : '';
     card.power.textContent = getGalacticInvasionText('fleetPower', 'Fleet Power: {value}', {
-      value: formatGalacticInvasionPower(letter.fleetPower)
+      value: formatGalacticInvasionPower(galaxyInvasionManager.getLetterFleetPower(letter))
     });
     card.traits.textContent = getGalacticInvasionTraitListText(letter.traits);
     card.reward.textContent = getGalacticInvasionRewardText(letter.key);

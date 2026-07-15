@@ -78,9 +78,6 @@ if (moduleExports) {
   moduleExports.WindTurbine = WindTurbine;
   moduleExports.windTurbine = WindTurbine;
 } else {
-  const root = Function('return this')();
-  if (root) {
-    root.WindTurbine = WindTurbine;
-    root.windTurbine = WindTurbine;
-  }
+  window.WindTurbine = WindTurbine;
+  window.windTurbine = WindTurbine;
 }

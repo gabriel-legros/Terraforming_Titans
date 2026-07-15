@@ -1,4 +1,4 @@
-const ATLAS_FEATURED_SEED_KEYS = ['hermes', 'titania', 'therealposeidon', 'wolfysnightmare'];
+const ATLAS_FEATURED_SEED_KEYS = ['hermes', 'titania', 'therealposeidon', 'teebeepee', 'wolfysnightmare', 'shadesnightmare'];
 const ATLAS_COMMUNITY_COMPLETION_ARTIFACT_REWARD = 1000;
 
 function getAtlasSpecialSeedKey(source) {
@@ -18,12 +18,21 @@ class AtlasManager extends EffectableEntity {
         super({ description: 'Manages Atlas challenge worlds.' });
         this.enabled = false;
         this.atlasWorldCompletions = {};
+        this.uiDirty = true;
+        this.forceUIRefresh = false;
+    }
+
+    markUIDirty(options = {}) {
+        this.uiDirty = true;
+        this.forceUIRefresh = this.forceUIRefresh || options.force === true;
     }
 
     getChallengeDefinitions() {
         const definitions = getAllSpecialSeedDefinitions();
         return definitions
             .filter((definition) => definition && definition.key)
+            .filter((definition) => definition.enabled !== false)
+            .filter((definition) => !definition.steamExclusive || GAME_FEATURES.steamExclusiveAtlasWorlds)
             .sort((left, right) => {
                 const leftFeatured = ATLAS_FEATURED_SEED_KEYS.includes(left.key);
                 const rightFeatured = ATLAS_FEATURED_SEED_KEYS.includes(right.key);
@@ -41,6 +50,20 @@ class AtlasManager extends EffectableEntity {
 
     getFeaturedDefinitions() {
         return this.getChallengeDefinitions().filter((definition) => ATLAS_FEATURED_SEED_KEYS.includes(definition.key));
+    }
+
+    getFeaturedAwakeningSkillIds() {
+        const skillIds = [];
+        this.getFeaturedDefinitions().forEach((definition) => {
+            (definition.completionRewards || []).forEach((reward) => {
+                (reward.effects || []).forEach((effect) => {
+                    if (effect.target === 'skillManager' && effect.type === 'skillReveal') {
+                        skillIds.push(effect.targetId);
+                    }
+                });
+            });
+        });
+        return skillIds;
     }
 
     getFeaturedCompletionCount() {
@@ -119,8 +142,8 @@ class AtlasManager extends EffectableEntity {
             if (!seedKey) {
                 return;
             }
-            const sourceId = `atlas-reward-${seedKey}`;
             this.getCompletionRewards(seedKey).forEach((reward, rewardIndex) => {
+                const sourceId = `atlas-reward-${seedKey}-${reward.id}`;
                 const effects = Array.isArray(reward.effects) ? reward.effects : [];
                 effects.forEach((effect, effectIndex) => {
                     const rewardEffect = {
@@ -135,9 +158,7 @@ class AtlasManager extends EffectableEntity {
                 });
             });
         });
-        if (typeof updateRandomWorldUI === 'function') {
-            updateRandomWorldUI();
-        }
+        this.markUIDirty({ force: true });
     }
 
     grantCommunityCompletionArtifactReward(seedKey) {
@@ -149,10 +170,11 @@ class AtlasManager extends EffectableEntity {
         if (existing.communityArtifactRewardGranted) {
             return 0;
         }
-        resources.special.alienArtifact.increase(ATLAS_COMMUNITY_COMPLETION_ARTIFACT_REWARD);
+        const artifactGain = getArtifactGainAmount(ATLAS_COMMUNITY_COMPLETION_ARTIFACT_REWARD);
+        resources.special.alienArtifact.increase(artifactGain);
         existing.communityArtifactRewardGranted = true;
         this.atlasWorldCompletions[resolved] = existing;
-        return ATLAS_COMMUNITY_COMPLETION_ARTIFACT_REWARD;
+        return artifactGain;
     }
 
     markCompleted(seedKey, options = {}) {
@@ -178,7 +200,7 @@ class AtlasManager extends EffectableEntity {
             changed = true;
         }
         if (changed) {
-            this.updateUI({ force: true });
+            this.markUIDirty({ force: true });
         }
     }
 
@@ -237,6 +259,9 @@ class AtlasManager extends EffectableEntity {
     }
 
     enable(targetId) {
+        if (isCurrentWorldManagerDisabled('atlasManager')) {
+            return;
+        }
         if (targetId && targetId !== 'space-atlas' && targetId !== 'atlas') {
             return;
         }
@@ -257,15 +282,17 @@ class AtlasManager extends EffectableEntity {
     }
 
     refreshUIVisibility() {
-        if (this.enabled) {
+        if (isManagerEffectivelyEnabled(this, 'atlasManager')) {
             showSpaceAtlasTab();
         } else {
             hideSpaceAtlasTab();
         }
-        this.updateUI({ force: true });
+        this.markUIDirty({ force: true });
     }
 
     updateUI(options = {}) {
+        this.uiDirty = false;
+        this.forceUIRefresh = false;
         if (typeof updateAtlasUI === 'function') {
             updateAtlasUI(options);
         }
@@ -274,6 +301,9 @@ class AtlasManager extends EffectableEntity {
     update() {}
 
     reapplyEffects() {
+        if (isCurrentWorldManagerDisabled('atlasManager')) {
+            return;
+        }
         this.applyCompletionRewards();
         if (skillManager && typeof skillManager.handleAtlasCompletionChange === 'function') {
             skillManager.handleAtlasCompletionChange();

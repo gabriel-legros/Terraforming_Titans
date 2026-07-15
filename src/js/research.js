@@ -40,9 +40,19 @@ class Research {
       this.orderDirty = false;
       this.autoResearchEnabled = false;
       this.pendingConditionalEffects = new Map();
+      this.advancedResearchFlagIds = new Set();
 
       // Load research data and create Research instances
       for (const category in researchData) {
+        if (category === 'advanced') {
+          researchData[category].forEach((research) => {
+            (research.effects || []).forEach((effect) => {
+              if (effect.type === 'booleanFlag' && effect.flagId) {
+                this.advancedResearchFlagIds.add(effect.flagId);
+              }
+            });
+          });
+        }
         this.researches[category] = researchData[category].map(
           (research) =>
             new Research(
@@ -59,6 +69,13 @@ class Research {
 
       this.sortAllResearches();
       this.orderDirty = false;
+    }
+
+    isBooleanFlagSet(flag) {
+      if (isCurrentWorldAdvancedResearchDisabled() && this.advancedResearchFlagIds.has(flag)) {
+        return false;
+      }
+      return super.isBooleanFlagSet(flag);
     }
 
     getRepeatCount(research) {
@@ -99,14 +116,37 @@ class Research {
   }
 
     updateRepeatableResearchCost(research) {
+      const settingMultiplier = this.getResearchCostMultiplier(research);
       if (!research.repeatable) {
-        research.cost = { ...research.baseCost };
+        research.cost = scaleResearchCost(research.baseCost, settingMultiplier);
         return;
       }
 
       const multiplier = (research.repeatableCostMultiplier || 1) ** Math.max(research.timesResearched, 0);
-      research.cost = scaleResearchCost(research.baseCost, multiplier);
+      research.cost = scaleResearchCost(research.baseCost, multiplier * settingMultiplier);
       this.orderDirty = true;
+    }
+
+    getResearchCostMultiplier(research) {
+      let multiplier = 1;
+      this.activeEffects.forEach(effect => {
+        if (
+          effect.type === 'researchCostMultiplier' &&
+          (!effect.targetId || effect.targetId === research.id)
+        ) {
+          multiplier *= effect.value;
+        }
+      });
+      return multiplier;
+    }
+
+    updateAllResearchCosts() {
+      for (const category in this.researches) {
+        this.researches[category].forEach(research => {
+          this.updateRepeatableResearchCost(research);
+        });
+      }
+      this.sortAllResearches();
     }
 
     normalizeAutoResearchPriority(priority) {
@@ -150,6 +190,7 @@ class Research {
     }
 
     update(deltaTime) {
+      if (isCurrentWorldAdvancedResearchDisabled()) return;
       if (!resources || !resources.colony || !resources.colony.advancedResearch) return;
       if (!resources.colony.advancedResearch.unlocked) return;
       if (typeof spaceManager === 'undefined') return;
@@ -165,12 +206,13 @@ class Research {
     }
 
     calculateAdvancedResearchMultiplier() {
-      return this.activeEffects.reduce((multiplier, effect) => {
+      const effectMultiplier = this.activeEffects.reduce((multiplier, effect) => {
         if (effect.type === 'advancedResearchBoost') {
           return multiplier * effect.value;
         }
         return multiplier;
       }, 1);
+      return effectMultiplier * getMegaprojectsCoordinationAdvancedResearchMultiplier(spaceManager);
     }
 
     applyEffect(effect) {
@@ -183,6 +225,10 @@ class Research {
       }
       if (effect.type === 'enableResearch') {
         this.applyEnableResearch(effect);
+        return;
+      }
+      if (effect.type === 'researchCostMultiplier') {
+        this.updateAllResearchCosts();
         return;
       }
       super.applyEffect(effect);
@@ -204,9 +250,74 @@ class Research {
       }
     }
 
+    hasActiveResearchEffect(targetId, type) {
+      for (let i = 0; i < this.activeEffects.length; i += 1) {
+        const effect = this.activeEffects[i];
+        if (effect.type === type && effect.targetId === targetId) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    updateDisabledStateForResearchId(targetId) {
+      const research = this.getResearchById(targetId);
+      if (!research) {
+        return;
+      }
+      let disabled = research.baseDisabled;
+      if (this.hasActiveResearchEffect(targetId, 'enableResearch')) {
+        disabled = false;
+      }
+      if (this.hasActiveResearchEffect(targetId, 'researchDisable')) {
+        disabled = true;
+      }
+      if (research.disabled === disabled) {
+        return;
+      }
+      research.disabled = disabled;
+      this.orderDirty = true;
+      if (typeof invalidateResearchUICache === 'function') {
+        invalidateResearchUICache();
+      }
+    }
+
+    collectResearchToggleTargets(effects) {
+      const targetIds = new Set();
+      effects.forEach((effect) => {
+        if ((effect.type === 'researchDisable' || effect.type === 'enableResearch') && effect.targetId) {
+          targetIds.add(effect.targetId);
+        }
+      });
+      return targetIds;
+    }
+
+    clearEffectsOnTravel() {
+      const clearOnTravelTargets = this.collectResearchToggleTargets(
+        this.activeEffects.filter((effect) => effect.clearOnTravel === true)
+      );
+      this.removeEffect({ sourceId: 'planet-parameters' });
+      super.clearEffectsOnTravel();
+      clearOnTravelTargets.forEach((targetId) => this.updateDisabledStateForResearchId(targetId));
+    }
+
+    removeEffect(effect) {
+      const sourceId = effect.sourceId;
+      const removedEffects = sourceId
+        ? this.activeEffects.filter((activeEffect) => activeEffect.sourceId === sourceId)
+        : [];
+      const targetIds = this.collectResearchToggleTargets(removedEffects);
+      super.removeEffect(effect);
+      targetIds.forEach((targetId) => this.updateDisabledStateForResearchId(targetId));
+      return this;
+    }
+
     applyEnableResearch(effect) {
       const research = this.getResearchById(effect.targetId);
       if (!research) {
+        return;
+      }
+      if (this.hasActiveResearchEffect(effect.targetId, 'researchDisable')) {
         return;
       }
       const wasDisabled = research.disabled;
@@ -355,10 +466,16 @@ class Research {
     }
 
     isResearchDisplayable(research) {
+      if (research.category === 'advanced' && isCurrentWorldAdvancedResearchDisabled()) {
+        return false;
+      }
       if (research.disabled) {
         return false;
       }
       if (research.category === 'advanced' && !this.isBooleanFlagSet('advancedResearchUnlocked')) {
+        return false;
+      }
+      if (research.requiredGameFeature && !GAME_FEATURES[research.requiredGameFeature]) {
         return false;
       }
       if (research.disableFlag) {
@@ -458,7 +575,7 @@ class Research {
     // Mark a research as completed
     completeResearch(id) {
         const research = this.getResearchById(id);
-        if (research && this.isResearchAvailable(id) && canAffordResearch(research)) {
+        if (research && this.isResearchDisplayable(research) && this.isResearchAvailable(id) && canAffordResearch(research)) {
           if (research.cost.research) {
             resources.colony.research.value -= research.cost.research;
           }
@@ -470,6 +587,9 @@ class Research {
           research.timesResearched = (research.timesResearched || 0) + 1;
           console.log(`Research "${research.name}" has been completed.`);
           this.applyResearchEffects(research); // Apply the effects of the research
+          if (id === 'construction_office') {
+            showConstructionOfficeGuidePrompt();
+          }
           this.updateRepeatableResearchCost(research);
           if (research.category === 'advanced') {
             this.checkResearchUnlocks();
@@ -481,7 +601,7 @@ class Research {
 
     // Instantly mark a research as completed without cost or prerequisite checks,
     // but still respect planet and flag requirements.
-    completeResearchInstant(id) {
+    completeResearchInstant(id, options = {}) {
         const research = this.getResearchById(id);
         if (!research || (research.isResearched && !research.repeatable) || !this.isResearchDisplayable(research)) {
           return;
@@ -491,6 +611,9 @@ class Research {
         research.timesResearched = Math.max(research.timesResearched || 0, 1);
         this.updateRepeatableResearchCost(research);
         this.applyResearchEffects(research);
+        if (id === 'construction_office' && options.showConstructionOfficeGuidePrompt !== false) {
+          showConstructionOfficeGuidePrompt();
+        }
         if (research.category === 'advanced') {
           this.checkResearchUnlocks();
         }
@@ -503,15 +626,21 @@ class Research {
       for (const category in this.researches) {
       this.researches[category].forEach((research) => {
         if (research.isResearched && (!research.repeatable || research.timesResearched > 0)) {
-          this.applyResearchEffects(research);
+          this.applyResearchEffects(research, { reapply: true });
         }
       });
       }
     }
 
-  // Apply research effects to the target
-  applyResearchEffects(research) {
-    research.effects.forEach((effect, index) => {
+    // Apply research effects to the target
+    applyResearchEffects(research, options = {}) {
+      if (research.category === 'advanced' && isCurrentWorldAdvancedResearchDisabled()) {
+        return;
+      }
+      research.effects.forEach((effect, index) => {
+      if (options.reapply && (effect.type === 'activateTab' || effect.type === 'activateSubtab') && effect.onReapply !== true) {
+        return;
+      }
       this.applyResearchEffect(research, effect, index);
     });
   }

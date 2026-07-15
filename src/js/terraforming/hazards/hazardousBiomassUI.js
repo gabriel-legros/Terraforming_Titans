@@ -25,6 +25,8 @@ const hazardUICache = {
   barHazardLabel: null,
   barDetails: null,
   factorsSection: null,
+  factorsInfoIcon: null,
+  factorsTooltip: null,
   factorSummaryList: null,
   baseGrowthValue: null,
   totalPenaltyValue: null,
@@ -1360,6 +1362,19 @@ function ensureLayout() {
   factorsHeaderLabel.className = 'hazard-factors__title';
   factorsHeaderLabel.textContent = getHazardousBiomassLabel('growthModifiers', 'Growth Modifiers');
   factorsHeader.appendChild(factorsHeaderLabel);
+
+  const factorsInfoIcon = doc.createElement('span');
+  factorsInfoIcon.className = 'info-tooltip-icon';
+  factorsInfoIcon.innerHTML = '&#9432;';
+  factorsHeader.appendChild(factorsInfoIcon);
+  hazardUICache.factorsInfoIcon = factorsInfoIcon;
+  hazardUICache.factorsTooltip = attachDynamicInfoTooltip(
+    factorsInfoIcon,
+    getHazardousBiomassTooltip(
+      'growthModifiers',
+      'Hazardous Biomass has a base growth and a preferred environment.  For each environmental category there is an optimal range.  They suffer penalty equal to severity for each point outside that range.'
+    )
+  );
 
   const factorSummaryList = doc.createElement('div');
   factorSummaryList.className = 'hazard-factor-summary-list';

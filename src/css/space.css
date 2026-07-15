@@ -510,7 +510,7 @@
   font-weight: 600;
 }
 
-.artificial-cost-row span:first-child {
+.artificial-cost-row > span:first-child {
   color: var(--space-fg-muted);
 }
 
@@ -557,7 +557,7 @@
   gap: 6px;
 }
 
-.artificial-gain-row span:first-child {
+.artificial-gain-row > span:first-child {
   font-weight: 700;
   color: var(--space-fg);
 }
@@ -603,8 +603,12 @@
   color: #ff6b6b;
 }
 
-.artificial-effect-penalty span:first-child {
+.artificial-effect-penalty > span:first-child {
   white-space: pre-line;
+}
+
+.artificial-effect-warning {
+  color: #ff6161;
 }
 
 .artificial-priority {
@@ -613,6 +617,22 @@
   gap: 8px;
   color: var(--space-fg-muted);
   font-size: 13px;
+}
+
+.artificial-inline-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.artificial-automation-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.artificial-automation-option {
+  min-width: 0;
 }
 
 .artificial-primary,
@@ -796,6 +816,67 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.artificial-supermassive-card {
+  gap: 12px;
+  background: linear-gradient(180deg, rgba(67, 123, 168, 0.10), rgba(255, 255, 255, 0.02));
+}
+
+.artificial-supermassive-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.artificial-supermassive-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.artificial-supermassive-aside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.artificial-supermassive-status {
+  color: var(--space-accent);
+  font-weight: 700;
+  padding: 3px 8px;
+  border: 1px solid rgba(88, 166, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(88, 166, 255, 0.08);
+}
+
+.artificial-supermassive-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  min-width: 0;
+  font-size: 16px;
+}
+
+.artificial-supermassive-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.artificial-supermassive-card .artificial-actions {
+  margin-top: 2px;
+  justify-content: flex-end;
+}
+
+.artificial-supermassive-card .artificial-primary {
+  min-width: 88px;
 }
 
 .artificial-history-card {
@@ -1081,6 +1162,10 @@
   text-align: right;
   color: var(--space-fg);
   font-weight: 700;
+}
+
+.space-slider-allocation {
+  min-width: 55px;
 }
 
 .space-slider-energy {

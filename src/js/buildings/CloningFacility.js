@@ -6,7 +6,7 @@ function getCloningFacilityText(path, fallback, vars) {
   }
 }
 
-class CloningFacility extends Building {
+class CloningFacility extends MultiRecipesBuilding {
   constructor(config, buildingName) {
     super(config, buildingName);
     this.automationCustomBasisOptions = (this.automationCustomBasisOptions || []).concat([

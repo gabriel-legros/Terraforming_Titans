@@ -16,14 +16,20 @@ function normalizeWaterImportTarget(target) {
 }
 
 function normalizeMaterialImportTarget(target) {
-  if (target === 'planetaryMass' || target === 'spaceStorage') {
+  if (target === 'planetaryMass' || target === 'spaceStorage' || target === 'colonyAndPlanetaryMass') {
     return target;
   }
   return 'colony';
 }
 
-function normalizeGasImportTarget(target) {
-  return target === 'spaceStorage' ? 'spaceStorage' : 'atmospheric';
+function normalizeGasImportTarget(target, gas) {
+  if (target === 'spaceStorage') {
+    return 'spaceStorage';
+  }
+  if (gas === 'hydrogen' && (target === 'colony' || target === 'colonyOnly' || target === 'colonyAndSpaceStorage')) {
+    return target;
+  }
+  return 'atmospheric';
 }
 
 function ensureSelectOption(select, value, labelText) {
@@ -50,6 +56,16 @@ function removeSelectOption(select, value) {
   }
 }
 
+function normalizeCoveragePercentInput(value) {
+  const parsed = parseFlexibleNumber(value);
+  const clamped = Number.isFinite(parsed) ? Math.max(0, Math.min(parsed, 100)) : 0;
+  return Math.round(clamped * 1000000) / 1000000;
+}
+
+function formatCoverageThresholdPercent(threshold) {
+  return String(normalizeCoveragePercentInput(threshold * 100));
+}
+
 class SpaceMiningProject extends SpaceshipProject {
   constructor(config, name) {
     super(config, name);
@@ -61,6 +77,8 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disableAboveWaterCoverage = false;
     this.waterCoverageThreshold = 0.2;
     this.waterCoverageDisableMode = 'coverage';
+    this.includeIceInWaterCoverage = false;
+    this.includeVaporInWaterCoverage = false;
     this.disableAboveCo2Coverage = false;
     this.co2CoverageThreshold = 0.2;
     this.co2CoverageDisableMode = 'coverage';
@@ -89,6 +107,13 @@ class SpaceMiningProject extends SpaceshipProject {
 
   getMaxAssignableShips() {
     return warpGateNetworkManager.getCapForProject(this);
+  }
+
+  applyLegacyWaterCoverageMode(mode) {
+    if (mode === 'target') {
+      this.includeIceInWaterCoverage = true;
+      this.waterCoverageThreshold = Math.max(0, Math.min(terraforming.waterTarget, 1));
+    }
   }
 
   assignSpaceships(count) {
@@ -269,44 +294,22 @@ class SpaceMiningProject extends SpaceshipProject {
     label.htmlFor = checkbox.id;
     control.appendChild(label);
 
-    const modeSelect = document.createElement('select');
-    modeSelect.classList.add('water-coverage-mode');
-    [
-      { value: 'coverage', text: getSpaceMiningText('ui.projects.spaceMining.waterCoverageAbove', 'water coverage above') },
-      { value: 'target', text: getSpaceMiningText('ui.projects.spaceMining.waterIceAboveTarget', 'water+ice above target') }
-    ].forEach(optionData => {
-      const option = document.createElement('option');
-      option.value = optionData.value;
-      option.textContent = optionData.text;
-      modeSelect.appendChild(option);
-    });
-    modeSelect.value = this.waterCoverageDisableMode;
-    control.appendChild(modeSelect);
+    const coverageLabel = document.createElement('span');
+    coverageLabel.textContent = getSpaceMiningText('ui.projects.spaceMining.waterCoverageAbove', 'water coverage above');
+    control.appendChild(coverageLabel);
 
     const input = document.createElement('input');
-    input.type = 'number';
-    input.step = 'any';
-    input.min = '0';
-    input.max = '100';
+    input.type = 'text';
+    input.inputMode = 'decimal';
     input.classList.add('water-coverage-input');
-    input.value = this.waterCoverageThreshold * 100;
-    input.addEventListener('input', () => {
-      if (input.value === '') {
-        return;
-      }
-      const val = Number(input.value);
-      if (!Number.isFinite(val)) {
-        this.waterCoverageThreshold = 0;
-        return;
-      }
-      const clamped = Math.max(0, Math.min(val, 100));
-      this.waterCoverageThreshold = clamped / 100;
-      input.value = clamped;
-    });
-    input.addEventListener('blur', () => {
-      if (input.value === '') {
-        input.value = this.waterCoverageThreshold * 100;
-      }
+    input.value = formatCoverageThresholdPercent(this.waterCoverageThreshold);
+    wireStringNumberInput(input, {
+      parseValue: normalizeCoveragePercentInput,
+      formatValue: (value) => String(value),
+      onValue: (value) => {
+        this.waterCoverageThreshold = value / 100;
+      },
+      datasetKey: 'waterCoveragePercent',
     });
     control.appendChild(input);
 
@@ -315,26 +318,44 @@ class SpaceMiningProject extends SpaceshipProject {
     percent.textContent = getSpaceMiningText('ui.projects.spaceMining.percent', '%');
     control.appendChild(percent);
 
-    const updateInputVisibility = () => {
-      const showInput = this.waterCoverageDisableMode === 'coverage';
-      input.style.display = showInput ? '' : 'none';
-      percent.style.display = showInput ? '' : 'none';
-    };
-
-    modeSelect.addEventListener('change', () => {
-      this.waterCoverageDisableMode = modeSelect.value;
-      updateInputVisibility();
+    const includeIceCheckbox = document.createElement('input');
+    includeIceCheckbox.type = 'checkbox';
+    includeIceCheckbox.id = `${this.name}-water-coverage-include-ice-checkbox`;
+    includeIceCheckbox.classList.add('water-coverage-include-ice-checkbox');
+    includeIceCheckbox.checked = this.includeIceInWaterCoverage === true;
+    includeIceCheckbox.addEventListener('change', () => {
+      this.includeIceInWaterCoverage = includeIceCheckbox.checked;
     });
+    control.appendChild(includeIceCheckbox);
 
-    updateInputVisibility();
+    const includeIceLabel = document.createElement('label');
+    includeIceLabel.htmlFor = includeIceCheckbox.id;
+    includeIceLabel.textContent = getSpaceMiningText('ui.projects.spaceMining.includeIceInCount', 'Include ice in count');
+    control.appendChild(includeIceLabel);
+
+    const includeVaporCheckbox = document.createElement('input');
+    includeVaporCheckbox.type = 'checkbox';
+    includeVaporCheckbox.id = `${this.name}-water-coverage-include-vapor-checkbox`;
+    includeVaporCheckbox.classList.add('water-coverage-include-vapor-checkbox');
+    includeVaporCheckbox.checked = this.includeVaporInWaterCoverage === true;
+    includeVaporCheckbox.addEventListener('change', () => {
+      this.includeVaporInWaterCoverage = includeVaporCheckbox.checked;
+    });
+    control.appendChild(includeVaporCheckbox);
+
+    const includeVaporLabel = document.createElement('label');
+    includeVaporLabel.htmlFor = includeVaporCheckbox.id;
+    includeVaporLabel.textContent = getSpaceMiningText('ui.projects.spaceMining.includeVapourInCount', 'Include vapour in count');
+    control.appendChild(includeVaporLabel);
 
     projectElements[this.name] = {
       ...projectElements[this.name],
       waterCoverageControl: control,
       waterCoverageCheckbox: checkbox,
       waterCoverageInput: input,
-      waterCoverageMode: modeSelect,
       waterCoveragePercent: percent,
+      waterCoverageIncludeIceCheckbox: includeIceCheckbox,
+      waterCoverageIncludeVaporCheckbox: includeVaporCheckbox,
     };
 
     return control;
@@ -376,29 +397,17 @@ class SpaceMiningProject extends SpaceshipProject {
     control.appendChild(modeSelect);
 
     const input = document.createElement('input');
-    input.type = 'number';
-    input.step = 'any';
-    input.min = '0';
-    input.max = '100';
+    input.type = 'text';
+    input.inputMode = 'decimal';
     input.classList.add('co2-coverage-input');
-    input.value = this.co2CoverageThreshold * 100;
-    input.addEventListener('input', () => {
-      if (input.value === '') {
-        return;
-      }
-      const val = Number(input.value);
-      if (!Number.isFinite(val)) {
-        this.co2CoverageThreshold = 0;
-        return;
-      }
-      const clamped = Math.max(0, Math.min(val, 100));
-      this.co2CoverageThreshold = clamped / 100;
-      input.value = clamped;
-    });
-    input.addEventListener('blur', () => {
-      if (input.value === '') {
-        input.value = this.co2CoverageThreshold * 100;
-      }
+    input.value = formatCoverageThresholdPercent(this.co2CoverageThreshold);
+    wireStringNumberInput(input, {
+      parseValue: normalizeCoveragePercentInput,
+      formatValue: (value) => String(value),
+      onValue: (value) => {
+        this.co2CoverageThreshold = value / 100;
+      },
+      datasetKey: 'co2CoveragePercent',
     });
     control.appendChild(input);
 
@@ -444,7 +453,7 @@ class SpaceMiningProject extends SpaceshipProject {
     const control = document.createElement('div');
     control.classList.add('checkbox-container', 'water-import-target-control');
     control.id = `${this.name}-water-import-target-control`;
-    control.style.display = (this.isBooleanFlagSet('waterImportTargeting') || this.isSpaceStorageTargetAvailable()) ? 'flex' : 'none';
+    control.style.display = this.shouldShowWaterImportTargetControl() ? 'flex' : 'none';
 
     const label = document.createElement('label');
     label.textContent = getSpaceMiningText('ui.projects.spaceMining.target', 'Target ');
@@ -469,6 +478,7 @@ class SpaceMiningProject extends SpaceshipProject {
     select.value = this.waterImportTarget;
     select.addEventListener('change', () => {
       this.waterImportTarget = normalizeWaterImportTarget(select.value);
+      this.updateUI();
     });
     control.appendChild(select);
 
@@ -477,6 +487,8 @@ class SpaceMiningProject extends SpaceshipProject {
       waterImportTargetControl: control,
       waterImportTargetLabel: label,
       waterImportTargetSelect: select,
+      waterImportTargetColonyOption: select.querySelector('option[value="colony"]'),
+      waterImportTargetColonyOnlyOption: select.querySelector('option[value="colonyOnly"]'),
       waterImportTargetSpaceStorageOption: select.querySelector('option[value="spaceStorage"]'),
     };
 
@@ -501,27 +513,52 @@ class SpaceMiningProject extends SpaceshipProject {
     return this.canImportToPlanetaryMass() && this.materialImportTarget === 'planetaryMass';
   }
 
+  isMaterialColonyAndPlanetaryMassImportSelected() {
+    return this.canImportToPlanetaryMass() && this.materialImportTarget === 'colonyAndPlanetaryMass';
+  }
+
   isGasStorageImportSelected() {
     return this.getTargetAtmosphericResource() && this.gasImportTarget === 'spaceStorage';
+  }
+
+  isHydrogenColonyImportSelected() {
+    return this.getTargetAtmosphericResource() === 'hydrogen'
+      && (this.gasImportTarget === 'colony'
+        || this.gasImportTarget === 'colonyOnly'
+        || this.gasImportTarget === 'colonyAndSpaceStorage');
   }
 
   isSpaceStorageImportSelected() {
     return (this.attributes.dynamicWaterImport && this.waterImportTarget === 'spaceStorage')
       || (this.getPlanetaryMassImportResource() && this.materialImportTarget === 'spaceStorage')
-      || this.isGasStorageImportSelected();
+      || this.isGasStorageImportSelected()
+      || this.gasImportTarget === 'colonyAndSpaceStorage';
   }
 
   shouldSkipSpaceshipCostEffect(effect) {
-    return effect.skipForSpaceStorageImports === true && this.isSpaceStorageImportSelected();
+    return super.shouldSkipSpaceshipCostEffect(effect)
+      || (effect.skipForSpaceStorageImports === true && this.isSpaceStorageImportSelected());
   }
 
   isAtmosphericImportTargetSelected() {
-    return !this.getTargetAtmosphericResource() || !this.isGasStorageImportSelected();
+    const gas = this.getTargetAtmosphericResource();
+    if (!gas) {
+      return false;
+    }
+    if (gas === 'hydrogen' && this.gasImportTarget === 'colony') {
+      return true;
+    }
+    return !this.isGasStorageImportSelected() && !this.isHydrogenColonyImportSelected();
   }
 
   isSpaceStorageTargetAvailable() {
     const project = projectManager.projects?.spaceStorage;
     return !!project && project.enabled !== false && project.unlocked !== false;
+  }
+
+  shouldShowWaterImportTargetControl() {
+    return this.attributes.dynamicWaterImport
+      && (this.isBooleanFlagSet('waterImportTargeting') || this.isSpaceStorageTargetAvailable());
   }
 
   ensureAutoStartTargetRow(container) {
@@ -595,6 +632,7 @@ class SpaceMiningProject extends SpaceshipProject {
     [
       { value: 'colony', text: getSpaceMiningText('ui.projects.spaceMining.colony', 'Colony') },
       { value: 'spaceStorage', text: getSpaceMiningText('ui.projects.spaceMining.spaceStorage', 'Space Storage') },
+      { value: 'colonyAndPlanetaryMass', text: getSpaceMiningText('ui.projects.spaceMining.colonyAndPlanetaryMass', 'Colony and Planetary Mass') },
       { value: 'planetaryMass', text: getSpaceMiningText('ui.projects.spaceMining.planetaryMass', 'Planetary Mass') }
     ].forEach(optionData => {
       const option = document.createElement('option');
@@ -604,6 +642,9 @@ class SpaceMiningProject extends SpaceshipProject {
         option.style.display = this.isSpaceStorageTargetAvailable() ? '' : 'none';
       }
       if (optionData.value === 'planetaryMass') {
+        option.style.display = this.canImportToPlanetaryMass() ? '' : 'none';
+      }
+      if (optionData.value === 'colonyAndPlanetaryMass') {
         option.style.display = this.canImportToPlanetaryMass() ? '' : 'none';
       }
       select.appendChild(option);
@@ -620,17 +661,18 @@ class SpaceMiningProject extends SpaceshipProject {
       materialImportTargetLabel: label,
       materialImportTargetSelect: select,
       materialImportTargetSpaceStorageOption: select.querySelector('option[value="spaceStorage"]'),
+      materialImportTargetColonyAndPlanetaryMassOption: select.querySelector('option[value="colonyAndPlanetaryMass"]'),
     };
 
     return control;
   }
 
   createGasImportTargetControl() {
-    if (!this.isSpaceStorageTargetAvailable()) {
-      return null;
-    }
     const gas = this.getTargetAtmosphericResource();
     if (!gas) {
+      return null;
+    }
+    if (!this.isSpaceStorageTargetAvailable() && gas !== 'hydrogen') {
       return null;
     }
 
@@ -644,21 +686,35 @@ class SpaceMiningProject extends SpaceshipProject {
 
     const select = document.createElement('select');
     select.classList.add('gas-import-target-select');
-    [
+    const options = [
       { value: 'atmospheric', text: getSpaceMiningText('ui.projects.spaceMining.atmosphere', 'Atmosphere') },
       { value: 'spaceStorage', text: getSpaceMiningText('ui.projects.spaceMining.spaceStorage', 'Space Storage') }
-    ].forEach(optionData => {
+    ];
+    if (gas === 'hydrogen') {
+      options.splice(
+        1,
+        0,
+        { value: 'colony', text: getSpaceMiningText('ui.projects.spaceMining.colonyAndAtmosphere', 'Colony and Atmosphere') },
+        { value: 'colonyAndSpaceStorage', text: getSpaceMiningText('ui.projects.spaceMining.colonyAndSpaceStorage', 'Colony and Space Storage') },
+        { value: 'colonyOnly', text: getSpaceMiningText('ui.projects.spaceMining.colonyOnly', 'Colony only') }
+      );
+    }
+    options.forEach(optionData => {
       const option = document.createElement('option');
       option.value = optionData.value;
       option.textContent = optionData.text;
       if (optionData.value === 'spaceStorage') {
         option.style.display = this.isSpaceStorageTargetAvailable() ? '' : 'none';
       }
+      if (optionData.value === 'colonyAndSpaceStorage') {
+        option.style.display = this.isSpaceStorageTargetAvailable() ? '' : 'none';
+      }
       select.appendChild(option);
     });
+    this.gasImportTarget = normalizeGasImportTarget(this.gasImportTarget, gas);
     select.value = this.gasImportTarget;
     select.addEventListener('change', () => {
-      this.gasImportTarget = normalizeGasImportTarget(select.value);
+      this.gasImportTarget = normalizeGasImportTarget(select.value, gas);
     });
     control.appendChild(select);
 
@@ -668,6 +724,7 @@ class SpaceMiningProject extends SpaceshipProject {
       gasImportTargetLabel: label,
       gasImportTargetSelect: select,
       gasImportTargetSpaceStorageOption: select.querySelector('option[value="spaceStorage"]'),
+      gasImportTargetColonyAndSpaceStorageOption: select.querySelector('option[value="colonyAndSpaceStorage"]'),
     };
 
     return control;
@@ -790,15 +847,19 @@ class SpaceMiningProject extends SpaceshipProject {
       }
     }
     if (elements.automationSettingsContainer) {
-      if (this.getTargetAtmosphericResource() && this.isSpaceStorageTargetAvailable() && !elements.gasImportTargetControl) {
+      const gas = this.getTargetAtmosphericResource();
+      const canShowGasTarget = gas && (this.isSpaceStorageTargetAvailable() || gas === 'hydrogen');
+      if (canShowGasTarget && !elements.gasImportTargetControl) {
         const gasTargetControl = this.createGasImportTargetControl();
         this.placeTargetControlInline(elements.automationSettingsContainer, gasTargetControl);
       }
       this.ensureAutoStartTargetRow(elements.automationSettingsContainer);
-      if ((this.attributes.dynamicWaterImport && this.isSpaceStorageTargetAvailable()) && !elements.waterImportTargetControl) {
+      if (this.attributes.dynamicWaterImport && !elements.waterImportTargetControl) {
         this.placeTargetControlInline(elements.automationSettingsContainer, this.createWaterImportTargetControl());
       }
-      if (this.getPlanetaryMassImportResource() && this.isSpaceStorageTargetAvailable() && !elements.materialImportTargetControl) {
+      if (this.getPlanetaryMassImportResource()
+        && (this.isSpaceStorageTargetAvailable() || this.canImportToPlanetaryMass())
+        && !elements.materialImportTargetControl) {
         this.placeTargetControlInline(elements.automationSettingsContainer, this.createMaterialImportTargetControl());
       }
       if (elements.waterImportTargetControl) {
@@ -831,21 +892,19 @@ class SpaceMiningProject extends SpaceshipProject {
       elements.pressureUnitLabel.textContent = getSpaceMiningText('ui.projects.spaceMining.pa', 'Pa');
     }
     if (elements.waterCoverageControl) {
-      elements.waterCoverageControl.style.display = this.isBooleanFlagSet('atmosphericMonitoring') && showDisableIfControls ? 'flex' : 'none';
+      elements.waterCoverageControl.style.display = this.shouldShowWaterCoverageControl(showDisableIfControls) ? 'flex' : 'none';
     }
     if (elements.waterCoverageCheckbox) {
       elements.waterCoverageCheckbox.checked = this.disableAboveWaterCoverage;
     }
-    if (elements.waterCoverageMode) {
-      elements.waterCoverageMode.value = this.waterCoverageDisableMode;
-    }
     if (elements.waterCoverageInput && document.activeElement !== elements.waterCoverageInput) {
-      elements.waterCoverageInput.value = this.waterCoverageThreshold * 100;
+      elements.waterCoverageInput.value = formatCoverageThresholdPercent(this.waterCoverageThreshold);
     }
-    if (elements.waterCoverageInput && elements.waterCoveragePercent) {
-      const showInput = this.waterCoverageDisableMode === 'coverage';
-      elements.waterCoverageInput.style.display = showInput ? '' : 'none';
-      elements.waterCoveragePercent.style.display = showInput ? '' : 'none';
+    if (elements.waterCoverageIncludeIceCheckbox) {
+      elements.waterCoverageIncludeIceCheckbox.checked = this.includeIceInWaterCoverage === true;
+    }
+    if (elements.waterCoverageIncludeVaporCheckbox) {
+      elements.waterCoverageIncludeVaporCheckbox.checked = this.includeVaporInWaterCoverage === true;
     }
     if (elements.co2CoverageControl) {
       const shouldShowCo2Control = this.isBooleanFlagSet('atmosphericMonitoring') && this.hasCo2LiquidTarget();
@@ -858,14 +917,28 @@ class SpaceMiningProject extends SpaceshipProject {
       elements.co2CoverageMode.value = this.co2CoverageDisableMode;
     }
     if (elements.co2CoverageInput && document.activeElement !== elements.co2CoverageInput) {
-      elements.co2CoverageInput.value = this.co2CoverageThreshold * 100;
+      elements.co2CoverageInput.value = formatCoverageThresholdPercent(this.co2CoverageThreshold);
     }
     if (elements.co2CoverageVisibilityUpdate) {
       elements.co2CoverageVisibilityUpdate();
     }
     if (elements.waterImportTargetControl) {
-      const showWaterTarget = this.isBooleanFlagSet('waterImportTargeting') || this.isSpaceStorageTargetAvailable();
+      const showWaterTarget = this.shouldShowWaterImportTargetControl();
       elements.waterImportTargetControl.style.display = showWaterTarget ? 'flex' : 'none';
+    }
+    if (elements.waterImportTargetSelect && !elements.waterImportTargetColonyOption) {
+      elements.waterImportTargetColonyOption = ensureSelectOption(
+        elements.waterImportTargetSelect,
+        'colony',
+        getSpaceMiningText('ui.projects.spaceMining.colony', 'Colony')
+      );
+    }
+    if (elements.waterImportTargetSelect && !elements.waterImportTargetColonyOnlyOption) {
+      elements.waterImportTargetColonyOnlyOption = ensureSelectOption(
+        elements.waterImportTargetSelect,
+        'colonyOnly',
+        getSpaceMiningText('ui.projects.spaceMining.colonyOnly', 'Colony only')
+      );
     }
     if (elements.waterImportTargetSelect && !elements.waterImportTargetSpaceStorageOption) {
       elements.waterImportTargetSpaceStorageOption = ensureSelectOption(
@@ -873,6 +946,14 @@ class SpaceMiningProject extends SpaceshipProject {
         'spaceStorage',
         getSpaceMiningText('ui.projects.spaceMining.spaceStorage', 'Space Storage')
       );
+    }
+    if (elements.waterImportTargetColonyOption && elements.waterImportTargetColonyOnlyOption) {
+      const allowColonyTargets = this.isBooleanFlagSet('waterImportTargeting');
+      elements.waterImportTargetColonyOption.style.display = allowColonyTargets ? '' : 'none';
+      elements.waterImportTargetColonyOnlyOption.style.display = allowColonyTargets ? '' : 'none';
+      if (!allowColonyTargets && (this.waterImportTarget === 'colony' || this.waterImportTarget === 'colonyOnly')) {
+        this.waterImportTarget = 'surface';
+      }
     }
     if (elements.waterImportTargetSpaceStorageOption) {
       const allowSpaceStorage = this.isSpaceStorageTargetAvailable();
@@ -885,7 +966,8 @@ class SpaceMiningProject extends SpaceshipProject {
       elements.waterImportTargetSelect.value = this.waterImportTarget;
     }
     if (elements.materialImportTargetControl) {
-      const showMaterialTarget = this.getPlanetaryMassImportResource() && this.isSpaceStorageTargetAvailable();
+      const showMaterialTarget = this.getPlanetaryMassImportResource()
+        && (this.isSpaceStorageTargetAvailable() || this.canImportToPlanetaryMass());
       elements.materialImportTargetControl.style.display = showMaterialTarget ? 'flex' : 'none';
     }
     if (elements.materialImportTargetSelect && !elements.materialImportTargetSpaceStorageOption) {
@@ -904,14 +986,22 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (elements.materialImportTargetSelect) {
       if (this.canImportToPlanetaryMass()) {
-        ensureSelectOption(
+        const planetaryMassOption = ensureSelectOption(
           elements.materialImportTargetSelect,
           'planetaryMass',
           getSpaceMiningText('ui.projects.spaceMining.planetaryMass', 'Planetary Mass')
         );
+        planetaryMassOption.style.display = '';
+        elements.materialImportTargetColonyAndPlanetaryMassOption = ensureSelectOption(
+          elements.materialImportTargetSelect,
+          'colonyAndPlanetaryMass',
+          getSpaceMiningText('ui.projects.spaceMining.colonyAndPlanetaryMass', 'Colony and Planetary Mass')
+        );
+        elements.materialImportTargetColonyAndPlanetaryMassOption.style.display = '';
       } else {
         removeSelectOption(elements.materialImportTargetSelect, 'planetaryMass');
-        if (this.materialImportTarget === 'planetaryMass') {
+        removeSelectOption(elements.materialImportTargetSelect, 'colonyAndPlanetaryMass');
+        if (this.materialImportTarget === 'planetaryMass' || this.materialImportTarget === 'colonyAndPlanetaryMass') {
           this.materialImportTarget = 'colony';
         }
       }
@@ -919,7 +1009,8 @@ class SpaceMiningProject extends SpaceshipProject {
     if (elements.materialImportTargetSelect) {
       elements.materialImportTargetSelect.value = this.materialImportTarget;
     }
-    const showGasTargetControl = this.getTargetAtmosphericResource() && this.isSpaceStorageTargetAvailable();
+    const gasTarget = this.getTargetAtmosphericResource();
+    const showGasTargetControl = gasTarget && (this.isSpaceStorageTargetAvailable() || gasTarget === 'hydrogen');
     if (elements.gasImportTargetControl) {
       elements.gasImportTargetControl.style.display = showGasTargetControl ? 'flex' : 'none';
     }
@@ -930,7 +1021,15 @@ class SpaceMiningProject extends SpaceshipProject {
         this.gasImportTarget = 'atmospheric';
       }
     }
+    if (elements.gasImportTargetColonyAndSpaceStorageOption) {
+      const allowSpaceStorage = this.isSpaceStorageTargetAvailable();
+      elements.gasImportTargetColonyAndSpaceStorageOption.style.display = allowSpaceStorage ? '' : 'none';
+      if (!allowSpaceStorage && this.gasImportTarget === 'colonyAndSpaceStorage') {
+        this.gasImportTarget = 'atmospheric';
+      }
+    }
     if (elements.gasImportTargetSelect) {
+      this.gasImportTarget = normalizeGasImportTarget(this.gasImportTarget, this.getTargetAtmosphericResource());
       elements.gasImportTargetSelect.value = this.gasImportTarget;
     }
     if (elements.oxygenPressureControl) {
@@ -975,6 +1074,7 @@ class SpaceMiningProject extends SpaceshipProject {
     return monitoringOn
       && this.attributes.dynamicWaterImport
       && this.disableAboveWaterCoverage
+      && this.waterImportTarget !== 'colonyOnly'
       && this.waterImportTarget !== 'spaceStorage';
   }
 
@@ -1046,18 +1146,65 @@ class SpaceMiningProject extends SpaceshipProject {
     return total;
   }
 
+  getEffectiveWaterCoverage(accumulatedChanges = null) {
+    if (this.includeIceInWaterCoverage !== true && this.includeVaporInWaterCoverage !== true) {
+      return calculateAverageCoverage(terraforming, 'liquidWater') || 0;
+    }
+    const surfaceArea = terraforming.celestialParameters.surfaceArea;
+    const vaporAmount = this.includeVaporInWaterCoverage === true
+      ? (resources.atmospheric.atmosphericWater.value || 0) + (accumulatedChanges?.atmospheric?.atmosphericWater || 0)
+      : 0;
+    let totalCoverage = 0;
+    for (const zone of getZones()) {
+      const zoneSurface = terraforming.zonalSurface[zone];
+      const zoneWeight = getZonePercentage(zone);
+      const zoneArea = surfaceArea * zoneWeight;
+      let amount = zoneSurface.liquidWater || 0;
+      amount += accumulatedChanges?.surface?.liquidWater || 0;
+      if (this.includeIceInWaterCoverage === true) {
+        amount += zoneSurface.ice || 0;
+        amount += accumulatedChanges?.surface?.ice || 0;
+      }
+      amount += vaporAmount * zoneWeight;
+      totalCoverage += estimateCoverage(amount, zoneArea) * zoneWeight;
+    }
+    return Math.max(0, Math.min(totalCoverage, 1));
+  }
+
   exceedsWaterCoverageLimit(hasMonitoring) {
     if (!this.waterCoverageLimitEnabled(hasMonitoring)) {
       return false;
     }
-    if (this.waterCoverageDisableMode === 'target') {
-      const totalAmount = this.getWaterIceTotalAmount();
-      const targetAmount = this.getWaterTargetAmount();
-      return totalAmount >= (targetAmount * (1 - ATMOSPHERIC_MONITORING_TOLERANCE));
-    }
-    const liquidCoverage = calculateAverageCoverage(terraforming, 'liquidWater') || 0;
-    const totalCoverage = Math.min(1, liquidCoverage);
+    const totalCoverage = this.getEffectiveWaterCoverage();
     return totalCoverage >= (this.waterCoverageThreshold - ATMOSPHERIC_MONITORING_TOLERANCE);
+  }
+
+  getColonyResourceCapacityRemaining(resourceName, accumulatedChanges = null) {
+    const resource = resources.colony[resourceName];
+    if (!resource.hasCap) {
+      return Infinity;
+    }
+    const pending = accumulatedChanges?.colony?.[resourceName] || 0;
+    return Math.max(0, resource.cap - resource.value - pending);
+  }
+
+  shouldWaterCoverageLimitBlockImport(amount = null, hasMonitoring = null, accumulatedChanges = null) {
+    if (!this.exceedsWaterCoverageLimit(hasMonitoring)) {
+      return false;
+    }
+    if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget === 'colony') {
+      const capacity = this.getColonyResourceCapacityRemaining('water', accumulatedChanges);
+      return amount > 0 ? capacity + 1e-9 < amount : capacity <= 0;
+    }
+    return true;
+  }
+
+  shouldShowWaterCoverageControl(showDisableIfControls) {
+    return this.isBooleanFlagSet('atmosphericMonitoring')
+      && showDisableIfControls
+      && this.attributes.dynamicWaterImport
+      && this.waterImportTarget !== 'colonyOnly'
+      && this.waterImportTarget !== 'spaceStorage';
   }
 
   getSurfaceCoverageLimitRemaining(coverageKey, threshold, accumulatedChanges = null) {
@@ -1068,7 +1215,10 @@ class SpaceMiningProject extends SpaceshipProject {
       const zoneSurface = terraforming.zonalSurface[zone];
       const zoneArea = surfaceArea * getZonePercentage(zone);
       if (coverageKey === 'liquidWater') {
-        current += (zoneSurface.liquidWater || 0) + (zoneSurface.ice || 0);
+        current += zoneSurface.liquidWater || 0;
+        if (this.includeIceInWaterCoverage === true) {
+          current += zoneSurface.ice || 0;
+        }
       } else {
         current += (zoneSurface.liquidCO2 || 0) + (zoneSurface.dryIce || 0);
       }
@@ -1076,7 +1226,12 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (coverageKey === 'liquidWater') {
       current += accumulatedChanges?.surface?.liquidWater || 0;
-      current += accumulatedChanges?.surface?.ice || 0;
+      if (this.includeIceInWaterCoverage === true) {
+        current += accumulatedChanges?.surface?.ice || 0;
+      }
+      if (this.includeVaporInWaterCoverage === true) {
+        current += (resources.atmospheric.atmosphericWater.value || 0) + (accumulatedChanges?.atmospheric?.atmosphericWater || 0);
+      }
     } else {
       current += accumulatedChanges?.surface?.liquidCO2 || 0;
       current += accumulatedChanges?.surface?.dryIce || 0;
@@ -1087,10 +1242,6 @@ class SpaceMiningProject extends SpaceshipProject {
   getWaterImportLimitRemaining(accumulatedChanges = null) {
     if (!this.isBooleanFlagSet('atmosphericMonitoring') || !this.attributes.dynamicWaterImport || !this.disableAboveWaterCoverage) {
       return Infinity;
-    }
-    if (this.waterCoverageDisableMode === 'target') {
-      const current = this.getWaterIceTotalAmount() + (accumulatedChanges?.surface?.liquidWater || 0) + (accumulatedChanges?.surface?.ice || 0);
-      return Math.max(0, this.getWaterTargetAmount() - current);
     }
     return this.getSurfaceCoverageLimitRemaining('liquidWater', this.waterCoverageThreshold, accumulatedChanges);
   }
@@ -1109,7 +1260,8 @@ class SpaceMiningProject extends SpaceshipProject {
   getPressureLimitMass(limitKPa) {
     const gSurface = terraforming.celestialParameters.gravity;
     const radius = terraforming.celestialParameters.radius;
-    const surfaceArea = 4 * Math.PI * Math.pow(radius * 1000, 2);
+    const surfaceArea = terraforming.celestialParameters.surfaceArea
+      || (4 * Math.PI * Math.pow(radius * 1000, 2));
     const limitPa = limitKPa * 1000;
     return (limitPa * surfaceArea) / (1000 * gSurface);
   }
@@ -1121,7 +1273,11 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   isGasPressureLimitReached(gas, limitKPa, deltaTime = this.currentTickDeltaTime || 0, accumulatedChanges = null) {
-    const amount = (resources.atmospheric[gas].value || 0) + (accumulatedChanges?.atmospheric?.[gas] || 0);
+    const atmosphericResource = resources.atmospheric[gas];
+    if (!gas || !atmosphericResource) {
+      return false;
+    }
+    const amount = (atmosphericResource.value || 0) + (accumulatedChanges?.atmospheric?.[gas] || 0);
     const maxMass = this.getPressureLimitMass(limitKPa);
     const consumptionBuffer = this.getAtmosphericNeedForGas(gas, deltaTime, accumulatedChanges);
     return amount >= maxMass + consumptionBuffer;
@@ -1131,7 +1287,11 @@ class SpaceMiningProject extends SpaceshipProject {
     if (!this.isBooleanFlagSet('atmosphericMonitoring') || !this.disableAbovePressure) {
       return Infinity;
     }
-    const amount = (resources.atmospheric[gas].value || 0) + (accumulatedChanges?.atmospheric?.[gas] || 0);
+    const atmosphericResource = resources.atmospheric[gas];
+    if (!gas || !atmosphericResource) {
+      return Infinity;
+    }
+    const amount = (atmosphericResource.value || 0) + (accumulatedChanges?.atmospheric?.[gas] || 0);
     const maxMass = this.getPressureLimitMass(this.disablePressureThreshold);
     const consumptionBuffer = this.getAtmosphericNeedForGas(gas, this.currentTickDeltaTime || 0, accumulatedChanges);
     return Math.max(0, maxMass + consumptionBuffer - amount);
@@ -1170,7 +1330,7 @@ class SpaceMiningProject extends SpaceshipProject {
       return false;
     }
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
-    if (this.exceedsWaterCoverageLimit(hasMonitoring)) {
+    if (this.shouldWaterCoverageLimitBlockImport(null, hasMonitoring, accumulatedChanges)) {
       return true;
     }
     if (this.exceedsCo2CoverageLimit(hasMonitoring)) {
@@ -1200,7 +1360,7 @@ class SpaceMiningProject extends SpaceshipProject {
       return true;
     }
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
-    if (this.exceedsWaterCoverageLimit(hasMonitoring)) {
+    if (this.shouldWaterCoverageLimitBlockImport(null, hasMonitoring)) {
       return false;
     }
     if (this.exceedsCo2CoverageLimit(hasMonitoring)) {
@@ -1233,7 +1393,8 @@ class SpaceMiningProject extends SpaceshipProject {
       disableOxygenPressureThreshold: this.disableOxygenPressureThreshold,
       disableAboveWaterCoverage: this.disableAboveWaterCoverage === true,
       waterCoverageThreshold: this.waterCoverageThreshold,
-      waterCoverageDisableMode: this.waterCoverageDisableMode,
+      includeIceInWaterCoverage: this.includeIceInWaterCoverage === true,
+      includeVaporInWaterCoverage: this.includeVaporInWaterCoverage === true,
       disableAboveCo2Coverage: this.disableAboveCo2Coverage === true,
       co2CoverageThreshold: this.co2CoverageThreshold,
       co2CoverageDisableMode: this.co2CoverageDisableMode,
@@ -1272,7 +1433,13 @@ class SpaceMiningProject extends SpaceshipProject {
       this.waterCoverageThreshold = Math.max(0, Math.min(settings.waterCoverageThreshold || 0, 1));
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'waterCoverageDisableMode')) {
-      this.waterCoverageDisableMode = settings.waterCoverageDisableMode || this.waterCoverageDisableMode;
+      this.applyLegacyWaterCoverageMode(settings.waterCoverageDisableMode);
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'includeIceInWaterCoverage')) {
+      this.includeIceInWaterCoverage = settings.includeIceInWaterCoverage === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'includeVaporInWaterCoverage')) {
+      this.includeVaporInWaterCoverage = settings.includeVaporInWaterCoverage === true;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'disableAboveCo2Coverage')) {
       this.disableAboveCo2Coverage = settings.disableAboveCo2Coverage === true;
@@ -1293,7 +1460,13 @@ class SpaceMiningProject extends SpaceshipProject {
       this.materialImportTarget = normalizeMaterialImportTarget(settings.materialImportTarget);
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'gasImportTarget')) {
-      this.gasImportTarget = normalizeGasImportTarget(settings.gasImportTarget);
+      this.gasImportTarget = normalizeGasImportTarget(settings.gasImportTarget, this.getTargetAtmosphericResource());
+    }
+    if (!this.getTargetAtmosphericResource()) {
+      this.disableAbovePressure = false;
+      this.disablePressureThreshold = 0;
+      this.disableAboveOxygenPressure = false;
+      this.disableOxygenPressureThreshold = 0;
     }
   }
 
@@ -1306,7 +1479,8 @@ class SpaceMiningProject extends SpaceshipProject {
       disableOxygenPressureThreshold: this.disableOxygenPressureThreshold,
       disableAboveWaterCoverage: this.disableAboveWaterCoverage,
       waterCoverageThreshold: this.waterCoverageThreshold,
-      waterCoverageDisableMode: this.waterCoverageDisableMode,
+      includeIceInWaterCoverage: this.includeIceInWaterCoverage === true,
+      includeVaporInWaterCoverage: this.includeVaporInWaterCoverage === true,
       disableAboveCo2Coverage: this.disableAboveCo2Coverage,
       co2CoverageThreshold: this.co2CoverageThreshold,
       co2CoverageDisableMode: this.co2CoverageDisableMode,
@@ -1334,7 +1508,9 @@ class SpaceMiningProject extends SpaceshipProject {
     if (Number.isFinite(state.waterCoverageThreshold)) {
       this.waterCoverageThreshold = Math.max(0, Math.min(state.waterCoverageThreshold, 1));
     }
-    this.waterCoverageDisableMode = state.waterCoverageDisableMode || this.waterCoverageDisableMode;
+    this.applyLegacyWaterCoverageMode(state.waterCoverageDisableMode);
+    this.includeIceInWaterCoverage = this.includeIceInWaterCoverage === true || state.includeIceInWaterCoverage === true;
+    this.includeVaporInWaterCoverage = state.includeVaporInWaterCoverage === true;
     this.disableAboveCo2Coverage = state.disableAboveCo2Coverage ?? this.disableAboveCo2Coverage;
     if (Number.isFinite(state.co2CoverageThreshold)) {
       this.co2CoverageThreshold = Math.max(0, Math.min(state.co2CoverageThreshold, 1));
@@ -1345,7 +1521,7 @@ class SpaceMiningProject extends SpaceshipProject {
     this.oxygenPressureUnit = 'Pa';
     this.waterImportTarget = normalizeWaterImportTarget(state.waterImportTarget || this.waterImportTarget);
     this.materialImportTarget = normalizeMaterialImportTarget(state.materialImportTarget || this.materialImportTarget);
-    this.gasImportTarget = normalizeGasImportTarget(state.gasImportTarget || this.gasImportTarget);
+    this.gasImportTarget = normalizeGasImportTarget(state.gasImportTarget || this.gasImportTarget, this.getTargetAtmosphericResource());
   }
 
   saveTravelState() {
@@ -1359,7 +1535,8 @@ class SpaceMiningProject extends SpaceshipProject {
       disableOxygenPressureThreshold: this.disableOxygenPressureThreshold,
       disableAboveWaterCoverage: this.disableAboveWaterCoverage,
       waterCoverageThreshold: this.waterCoverageThreshold,
-      waterCoverageDisableMode: this.waterCoverageDisableMode,
+      includeIceInWaterCoverage: this.includeIceInWaterCoverage === true,
+      includeVaporInWaterCoverage: this.includeVaporInWaterCoverage === true,
       disableAboveCo2Coverage: this.disableAboveCo2Coverage,
       co2CoverageThreshold: this.co2CoverageThreshold,
       co2CoverageDisableMode: this.co2CoverageDisableMode,
@@ -1387,7 +1564,9 @@ class SpaceMiningProject extends SpaceshipProject {
     this.disableOxygenPressureThreshold = state.disableOxygenPressureThreshold ?? this.disableOxygenPressureThreshold;
     this.disableAboveWaterCoverage = state.disableAboveWaterCoverage ?? this.disableAboveWaterCoverage;
     this.waterCoverageThreshold = state.waterCoverageThreshold ?? this.waterCoverageThreshold;
-    this.waterCoverageDisableMode = state.waterCoverageDisableMode || this.waterCoverageDisableMode;
+    this.applyLegacyWaterCoverageMode(state.waterCoverageDisableMode);
+    this.includeIceInWaterCoverage = this.includeIceInWaterCoverage === true || state.includeIceInWaterCoverage === true;
+    this.includeVaporInWaterCoverage = state.includeVaporInWaterCoverage === true;
     this.disableAboveCo2Coverage = state.disableAboveCo2Coverage ?? this.disableAboveCo2Coverage;
     this.co2CoverageThreshold = state.co2CoverageThreshold ?? this.co2CoverageThreshold;
     this.co2CoverageDisableMode = state.co2CoverageDisableMode || this.co2CoverageDisableMode;
@@ -1396,7 +1575,7 @@ class SpaceMiningProject extends SpaceshipProject {
     this.oxygenPressureUnit = 'Pa';
     this.waterImportTarget = normalizeWaterImportTarget(state.waterImportTarget || this.waterImportTarget);
     this.materialImportTarget = normalizeMaterialImportTarget(state.materialImportTarget || this.materialImportTarget);
-    this.gasImportTarget = normalizeGasImportTarget(state.gasImportTarget || this.gasImportTarget);
+    this.gasImportTarget = normalizeGasImportTarget(state.gasImportTarget || this.gasImportTarget, this.getTargetAtmosphericResource());
   }
 
   calculateSpaceshipGainPerShip() {
@@ -1408,7 +1587,7 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
       const capacity = this.getShipCapacity(this.attributes.resourceGainPerShip.surface.ice);
-      if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget === 'spaceStorage') {
+      if (this.waterImportTarget === 'spaceStorage') {
         return { spaceStorage: { liquidWater: capacity } };
       }
       if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget !== 'surface') {
@@ -1428,6 +1607,10 @@ class SpaceMiningProject extends SpaceshipProject {
       const gas = this.getTargetAtmosphericResource();
       const amount = this.attributes.resourceGainPerShip?.atmospheric?.[gas] || 0;
       return { spaceStorage: { [gas]: this.getShipCapacity(amount) } };
+    }
+    if (this.isHydrogenColonyImportSelected()) {
+      const amount = this.attributes.resourceGainPerShip?.atmospheric?.hydrogen || 0;
+      return { colony: { colonyHydrogen: this.getShipCapacity(amount) } };
     }
     return super.calculateSpaceshipGainPerShip();
   }
@@ -1453,9 +1636,109 @@ class SpaceMiningProject extends SpaceshipProject {
     return super.calculateSpaceshipTotalResourceGain(perSecond);
   }
 
-  applyWaterImportToColony(amount, accumulatedChanges = null, allowOverflow = false) {
-    const resource = resources.colony.water;
-    const pending = accumulatedChanges?.colony?.water || 0;
+  estimateProductionRateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
+    const material = this.getPlanetaryMassImportResource();
+    if (!material || !this.isActive || !this.isContinuous() || this.isBlockedByPulsarStorm()) {
+      return null;
+    }
+
+    const context = this.getContinuousOperationContext(deltaTime, productivity);
+    if (context.fraction <= 0 || context.totalTransportCount <= 0) {
+      return { cost: {}, gain: {} };
+    }
+
+    const totals = { cost: {}, gain: {} };
+    const costPerShip = this.calculateSpaceshipCost();
+    for (const category in costPerShip) {
+      for (const resource in costPerShip[category]) {
+        if (this.ignoreCostForResource && this.ignoreCostForResource(category, resource)) {
+          continue;
+        }
+        const count = this.getContinuousCostCountForResource(category, resource, context);
+        const amount = costPerShip[category][resource] * count * context.fraction * productivity;
+        this.addAmountToResourceMap(totals.cost, category, resource, amount);
+      }
+    }
+
+    const gainPerShip = this.calculateSpaceshipGainPerShip() || {};
+    const gainCount = this.getContinuousGainCount(context);
+    for (const category in gainPerShip) {
+      for (const resource in gainPerShip[category]) {
+        const amount = gainPerShip[category][resource] *
+          gainCount *
+          context.fraction *
+          context.successChance *
+          context.productivity;
+        this.addAmountToResourceMap(totals.gain, category, resource, amount);
+      }
+    }
+    if (this.applyMetalCostPenalty) {
+      const metalPenalty = (costPerShip.colony?.metal || 0) *
+        gainCount *
+        context.fraction *
+        context.successChance *
+        context.productivity;
+      this.applyMetalCostPenalty(totals.gain, metalPenalty);
+    }
+
+    if (applyRates) {
+      const seconds = deltaTime / 1000;
+      if (seconds > 0) {
+        const costLabel = this.getCostRateLabel();
+        for (const category in totals.cost) {
+          for (const resource in totals.cost[category]) {
+            resources[category][resource].modifyRate(
+              -(totals.cost[category][resource] / seconds),
+              costLabel,
+              'project'
+            );
+          }
+        }
+        const gainLabel = this.getExportRateLabel(this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export');
+        for (const category in totals.gain) {
+          for (const resource in totals.gain[category]) {
+            resources[category][resource].modifyRate(
+              totals.gain[category][resource] / seconds,
+              gainLabel,
+              'project'
+            );
+          }
+        }
+      }
+    }
+
+    return totals;
+  }
+
+  applyColonyResourceImport(resourceName, amount, accumulatedChanges = null, accumulatedSpecialChanges = null, options = {}) {
+    const resource = resources.colony[resourceName];
+    const allowOverflow = options.allowOverflow === true;
+    const deferOverflow = options.deferOverflow === true;
+    const specialChangeKey = options.specialChangeKey;
+
+    if (accumulatedChanges && (allowOverflow || deferOverflow)) {
+      if (!accumulatedChanges.colony) accumulatedChanges.colony = {};
+      accumulatedChanges.colony[resourceName] = (accumulatedChanges.colony[resourceName] || 0) + amount;
+      if (specialChangeKey) {
+        accumulatedSpecialChanges[specialChangeKey] =
+          (accumulatedSpecialChanges[specialChangeKey] || 0) + amount;
+      }
+      return 0;
+    }
+
+    if (!accumulatedChanges && deferOverflow) {
+      const previousValue = resource.value;
+      resource.value += amount;
+      if (!resource.hasCap) {
+        return 0;
+      }
+      const limit = previousValue >= resource.cap ? previousValue : resource.cap;
+      const overflow = Math.max(0, resource.value - limit);
+      resource.value -= overflow;
+      return overflow;
+    }
+
+    const pending = accumulatedChanges?.colony?.[resourceName] || 0;
     const current = resource.value + pending;
     const limit = resource.hasCap
       ? (allowOverflow ? current + amount : (current >= resource.cap ? current : resource.cap))
@@ -1465,12 +1748,31 @@ class SpaceMiningProject extends SpaceshipProject {
     if (toColony > 0) {
       if (accumulatedChanges) {
         if (!accumulatedChanges.colony) accumulatedChanges.colony = {};
-        accumulatedChanges.colony.water = (accumulatedChanges.colony.water || 0) + toColony;
+        accumulatedChanges.colony[resourceName] = (accumulatedChanges.colony[resourceName] || 0) + toColony;
       } else {
         resource.value += toColony;
       }
     }
+    if (accumulatedSpecialChanges && allowOverflow && specialChangeKey) {
+      accumulatedSpecialChanges[specialChangeKey] =
+        (accumulatedSpecialChanges[specialChangeKey] || 0) + amount;
+    }
     return amount - toColony;
+  }
+
+  applyPlanetaryMassImport(material, amount, accumulatedSpecialChanges = null) {
+    if (!(amount > 0)) {
+      return;
+    }
+    const sourceLabel = this.getExportRateLabel(this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export');
+    if (accumulatedSpecialChanges) {
+      accumulateSpecialPlanetaryMassImport(accumulatedSpecialChanges, sourceLabel, material, amount, false, 'project');
+      return;
+    }
+    addDynamicWorldPlanetaryMaterial(terraforming, material, amount);
+    modifyPlanetaryMassRate(amount, sourceLabel);
+    terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
+    reconcileLandResourceValue();
   }
 
   getContinuousGainScaleLimit(context, gainBase, accumulatedChanges = null, productivity = 1) {
@@ -1533,14 +1835,42 @@ class SpaceMiningProject extends SpaceshipProject {
       const zones = getZones();
       const temps = terraforming?.temperature?.zones || {};
       const allBelow = zones.every(z => (temps[z]?.value || 0) <= 273.15);
-      if (this.exceedsWaterCoverageLimit(hasMonitoring)) {
-        const surfaceResource = allBelow ? 'ice' : 'liquidWater';
-        resources.surface[surfaceResource].automationLimited = true;
-        return;
-      }
       let amount = entry[resourceName] * fraction * productivity;
       if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget !== 'surface') {
-        this.applyWaterImportToColony(amount, accumulatedChanges, this.waterImportTarget === 'colony');
+        const importWithoutOverflow = this.waterImportTarget === 'colonyOnly';
+        const colonyCapacity = this.waterImportTarget === 'colony'
+          ? this.getColonyResourceCapacityRemaining('water', accumulatedChanges)
+          : Infinity;
+        if (!importWithoutOverflow && this.shouldWaterCoverageLimitBlockImport(amount, hasMonitoring, accumulatedChanges)) {
+          const colonyAmount = Math.min(amount, colonyCapacity);
+          if (colonyAmount > 0) {
+            this.applyColonyResourceImport(
+              'water',
+              colonyAmount,
+              accumulatedChanges,
+              null,
+              { allowOverflow: false }
+            );
+          }
+          const surfaceResource = allBelow ? 'ice' : 'liquidWater';
+          resources.surface[surfaceResource].automationLimited = true;
+          return;
+        }
+        this.applyColonyResourceImport(
+          'water',
+          amount,
+          accumulatedChanges,
+          importWithoutOverflow ? accumulatedSpecialChanges : null,
+          {
+            allowOverflow: this.waterImportTarget === 'colony' || importWithoutOverflow,
+            specialChangeKey: importWithoutOverflow ? 'colonyWaterNoOverflow' : null
+          }
+        );
+        return;
+      }
+      if (this.shouldWaterCoverageLimitBlockImport(amount, hasMonitoring, accumulatedChanges)) {
+        const surfaceResource = allBelow ? 'ice' : 'liquidWater';
+        resources.surface[surfaceResource].automationLimited = true;
         return;
       }
       const surfaceResource = (allBelow || resourceName === 'ice') ? 'ice' : 'liquidWater';
@@ -1552,24 +1882,62 @@ class SpaceMiningProject extends SpaceshipProject {
       }
       return;
     }
+    if (this.isHydrogenColonyImportSelected() && gain.colony?.colonyHydrogen) {
+      const amount = gain.colony.colonyHydrogen * fraction * productivity;
+      const importWithoutOverflow = this.gasImportTarget === 'colonyOnly';
+      if (this.gasImportTarget === 'colonyAndSpaceStorage' && accumulatedChanges) {
+        this.applyColonyResourceImport(
+          'colonyHydrogen',
+          amount,
+          accumulatedChanges,
+          accumulatedSpecialChanges,
+          {
+            allowOverflow: true,
+            specialChangeKey: 'colonyHydrogenOverflowToSpaceStorage'
+          }
+        );
+        return;
+      }
+      const overflow = this.applyColonyResourceImport(
+        'colonyHydrogen',
+        amount,
+        accumulatedChanges,
+        importWithoutOverflow ? accumulatedSpecialChanges : null,
+        {
+          allowOverflow: this.gasImportTarget === 'colony' || importWithoutOverflow,
+          specialChangeKey: importWithoutOverflow ? 'colonyHydrogenNoOverflow' : null
+        }
+      );
+      if (this.gasImportTarget === 'colonyAndSpaceStorage' && overflow > 0) {
+        const scale = fraction * productivity;
+        const storageGain = { spaceStorage: { hydrogen: scale > 0 ? overflow / scale : 0 } };
+        this.applySpaceshipResourceGain(storageGain, fraction, accumulatedChanges, productivity, accumulatedSpecialChanges);
+      }
+      return;
+    }
+    if (this.isMaterialColonyAndPlanetaryMassImportSelected()) {
+      const material = this.getPlanetaryMassImportResource();
+      if (!material || !gain.colony?.[material]) {
+        return;
+      }
+      const amount = gain.colony[material] * fraction * productivity;
+      if (accumulatedChanges) {
+        this.applyColonyResourceImport(material, amount, accumulatedChanges, null, { deferOverflow: true });
+        const sourceLabel = this.getExportRateLabel(this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export');
+        accumulateMaterialOverflowToPlanetaryMass(accumulatedSpecialChanges, sourceLabel, material, amount);
+      } else {
+        const overflow = this.applyColonyResourceImport(material, amount, null, null, { deferOverflow: true });
+        this.applyPlanetaryMassImport(material, overflow);
+      }
+      return;
+    }
     if (this.isPlanetaryMassImportSelected() && gain.underground?.planetaryMass) {
       const material = this.getPlanetaryMassImportResource();
       if (!material) {
         return;
       }
-      const sourceLabel = this.getExportRateLabel(this.attributes.spaceMining ? 'Spaceship Mining' : 'Spaceship Export');
       const amount = gain.underground.planetaryMass * fraction * productivity;
-      if (!(amount > 0)) {
-        return;
-      }
-      if (accumulatedSpecialChanges) {
-        accumulateSpecialPlanetaryMassImport(accumulatedSpecialChanges, sourceLabel, material, amount, false, 'project');
-        return;
-      }
-      addDynamicWorldPlanetaryMaterial(terraforming, material, amount);
-      modifyPlanetaryMassRate(amount, sourceLabel);
-      terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
-      reconcileLandResourceValue();
+      this.applyPlanetaryMassImport(material, amount, accumulatedSpecialChanges);
       return;
     }
     if (!this.applyingContinuousPlanGain && hasMonitoring && this.disableAbovePressure && this.isAtmosphericImportTargetSelected() && gain.atmospheric) {

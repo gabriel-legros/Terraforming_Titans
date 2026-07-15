@@ -2,7 +2,7 @@
 
 // Simple representation of the Sun used for original planet summaries
 const SOL_STAR = {
-    name: 'Sol',
+    name: t('ui.space.stars.sol', {}, 'Sol'),
     spectralType: 'G2V',
     luminositySolar: 1,
     massSolar: 1,
@@ -11,8 +11,8 @@ const SOL_STAR = {
 };
 
 const ROGUE_STAR = {
-    name: 'Rogue Space',
-    spectralType: '—',
+    name: t('ui.space.stars.rogueSpace', {}, 'Rogue Space'),
+    spectralType: '-',
     luminositySolar: 0,
     massSolar: 0,
     temperatureK: 0,
@@ -24,9 +24,11 @@ const SPACE_HAZARD_KEY_SET = new Set(SPACE_HAZARD_KEYS);
 
 const SPACE_DEFAULT_SECTOR_LABEL = globalThis?.DEFAULT_SECTOR_LABEL || 'R5-07';
 const ARTIFICIAL_TERRAFORM_DIVISOR = 50_000_000_000;
+const SPACE_SUPERMASSIVE_SHELL_CORE = 'smbh';
 const MAX_REMEMBERED_RANDOM_WORLD_STATUSES = 10;
 const MAX_REMEMBERED_ARTIFICIAL_WORLD_STATUSES = 50;
 const MAX_TERRAFORM_HISTORY_ENTRIES = 10;
+const SPACE_BIRCH_WORLD_SPECIALIZATION = 'birchWorld';
 
 function buildSpaceHazardKeys() {
     const keys = new Set();
@@ -80,6 +82,27 @@ function resolveSectorFromSources(...sources) {
     return SPACE_DEFAULT_SECTOR_LABEL;
 }
 
+function isSupermassiveShellworldStatus(status) {
+    if (!status) return false;
+    const typeCandidates = [
+        status.type,
+        status.classification?.type,
+        status.original?.merged?.classification?.type,
+        status.original?.classification?.type,
+        status.artificialSnapshot?.type
+    ];
+    const coreCandidates = [
+        status.core,
+        status.classification?.core,
+        status.original?.merged?.classification?.core,
+        status.original?.classification?.core,
+        status.artificialSnapshot?.core
+    ];
+    const type = typeCandidates.find((value) => value && value !== 'unknown');
+    const core = coreCandidates.find((value) => value && value !== 'unknown');
+    return type === 'shell' && core === SPACE_SUPERMASSIVE_SHELL_CORE;
+}
+
 function getLandFromParams(source) {
     return source?.resources?.surface?.land?.initialValue
         || source?.resources?.surface?.land?.baseLand
@@ -113,6 +136,11 @@ function getDominionIdFromWorldData(source) {
         || source.original?.merged?.specialAttributes?.terraformingRequirementId
         || source.original?.dominionId
         || null;
+}
+
+function isOrbitalRingEligibleWorldData(source) {
+    const dominionId = getDominionIdFromWorldData(source);
+    return !dominionId || !getTerraformingRequirement(dominionId).orbitalRingDisabled;
 }
 
 function applyDominionIdToWorldData(source, dominionId) {
@@ -163,7 +191,7 @@ class SpaceManager extends EffectableEntity {
         // Tracking for procedurally generated worlds
         this.currentRandomSeed = null;
         this.currentRandomName = '';
-        this.randomWorldStatuses = {}; // seed -> { name, terraformed, colonists, original, orbitalRing }
+        this.randomWorldStatuses = {}; // seed -> { name, terraformed, colonists, populationCapacity, original, orbitalRing }
         this.rwgSummary = this._createEmptyRwgSummary();
         this.currentArtificialKey = null;
         this.artificialWorldStatuses = {};
@@ -172,7 +200,7 @@ class SpaceManager extends EffectableEntity {
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
         this.oneillCylinders = 0;
-        this.spaceSliders = { cylindersHope: 0 };
+        this.spaceSliders = { cylindersHope: 0, megaprojectsCoordination: 50 };
         this.spaceSliderRuntime = {};
         this.terraformHistory = [];
         this.fastestTerraformByWorldType = {};
@@ -180,6 +208,13 @@ class SpaceManager extends EffectableEntity {
         this.dominionTerraformRewardCount = 0;
         this.foundryWorldBonusCache = { count: 0, bonus: 0 };
         this.worldStatsCache = this._createEmptyWorldStatsCache();
+        this.nonBirchGalacticPopulation = 0;
+        this.nonBirchGalacticPopulationCapacity = 0;
+        this.galacticPopulation = 0;
+        this.galacticPopulationCapacity = 0;
+        this.birchWorldPopulation = 0;
+        this.birchWorldPopulationCapacity = 0;
+        this.galacticPopulationGrowthRate = 0.005 / 365;
         this.terraformedWorldCountCache = null;
         this.travelPerfLoggingEnabled = true;
         this.travelPerfStats = {
@@ -199,6 +234,35 @@ class SpaceManager extends EffectableEntity {
         }
         this._refreshWorldStatsCache();
         console.log("SpaceManager initialized with planet statuses.");
+    }
+
+    update(delta) {
+        const seconds = delta / 1000;
+        this._syncGalacticPopulationTotals();
+        if (seconds <= 0 || this.galacticPopulation <= 0 || this.galacticPopulationCapacity <= 0) {
+            return;
+        }
+        if (this.galacticPopulation >= this.galacticPopulationCapacity) {
+            const birchContribution = this._isCurrentWorldBirchWorld()
+                ? 0
+                : Math.max(0, Number(this.birchWorldPopulation) || 0);
+            this.nonBirchGalacticPopulation = Math.max(
+                0,
+                this.galacticPopulationCapacity - birchContribution
+            );
+            this._syncGalacticPopulationTotals();
+            return;
+        }
+        const capacityFactor = 1 - (this.galacticPopulation / this.galacticPopulationCapacity);
+        const growth = this.galacticPopulation * this.galacticPopulationGrowthRate * capacityFactor * seconds;
+        this.nonBirchGalacticPopulation = Math.max(
+            0,
+            Math.min(
+                this.galacticPopulationCapacity,
+                this.galacticPopulation + growth
+            ) - (this._isCurrentWorldBirchWorld() ? 0 : Math.max(0, Number(this.birchWorldPopulation) || 0))
+        );
+        this._syncGalacticPopulationTotals();
     }
 
     _recordTravelPerf(kind, elapsedMs, targetLabel) {
@@ -241,6 +305,7 @@ class SpaceManager extends EffectableEntity {
                 departureSkillPointGranted: false,
                 enabled: false, // visible/selectable in UI
                 colonists: 0,
+                populationCapacity: 0,
                 orbitalRing: false,
                 departedAt: null,
                 ecumenopolisPercent: 0,
@@ -328,8 +393,9 @@ class SpaceManager extends EffectableEntity {
         const reward = 1000 * rewardIndex;
         this.dominionTerraformRewards[resolvedDominion] = true;
         this.dominionTerraformRewardCount = rewardIndex;
-        resources.special.alienArtifact.increase(reward);
-        return reward;
+        const artifactGain = getArtifactGainAmount(reward);
+        resources.special.alienArtifact.increase(artifactGain);
+        return artifactGain;
     }
 
     // --- Getters (Keep existing getters) ---
@@ -418,16 +484,23 @@ class SpaceManager extends EffectableEntity {
     _buildCurrentTerraformHistoryEntry(playTime, realTime) {
         let worldId = this.currentPlanetKey;
         let worldType = 'story';
+        let worldArchetype = this._getCurrentWorldArchetype();
         if (this.currentRandomSeed !== null) {
             worldId = String(this.currentRandomSeed);
             worldType = 'random';
         } else if (this.currentArtificialKey !== null) {
             worldId = String(this.currentArtificialKey);
             worldType = 'artificial';
+            const status = this.artificialWorldStatuses[worldId];
+            const artificialType = this._resolveArtificialWorldType(status)
+                || currentPlanetParameters?.classification?.type
+                || 'artificial';
+            worldArchetype = `artificial:${artificialType}`;
         }
         return {
             worldId,
             worldType,
+            worldArchetype,
             name: this._getCurrentWorldDisplayName(),
             playTimeSeconds: Math.max(0, Number(playTime) || 0),
             realTimeSeconds: Math.max(0, Number(realTime) || 0),
@@ -511,9 +584,12 @@ class SpaceManager extends EffectableEntity {
             terraformedCount: 0,
             orbitalRingCount: 0,
             departedColonistsTotal: 0,
+            departedPopulationCapacityTotal: 0,
             sectorUnits: {},
             sectorTerraformedCounts: {},
+            sectorOrbitalRingIneligibleCounts: {},
             sectorRingCounts: {},
+            orbitalRingIneligibleCount: 0,
             typeCounts: {},
             typeHazardBonuses: {},
             typeHazardCounts: {},
@@ -526,6 +602,7 @@ class SpaceManager extends EffectableEntity {
     _createEmptyArtificialSummary() {
         return {
             departedColonistsTotal: 0,
+            departedPopulationCapacityTotal: 0,
             terraformedCount: 0,
             sectorTerraformCounts: {},
             sectorUnits: {},
@@ -627,9 +704,15 @@ class SpaceManager extends EffectableEntity {
             terraformedCount: Math.max(0, Number(summary.terraformedCount) || 0),
             orbitalRingCount: Math.max(0, Number(summary.orbitalRingCount) || 0),
             departedColonistsTotal: Math.max(0, Number(summary.departedColonistsTotal) || 0),
+            departedPopulationCapacityTotal: Math.max(
+                0,
+                Number(summary.departedPopulationCapacityTotal) || Number(summary.departedColonistsTotal) || 0
+            ),
             sectorUnits: this._sanitizeCountMap(summary.sectorUnits),
             sectorTerraformedCounts: this._sanitizeCountMap(summary.sectorTerraformedCounts),
+            sectorOrbitalRingIneligibleCounts: this._sanitizeCountMap(summary.sectorOrbitalRingIneligibleCounts),
             sectorRingCounts: this._sanitizeCountMap(summary.sectorRingCounts),
+            orbitalRingIneligibleCount: Math.max(0, Number(summary.orbitalRingIneligibleCount) || 0),
             typeCounts: this._sanitizeCountMap(summary.typeCounts),
             typeHazardBonuses: this._sanitizeCountMap(summary.typeHazardBonuses),
             typeHazardCounts: this._sanitizeNestedCountMap(summary.typeHazardCounts),
@@ -688,6 +771,10 @@ class SpaceManager extends EffectableEntity {
     _sanitizeArtificialSummary(summary = {}) {
         return {
             departedColonistsTotal: Math.max(0, Number(summary.departedColonistsTotal) || 0),
+            departedPopulationCapacityTotal: Math.max(
+                0,
+                Number(summary.departedPopulationCapacityTotal) || Number(summary.departedColonistsTotal) || 0
+            ),
             terraformedCount: Math.max(0, Number(summary.terraformedCount) || 0),
             sectorTerraformCounts: this._sanitizeCountMap(summary.sectorTerraformCounts),
             sectorUnits: this._sanitizeCountMap(summary.sectorUnits),
@@ -820,12 +907,22 @@ class SpaceManager extends EffectableEntity {
         return count;
     }
 
+    _getStatusPopulation(status) {
+        return Math.max(0, Number(status?.colonists) || 0);
+    }
+
+    _getStatusPopulationCapacity(status) {
+        const capacity = Number(status?.populationCapacity);
+        return Number.isFinite(capacity) ? Math.max(0, capacity) : this._getStatusPopulation(status);
+    }
+
     _addRandomWorldStatusToSummary(status) {
         if (!status) {
             return;
         }
 
-        this._adjustRwgSummaryNumber('departedColonistsTotal', Math.max(0, Number(status.colonists) || 0));
+        this._adjustRwgSummaryNumber('departedColonistsTotal', this._getStatusPopulation(status));
+        this._adjustRwgSummaryNumber('departedPopulationCapacityTotal', this._getStatusPopulationCapacity(status));
 
         if (status.specialization) {
             this._adjustRwgSummaryMapValue('specializationCounts', status.specialization, 1);
@@ -843,12 +940,17 @@ class SpaceManager extends EffectableEntity {
         this._adjustRwgSummaryNumber('terraformedCount', 1);
         const sector = normalizeSectorLabel(status.sector || resolveSectorFromSources(status, status.original));
         this._adjustRwgSummaryMapValue('sectorTerraformedCounts', sector, 1);
-        if (status.orbitalRing) {
+        const ringEligible = isOrbitalRingEligibleWorldData(status);
+        if (!ringEligible) {
+            this._adjustRwgSummaryNumber('orbitalRingIneligibleCount', 1);
+            this._adjustRwgSummaryMapValue('sectorOrbitalRingIneligibleCounts', sector, 1);
+        }
+        if (ringEligible && status.orbitalRing) {
             this._adjustRwgSummaryNumber('orbitalRingCount', 1);
             this._adjustRwgSummaryMapValue('sectorRingCounts', sector, 1);
         }
 
-        const sectorUnits = 1 + (status.orbitalRing ? 1 : 0);
+        const sectorUnits = 1 + (ringEligible && status.orbitalRing ? 1 : 0);
         this._adjustRwgSummaryMapValue('sectorUnits', sector, sectorUnits);
 
         const worldType = this._getRandomWorldType(status);
@@ -869,7 +971,8 @@ class SpaceManager extends EffectableEntity {
             return;
         }
 
-        this._adjustArtificialSummaryNumber('departedColonistsTotal', Math.max(0, Number(status.colonists) || 0));
+        this._adjustArtificialSummaryNumber('departedColonistsTotal', this._getStatusPopulation(status));
+        this._adjustArtificialSummaryNumber('departedPopulationCapacityTotal', this._getStatusPopulationCapacity(status));
 
         if (!status.terraformed) {
             return;
@@ -1131,6 +1234,9 @@ class SpaceManager extends EffectableEntity {
             if (!this._isRememberedArtificialWorldStatus(key, status, activeKey)) {
                 return;
             }
+            if (isSupermassiveShellworldStatus(status)) {
+                return;
+            }
             if (keepKeys.has(key)) {
                 if (this._isPrunableArtificialWorldStatus(key, status, activeKey)) {
                     this._prepareCompactableArtificialStatus(status);
@@ -1174,12 +1280,16 @@ class SpaceManager extends EffectableEntity {
     _getForgottenSectorRinglessCapacity(sectorLabel) {
         const sector = normalizeSectorLabel(sectorLabel);
         const terraformed = this.rwgSummary.sectorTerraformedCounts[sector] || 0;
+        const ineligible = this.rwgSummary.sectorOrbitalRingIneligibleCounts[sector] || 0;
         const rings = this.rwgSummary.sectorRingCounts[sector] || 0;
-        return Math.max(0, terraformed - rings);
+        return Math.max(0, terraformed - ineligible - rings);
     }
 
     _setForgottenOrbitalRingCount(targetCount) {
-        const maxCount = Math.max(0, this.rwgSummary.terraformedCount || 0);
+        const maxCount = Math.max(
+            0,
+            (this.rwgSummary.terraformedCount || 0) - (this.rwgSummary.orbitalRingIneligibleCount || 0)
+        );
         const target = Math.max(0, Math.min(maxCount, Number(targetCount) || 0));
         let current = Math.max(0, this.rwgSummary.orbitalRingCount || 0);
         if (target === current) {
@@ -1389,6 +1499,7 @@ class SpaceManager extends EffectableEntity {
             const contribution = this._buildWorldContribution('artificial', key, this.artificialWorldStatuses[key]);
             this._applyWorldContributionDiff(null, contribution);
         });
+        this._ensureGalacticPopulationTotals();
     }
 
     _updateWorldCacheForStatusMutation(type, key, mutator) {
@@ -1411,7 +1522,9 @@ class SpaceManager extends EffectableEntity {
             if (!status) {
                 return;
             }
-            status.orbitalRing = !!value;
+            status.orbitalRing = type === 'random' && !isOrbitalRingEligibleWorldData(status)
+                ? false
+                : !!value;
         });
     }
 
@@ -1427,6 +1540,7 @@ class SpaceManager extends EffectableEntity {
         this._updateWorldCacheForStatusMutation('artificial', resolvedKey, (_, map, targetKey) => {
             delete map[targetKey];
         });
+        this._ensureGalacticPopulationTotals();
         return true;
     }
 
@@ -1486,6 +1600,133 @@ class SpaceManager extends EffectableEntity {
         return Math.max(0, this.artificialSummary.departedColonistsTotal || 0);
     }
 
+    _computeTotalPopulationStats({ includeCurrentWorld = false } = {}) {
+        let population = this.getRandomWorldDepartedColonistsTotal()
+            + this.getArtificialWorldDepartedColonistsTotal();
+        let populationCapacity = Math.max(0, this.rwgSummary.departedPopulationCapacityTotal || 0)
+            + Math.max(0, this.artificialSummary.departedPopulationCapacityTotal || 0);
+        const currentStoryKey = this.currentPlanetKey;
+        const currentSeed = this.currentRandomSeed === null ? null : String(this.currentRandomSeed);
+        const currentArtificialKey = this.currentArtificialKey === null ? null : String(this.currentArtificialKey);
+
+        Object.keys(this.planetStatuses).forEach((key) => {
+            if (!includeCurrentWorld && currentSeed === null && currentArtificialKey === null && key === currentStoryKey) {
+                return;
+            }
+            const status = this.planetStatuses[key];
+            population += this._getStatusPopulation(status);
+            populationCapacity += this._getStatusPopulationCapacity(status);
+        });
+
+        Object.keys(this.randomWorldStatuses).forEach((key) => {
+            if (!includeCurrentWorld && currentSeed !== null && key === currentSeed) {
+                return;
+            }
+            const status = this.randomWorldStatuses[key];
+            population += this._getStatusPopulation(status);
+            populationCapacity += this._getStatusPopulationCapacity(status);
+        });
+
+        Object.keys(this.artificialWorldStatuses).forEach((key) => {
+            if (!includeCurrentWorld && currentArtificialKey !== null && key === currentArtificialKey) {
+                return;
+            }
+            const status = this.artificialWorldStatuses[key];
+            if (isSupermassiveShellworldStatus(status)) {
+                return;
+            }
+            population += this._getStatusPopulation(status);
+            populationCapacity += this._getStatusPopulationCapacity(status);
+        });
+
+        return { population, populationCapacity };
+    }
+
+    _refreshGalacticPopulationTotals(options = {}) {
+        const stats = this._computeTotalPopulationStats(options);
+        this.nonBirchGalacticPopulation = stats.population;
+        this.nonBirchGalacticPopulationCapacity = stats.populationCapacity;
+        return this._syncGalacticPopulationTotals();
+    }
+
+    _isCurrentWorldBirchWorld() {
+        if (this.currentArtificialKey === null) {
+            return false;
+        }
+        return isSupermassiveShellworldStatus(this.artificialWorldStatuses[String(this.currentArtificialKey)])
+            || isSupermassiveShellworldStatus(currentPlanetParameters);
+    }
+
+    _syncGalacticPopulationTotals() {
+        const nonBirchPopulation = Math.max(0, Number(this.nonBirchGalacticPopulation) || 0);
+        const nonBirchCapacity = Math.max(0, Number(this.nonBirchGalacticPopulationCapacity) || 0);
+        const birchPopulation = Math.max(0, Number(this.birchWorldPopulation) || 0);
+        const birchCapacity = Math.max(0, Number(this.birchWorldPopulationCapacity) || 0);
+        if (this._isCurrentWorldBirchWorld()) {
+            this.galacticPopulation = nonBirchPopulation;
+            this.galacticPopulationCapacity = nonBirchCapacity;
+        } else {
+            this.galacticPopulation = nonBirchPopulation + birchPopulation;
+            this.galacticPopulationCapacity = nonBirchCapacity + birchCapacity;
+        }
+        return {
+            population: this.galacticPopulation,
+            populationCapacity: this.galacticPopulationCapacity
+        };
+    }
+
+    _hasGalacticPopulationTotals() {
+        const population = Number(this.galacticPopulation);
+        const capacity = Number(this.galacticPopulationCapacity);
+        return Number.isFinite(population)
+            && Number.isFinite(capacity)
+            && population > 0
+            && capacity > 0;
+    }
+
+    _ensureGalacticPopulationTotals(options = {}) {
+        if (this._hasGalacticPopulationTotals()) {
+            return this._syncGalacticPopulationTotals();
+        }
+        return this._refreshGalacticPopulationTotals(options);
+    }
+
+    _addGalacticPopulationTotals(population, populationCapacity) {
+        this.nonBirchGalacticPopulation = Math.max(
+            0,
+            Math.max(0, Number(this.nonBirchGalacticPopulation) || 0) + (Number(population) || 0)
+        );
+        this.nonBirchGalacticPopulationCapacity = Math.max(
+            0,
+            Math.max(0, Number(this.nonBirchGalacticPopulationCapacity) || 0) + (Number(populationCapacity) || 0)
+        );
+        return this._syncGalacticPopulationTotals();
+    }
+
+    _setBirchWorldPopulationTotals(population, populationCapacity) {
+        this.birchWorldPopulation = Math.max(0, Number(population) || 0);
+        this.birchWorldPopulationCapacity = Math.max(0, Number(populationCapacity) || 0);
+        return this._syncGalacticPopulationTotals();
+    }
+
+    getTotalPopulationStats(options = {}) {
+        if (options.includeCurrentWorld) {
+            return this._computeTotalPopulationStats(options);
+        }
+        return {
+            population: Math.max(0, this.galacticPopulation || 0),
+            populationCapacity: Math.max(0, this.galacticPopulationCapacity || 0)
+        };
+    }
+
+    getTotalPopulation(options = {}) {
+        return this.getTotalPopulationStats(options).population;
+    }
+
+    getTotalPopulationCapacity(options = {}) {
+        return this.getTotalPopulationStats(options).populationCapacity;
+    }
+
     getArtificialWorldSpecializationCounts() {
         const counts = { ...(this.artificialSummary.specializationCounts || {}) };
         Object.values(this.artificialWorldStatuses).forEach((status) => {
@@ -1506,7 +1747,15 @@ class SpaceManager extends EffectableEntity {
 
     currentWorldHasOrbitalRing() {
         if (this.currentRandomSeed !== null) {
-            return !!this.randomWorldStatuses[String(this.currentRandomSeed)]?.orbitalRing;
+            const seed = String(this.currentRandomSeed);
+            const status = this.randomWorldStatuses[seed];
+            if (!isOrbitalRingEligibleWorldData(status)) {
+                if (status?.orbitalRing) {
+                    this._setWorldOrbitalRing('random', seed, false);
+                }
+                return false;
+            }
+            return !!status?.orbitalRing;
         }
         if (this.currentArtificialKey !== null) {
             const key = String(this.currentArtificialKey);
@@ -1540,9 +1789,10 @@ class SpaceManager extends EffectableEntity {
         const key = String(seed);
         if (!this.randomWorldStatuses[key]) {
             this.randomWorldStatuses[key] = {
-                name: `Seed ${key}`,
+                name: t('ui.space.randomWorldSeedName', { seed: key }, 'Seed {seed}'),
                 terraformed: false,
                 colonists: 0,
+                populationCapacity: 0,
                 original: null,
                 visited: false,
                 departureSkillPointGranted: false,
@@ -1566,6 +1816,7 @@ class SpaceManager extends EffectableEntity {
         if (followersManager && followersManager.resetConsecrationForSeed) {
             followersManager.resetConsecrationForSeed(key);
         }
+        this._ensureGalacticPopulationTotals();
         this._refreshFoundryWorldBonusCache();
     }
 
@@ -1588,6 +1839,22 @@ class SpaceManager extends EffectableEntity {
         return (this.worldStatsCache.storyOrbitalRings || 0) + this._getTotalRandomOrbitalRingCount();
     }
 
+    getOrbitalRingEligibleTerraformedWorldCount() {
+        let retainedRandomWorlds = 0;
+        Object.values(this.randomWorldStatuses).forEach((status) => {
+            if (status?.terraformed && isOrbitalRingEligibleWorldData(status)) {
+                retainedRandomWorlds += 1;
+            }
+        });
+        const forgottenRandomWorlds = Math.max(
+            0,
+            (this.rwgSummary.terraformedCount || 0) - (this.rwgSummary.orbitalRingIneligibleCount || 0)
+        );
+        return (this.worldStatsCache.storyTerraformed || 0)
+            + retainedRandomWorlds
+            + forgottenRandomWorlds;
+    }
+
     assignOrbitalRings(totalRings, options = {}) {
         const { preferCurrentWorld = false } = options;
         const normalizedTotal = Math.max(0, Number.isFinite(totalRings) ? Math.floor(totalRings) : 0);
@@ -1604,6 +1871,12 @@ class SpaceManager extends EffectableEntity {
             }
             if (!status.terraformed) {
                 if (force && status.orbitalRing) {
+                    this._setWorldOrbitalRing(type, key, false);
+                }
+                return;
+            }
+            if (type === 'random' && !isOrbitalRingEligibleWorldData(status)) {
+                if (status.orbitalRing) {
                     this._setWorldOrbitalRing(type, key, false);
                 }
                 return;
@@ -1809,28 +2082,47 @@ class SpaceManager extends EffectableEntity {
     }
 
     getOneillCylinderEffectiveWorldCount() {
+        const cachedCylinders = this.terraformedWorldCountCache?.oneillEffectiveWorldCount;
+        if (Number.isFinite(cachedCylinders)) {
+            return cachedCylinders;
+        }
         const cylinders = this.getOneillCylinderCount();
         if (!(cylinders > 0)) {
+            if (this.terraformedWorldCountCache) {
+                this.terraformedWorldCountCache.oneillEffectiveWorldCount = 0;
+            }
             return 0;
         }
-        const capacity = getOneillCylinderCapacity(galaxyManager, this);
-        return Math.min(cylinders, capacity);
+        const capacity = getOneillCylinderCapacity(galaxyManager, this, { ignoreWorldDisabled: true });
+        const effective = Math.min(cylinders, capacity);
+        if (this.terraformedWorldCountCache) {
+            this.terraformedWorldCountCache.oneillEffectiveWorldCount = effective;
+        }
+        return effective;
     }
 
     getSpaceSliderTick(sliderId) {
         if (sliderId === 'cylindersHope') {
             return Math.max(0, Math.min(10, Math.floor(Number(this.spaceSliders.cylindersHope) || 0)));
         }
+        if (sliderId === 'megaprojectsCoordination') {
+            return clampMegaprojectsCoordinationAllocation(this.spaceSliders.megaprojectsCoordination);
+        }
         return 0;
     }
 
     setSpaceSliderTick(sliderId, value) {
-        if (sliderId !== 'cylindersHope') {
-            return 0;
+        if (sliderId === 'cylindersHope') {
+            const next = Math.max(0, Math.min(10, Math.floor(Number(value) || 0)));
+            this.spaceSliders.cylindersHope = next;
+            return next;
         }
-        const next = Math.max(0, Math.min(10, Math.floor(Number(value) || 0)));
-        this.spaceSliders.cylindersHope = next;
-        return next;
+        if (sliderId === 'megaprojectsCoordination') {
+            const next = clampMegaprojectsCoordinationAllocation(value);
+            this.spaceSliders.megaprojectsCoordination = next;
+            return next;
+        }
+        return 0;
     }
 
     setSpaceSliderRuntimeData(sliderId, data = {}) {
@@ -1983,12 +2275,14 @@ class SpaceManager extends EffectableEntity {
         if (!this.terraformedWorldCountCache) {
             this.terraformedWorldCountCache = {
                 base: NaN,
-                includingCurrent: NaN
+                includingCurrent: NaN,
+                oneillEffectiveWorldCount: NaN
             };
             return;
         }
         this.terraformedWorldCountCache.base = NaN;
         this.terraformedWorldCountCache.includingCurrent = NaN;
+        this.terraformedWorldCountCache.oneillEffectiveWorldCount = NaN;
     }
 
     clearTerraformedWorldCountCache() {
@@ -2224,6 +2518,7 @@ class SpaceManager extends EffectableEntity {
                         name: this.currentRandomName,
                         terraformed: false,
                         colonists: 0,
+                        populationCapacity: 0,
                         original,
                         visited: true,
                         departureSkillPointGranted: false,
@@ -2263,6 +2558,7 @@ class SpaceManager extends EffectableEntity {
                         name: this.currentRandomName || `Artificial ${resolvedKey}`,
                         terraformed: false,
                         colonists: 0,
+                        populationCapacity: 0,
                         original,
                         visited: true,
                         departureSkillPointGranted: false,
@@ -2345,6 +2641,7 @@ class SpaceManager extends EffectableEntity {
                       departureSkillPointGranted: false,
                       enabled: false,
                       colonists: 0,
+                      populationCapacity: 0,
                       orbitalRing: false,
                       departedAt: null,
                       ecumenopolisPercent: 0,
@@ -2410,10 +2707,10 @@ class SpaceManager extends EffectableEntity {
      * This ensures all managers save their travel state consistently.
      * @returns {Object} Travel state data
      */
-    prepareForTravel() {
+    prepareForTravel(options = {}) {
         // Delegate to the unified prepareForTravel method in game.js
         if (typeof prepareForTravel === 'function') {
-            return prepareForTravel();
+            return prepareForTravel(options);
         }
         // Fallback for testing environments
         return {};
@@ -2427,17 +2724,41 @@ class SpaceManager extends EffectableEntity {
      * - stamps departure time
      * Works for both story planets and random worlds.
      */
-    recordDepartureSnapshot() {
+    recordDepartureSnapshot(options = {}) {
         // Call unified prepareForTravel before recording snapshot
-        this.prepareForTravel();
+        this.prepareForTravel({ savePretravel: options.savePretravel });
         
         const now = Date.now();
-        const pop = globalThis?.resources?.colony?.colonists?.value || 0;
-        if (followersManager && followersManager.onTravelDeparture) {
-            followersManager.onTravelDeparture(pop);
+        const pop = resources.colony.colonists.value || 0;
+        const landCapacity = 10 * (resources.surface.land.value || 0);
+        const populationCapacity = Math.max(0, resources.colony.colonists.cap || 0, landCapacity || 0);
+        const ecoPercent = getEcumenopolisLandFraction(terraforming) * 100;
+        let specialization = terraforming.requirementId;
+        if (this.currentArtificialKey !== null) {
+            const status = this.artificialWorldStatuses[String(this.currentArtificialKey)];
+            if (isSupermassiveShellworldStatus(status) || isSupermassiveShellworldStatus(currentPlanetParameters)) {
+                specialization = SPACE_BIRCH_WORLD_SPECIALIZATION;
+            }
         }
-        const ecoPercent = getEcumenopolisLandFraction(globalThis.terraforming) * 100;
-        const specialization = terraforming.requirementId;
+        const isBirchWorldDeparture = this.currentArtificialKey !== null
+            && (
+                isSupermassiveShellworldStatus(this.artificialWorldStatuses[String(this.currentArtificialKey)])
+                || isSupermassiveShellworldStatus(currentPlanetParameters)
+            );
+        let previousPopulationContribution = 0;
+        let previousCapacityContribution = 0;
+        if (!isBirchWorldDeparture) {
+            let currentStatus = null;
+            if (this.currentRandomSeed !== null) {
+                currentStatus = this.randomWorldStatuses[String(this.currentRandomSeed)];
+            } else if (this.currentArtificialKey !== null) {
+                currentStatus = this.artificialWorldStatuses[String(this.currentArtificialKey)];
+            } else {
+                currentStatus = this.planetStatuses[this.currentPlanetKey];
+            }
+            previousPopulationContribution = this._getStatusPopulation(currentStatus);
+            previousCapacityContribution = this._getStatusPopulationCapacity(currentStatus);
+        }
         let foundryCompleted = false;
         try {
             foundryCompleted = projectManager.projects.foundryWorld.isCompleted;
@@ -2456,6 +2777,7 @@ class SpaceManager extends EffectableEntity {
                     name: this.currentRandomName || `Seed ${seed}`,
                     terraformed: false,
                     colonists: 0,
+                    populationCapacity: 0,
                     original: this.getCurrentWorldOriginal ? this.getCurrentWorldOriginal() : null,
                     visited: true,
                     orbitalRing: false,
@@ -2470,6 +2792,7 @@ class SpaceManager extends EffectableEntity {
             const st = this.randomWorldStatuses[seed];
             st.visited = true;
             st.colonists = pop;
+            st.populationCapacity = populationCapacity;
             st.departedAt = now;
             st.ecumenopolisPercent = ecoPercent;
             st.foundryWorld = foundryCompleted;
@@ -2488,6 +2811,7 @@ class SpaceManager extends EffectableEntity {
                     name: this.currentRandomName || `Artificial ${key}`,
                     terraformed: false,
                     colonists: 0,
+                    populationCapacity: 0,
                     original: this.getCurrentWorldOriginal ? this.getCurrentWorldOriginal() : null,
                     visited: true,
                     departureSkillPointGranted: false,
@@ -2510,8 +2834,11 @@ class SpaceManager extends EffectableEntity {
                 };
             }
             const st = this.artificialWorldStatuses[key];
+            const isSupermassiveArtificialDeparture = isSupermassiveShellworldStatus(st)
+                || isSupermassiveShellworldStatus(currentPlanetParameters);
             st.visited = true;
             st.colonists = pop;
+            st.populationCapacity = populationCapacity;
             st.departedAt = now;
             st.ecumenopolisPercent = ecoPercent;
             st.foundryWorld = foundryCompleted;
@@ -2519,8 +2846,12 @@ class SpaceManager extends EffectableEntity {
             st.specialization = specialization;
             st.stored = false;
             st.abandoned = !this._isCurrentWorldTerraformed();
-            st.type = currentPlanetParameters?.classification?.type || st.type || 'shell';
-            st.core = currentPlanetParameters?.classification?.core || st.core || this._resolveArtificialWorldCore(st, st.type);
+            st.type = isSupermassiveArtificialDeparture
+                ? 'shell'
+                : currentPlanetParameters?.classification?.type || st.type || 'shell';
+            st.core = isSupermassiveArtificialDeparture
+                ? SPACE_SUPERMASSIVE_SHELL_CORE
+                : currentPlanetParameters?.classification?.core || st.core || this._resolveArtificialWorldCore(st, st.type);
             if (!st.terraformedValue) {
                 st.terraformedValue = this._deriveArtificialTerraformValue({
                     landHa: this._getCurrentWorldLandHa(),
@@ -2533,12 +2864,28 @@ class SpaceManager extends EffectableEntity {
             }
             st.landHa = landHa;
             st.cachedLandHa = landHa;
-            st.artificialSnapshot = artificialManager.buildSnapshotFromParams(currentPlanetParameters);
+            const nextArtificialSnapshot = artificialManager.buildSnapshotFromParams(currentPlanetParameters);
+            if (isSupermassiveArtificialDeparture) {
+                st.artificialSnapshot = st.artificialSnapshot || nextArtificialSnapshot || {};
+                st.artificialSnapshot.type = 'shell';
+                st.artificialSnapshot.core = SPACE_SUPERMASSIVE_SHELL_CORE;
+                if (st.artificialSnapshot.classification) {
+                    st.artificialSnapshot.classification.type = 'shell';
+                    st.artificialSnapshot.classification.core = SPACE_SUPERMASSIVE_SHELL_CORE;
+                }
+            } else {
+                st.artificialSnapshot = nextArtificialSnapshot;
+            }
+            const smbhSnapshot = captureCurrentSmbhShellworldSnapshot(this);
+            if (smbhSnapshot) {
+                st.smbhSnapshot = smbhSnapshot;
+            }
             if (!st.name) st.name = this.currentRandomName || `Artificial ${key}`;
         } else if (this.planetStatuses[this.currentPlanetKey]) {
             const ps = this.planetStatuses[this.currentPlanetKey];
             ps.visited = true;
             ps.colonists = pop;
+            ps.populationCapacity = populationCapacity;
             ps.departedAt = now;
             ps.ecumenopolisPercent = ecoPercent;
             ps.foundryWorld = foundryCompleted;
@@ -2547,6 +2894,22 @@ class SpaceManager extends EffectableEntity {
         }
         this._compactRandomWorldStatuses();
         this._compactArtificialWorldStatuses();
+        if (isBirchWorldDeparture) {
+            this._setBirchWorldPopulationTotals(pop, populationCapacity);
+            if (!this._hasGalacticPopulationTotals()) {
+                this._refreshGalacticPopulationTotals();
+            }
+        } else if (this._hasGalacticPopulationTotals()) {
+            this._addGalacticPopulationTotals(
+                pop - previousPopulationContribution,
+                populationCapacity - previousCapacityContribution
+            );
+        } else {
+            this._refreshGalacticPopulationTotals({ includeCurrentWorld: true });
+        }
+        if (followersManager && followersManager.onTravelDeparture) {
+            followersManager.onTravelDeparture(pop);
+        }
         this._refreshFoundryWorldBonusCache();
     }
 
@@ -2591,9 +2954,10 @@ class SpaceManager extends EffectableEntity {
         if (!status || status.departureSkillPointGranted || !this._isCurrentWorldTerraformed() || !skillManager) {
             return false;
         }
+        const skillPointGain = normalizeDifficultySettingValue('skillPointsGainMultiplier', gameSettings.skillPointsGainMultiplier);
         status.departureSkillPointGranted = true;
-        skillManager.skillPoints += 1;
-        notifySkillPointGained(1);
+        skillManager.skillPoints += skillPointGain;
+        notifySkillPointGained(skillPointGain);
         return true;
     }
 
@@ -2607,7 +2971,12 @@ class SpaceManager extends EffectableEntity {
             this.applyWorldStatusToPlanetParameters(params, options?.planetKey);
             currentPlanetParameters = JSON.parse(JSON.stringify(params));
         }
+        this._ensureGalacticPopulationTotals();
         initializeGameState({ preserveManagers: true, preserveJournal: true });
+        restoreCurrentSmbhShellworldSnapshot(this);
+        if (followersManager && followersManager.syncGalacticBelievers) {
+            followersManager.syncGalacticBelievers();
+        }
         resetGameFrameClock(true);
         const elapsedMs = performance.now() - startMs;
         this._recordTravelPerf(options?.travelKind, elapsedMs, options?.targetLabel);
@@ -2627,8 +2996,11 @@ class SpaceManager extends EffectableEntity {
             return false;
         }
 
+        const params = getPlanetParameters(targetKey);
+        const savePretravel = params.specialAttributes?.savePretravel !== false;
+
         // Preserve departure context for rewards/state before switching worlds.
-        this.recordDepartureSnapshot();
+        this.recordDepartureSnapshot({ savePretravel });
         this._grantDepartureSkillPoint();
         if (!this._setCurrentPlanetKey(targetKey)) {
             return false;
@@ -2640,7 +3012,6 @@ class SpaceManager extends EffectableEntity {
         this.visitPlanet(targetKey);
         this._compactRandomWorldStatuses();
         this._compactArtificialWorldStatuses();
-        const params = getPlanetParameters(targetKey);
         this._finalizeTravelInitialization({
             planetKey: targetKey,
             planetParameters: params,
@@ -2671,6 +3042,9 @@ class SpaceManager extends EffectableEntity {
         const revisitingRandomSeed = !isArtificial && !!existing?.visited;
         const specialSeedKey = getSpecialSeedKeyFromWorldData(res) || getSpecialSeedKeyFromWorldData(existing);
         const persistedDominionId = getDominionIdFromWorldData(res) || getDominionIdFromWorldData(existing);
+        const requestedSpecialAttributes = res?.override?.specialAttributes || res?.merged?.specialAttributes || {};
+        const deferHazardousBiomassTravelTuning = requestedSpecialAttributes.deferHazardousBiomassTravelTuning === true;
+        const deferHazardousMachineryTravelTuning = requestedSpecialAttributes.deferHazardousMachineryTravelTuning === true;
         let travelResult = res;
         if (revisitingRandomSeed) {
             try {
@@ -2680,6 +3054,19 @@ class SpaceManager extends EffectableEntity {
                 if (!regenerated || !regenerated.merged) {
                     console.warn(`SpaceManager: Failed to regenerate seed ${s} for replay.`);
                     return false;
+                }
+                if (deferHazardousBiomassTravelTuning || deferHazardousMachineryTravelTuning) {
+                    const override = regenerated.override || (regenerated.override = {});
+                    const special = override.specialAttributes || (override.specialAttributes = {});
+                    const mergedSpecial = regenerated.merged.specialAttributes || (regenerated.merged.specialAttributes = {});
+                    if (deferHazardousBiomassTravelTuning) {
+                        special.deferHazardousBiomassTravelTuning = true;
+                        mergedSpecial.deferHazardousBiomassTravelTuning = true;
+                    }
+                    if (deferHazardousMachineryTravelTuning) {
+                        special.deferHazardousMachineryTravelTuning = true;
+                        mergedSpecial.deferHazardousMachineryTravelTuning = true;
+                    }
                 }
                 travelResult = regenerated;
             } catch (error) {
@@ -2746,6 +3133,7 @@ class SpaceManager extends EffectableEntity {
                     name: this.currentRandomName,
                     terraformed: false,
                     colonists: 0,
+                    populationCapacity: 0,
                     original: originalSnapshot,
                     visited: true,
                     departureSkillPointGranted: false,
@@ -2993,12 +3381,19 @@ class SpaceManager extends EffectableEntity {
             artificialSummary: this._getArtificialSummarySaveData(),
             randomWorldStatuses: pruneStatuses(this.randomWorldStatuses, activeRandomKey),
             rwgSummary: this._sanitizeRwgSummary(this.rwgSummary),
+            galacticPopulation: this.galacticPopulation,
+            galacticPopulationCapacity: this.galacticPopulationCapacity,
+            nonBirchGalacticPopulation: this.nonBirchGalacticPopulation,
+            nonBirchGalacticPopulationCapacity: this.nonBirchGalacticPopulationCapacity,
+            birchWorldPopulation: this.birchWorldPopulation,
+            birchWorldPopulationCapacity: this.birchWorldPopulationCapacity,
             randomTabEnabled: this.randomTabEnabled,
             rwgSectorLock: this.rwgSectorLock,
             rwgSectorLockManual: this.rwgSectorLockManual,
             oneillCylinders: this.getOneillCylinderCount(),
             spaceSliders: {
-                cylindersHope: this.getSpaceSliderTick('cylindersHope')
+                cylindersHope: this.getSpaceSliderTick('cylindersHope'),
+                megaprojectsCoordination: this.getSpaceSliderTick('megaprojectsCoordination')
             },
             terraformHistory: this.terraformHistory,
             fastestTerraformByWorldType: this.getFastestTerraformByWorldType(),
@@ -3021,7 +3416,11 @@ class SpaceManager extends EffectableEntity {
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
         this.oneillCylinders = 0;
-        this.spaceSliders = { cylindersHope: 0 };
+        this.nonBirchGalacticPopulation = 0;
+        this.nonBirchGalacticPopulationCapacity = 0;
+        this.birchWorldPopulation = 0;
+        this.birchWorldPopulationCapacity = 0;
+        this.spaceSliders = { cylindersHope: 0, megaprojectsCoordination: 50 };
         this.spaceSliderRuntime = {};
         this.terraformHistory = [];
         this.fastestTerraformByWorldType = {};
@@ -3092,6 +3491,7 @@ class SpaceManager extends EffectableEntity {
         }
         const savedSliders = savedData.spaceSliders || {};
         this.setSpaceSliderTick('cylindersHope', savedSliders.cylindersHope || 0);
+        this.setSpaceSliderTick('megaprojectsCoordination', savedSliders.megaprojectsCoordination);
 
         // Load current location
         if (savedData.currentRandomSeed !== undefined && savedData.currentRandomSeed !== null) {
@@ -3132,6 +3532,12 @@ class SpaceManager extends EffectableEntity {
                     if (typeof saved.colonists === 'number') {
                         this.planetStatuses[planetKey].colonists = saved.colonists;
                     }
+                    const savedPopulationCapacity = Number(saved.populationCapacity);
+                    if (Number.isFinite(savedPopulationCapacity)) {
+                        this.planetStatuses[planetKey].populationCapacity = savedPopulationCapacity;
+                    } else {
+                        this.planetStatuses[planetKey].populationCapacity = this.planetStatuses[planetKey].colonists;
+                    }
                     if (typeof saved.orbitalRing === 'boolean') {
                         this.planetStatuses[planetKey].orbitalRing = saved.orbitalRing;
                     }
@@ -3170,6 +3576,9 @@ class SpaceManager extends EffectableEntity {
                     return;
                 }
                 this._migrateArtificialWorldStatus(key, entry, activeArtificialKey);
+                if (!Number.isFinite(Number(entry.populationCapacity))) {
+                    entry.populationCapacity = Math.max(0, Number(entry.colonists) || 0);
+                }
                 if (entry.orbitalRing) {
                     entry.orbitalRing = false;
                 }
@@ -3196,10 +3605,16 @@ class SpaceManager extends EffectableEntity {
             Object.values(this.randomWorldStatuses)
                 .filter(Boolean)
                 .forEach((entry) => {
+                    if (!Number.isFinite(Number(entry.populationCapacity))) {
+                        entry.populationCapacity = Math.max(0, Number(entry.colonists) || 0);
+                    }
                     entry.departureSkillPointGranted = entry.departureSkillPointGranted === true;
                     entry.foundryLandFactor = entry.foundryLandFactor || 0;
                     entry.naturalMagnetosphere = entry.naturalMagnetosphere === true;
                     entry.dominionId = entry.dominionId || getDominionIdFromWorldData(entry);
+                    if (!isOrbitalRingEligibleWorldData(entry)) {
+                        entry.orbitalRing = false;
+                    }
                     assignSector(entry);
                     sanitizeCachedHazards(entry);
                 });
@@ -3252,6 +3667,7 @@ class SpaceManager extends EffectableEntity {
                 .map((entry) => ({
                     worldId: entry?.worldId == null ? '' : String(entry.worldId),
                     worldType: entry?.worldType === 'random' || entry?.worldType === 'artificial' ? entry.worldType : 'story',
+                    worldArchetype: entry?.worldArchetype == null ? '' : String(entry.worldArchetype),
                     name: entry?.name == null ? '' : String(entry.name),
                     playTimeSeconds: Math.max(0, Number(entry?.playTimeSeconds) || 0),
                     realTimeSeconds: Math.max(0, Number(entry?.realTimeSeconds) || 0),
@@ -3273,6 +3689,63 @@ class SpaceManager extends EffectableEntity {
         }
 
         this.rwgSummary = this._sanitizeRwgSummary(savedData.rwgSummary);
+        const savedGalacticPopulation = Number(savedData.galacticPopulation);
+        const savedGalacticPopulationCapacity = Number(savedData.galacticPopulationCapacity);
+        const savedNonBirchGalacticPopulation = Number(savedData.nonBirchGalacticPopulation);
+        const savedNonBirchGalacticPopulationCapacity = Number(savedData.nonBirchGalacticPopulationCapacity);
+        const savedBirchWorldPopulation = Number(savedData.birchWorldPopulation);
+        const savedBirchWorldPopulationCapacity = Number(savedData.birchWorldPopulationCapacity);
+        const hasSavedBirchWorldPopulation = Object.prototype.hasOwnProperty.call(savedData, 'birchWorldPopulation')
+            && Number.isFinite(savedBirchWorldPopulation);
+        const hasSavedNonBirchGalacticPopulation = Object.prototype.hasOwnProperty.call(savedData, 'nonBirchGalacticPopulation')
+            && Number.isFinite(savedNonBirchGalacticPopulation);
+        let migratedBirchWorldPopulation = 0;
+        let migratedBirchWorldPopulationCapacity = 0;
+        if (!hasSavedBirchWorldPopulation) {
+            Object.values(this.artificialWorldStatuses).forEach((status) => {
+                if (!isSupermassiveShellworldStatus(status)) {
+                    return;
+                }
+                migratedBirchWorldPopulation = Math.max(
+                    migratedBirchWorldPopulation,
+                    this._getStatusPopulation(status)
+                );
+                migratedBirchWorldPopulationCapacity = Math.max(
+                    migratedBirchWorldPopulationCapacity,
+                    this._getStatusPopulationCapacity(status)
+                );
+            });
+        }
+        this.birchWorldPopulation = hasSavedBirchWorldPopulation
+            ? Math.max(0, savedBirchWorldPopulation)
+            : migratedBirchWorldPopulation;
+        this.birchWorldPopulationCapacity = Object.prototype.hasOwnProperty.call(savedData, 'birchWorldPopulationCapacity')
+            && Number.isFinite(savedBirchWorldPopulationCapacity)
+            ? Math.max(0, savedBirchWorldPopulationCapacity)
+            : migratedBirchWorldPopulationCapacity;
+        const recomputedNonBirchStats = this._computeTotalPopulationStats();
+        this.nonBirchGalacticPopulation = hasSavedNonBirchGalacticPopulation
+            ? Math.max(0, savedNonBirchGalacticPopulation)
+            : recomputedNonBirchStats.population > 0
+                ? recomputedNonBirchStats.population
+                : Number.isFinite(savedGalacticPopulation) && savedGalacticPopulation > 0
+                    ? Math.max(0, savedGalacticPopulation - migratedBirchWorldPopulation)
+                    : 0;
+        this.nonBirchGalacticPopulationCapacity = Object.prototype.hasOwnProperty.call(savedData, 'nonBirchGalacticPopulationCapacity')
+            && Number.isFinite(savedNonBirchGalacticPopulationCapacity)
+            ? Math.max(0, savedNonBirchGalacticPopulationCapacity)
+            : recomputedNonBirchStats.populationCapacity > 0
+                ? recomputedNonBirchStats.populationCapacity
+                : Number.isFinite(savedGalacticPopulationCapacity) && savedGalacticPopulationCapacity > 0
+                    ? Math.max(0, savedGalacticPopulationCapacity - migratedBirchWorldPopulationCapacity)
+                    : 0;
+        this.galacticPopulation = Number.isFinite(savedGalacticPopulation) && savedGalacticPopulation > 0
+            ? savedGalacticPopulation
+            : 0;
+        this.galacticPopulationCapacity = Number.isFinite(savedGalacticPopulationCapacity) && savedGalacticPopulationCapacity > 0
+            ? savedGalacticPopulationCapacity
+            : 0;
+        this._syncGalacticPopulationTotals();
 
         Object.keys(this.planetStatuses).forEach((planetKey) => {
             this._syncFoundryLandFactor(this.planetStatuses[planetKey], planetKey);

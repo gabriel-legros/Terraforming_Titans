@@ -18,6 +18,13 @@ const autobuildCostTracker = {
             }
         }
     },
+    reset() {
+        this.elapsed = 0;
+        this.currentCosts = {};
+        this.currentBuildingCosts = {};
+        this.costQueue = [];
+        this.buildingCostQueue = [];
+    },
     update(delta) {
         this.elapsed += delta;
         while (this.elapsed >= 1000) {
@@ -81,6 +88,56 @@ const CONSTRUCTION_OFFICE_RESERVE_RESOURCES = [
     { key: 'surface.land', category: 'surface', resource: 'land', labelKey: 'land', fallbackLabel: 'Land' },
 ];
 
+const CONSTRUCTION_OFFICE_GUIDE_SECTIONS = [
+    {
+        key: 'section1',
+        marker: '1',
+        fallback: 'This section controls whether or not autobuild is active. The value entered and mode controls how your target is defined.',
+    },
+    {
+        key: 'section2a',
+        marker: '2a',
+        fallback: 'This can control the value in 1) without using the keyboard. Useful for making small adjustments.',
+    },
+    {
+        key: 'section2b',
+        marker: '2b',
+        fallback: 'This controls autobuild priority, higher priorities are built first.',
+    },
+    {
+        key: 'section3',
+        marker: '3',
+        fallback: 'This is your current autobuild target based on defined value. The construction office will attempt to build to that value.',
+    },
+    {
+        key: 'section4',
+        marker: '4',
+        fallback: 'Set active to target is useful to ensure newly built buildings are automatically activated when built, or to quickly change your number of active buildings.',
+    },
+    {
+        key: 'section5',
+        marker: '5',
+        fallback: 'This is a way to calculate a value in 1) that will match your current setup.',
+    },
+];
+
+const CONSTRUCTION_OFFICE_GUIDE_RECOMMENDATIONS = [
+    'Use autobuild on 1% of pop for hydroponics farm. Each upgraded farm can feed 100 people, so you need a number of farms equal to 1% of your pop.',
+    'Use sand quarries as 100% of Glass Smelter + Electronics Factory demand.',
+    '% of workers calculates your target based on your number of workers. % worker share calculates a target based on assigning the given % of your workers to this building. For example, if you want 50% of your workers to work in components factory, you can use 50% worker share.',
+    'When you unlock the construction office for the first time, try setting most of your buildings to % of workers or % worker share and press "Set Target to Active" then turn it on. The autobuilder will mostly imitate your current setup.',
+    'If you need a bit more of something or want to free up your workers a little, the box in 2a is great for small adjustments.',
+];
+
+const CONSTRUCTION_OFFICE_GUIDE_MARKERS = [
+    { label: '1', className: 'construction-office-guide-marker-1' },
+    { label: '2a', className: 'construction-office-guide-marker-2a' },
+    { label: '2b', className: 'construction-office-guide-marker-2b' },
+    { label: '3', className: 'construction-office-guide-marker-3' },
+    { label: '4', className: 'construction-office-guide-marker-4' },
+    { label: '5', className: 'construction-office-guide-marker-5' },
+];
+
 function normalizeConstructionOfficeReservePercent(value) {
     const parsed = parseFloat(value);
     if (Number.isNaN(parsed)) {
@@ -94,6 +151,89 @@ function getConstructionOfficeReserveResourceLabel(option) {
         `ui.colony.constructionOffice.reserveResources.${option.labelKey}`,
         option.fallbackLabel
     );
+}
+
+function closeConstructionOfficeGuide(overlay) {
+    overlay.remove();
+    window.popupActive = false;
+}
+
+function openConstructionOfficeGuide() {
+    window.popupActive = true;
+
+    const overlay = document.createElement('div');
+    overlay.classList.add('construction-office-guide-overlay');
+
+    const win = document.createElement('div');
+    win.classList.add('construction-office-guide-window');
+
+    const header = document.createElement('div');
+    header.classList.add('construction-office-guide-header');
+
+    const title = document.createElement('h2');
+    title.classList.add('construction-office-guide-title');
+    title.textContent = getConstructionOfficeText('ui.colony.constructionOffice.guide.title', 'Autobuild Guide');
+
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.classList.add('construction-office-guide-close');
+    close.textContent = getConstructionOfficeText('ui.colony.constructionOffice.close', 'X');
+    close.setAttribute('aria-label', getConstructionOfficeText('ui.colony.constructionOffice.guide.close', 'Close autobuild guide'));
+    close.addEventListener('click', () => closeConstructionOfficeGuide(overlay));
+
+    header.append(title, close);
+
+    const imageWrap = document.createElement('div');
+    imageWrap.classList.add('construction-office-guide-image-wrap');
+
+    const image = document.createElement('img');
+    image.classList.add('construction-office-guide-image');
+    image.src = 'assets/autobuild_guide/overall.png';
+    image.alt = getConstructionOfficeText('ui.colony.constructionOffice.guide.imageAlt', 'Autobuild controls with numbered guide sections');
+    imageWrap.appendChild(image);
+
+    CONSTRUCTION_OFFICE_GUIDE_MARKERS.forEach(marker => {
+        const label = document.createElement('span');
+        label.classList.add('construction-office-guide-marker', marker.className);
+        label.textContent = marker.label;
+        imageWrap.appendChild(label);
+    });
+
+    const sectionGrid = document.createElement('div');
+    sectionGrid.classList.add('construction-office-guide-sections');
+    CONSTRUCTION_OFFICE_GUIDE_SECTIONS.forEach(section => {
+        const item = document.createElement('div');
+        item.classList.add('construction-office-guide-section');
+        const marker = document.createElement('span');
+        marker.classList.add('construction-office-guide-section-marker');
+        marker.textContent = section.marker;
+        const text = document.createElement('span');
+        text.textContent = getConstructionOfficeText(`ui.colony.constructionOffice.guide.${section.key}`, section.fallback);
+        item.append(marker, text);
+        sectionGrid.appendChild(item);
+    });
+
+    const recommendationsTitle = document.createElement('h3');
+    recommendationsTitle.classList.add('construction-office-guide-recommendations-title');
+    recommendationsTitle.textContent = getConstructionOfficeText('ui.colony.constructionOffice.guide.recommendationsTitle', 'Recommendations');
+
+    const recommendations = document.createElement('ul');
+    recommendations.classList.add('construction-office-guide-recommendations');
+    CONSTRUCTION_OFFICE_GUIDE_RECOMMENDATIONS.forEach((fallback, index) => {
+        const item = document.createElement('li');
+        item.textContent = getConstructionOfficeText(`ui.colony.constructionOffice.guide.recommendation${index + 1}`, fallback);
+        recommendations.appendChild(item);
+    });
+
+    overlay.addEventListener('click', (event) => {
+        if (event.target === overlay) {
+            closeConstructionOfficeGuide(overlay);
+        }
+    });
+
+    win.append(header, imageWrap, sectionGrid, recommendationsTitle, recommendations);
+    overlay.appendChild(win);
+    document.body.appendChild(overlay);
 }
 
 function getConstructionOfficeReservePercentForResource(reserveSettings, category, resource) {
@@ -451,6 +591,7 @@ const constructionOfficeState = {
     autobuilderActive: true,
     strategicReserve: 0,
     strategicReserveResources: {},
+    guidePromptSeen: false,
 };
 
 const constructionOfficeReserveSettingsElements = {
@@ -458,11 +599,31 @@ const constructionOfficeReserveSettingsElements = {
     inputs: {},
 };
 
+const constructionOfficeElements = {
+    container: null,
+    statusSpan: null,
+    pauseBtn: null,
+    reserveInput: null,
+};
+
 function updateConstructionOfficeUI() {
-    const container = typeof document !== 'undefined' ? document.getElementById('construction-office-container') : null;
-    const statusSpan = typeof document !== 'undefined' ? document.getElementById('autobuilder-status') : null;
-    const pauseBtn = typeof document !== 'undefined' ? document.getElementById('autobuilder-pause-btn') : null;
-    const reserveInput = typeof document !== 'undefined' ? document.getElementById('strategic-reserve-input') : null;
+    if (typeof document === 'undefined') return;
+    if (!constructionOfficeElements.container || !constructionOfficeElements.container.isConnected) {
+        constructionOfficeElements.container = document.getElementById('construction-office-container');
+    }
+    if (!constructionOfficeElements.statusSpan || !constructionOfficeElements.statusSpan.isConnected) {
+        constructionOfficeElements.statusSpan = document.getElementById('autobuilder-status');
+    }
+    if (!constructionOfficeElements.pauseBtn || !constructionOfficeElements.pauseBtn.isConnected) {
+        constructionOfficeElements.pauseBtn = document.getElementById('autobuilder-pause-btn');
+    }
+    if (!constructionOfficeElements.reserveInput || !constructionOfficeElements.reserveInput.isConnected) {
+        constructionOfficeElements.reserveInput = document.getElementById('strategic-reserve-input');
+    }
+    const container = constructionOfficeElements.container;
+    const statusSpan = constructionOfficeElements.statusSpan;
+    const pauseBtn = constructionOfficeElements.pauseBtn;
+    const reserveInput = constructionOfficeElements.reserveInput;
 
     if (container && typeof globalEffects !== 'undefined' && typeof globalEffects.isBooleanFlagSet === 'function') {
         const unlocked = globalEffects.isBooleanFlagSet('automateConstruction');
@@ -641,6 +802,22 @@ function ensureConstructionOfficeReserveSettingsWindow() {
     }
 }
 
+function showConstructionOfficeGuidePrompt() {
+    if (constructionOfficeState.guidePromptSeen) return;
+    constructionOfficeState.guidePromptSeen = true;
+    createSystemChoicePopup(
+        getConstructionOfficeText('ui.colony.constructionOffice.guidePrompt.title', 'Autobuild Guide'),
+        getConstructionOfficeText(
+            'ui.colony.constructionOffice.guidePrompt.message',
+            'A guide for this feature is available.  Would you like to see the guide now?  (It is also accessible from the construction office under the colony tab)'
+        ),
+        getConstructionOfficeText('ui.colony.constructionOffice.guidePrompt.yes', 'Yes'),
+        getConstructionOfficeText('ui.colony.constructionOffice.guidePrompt.no', 'No'),
+        openConstructionOfficeGuide,
+        () => {}
+    );
+}
+
 function saveConstructionOfficeState() {
     return {
         ...constructionOfficeState,
@@ -652,6 +829,7 @@ function loadConstructionOfficeState(state) {
     if (!state) return;
     setAutobuilderActive(state.autobuilderActive);
     setStrategicReserve(state.strategicReserve);
+    constructionOfficeState.guidePromptSeen = state.guidePromptSeen === true;
     constructionOfficeState.strategicReserveResources = {};
     if (state.strategicReserveResources && state.strategicReserveResources.constructor === Object) {
         CONSTRUCTION_OFFICE_RESERVE_RESOURCES.forEach(option => {
@@ -687,6 +865,17 @@ function initializeConstructionOfficeUI() {
     title.classList.add('card-title');
     title.textContent = getConstructionOfficeText('ui.colony.constructionOffice.title', 'Construction Office');
     header.appendChild(title);
+    const guideButton = document.createElement('button');
+    guideButton.type = 'button';
+    guideButton.classList.add('terraforming-infographic-button', 'construction-office-guide-button');
+    guideButton.title = getConstructionOfficeText('ui.colony.constructionOffice.guide.open', 'Open autobuild guide');
+    guideButton.setAttribute('aria-label', getConstructionOfficeText('ui.colony.constructionOffice.guide.open', 'Open autobuild guide'));
+    const guideIcon = document.createElement('span');
+    guideIcon.classList.add('terraforming-infographic-icon');
+    guideIcon.textContent = '?';
+    guideButton.appendChild(guideIcon);
+    guideButton.addEventListener('click', openConstructionOfficeGuide);
+    header.appendChild(guideButton);
     card.appendChild(header);
 
     const body = document.createElement('div');
@@ -781,6 +970,7 @@ function captureAutoBuildSettings(structures) {
             autoUpgrade: s.autoUpgradeEnabled,
             step: s.autoBuildStep,
             fixed: s.autoBuildFixed,
+            maxPercent: s.autoBuildMaxPercent,
             fillPercent: s.autoBuildFillPercent,
             fillPrimary: s.autoBuildFillResourcePrimary,
             fillSecondary: s.autoBuildFillResourceSecondary,
@@ -811,6 +1001,9 @@ function restoreAutoBuildSettings(structures) {
             s.autoUpgradeEnabled = !!savedAutoBuildSettings[name].autoUpgrade;
             if (savedAutoBuildSettings[name].fixed !== undefined) {
                 s.autoBuildFixed = Math.max(0, Math.floor(savedAutoBuildSettings[name].fixed || 0));
+            }
+            if (savedAutoBuildSettings[name].maxPercent !== undefined) {
+                s.autoBuildMaxPercent = savedAutoBuildSettings[name].maxPercent;
             }
             if (savedAutoBuildSettings[name].fillPercent !== undefined) {
                 s.autoBuildFillPercent = savedAutoBuildSettings[name].fillPercent;
@@ -901,6 +1094,21 @@ function canApplyAutoActiveTarget(building) {
     return !!building.autoActiveEnabled;
 }
 
+function getAerostatSupportedBuildingLimit(building) {
+    const aerostat = colonies.aerostat_colony;
+    if (
+        !aerostat.shouldCapSupportedBuildingsToAerostatCapacity() ||
+        building.aerostatReduction <= 0
+    ) {
+        return Infinity;
+    }
+
+    return Math.max(
+        0,
+        Math.floor(aerostat.activeNumber * building.aerostatReduction)
+    );
+}
+
 function getAutoActivationTargetCount(building, population, workerCap, totalLand, collection) {
     const usesFillMode = building.autoBuildFillEnabled && building.autoBuildBasis === 'fill';
     if (usesFillMode) {
@@ -940,6 +1148,54 @@ function getAutoActivationTargetCount(building, population, workerCap, totalLand
                             : roundedPercentTarget;
 }
 
+function autoActivateStructures(buildings) {
+    const population = resources.colony.colonists.value;
+    const workerCap = resources.colony.workers?.cap || 0;
+    const totalLand = resources.surface.land.value;
+
+    for (const buildingName in buildings) {
+        const building = buildings[buildingName];
+        if (!canApplyAutoActiveTarget(building)) {
+            continue;
+        }
+        const targetCount = getAutoActivationTargetCount(
+            building,
+            population,
+            workerCap,
+            totalLand,
+            buildings
+        );
+        const desiredActive = building.getClampedSetActiveTargetCount
+            ? building.getClampedSetActiveTargetCount(targetCount, building.countNumber)
+            : Math.min(targetCount, building.countNumber);
+        const change = desiredActive - building.activeNumber;
+        if (change !== 0) {
+            adjustStructureActivation(building, change);
+        }
+    }
+
+    for (const buildingName in buildings) {
+        const building = buildings[buildingName];
+        if (!building) {
+            continue;
+        }
+        let supportedCap = getAerostatSupportedBuildingLimit(building);
+        if (building.shouldClampSetActiveToSupported && building.shouldClampSetActiveToSupported()) {
+            supportedCap = Math.min(
+                supportedCap,
+                Math.max(0, Math.floor(building.getSupportedActiveCap()))
+            );
+        }
+        if (supportedCap === Infinity) {
+            continue;
+        }
+        const change = supportedCap - building.activeNumber;
+        if (change < 0) {
+            adjustStructureActivation(building, change);
+        }
+    }
+}
+
 function autoBuild(buildings, delta = 0) {
     resetAutoBuildPartialFlags(buildings);
     resetAutoBuildResourceShortages(typeof resources !== 'undefined' ? resources : null);
@@ -953,23 +1209,31 @@ function autoBuild(buildings, delta = 0) {
     const workerCap = resources.colony.workers?.cap || 0;
     const totalLand = resources.surface.land.value;
     const buildableBuildings = [];
-    const buildingInfos = [];
 
     // Step 1: Calculate ratios and populate buildableBuildings with required info
     for (const buildingName in buildings) {
         const building = buildings[buildingName];
         if (!building || building.isHidden || !building.unlocked) continue;
+        let skipAutoBuildForAutoUpgradeColony = false;
+        if (gameSettings.autobuildIgnoreAutoUpgradeColonies && colonies[buildingName] === building && building.autoUpgradeEnabled) {
+            const nextName = building.getNextTierName();
+            const next = nextName ? buildings[nextName] : null;
+            skipAutoBuildForAutoUpgradeColony = !!(next && next.unlocked && !next.isHidden);
+        }
         if (building.autoBuildEnabled || building.autoActiveEnabled || (building.shouldClampSetActiveToSupported && building.shouldClampSetActiveToSupported())) {
             const usesFillMode = building.autoBuildFillEnabled && building.autoBuildBasis === 'fill';
             if (usesFillMode) {
                 const fillData = getAutoBuildFillData(building);
-                const targetCount = building.countNumber + fillData.requiredAmount;
-                buildingInfos.push({ building, targetCount });
-                if (building.autoBuildEnabled && fillData.requiredAmount > 0) {
+                const supportedLimit = getAerostatSupportedBuildingLimit(building);
+                const requiredAmount = Math.min(
+                    fillData.requiredAmount,
+                    supportedLimit - building.countNumber
+                );
+                if (building.autoBuildEnabled && !skipAutoBuildForAutoUpgradeColony && requiredAmount > 0) {
                     buildableBuildings.push({
                         building,
                         currentRatio: Math.max(0, 1 - fillData.fillRatio),
-                        requiredAmount: fillData.requiredAmount,
+                        requiredAmount,
                         maxMode: false,
                     });
                 }
@@ -990,7 +1254,7 @@ function autoBuild(buildings, delta = 0) {
             const roundedPercentTarget = building.autoBuildBasis === 'aerostatCapacity'
                 ? Math.floor(percentTarget)
                 : Math.ceil(percentTarget);
-            const targetCount = usesMaxBasis
+            const uncappedTargetCount = usesMaxBasis
                 ? (usesAdjustableMaxBasis ? building.getAutoBuildMaxTargetCount() : Infinity)
                 : usesFixedBasis
                     ? fixedTarget
@@ -1001,14 +1265,18 @@ function autoBuild(buildings, delta = 0) {
                             : usesAndroidCountBasis
                             ? building.getAndroidCountTarget(resources.colony.androids.value || 0)
                             : usesAndroidCapacityShareBasis
-                                ? building.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
+                            ? building.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
                             : roundedPercentTarget;
+            const targetCount = Math.min(
+                uncappedTargetCount,
+                getAerostatSupportedBuildingLimit(building)
+            );
 
-            buildingInfos.push({ building, targetCount });
-
-            if (building.autoBuildEnabled) {
+            if (building.autoBuildEnabled && !skipAutoBuildForAutoUpgradeColony) {
                 const currentRatio = usesMaxBasis && !usesAdjustableMaxBasis ? 0 : (targetCount > 0 ? building.countNumber / targetCount : 0);
-                const requiredAmount = usesMaxBasis && !usesAdjustableMaxBasis ? 1 : targetCount - building.countNumber;
+                const requiredAmount = usesMaxBasis && !usesAdjustableMaxBasis
+                    ? Math.min(1, targetCount - building.countNumber)
+                    : targetCount - building.countNumber;
 
                 if (requiredAmount > 0) {
                     buildableBuildings.push({
@@ -1074,10 +1342,13 @@ function autoBuild(buildings, delta = 0) {
             } else if (building.autoBuildPriority >= -1) {
                 extraReserves = reserveForPriorityZeroToTwo;
             }
+            const buildLimit = Math.min(
+                building.getAutoBuildCountLimit(),
+                getAerostatSupportedBuildingLimit(building)
+            );
             const maxCount = building.getAutoBuildMaxCount(reserve, extraReserves);
-            const buildLimit = building.getBuildLimit() ?? Infinity;
             const maxTargetCount = maxMode && building.getAutoBuildMaxTargetCount
-                ? building.getAutoBuildMaxTargetCount()
+                ? Math.min(building.getAutoBuildMaxTargetCount(), buildLimit)
                 : buildLimit;
             const desiredAmount = maxMode
                 ? maxTargetCount - building.countNumber
@@ -1085,12 +1356,15 @@ function autoBuild(buildings, delta = 0) {
             if (desiredAmount <= 0) {
                 return;
             }
-            const canBuildFull = building.canAfford(desiredAmount, reserve, extraReserves);
+            const canBuildFull = !maxMode && building.canAfford(desiredAmount, reserve, extraReserves);
             if (!canBuildFull) {
                 building.autoBuildPartial = true;
                 markAutoBuildShortages(building, desiredAmount, reserve, extraReserves);
             }
-            buildCount = canBuildFull ? desiredAmount : maxCount;
+            buildCount = Math.min(
+                canBuildFull ? desiredAmount : maxCount,
+                desiredAmount
+            );
 
             if (maxMode && buildCount > 0 && buildCount < desiredAmount) {
                 building.autoBuildPartial = true;
@@ -1155,57 +1429,13 @@ function autoBuild(buildings, delta = 0) {
     }
 
     // Step 4: Auto-set active counts after building
-    buildingInfos.forEach(({ building }) => {
-        if (!building.shouldClampSetActiveToSupported || !building.shouldClampSetActiveToSupported()) {
-            return;
-        }
-        const supportedCap = Math.max(0, Math.floor(building.getSupportedActiveCap()));
-        const change = supportedCap - building.activeNumber;
-        if (change >= 0) {
-            return;
-        }
-        if (typeof adjustStructureActivation === 'function') {
-            adjustStructureActivation(building, change);
-        } else {
-            building.active = BigInt(
-                Math.max(0, Math.min(building.activeNumber + change, building.countNumber))
-            );
-        }
-    });
-
-    buildingInfos.forEach(({ building }) => {
-        if (!canApplyAutoActiveTarget(building)) {
-            return;
-        }
-        const currentPopulation = resources.colony.colonists.value;
-        const currentWorkerCap = resources.colony.workers?.cap || 0;
-        const currentTotalLand = resources.surface.land.value;
-        const targetCount = getAutoActivationTargetCount(
-            building,
-            currentPopulation,
-            currentWorkerCap,
-            currentTotalLand,
-            buildings
-        );
-        const desiredActive = building.getClampedSetActiveTargetCount
-            ? building.getClampedSetActiveTargetCount(targetCount, building.countNumber)
-            : Math.min(targetCount, building.countNumber);
-        const change = desiredActive - building.activeNumber;
-        if (change !== 0) {
-            if (typeof adjustStructureActivation === 'function') {
-                adjustStructureActivation(building, change);
-            } else {
-                building.active = BigInt(
-                    Math.max(0, Math.min(building.activeNumber + change, building.countNumber))
-                );
-            }
-        }
-    });
+    autoActivateStructures(buildings);
 }
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         autoBuild,
+        autoActivateStructures,
         autoUpgradeColonies,
         autobuildCostTracker,
         resolveAutoBuildBase,
@@ -1216,7 +1446,9 @@ if (typeof module !== 'undefined' && module.exports) {
         toggleAutobuilder,
         setStrategicReserve,
         setStrategicReserveForResource,
+        getConstructionOfficeReservePercentForResource,
         getConstructionOfficeReserveSettings,
+        showConstructionOfficeGuidePrompt,
         saveConstructionOfficeState,
         loadConstructionOfficeState,
         captureConstructionOfficeSettings,
@@ -1238,7 +1470,9 @@ if (typeof window !== 'undefined') {
     window.toggleAutobuilder = toggleAutobuilder;
     window.setStrategicReserve = setStrategicReserve;
     window.setStrategicReserveForResource = setStrategicReserveForResource;
+    window.getConstructionOfficeReservePercentForResource = getConstructionOfficeReservePercentForResource;
     window.getConstructionOfficeReserveSettings = getConstructionOfficeReserveSettings;
+    window.showConstructionOfficeGuidePrompt = showConstructionOfficeGuidePrompt;
     window.saveConstructionOfficeState = saveConstructionOfficeState;
     window.loadConstructionOfficeState = loadConstructionOfficeState;
     window.captureConstructionOfficeSettings = captureConstructionOfficeSettings;

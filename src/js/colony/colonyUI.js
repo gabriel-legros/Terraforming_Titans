@@ -557,7 +557,7 @@ function initializeColonyAlerts() {
   updateColonyAlert();
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+function initializeColonyDomUI() {
   const unhideButton = document.getElementById('unhide-obsolete-button');
   if (unhideButton) {
     unhideButton.addEventListener('click', () => {
@@ -571,7 +571,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   createGrowthRateDisplay();
   initializeConstructionOfficeUI();
-});
+}
 
 globalThis.rebuildColonyNeedCache = rebuildColonyNeedCache;
 globalThis.invalidateColonyNeedCache = invalidateColonyNeedCache;

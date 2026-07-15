@@ -15,13 +15,19 @@ class PatienceManager extends EffectableEntity {
         this.worldPatienceCapHours = 3;
         this.worldPatienceRateSeconds = 2;
         this.worldTerraformingCompleted = false;
+        this.totalSpentHours = 0;
+        this.everPossibleSpendGainIds = new Set();
     }
 
     /**
      * Enable the patience system
      */
     enable() {
+        if (isCurrentWorldManagerDisabled('patienceManager')) {
+            return;
+        }
         this.enabled = true;
+        this.enforceInfinitePatience();
     }
 
     /**
@@ -34,6 +40,8 @@ class PatienceManager extends EffectableEntity {
         this.worldSecondsElapsed = 0;
         this.worldPatienceGranted = 0;
         this.worldTerraformingCompleted = false;
+        this.totalSpentHours = 0;
+        this.everPossibleSpendGainIds = new Set();
         this.activeEffects = [];
         this.booleanFlags = new Set();
     }
@@ -44,6 +52,7 @@ class PatienceManager extends EffectableEntity {
      */
     addPatience(hours) {
         this.currentHours = Math.min(this.currentHours + hours, this.getEffectiveMaxHours());
+        this.enforceInfinitePatience();
     }
 
     getEffectiveMaxHours() {
@@ -59,8 +68,18 @@ class PatienceManager extends EffectableEntity {
 
     clampCurrentHoursToMax() {
         const maxHours = this.getEffectiveMaxHours();
+        if (gameSettings.infinitePatience) {
+            this.currentHours = maxHours;
+            return;
+        }
         if (this.currentHours > maxHours) {
             this.currentHours = maxHours;
+        }
+    }
+
+    enforceInfinitePatience() {
+        if (gameSettings.infinitePatience) {
+            this.currentHours = this.getEffectiveMaxHours();
         }
     }
 
@@ -116,7 +135,9 @@ class PatienceManager extends EffectableEntity {
             metalGain,
             oneillGain,
             oneillCapacity,
-            faithGains
+            faithGains,
+            warpGateCommandAdvance,
+            warpGateNetworkAdvance
         } = this.calculateSpendGains(hours);
         const noGains = superalloyGain <= 0
             && superconductorGain <= 0
@@ -124,12 +145,19 @@ class PatienceManager extends EffectableEntity {
             && metalGain <= 0
             && oneillGain <= 0
             && faithGains.worldBelieverGain <= 0
-            && faithGains.galacticBelieverGain <= 0;
+            && faithGains.galacticBelieverGain <= 0
+            && !warpGateCommandAdvance
+            && !warpGateNetworkAdvance;
         if (noGains) {
             return false;
         }
 
-        this.currentHours -= hours;
+        if (gameSettings.infinitePatience) {
+            this.currentHours = this.getEffectiveMaxHours();
+        } else {
+            this.currentHours -= hours;
+        }
+        this.totalSpentHours += hours;
 
         if (superalloyGain > 0) {
             resources.colony.superalloys.increase(superalloyGain, false);
@@ -152,10 +180,6 @@ class PatienceManager extends EffectableEntity {
             const capacity = oneillCapacity ?? 0;
             const next = currentCount + oneillGain;
             spaceManager.setOneillCylinderCount(next, capacity);
-            updateOneillCylinderStatsUI({
-                space: spaceManager,
-                galaxy: galaxyManager
-            });
         }
 
         if (faithGains.worldBelieverGain > 0 || faithGains.galacticBelieverGain > 0) {
@@ -182,7 +206,9 @@ class PatienceManager extends EffectableEntity {
                 metalGain: 0,
                 oneillGain: 0,
                 oneillCapacity: 0,
-                faithGains: followersManager.getEmptyPatienceFaithSpendGains()
+                faithGains: followersManager.getEmptyPatienceFaithSpendGains(),
+                warpGateCommandAdvance: false,
+                warpGateNetworkAdvance: false
             };
         }
 
@@ -223,16 +249,45 @@ class PatienceManager extends EffectableEntity {
         const oneillCapacity = oneillDelta.capacity || 0;
         const oneillGain = oneillDelta.gain || 0;
         const faithGains = followersManager.getPatienceFaithSpendGains(hours);
+        const warpGateCommandAdvance = warpGateCommand.enabled;
+        const warpGateNetworkAdvance = warpGateNetworkManager.isBooleanFlagSet('warpGateFabrication') && galaxyManager.enabled;
 
-        return {
+        const gains = {
             superalloyGain,
             superconductorGain,
             advancedResearchGain,
             metalGain,
             oneillGain,
             oneillCapacity,
-            faithGains
+            faithGains,
+            warpGateCommandAdvance,
+            warpGateNetworkAdvance
         };
+        this.rememberPossibleSpendGains(gains);
+        return gains;
+    }
+
+    getPossibleSpendGainIds(gains) {
+        const ids = [];
+        if (gains.metalGain > 0) ids.push('metal');
+        if (gains.superalloyGain > 0) ids.push('superalloys');
+        if (gains.superconductorGain > 0) ids.push('superconductors');
+        if (gains.advancedResearchGain > 0) ids.push('advancedResearch');
+        if (gains.oneillGain > 0) ids.push('oneillCylinders');
+        if (gains.faithGains.worldBelieverGain > 0 || gains.faithGains.galacticBelieverGain > 0) ids.push('faithConversion');
+        if (gains.warpGateCommandAdvance || gains.warpGateNetworkAdvance) ids.push('warpGateProgress');
+        return ids;
+    }
+
+    rememberPossibleSpendGains(gains) {
+        const ids = this.getPossibleSpendGainIds(gains);
+        for (let i = 0; i < ids.length; i += 1) {
+            this.everPossibleSpendGainIds.add(ids[i]);
+        }
+    }
+
+    getEverPossibleSpendGainIds() {
+        return Array.from(this.everPossibleSpendGainIds);
     }
 
     advanceWarpGateCommand(seconds) {
@@ -325,7 +380,7 @@ class PatienceManager extends EffectableEntity {
      * Update called each tick
      */
     update(delta = 0) {
-        if (!this.enabled) {
+        if (!isManagerEffectivelyEnabled(this, 'patienceManager')) {
             return;
         }
         const deltaSeconds = delta / 1000;
@@ -333,6 +388,7 @@ class PatienceManager extends EffectableEntity {
             return;
         }
         this.worldSecondsElapsed += deltaSeconds;
+        this.enforceInfinitePatience();
         if (this.worldTerraformingCompleted) {
             this.grantWorldPatience();
         }
@@ -348,7 +404,9 @@ class PatienceManager extends EffectableEntity {
             lastDailyClaimDate: this.lastDailyClaimDate,
             worldSecondsElapsed: this.worldSecondsElapsed,
             worldPatienceGranted: this.worldPatienceGranted,
-            worldTerraformingCompleted: this.worldTerraformingCompleted
+            worldTerraformingCompleted: this.worldTerraformingCompleted,
+            totalSpentHours: this.totalSpentHours,
+            everPossibleSpendGainIds: this.getEverPossibleSpendGainIds()
         };
     }
 
@@ -372,12 +430,22 @@ class PatienceManager extends EffectableEntity {
         if (data.worldTerraformingCompleted !== undefined) {
             this.worldTerraformingCompleted = data.worldTerraformingCompleted;
         }
+        if (data.totalSpentHours !== undefined) {
+            this.totalSpentHours = data.totalSpentHours;
+        }
+        if (data.everPossibleSpendGainIds) {
+            this.everPossibleSpendGainIds = new Set(data.everPossibleSpendGainIds);
+        }
+        this.enforceInfinitePatience();
     }
 
     /**
      * Reapply effects after loading or planet travel
      */
     reapplyEffects() {
+        if (isCurrentWorldManagerDisabled('patienceManager')) {
+            return;
+        }
         this.applyActiveEffects();
         this.clampCurrentHoursToMax();
     }

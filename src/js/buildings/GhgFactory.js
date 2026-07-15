@@ -37,8 +37,8 @@ function getGhgAutomationModeConfig(targetMode) {
   return GHG_AUTOMATION_MODE_CONFIG[targetMode] || GHG_AUTOMATION_MODE_CONFIG.temperature;
 }
 
-function calculateGhgAutomationPressureKPa(resourceAmount, gravity, radius) {
-  return calculateAtmosphericPressure(resourceAmount || 0, gravity, radius) / 1000;
+function calculateGhgAutomationPressureKPa(resourceAmount, gravity, radius, surfaceArea) {
+  return calculateAtmosphericPressure(resourceAmount || 0, gravity, radius, surfaceArea) / 1000;
 }
 
 class GhgFactory extends Building {
@@ -107,7 +107,8 @@ class GhgFactory extends Building {
       return calculateGhgAutomationPressureKPa(
         amount,
         terraforming.celestialParameters.gravity,
-        terraforming.celestialParameters.radius
+        terraforming.celestialParameters.radius,
+        terraforming.celestialParameters.surfaceArea
       );
     };
     const getTargetConfig = (gasKey) => {

@@ -11,6 +11,9 @@ const BASE_TP_RATIO = 2 / FUSION_VE;
 const ESCAPE_L1_FACTOR = 1.0;             // scale of Hill-radius target for escape
 const THRUSTER_POWER_MODE_ABSOLUTE = 'absolute';
 const THRUSTER_POWER_MODE_PERCENT = 'percent';
+const THRUSTER_MOTION_TARGET_AU = 'au';
+const THRUSTER_MOTION_TARGET_FLUX = 'flux';
+const THRUSTER_SOLAR_CONSTANT_WM2 = 1361;
 
 // rotationPeriodToDuration is defined globally in the browser but must be
 // required explicitly when running under Node.js for tests
@@ -121,6 +124,27 @@ function translationalEnergyRemaining(p,dvRem,tpRatio){
   return p.mass * dvRem / tpRatio;
 }
 
+function getStarLuminositySolar(){
+  const luminosity = terraforming.celestialParameters?.starLuminosity;
+  if (Number.isFinite(luminosity) && luminosity > 0) return luminosity;
+  const starLuminosity = currentPlanetParameters?.star?.luminositySolar;
+  if (Number.isFinite(starLuminosity) && starLuminosity > 0) return starLuminosity;
+  return 1;
+}
+
+function orbitAUFromStellarFlux(fluxWm2){
+  if (!Number.isFinite(fluxWm2) || fluxWm2 <= 0) return ROGUE_DISTANCE_AU;
+  return Math.min(
+    ROGUE_DISTANCE_AU,
+    Math.sqrt((getStarLuminositySolar() * THRUSTER_SOLAR_CONSTANT_WM2) / fluxWm2)
+  );
+}
+
+function stellarFluxFromOrbitAU(orbitAU){
+  const au = Number.isFinite(orbitAU) && orbitAU > 0 ? orbitAU : 1;
+  return (getStarLuminositySolar() * THRUSTER_SOLAR_CONSTANT_WM2) / (au * au);
+}
+
 // Hill radius in **meters** – uses the planet's heliocentric distance (per data model)
 function hillRadiusMeters(p, parent, starMass = SOLAR_MASS) {
   const a = (p.distanceFromSun ?? 1) * AU_IN_METERS; // heliocentric a lives on the planet
@@ -178,7 +202,7 @@ class PlanetaryThrustersProject extends Project{
     this.spinInvest=false;this.motionInvest=false;
     this.autoGoRogue=false;
 
-    this.tgtDays=1;this.tgtAU=1;
+    this.tgtDays=1;this.tgtAU=1;this.motionTargetMode=THRUSTER_MOTION_TARGET_AU;
 
     this.dVreq=0;this.dVdone=0;
     this.spinStartDays=null;
@@ -285,7 +309,7 @@ class PlanetaryThrustersProject extends Project{
            <span>&nbsp;at </span><span id="parentRad" class="stat-value">—</span>
         </div>
         <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.target', 'Target:')}</span>
-             <input id="distTarget" type="number" min="0.1" step="0.1" value="1"><span>AU</span></div>
+             <span class="thruster-motion-target-control"><input id="distTarget" type="text" class="thruster-motion-target-input" value="1"><select id="distTargetMode" class="thruster-motion-target-mode"><option value="au">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.targetAu', 'AU')}</option><option value="flux">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.targetFlux', 'W/m^2')}</option></select></span></div>
         <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.spiralDv', 'Spiral Δv:')}</span><span id="distDv" class="stat-value">—</span></div>
         <div id="escapeRow" style="display:none;">
              <span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.motion.escapeDv', 'Escape Δv:')}</span><span id="escDv" class="stat-value">—</span>
@@ -346,6 +370,7 @@ class PlanetaryThrustersProject extends Project{
       rotDv:g('#rotDv',spinCard),rotE:g('#rotE',spinCard),rotCb:g('#rotInvest',spinCard),
       rotSpent:g('#rotSpent',spinCard),rotBurn:g('#rotBurn',spinCard),
       distNow:g('#distNow',motCard),distTarget:distTargetEl,
+      distTargetMode:g('#distTargetMode',motCard),
       distTargetRow:distTargetEl.parentElement,
       distDv:distDvEl,distDvRow:distDvEl.parentElement,
       distE:g('#distE',motCard),distCb:g('#distInvest',motCard),
@@ -370,7 +395,7 @@ class PlanetaryThrustersProject extends Project{
       g('#thruster-motion-tooltip', motCard),
       getPlanetaryThrustersText(
         'ui.projects.planetaryThrusters.motion.tooltip',
-        'Use planetary thrusters to change the world\'s orbit. If bound to a parent body, investment first drives a slow spiral to the Hill radius for escape. After escape, investment changes heliocentric distance toward the target AU. Investment consumes energy continuously; only one mode, Spin or Motion, can be active at a time.'
+        'Use planetary thrusters to change the world\'s orbit. If bound to a parent body, investment first drives a slow spiral to the Hill radius for escape. After escape, investment changes heliocentric distance toward the target orbit. The target can be entered as AU or stellar flux in W/m^2. Investment consumes energy continuously; only one mode, Spin or Motion, can be active at a time.'
       )
     );
     attachDynamicInfoTooltip(
@@ -401,11 +426,23 @@ class PlanetaryThrustersProject extends Project{
     this.el.pwrMode.value = this.powerMode;
     this.el.goRogueAutoCb.checked = this.autoGoRogue;
     this.el.rotTarget.value = this.tgtDays;
-    this.el.distTarget.value = this.tgtAU;
+    this.el.distTargetMode.value = this.motionTargetMode;
+    this.syncMotionTargetInput();
 
     /* listeners */
     this.el.rotTarget.oninput = ()=>this.calcSpinCost();
     this.el.distTarget.oninput= ()=>this.calcMotionCost();
+    this.el.distTargetMode.onchange = ()=>{
+      this.motionTargetMode = this.el.distTargetMode.value === THRUSTER_MOTION_TARGET_FLUX
+        ? THRUSTER_MOTION_TARGET_FLUX
+        : THRUSTER_MOTION_TARGET_AU;
+      const currentAU = terraforming.celestialParameters?.distanceFromSun;
+      if (Number.isFinite(currentAU) && currentAU > 0) {
+        this.tgtAU = currentAU;
+      }
+      this.syncMotionTargetInput(true);
+      this.calcMotionCost();
+    };
 
     this.el.rotCb.onchange = ()=>{
       this.spinInvest = this.el.rotCb.checked;
@@ -502,6 +539,28 @@ class PlanetaryThrustersProject extends Project{
     if(this.spinInvest && (changed || this.dVreq===0)) { this.prepareJob(true,false); this.activeMode='spin'; }
   }
 
+  readMotionTargetAU(){
+    let targetValue = 1;
+    try{
+      const parsed = parseFlexibleNumber(this.el.distTarget.value);
+      if(Number.isFinite(parsed)) targetValue = parsed;
+    }catch(e){ targetValue = 1; }
+    if(this.motionTargetMode === THRUSTER_MOTION_TARGET_FLUX){
+      return Math.max(0.1, orbitAUFromStellarFlux(targetValue));
+    }
+    return Math.max(0.1, targetValue);
+  }
+
+  syncMotionTargetInput(force=false){
+    if(!this.el.distTarget) return;
+    if(!force && document.activeElement === this.el.distTarget) return;
+    if(this.motionTargetMode === THRUSTER_MOTION_TARGET_FLUX){
+      this.el.distTarget.value = formatNumber(stellarFluxFromOrbitAU(this.tgtAU), false, 3);
+      return;
+    }
+    this.el.distTarget.value = this.tgtAU;
+  }
+
   calcMotionCost(){
     const p = terraforming.celestialParameters;
     if(!p){
@@ -510,12 +569,7 @@ class PlanetaryThrustersProject extends Project{
     }
     // If we've escaped previously, ignore parent for preview and show heliocentric costs
     if(!isBoundToParent(p)){
-      let tgt=1;
-      try{
-        const v=this.el.distTarget&&this.el.distTarget.value;
-        const n=parseFloat(v);
-        if(!isNaN(n)) tgt=n;
-      }catch(e){ tgt=1; }
+      const tgt=this.readMotionTargetAU();
       const changed = tgt !== this.tgtAU;
       this.tgtAU=tgt;
       this.el.distTargetRow.style.display="block";
@@ -681,6 +735,18 @@ class PlanetaryThrustersProject extends Project{
       ? fmt(p.parentBody.orbitRadius||0,false,0)+" km"
       : fmt(p.distanceFromSun||0,false,3)+" AU";
     this.el.pwrMode.value = this.powerMode;
+    if (!isBoundToParent(p)) {
+      const currentAU = p.distanceFromSun || 0;
+      this.el.distNow.textContent = getPlanetaryThrustersText(
+        'ui.projects.planetaryThrusters.motion.distanceValue',
+        `${fmt(currentAU, false, 3)} AU / ${fmt(stellarFluxFromOrbitAU(currentAU), false, 0)} W/m^2`,
+        {
+          distance: fmt(currentAU, false, 3),
+          flux: fmt(stellarFluxFromOrbitAU(currentAU), false, 0)
+        }
+      );
+    }
+    this.el.distTargetMode.value = this.motionTargetMode;
     if(document.activeElement !== this.el.pwrVal){
       this.el.pwrVal.value = this.powerMode === THRUSTER_POWER_MODE_PERCENT
         ? `${this.powerPercent}`
@@ -742,12 +808,7 @@ class PlanetaryThrustersProject extends Project{
         this.el.distE.textContent = formatEnergy(energyRem);
         this.setBurnTime(this.el.distBurn, energyRem);
       }else if(p){
-        let tgtAU = 1;
-        try{
-          const v=this.el.distTarget.value;
-          const n=parseFloat(v);
-          if(!isNaN(n)) tgtAU=n;
-        }catch(e){ tgtAU=1; }
+        const tgtAU = this.readMotionTargetAU();
         this.tgtAU = tgtAU;
         this.el.distTargetRow.style.display="block";
         this.el.distDvRow.style.display="block";
@@ -805,6 +866,7 @@ class PlanetaryThrustersProject extends Project{
 /* ------------------  T I C K  ---------------------------------------- */
   update(dtMs){
     super.update(dtMs);
+    this.syncPowerFromMode();
     if(this.tryAutoGoRogue()){
       this.lastActiveTime = 0;
       return;
@@ -821,6 +883,7 @@ class PlanetaryThrustersProject extends Project{
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1){
     const totals = { cost: {}, gain: {} };
+    this.syncPowerFromMode();
     if(!this.isCompleted || this.power<=0 || (!this.spinInvest && !this.motionInvest)) return totals;
     if (applyRates && resources?.colony?.energy?.modifyRate) {
       resources.colony.energy.modifyRate(-this.power * productivity, 'Planetary Thrusters', 'project');
@@ -830,6 +893,7 @@ class PlanetaryThrustersProject extends Project{
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1){
+    this.syncPowerFromMode();
     if(!this.isCompleted || this.power<=0 || (!this.spinInvest && !this.motionInvest)){
       return;
     }
@@ -1002,7 +1066,8 @@ class PlanetaryThrustersProject extends Project{
       motionInvest: this.motionInvest === true,
       autoGoRogue: this.autoGoRogue === true,
       tgtDays: this.tgtDays,
-      tgtAU: this.tgtAU
+      tgtAU: this.tgtAU,
+      motionTargetMode: this.motionTargetMode
     };
   }
 
@@ -1046,6 +1111,11 @@ class PlanetaryThrustersProject extends Project{
     if (Object.prototype.hasOwnProperty.call(settings, 'tgtAU')) {
       this.tgtAU = Math.max(0.1, settings.tgtAU || 0.1);
     }
+    if (Object.prototype.hasOwnProperty.call(settings, 'motionTargetMode')) {
+      this.motionTargetMode = settings.motionTargetMode === THRUSTER_MOTION_TARGET_FLUX
+        ? THRUSTER_MOTION_TARGET_FLUX
+        : THRUSTER_MOTION_TARGET_AU;
+    }
     const spinTargetChanged = this.tgtDays !== previousTargetDays;
     const motionTargetChanged = this.tgtAU !== previousTargetAU;
 
@@ -1062,7 +1132,10 @@ class PlanetaryThrustersProject extends Project{
       this.el.rotTarget.value = this.tgtDays;
     }
     if (this.el.distTarget) {
-      this.el.distTarget.value = this.tgtAU;
+      this.syncMotionTargetInput(true);
+    }
+    if (this.el.distTargetMode) {
+      this.el.distTargetMode.value = this.motionTargetMode;
     }
     if (this.el.rotCb) {
       this.el.rotCb.checked = this.spinInvest;
@@ -1115,6 +1188,7 @@ class PlanetaryThrustersProject extends Project{
     state.autoGoRogue = this.autoGoRogue;
     state.tgtDays = this.tgtDays;
     state.tgtAU = this.tgtAU;
+    state.motionTargetMode = this.motionTargetMode;
     state.dVreq = this.dVreq;
     state.dVdone = this.dVdone;
     state.spinStartDays = this.spinStartDays;
@@ -1140,6 +1214,9 @@ class PlanetaryThrustersProject extends Project{
     this.autoGoRogue = state.autoGoRogue === true;
     this.tgtDays = state.tgtDays || 1;
     this.tgtAU = state.tgtAU || 1;
+    this.motionTargetMode = state.motionTargetMode === THRUSTER_MOTION_TARGET_FLUX
+      ? THRUSTER_MOTION_TARGET_FLUX
+      : THRUSTER_MOTION_TARGET_AU;
     this.dVreq = state.dVreq || 0;
     this.dVdone = state.dVdone || 0;
     this.spinStartDays = state.spinStartDays ?? null;
@@ -1159,7 +1236,8 @@ class PlanetaryThrustersProject extends Project{
       if(this.el.goRogueAutoCb) this.el.goRogueAutoCb.checked = this.autoGoRogue;
       if(this.el.pwrMode) this.el.pwrMode.value = this.powerMode;
       if(this.el.rotTarget) this.el.rotTarget.value = this.tgtDays;
-      if(this.el.distTarget) this.el.distTarget.value = this.tgtAU;
+      if(this.el.distTargetMode) this.el.distTargetMode.value = this.motionTargetMode;
+      if(this.el.distTarget) this.syncMotionTargetInput(true);
     }
     this.syncPowerFromMode();
   }

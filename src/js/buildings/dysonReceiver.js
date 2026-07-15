@@ -6,6 +6,7 @@ class DysonReceiver extends Building {
   constructor(config, buildingName) {
     super(config, buildingName);
     this.capActiveToDysonCapacity = false;
+    this.autoBuildMaxPercent = this.autoBuildPercent;
   }
 
   getReceiverEnergyPerBuilding() {
@@ -44,7 +45,10 @@ class DysonReceiver extends Building {
   }
 
   getAutoBuildMaxModeLabel() {
-    return 'Dyson Capacity';
+    return getDysonReceiverText(
+      'ui.buildings.dysonReceiver.percentDysonCapacity',
+      '% Dyson Capacity'
+    );
   }
 
   hasAdjustableAutoBuildMaxTarget() {
@@ -56,14 +60,23 @@ class DysonReceiver extends Building {
     if (capacity <= 0) {
       return 0;
     }
-    const percent = Math.min(100, Math.max(0, this.autoBuildPercent || 0));
+    const percent = Math.min(100, Math.max(0, this.autoBuildMaxPercent || 0));
     return Math.ceil(capacity * percent / 100);
+  }
+
+  getAutoBuildCountLimit() {
+    const base = super.getAutoBuildCountLimit();
+    if (!this.shouldClampSetActiveToSupported()) {
+      return base;
+    }
+    return Math.min(base, this.getSupportedActiveCap());
   }
 
   getAutoBuildMaxCount(reservePercent = 0, additionalReserves = null) {
     const base = super.getAutoBuildMaxCount(reservePercent, additionalReserves);
     if (this.autoBuildBasis !== 'max') {
-      return base;
+      const remaining = Math.max(this.getAutoBuildCountLimit() - this.countNumber, 0);
+      return Math.min(base, remaining);
     }
 
     const target = this.getAutoBuildMaxTargetCount();
@@ -160,12 +173,17 @@ class DysonReceiver extends Building {
   saveState() {
     return {
       ...super.saveState(),
+      autoBuildMaxPercent: this.autoBuildMaxPercent,
       capActiveToDysonCapacity: this.capActiveToDysonCapacity === true
     };
   }
 
   loadState(state = {}) {
     super.loadState(state);
+    this.autoBuildMaxPercent = Math.min(100, Math.max(
+      0,
+      state.autoBuildMaxPercent ?? state.autoBuildPercent ?? this.autoBuildMaxPercent
+    ));
     this.capActiveToDysonCapacity = state.capActiveToDysonCapacity === true;
   }
 }

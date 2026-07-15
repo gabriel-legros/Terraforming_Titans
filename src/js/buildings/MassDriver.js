@@ -26,16 +26,25 @@ class MassDriver extends Building {
     }
 
     let targetProductivity = baseTarget;
+    const maintenanceCap = gameSettings.unfulfilledMaintenancePenalties
+      ? Math.max(0, Math.min(1, this.maintenanceProductivity))
+      : 1;
 
-    this.productivity = this.applyProductivityDamping(
-      this.productivity,
-      targetProductivity,
-      deltaTime
+    this.productivity = Math.min(
+      this.applyProductivityDamping(
+        this.productivity,
+        targetProductivity,
+        deltaTime
+      ),
+      maintenanceCap
     );
-    this.displayProductivity = this.applyProductivityDamping(
-      this.displayProductivity,
-      targetProductivity,
-      deltaTime
+    this.displayProductivity = Math.min(
+      this.applyProductivityDamping(
+        this.displayProductivity,
+        targetProductivity,
+        deltaTime
+      ),
+      maintenanceCap
     );
   }
 

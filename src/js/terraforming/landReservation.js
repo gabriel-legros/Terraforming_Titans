@@ -18,10 +18,7 @@ function normalizeLandReservationShare(share) {
 }
 
 function resolveLandReservationInitialLand(terraformingState, landResource) {
-  if (currentPlanetParameters?.specialAttributes?.dynamicMass === true) {
-    return resolveWorldGeometricLand(terraformingState, landResource);
-  }
-  return resolveWorldBaseLand(terraformingState, landResource);
+  return resolveWorldGeometricLand(terraformingState, landResource);
 }
 
 function getCoreFluxLandReservationShare(terraformingState = terraforming) {

@@ -12,6 +12,10 @@ class CargoRocketProject extends Project {
     return this.isBooleanFlagSet && this.isBooleanFlagSet('continuousTrading');
   }
 
+  getResourceExecutionDeltaTime(deltaTime) {
+    return this.manualContinuousRun && this.isContinuous() ? 1000 : deltaTime;
+  }
+
   getCargoRocketText(path, fallback, vars) {
     try {
       return t(path, vars, fallback);
@@ -33,8 +37,11 @@ class CargoRocketProject extends Project {
       priceSpans: [],
       minusButtons: [],
       plusButtons: [],
-      increment: this.selectionIncrement,
+      cargoProject: this,
     };
+
+    const getCargoElements = () => projectElements[this.name] || elements;
+    const getCargoProject = () => getCargoElements().cargoProject || elements.cargoProject || this;
 
     const syncQuantityFromText = (input) => {
       const parsed = parseSelectionQuantity(input.value);
@@ -61,12 +68,24 @@ class CargoRocketProject extends Project {
     elements.setInputQuantity = setInputQuantity;
 
     const updateIncrementButtons = () => {
-      elements.minusButtons.forEach((btn) => {
-        btn.textContent = `-${formatNumber(elements.increment, true)}`;
+      const currentElements = getCargoElements();
+      const label = formatNumber(getCargoProject().selectionIncrement || 1, true);
+      (currentElements.minusButtons || elements.minusButtons).forEach((btn) => {
+        btn.textContent = `-${label}`;
       });
-      elements.plusButtons.forEach((btn) => {
-        btn.textContent = `+${formatNumber(elements.increment, true)}`;
+      (currentElements.plusButtons || elements.plusButtons).forEach((btn) => {
+        btn.textContent = `+${label}`;
       });
+    };
+    elements.updateIncrementButtons = updateIncrementButtons;
+
+    const updateIncrement = (newValue) => {
+      const currentElements = getCargoElements();
+      const project = projectManager.projects[this.name] || getCargoProject();
+      currentElements.cargoProject = project;
+      elements.cargoProject = project;
+      project.selectionIncrement = Math.max(1, Math.floor(newValue));
+      currentElements.updateIncrementButtons?.();
     };
 
     const headerRow = document.createElement('div');
@@ -102,13 +121,11 @@ class CargoRocketProject extends Project {
     };
 
     createHeaderButton('/10', () => {
-      elements.increment = Math.max(1, Math.floor(elements.increment / 10));
-      this.selectionIncrement = elements.increment;
+      updateIncrement(getCargoProject().selectionIncrement / 10);
     });
 
     createHeaderButton('x10', () => {
-      elements.increment *= 10;
-      this.selectionIncrement = elements.increment;
+      updateIncrement(getCargoProject().selectionIncrement * 10);
     });
 
     selectionGrid.appendChild(headerRow);
@@ -153,8 +170,9 @@ class CargoRocketProject extends Project {
         quantityInput.dataset.resource = resourceId;
         quantityInput.addEventListener('input', () => {
           syncQuantityFromText(quantityInput);
-          this.clampKesslerCargoInputs();
-          updateTotalCostDisplay(this);
+          const project = getCargoProject();
+          project.clampKesslerCargoInputs();
+          updateTotalCostDisplay(project);
         });
         quantityInput.addEventListener('blur', () => {
           setInputQuantity(quantityInput, getInputQuantity(quantityInput), true);
@@ -181,8 +199,9 @@ class CargoRocketProject extends Project {
           button.textContent = text;
           button.addEventListener('click', () => {
             onClick();
-            this.clampKesslerCargoInputs();
-            updateTotalCostDisplay(this);
+            const project = getCargoProject();
+            project.clampKesslerCargoInputs();
+            updateTotalCostDisplay(project);
           });
           buttonsContainer.appendChild(button);
           return button;
@@ -192,14 +211,14 @@ class CargoRocketProject extends Project {
           setInputQuantity(quantityInput, 0, true);
         });
 
-        const minusButton = createButton(`-${formatNumber(elements.increment, true)}`, () => {
+        const minusButton = createButton(`-${formatNumber(this.selectionIncrement, true)}`, () => {
           const current = getInputQuantity(quantityInput);
-          setInputQuantity(quantityInput, current - elements.increment, true);
+          setInputQuantity(quantityInput, current - getCargoProject().selectionIncrement, true);
         });
 
-        const plusButton = createButton(`+${formatNumber(elements.increment, true)}`, () => {
+        const plusButton = createButton(`+${formatNumber(this.selectionIncrement, true)}`, () => {
           const current = getInputQuantity(quantityInput);
-          setInputQuantity(quantityInput, current + elements.increment, true);
+          setInputQuantity(quantityInput, current + getCargoProject().selectionIncrement, true);
         });
 
         elements.minusButtons.push(minusButton);
@@ -237,12 +256,35 @@ class CargoRocketProject extends Project {
       totalCostDisplay: totalCostDisplay,
       totalCostValue: totalCostValue,
       resourceSelectionContainer: container,
+      cargoProject: this,
     };
+  }
+
+  syncSelectionUIFromState() {
+    const elements = projectElements[this.name];
+    if (!elements) return;
+    elements.cargoProject = this;
+
+    if (elements.updateIncrementButtons) {
+      elements.updateIncrementButtons();
+    }
+
+    const inputs = elements.selectionInputs || [];
+    const setInputQuantity = elements.setInputQuantity;
+    if (!setInputQuantity || inputs.length === 0) return;
+
+    inputs.forEach((input) => {
+      const selected = this.selectedResources.find(
+        (sr) => sr.category === input.dataset.category && sr.resource === input.dataset.resource
+      );
+      setInputQuantity(input, selected ? selected.quantity : 0, true);
+    });
   }
 
   updateUI() {
     const elements = projectElements[this.name];
     if (!elements) return;
+    elements.cargoProject = this;
 
     if (this.attributes.resourceChoiceGainCost) {
       const inputs = elements.selectionInputs || [];
@@ -307,28 +349,84 @@ class CargoRocketProject extends Project {
     return this.spaceshipPriceIncrease;
   }
 
-  applySpaceshipPurchase(count) {
-    const total = typeof spaceManager !== 'undefined' && typeof spaceManager.getTerraformedPlanetCount === 'function'
-      ? spaceManager.getTerraformedPlanetCount()
-      : 0;
-    const currentTerraformed = typeof spaceManager !== 'undefined' && typeof spaceManager.isPlanetTerraformed === 'function' && typeof spaceManager.getCurrentPlanetKey === 'function'
-      ? spaceManager.isPlanetTerraformed(spaceManager.getCurrentPlanetKey())
+  getSpaceshipDivisor() {
+    const total = spaceManager.getTerraformedPlanetCount() || 0;
+    const currentPlanetKey = spaceManager.getCurrentPlanetKey();
+    const currentTerraformed = currentPlanetKey
+      ? spaceManager.isPlanetTerraformed(currentPlanetKey)
       : false;
-    const divisor = Math.max(1, total - (currentTerraformed ? 1 : 0));
+    return Math.max(1, total - (currentTerraformed ? 1 : 0));
+  }
+
+  applySpaceshipPurchase(count) {
+    const divisor = this.getSpaceshipDivisor();
     this.spaceshipPriceIncrease += count / divisor;
   }
 
   getSpaceshipTotalCost(quantity, basePrice) {
-    const total = typeof spaceManager !== 'undefined' && typeof spaceManager.getTerraformedPlanetCount === 'function'
-      ? spaceManager.getTerraformedPlanetCount()
-      : 0;
-    const currentTerraformed = typeof spaceManager !== 'undefined' && typeof spaceManager.isPlanetTerraformed === 'function' && typeof spaceManager.getCurrentPlanetKey === 'function'
-      ? spaceManager.isPlanetTerraformed(spaceManager.getCurrentPlanetKey())
-      : false;
-    const divisor = Math.max(1, total - (currentTerraformed ? 1 : 0));
+    const divisor = this.getSpaceshipDivisor();
     const delta = 1 / divisor;
     const current = this.spaceshipPriceIncrease;
     return basePrice * quantity + current * quantity + delta * quantity * (quantity - 1) / 2;
+  }
+
+  getBuyTransactionCost(transaction, quantity) {
+    return transaction.resource === 'spaceships'
+      ? this.getSpaceshipTotalCost(quantity, transaction.basePrice)
+      : transaction.basePrice * quantity;
+  }
+
+  getScaledBuyCost(transactions, scale, seconds, productivity) {
+    let total = 0;
+    transactions.forEach((transaction) => {
+      total += this.getBuyTransactionCost(transaction, transaction.quantity * scale) * seconds * productivity;
+    });
+    return total;
+  }
+
+  getBuyCostCoefficients(transactions, seconds, productivity) {
+    const timeScale = seconds * productivity;
+    const divisor = this.getSpaceshipDivisor();
+    const delta = 1 / divisor;
+    let quadratic = 0;
+    let linear = 0;
+
+    transactions.forEach((transaction) => {
+      const quantity = transaction.quantity;
+      if (transaction.resource === 'spaceships') {
+        quadratic += (delta * quantity * quantity / 2) * timeScale;
+        linear += (transaction.basePrice + this.spaceshipPriceIncrease - delta / 2) * quantity * timeScale;
+      } else {
+        linear += transaction.basePrice * quantity * timeScale;
+      }
+    });
+
+    return { quadratic, linear };
+  }
+
+  getAffordableBuyScale(transactions, availableFunding, seconds, productivity) {
+    if (availableFunding <= 0) {
+      return 0;
+    }
+    const fullCost = this.getScaledBuyCost(transactions, 1, seconds, productivity);
+    if (fullCost <= availableFunding) {
+      return 1;
+    }
+
+    const coefficients = this.getBuyCostCoefficients(transactions, seconds, productivity);
+    if (coefficients.quadratic <= 0) {
+      return Math.max(0, Math.min(1, availableFunding / coefficients.linear));
+    }
+
+    const normalizer = Math.max(coefficients.quadratic, Math.abs(coefficients.linear), availableFunding);
+    const quadratic = coefficients.quadratic / normalizer;
+    const linear = coefficients.linear / normalizer;
+    const funding = availableFunding / normalizer;
+    const discriminantRoot = Math.sqrt(linear * linear + 4 * quadratic * funding);
+    const scale = linear >= 0
+      ? (2 * funding) / (linear + discriminantRoot)
+      : (-linear + discriminantRoot) / (2 * quadratic);
+    return Math.max(0, Math.min(1, scale));
   }
 
   update(delta) {
@@ -401,7 +499,7 @@ class CargoRocketProject extends Project {
       return false;
     }
 
-    if (this.isContinuous()) {
+    if (this.isContinuous() && !this.manualContinuousRun) {
       return true;
     }
 
@@ -494,7 +592,7 @@ class CargoRocketProject extends Project {
     const totals = { cost: {}, gain: {} };
     if (!this.isActive) return totals;
     if (this.isContinuous()) {
-      if (!this.autoStart) return totals;
+      if (!this.autoStart && !this.manualContinuousRun) return totals;
       const seconds = deltaTime / 1000;
       if (this.selectedResources && this.selectedResources.length > 0) {
         let costPerSecond = 0;
@@ -598,23 +696,22 @@ class CargoRocketProject extends Project {
 
   loadAutomationSettings(settings = {}) {
     super.loadAutomationSettings(settings);
+    const elements = projectElements[this.name];
+    if (elements) {
+      elements.cargoProject = this;
+    }
     if (Object.prototype.hasOwnProperty.call(settings, 'selectedResources')) {
       this.selectedResources = normalizeSelectionEntries(settings.selectedResources || []);
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'selectionIncrement')) {
       this.selectionIncrement = Math.max(1, settings.selectionIncrement || 1);
-      const elements = projectElements[this.name];
-      if (elements) {
-        elements.increment = this.selectionIncrement;
-      }
     }
+    this.syncSelectionUIFromState();
   }
 
   saveState() {
     const state = super.saveState();
-    if (this.autoStart) {
-      state.selectedResources = this.selectedResources;
-    }
+    state.selectedResources = normalizeSelectionEntries(this.selectedResources || []);
     state.spaceshipPriceIncrease = this.spaceshipPriceIncrease;
     state.selectionIncrement = this.selectionIncrement;
     return state;
@@ -622,38 +719,47 @@ class CargoRocketProject extends Project {
 
   loadState(state) {
     super.loadState(state);
-    this.selectedResources = this.autoStart && state.selectedResources
+    this.selectedResources = state.selectedResources
       ? normalizeSelectionEntries(state.selectedResources)
       : [];
     this.spaceshipPriceIncrease = state.spaceshipPriceIncrease || 0;
     this.selectionIncrement = state.selectionIncrement || 1;
-    const elements = typeof projectElements !== 'undefined'
-      ? projectElements[this.name]
-      : null;
+    const elements = projectElements[this.name];
     if (elements) {
-      elements.increment = this.selectionIncrement;
-      if (typeof formatNumber === 'function') {
-        elements.minusButtons?.forEach((btn) => {
-          btn.textContent = `-${formatNumber(elements.increment, true)}`;
-        });
-        elements.plusButtons?.forEach((btn) => {
-          btn.textContent = `+${formatNumber(elements.increment, true)}`;
-        });
-      }
+      elements.cargoProject = this;
     }
+    this.syncSelectionUIFromState();
   }
 
   saveTravelState() {
-    return { spaceshipPriceIncrease: this.spaceshipPriceIncrease };
+    return {
+      spaceshipPriceIncrease: this.spaceshipPriceIncrease,
+      selectionIncrement: this.selectionIncrement || 1
+    };
   }
 
   loadTravelState(state = {}) {
     this.spaceshipPriceIncrease = state.spaceshipPriceIncrease || 0;
+    if (Object.prototype.hasOwnProperty.call(state, 'selectionIncrement')) {
+      this.selectionIncrement = Math.max(1, state.selectionIncrement || 1);
+    }
+    this.selectedResources = [];
+
+    const elements = projectElements[this.name];
+    if (elements) {
+      elements.cargoProject = this;
+      elements.updateIncrementButtons?.();
+    }
+    if (elements && elements.selectionInputs && elements.setInputQuantity) {
+      elements.selectionInputs.forEach((input) => {
+        elements.setInputQuantity(input, 0, true);
+      });
+    }
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     this.shortfallLastTick = false;
-    if (!this.isActive || !this.isContinuous() || !this.autoStart) return;
+    if (!this.isActive || !this.isContinuous() || (!this.autoStart && !this.manualContinuousRun)) return;
     if (!this.selectedResources || this.selectedResources.length === 0) return;
     const seconds = deltaTime / 1000;
     const purchases = [];
@@ -662,20 +768,22 @@ class CargoRocketProject extends Project {
     this.selectedResources.forEach(({ category, resource, quantity }) => {
       const scaledQuantity = quantity * tradeScale;
       const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
-      const perSecCost = resource === 'spaceships'
-        ? this.getSpaceshipTotalCost(scaledQuantity, basePrice)
-        : basePrice * scaledQuantity;
-      purchases.push({ category, resource, quantity: scaledQuantity, perSecCost });
-      costPerSecond += perSecCost;
+      purchases.push({ category, resource, quantity: scaledQuantity, basePrice, perSecCost: 0 });
+    });
+    purchases.forEach((purchase) => {
+      purchase.perSecCost = this.getBuyTransactionCost(purchase, purchase.quantity);
+      costPerSecond += purchase.perSecCost;
     });
     let totalCost = costPerSecond * seconds * productivity;
     let available = resources.colony.funding.value;
     if (totalCost > available) {
       this.shortfallLastTick = totalCost > 0;
-      if (available <= 0) return;
-      const scale = available / totalCost;
-      purchases.forEach(p => { p.quantity *= scale; p.perSecCost *= scale; });
-      totalCost = available;
+      const scale = this.getAffordableBuyScale(purchases, available, seconds, productivity);
+      purchases.forEach((purchase) => {
+        purchase.quantity *= scale;
+        purchase.perSecCost = this.getBuyTransactionCost(purchase, purchase.quantity);
+      });
+      totalCost = this.getScaledBuyCost(purchases, 1, seconds, productivity);
     }
     if (totalCost > 0) {
       if (accumulatedChanges) {

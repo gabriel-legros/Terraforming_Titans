@@ -5,7 +5,7 @@ const ARTIFICIAL_STAR_RECIPE = {
   baseOutput: 25_000_000_000_000_000_000_000,
   inputs: {
     spaceStorage: {
-      hydrogen: 50_000_000_000
+      hydrogen: 5_000_000_000
     }
   },
   wgcUpgradeId: 'superalloyFusionEfficiency'
@@ -124,7 +124,7 @@ class ArtificialStarsProject extends NuclearAlchemyFurnaceProject {
       }
     };
 
-    const assigned = this.furnaceAssignments.energy || 0;
+    const assigned = Number(this.furnaceAssignments.energy || 0n);
     if (!(assigned > 0)) {
       return plan;
     }
@@ -269,7 +269,7 @@ class ArtificialStarsProject extends NuclearAlchemyFurnaceProject {
     }
 
     this.normalizeAssignments();
-    const assigned = this.furnaceAssignments.energy || 0;
+    const assigned = Number(this.furnaceAssignments.energy || 0n);
     if (!(assigned > 0)) {
       return totals;
     }

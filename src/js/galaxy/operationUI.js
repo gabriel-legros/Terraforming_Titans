@@ -1,4 +1,5 @@
 const GalaxyOperationUI = (() => {
+    const OPERATION_ARROW_LINE_WIDTH = 4;
     const operationsAllocations = new Map();
     const operationsStepSizes = new Map();
     const operationsAutoStates = new Map();
@@ -135,9 +136,10 @@ const GalaxyOperationUI = (() => {
         if (!faction) {
             return 0;
         }
-        const operational = faction.getOperationalFleetPower?.(manager);
-        if (Number.isFinite(operational) && operational > 0) {
-            return operational;
+        const getOperationalFleetPower = faction.getOperationalFleetPower;
+        if (getOperationalFleetPower) {
+            const operational = getOperationalFleetPower.call(faction, manager);
+            return Number.isFinite(operational) && operational > 0 ? operational : 0;
         }
         const fleet = Number(faction.fleetPower);
         if (!Number.isFinite(fleet) || fleet <= 0) {
@@ -304,7 +306,7 @@ const GalaxyOperationUI = (() => {
         const manager = getManager();
         if (manager && typeof manager.getOperationAutoMode === 'function') {
             const mode = manager.getOperationAutoMode();
-            if (mode === 'all' || mode === 'off' || mode === 'forceOff') {
+            if (mode === 'all' || mode === 'off' || mode === 'pauseAll' || mode === 'uncheckAll') {
                 return mode;
             }
         }
@@ -313,7 +315,9 @@ const GalaxyOperationUI = (() => {
 
     function setOperationAutoMode(value) {
         const manager = getManager();
-        const requestedMode = value === 'all' || value === 'off' || value === 'forceOff' ? value : 'off';
+        const requestedMode = value === 'all' || value === 'off' || value === 'pauseAll' || value === 'uncheckAll'
+            ? value
+            : 'off';
         if (manager && typeof manager.setOperationAutoMode === 'function') {
             return manager.setOperationAutoMode(requestedMode);
         }
@@ -373,6 +377,16 @@ const GalaxyOperationUI = (() => {
             return 0;
         }
         return Math.max(0, Math.min(1, chance));
+    }
+
+    function resolveOperationControlGainFraction(manager, operation) {
+        const fraction = manager?.getOperationControlGainFraction
+            ? manager.getOperationControlGainFraction(operation)
+            : 0.1;
+        if (!Number.isFinite(fraction) || fraction <= 0) {
+            return 0;
+        }
+        return Math.max(0, Math.min(1, fraction));
     }
 
     function adjustAllocationByAction(action) {
@@ -437,6 +451,30 @@ const GalaxyOperationUI = (() => {
         adjustAllocationByAction(action);
     }
 
+    function handleOperationsInputCommit(event) {
+        const input = event.currentTarget;
+        const cache = getCache();
+        const manager = getManager();
+        const key = cache?.selectedSector?.key;
+        if (!manager || !manager.enabled || !key) {
+            updateOperationsPanel(manager, cache);
+            return;
+        }
+        const faction = manager.getFaction(UHF_FACTION_ID || 'uhf');
+        const availablePower = resolveOperationsAvailablePower(manager, faction);
+        const assignment = clampAssignment(parseFlexibleNumber(input.value), availablePower);
+        setStoredAllocation(key, assignment);
+        updateOperationsPanel(manager, cache);
+    }
+
+    function handleOperationsInputKeydown(event) {
+        if (event.key !== 'Enter') {
+            return;
+        }
+        event.preventDefault();
+        event.currentTarget.blur();
+    }
+
     function handleAutoCheckboxChange(event) {
         const checkbox = event?.target;
         const cache = getCache();
@@ -484,7 +522,7 @@ const GalaxyOperationUI = (() => {
         if (!select) {
             return;
         }
-        const mode = select.value === 'all' || select.value === 'off' || select.value === 'forceOff'
+        const mode = select.value === 'all' || select.value === 'off' || select.value === 'pauseAll' || select.value === 'uncheckAll'
             ? select.value
             : 'off';
         setOperationAutoMode(mode);
@@ -510,6 +548,20 @@ const GalaxyOperationUI = (() => {
             return;
         }
         const uhfFactionId = faction.id || fallbackFactionId;
+        const sector = manager.getSector(selection.q, selection.r);
+        if (!sector) {
+            return;
+        }
+        if (GalaxySector.isFullyControlled(sector, faction)) {
+            return;
+        }
+        const hasStronghold = manager.hasNeighboringStronghold
+            ? manager.hasNeighboringStronghold(uhfFactionId, selection.q, selection.r)
+            : false;
+        const hasPresence = Number(sector.getControlValue ? sector.getControlValue(uhfFactionId) : 0) > 0;
+        if (!hasStronghold && !hasPresence) {
+            return;
+        }
         const availablePower = resolveOperationsAvailablePower(manager, faction);
         const stored = getStoredAllocation(sectorKey);
         const assignment = clampAssignment(stored, availablePower);
@@ -524,9 +576,6 @@ const GalaxyOperationUI = (() => {
         }
         const targetFactionId = manager.getOperationTargetFaction?.(sectorKey, uhfFactionId) || null;
         const durationMs = getDefaultOperationDurationMs(manager, sectorKey, uhfFactionId, targetFactionId);
-        if (!spendAntimatterEquivalent(plannedCost, resources)) {
-            return;
-        }
         const operation = manager.startOperation({
             sectorKey,
             factionId: uhfFactionId,
@@ -535,6 +584,10 @@ const GalaxyOperationUI = (() => {
             targetFactionId
         });
         if (!operation) {
+            return;
+        }
+        if (!spendAntimatterEquivalent(plannedCost, resources)) {
+            manager.cancelOperation?.(operation);
             return;
         }
         const appliedPower = Number.isFinite(operation.assignedPower) && operation.assignedPower > 0
@@ -616,11 +669,10 @@ const GalaxyOperationUI = (() => {
 
         const powerInput = doc.createElement('input');
         powerInput.type = 'text';
-        powerInput.readOnly = true;
-        powerInput.tabIndex = -1;
-        powerInput.setAttribute('aria-readonly', 'true');
         powerInput.className = 'galaxy-operations-form__input';
         powerInput.value = formatOperationsInputValue(0);
+        powerInput.addEventListener('keydown', handleOperationsInputKeydown);
+        powerInput.addEventListener('blur', handleOperationsInputCommit);
         powerRow.appendChild(powerInput);
 
         const targetRow = doc.createElement('div');
@@ -691,7 +743,8 @@ const GalaxyOperationUI = (() => {
         [
             { value: 'off', label: getOperationsText('autoOperationsOff', {}, 'Off') },
             { value: 'all', label: getOperationsText('autoOperationsAll', {}, 'All sectors') },
-            { value: 'forceOff', label: getOperationsText('autoOperationsForceOff', {}, 'Force all off') }
+            { value: 'pauseAll', label: getOperationsText('autoOperationsPauseAll', {}, 'Pause all') },
+            { value: 'uncheckAll', label: getOperationsText('autoOperationsUncheckAll', {}, 'Uncheck all') }
         ].forEach(({ value, label }) => {
             const option = doc.createElement('option');
             option.value = value;
@@ -1023,10 +1076,10 @@ const GalaxyOperationUI = (() => {
         }
         const storedAutoEnabled = selectedKey ? getOperationAutoState(selectedKey) : false;
         const autoMode = getOperationAutoMode();
-        const autoModeOverridingCards = autoMode === 'all' || autoMode === 'forceOff';
+        const autoModeOverridingCards = autoMode === 'all' || autoMode === 'pauseAll';
         const effectiveAutoEnabled = autoMode === 'all'
             ? true
-            : (autoMode === 'forceOff' ? false : storedAutoEnabled);
+            : (autoMode === 'pauseAll' ? false : storedAutoEnabled);
         if (operationsAutoModeSelect) {
             operationsAutoModeSelect.value = autoMode;
             operationsAutoModeSelect.disabled = false;
@@ -1139,27 +1192,7 @@ const GalaxyOperationUI = (() => {
             : 'uhf';
         const faction = manager.getFaction(fallbackFactionId);
         const uhfFactionId = faction?.id || fallbackFactionId;
-        if (GalaxySector.isFullyControlled(sector, faction)) {
-            operationsEmpty.classList.remove('is-hidden');
-            operationsEmpty.textContent = getOperationsText('sectorAlreadyControlled', {}, 'Fully controlled by UHF.');
-            operationsForm.classList.add('is-hidden');
-            operationsCostValue.textContent = '0';
-            operationsStatusMessage.textContent = '';
-            if (operationsDurationValue) {
-                operationsDurationValue.textContent = '—';
-            }
-            if (operationsTargetRow) {
-                operationsTargetRow.classList.add('is-hidden');
-            }
-            if (operationsTargetFaction) {
-                operationsTargetFaction.textContent = '—';
-            }
-            if (operationsTargetDefense) {
-                operationsTargetDefense.textContent = '0';
-            }
-            disableAllControls();
-            return;
-        }
+        const sectorFullyControlled = GalaxySector.isFullyControlled(sector, faction);
         const availablePower = resolveOperationsAvailablePower(manager, faction);
         const stored = getStoredAllocation(selection.key);
         let assignment = clampAssignment(stored, availablePower);
@@ -1185,6 +1218,11 @@ const GalaxyOperationUI = (() => {
             || null;
         const targetFaction = targetFactionId ? manager.getFaction(targetFactionId) : null;
         const targetLabel = targetFaction ? (targetFaction.name || targetFaction.id) : getOperationsText('noTarget', {}, 'No target');
+        const hasStronghold = manager.hasNeighboringStronghold
+            ? manager.hasNeighboringStronghold(uhfFactionId, selection.q, selection.r)
+            : false;
+        const hasPresence = Number(sector.getControlValue ? sector.getControlValue(uhfFactionId) : 0) > 0;
+        const canLaunchOnSelection = !sectorFullyControlled && (hasStronghold || hasPresence);
 
         const sectorPower = manager.getSectorDefensePower
             ? manager.getSectorDefensePower(selection.key, uhfFactionId, targetFactionId)
@@ -1200,7 +1238,8 @@ const GalaxyOperationUI = (() => {
         if (operationsTargetDefense) {
             operationsTargetDefense.textContent = formatNumber(sectorPower, false, 2);
         }
-        if (!operationRunning && effectiveAutoEnabled && requiredThreshold > 0 && assignment < requiredThreshold && availablePower >= requiredThreshold) {
+        const hasValidOperationTarget = !!targetFactionId && canLaunchOnSelection;
+        if (!operationRunning && hasValidOperationTarget && effectiveAutoEnabled && requiredThreshold > 0 && assignment < requiredThreshold && availablePower >= requiredThreshold) {
             const adjusted = clampAssignment(requiredThreshold, availablePower);
             const normalizedAdjustment = normalizeAssignment(adjusted);
             if (normalizedAdjustment > assignment) {
@@ -1208,7 +1247,9 @@ const GalaxyOperationUI = (() => {
                 setStoredAllocation(selection.key, normalizedAdjustment);
             }
         }
-        operationsInput.value = formatOperationsInputValue(assignment);
+        if (operationsInput.ownerDocument.activeElement !== operationsInput) {
+            operationsInput.value = formatOperationsInputValue(assignment);
+        }
 
         const antimatterCost = assignment * 1000;
         operationsCostValue.textContent = formatNumber(antimatterCost, true);
@@ -1222,7 +1263,7 @@ const GalaxyOperationUI = (() => {
             targetFactionId
         });
 
-        const successChance = assignment > 0
+        const successChance = !sectorFullyControlled && assignment > 0
             ? resolveOperationSuccessChance(manager, selection.key, assignment, uhfFactionId, targetFactionId)
             : 0;
         const meetsAutoThreshold = requiredThreshold <= 0 ? assignment > 0 : assignment >= requiredThreshold;
@@ -1238,23 +1279,37 @@ const GalaxyOperationUI = (() => {
                 : `${Math.round(successChance * 100)}%`;
         }
         if (operationsSummaryItems.gain) {
-            operationsSummaryItems.gain.textContent = '+10%';
+            const gainFraction = sectorFullyControlled
+                ? 0
+                : resolveOperationControlGainFraction(manager, {
+                    sectorKey: selection.key,
+                    factionId: uhfFactionId,
+                    targetFactionId,
+                    assignedPower: assignment,
+                    reservedPower: assignment,
+                    offensePower: assignment,
+                    defensePower: sectorPower,
+                    status: operationRunning ? 'running' : 'pending'
+                });
+            operationsSummaryItems.gain.textContent = `+${Math.round(gainFraction * 100)}%`;
         }
         if (operationsSummaryItems.loss) {
             const successLoss = lossEstimate?.successLoss;
             const failureLoss = lossEstimate?.failureLoss;
-            const lossDisplay = successChance > 0
-                ? (Number.isFinite(successLoss) ? successLoss : assignment)
-                : (Number.isFinite(failureLoss) ? failureLoss : assignment);
+            const lossDisplay = sectorFullyControlled
+                ? 0
+                : (successChance > 0
+                    ? (Number.isFinite(successLoss) ? successLoss : assignment)
+                    : (Number.isFinite(failureLoss) ? failureLoss : assignment));
             operationsSummaryItems.loss.textContent = getOperationsText('projectedLossesValue', { value: formatNumber(lossDisplay, false, 2) }, `-${formatNumber(lossDisplay, false, 2)} power`);
         }
 
         const hasFleetPower = availablePower > 0;
         const hasAssignment = assignment > 0;
         const hasAntimatter = !!antimatterResource && antimatterValue >= antimatterCost;
-        const insufficientAntimatter = hasAssignment && !hasAntimatter;
+        const insufficientAntimatter = !sectorFullyControlled && hasAssignment && !hasAntimatter;
         const hasChance = successChance > 0;
-        let launchBlocked = !hasFleetPower || !hasAssignment || !hasAntimatter || !hasChance;
+        let launchBlocked = sectorFullyControlled || !hasFleetPower || !hasAssignment || !hasAntimatter || !hasChance;
         let statusMessage = '';
 
         if (operationRunning) {
@@ -1305,7 +1360,9 @@ const GalaxyOperationUI = (() => {
                 button.disabled = !hasFleetPower;
             });
 
-            if (!hasFleetPower) {
+            if (sectorFullyControlled) {
+                statusMessage = getOperationsText('sectorAlreadyControlled', {}, 'Fully controlled by UHF.');
+            } else if (!hasFleetPower) {
                 statusMessage = getOperationsText('noFleetPowerAvailable', {}, 'No fleet power available for deployment.');
             } else if (!hasAssignment) {
                 statusMessage = getOperationsText('assignFleetPower', {}, 'Assign fleet power to begin an operation.');
@@ -1315,7 +1372,7 @@ const GalaxyOperationUI = (() => {
             } else if (!hasChance) {
                 statusMessage = getOperationsText('assignMoreThan', { value: formatNumber(sectorPower, false, 0) }, `Assign more than ${formatNumber(sectorPower, false, 0)} power for a chance of success.`);
             }
-            if (statusMessage === '' && effectiveAutoEnabled && !meetsAutoThreshold && requiredAutoPower > 0) {
+            if (statusMessage === '' && hasValidOperationTarget && effectiveAutoEnabled && !meetsAutoThreshold && requiredAutoPower > 0) {
                 statusMessage = getOperationsText('autoLaunchRequires', { value: formatNumber(requiredAutoPower, false, 2) }, `Auto launch requires ${formatNumber(requiredAutoPower, false, 2)} power.`);
             }
         }
@@ -1338,29 +1395,36 @@ const GalaxyOperationUI = (() => {
     function updateOperationArrows(managerOverride, cacheOverride) {
         const cache = cacheOverride || getCache();
         const manager = managerOverride || getManager();
-        if (!cache || !cache.operationArrows) {
-            return;
-        }
-        cache.operationArrows.forEach((arrow) => {
-            if (arrow?.isConnected) {
-                arrow.remove();
-            }
-        });
-        cache.operationArrows.clear();
         if (!cache || !cache.mapOperationsLayer || !cache.operationArrows) {
             return;
         }
-        const doc = cache.mapOperationsLayer.ownerDocument || globalThis.document;
-        if (!doc || !manager || !manager.enabled) {
+        const operations = manager && manager.enabled
+            ? manager.operationManager?.operations
+            : null;
+        const signatureParts = [];
+        operations?.forEach?.((operation) => {
+            if (!operation || operation.status !== 'running') {
+                return;
+            }
+            const origin = operation.originHex;
+            signatureParts.push(`${operation.sectorKey}|${operation.factionId || 'uhf'}|${origin?.q ?? ''},${origin?.r ?? ''}`);
+        });
+        const operationSignature = signatureParts.join(';');
+        if (cache.operationArrowSignature === operationSignature) {
             return;
         }
+        cache.operationArrowSignature = operationSignature;
+
         const arrowCache = cache.operationArrows;
+        const activeArrowKeys = new Set();
+        const doc = cache.mapOperationsLayer.ownerDocument || globalThis.document;
         const hexLookup = cache.hexLookup;
-        cache.mapOperationsLayer.replaceChildren();
-        const operations = manager.operationManager?.operations;
-        if (!operations || typeof operations.forEach !== 'function') {
+        if (!doc || !operations) {
+            arrowCache.forEach((arrow) => arrow.remove());
+            arrowCache.clear();
             return;
         }
+
         operations.forEach((operation) => {
             if (!operation || operation.status !== 'running') {
                 return;
@@ -1392,8 +1456,8 @@ const GalaxyOperationUI = (() => {
             }
             const unitX = deltaX / distance;
             const unitY = deltaY / distance;
-            const originTrim = (originHex.offsetWidth || 0) * 0.35;
-            const targetTrim = (targetHex.offsetWidth || 0) * 0.35;
+            const originTrim = originHex.galaxyDisplayWidth * 0.35;
+            const targetTrim = targetHex.galaxyDisplayWidth * 0.35;
             const adjustedStartX = startX + (unitX * originTrim);
             const adjustedStartY = startY + (unitY * originTrim);
             const adjustedEndX = endX - (unitX * targetTrim);
@@ -1405,31 +1469,46 @@ const GalaxyOperationUI = (() => {
                 return;
             }
 
-            const arrow = doc.createElement('div');
-            arrow.className = 'galaxy-operation-arrow';
-            arrow.dataset.sector = sectorKey;
             const factionId = typeof operation.factionId === 'string' && operation.factionId
                 ? operation.factionId
                 : null;
             const factionColor = factionId
                 ? manager.getFaction?.(factionId)?.color
                 : null;
-            if (typeof factionColor === 'string' && factionColor) {
+            const angleDeg = Math.atan2(adjustedDeltaY, adjustedDeltaX) * (180 / Math.PI);
+            const arrowKey = `${sectorKey}|${operation.factionId || 'uhf'}`;
+            activeArrowKeys.add(arrowKey);
+            let arrow = arrowCache.get(arrowKey);
+            if (!arrow) {
+                arrow = doc.createElement('div');
+                arrow.className = 'galaxy-operation-arrow';
+                arrow.dataset.sector = sectorKey;
+                arrowCache.set(arrowKey, arrow);
+                cache.mapOperationsLayer.appendChild(arrow);
+            }
+
+            const geometrySignature = `${adjustedStartX}|${adjustedStartY}|${adjustedDistance}|${angleDeg}|${factionColor || ''}`;
+            if (arrow.galaxyGeometrySignature === geometrySignature) {
+                return;
+            }
+            arrow.galaxyGeometrySignature = geometrySignature;
+            if (factionColor) {
                 arrow.style.setProperty('--operation-arrow-color', factionColor);
             } else {
                 arrow.style.removeProperty('--operation-arrow-color');
             }
             arrow.style.left = `${adjustedStartX}px`;
+            arrow.style.top = `${adjustedStartY - (OPERATION_ARROW_LINE_WIDTH / 2)}px`;
             arrow.style.width = `${adjustedDistance}px`;
-
-            cache.mapOperationsLayer.appendChild(arrow);
-            const arrowHalfHeight = (arrow.offsetHeight || 0) / 2;
-            arrow.style.top = `${adjustedStartY - arrowHalfHeight}px`;
-            const angleDeg = Math.atan2(adjustedDeltaY, adjustedDeltaX) * (180 / Math.PI);
             arrow.style.transform = `rotate(${angleDeg}deg)`;
+        });
 
-            const arrowKey = `${sectorKey}|${operation.factionId || 'uhf'}`;
-            arrowCache.set(arrowKey, arrow);
+        arrowCache.forEach((arrow, arrowKey) => {
+            if (activeArrowKeys.has(arrowKey)) {
+                return;
+            }
+            arrow.remove();
+            arrowCache.delete(arrowKey);
         });
     }
 

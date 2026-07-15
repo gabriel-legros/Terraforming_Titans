@@ -2,6 +2,14 @@ let forceShipStepsRefresh = false;
 let shipPresetOptionsSignature = '';
 let shipStepsSignature = '';
 
+function invalidateShipAutomationUI() {
+  forceShipStepsRefresh = true;
+  shipPresetOptionsSignature = '';
+  shipStepsSignature = '';
+  queueAutomationUIRefresh();
+  updateAutomationUI();
+}
+
 function getShipPresetLabel(preset) {
   return preset.name || getAutomationCardText('presetWithId', { id: preset.id }, `Preset ${preset.id}`);
 }
@@ -45,6 +53,69 @@ function getShipStepsSignature(automation, preset, targets) {
   return `${preset.id}|${stepParts.join(';')}|disabled:${disabledProjects}|targets:${getShipTargetsSignature(targets)}`;
 }
 
+function markShipStepsRefreshNeeded() {
+  forceShipStepsRefresh = true;
+  queueAutomationUIRefresh();
+  updateAutomationUI();
+}
+
+function getCurrentShipAutomationStep(automation, binding) {
+  const currentPreset = automation.getActivePreset();
+  if (!currentPreset || !binding || currentPreset.id !== binding.presetId) {
+    return null;
+  }
+  for (let index = 0; index < currentPreset.steps.length; index += 1) {
+    const currentStep = currentPreset.steps[index];
+    if (currentStep.id === binding.stepId) {
+      return { preset: currentPreset, step: currentStep };
+    }
+  }
+  return null;
+}
+
+function getCurrentShipAutomationEntry(automation, binding) {
+  const current = getCurrentShipAutomationStep(automation, binding);
+  if (!current) {
+    return null;
+  }
+  for (let index = 0; index < current.step.entries.length; index += 1) {
+    const entry = current.step.entries[index];
+    if (entry.projectId === binding.projectId) {
+      return { preset: current.preset, step: current.step, entry };
+    }
+  }
+  return null;
+}
+
+function updateShipStepSubtitleText(subtitle, step) {
+  const usingCappedMin = step.mode === 'cappedMin';
+  const usingCappedMax = step.mode === 'cappedMax';
+  const usingRemainingPercent = step.mode === 'remainingPercent';
+  if (usingCappedMin) {
+    subtitle.textContent = getAutomationCardText('shipStepSubtitleSmallestMax', {}, 'Balance ships with the smallest max');
+  } else if (usingCappedMax) {
+    subtitle.textContent = getAutomationCardText('shipStepSubtitleLargestMax', {}, 'Balance ships with the largest max');
+  } else if (usingRemainingPercent) {
+    const percentText = Number(step.limit === null || step.limit === undefined ? 100 : step.limit).toLocaleString();
+    subtitle.textContent = getAutomationCardText('shipStepSubtitleRemainingPercent', { percent: percentText }, 'Assign {percent}% of remaining ships');
+  } else if (step.limit !== null && step.limit !== undefined) {
+    const limitText = formatNumber(step.limit || 0, true, 3);
+    subtitle.textContent = getAutomationCardText('shipStepSubtitleAssignUpTo', { count: limitText }, `Assign up to ${limitText} ships`);
+  } else {
+    subtitle.textContent = getAutomationCardText('shipStepSubtitleByWeight', {}, 'Distribute ships by weight');
+  }
+}
+
+function setCurrentShipStepLimit(automation, binding, value) {
+  const current = getCurrentShipAutomationStep(automation, binding);
+  if (!current) {
+    markShipStepsRefreshNeeded();
+    return false;
+  }
+  automation.setStepLimit(current.preset.id, current.step.id, value);
+  return true;
+}
+
 function buildAutomationShipUI() {
   const card = automationElements.shipAssignment || document.getElementById('automation-ship-assignment');
   if (!card) return;
@@ -69,6 +140,9 @@ function buildAutomationShipUI() {
   card.appendChild(body);
 
   const presetRow = createAutomationPresetRow(body);
+  const shipTransferButtons = createAutomationPresetTransferButtons('ship-automation-preset');
+  presetRow.presetRow.appendChild(shipTransferButtons.importButton);
+  presetRow.presetRow.appendChild(shipTransferButtons.exportButton);
 
   const stepsContainer = document.createElement('div');
   stepsContainer.classList.add('automation-steps');
@@ -82,6 +156,7 @@ function buildAutomationShipUI() {
   automationElements.collapseButton = header.collapse;
   automationElements.panelBody = body;
   automationElements.presetSelect = presetRow.presetSelect;
+  automationElements.shipPresetUsage = presetRow.presetUsage;
   automationElements.presetMoveUpButton = presetRow.presetMoveUp;
   automationElements.presetMoveDownButton = presetRow.presetMoveDown;
   automationElements.presetNameInput = presetRow.presetName;
@@ -92,6 +167,8 @@ function buildAutomationShipUI() {
   automationElements.showPresetInSidebarCheckbox = presetRow.showInSidebarCheckbox;
   automationElements.stepsContainer = stepsContainer;
   automationElements.addStepButton = addStepButton;
+  automationElements.shipImportPresetButton = shipTransferButtons.importButton;
+  automationElements.shipExportPresetButton = shipTransferButtons.exportButton;
 
   attachAutomationHandlers();
 }
@@ -151,6 +228,7 @@ function updateShipAutomationUI() {
   }
 
   const activePreset = automation.getActivePreset();
+  updateAutomationPresetUsageLine(automationElements.shipPresetUsage, 'ship', activePreset);
   if (activePreset) {
     if (document.activeElement !== presetNameInput) {
       presetNameInput.value = activePreset.name || '';
@@ -188,6 +266,12 @@ function updateShipAutomationUI() {
     forceShipStepsRefresh = false;
   }
   addStepButton.disabled = !activePreset || activePreset.steps.length >= 10;
+  if (automationElements.shipImportPresetButton) {
+    automationElements.shipImportPresetButton.disabled = false;
+  }
+  if (automationElements.shipExportPresetButton) {
+    automationElements.shipExportPresetButton.disabled = !activePreset;
+  }
 }
 
 function attachAutomationHandlers() {
@@ -307,10 +391,61 @@ function attachAutomationHandlers() {
       updateAutomationUI();
     });
   }
+
+  const { shipExportPresetButton, shipImportPresetButton } = automationElements;
+  if (shipExportPresetButton) {
+    shipExportPresetButton.addEventListener('click', () => {
+      if (!automationManager || !automationManager.spaceshipAutomation) return;
+      const automation = automationManager.spaceshipAutomation;
+      const preset = automation.getActivePreset();
+      if (!preset) return;
+      exportAutomationPresetToClipboard('ship', automation.exportPreset(preset.id), shipExportPresetButton);
+    });
+  }
+  if (shipImportPresetButton) {
+    shipImportPresetButton.addEventListener('click', () => {
+      openAutomationPresetImportDialog({
+        title: getAutomationCardText('importShipPresetTitle', {}, 'Import Ship Preset'),
+        description: getAutomationCardText(
+          'importPresetDescription',
+          {},
+          'Paste an exported preset string below. Import adds it as a new preset.'
+        ),
+        onImport: (text) => {
+          const parsed = parseAutomationPresetTransferPayload(text, 'ship');
+          if (!parsed.ok) {
+            return parsed;
+          }
+          if (!automationManager || !automationManager.spaceshipAutomation) {
+            return { ok: false, error: getAutomationCardText('importPresetFailed', {}, 'Could not import that preset.') };
+          }
+          automationManager.spaceshipAutomation.importPreset(parsed.preset);
+          forceShipStepsRefresh = true;
+          queueAutomationUIRefresh();
+          updateAutomationUI();
+          return { ok: true };
+        }
+      });
+    });
+  }
 }
 
 function renderAutomationSteps(automation, preset, container, projectsOverride) {
   const projects = projectsOverride || automation.getAutomationTargets();
+  const updateAllStepWeights = (binding, multiplier) => {
+    const current = getCurrentShipAutomationStep(automation, binding);
+    if (!current) {
+      markShipStepsRefreshNeeded();
+      return;
+    }
+    for (let index = 0; index < current.step.entries.length; index += 1) {
+      const stepEntry = current.step.entries[index];
+      const nextWeight = Math.max(0, Math.floor((stepEntry.weight || 0) * multiplier));
+      automation.updateEntry(current.preset.id, current.step.id, stepEntry.projectId, { weight: nextWeight });
+    }
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  };
 
   const formatProjectOption = (option, project) => {
     const label = project.displayName || project.name;
@@ -324,8 +459,14 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
 
   for (let stepIndex = 0; stepIndex < preset.steps.length; stepIndex += 1) {
     const step = preset.steps[stepIndex];
+    const stepBinding = {
+      presetId: preset.id,
+      stepId: step.id,
+      refs: {}
+    };
     const stepCard = document.createElement('div');
     stepCard.classList.add('automation-step');
+    stepCard._shipStepBinding = stepBinding;
 
     const header = document.createElement('div');
     header.classList.add('automation-step-header');
@@ -336,23 +477,12 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     title.textContent = getAutomationCardText('stepWithIndex', { index: stepIndex + 1 }, `Step ${stepIndex + 1}`);
     const subtitle = document.createElement('span');
     subtitle.classList.add('automation-step-subtitle');
+    stepBinding.refs.subtitle = subtitle;
     const usingCappedMin = step.mode === 'cappedMin';
     const usingCappedMax = step.mode === 'cappedMax';
     const usingRemainingPercent = step.mode === 'remainingPercent';
     const usingCapped = usingCappedMin || usingCappedMax;
-    if (usingCappedMin) {
-      subtitle.textContent = getAutomationCardText('shipStepSubtitleSmallestMax', {}, 'Balance ships with the smallest max');
-    } else if (usingCappedMax) {
-      subtitle.textContent = getAutomationCardText('shipStepSubtitleLargestMax', {}, 'Balance ships with the largest max');
-    } else if (usingRemainingPercent) {
-      const percentText = Number(step.limit === null || step.limit === undefined ? 100 : step.limit).toLocaleString();
-      subtitle.textContent = getAutomationCardText('shipStepSubtitleRemainingPercent', { percent: percentText }, 'Assign {percent}% of remaining ships');
-    } else if (step.limit !== null && step.limit !== undefined) {
-      const limitText = Number(step.limit || 0).toLocaleString();
-      subtitle.textContent = getAutomationCardText('shipStepSubtitleAssignUpTo', { count: limitText }, `Assign up to ${limitText} ships`);
-    } else {
-      subtitle.textContent = getAutomationCardText('shipStepSubtitleByWeight', {}, 'Distribute ships by weight');
-    }
+    updateShipStepSubtitleText(subtitle, step);
     heading.append(title, subtitle);
     header.appendChild(heading);
 
@@ -366,6 +496,7 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
       getAutomationCardText('shipLimitTooltip', {}, 'Assign Amount:\n- Distributes up to the entered amount by weight.\n\nModes:\n- Capped by smallest max: balance by weight until the smallest max is reached.\n- Capped by largest max: balance by weight until the largest max is reached. If no largest max is reached (infinite/unset caps), it uses every remaining ship.\n- % of remaining ships: distributes up to that percent of ships still unassigned when this step starts.\n\nMass Drivers:\n- Each Mass Driver counts as 10 ships.\n- Counts toward assign amount limits.\n- Can only be assigned through "Resource Disposal (mass drivers included)".')
     );
     const limitMode = document.createElement('select');
+    limitMode._shipStepBinding = stepBinding;
     const fixedOpt = document.createElement('option');
     fixedOpt.value = 'fixed';
     fixedOpt.textContent = getAutomationCardText('shipAssignAmount', {}, 'Assign Amount');
@@ -386,6 +517,7 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     const limitInput = document.createElement('input');
     limitInput.type = 'text';
     limitInput.min = '0';
+    limitInput._shipStepBinding = stepBinding;
     limitInput.placeholder = getAutomationCardText('shipAmountPlaceholder', {}, 'Amount');
     if (step.limit !== null && step.limit !== undefined && !usingCapped) {
       limitInput.value = formatNumber(step.limit, true, 3);
@@ -393,26 +525,34 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
       limitInput.value = '';
     }
     limitInput.disabled = limitMode.value === 'cappedMin' || limitMode.value === 'cappedMax';
+    stepBinding.refs.limitMode = limitMode;
+    stepBinding.refs.limitInput = limitInput;
     limitMode.addEventListener('change', (event) => {
       const mode = event.target.value;
+      const current = getCurrentShipAutomationStep(automation, event.target._shipStepBinding);
+      if (!current) {
+        markShipStepsRefreshNeeded();
+        return;
+      }
       if (mode === 'cappedMin' || mode === 'cappedMax') {
-        automation.setStepMode(preset.id, step.id, mode);
-        automation.setStepLimit(preset.id, step.id, null);
+        automation.setStepMode(current.preset.id, current.step.id, mode);
+        automation.setStepLimit(current.preset.id, current.step.id, null);
         limitInput.disabled = true;
         limitInput.value = '';
       } else if (mode === 'remainingPercent') {
-        automation.setStepMode(preset.id, step.id, mode);
+        automation.setStepMode(current.preset.id, current.step.id, mode);
         const parsed = parseFlexibleNumber(limitInput.value);
         const percent = Number.isFinite(parsed) ? Math.min(Math.max(Math.floor(parsed), 0), 100) : 100;
-        automation.setStepLimit(preset.id, step.id, percent);
+        automation.setStepLimit(current.preset.id, current.step.id, percent);
         limitInput.disabled = false;
         limitInput.value = formatNumber(percent, true, 3);
       } else {
-        automation.setStepMode(preset.id, step.id, 'fill');
+        automation.setStepMode(current.preset.id, current.step.id, 'fill');
         const parsed = parseFlexibleNumber(limitInput.value);
-        automation.setStepLimit(preset.id, step.id, Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0);
+        automation.setStepLimit(current.preset.id, current.step.id, Number.isFinite(parsed) && parsed >= 0 ? Math.floor(parsed) : 0);
         limitInput.disabled = false;
       }
+      updateShipStepSubtitleText(subtitle, current.step);
       queueAutomationUIRefresh();
       updateAutomationUI();
     });
@@ -431,10 +571,22 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
         return value > 0 ? formatNumber(value, true, 3) : '';
       },
       onValue: (parsed) => {
+        const current = getCurrentShipAutomationStep(automation, limitInput._shipStepBinding);
         if (limitMode.value === 'remainingPercent') {
-          automation.setStepLimit(preset.id, step.id, Math.min(Math.max(Math.floor(parsed), 0), 100));
+          setCurrentShipStepLimit(
+            automation,
+            limitInput._shipStepBinding,
+            Math.min(Math.max(Math.floor(parsed), 0), 100)
+          );
         } else {
-          automation.setStepLimit(preset.id, step.id, parsed > 0 ? parsed : null);
+          setCurrentShipStepLimit(
+            automation,
+            limitInput._shipStepBinding,
+            parsed > 0 ? parsed : null
+          );
+        }
+        if (current) {
+          updateShipStepSubtitleText(subtitle, current.step);
         }
         queueAutomationUIRefresh();
       }
@@ -443,6 +595,24 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     const controlWrap = document.createElement('div');
     controlWrap.classList.add('automation-step-controls');
     controlWrap.append(limitRow);
+    const weightScaleControls = document.createElement('div');
+    weightScaleControls.classList.add('automation-entry-scale-controls');
+    const divideWeightsButton = document.createElement('button');
+    divideWeightsButton.type = 'button';
+    divideWeightsButton.textContent = getAutomationCardText('shipWeightScaleDownButton', {}, '/10');
+    divideWeightsButton.title = getAutomationCardText('shipWeightScaleDownTitle', {}, 'Divide all step weights by 10');
+    divideWeightsButton.addEventListener('click', () => {
+      updateAllStepWeights(stepBinding, 0.1);
+    });
+    const multiplyWeightsButton = document.createElement('button');
+    multiplyWeightsButton.type = 'button';
+    multiplyWeightsButton.textContent = getAutomationCardText('shipWeightScaleUpButton', {}, 'x10');
+    multiplyWeightsButton.title = getAutomationCardText('shipWeightScaleUpTitle', {}, 'Multiply all step weights by 10');
+    multiplyWeightsButton.addEventListener('click', () => {
+      updateAllStepWeights(stepBinding, 10);
+    });
+    weightScaleControls.append(divideWeightsButton, multiplyWeightsButton);
+    controlWrap.appendChild(weightScaleControls);
     const orderWrap = document.createElement('div');
     orderWrap.classList.add('automation-step-order');
     const moveUp = document.createElement('button');
@@ -450,7 +620,12 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     moveUp.title = getAutomationCardText('moveStepUp', {}, 'Move step up');
     moveUp.disabled = stepIndex === 0;
     moveUp.addEventListener('click', () => {
-      automation.moveStep(preset.id, step.id, -1);
+      const current = getCurrentShipAutomationStep(automation, stepBinding);
+      if (!current) {
+        markShipStepsRefreshNeeded();
+        return;
+      }
+      automation.moveStep(current.preset.id, current.step.id, -1);
       forceShipStepsRefresh = true;
       queueAutomationUIRefresh();
       updateAutomationUI();
@@ -460,7 +635,12 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     moveDown.title = getAutomationCardText('moveStepDown', {}, 'Move step down');
     moveDown.disabled = stepIndex === preset.steps.length - 1;
     moveDown.addEventListener('click', () => {
-      automation.moveStep(preset.id, step.id, 1);
+      const current = getCurrentShipAutomationStep(automation, stepBinding);
+      if (!current) {
+        markShipStepsRefreshNeeded();
+        return;
+      }
+      automation.moveStep(current.preset.id, current.step.id, 1);
       forceShipStepsRefresh = true;
       queueAutomationUIRefresh();
       updateAutomationUI();
@@ -472,7 +652,12 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     removeStep.textContent = '✕';
     removeStep.title = getAutomationCardText('removeStep', {}, 'Remove step');
     removeStep.addEventListener('click', () => {
-      automation.removeStep(preset.id, step.id);
+      const current = getCurrentShipAutomationStep(automation, stepBinding);
+      if (!current) {
+        markShipStepsRefreshNeeded();
+        return;
+      }
+      automation.removeStep(current.preset.id, current.step.id);
       forceShipStepsRefresh = true;
       queueAutomationUIRefresh();
       updateAutomationUI();
@@ -487,10 +672,20 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
 
     for (let entryIndex = 0; entryIndex < step.entries.length; entryIndex += 1) {
       const entry = step.entries[entryIndex];
+      const entryBinding = {
+        presetId: preset.id,
+        stepId: step.id,
+        projectId: entry.projectId,
+        refs: {}
+      };
       const row = document.createElement('div');
       row.classList.add('automation-entry');
+      row._shipEntryBinding = entryBinding;
+      row._refs = {};
 
       const projectSelect = document.createElement('select');
+      projectSelect._shipEntryBinding = entryBinding;
+      row._refs.projectSelect = projectSelect;
       const usedIds = step.entries.filter(item => item !== entry).map(item => item.projectId);
       for (let projectIndex = 0; projectIndex < projects.length; projectIndex += 1) {
         const project = projects[projectIndex];
@@ -507,11 +702,20 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
       }
       projectSelect.addEventListener('change', (event) => {
         const newId = event.target.value;
-        if (usedIds.includes(newId)) {
-          event.target.value = entry.projectId;
+        const current = getCurrentShipAutomationEntry(automation, event.target._shipEntryBinding);
+        if (!current) {
+          markShipStepsRefreshNeeded();
           return;
         }
-        automation.updateEntry(preset.id, step.id, entry.projectId, { projectId: newId });
+        const currentUsedIds = current.step.entries
+          .filter(item => item !== current.entry)
+          .map(item => item.projectId);
+        if (currentUsedIds.includes(newId)) {
+          event.target.value = current.entry.projectId;
+          return;
+        }
+        automation.updateEntry(current.preset.id, current.step.id, current.entry.projectId, { projectId: newId });
+        event.target._shipEntryBinding.projectId = newId;
         forceShipStepsRefresh = true;
         queueAutomationUIRefresh();
         updateAutomationUI();
@@ -526,6 +730,8 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
       weightInput.type = 'text';
       weightInput.min = '0';
       weightInput.value = formatNumber(entry.weight, true, 3);
+      weightInput._shipEntryBinding = entryBinding;
+      row._refs.weightInput = weightInput;
       wireStringNumberInput(weightInput, {
         parseValue: (value) => {
           const parsed = parseFlexibleNumber(value);
@@ -535,7 +741,12 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
           return value > 0 ? formatNumber(value, true, 3) : '0';
         },
         onValue: (parsed) => {
-          automation.updateEntry(preset.id, step.id, entry.projectId, { weight: parsed });
+          const current = getCurrentShipAutomationEntry(automation, weightInput._shipEntryBinding);
+          if (!current) {
+            markShipStepsRefreshNeeded();
+            return;
+          }
+          automation.updateEntry(current.preset.id, current.step.id, current.entry.projectId, { weight: parsed });
           queueAutomationUIRefresh();
         }
       });
@@ -544,8 +755,13 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
 
       const maxWrapper = document.createElement('div');
       maxWrapper.classList.add('automation-max-wrapper');
+      const maxLabel = document.createElement('span');
+      maxLabel.classList.add('automation-max-label');
+      maxLabel.textContent = getAutomationCardText('shipCapLabel', {}, 'Cap');
 
       const maxMode = document.createElement('select');
+      maxMode._shipEntryBinding = entryBinding;
+      row._refs.maxMode = maxMode;
       const absoluteOpt = document.createElement('option');
       absoluteOpt.value = 'absolute';
       absoluteOpt.textContent = getAutomationCardText('shipMaxLabel', {}, 'Max');
@@ -568,8 +784,15 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
       maxInput.min = '0';
       maxInput.placeholder = getAutomationCardText('shipMaxLabel', {}, 'Max');
       maxInput.value = entry.max === null || entry.max === undefined ? '' : formatNumber(entry.max, true, getMaxPrecision());
+      maxInput._shipEntryBinding = entryBinding;
+      row._refs.maxInput = maxInput;
       maxMode.addEventListener('change', (event) => {
-        automation.updateEntry(preset.id, step.id, entry.projectId, { maxMode: event.target.value });
+        const current = getCurrentShipAutomationEntry(automation, event.target._shipEntryBinding);
+        if (!current) {
+          markShipStepsRefreshNeeded();
+          return;
+        }
+        automation.updateEntry(current.preset.id, current.step.id, current.entry.projectId, { maxMode: event.target.value });
         queueAutomationUIRefresh();
         updateAutomationUI();
       });
@@ -584,12 +807,17 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
           return value > 0 ? formatNumber(value, true, getMaxPrecision()) : '';
         },
         onValue: (parsed) => {
-          automation.updateEntry(preset.id, step.id, entry.projectId, { max: parsed > 0 ? parsed : null });
+          const current = getCurrentShipAutomationEntry(automation, maxInput._shipEntryBinding);
+          if (!current) {
+            markShipStepsRefreshNeeded();
+            return;
+          }
+          automation.updateEntry(current.preset.id, current.step.id, current.entry.projectId, { max: parsed > 0 ? parsed : null });
           queueAutomationUIRefresh();
         }
       });
 
-      maxWrapper.append(maxMode, maxInput);
+      maxWrapper.append(maxLabel, maxMode, maxInput);
       row.appendChild(maxWrapper);
 
       const projectObject = projects.find(item => item.name === entry.projectId);
@@ -599,10 +827,17 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
       const exclude = document.createElement('input');
       exclude.type = 'checkbox';
       exclude.checked = automation.disabledProjects.has(entry.projectId);
+      exclude._shipEntryBinding = entryBinding;
+      row._refs.exclude = exclude;
       excludeWrapper.append(exclude, getAutomationCardText('shipReleaseIfDisabled', {}, 'Release if disabled'));
       if (allowDisable) {
         exclude.addEventListener('change', (event) => {
-          automation.toggleProjectDisabled(entry.projectId, event.target.checked);
+          const current = getCurrentShipAutomationEntry(automation, event.target._shipEntryBinding);
+          if (!current) {
+            markShipStepsRefreshNeeded();
+            return;
+          }
+          automation.toggleProjectDisabled(current.entry.projectId, event.target.checked);
           queueAutomationUIRefresh();
           updateAutomationUI();
         });
@@ -615,8 +850,15 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
       const remove = document.createElement('button');
       remove.textContent = '✕';
       remove.title = getAutomationCardText('removeProject', {}, 'Remove project');
+      remove._shipEntryBinding = entryBinding;
+      row._refs.remove = remove;
       remove.addEventListener('click', () => {
-        automation.removeEntry(preset.id, step.id, entry.projectId);
+        const current = getCurrentShipAutomationEntry(automation, remove._shipEntryBinding);
+        if (!current) {
+          markShipStepsRefreshNeeded();
+          return;
+        }
+        automation.removeEntry(current.preset.id, current.step.id, current.entry.projectId);
         forceShipStepsRefresh = true;
         queueAutomationUIRefresh();
         updateAutomationUI();
@@ -628,7 +870,9 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
 
     const addRow = document.createElement('div');
     addRow.classList.add('automation-add-entry-row');
+    addRow._shipStepBinding = stepBinding;
     const addSelect = document.createElement('select');
+    addSelect._shipStepBinding = stepBinding;
     const availableProjects = projects.filter(project => !step.entries.some(entry => entry.projectId === project.name));
     availableProjects.forEach(project => {
       const option = document.createElement('option');
@@ -646,10 +890,22 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     const addEntryButton = document.createElement('button');
     addEntryButton.textContent = getAutomationCardText('addProjectButton', {}, '+ Project');
     addEntryButton.disabled = availableProjects.length === 0;
+    addEntryButton._shipStepBinding = stepBinding;
     addEntryButton.addEventListener('click', () => {
+      const current = getCurrentShipAutomationStep(automation, addEntryButton._shipStepBinding);
+      if (!current) {
+        markShipStepsRefreshNeeded();
+        return;
+      }
       const selectedId = addSelect.value;
       if (!selectedId) return;
-      automation.addEntry(preset.id, step.id, selectedId);
+      for (let index = 0; index < current.step.entries.length; index += 1) {
+        if (current.step.entries[index].projectId === selectedId) {
+          markShipStepsRefreshNeeded();
+          return;
+        }
+      }
+      automation.addEntry(current.preset.id, current.step.id, selectedId);
       forceShipStepsRefresh = true;
       queueAutomationUIRefresh();
       updateAutomationUI();

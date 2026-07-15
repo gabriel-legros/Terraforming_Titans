@@ -7,46 +7,46 @@ const COLONY_AUTOMATION_CATEGORY_ORDER = [
 ];
 
 const COLONY_AUTOMATION_CATEGORY_LABELS = {
-  colonyBuildings: 'Colony Buildings',
-  colonySliders: 'Colony Sliders',
-  constructionOffice: 'Construction Office',
-  nanocolony: 'Nanocolony',
-  orbitals: 'Orbitals'
+  colonyBuildings: t('ui.hope.automationCards.colonyCategoryColonyBuildings', {}, 'Colony Buildings'),
+  colonySliders: t('ui.hope.automationCards.colonyCategoryColonySliders', {}, 'Colony Sliders'),
+  constructionOffice: t('ui.hope.automationCards.colonyTargetConstructionOffice', {}, 'Construction Office'),
+  nanocolony: t('ui.hope.automationCards.colonyTargetNanocolony', {}, 'Nanocolony'),
+  orbitals: t('ui.hope.automationCards.colonyTargetOrbitals', {}, 'Orbitals')
 };
 
 const COLONY_AUTOMATION_SLIDER_TARGETS = {
   workforceRatio: {
-    label: 'Workforce Allocation',
+    label: t('ui.hope.automationCards.colonySliderWorkforceAllocation', {}, 'Workforce Allocation'),
     isAvailable: () => true,
     capture: () => colonySliderSettings.workerRatio,
     apply: (value) => colonySliderSettings.setWorkforceRatio(value)
   },
   foodConsumption: {
-    label: 'Food Consumption',
+    label: t('ui.hope.automationCards.colonySliderFoodConsumption', {}, 'Food Consumption'),
     isAvailable: () => true,
     capture: () => colonySliderSettings.foodConsumption,
     apply: (value) => colonySliderSettings.setFoodConsumptionMultiplier(value)
   },
   luxuryWater: {
-    label: 'Luxury Water Use',
+    label: t('ui.hope.automationCards.colonySliderLuxuryWaterUse', {}, 'Luxury Water Use'),
     isAvailable: () => true,
     capture: () => colonySliderSettings.luxuryWater,
     apply: (value) => colonySliderSettings.setLuxuryWaterMultiplier(value)
   },
   oreMineWorkers: {
-    label: 'Ore Mine Workers',
+    label: t('ui.hope.automationCards.colonySliderOreMineWorkers', {}, 'Ore Mine Workers'),
     isAvailable: () => true,
     capture: () => colonySliderSettings.oreMineWorkers,
     apply: (value) => colonySliderSettings.setOreMineWorkerAssist(value)
   },
   mechanicalAssistance: {
-    label: 'Mechanical Assistance',
+    label: t('ui.hope.automationCards.colonySliderMechanicalAssistance', {}, 'Mechanical Assistance'),
     isAvailable: () => colonySliderSettings.isBooleanFlagSet('mechanicalAssistance') && terraforming.celestialParameters.gravity > 10,
     capture: () => colonySliderSettings.mechanicalAssistance,
     apply: (value) => colonySliderSettings.setMechanicalAssistance(value)
   },
   warpnetLevel: {
-    label: 'Warpnet',
+    label: t('ui.hope.automationCards.colonySliderWarpnet', {}, 'Warpnet'),
     isAvailable: () => colonySliderSettings.isBooleanFlagSet('warpnet'),
     capture: () => colonySliderSettings.warpnetLevel,
     apply: (value) => colonySliderSettings.setWarpnetLevel(value)
@@ -63,7 +63,7 @@ try {
 const ColonyAutomationPresetManagerBaseClass = ColonyAutomationPresetManagerBaseRef || class ColonyAutomationPresetManagerBaseFallback {};
 
 class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
-  constructor() {
+  constructor(encounteredTargets = null) {
     super({
       featureKey: 'automationColony',
       presetLabel: 'Preset',
@@ -71,8 +71,11 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       useMasterEnabled: true,
       useAssignments: true,
       useCombinations: true,
-      nextTravelKind: 'combination'
+      nextTravelKind: 'combination',
+      presetCollectionKey: 'targets'
     });
+    this.encounteredTargets = encounteredTargets;
+    this.elapsed = 0;
   }
 
   setCollapsed(collapsed) {
@@ -221,6 +224,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     return {
       name: preset.name,
       showInSidebar: preset.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(preset.presetMode),
       includeControl: preset.includeControl !== false,
       includeAutomation: preset.includeAutomation !== false,
       scopeAll: preset.scopeAll === true,
@@ -246,6 +250,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       id,
       name: presetData.name || `Preset ${id}`,
       showInSidebar: presetData.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(presetData.presetMode),
       includeControl: presetData.includeControl !== false,
       includeAutomation: presetData.includeAutomation !== false,
       scopeAll: presetData.scopeAll === true,
@@ -254,8 +259,12 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     const importedTargets = presetData.targets || {};
     for (const targetId in importedTargets) {
       const entry = importedTargets[targetId] || {};
-      const control = entry.control ? this.deepClone(entry.control) : null;
-      const automation = entry.automation ? this.deepClone(entry.automation) : null;
+      const control = entry.control && Object.keys(entry.control).length > 0
+        ? this.deepClone(entry.control)
+        : null;
+      const automation = entry.automation && Object.keys(entry.automation).length > 0
+        ? this.deepClone(entry.automation)
+        : null;
       if (automation && automation.autoBuildBasis === 'initialLand') {
         automation.autoBuildBasis = 'geometricLand';
       }
@@ -268,6 +277,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
         automation
       };
     }
+    this.recordPresetTargets(importedPreset);
     this.presets.push(importedPreset);
     this.selectedPresetId = importedPreset.id;
     return importedPreset.id;
@@ -282,6 +292,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       id,
       name: name || `Preset ${id}`,
       showInSidebar: options.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(options.presetMode),
       includeControl,
       includeAutomation,
       scopeAll,
@@ -295,7 +306,15 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
         preset.targets[targetId] = entry;
       }
     }
+    this.recordPresetTargets(preset);
     return preset;
+  }
+
+  recordPresetTargets(preset) {
+    if (!this.encounteredTargets) {
+      return;
+    }
+    this.encounteredTargets.recordAll('colony', Object.keys(preset.targets || {}));
   }
 
   mergeMissingTargetsIntoPreset(presetId, targetIds = []) {
@@ -321,7 +340,57 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       preset.targets[targetId] = entry;
       changed = true;
     }
+    if (changed) {
+      this.recordPresetTargets(preset);
+    }
     return changed;
+  }
+
+  snapshotTargetIntoPreset(presetId, targetId) {
+    const preset = this.getPresetById(Number(presetId));
+    if (!preset) {
+      return false;
+    }
+    const entry = this.captureTargetSettings(
+      targetId,
+      preset.includeControl !== false,
+      preset.includeAutomation !== false
+    );
+    if (!entry.control && !entry.automation) {
+      return false;
+    }
+    preset.targets[targetId] = entry;
+    return true;
+  }
+
+  isPresetParameterPathEligible(preset, path) {
+    if (!Array.isArray(path) || path[0] !== 'targets') {
+      return true;
+    }
+    const section = path[2];
+    const leafKey = path[path.length - 1];
+    if (section === 'control' && path[3] === 'workerPriority') {
+      return false;
+    }
+    if (section !== 'automation') {
+      return true;
+    }
+    if (leafKey === 'autoBuildPriority') {
+      return false;
+    }
+    const targetId = path[1];
+    const automation = preset.targets[targetId]?.automation || {};
+    const mode = automation.autoBuildBasis || '';
+    if (leafKey === 'autoBuildFixed') {
+      return mode === 'fixed';
+    }
+    if (leafKey === 'autoBuildFillPercent') {
+      return mode === 'fill';
+    }
+    if (leafKey === 'autoBuildPercent') {
+      return mode !== 'fixed' && mode !== 'fill' && mode !== 'max';
+    }
+    return true;
   }
 
   captureTargetSettings(targetId, includeControl, includeAutomation) {
@@ -378,6 +447,8 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       control.landAsResearchOutpost = colony.landAsResearchOutpost === true;
       control.capWorkersToAerostatCapacity =
         colony.capWorkersToAerostatCapacity === true;
+      control.capSupportedBuildingsToAerostatCapacity =
+        colony.capSupportedBuildingsToAerostatCapacity === true;
       control.androidCapacityShare = colony.getAndroidCapacityShare();
     }
     return control;
@@ -409,6 +480,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       componentsSlider: nanotechManager.componentsSlider,
       maintenance3Slider: nanotechManager.maintenance3Slider,
       electronicsSlider: nanotechManager.electronicsSlider,
+      stage3Resource: nanotechManager.stage3Resource,
       maintenance4Slider: nanotechManager.maintenance4Slider,
       grapheneSlider: nanotechManager.grapheneSlider,
       maxEnergyPercent: nanotechManager.maxEnergyPercent,
@@ -459,6 +531,9 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       if (!preset) {
         continue;
       }
+      if (this.isParameterizedPreset(preset) && !this.getPresetParameterInfo(preset).valid) {
+        continue;
+      }
       const entries = preset.targets;
       for (const targetId in entries) {
         const entry = entries[targetId];
@@ -485,8 +560,8 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     this.applyPresets();
   }
 
-  applyPresetOnce(presetId) {
-    const preset = this.getPresetById(presetId);
+  applyPresetOnce(presetId, parameterValue = null) {
+    const preset = this.buildPresetForApplication(this.getPresetById(presetId), parameterValue);
     if (!preset) {
       return;
     }
@@ -506,51 +581,16 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
   }
 
   applyResolvedMaps(controlMap, automationMap) {
-    let coloniesChanged = false;
-    let slidersChanged = false;
-    let constructionChanged = false;
-    let nanocolonyChanged = false;
-    let orbitalsChanged = false;
-
     for (const targetId in controlMap) {
       if (this.applyControlSettings(targetId, controlMap[targetId])) {
-        if (this.isColonyTarget(targetId)) {
-          coloniesChanged = true;
-        } else if (this.isSliderTarget(targetId)) {
-          slidersChanged = true;
-        } else if (targetId === 'constructionOffice') {
-          constructionChanged = true;
-        } else if (targetId === 'nanocolony') {
-          nanocolonyChanged = true;
-        } else if (targetId === 'orbitals') {
-          orbitalsChanged = true;
+        if (targetId === 'nanocolony') {
+          nanotechManager.reapplyEffects();
         }
       }
     }
 
     for (const targetId in automationMap) {
-      if (this.applyAutomationSettings(targetId, automationMap[targetId])) {
-        if (this.isColonyTarget(targetId)) {
-          coloniesChanged = true;
-        }
-      }
-    }
-
-    if (coloniesChanged) {
-      updateColonyDisplay(colonies);
-    }
-    if (slidersChanged) {
-      updateColonySlidersUI();
-    }
-    if (constructionChanged) {
-      updateConstructionOfficeUI();
-    }
-    if (nanocolonyChanged) {
-      nanotechManager.reapplyEffects();
-      nanotechManager.updateUI();
-    }
-    if (orbitalsChanged) {
-      followersManager.updateUI();
+      this.applyAutomationSettings(targetId, automationMap[targetId]);
     }
   }
 
@@ -637,6 +677,15 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       colony.refreshWorkerCapacityCapState?.();
       changed = true;
     }
+    if (
+      'capSupportedBuildingsToAerostatCapacity' in control &&
+      colony.capSupportedBuildingsToAerostatCapacity !==
+        control.capSupportedBuildingsToAerostatCapacity
+    ) {
+      colony.capSupportedBuildingsToAerostatCapacity =
+        control.capSupportedBuildingsToAerostatCapacity === true;
+      changed = true;
+    }
     if ('androidCapacityShare' in control) {
       const currentShare = colony.getAndroidCapacityShare ? colony.getAndroidCapacityShare() : 0;
       if (currentShare !== control.androidCapacityShare) {
@@ -652,20 +701,22 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       return false;
     }
     let changed = false;
-    if (colony.autoBuildEnabled !== automation.autoBuildEnabled) {
+    if ('autoBuildEnabled' in automation && colony.autoBuildEnabled !== automation.autoBuildEnabled) {
       colony.autoBuildEnabled = automation.autoBuildEnabled;
       changed = true;
     }
-    if (colony.autoBuildPriority !== automation.autoBuildPriority) {
+    if ('autoBuildPriority' in automation && colony.autoBuildPriority !== automation.autoBuildPriority) {
       colony.autoBuildPriority = automation.autoBuildPriority;
       changed = true;
     }
-    const automationBasis = automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : automation.autoBuildBasis;
-    if (colony.autoBuildBasis !== automationBasis) {
-      colony.autoBuildBasis = automationBasis;
-      changed = true;
+    if ('autoBuildBasis' in automation) {
+      const automationBasis = automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : automation.autoBuildBasis;
+      if (colony.autoBuildBasis !== automationBasis) {
+        colony.autoBuildBasis = automationBasis;
+        changed = true;
+      }
     }
-    if (colony.autoBuildPercent !== automation.autoBuildPercent) {
+    if ('autoBuildPercent' in automation && colony.autoBuildPercent !== automation.autoBuildPercent) {
       colony.autoBuildPercent = automation.autoBuildPercent;
       changed = true;
     }
@@ -673,19 +724,19 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       colony.autoBuildFixed = automation.autoBuildFixed;
       changed = true;
     }
-    if (colony.autoBuildFillPercent !== automation.autoBuildFillPercent) {
+    if ('autoBuildFillPercent' in automation && colony.autoBuildFillPercent !== automation.autoBuildFillPercent) {
       colony.autoBuildFillPercent = automation.autoBuildFillPercent;
       changed = true;
     }
-    if (colony.autoBuildFillResourcePrimary !== automation.autoBuildFillResourcePrimary) {
+    if ('autoBuildFillResourcePrimary' in automation && colony.autoBuildFillResourcePrimary !== automation.autoBuildFillResourcePrimary) {
       colony.autoBuildFillResourcePrimary = automation.autoBuildFillResourcePrimary;
       changed = true;
     }
-    if (colony.autoBuildFillResourceSecondary !== automation.autoBuildFillResourceSecondary) {
+    if ('autoBuildFillResourceSecondary' in automation && colony.autoBuildFillResourceSecondary !== automation.autoBuildFillResourceSecondary) {
       colony.autoBuildFillResourceSecondary = automation.autoBuildFillResourceSecondary;
       changed = true;
     }
-    if (colony.autoActiveEnabled !== automation.autoActiveEnabled) {
+    if ('autoActiveEnabled' in automation && colony.autoActiveEnabled !== automation.autoActiveEnabled) {
       colony.autoActiveEnabled = automation.autoActiveEnabled;
       changed = true;
     }
@@ -703,6 +754,10 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     nanotechManager.componentsSlider = control.componentsSlider || 0;
     nanotechManager.maintenance3Slider = control.maintenance3Slider || 0;
     nanotechManager.electronicsSlider = control.electronicsSlider || 0;
+    const alternateRecipeUnlocked = projectManager.projects.nanoworld.getShopPurchaseCount('alternateElectronicsRecipe') > 0;
+    nanotechManager.stage3Resource = control.stage3Resource === 'graphite' && alternateRecipeUnlocked
+      ? 'graphite'
+      : 'biomass';
     nanotechManager.maintenance4Slider = control.maintenance4Slider || 0;
     nanotechManager.grapheneSlider = control.grapheneSlider || 0;
     nanotechManager.maxEnergyPercent = control.maxEnergyPercent ?? 10;
@@ -775,7 +830,36 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     return true;
   }
 
+  recordCurrentlyAvailableTargets() {
+    if (!this.encounteredTargets) {
+      return;
+    }
+    const colonyList = Object.values(colonies || {});
+    for (let index = 0; index < colonyList.length; index += 1) {
+      const colony = colonyList[index];
+      if (!colony || !colony.unlocked || colony.permanentlyDisabled) {
+        continue;
+      }
+      this.encounteredTargets.record('colony', `colony:${colony.name}`);
+    }
+    for (const sliderId in COLONY_AUTOMATION_SLIDER_TARGETS) {
+      if (COLONY_AUTOMATION_SLIDER_TARGETS[sliderId].isAvailable()) {
+        this.encounteredTargets.record('colony', `slider:${sliderId}`);
+      }
+    }
+    if (globalEffects.isBooleanFlagSet('automateConstruction')) {
+      this.encounteredTargets.record('colony', 'constructionOffice');
+    }
+    if (nanotechManager && nanotechManager.enabled) {
+      this.encounteredTargets.record('colony', 'nanocolony');
+    }
+    if (followersManager && followersManager.enabled) {
+      this.encounteredTargets.record('colony', 'orbitals');
+    }
+  }
+
   getAvailableTargets() {
+    this.recordCurrentlyAvailableTargets();
     const targets = [];
     const colonyList = Object.values(colonies || {});
     for (let index = 0; index < colonyList.length; index += 1) {
@@ -811,7 +895,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
         id: 'constructionOffice',
         categoryId: 'constructionOffice',
         categoryLabel: COLONY_AUTOMATION_CATEGORY_LABELS.constructionOffice,
-        label: 'Construction Office',
+        label: t('ui.hope.automationCards.colonyTargetConstructionOffice', {}, 'Construction Office'),
         supportsAutomation: false
       });
     }
@@ -821,7 +905,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
         id: 'nanocolony',
         categoryId: 'nanocolony',
         categoryLabel: COLONY_AUTOMATION_CATEGORY_LABELS.nanocolony,
-        label: 'Nanocolony',
+        label: t('ui.hope.automationCards.colonyTargetNanocolony', {}, 'Nanocolony'),
         supportsAutomation: false
       });
     }
@@ -831,9 +915,28 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
         id: 'orbitals',
         categoryId: 'orbitals',
         categoryLabel: COLONY_AUTOMATION_CATEGORY_LABELS.orbitals,
-        label: 'Orbitals',
+        label: t('ui.hope.automationCards.colonyTargetOrbitals', {}, 'Orbitals'),
         supportsAutomation: false
       });
+    }
+
+    if (this.encounteredTargets) {
+      this.presets.forEach(preset => this.recordPresetTargets(preset));
+      const currentTargetIds = new Set(targets.map(target => target.id));
+      const encounteredTargetIds = this.encounteredTargets.getIds('colony');
+      for (let index = 0; index < encounteredTargetIds.length; index += 1) {
+        const targetId = encounteredTargetIds[index];
+        if (currentTargetIds.has(targetId)) {
+          continue;
+        }
+        targets.push({
+          id: targetId,
+          categoryId: this.getTargetCategoryId(targetId),
+          categoryLabel: this.getCategoryLabel(this.getTargetCategoryId(targetId)),
+          label: this.getTargetLabel(targetId),
+          supportsAutomation: this.targetSupportsAutomation(targetId)
+        });
+      }
     }
 
     targets.sort((left, right) => {
@@ -929,6 +1032,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
         id: preset.id,
         name: preset.name,
         showInSidebar: preset.showInSidebar !== false,
+        presetMode: this.getPresetModeValue(preset.presetMode),
         includeControl: !!preset.includeControl,
         includeAutomation: !!preset.includeAutomation,
         scopeAll: !!preset.scopeAll,
@@ -965,15 +1069,19 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       id: preset.id,
       name: preset.name || 'Preset',
       showInSidebar: preset.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(preset.presetMode),
       includeControl: preset.includeControl !== false,
       includeAutomation: preset.includeAutomation !== false,
       scopeAll: preset.scopeAll === true,
       targets: Object.fromEntries(
         Object.entries(preset.targets || {}).map(([targetId, entry]) => {
-          const control = entry?.control ? { ...entry.control } : null;
+          let control = entry?.control ? { ...entry.control } : null;
           let automation = entry?.automation ? { ...entry.automation } : null;
           if (control && 'autoUpgradeEnabled' in control && !automation) {
-            automation = {};
+            automation = {
+              autoUpgradeEnabled: control.autoUpgradeEnabled === true
+            };
+            delete control.autoUpgradeEnabled;
           }
           if (control && 'autoUpgradeEnabled' in control && automation && !('autoUpgradeEnabled' in automation)) {
             automation.autoUpgradeEnabled = control.autoUpgradeEnabled === true;
@@ -981,6 +1089,12 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
           }
           if (automation && automation.autoBuildBasis === 'initialLand') {
             automation.autoBuildBasis = 'geometricLand';
+          }
+          if (control && Object.keys(control).length === 0) {
+            control = null;
+          }
+          if (automation && Object.keys(automation).length === 0) {
+            automation = null;
           }
           return [targetId, {
             categoryId: entry?.categoryId || this.getTargetCategoryId(targetId),
@@ -993,9 +1107,16 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     this.loadAssignmentsFromState(data.assignments);
     this.loadCombinationsFromState(data.combinations);
     this.loadCommonListState(data, { allowLegacyApplyOnNextTravel: false });
+    this.presets.forEach(preset => this.recordPresetTargets(preset));
   }
 
-  update() {}
+  update(delta) {
+    this.elapsed += delta || 0;
+    if (this.elapsed >= 1000) {
+      this.elapsed = 0;
+      this.recordCurrentlyAvailableTargets();
+    }
+  }
 }
 
 try {

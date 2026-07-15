@@ -169,7 +169,6 @@ function resolveWorldBaseLand(terraformingState, landResource) {
   const activeTerraforming = terraformingState || null;
   const activeLandResource = landResource || activeTerraforming?.resources?.surface?.land || null;
   const activeCelestialParameters = activeTerraforming?.celestialParameters || null;
-  const geometricLand = calculateSurfaceAreaHectaresFromRadius(activeCelestialParameters?.radius);
   const dynamicMassWorld = !!(
     activeCelestialParameters?.dynamicMassDeltaKg
     || activeCelestialParameters?.dynamicSurfaceVolumeDeltaM3
@@ -181,9 +180,6 @@ function resolveWorldBaseLand(terraformingState, landResource) {
     || activeCelestialParameters?.currentPlanetaryVolumeM3
     || activeCelestialParameters?.currentSurfaceVolumeM3
   );
-  if (geometricLand > 0 && !dynamicMassWorld) {
-    return geometricLand;
-  }
   const candidates = [
     activeTerraforming?.baseLand,
     activeCelestialParameters?.baseLand,
@@ -200,12 +196,21 @@ function resolveWorldBaseLand(terraformingState, landResource) {
     }
   }
 
+  const surfaceAreaLand = activeCelestialParameters?.surfaceArea / 10000;
+  if (Number.isFinite(surfaceAreaLand) && surfaceAreaLand > 0 && !dynamicMassWorld) {
+    return surfaceAreaLand;
+  }
+
   return calculateSurfaceAreaHectaresFromRadius(activeCelestialParameters?.radius);
 }
 
 function resolveWorldGeometricLand(terraformingState, landResource) {
   const activeTerraforming = terraformingState || null;
   const activeCelestialParameters = activeTerraforming?.celestialParameters || null;
+  const surfaceAreaLand = activeCelestialParameters?.surfaceArea / 10000;
+  if (Number.isFinite(surfaceAreaLand) && surfaceAreaLand > 0) {
+    return surfaceAreaLand;
+  }
   const geometricLand = calculateSurfaceAreaHectaresFromRadius(activeCelestialParameters?.radius);
   return geometricLand > 0
     ? geometricLand
@@ -550,7 +555,11 @@ function ensureCelestialAreaFields(celestialParameters) {
   if (!celestialParameters) {
     return;
   }
-  celestialParameters.surfaceArea = calculateSurfaceAreaM2FromRadius(celestialParameters.radius);
+  const layeredSurfaceArea = celestialParameters.layeredSurfaceArea === true;
+  const baseLandArea = celestialParameters.baseLand * 10000;
+  celestialParameters.surfaceArea = layeredSurfaceArea && Number.isFinite(baseLandArea) && baseLandArea > 0
+    ? baseLandArea
+    : calculateSurfaceAreaM2FromRadius(celestialParameters.radius);
   celestialParameters.crossSectionArea = calculateCrossSectionAreaM2FromRadius(celestialParameters.radius);
 }
 

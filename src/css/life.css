@@ -83,7 +83,7 @@
   
   #life-apply-progress-container {
     position: relative;
-    height: 20px;
+    min-height: 32px;
     width: 100%;
     border-radius: 10px;
     margin-top: 10px;
@@ -91,6 +91,7 @@
 
   #life-apply-btn {
     width: 100%;
+    min-height: 32px;
     display: block;
   }
   #life-apply-btn.life-apply-blocked {
@@ -207,6 +208,14 @@
     display: block;
     width: 100%;
     margin-bottom: 2px; /* Reduced margin */
+  }
+
+  .life-point-shop-btn.life-point-shop-btn-unaffordable:disabled {
+    background: #b12727;
+    border-color: #7f1f1f;
+    color: #fff;
+    -webkit-text-fill-color: #fff;
+    opacity: 1;
   }
   
   .shop-category-description {

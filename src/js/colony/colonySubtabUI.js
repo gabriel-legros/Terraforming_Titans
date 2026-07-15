@@ -8,6 +8,7 @@ const COLONY_SUBTAB_IDS = {
 
 const colonySubtabState = {
   initialized: false,
+  activeSubtabId: COLONY_SUBTAB_IDS.population,
   populationEverUnlocked: false,
   nanocolonyEverUnlocked: false,
   followersEverUnlocked: false,
@@ -107,17 +108,23 @@ function activateColonySubtab(subtabId) {
   }
   if (colonySubtabManager) {
     colonySubtabManager.activate(subtabId);
+    colonySubtabState.activeSubtabId = colonySubtabManager.getActiveId() || subtabId;
   } else {
     activateSubtab('colony-subtab', 'colony-subtab-content', subtabId, true);
+    colonySubtabState.activeSubtabId = subtabId;
   }
+}
+
+function isColonySubtabActiveFromState(subtabId) {
+  return colonySubtabState.activeSubtabId === subtabId;
 }
 
 function updateColonySubtabsVisibility() {
   cacheColonySubtabElements();
 
-  const populationUnlocked = isPopulationSubtabUnlocked();
-  const nanocolonyUnlocked = populationUnlocked && isNanocolonySubtabUnlocked();
-  const followersUnlocked = populationUnlocked && isFollowersSubtabUnlocked();
+  const populationUnlocked = isPopulationSubtabUnlocked() && !isCurrentWorldSubtabDisabled(COLONY_SUBTAB_IDS.population);
+  const nanocolonyUnlocked = isPopulationSubtabUnlocked() && isNanocolonySubtabUnlocked() && !isCurrentWorldSubtabDisabled(COLONY_SUBTAB_IDS.nanocolony);
+  const followersUnlocked = isPopulationSubtabUnlocked() && isFollowersSubtabUnlocked() && !isCurrentWorldSubtabDisabled(COLONY_SUBTAB_IDS.followers);
 
   setColonySubtabVisibility(COLONY_SUBTAB_IDS.population, populationUnlocked);
   setColonySubtabVisibility(COLONY_SUBTAB_IDS.nanocolony, nanocolonyUnlocked);
@@ -135,6 +142,9 @@ function updateColonySubtabsVisibility() {
   }
 
   const activeId = getActiveColonySubtabId();
+  if (activeId) {
+    colonySubtabState.activeSubtabId = activeId;
+  }
   if (availableSubtabs.length > 0 && (!activeId || !availableSubtabs.includes(activeId))) {
     activateColonySubtab(availableSubtabs[0]);
   }
@@ -142,7 +152,10 @@ function updateColonySubtabsVisibility() {
   const populationFirstUnlock = populationUnlocked && !colonySubtabState.populationEverUnlocked;
   const nanocolonyFirstUnlock = nanocolonyUnlocked && !colonySubtabState.nanocolonyEverUnlocked;
   const followersFirstUnlock = followersUnlocked && !colonySubtabState.followersEverUnlocked;
-  const canAutoSwitch = colonySubtabState.initialized && !globalGameIsLoadingFromSave && !globalGameIsTraveling;
+  const canAutoSwitch = colonySubtabState.initialized
+    && !globalGameIsLoadingFromSave
+    && !globalGameIsTraveling
+    && !(storyManager && storyManager.suppressNavigationRewards);
   if (canAutoSwitch && populationFirstUnlock) {
     tabManager.activateTab('colonies');
     activateColonySubtab(COLONY_SUBTAB_IDS.population);
@@ -171,6 +184,9 @@ function initializeColonySubtabs() {
     colonySubtabManager = new SubtabManager('.colony-subtab', '.colony-subtab-content', true);
     colonySubtabManager.onActivate(() => {
       markColoniesViewed();
+    });
+    colonySubtabManager.onActivate((subtabId) => {
+      colonySubtabState.activeSubtabId = subtabId;
     });
   }
   colonySubtabState.initialized = false;

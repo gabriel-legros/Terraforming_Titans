@@ -328,6 +328,35 @@ function getEffectiveLifeFraction(terraforming) {
     return Math.max(0, (terraforming.life?.target || 0) - fraction);
 }
 
+function getLifeBiomassDensityTarget(terraforming) {
+    return Math.max(0, terraforming?.requirements?.lifeBiomassDensityTargetTPerM2 || 0);
+}
+
+function getTerraformingTotalBiomass(terraforming) {
+    let totalBiomass = 0;
+    const zones = (terraforming && Array.isArray(terraforming.zoneKeys) && terraforming.zoneKeys.length)
+      ? terraforming.zoneKeys
+      : getZones();
+    for (let i = 0; i < zones.length; i += 1) {
+        const zone = zones[i];
+        totalBiomass += terraforming.zonalSurface[zone]?.biomass || 0;
+    }
+    return totalBiomass;
+}
+
+function getLifeBiomassDensity(terraforming) {
+    const surfaceArea = terraforming?.celestialParameters?.surfaceArea || 0;
+    return surfaceArea > 0 ? getTerraformingTotalBiomass(terraforming) / surfaceArea : 0;
+}
+
+function getEffectiveLifeTargetAmount(terraforming) {
+    const densityTarget = getLifeBiomassDensityTarget(terraforming);
+    if (densityTarget <= 0) {
+        return 0;
+    }
+    return densityTarget * (terraforming?.celestialParameters?.surfaceArea || 0);
+}
+
 var runAtmosphericChemistry;
 var applyAtmosphericChemistryRates;
 var METHANE_COMBUSTION_PARAMETER_CONST;
@@ -403,13 +432,13 @@ try {
 }
 
 
-function buildAtmosphereContext(atmospheric, gravity, radius) {
+function buildAtmosphereContext(atmospheric, gravity, radius, surfaceArea) {
     let totalPressurePa = 0;
     const pressureByKey = {};
     const availableByKey = {};
     for (const key in atmospheric) {
         const amount = atmospheric[key]?.value || 0;
-        const pressure = calculateAtmosphericPressure(amount, gravity, radius);
+        const pressure = calculateAtmosphericPressure(amount, gravity, radius, surfaceArea);
         totalPressurePa += pressure;
         pressureByKey[key] = pressure;
         availableByKey[key] = amount;
@@ -427,7 +456,10 @@ function calculateInitialAtmosphericPressureForDelta(terraformingState, amount) 
     const radius = dynamicMassWorld
         ? (initialCelestial.radius || initialCelestial.baseRadius)
         : currentCelestial.radius;
-    return calculateAtmosphericPressure(amount, gravity, radius);
+    const surfaceArea = dynamicMassWorld
+        ? initialCelestial.surfaceArea
+        : currentCelestial.surfaceArea;
+    return calculateAtmosphericPressure(amount, gravity, radius, surfaceArea);
 }
 
 class Terraforming extends EffectableEntity{
@@ -499,6 +531,8 @@ class Terraforming extends EffectableEntity{
         availableByKey: {},
     };
     this.heatCapacityCache = null;
+    this.factoryHeatPower = 0;
+    this.factoryHeatFlux = 0;
     this.exosphereHeightMeters = 0;
     this.resourceSubstepMilliseconds = TERRAFORMING_RESOURCE_SUBSTEP_MS;
     this.maxResourceSubsteps = TERRAFORMING_RESOURCE_MAX_SUBSTEPS;
@@ -523,7 +557,7 @@ class Terraforming extends EffectableEntity{
 
     // Global atmosphere properties (Now primarily accessed via global 'resources.atmospheric')
     this.atmosphere = {
-        name: 'Atmosphere',
+        name: t('ui.terraforming.coreNames.atmosphere', {}, 'Atmosphere'),
         // value: 0, // REMOVED - Calculated on the fly
         // gases: {}, // REMOVED - Stored in global resources
         // globalPressures: {}, // REMOVED - Calculated on the fly
@@ -532,7 +566,7 @@ class Terraforming extends EffectableEntity{
         unlocked: false // Keep track of unlock status if needed
     };
     this.temperature = {
-      name: 'Temperature',
+      name: t('ui.terraforming.coreNames.temperature', {}, 'Temperature'),
       value: 0,
       trendValue: 0,
       targetMin: this.requirements.temperatureRangeK.min,
@@ -571,7 +605,7 @@ class Terraforming extends EffectableEntity{
       }
     };
     this.luminosity = {
-      name: 'Luminosity',
+      name: t('ui.terraforming.coreNames.luminosity', {}, 'Luminosity'),
       value: 100,
       targetMin: this.requirements.luminosityRange.min,
       targetMax: this.requirements.luminosityRange.max,
@@ -598,14 +632,14 @@ class Terraforming extends EffectableEntity{
     });
     // Global life properties (name, target, unlock status)
     this.life = {
-        name: 'Life',
+        name: t('ui.terraforming.coreNames.life', {}, 'Life'),
         unlocked: false,
         target: this.requirements.lifeCoverageTarget,
         // biomassCoverage: 0, // Removed - will be calculated from zonalSurface.biomass
         // dryIceCoverage: 0 // Removed - will be calculated from zonalSurface.dryIce
     };
     this.magnetosphere = {
-      name: 'Others',
+      name: t('ui.terraforming.coreNames.others', {}, 'Others'),
       value: 0,
       target: this.requirements.magnetosphereThreshold,
       unlocked: false
@@ -698,14 +732,54 @@ class Terraforming extends EffectableEntity{
     return Math.max(0, coreHeatFlux - megaHeatSinkFlux);
   }
 
-  getMegaHeatSinkCoolingFlux() {
+  setFactoryHeatPower(power) {
+    const surfaceArea = this.celestialParameters.surfaceArea
+      || (4 * Math.PI * Math.pow((this.celestialParameters.radius || 0) * 1000, 2));
+    this.factoryHeatPower = Number(power) || 0;
+    this.factoryHeatFlux = surfaceArea > 0 ? this.factoryHeatPower / surfaceArea : 0;
+  }
+
+  getFactoryHeatFlux() {
+    if (!gameSettings.factoryHeating || isEquilibrating) {
+      return 0;
+    }
+    return this.factoryHeatFlux || 0;
+  }
+
+  getNetFactoryHeatFlux() {
+    const factoryHeatFlux = this.getFactoryHeatFlux();
+    if (factoryHeatFlux <= 0) {
+      return factoryHeatFlux;
+    }
+    const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
+    const sinkAfterCore = megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()
+      ? this.getMegaHeatSinkRawFlux()
+      : Math.max(0, this.getMegaHeatSinkFlux() - this.getCoreHeatFlux());
+    return Math.max(0, factoryHeatFlux - sinkAfterCore);
+  }
+
+  getNetSurfaceHeatFlux() {
     const coreHeatFlux = this.getCoreHeatFlux();
+    const factoryHeatFlux = this.getFactoryHeatFlux();
+    const megaHeatSinkFlux = this.getMegaHeatSinkFlux();
+    const positiveFactoryHeatFlux = Math.max(0, factoryHeatFlux);
+    const factoryCoolingFlux = Math.max(0, -factoryHeatFlux);
+    const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
+    if (megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()) {
+      const factoryHeatAfterSink = Math.max(0, positiveFactoryHeatFlux - this.getMegaHeatSinkRawFlux());
+      return coreHeatFlux + factoryHeatAfterSink - factoryCoolingFlux;
+    }
+    return Math.max(0, coreHeatFlux + positiveFactoryHeatFlux - megaHeatSinkFlux) - factoryCoolingFlux;
+  }
+
+  getMegaHeatSinkCoolingFlux() {
+    const totalHeatFlux = this.getCoreHeatFlux() + Math.max(0, this.getFactoryHeatFlux());
     const megaHeatSinkFlux = this.getMegaHeatSinkRawFlux();
     const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
     if (megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()) {
       return megaHeatSinkFlux;
     }
-    return Math.max(0, megaHeatSinkFlux - coreHeatFlux);
+    return Math.max(0, megaHeatSinkFlux - totalHeatFlux);
   }
 
   setTemperatureValuesToTrend() {
@@ -730,7 +804,8 @@ class Terraforming extends EffectableEntity{
           const gasPressurePa = calculateAtmosphericPressure(
               gasAmount,
               this.celestialParameters.gravity,
-              this.celestialParameters.radius
+              this.celestialParameters.radius,
+              this.celestialParameters.surfaceArea
           );
           const target = this.gasTargets[gas];
           if (gasPressurePa < target.min || gasPressurePa > target.max) {
@@ -761,6 +836,10 @@ class Terraforming extends EffectableEntity{
   }
 
   getLifeStatus() {
+    const densityTarget = getLifeBiomassDensityTarget(this);
+    if (densityTarget > 0) {
+      return getLifeBiomassDensity(this) >= densityTarget;
+    }
      // Compare average biomass coverage to the global target
     return (calculateAverageCoverage(this, 'biomass') >= getEffectiveLifeFraction(this));
   }
@@ -805,6 +884,9 @@ class Terraforming extends EffectableEntity{
           targetText: requirement.targetTextKey
             ? t(requirement.targetTextKey, null, requirement.targetText || `Complete ${label}.`)
             : (requirement.targetText || `Complete ${label}.`),
+          buttonText: requirement.buttonTextKey
+            ? t(requirement.buttonTextKey, null, requirement.buttonText || `Complete ${label} first`)
+            : requirement.buttonText,
           currentText: complete ? 'Completed' : 'Not completed'
         });
         continue;
@@ -1198,7 +1280,7 @@ class Terraforming extends EffectableEntity{
 
     runHazardUpdate(deltaTime = 0, options = {}) {
       if (!options.skipHazardUpdates && hazardManager && hazardManager.update) {
-        hazardManager.update(deltaTime, this);
+        hazardManager.update(deltaTime, this, options);
       }
     }
 
@@ -1426,7 +1508,14 @@ class Terraforming extends EffectableEntity{
         ? albRes.cloudHazeRaw
         : albRes.penalty;
       this.luminosity.albedo = this.luminosity.actualAlbedo;
-      this.luminosity.solarFlux = this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
+      const fixedZonalAverageFlux = currentPlanetParameters.specialAttributes?.fixedZonalAverageFlux;
+      let solarFlux = fixedZonalAverageFlux ?? this.calculateSolarFlux(this.celestialParameters.distanceFromSun * AU_METER);
+      for (const effect of this.activeEffects) {
+        if (effect.type === 'stellarFluxAddition') {
+          solarFlux += effect.value || 0;
+        }
+      }
+      this.luminosity.solarFlux = Math.max(0, solarFlux);
     }
 
     saveTemperatureState() {
@@ -1566,7 +1655,8 @@ class Terraforming extends EffectableEntity{
         const surfacePressurePa = calculateAtmosphericPressure(
             totalMass / 1000,
             gSurface,
-            this.celestialParameters.radius
+            this.celestialParameters.radius,
+            this.celestialParameters.surfaceArea
         );
         const surfacePressureBar = surfacePressurePa / 1e5;
 
@@ -1602,50 +1692,29 @@ class Terraforming extends EffectableEntity{
     const ignoreHeatCapacity = !!(options && options.ignoreHeatCapacity);
     const zonalFluxOverrides = options && options.zonalFluxOverrides;
     const disableAvailableAdvancedHeating = !!(options && options.disableAvailableAdvancedHeating);
-    const netSurfaceHeatFlux = this.getNetCoreHeatFlux();
+    const netSurfaceHeatFlux = this.getNetSurfaceHeatFlux();
     const megaHeatSinkCoolingFlux = this.getMegaHeatSinkCoolingFlux();
     const allowAvailableHeating =
-        !disableAvailableAdvancedHeating &&
         !!(mirrorOversightSettings?.advancedOversight) &&
         mirrorOversightSettings.allowAvailableToHeat !== false;
     let availableAdvancedHeatingPower = 0;
-    if (allowAvailableHeating) {
+    if (allowAvailableHeating && !disableAvailableAdvancedHeating) {
       const mirrorEffect = this.calculateMirrorEffect();
-      const mirrorPowerPer = mirrorEffect?.interceptedPower || 0;
-      const totalMirrors = Math.max(
-        0,
-        Number.isFinite(buildings?.spaceMirror?.activeNumber)
-          ? buildings.spaceMirror.activeNumber
-          : (typeof buildingCountToNumber === 'function'
-            ? buildingCountToNumber(buildings?.spaceMirror?.active)
-            : Math.max(0, Math.floor(Number(buildings?.spaceMirror?.active) || 0)))
-      );
+      const mirror = buildings.spaceMirror;
+      const mirrorResourceFactor = Number.isFinite(mirror._baseProductivity)
+        ? mirror._baseProductivity
+        : mirror.productivity;
+      const mirrorPowerPer = (mirrorEffect?.interceptedPower || 0) * Math.max(0, Math.min(1, mirrorResourceFactor));
       const lantern = buildings?.hyperionLantern;
       const lanternBaseProductivity = Number.isFinite(lantern?._baseProductivity)
         ? lantern._baseProductivity
         : (Number.isFinite(lantern?.productivity) ? lantern.productivity : 1);
-      const lanternPowerPer = lantern ? (lantern.powerPerBuilding || 0) * lanternBaseProductivity : 0;
-      const totalLanterns = Math.max(
-        0,
-        Number.isFinite(lantern?.activeNumber)
-          ? lantern.activeNumber
-          : (typeof buildingCountToNumber === 'function'
-            ? buildingCountToNumber(lantern?.active)
-            : Math.max(0, Math.floor(Number(lantern?.active) || 0)))
-      );
-      const assignM = mirrorOversightSettings.assignments?.mirrors || {};
-      const assignL = mirrorOversightSettings.assignments?.lanterns || {};
-      const assignedMirrors =
-        Math.abs(assignM.tropical || 0) +
-        Math.abs(assignM.temperate || 0) +
-        Math.abs(assignM.polar || 0) +
-        Math.abs(assignM.focus || 0);
-      const assignedLanterns = mirrorOversightSettings.applyToLantern
-        ? (assignL.tropical || 0) + (assignL.temperate || 0) + (assignL.polar || 0) + (assignL.focus || 0)
-        : 0;
-      const availableMirrors = Math.max(0, totalMirrors - assignedMirrors);
+      const rawLanternProductionFactor = lantern ? lantern.getEffectiveProductionMultiplier() : 1;
+      const lanternProductionFactor = Number.isFinite(rawLanternProductionFactor) ? rawLanternProductionFactor : 1;
+      const lanternPowerPer = lantern ? (lantern.powerPerBuilding || 0) * lanternBaseProductivity * lanternProductionFactor : 0;
+      const availableMirrors = Math.max(0, Number(mirrorOversightSettings.availableHeating?.mirrors) || 0);
       const availableLanterns = mirrorOversightSettings.applyToLantern
-        ? Math.max(0, totalLanterns - assignedLanterns)
+        ? Math.max(0, Number(mirrorOversightSettings.availableHeating?.lanterns) || 0)
         : 0;
       availableAdvancedHeatingPower =
         (availableMirrors * mirrorPowerPer) +
@@ -1765,22 +1834,49 @@ class Terraforming extends EffectableEntity{
         }
     }
 
-    const heatWeights = {};
-    let totalHeatWeight = 0;
-    if (availableAdvancedHeatingPower > 0) {
-        for (const zone of ORDER) {
-            const previousMean = this.temperature.zones[zone].value;
-            const desiredDelta = T[zone] - previousMean;
-            const zoneArea = z[zone].area || 0;
-            const weight = desiredDelta > 0 ? desiredDelta * zoneArea : 0;
-            heatWeights[zone] = weight;
-            totalHeatWeight += weight;
+    const baselineCombinedFluxes = {};
+    const availableHeatingPowerDemands = {};
+    let totalAvailableHeatingPowerDemand = 0;
+    for (const zone of ORDER) {
+        const previousMean = this.temperature.zones[zone].value;
+        const capacity = z[zone].capacityPerArea;
+        const greenhouseFactor = z[zone].greenhouseFactor || 1;
+        const zoneFlux = this.luminosity.zonalFluxes[zone];
+        const usesFlatSurfaceFlux = isRingWorld() || isAldersonDiskWorld();
+        const absorbedFlux = ((1 - z[zone].albedo) * zoneFlux * (usesFlatSurfaceFlux ? 1 : 0.25)) + netSurfaceHeatFlux;
+        const emittedFlux = greenhouseFactor > 0
+            ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / greenhouseFactor
+            : 0;
+        const desiredDelta = T[zone] - previousMean;
+        const mixingDelta = T[zone] - z[zone].mean;
+        const emittedFluxPreTarget = greenhouseFactor > 0
+            ? STEFAN_BOLTZMANN * Math.pow(Math.max(z[zone].mean, 0), 4) / greenhouseFactor
+            : 0;
+        const emittedFluxTarget = greenhouseFactor > 0
+            ? STEFAN_BOLTZMANN * Math.pow(Math.max(T[zone], 0), 4) / greenhouseFactor
+            : 0;
+        const windFlux = mixingDelta !== 0 ? emittedFluxPreTarget - emittedFluxTarget : 0;
+        let combinedFlux = absorbedFlux - emittedFlux - windFlux;
+
+        if (desiredDelta < 0 && megaHeatSinkCoolingFlux > 0) {
+          combinedFlux -= megaHeatSinkCoolingFlux;
         }
+        baselineCombinedFluxes[zone] = combinedFlux;
+
+        let heatingPowerDemand = 0;
+        if (allowAvailableHeating && !ignoreHeatCapacity && dtSeconds > 0 && desiredDelta > 0 && capacity > 0) {
+          const baselineTemperature = previousMean + (combinedFlux * dtSeconds) / capacity;
+          const requiredHeatingFlux = Math.max(0, (T[zone] - baselineTemperature) * capacity / dtSeconds);
+          heatingPowerDemand = requiredHeatingFlux * (z[zone].area || 0);
+        }
+        availableHeatingPowerDemands[zone] = heatingPowerDemand;
+        totalAvailableHeatingPowerDemand += heatingPowerDemand;
     }
+    this.availableAdvancedHeatingPowerDemand = totalAvailableHeatingPowerDemand;
+    const usableAvailableHeatingPower = Math.min(availableAdvancedHeatingPower, totalAvailableHeatingPowerDemand);
 
     // --- Write back temperatures; shift day/night by mean offset ------
     for (const zone of ORDER) {
-        const zoneFlux = this.luminosity.zonalFluxes[zone];
         const pct = this.getZoneWeight(zone);
         if (pct <= 0) {
           continue;
@@ -1795,42 +1891,21 @@ class Terraforming extends EffectableEntity{
 
         const previousMean = this.temperature.zones[zone].value;
         const capacity = z[zone].capacityPerArea;
-        const greenhouseFactor = z[zone].greenhouseFactor || 1;
-
-        const usesFlatSurfaceFlux = isRingWorld() || isAldersonDiskWorld();
-        const absorbedFlux = ((1 - z[zone].albedo) * zoneFlux * (usesFlatSurfaceFlux ? 1 : 0.25)) + netSurfaceHeatFlux;
-        const emittedFlux = greenhouseFactor > 0
-            ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / greenhouseFactor
-            : 0;
-        const netFlux = absorbedFlux - emittedFlux;
 
         let newTemp = 0;
         const desiredDelta = T[zone] - previousMean;
-        const mixingDelta = T[zone] - z[zone].mean;
 
         if(ignoreHeatCapacity){
           newTemp = T[zone];
         }
         else{
-            // Represent meridional mixing as the change in outgoing flux between pre- and post-wind temperatures
             const targetTemp = T[zone];
-            const emittedFluxPreTarget = greenhouseFactor > 0
-                ? STEFAN_BOLTZMANN * Math.pow(Math.max(z[zone].mean, 0), 4) / greenhouseFactor
-                : 0;
-            const emittedFluxTarget = greenhouseFactor > 0
-                ? STEFAN_BOLTZMANN * Math.pow(Math.max(targetTemp, 0), 4) / greenhouseFactor
-                : 0;
-            const windFlux = mixingDelta !== 0 ? emittedFluxPreTarget - emittedFluxTarget : 0;
-            let combinedFlux = netFlux - windFlux;
-
-            if (desiredDelta < 0 && megaHeatSinkCoolingFlux > 0) {
-              combinedFlux -= megaHeatSinkCoolingFlux;
-            }
-            if (desiredDelta > 0 && availableAdvancedHeatingPower > 0) {
+            let combinedFlux = baselineCombinedFluxes[zone];
+            if (desiredDelta > 0 && usableAvailableHeatingPower > 0) {
               const zoneArea = z[zone].area || 0;
-              const heatWeight = heatWeights[zone] || 0;
-              if (zoneArea > 0 && totalHeatWeight > 0 && heatWeight > 0) {
-                const heatingPower = availableAdvancedHeatingPower * (heatWeight / totalHeatWeight);
+              const heatingPowerDemand = availableHeatingPowerDemands[zone] || 0;
+              if (zoneArea > 0 && totalAvailableHeatingPowerDemand > 0 && heatingPowerDemand > 0) {
+                const heatingPower = usableAvailableHeatingPower * (heatingPowerDemand / totalAvailableHeatingPowerDemand);
                 const heatingFlux = heatingPower / zoneArea;
                 combinedFlux += heatingFlux;
               }
@@ -2051,7 +2126,8 @@ class Terraforming extends EffectableEntity{
         const cache = buildAtmosphereContext(
             this.resources.atmospheric,
             this.celestialParameters.gravity,
-            this.celestialParameters.radius
+            this.celestialParameters.radius,
+            this.celestialParameters.surfaceArea
         );
         cache.totalPressureKPa = cache.totalPressure / 1000;
         this.atmosphericPressureCache = cache;
@@ -2069,7 +2145,8 @@ class Terraforming extends EffectableEntity{
         const surfacePressurePa = calculateAtmosphericPressure(
             totalMass / 1000,
             gSurface,
-            this.celestialParameters.radius
+            this.celestialParameters.radius,
+            this.celestialParameters.surfaceArea
         );
         const surfacePressureBar = surfacePressurePa / 1e5;
         const atmosphericHeatCapacity = calculateEffectiveAtmosphericHeatCapacityHelper(
@@ -2394,6 +2471,10 @@ class Terraforming extends EffectableEntity{
     }
 
     calculateDiskDirectSolarFlux(zone) {
+      const fixedZonalAverageFlux = currentPlanetParameters.specialAttributes?.fixedZonalAverageFlux;
+      if (fixedZonalAverageFlux !== undefined) {
+        return Math.max(fixedZonalAverageFlux, 2.4e-5);
+      }
       const diskRadiusAU = Math.max(this.getDiskOuterRadiusAU(), 0.000001);
       const annulusRadiusAU = Math.max(diskRadiusAU * getDiskZoneRadiusRatio(zone), 0.000001);
       const orbitalFlux = this.calculateSolarFlux(annulusRadiusAU * AU_METER);
@@ -2402,7 +2483,8 @@ class Terraforming extends EffectableEntity{
     }
 
     calculateModifiedSolarFlux(distanceFromSunInMeters){
-      const baseFlux = this.calculateSolarFlux(distanceFromSunInMeters);
+      const fixedZonalAverageFlux = currentPlanetParameters.specialAttributes?.fixedZonalAverageFlux;
+      const baseFlux = fixedZonalAverageFlux ?? this.calculateSolarFlux(distanceFromSunInMeters);
       const mirrorEffect = this.calculateMirrorEffect();
       const mirrorFlux = mirrorEffect.powerPerUnitArea;
       const lanternFlux = this.calculateLanternFlux();
@@ -2454,7 +2536,9 @@ class Terraforming extends EffectableEntity{
         const assignmentFactor = lantern._allowFullProductivity
           ? 1
           : (Number.isFinite(lantern._assignmentShare) ? lantern._assignmentShare : 1);
-        const power = (lantern.powerPerBuilding || 0) * lantern.activeNumber * resourceFactor * assignmentFactor;
+        const rawProductionFactor = lantern.getEffectiveProductionMultiplier();
+        const productionFactor = Number.isFinite(rawProductionFactor) ? rawProductionFactor : 1;
+        const power = (lantern.powerPerBuilding || 0) * lantern.activeNumber * resourceFactor * productionFactor * assignmentFactor;
         const area = this.celestialParameters.crossSectionArea || this.celestialParameters.surfaceArea;
         return power / area;
       }
@@ -2621,7 +2705,12 @@ class Terraforming extends EffectableEntity{
             const currentAmount = this.resources.atmospheric[gas].value || 0;
             const initialAmount = currentPlanetParameters.resources.atmospheric[gas]?.initialValue || 0;
 
-            const currentPressure = calculateAtmosphericPressure(currentAmount, this.celestialParameters.gravity, this.celestialParameters.radius);
+            const currentPressure = calculateAtmosphericPressure(
+                currentAmount,
+                this.celestialParameters.gravity,
+                this.celestialParameters.radius,
+                this.celestialParameters.surfaceArea
+            );
             const initialPressure = calculateInitialAtmosphericPressureForDelta(this, initialAmount);
 
             totalDelta += Math.abs(currentPressure - initialPressure);
@@ -2641,7 +2730,7 @@ class Terraforming extends EffectableEntity{
         targetId: 'solarPanel',
         type: 'productionMultiplier',
         value: solarPanelMultiplier,
-        name: 'Luminosity'
+        name: t('ui.terraforming.effects.luminosity', {}, 'Luminosity')
       }
       addEffect(solarPanelEffect);
 
@@ -2651,7 +2740,7 @@ class Terraforming extends EffectableEntity{
         targetId: 'windTurbine',
         type: 'productionMultiplier',
         value: windTurbineMultiplier,
-        name: 'Atmospheric pressure'
+        name: t('ui.terraforming.effects.atmosphericPressure', {}, 'Atmospheric pressure')
       }
       addEffect(windTurbineEffect);
 
@@ -2670,6 +2759,23 @@ class Terraforming extends EffectableEntity{
           : this.getFactoryTemperatureMaintenancePenaltyReduction();
       const buildingMitigationById =
         aerostatMitigationDetails?.buildingCoverage?.byId ?? {};
+      const applyTerraformingPenaltyEffect = (effect) => {
+        let targetObject = null;
+        if (effect.target === 'building') {
+          targetObject = buildings?.[effect.targetId];
+        } else if (effect.target === 'colony') {
+          targetObject = colonies?.[effect.targetId];
+        }
+        const existingEffect = targetObject?.activeEffects?.find((activeEffect) => activeEffect.effectId === effect.effectId);
+        if (
+          existingEffect &&
+          effectsAreShallowEqual(existingEffect, effect) &&
+          canSkipShallowEqualReapply(effect)
+        ) {
+          return;
+        }
+        addEffect(effect);
+      };
 
       for (let i = 1; i <= 7; i++) {
         const energyPenaltyEffect = {
@@ -2679,10 +2785,15 @@ class Terraforming extends EffectableEntity{
             type: 'resourceConsumptionMultiplier',
             resourceCategory: 'colony',
             resourceTarget: 'energy',
-            value: colonyEnergyPenalty
+            value: colonyEnergyPenalty,
+            name: t(
+              'ui.terraforming.temperature.effects.colonyEnergyPenalty',
+              null,
+              'Temperature'
+            )
         };
 
-        addEffect(energyPenaltyEffect);
+        applyTerraformingPenaltyEffect(energyPenaltyEffect);
 
         const metalCostPenaltyEffect = {
             effectId: 'pressureCostPenalty-metal',
@@ -2692,7 +2803,7 @@ class Terraforming extends EffectableEntity{
             resourceCategory: 'colony',
             resourceId: 'metal',
             value: colonyCostPenalty,
-            name: 'High pressure'
+            name: t('ui.terraforming.effects.highPressure', {}, 'High pressure')
         };
 
         const glassCostPenaltyEffect = {
@@ -2703,11 +2814,11 @@ class Terraforming extends EffectableEntity{
             resourceCategory: 'colony',
             resourceId: 'glass',
             value: colonyCostPenalty,
-            name: 'High pressure'
+            name: t('ui.terraforming.effects.highPressure', {}, 'High pressure')
         };
 
-        addEffect(metalCostPenaltyEffect);
-        addEffect(glassCostPenaltyEffect);
+        applyTerraformingPenaltyEffect(metalCostPenaltyEffect);
+        applyTerraformingPenaltyEffect(glassCostPenaltyEffect);
       }
 
       if (this.gravityPenaltyEnabled) {
@@ -2733,7 +2844,7 @@ class Terraforming extends EffectableEntity{
                 resource === 'water' ||
                 resource === 'research'
               ) continue;
-              addEffect({
+              applyTerraformingPenaltyEffect({
                 effectId: `gravityCostPenalty-${category}-${resource}`,
                 target,
                 targetId: id,
@@ -2741,7 +2852,7 @@ class Terraforming extends EffectableEntity{
                 resourceCategory: category,
                 resourceId: resource,
                 value: gravityCostMultiplier,
-                name: 'Gravity'
+                name: t('ui.terraforming.effects.gravity', {}, 'Gravity')
               });
             }
           }
@@ -2798,7 +2909,7 @@ class Terraforming extends EffectableEntity{
           if (!categoryCosts) continue;
           for (const resource in categoryCosts) {
             if (resource === 'research') continue;
-            addEffect({
+            applyTerraformingPenaltyEffect({
               effectId: `temperatureMaintenancePenalty-${resource}`,
               target: 'building',
               targetId: id,
@@ -2806,7 +2917,7 @@ class Terraforming extends EffectableEntity{
               resourceCategory: 'colony',
               resourceId: resource,
               value: penaltyValue,
-              name: 'Temperature penalty'
+              name: t('ui.terraforming.effects.temperaturePenalty', {}, 'Temperature penalty')
             });
           }
         }
@@ -2822,7 +2933,7 @@ class Terraforming extends EffectableEntity{
           if (!colonyCosts) continue;
           for (const resource in colonyCosts) {
             if (resource === 'research') continue;
-            addEffect({
+            applyTerraformingPenaltyEffect({
               effectId: `temperatureMaintenancePenalty-${resource}`,
               target: 'colony',
               targetId: id,
@@ -2830,7 +2941,7 @@ class Terraforming extends EffectableEntity{
               resourceCategory: 'colony',
               resourceId: resource,
               value: penaltyValue,
-              name: 'Temperature penalty'
+              name: t('ui.terraforming.effects.temperaturePenalty', {}, 'Temperature penalty')
             });
           }
         }
@@ -3163,6 +3274,9 @@ if (typeof module !== "undefined" && module.exports) {
   module.exports.setStarLuminosity = setStarLuminosity;
   module.exports.getStarLuminosity = getStarLuminosity;
   module.exports.getEffectiveLifeFraction = getEffectiveLifeFraction;
+  module.exports.getLifeBiomassDensityTarget = getLifeBiomassDensityTarget;
+  module.exports.getLifeBiomassDensity = getLifeBiomassDensity;
+  module.exports.getEffectiveLifeTargetAmount = getEffectiveLifeTargetAmount;
   module.exports.METHANE_COMBUSTION_PARAMETER = METHANE_COMBUSTION_PARAMETER_CONST;
   module.exports.buildAtmosphereContext = buildAtmosphereContext;
   module.exports.calculateInitialAtmosphericPressureForDelta = calculateInitialAtmosphericPressureForDelta;

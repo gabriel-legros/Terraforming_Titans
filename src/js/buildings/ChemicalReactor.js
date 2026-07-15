@@ -113,7 +113,8 @@ class ChemicalReactor extends MultiRecipesBuilding {
       const pressure = calculateAtmosphericPressure(
         resourceObj.value,
         terraforming.celestialParameters.gravity,
-        terraforming.celestialParameters.radius
+        terraforming.celestialParameters.radius,
+        terraforming.celestialParameters.surfaceArea
       );
       return settings.unit === 'kPa' ? pressure / 1000 : pressure;
     }

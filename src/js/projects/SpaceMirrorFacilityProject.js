@@ -75,6 +75,12 @@ function normalizeMirrorOversightMode(mode) {
   return mode === 'day' || mode === 'night' || mode === 'flux' ? mode : 'average';
 }
 
+function normalizeMirrorOversightPriority(zone, priority) {
+  const value = parseInt(priority, 10) || 1;
+  const maximum = zone === 'focus' ? 5 : 3;
+  return Math.max(1, Math.min(maximum, value));
+}
+
 function isMirrorOversightFluxMode(mode) {
   return normalizeMirrorOversightMode(mode) === 'flux';
 }
@@ -108,6 +114,14 @@ function getMirrorOversightProjectedState(settings) {
   return settings.lastProjectedTemperatureState || null;
 }
 
+function isSpaceMirrorFacilityFlagActive(flagId) {
+  const project = projectManager.projects.spaceMirrorFacility;
+  return !!(
+    (projectManager.isBooleanFlagSet && projectManager.isBooleanFlagSet(flagId)) ||
+    (project.isBooleanFlagSet && project.isBooleanFlagSet(flagId))
+  );
+}
+
 // Mirror oversight controls
 function createDefaultMirrorOversightSettings() {
   return {
@@ -121,6 +135,7 @@ function createDefaultMirrorOversightSettings() {
     waterMultiplier: 1000,
     tempMode: { tropical: 'average', temperate: 'average', polar: 'average' },
     priority: { tropical: 1, temperate: 1, polar: 1, focus: 1 },
+    availableHeating: { mirrors: 0, lanterns: 0 },
     autoAssign: { tropical: false, temperate: false, polar: false, focus: false, any: false },
       assignments: {
         mirrors: { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 },
@@ -182,7 +197,7 @@ function releaseMirrorUnassignedAssignments(settings) {
   lanterns.unassigned = 0;
 }
 
-function applyMirrorOversightSettings(settings, saved = {}) {
+function applyMirrorOversightSettings(settings, saved = {}, options = {}) {
   const savedDistribution = saved.distribution || {};
   mergeSettingKeys(settings.distribution, savedDistribution).forEach(zone => {
     const v = Number(savedDistribution[zone]);
@@ -190,6 +205,9 @@ function applyMirrorOversightSettings(settings, saved = {}) {
   });
   settings.applyToLantern = !!saved.applyToLantern;
   settings.useFinerControls = !!saved.useFinerControls;
+  if (settings.useFinerControls) {
+    settings.applyToLantern = true;
+  }
 
   const normalizeStep = (value) => {
     const num = Number(value);
@@ -218,30 +236,38 @@ function applyMirrorOversightSettings(settings, saved = {}) {
 
   const savedPriority = saved.priority || {};
   mergeSettingKeys(settings.priority, savedPriority).forEach(zone => {
-    const val = parseInt(savedPriority[zone], 10);
-    settings.priority[zone] = val >= 1 && val <= 5 ? val : 1;
+    settings.priority[zone] = normalizeMirrorOversightPriority(zone, savedPriority[zone]);
   });
+
+  const savedAvailableHeating = saved.availableHeating || {};
+  settings.availableHeating.mirrors = Math.max(0, Math.floor(Number(savedAvailableHeating.mirrors) || 0));
+  settings.availableHeating.lanterns = Math.max(0, Math.floor(Number(savedAvailableHeating.lanterns) || 0));
 
   const savedAuto = saved.autoAssign || {};
   mergeSettingKeys(settings.autoAssign, savedAuto).forEach(zone => {
     settings.autoAssign[zone] = !!savedAuto[zone];
   });
 
-  const savedAssignments = saved.assignments || {};
-  const savedMirrors = savedAssignments.mirrors || {};
-  const savedLanterns = savedAssignments.lanterns || {};
-  mergeSettingKeys(settings.assignments.mirrors, savedMirrors).forEach(zone => {
-    const mv = Number(savedMirrors[zone]);
-    settings.assignments.mirrors[zone] = Number.isFinite(mv) ? mv : settings.assignments.mirrors[zone];
-  });
-  mergeSettingKeys(settings.assignments.lanterns, savedLanterns).forEach(zone => {
-    const lv = Number(savedLanterns[zone]);
-    settings.assignments.lanterns[zone] = Number.isFinite(lv) ? lv : settings.assignments.lanterns[zone];
-  });
-  const savedReversal = savedAssignments.reversalMode || {};
-  mergeSettingKeys(settings.assignments.reversalMode, savedReversal).forEach(zone => {
-    settings.assignments.reversalMode[zone] = !!savedReversal[zone];
-  });
+  if (!settings.advancedOversight || options.restoreAdvancedAssignments === true) {
+    const savedAssignments = saved.assignments || {};
+    const savedMirrors = savedAssignments.mirrors || {};
+    const savedLanterns = savedAssignments.lanterns || {};
+    mergeSettingKeys(settings.assignments.mirrors, savedMirrors).forEach(zone => {
+      const mv = Number(savedMirrors[zone]);
+      settings.assignments.mirrors[zone] = Number.isFinite(mv) ? mv : settings.assignments.mirrors[zone];
+    });
+    mergeSettingKeys(settings.assignments.lanterns, savedLanterns).forEach(zone => {
+      const lv = Number(savedLanterns[zone]);
+      settings.assignments.lanterns[zone] = Number.isFinite(lv) ? lv : settings.assignments.lanterns[zone];
+    });
+    const savedReversal = savedAssignments.reversalMode || {};
+    mergeSettingKeys(settings.assignments.reversalMode, savedReversal).forEach(zone => {
+      settings.assignments.reversalMode[zone] = !!savedReversal[zone];
+    });
+  }
+  settings.lastProjectedTemperatureState = options.restoreProjectedState === false
+    ? null
+    : (saved.lastProjectedTemperatureState || null);
 
   syncMirrorAssignmentMode(settings);
   if (settings.useFinerControls || settings.advancedOversight) {
@@ -265,8 +291,7 @@ function applyMirrorOversightTravelSettings(settings, saved = {}) {
 
   const savedPriority = saved.priority || {};
   mergeSettingKeys(settings.priority, savedPriority).forEach(zone => {
-    const val = parseInt(savedPriority[zone], 10);
-    settings.priority[zone] = val >= 1 && val <= 5 ? val : 1;
+    settings.priority[zone] = normalizeMirrorOversightPriority(zone, savedPriority[zone]);
   });
 
   settings.allowAvailableToHeat = saved.allowAvailableToHeat !== false;
@@ -289,6 +314,14 @@ function buildMirrorOversightTravelSnapshot(settings) {
   };
 }
 
+function buildMirrorOversightAutomationSnapshot(settings) {
+  const snapshot = JSON.parse(JSON.stringify(settings || {}));
+  delete snapshot.availableHeating;
+  delete snapshot.lastProjectedTemperatureState;
+  delete snapshot.lastSolution;
+  return snapshot;
+}
+
 function getQuickBuildCount(building, buildCount) {
   const count = buildCount || 1;
   if (!gameSettings.roundBuildingConstruction) {
@@ -309,6 +342,17 @@ function getFacilityResourceFactor(building) {
   return Math.max(0, Math.min(1, base));
 }
 
+function getFacilityProductionFactor(building) {
+  if (!building) return 1;
+  const factor = building.getEffectiveProductionMultiplier();
+  return Number.isFinite(factor) ? factor : 1;
+}
+
+function getLanternPowerPerBuilding(lantern) {
+  if (!lantern) return 0;
+  return (lantern.powerPerBuilding || 0) * getFacilityResourceFactor(lantern) * getFacilityProductionFactor(lantern);
+}
+
 function canControlLanternDayNightCycle() {
   if (typeof terraforming === 'undefined' || !terraforming.celestialParameters) return false;
   return terraforming.celestialParameters.rogue === true
@@ -319,6 +363,14 @@ function isLanternMirrorFacilityAvailable() {
   const lantern = buildings.hyperionLantern;
   return !!(lantern
     && lantern.unlocked
+    && !lantern.permanentlyDisabled
+    && !(lantern.isBooleanFlagSet && lantern.isBooleanFlagSet('disableMirrorFacilityActivation')));
+}
+
+function canShowLanternMirrorFacilityStatus(project) {
+  const lantern = buildings.hyperionLantern;
+  return !!(project.isBooleanFlagSet('hyperionLanternFacilityAccess')
+    && lantern
     && !lantern.permanentlyDisabled
     && !(lantern.isBooleanFlagSet && lantern.isBooleanFlagSet('disableMirrorFacilityActivation')));
 }
@@ -526,6 +578,7 @@ function resetMirrorOversightSettings() {
   mirrorOversightSettings.waterMultiplier = 1000;
   mirrorOversightSettings.tempMode = { tropical: 'average', temperate: 'average', polar: 'average' };
   mirrorOversightSettings.priority = { tropical: 1, temperate: 1, polar: 1, focus: 1 };
+  mirrorOversightSettings.availableHeating = { mirrors: 0, lanterns: 0 };
   mirrorOversightSettings.autoAssign = { tropical: false, temperate: false, polar: false, focus: false, any: false };
   mirrorOversightSettings.assignments.mirrors = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
   mirrorOversightSettings.assignments.lanterns = { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0, any: 0 };
@@ -631,6 +684,7 @@ function distributeAutoAssignments(type) {
 function toggleFinerControls(enabled) {
   mirrorOversightSettings.useFinerControls = enabled;
   if (enabled) {
+    mirrorOversightSettings.applyToLantern = true;
     distributeAssignmentsFromSliders('mirrors');
     distributeAssignmentsFromSliders('lanterns');
     releaseMirrorUnassignedAssignments(mirrorOversightSettings);
@@ -752,6 +806,8 @@ function updateAssignmentDisplays() {
 function toggleAdvancedOversight(enable) {
   const wasAdvanced = !!mirrorOversightSettings.advancedOversight;
   mirrorOversightSettings.advancedOversight = !!enable;
+  mirrorOversightSettings.availableHeating.mirrors = 0;
+  mirrorOversightSettings.availableHeating.lanterns = 0;
   syncMirrorAssignmentMode(mirrorOversightSettings);
   if (enable) {
     mirrorOversightSettings.useFinerControls = true;
@@ -891,6 +947,9 @@ function initializeMirrorOversightUI(container) {
   lanternCheckbox.checked = mirrorOversightSettings.applyToLantern;
   lanternCheckbox.addEventListener('change', () => {
     mirrorOversightSettings.applyToLantern = lanternCheckbox.checked;
+    if (mirrorOversightSettings.useFinerControls) {
+      mirrorOversightSettings.applyToLantern = true;
+    }
     updateMirrorOversightUI();
   });
 
@@ -906,10 +965,10 @@ function initializeMirrorOversightUI(container) {
   advDiv.innerHTML = `
     <input type="checkbox" id="mirror-advanced-oversight">
     <label for="mirror-advanced-oversight">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.title', 'Advanced Oversight')}</label>
-    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.titleTooltip', 'Unlocks target-based control: set temperature or flux targets per zone and a water melt target. Mirrors and lanterns auto-assign by priority when enabled; lower numbers are assigned first.')}">&#9432;</span>
+    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.titleTooltip', 'Unlocks target-based control: set temperature or flux targets per zone and a water melt target. Zonal targets use priorities 1 to 3, available heating uses priority 4.5, and melting can use priorities 1 to 5. Lower numbers are assigned first.')}">&#9432;</span>
     <input type="checkbox" id="mirror-allow-available-heat" style="margin-left:12px;">
     <label for="mirror-allow-available-heat">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.allowAvailableToHeat', 'Allow available to heat')}</label>
-    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.allowAvailableToHeatTooltip', 'When Advanced Oversight is running, leave this on to let any unassigned mirrors and lanterns provide extra heating toward the targets. This will not bring the temperature above the trend.')}">&#9432;</span>
+    <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.allowAvailableToHeatTooltip', 'Uses only as many available mirrors and lanterns as can help warm zones toward their temperature trend. With Advanced Oversight, this always runs at priority 4.5: Melt priority 4 runs before it, while Melt priority 5 receives the remaining facility capacity.')}">&#9432;</span>
   `;
   if (lanternDivInit) {
     lanternDivInit.style.display = 'flex';
@@ -925,7 +984,7 @@ function initializeMirrorOversightUI(container) {
   advancedControls.innerHTML = `
     <div class="control-group">
       <span class="control-label" style="font-weight:600;">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.targetsPriority', 'Targets & Priority')}</span>
-      <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.targetsPriorityTooltip', 'Set temperature targets in the current unit or flux targets in W/m^2 for each zone, plus a water melt target when focusing. Priorities 1 to 5 decide assignment order; lower numbers are assigned first.')}">&#9432;</span>
+      <span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.targetsPriorityTooltip', 'Set temperature targets in the current unit or flux targets in W/m^2 for each zone, plus a water melt target when focusing. Zonal targets use priorities 1 to 3. Melt uses priorities 1 to 5. Lower numbers are assigned first.')}">&#9432;</span>
     </div>
     <div class="stats-grid three-col" style="row-gap:8px;">
       <div class="stat-item" data-zone="tropical" style="display:flex; gap:8px; align-items:center;">
@@ -938,7 +997,7 @@ function initializeMirrorOversightUI(container) {
           <option value="flux">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.flux', 'Flux')}</option>
         </select>
         <select id="adv-priority-tropical" class="stat-value mirror-oversight-select-small mirror-oversight-select-priority">
-          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          <option>1</option><option>2</option><option>3</option>
         </select>
       </div>
       <div class="stat-item" data-zone="temperate" style="display:flex; gap:8px; align-items:center;">
@@ -951,7 +1010,7 @@ function initializeMirrorOversightUI(container) {
           <option value="flux">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.flux', 'Flux')}</option>
         </select>
         <select id="adv-priority-temperate" class="stat-value mirror-oversight-select-small mirror-oversight-select-priority">
-          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          <option>1</option><option>2</option><option>3</option>
         </select>
       </div>
       <div class="stat-item" data-zone="polar" style="display:flex; gap:8px; align-items:center;">
@@ -964,7 +1023,7 @@ function initializeMirrorOversightUI(container) {
           <option value="flux">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.advanced.flux', 'Flux')}</option>
         </select>
         <select id="adv-priority-polar" class="stat-value mirror-oversight-select-small mirror-oversight-select-priority">
-          <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+          <option>1</option><option>2</option><option>3</option>
         </select>
       </div>
       <div class="stat-item" id="adv-water-row" style="display:flex; gap:8px; align-items:center;">
@@ -1014,6 +1073,10 @@ function initializeMirrorOversightUI(container) {
     allowHeatCheckbox.checked = mirrorOversightSettings.allowAvailableToHeat !== false;
     allowHeatCheckbox.addEventListener('change', () => {
       mirrorOversightSettings.allowAvailableToHeat = allowHeatCheckbox.checked;
+      if (!allowHeatCheckbox.checked) {
+        mirrorOversightSettings.availableHeating.mirrors = 0;
+        mirrorOversightSettings.availableHeating.lanterns = 0;
+      }
     });
   }
   const advInputs = {
@@ -1087,8 +1150,7 @@ function initializeMirrorOversightUI(container) {
     const cur = mirrorOversightSettings.priority[k] || 1;
     el.value = String(cur);
     el.addEventListener('change', () => {
-      const v = Math.max(1, Math.min(5, parseInt(el.value, 10) || 1));
-      mirrorOversightSettings.priority[k] = v;
+      mirrorOversightSettings.priority[k] = normalizeMirrorOversightPriority(k, el.value);
     });
   });
   Object.keys(advTiming).forEach(k => {
@@ -1320,6 +1382,36 @@ function initializeMirrorOversightUI(container) {
 
 let mirrorOversightCache = null;
 
+function mirrorOversightUiMissingActiveZones(container) {
+  const assignmentGrid = container.querySelector('#assignment-grid');
+  if (!assignmentGrid) return true;
+  return getZones().some(zone => (
+    !container.querySelector(`#mirror-oversight-${zone}`) ||
+    !container.querySelector(`#adv-target-${zone}`) ||
+    !container.querySelector(`#mirror-flux-${zone}`) ||
+    !assignmentGrid.querySelector(`.assign-cell[data-type="mirrors"][data-zone="${zone}"]`) ||
+    !assignmentGrid.querySelector(`.assign-cell[data-type="lanterns"][data-zone="${zone}"]`) ||
+    !assignmentGrid.querySelector(`.auto-assign[data-zone="${zone}"]`)
+  ));
+}
+
+function rebuildMirrorOversightUiIfMissingZones(container) {
+  if (!mirrorOversightUiMissingActiveZones(container)) return false;
+  const parent = container.parentElement;
+  const finerContent = document.getElementById('mirror-finer-content');
+  const wasFinerOpen = finerContent && finerContent.style.display !== 'none';
+  container.remove();
+  mirrorOversightCache = null;
+  initializeMirrorOversightUI(parent);
+  if (wasFinerOpen) {
+    const rebuiltFinerContent = document.getElementById('mirror-finer-content');
+    const rebuiltFinerIcon = document.getElementById('mirror-finer-icon');
+    if (rebuiltFinerContent) rebuiltFinerContent.style.display = 'block';
+    if (rebuiltFinerIcon) rebuiltFinerIcon.textContent = '▼';
+  }
+  return true;
+}
+
 function rebuildMirrorOversightCache() {
   if (typeof document === 'undefined') return;
   const container = document.getElementById('mirror-oversight-container') || document.createElement('div');
@@ -1414,20 +1506,10 @@ function updateMirrorOversightUI() {
   if (typeof document === 'undefined') return;
   const container = document.getElementById('mirror-oversight-container');
   if (!container) return;
+  if (rebuildMirrorOversightUiIfMissingZones(container)) return;
   ensureMirrorOversightCache();
   applyMirrorZoneVisibility();
-  let enabled = false;
-  if (typeof projectManager !== 'undefined') {
-    if (projectManager.isBooleanFlagSet &&
-        projectManager.isBooleanFlagSet('spaceMirrorFacilityOversight')) {
-      enabled = true;
-    } else if (projectManager.projects &&
-               projectManager.projects.spaceMirrorFacility &&
-               typeof projectManager.projects.spaceMirrorFacility.isBooleanFlagSet === 'function' &&
-               projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('spaceMirrorFacilityOversight')) {
-      enabled = true;
-    }
-  }
+  const enabled = isSpaceMirrorFacilityFlagActive('spaceMirrorFacilityOversight');
   container.style.display = enabled ? 'block' : 'none';
   const dist = mirrorOversightSettings.distribution || { tropical: 0, temperate: 0, polar: 0, focus: 0, unassigned: 0 };
   const vals = {
@@ -1484,18 +1566,7 @@ function updateMirrorOversightUI() {
       label.style.display = reversalAvailable ? '' : 'none';
     });
   }
-  // Advanced oversight unlock check (boolean flag name: advancedOversight)
-  let advancedUnlocked = false;
-  if (typeof projectManager !== 'undefined') {
-    if (projectManager.isBooleanFlagSet && projectManager.isBooleanFlagSet('advancedOversight')) {
-      advancedUnlocked = true;
-    } else if (projectManager.projects &&
-               projectManager.projects.spaceMirrorFacility &&
-               typeof projectManager.projects.spaceMirrorFacility.isBooleanFlagSet === 'function' &&
-               projectManager.projects.spaceMirrorFacility.isBooleanFlagSet('advancedOversight')) {
-      advancedUnlocked = true;
-    }
-  }
+  const advancedUnlocked = isSpaceMirrorFacilityFlagActive('advancedOversight');
   const advDiv = document.getElementById('mirror-advanced-oversight-div');
   const advCheckbox = document.getElementById('mirror-advanced-oversight');
   if (advDiv) advDiv.style.display = advancedUnlocked ? 'flex' : 'none';
@@ -1587,16 +1658,12 @@ function updateMirrorOversightUI() {
     if (header) header.style.display = '';
   }
 
-  // Keep assignment numbers updated in advanced mode
-  if (advancedOn && typeof updateAssignmentDisplays === 'function') {
-    updateAssignmentDisplays();
-  }
   if (C.assignmentControls) C.assignmentControls.forEach(el => { el.disabled = advancedOn || !useFiner; });
   if (useFiner && !mirrorOversightSettings.advancedOversight) {
     distributeAutoAssignments('mirrors');
     distributeAutoAssignments('lanterns');
-    updateAssignmentDisplays();
   }
+  updateAssignmentDisplays();
   if (C.focusZoneCells) C.focusZoneCells.forEach(el => {
     if (!focusEnabled) {
       el.style.display = 'none';
@@ -1720,7 +1787,7 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
       const assignL = mirrorOversightSettings.assignments?.lanterns || {};
       const mirrorPowerPer = isRogue ? 0 : terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
       const lantern = buildings?.hyperionLantern;
-      const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);
+      const lanternPowerPer = getLanternPowerPerBuilding(lantern);
       const focusMirrorCount = mirrorOversightSettings.advancedOversight
         ? Math.abs(assignM.focus || 0)
         : (assignM.focus || 0);
@@ -1734,7 +1801,7 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
         const mirrorPowerPer = isRogue ? 0 : terraforming.calculateMirrorEffect().interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
         const mirrorPowerTotal = mirrorPowerPer * (buildings['spaceMirror']?.activeNumber || 0);
         const lantern = buildings?.hyperionLantern;
-        const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);
+        const lanternPowerPer = getLanternPowerPerBuilding(lantern);
         const lanternPowerTotal = mirrorOversightSettings.applyToLantern
           ? lanternPowerPer * (lantern?.activeNumber || 0)
           : 0;
@@ -1797,7 +1864,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
 
   const mirrorPowerPer = terraforming.calculateMirrorEffect(isDisk ? zone : undefined).interceptedPower * getFacilityResourceFactor(buildings?.spaceMirror);
   const lantern = buildings?.hyperionLantern;
-  const lanternPowerPer = (lantern?.powerPerBuilding || 0) * getFacilityResourceFactor(lantern);
+  const lanternPowerPer = getLanternPowerPerBuilding(lantern);
   const totalMirrorPower = mirrorPowerPer * (buildings?.spaceMirror?.activeNumber || 0);
   const totalLanternPower = lanternPowerPer * (lantern?.activeNumber || 0);
 
@@ -1904,9 +1971,9 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
 //  - Evaluate candidates by calling terraforming.updateSurfaceTemperature() only a handful of times,
 //    pick the best improving candidate(s), commit, repeat a small, capped number of times per pass.
 //  - Save the resulting assignment as lastSolution for next tick.
-function runAdvancedOversightAssignments(project) {
+function runAdvancedOversightAssignments(project, deltaTime) {
   if (!SpaceMirrorAdvancedOversightModule) return;
-  SpaceMirrorAdvancedOversightModule.runAssignments(project, mirrorOversightSettings);
+  SpaceMirrorAdvancedOversightModule.runAssignments(project, mirrorOversightSettings, deltaTime);
 }
 
 class SpaceMirrorFacilityProject extends Project {
@@ -1915,6 +1982,41 @@ class SpaceMirrorFacilityProject extends Project {
     this.reversalAvailable = false;
     this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
     mirrorOversightSettings = this.mirrorOversightSettings;
+  }
+
+  isPermanentlyDisabled() {
+    return super.isPermanentlyDisabled() || this.isBooleanFlagSet('stellarEngineMirrorFacilityLockout');
+  }
+
+  complete() {
+    if (this.isPermanentlyDisabled()) {
+      return;
+    }
+    super.complete();
+  }
+
+  enableHyperionLanternIfAvailable() {
+    if (this.isCompleted && this.isBooleanFlagSet('hyperionLanternFacilityAccess')) {
+      addEffect({
+        target: 'building',
+        targetId: 'hyperionLantern',
+        effectId: 'space-mirror-facility-enable-hyperion-lantern',
+        type: 'enable',
+        sourceId: this
+      });
+    }
+  }
+
+  applyEffect(effect) {
+    super.applyEffect(effect);
+    if (effect.type === 'booleanFlag' && effect.flagId === 'hyperionLanternFacilityAccess') {
+      this.enableHyperionLanternIfAvailable();
+    }
+  }
+
+  applyCompletionEffect() {
+    super.applyCompletionEffect();
+    this.enableHyperionLanternIfAvailable();
   }
 
   enforceMirrorLockout() {
@@ -1939,8 +2041,8 @@ class SpaceMirrorFacilityProject extends Project {
     this.enforceMirrorLockout();
     sanitizeMirrorDistribution();
     try {
-      if (mirrorOversightSettings.advancedOversight) {
-        runAdvancedOversightAssignments(this);
+      if (mirrorOversightSettings.advancedOversight && isSpaceMirrorFacilityFlagActive('advancedOversight')) {
+        runAdvancedOversightAssignments(this, deltaTime);
       }
     } catch (e) { /* swallow to avoid breaking tick */ }
     super.update(deltaTime);
@@ -1977,7 +2079,9 @@ class SpaceMirrorFacilityProject extends Project {
           </div>
         </div>
       </div>
+      <div class="mirror-facility-overlay">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.incompleteOverlay', 'Complete facility to enable mirrors')}</div>
     `;
+    mirrorDetails.classList.toggle('facility-incomplete', !this.isCompleted);
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(mirrorDetails);
     container.appendChild(mirrorDetails);
 
@@ -1991,18 +2095,18 @@ class SpaceMirrorFacilityProject extends Project {
     const mirrorQuickButton = document.createElement('button');
     mirrorQuickButton.classList.add('quick-build-button');
     mirrorQuick.appendChild(mirrorQuickButton);
-    // Reserve space so the build button can grow without moving x10
+    // Reserve space so the build button can grow without moving the step controls
     const mirrorSpacer = document.createElement('div');
     mirrorSpacer.classList.add('qb-spacer');
     const mirrorMul = document.createElement('button');
     mirrorMul.classList.add('increment-button', 'qb-inc');
     mirrorMul.textContent = getSpaceMirrorText('ui.projects.common.timesTen', 'x10');
     mirrorQuick.appendChild(mirrorSpacer);
-    mirrorQuick.appendChild(mirrorMul);
     const mirrorDiv = document.createElement('button');
     mirrorDiv.classList.add('increment-button', 'qb-inc');
     mirrorDiv.textContent = getSpaceMirrorText('ui.projects.common.divideTen', '/10');
     mirrorQuick.appendChild(mirrorDiv);
+    mirrorQuick.appendChild(mirrorMul);
     const mirrorZero = document.createElement('button');
     mirrorZero.classList.add('increment-button', 'qb-inc');
     mirrorZero.textContent = getSpaceMirrorText('ui.projects.common.zero', '0');
@@ -2054,8 +2158,10 @@ class SpaceMirrorFacilityProject extends Project {
           <span class="info-tooltip-icon" style="flex-shrink:0;" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.dayNight.tooltip', 'Control the day-night cycle duration for this world (1-1000 hours). Lanterns can provide artificial sunlight on a custom schedule.')}">&#9432;</span>
         </div>
       </div>
+      <div class="mirror-facility-overlay">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.incompleteLanternOverlay', 'Complete facility to enable lanterns')}</div>
     `;
     attachProjectInfoTooltips(lanternDetails);
+    lanternDetails.classList.toggle('facility-incomplete', !this.isCompleted);
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(lanternDetails);
     container.appendChild(lanternDetails);
 
@@ -2069,18 +2175,18 @@ class SpaceMirrorFacilityProject extends Project {
     const lanternQuickButton = document.createElement('button');
     lanternQuickButton.classList.add('quick-build-button');
     lanternQuick.appendChild(lanternQuickButton);
-    // Reserve space so the build button can grow without moving x10
+    // Reserve space so the build button can grow without moving the step controls
     const lanternSpacer = document.createElement('div');
     lanternSpacer.classList.add('qb-spacer');
     const lanternMul = document.createElement('button');
     lanternMul.classList.add('increment-button', 'qb-inc');
     lanternMul.textContent = getSpaceMirrorText('ui.projects.common.timesTen', 'x10');
     lanternQuick.appendChild(lanternSpacer);
-    lanternQuick.appendChild(lanternMul);
     const lanternDiv = document.createElement('button');
     lanternDiv.classList.add('increment-button', 'qb-inc');
     lanternDiv.textContent = getSpaceMirrorText('ui.projects.common.divideTen', '/10');
     lanternQuick.appendChild(lanternDiv);
+    lanternQuick.appendChild(lanternMul);
     const lanternZero = document.createElement('button');
     lanternZero.classList.add('increment-button', 'qb-inc');
     lanternZero.textContent = getSpaceMirrorText('ui.projects.common.zero', '0');
@@ -2105,6 +2211,7 @@ class SpaceMirrorFacilityProject extends Project {
     projectElements[this.name] = {
       ...projectElements[this.name],
       mirrorDetails: {
+        container: mirrorDetails,
         numMirrors: mirrorDetails.querySelector('#num-mirrors'),
         powerPerMirror: mirrorDetails.querySelector('#power-per-mirror'),
         powerPerMirrorArea: mirrorDetails.querySelector('#power-per-mirror-area'),
@@ -2234,6 +2341,7 @@ class SpaceMirrorFacilityProject extends Project {
   updateUI() {
     const elements = projectElements[this.name];
     if (!elements || !elements.mirrorDetails) return;
+    elements.mirrorDetails.container.classList.toggle('facility-incomplete', !this.isCompleted);
     const mirrorBuilding = buildings['spaceMirror'];
     const numMirrors = Number.isFinite(mirrorBuilding?.activeNumber)
       ? mirrorBuilding.activeNumber
@@ -2292,8 +2400,10 @@ class SpaceMirrorFacilityProject extends Project {
 
     if (elements.lanternDetails) {
       const lantern = buildings.hyperionLantern;
+      const showLanternStatus = canShowLanternMirrorFacilityStatus(this);
       const showLantern = this.isCompleted && isLanternMirrorFacilityAvailable();
-      elements.lanternDetails.container.style.display = showLantern ? 'block' : 'none';
+      elements.lanternDetails.container.style.display = showLanternStatus ? 'block' : 'none';
+      elements.lanternDetails.container.classList.toggle('facility-incomplete', !this.isCompleted);
       if (elements.quickBuild && elements.quickBuild.lantern) {
         elements.quickBuild.lantern.container.style.display = showLantern ? 'grid' : 'none';
       }
@@ -2319,17 +2429,20 @@ class SpaceMirrorFacilityProject extends Project {
       }
       
       if (showLantern) {
-        const area = terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea;
+        const birchWorldProject = projectManager.projects.birchWorld;
+        const usesBirchLayerArea = birchWorldProject?.unlocked && birchWorldProject.isCurrentSmbhShellworld();
+        const area = usesBirchLayerArea
+          ? terraforming.celestialParameters.surfaceArea
+          : (terraforming.celestialParameters.crossSectionArea || terraforming.celestialParameters.surfaceArea);
         const numLanterns = Number.isFinite(lantern?.activeNumber)
           ? lantern.activeNumber
           : (typeof buildingCountToNumber === 'function'
             ? buildingCountToNumber(lantern?.active)
             : Math.max(0, Math.floor(Number(lantern?.active) || 0)));
-        const lanternResourceFactor = getFacilityResourceFactor(lantern);
         const lanternAssignmentShare = lantern._allowFullProductivity
           ? 1
           : (Number.isFinite(lantern._assignmentShare) ? lantern._assignmentShare : 1);
-        const powerPerLantern = (lantern.powerPerBuilding || 0) * lanternResourceFactor;
+        const powerPerLantern = getLanternPowerPerBuilding(lantern);
         const powerPerLanternArea = area > 0 ? powerPerLantern / area : 0;
         const totalLanternPower = powerPerLantern * numLanterns * lanternAssignmentShare;
         const totalLanternArea = powerPerLanternArea * numLanterns * lanternAssignmentShare;
@@ -2379,18 +2492,38 @@ class SpaceMirrorFacilityProject extends Project {
   saveAutomationSettings() {
     return {
       ...super.saveAutomationSettings(),
-      mirrorOversightSettings: JSON.parse(JSON.stringify(this.mirrorOversightSettings))
+      mirrorOversightSettings: buildMirrorOversightAutomationSnapshot(this.mirrorOversightSettings)
     };
   }
 
-  loadAutomationSettings(settings = {}) {
+  loadAutomationSettings(settings = {}, options = {}) {
     super.loadAutomationSettings(settings);
     if (!Object.prototype.hasOwnProperty.call(settings, 'mirrorOversightSettings')) {
       return;
     }
+    const preserveAdvancedAssignments = options.isPresetApplication === true
+      && this.mirrorOversightSettings?.advancedOversight === true
+      && settings.mirrorOversightSettings?.advancedOversight === true;
+    const currentAdvancedAssignments = preserveAdvancedAssignments
+      ? {
+          mirrors: { ...(this.mirrorOversightSettings.assignments?.mirrors || {}) },
+          lanterns: { ...(this.mirrorOversightSettings.assignments?.lanterns || {}) },
+          reversalMode: { ...(this.mirrorOversightSettings.assignments?.reversalMode || {}) },
+        }
+      : null;
     this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
     mirrorOversightSettings = this.mirrorOversightSettings;
-    applyMirrorOversightSettings(this.mirrorOversightSettings, settings.mirrorOversightSettings || {});
+    applyMirrorOversightSettings(
+      this.mirrorOversightSettings,
+      settings.mirrorOversightSettings || {},
+      { restoreProjectedState: options.isPresetApplication !== true }
+    );
+    if (currentAdvancedAssignments) {
+      this.mirrorOversightSettings.assignments.mirrors = currentAdvancedAssignments.mirrors;
+      this.mirrorOversightSettings.assignments.lanterns = currentAdvancedAssignments.lanterns;
+      this.mirrorOversightSettings.assignments.reversalMode = currentAdvancedAssignments.reversalMode;
+      syncMirrorAssignmentMode(this.mirrorOversightSettings);
+    }
 
     if (typeof updateMirrorOversightUI === 'function') {
       updateMirrorOversightUI();
@@ -2408,7 +2541,11 @@ class SpaceMirrorFacilityProject extends Project {
     super.loadState(state);
     this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
     mirrorOversightSettings = this.mirrorOversightSettings;
-    applyMirrorOversightSettings(this.mirrorOversightSettings, state?.mirrorOversightSettings);
+    applyMirrorOversightSettings(
+      this.mirrorOversightSettings,
+      state?.mirrorOversightSettings,
+      { restoreAdvancedAssignments: true }
+    );
 
     if (typeof updateMirrorOversightUI === 'function') {
       updateMirrorOversightUI();

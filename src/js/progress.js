@@ -18,6 +18,9 @@ function getChapterNumber(id) {
 }
 
 function joinLines(text) {
+    if (text instanceof Function) {
+        return text();
+    }
     return Array.isArray(text) ? text.join('\n') : text;
 }
 
@@ -265,9 +268,7 @@ class StoryManager {
     }
 
     update() {
-        // Keep the objective label live even while story progression is paused by UI typing/popups.
         if ((typeof window !== 'undefined' && window.popupActive) || (typeof journalTyping !== 'undefined' && journalTyping)) {
-            this.updateCurrentObjectiveUI();
             return;
         }
 
@@ -309,9 +310,8 @@ class StoryManager {
                 }
             }
         }
+        this.suppressNavigationRewards = false;
 
-        // 4. Update the displayed objective after processing events
-        this.updateCurrentObjectiveUI();
     }
 
     activateEvent(event) { // Keep as is
@@ -461,6 +461,13 @@ class StoryManager {
                      return proj ? proj.repeatCount >= objective.repeatCount : false;
                 }
                 return false;
+          case 'projectAttribute': {
+               const proj = projectManager.projects[objective.projectId];
+               const attribute = objective.attribute || 'cores';
+               const current = proj ? proj[attribute] || 0 : 0;
+               const target = objective.quantity || objective.value || 0;
+               return compareValues(current, target, objective.comparison);
+          }
           case 'research': {
                if (typeof researchManager === 'undefined') {
                    return false;
@@ -483,6 +490,11 @@ class StoryManager {
                    return solisManager.solisPoints >= (objective.points || 0);
                }
                return false;
+          case 'earthAction': {
+               const current = earthManager ? earthManager.getActionCount(objective.actionId) : 0;
+               const target = objective.quantity || objective.value || 0;
+               return compareValues(current, target, objective.comparison);
+          }
           case 'galaxySectorControl': {
                const sectorLabel = objective.sectorLabel || objective.sectorKey || objective.sector || objective.label;
                const sector = findGalaxySector(sectorLabel);
@@ -617,6 +629,16 @@ class StoryManager {
                 }
                 return '';
             }
+          case 'projectAttribute': {
+               const proj = projectManager.projects[objective.projectId];
+               const attribute = objective.attribute || 'cores';
+               const current = proj ? proj[attribute] || 0 : 0;
+               const target = objective.quantity || objective.value || 0;
+               const name = objective.name || (proj ? proj.displayName : objective.projectId);
+               const fallbackLabel = attribute.charAt(0).toUpperCase() + attribute.slice(1);
+               const label = objective.labelKey ? t(objective.labelKey, null, fallbackLabel) : (objective.label || fallbackLabel);
+               return `${name} ${label}: ${format(current, true)}/${format(target, true)}`;
+          }
           case 'research': {
                if (typeof researchManager === 'undefined') {
                    return '';
@@ -653,6 +675,12 @@ class StoryManager {
                const current = solisManager ? solisManager.solisPoints || 0 : 0;
                return `Solis Points: ${format(current, true)}/${format(objective.points, true)}`;
            }
+          case 'earthAction': {
+               const current = earthManager ? earthManager.getActionCount(objective.actionId) : 0;
+               const target = objective.quantity || objective.value || 0;
+               const label = objective.labelKey ? t(objective.labelKey, null, objective.label || objective.actionId) : (objective.label || objective.actionId);
+               return `${label} ${format(current, true)}/${format(target, true)}`;
+          }
           case 'condition': {
                return objective.description || '';
           }
@@ -686,30 +714,54 @@ class StoryManager {
        }
    }
 
-    // Determine the first incomplete objective from active events
-    getCurrentObjectiveText() {
+    // Determine the incomplete objectives from the earliest active event waiting on objectives
+    getCurrentObjectiveTexts() {
         for (const id of this.activeEventIds) {
             const ev = this.findEventById(id);
             if (!ev || !ev.objectives) continue;
+            const texts = [];
             for (const obj of ev.objectives) {
                 if (!this.isObjectiveComplete(obj, ev)) {
-                    return this.describeObjective(obj);
+                    const text = this.describeObjective(obj);
+                    if (text) {
+                        texts.push(text);
+                    }
                 }
             }
+            if (texts.length) return texts;
         }
-        return '';
+        return [];
+    }
+
+    getCurrentObjectiveText() {
+        return this.getCurrentObjectiveTexts().join('; ');
     }
 
     updateCurrentObjectiveUI() {
         if (typeof document === 'undefined') return;
-        const el = document.getElementById('current-objective');
+        if (!this.currentObjectiveElement || !this.currentObjectiveElement.isConnected) {
+            this.currentObjectiveElement = document.getElementById('current-objective');
+        }
+        const el = this.currentObjectiveElement;
         if (!el) return;
-        const text = this.getCurrentObjectiveText();
-        el.textContent = text ? `Objective: ${text}` : '';
+        const texts = this.getCurrentObjectiveTexts();
+        if (texts.length === 0) {
+            el.textContent = '';
+            return;
+        }
+        el.textContent = `${texts.length === 1 ? 'Objective' : 'Objectives'}: ${texts.join('; ')}`;
     }
 
     shouldApplyEffect(effect) {
         return !effect.planetId || effect.planetId === spaceManager.getCurrentPlanetKey();
+    }
+
+    prepareStoryEffect(event, effect, index) {
+        return {
+            ...effect,
+            sourceId: effect.sourceId || event.id,
+            effectId: effect.effectId || `story-${event.id}-${index}`
+        };
     }
 
     applyRewards(event) { // Keep as is
@@ -719,19 +771,23 @@ class StoryManager {
         const delay = event.rewardDelay || 0;
         let effectiveIndex = 0; // Use separate index for delay timing if filtering rewards
 
-        event.reward.forEach((effect) => {
+        event.reward.forEach((effect, index) => {
             if (effect && effect.type) {
+                const storyEffect = this.prepareStoryEffect(event, effect, index);
+                const suppressNavigationReward = this.suppressNavigationRewards
+                    && (storyEffect.type === 'activateTab' || storyEffect.type === 'activateSubtab')
+                    && storyEffect.onTravel !== true;
                 setTimeout(() => {
                     if (!window.storyManager) {
                         console.warn("StoryManager gone, skipping delayed reward application.");
                         return;
                     }
-                    if (!effect.oneTimeFlag) {
-                        this.appliedEffects.push(effect);
+                    if (!storyEffect.oneTimeFlag) {
+                        this.appliedEffects.push(storyEffect);
                     }
-                    if (this.shouldApplyEffect(effect)) {
-                        addEffect(effect);
-                        console.log(`Applied reward for ${event.id}: ${effect.type}`);
+                    if (!suppressNavigationReward && this.shouldApplyEffect(storyEffect)) {
+                        addEffect(storyEffect);
+                        console.log(`Applied reward for ${event.id}: ${storyEffect.type}`);
                     }
                 }, effectiveIndex * delay);
                 effectiveIndex++;
@@ -744,6 +800,9 @@ class StoryManager {
     // Reapply stored effects to newly created game objects. Used when
     // resetting the game state while keeping the existing story progress.
     reapplyEffects() {
+        if (globalGameIsTraveling) {
+            this.suppressNavigationRewards = true;
+        }
         const uniqueEffectsToApply = new Map();
         this.appliedEffects.forEach(effect => {
             const effectKey = JSON.stringify(effect);
@@ -899,16 +958,17 @@ class StoryManager {
             if (!Array.isArray(event.reward)) {
                 return;
             }
-            event.reward.forEach(effect => {
+            event.reward.forEach((effect, index) => {
                 if (!effect || !effect.type) {
                     return;
                 }
+                const storyEffect = this.prepareStoryEffect(event, effect, index);
                 if (!effect.oneTimeFlag) {
-                    collectedEffects.push(effect);
+                    collectedEffects.push(storyEffect);
                 }
                 if (applyRewards) {
-                    if (this.shouldApplyEffect(effect)) {
-                        addEffect(effect);
+                    if (this.shouldApplyEffect(storyEffect)) {
+                        addEffect(storyEffect);
                     }
                 }
             });
@@ -938,6 +998,7 @@ class StoryManager {
         this.waitingForJournalEventId = savedState.waitingForJournalEventId || null; // <<< Load waiting state
         this.currentChapter = savedState.currentChapter || 0;
         this.currentChapterPlanet = savedState.currentChapterPlanet || null;
+        this.suppressNavigationRewards = true;
 
         if (storyDebugMode) {
             this.completeAllJournalEventsForDebug();
@@ -958,12 +1019,13 @@ class StoryManager {
          this.completedEventIds.forEach(eventId => {
              const event = this.findEventById(eventId);
              if (!event || event.type !== 'journal' || !Array.isArray(event.reward)) return;
-             event.reward.forEach(effect => {
+             event.reward.forEach((effect, index) => {
                  if (effect && !effect.oneTimeFlag) {
-                     const effectKey = JSON.stringify(effect);
+                     const storyEffect = this.prepareStoryEffect(event, effect, index);
+                     const effectKey = JSON.stringify(storyEffect);
                      if (!uniqueEffectsToApply.has(effectKey)) {
-                         uniqueEffectsToApply.set(effectKey, effect);
-                         this.appliedEffects.push(effect);
+                         uniqueEffectsToApply.set(effectKey, storyEffect);
+                         this.appliedEffects.push(storyEffect);
                      }
                  }
              });
@@ -1042,7 +1104,11 @@ class StoryEvent {
                 createPopup(
                     this.parameters.title,
                     joinLines(this.parameters.text),
-                    this.parameters.buttonText
+                    this.parameters.buttonText,
+                    {
+                        textSpeedMultiplier: this.parameters.textSpeedMultiplier,
+                        onClose: this.parameters.onClose
+                    }
                 );
                 break;
             case "system-pop-up":

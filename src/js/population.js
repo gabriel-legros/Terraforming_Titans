@@ -1,3 +1,5 @@
+const BIOWORKER_MAX_BIOMASS_DENSITY = 10000;
+
 class PopulationModule extends EffectableEntity {
     constructor(resources, populationParameters) {
       super({config : 'population module'})
@@ -22,6 +24,8 @@ class PopulationModule extends EffectableEntity {
       this.gravityMitigation = 0;
       this.currentWorldOverpopulationLossTotal = 0;
       this.currentWorldPeakPopulation = 0;
+      this.lastNaturalGrowthPerSecond = 0;
+      this.lastImmigrationPerSecond = 0;
     }
 
   getEffectiveGrowthMultiplier(){
@@ -31,7 +35,7 @@ class PopulationModule extends EffectableEntity {
         multiplier *= effect.value;
       }
     });
-    if (followersManager && followersManager.enabled) {
+    if (isManagerEffectivelyEnabled(followersManager, 'followersManager')) {
       multiplier *= (1 + followersManager.getPilgrimGrowthBonus());
     }
     return multiplier;
@@ -48,16 +52,29 @@ class PopulationModule extends EffectableEntity {
   }
 
   getWorkerEfficiencyMultipliers() {
-    const zealMultiplier = followersManager && followersManager.enabled
-      ? (1 + followersManager.getZealWorkerEfficiencyBonus())
-      : 1;
-    const artMultiplier = followersManager && followersManager.enabled
-      ? followersManager.getArtWorkerPerColonistMultiplier()
-      : 1;
+    let zealMultiplier = 1;
+    let artMultiplier = 1;
+    let resortMultiplier = 1;
+    let colonistMultiplier = 1;
+    this.activeEffects.forEach(effect => {
+      if (effect.type !== 'colonistWorkerEfficiencyMultiplier') {
+        return;
+      }
+      const multiplier = effect.value;
+      colonistMultiplier *= multiplier;
+      if (effect.effectId === 'followers-zeal-worker-efficiency') {
+        zealMultiplier = multiplier;
+      } else if (effect.effectId === 'followers-art-worker-efficiency') {
+        artMultiplier = multiplier;
+      } else if (effect.effectId === 'resort-vacation-worker-efficiency') {
+        resortMultiplier = multiplier;
+      }
+    });
     return {
       zealMultiplier,
       artMultiplier,
-      colonistMultiplier: zealMultiplier * artMultiplier
+      resortMultiplier,
+      colonistMultiplier
     };
   }
 
@@ -167,6 +184,48 @@ class PopulationModule extends EffectableEntity {
     }
     return 1 - ratio;
   }
+
+  getImmigrationBaseRateSplit(baseGrowthRate) {
+    const threshold = spaceManager.galacticPopulationGrowthRate;
+    if (
+      !gameSettings.immigrationPool ||
+      spaceManager.currentPlanetKey === 'mars' ||
+      baseGrowthRate <= threshold
+    ) {
+      return {
+        naturalBaseRate: baseGrowthRate,
+        immigrationBaseRate: 0
+      };
+    }
+
+    return {
+      naturalBaseRate: threshold,
+      immigrationBaseRate: baseGrowthRate - threshold
+    };
+  }
+
+  calculateImmigrationForTick(potentialImmigration, currentPopulation, populationCap) {
+    if (!(potentialImmigration > 0) || !(populationCap > 0)) {
+      return 0;
+    }
+
+    const galacticPopulation = Math.max(0, spaceManager.galacticPopulation || 0);
+    const galacticCapacity = Math.max(0, spaceManager.galacticPopulationCapacity || 0);
+    if (!(galacticPopulation > 0) || !(galacticCapacity > 0)) {
+      return 0;
+    }
+
+    const worldFill = currentPopulation / populationCap;
+    const galacticFill = galacticPopulation / galacticCapacity;
+    if (worldFill >= galacticFill) {
+      return 0;
+    }
+
+    const equalizingImmigration =
+      (populationCap * galacticPopulation - galacticCapacity * currentPopulation) /
+      (populationCap + galacticCapacity);
+    return Math.max(0, Math.min(potentialImmigration, galacticPopulation, equalizingImmigration));
+  }
   
     calculateGrowthRate() {
       let totalWeightedHappiness = 0;
@@ -210,15 +269,29 @@ class PopulationModule extends EffectableEntity {
       }
 
       this.growthRate = Math.max(0, this.calculateGrowthRate());
+      const seconds = deltaTime > 0 ? deltaTime / 1000 : 0;
 
       // Calculate logistic growth/decay
       const growthMultiplier = this.getEffectiveGrowthMultiplier();
       const capacityFactor = this.calculateCapacityFactor(currentPopulation, populationCap);
       const baseGrowthRate = Math.max(0, this.growthRate);
-      const growthPerSecond = baseGrowthRate * currentPopulation * capacityFactor * growthMultiplier;
+      const growthSplit = this.getImmigrationBaseRateSplit(baseGrowthRate);
+      const naturalGrowthPerSecond =
+        growthSplit.naturalBaseRate * currentPopulation * capacityFactor * growthMultiplier;
+      const potentialImmigrationPerSecond =
+        growthSplit.immigrationBaseRate * currentPopulation * capacityFactor * growthMultiplier;
+      const potentialImmigration = potentialImmigrationPerSecond * seconds;
+      const immigration = this.calculateImmigrationForTick(
+        potentialImmigration,
+        currentPopulation,
+        populationCap
+      );
+      const immigrationPerSecond = seconds > 0 ? immigration / seconds : 0;
+      const growthPerSecond = naturalGrowthPerSecond + immigrationPerSecond;
+      this.lastNaturalGrowthPerSecond = naturalGrowthPerSecond;
+      this.lastImmigrationPerSecond = immigrationPerSecond;
 
       // Calculate decay from shortages
-      const seconds = deltaTime > 0 ? deltaTime / 1000 : 0;
       const starvationCoverage = this.getWeightedNeedFulfillment('food');
       const energyCoverage = this.getWeightedNeedFulfillment('energy');
       const componentsCoverage = this.getWeightedNeedFulfillment('components');
@@ -260,7 +333,20 @@ class PopulationModule extends EffectableEntity {
       const populationChange = netPerSecond * seconds;
 
       if (growthPerSecond > 0) {
-        this.populationResource.modifyRate(growthPerSecond, 'Population Growth', 'population');
+        if (naturalGrowthPerSecond > 0) {
+          this.populationResource.modifyRate(
+            naturalGrowthPerSecond,
+            t('ui.colony.growthRate.naturalGrowth', null, 'Natural growth'),
+            'population'
+          );
+        }
+        if (immigrationPerSecond > 0) {
+          this.populationResource.modifyRate(
+            immigrationPerSecond,
+            t('ui.colony.growthRate.immigration', null, 'Immigration'),
+            'population'
+          );
+        }
       }
       if (starvationDecayPerSecond > 0) {
         this.populationResource.modifyRate(-starvationDecayPerSecond, 'Starvation', 'population');
@@ -280,6 +366,9 @@ class PopulationModule extends EffectableEntity {
         this.populationResource.increase(populationChange);
       } else if (populationChange < 0) {
         this.populationResource.decrease(-populationChange);
+      }
+      if (immigration > 0) {
+        spaceManager.galacticPopulation = Math.max(0, spaceManager.galacticPopulation - immigration);
       }
 
       currentPopulation = this.populationResource.value;
@@ -357,19 +446,28 @@ class PopulationModule extends EffectableEntity {
       return 1; // If no workers are required, ratio is 1 (everything is fulfilled)
     }
 
-    const tiers = [
-      { req: this.totalWorkersRequiredHigh, match: priority > 0 },
-      { req: this.totalWorkersRequiredNormal, match: priority === 0 },
-      { req: this.totalWorkersRequiredLow, match: priority < 0 }
-    ];
-
     let remaining = this.workerResource.cap;
-    for (const t of tiers) {
-      if (t.match) {
-        return t.req === 0 ? 1 : Math.min(1, remaining / t.req);
-      }
-      remaining = Math.max(0, remaining - t.req);
+
+    if (priority > 0) {
+      return this.totalWorkersRequiredHigh === 0
+        ? 1
+        : Math.min(1, remaining / this.totalWorkersRequiredHigh);
     }
+
+    remaining = Math.max(0, remaining - this.totalWorkersRequiredHigh);
+    if (priority === 0) {
+      return this.totalWorkersRequiredNormal === 0
+        ? 1
+        : Math.min(1, remaining / this.totalWorkersRequiredNormal);
+    }
+
+    remaining = Math.max(0, remaining - this.totalWorkersRequiredNormal);
+    if (priority < 0) {
+      return this.totalWorkersRequiredLow === 0
+        ? 1
+        : Math.min(1, remaining / this.totalWorkersRequiredLow);
+    }
+
     return 1;
   }
 
@@ -402,7 +500,7 @@ class PopulationModule extends EffectableEntity {
       if (activeBiomass <= 0) {
         return 0;
       }
-      const maxBiomassDensity = design.getMaxBiomassDensity();
+      const maxBiomassDensity = Math.min(design.getMaxBiomassDensity(), BIOWORKER_MAX_BIOMASS_DENSITY);
       const landAreaM2 = resolveWorldGeometricLand(terraforming, resources.surface.land) * 10000;
       const maxBiomass = landAreaM2 > 0 ? landAreaM2 * maxBiomassDensity : 0;
       const cappedBiomass = Math.min(activeBiomass, maxBiomass);

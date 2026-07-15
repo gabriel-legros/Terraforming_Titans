@@ -4,6 +4,10 @@ let festivalContainerElement = null;
 let festivalCountdownElement = null;
 let totalHappinessBonusElement = null;
 let claimAllMilestonesButton = null;
+let totalFundingBonusElement;
+let terraformingMilestoneAlertElement = null;
+let milestoneSubtabAlertElement = null;
+let milestoneSubtabButtonElement = null;
 let milestoneButtons = [];
 
 function getMilestoneSettings() {
@@ -11,8 +15,10 @@ function getMilestoneSettings() {
 }
 
 function isMilestoneSubtabUnlocked() {
-    const button = document.querySelector('.terraforming-subtab[data-subtab="milestone-terraforming"]');
-    return !button.classList.contains('hidden');
+    if (!milestoneSubtabButtonElement || !milestoneSubtabButtonElement.isConnected) {
+        milestoneSubtabButtonElement = document.querySelector('.terraforming-subtab[data-subtab="milestone-terraforming"]');
+    }
+    return !!(milestoneSubtabButtonElement && !milestoneSubtabButtonElement.classList.contains('hidden'));
 }
 
 function getMilestonesUiText(path, fallback, vars) {
@@ -23,6 +29,7 @@ function createMilestonesUI() {
     const milestonesContainer = document.getElementById('milestone-terraforming');
     milestonesContainer.innerHTML = ''; // Clear any existing content
     milestoneButtons = [];
+    totalFundingBonusElement = document.getElementById('total-funding-bonus');
 
     // Add the Milestones header
     const header = document.createElement('h2');
@@ -140,25 +147,31 @@ function updateMilestonesUI() {
         }
 
         // Update the button's state
+        let nextState;
         if (milestone.isCompleted) {
-            button.classList.remove('completable', 'not-completable');
-            button.classList.add('completed');
-            button.disabled = true;
+            nextState = 'completed';
             totalFundingBonus += milestone.fundingIncrease || 0;
             completedMilestones++;
         } else if (milestone.canBeCompleted) {
-            button.classList.remove('completed', 'not-completable');
-            button.classList.add('completable');
-            button.disabled = false;
+            nextState = 'completable';
         } else {
-            button.classList.remove('completed', 'completable');
-            button.classList.add('not-completable');
-            button.disabled = true;
+            nextState = 'not-completable';
+        }
+        if (button._milestoneState !== nextState) {
+            button.classList.remove('completed', 'completable', 'not-completable');
+            button.classList.add(nextState);
+            button._milestoneState = nextState;
+        }
+        const disabled = nextState !== 'completable';
+        if (button.disabled !== disabled) {
+            button.disabled = disabled;
         }
     });
 
     // Update the total bonuses
-    const totalFundingBonusElement = document.getElementById('total-funding-bonus');
+    if (totalFundingBonusElement && !totalFundingBonusElement.isConnected) {
+        totalFundingBonusElement = document.getElementById('total-funding-bonus');
+    }
 
     if (totalFundingBonusElement) {
         totalFundingBonusElement.textContent = totalFundingBonus;
@@ -206,8 +219,14 @@ function checkMilestoneAlert() {
 }
 
 function updateMilestoneAlert() {
-    const alertEl = document.getElementById('terraforming-alert');
-    const subtabEl = document.getElementById('milestone-subtab-alert');
+    if (!terraformingMilestoneAlertElement || !terraformingMilestoneAlertElement.isConnected) {
+        terraformingMilestoneAlertElement = document.getElementById('terraforming-alert');
+    }
+    if (!milestoneSubtabAlertElement || !milestoneSubtabAlertElement.isConnected) {
+        milestoneSubtabAlertElement = document.getElementById('milestone-subtab-alert');
+    }
+    const alertEl = terraformingMilestoneAlertElement;
+    const subtabEl = milestoneSubtabAlertElement;
     if (!alertEl && !subtabEl) return;
     const settings = getMilestoneSettings();
     if (settings && settings.silenceMilestoneAlert) {

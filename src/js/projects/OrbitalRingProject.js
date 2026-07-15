@@ -51,9 +51,7 @@ class OrbitalRingProject extends TerraformingDurationProject {
     ) {
       return true;
     }
-    const maxRings = spaceManager.getUnmodifiedTerraformedWorldCount({
-      countArtificial: false
-    });
+    const maxRings = spaceManager.getOrbitalRingEligibleTerraformedWorldCount();
     if (this.ringCount >= maxRings) {
       return false;
     }
@@ -116,9 +114,7 @@ class OrbitalRingProject extends TerraformingDurationProject {
     ) {
       return 0;
     }
-    const terraformedWorlds = spaceManager.getUnmodifiedTerraformedWorldCount({
-      countArtificial: false
-    });
+    const terraformedWorlds = spaceManager.getOrbitalRingEligibleTerraformedWorldCount();
     let maxPrepay = terraformedWorlds - this.ringCount - this.prepaidRings;
     if (this.isActive) {
       maxPrepay -= 1;

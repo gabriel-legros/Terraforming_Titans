@@ -100,11 +100,11 @@ const defaultPlanetParameters = {
   populationParameters: {
     workerRatio: 0.5
   },
-  gravityPenaltyEnabled: false,
+  gravityPenaltyEnabled: true,
   fundingRate: 0, // Default
   // Default host star information (for Solar System worlds)
   star: {
-    name: 'Sun',
+    name: t('catalogs.planets.default.star.name', {}, 'Sun'),
     spectralType: 'G2V',
     luminositySolar: 1,
     massSolar: 1,
@@ -290,7 +290,7 @@ const titanOverrides = {
     "tropical": {
       "liquidWater": 0,
       "ice": 3791.2417188821228,
-      "buriedIce": 150000000000000,
+      "buriedIce": 324000000000000000,
       "dryIce": 139.90393055759668,
       "buriedDryIce": 0,
       "liquidCO2": 0,
@@ -309,7 +309,7 @@ const titanOverrides = {
     "temperate": {
       "liquidWater": 0,
       "ice": 4628.180274946239,
-      "buriedIce": 1350000000000000,
+      "buriedIce": 2919000000000000000,
       "dryIce": 285.7580222734193,
       "buriedDryIce": 0,
       "liquidCO2": 0,
@@ -328,7 +328,7 @@ const titanOverrides = {
     "polar": {
       "liquidWater": 0,
       "ice": 9450000000001650,
-      "buriedIce": 4050000000000000,
+      "buriedIce": 8757000000000000000,
       "dryIce": 74787.24014496687,
       "buriedDryIce": 0,
       "liquidCO2": 0,
@@ -439,7 +439,7 @@ const callistoOverrides = {
     "tropical": {
       "liquidWater": 0,
       "ice": 234701.20681597744,
-      "buriedIce": 4000000000000000000,
+      "buriedIce": 4800000000000000000,
       "dryIce": 2.188939063830986e-14,
       "buriedDryIce": 0,
       "liquidCO2": 0,
@@ -458,7 +458,7 @@ const callistoOverrides = {
     "temperate": {
       "liquidWater": 0,
       "ice": 2272047.556094187,
-      "buriedIce": 5000000000000000000,
+      "buriedIce": 6000000000000000000,
       "dryIce": 1.2164918887818015e-9,
       "buriedDryIce": 0,
       "liquidCO2": 0,
@@ -477,7 +477,7 @@ const callistoOverrides = {
     "polar": {
       "liquidWater": 0,
       "ice": 39999644296512.875,
-      "buriedIce": 1000000000000000000,
+      "buriedIce": 1200000000000000000,
       "dryIce": 13448.182793617127,
       "buriedDryIce": 0,
       "liquidCO2": 0,
@@ -699,7 +699,7 @@ const ganymedeOverrides = {
 const vega2Overrides = {
   name: '',
   travelWarning: {
-    message: 'This world has no water.  Solis can help.'
+    message: t('catalogs.planets.vega2.travelWarning.message', {}, 'This world has no water.  Solis can help.  Five purchases is enough but more can help.  \n \n This world unlocks some very powerful upgrades and is strongly recommended (see Early Advanced Oversight in difficulty settings for a description of one of them).')
   },
 
   resources: {
@@ -828,10 +828,10 @@ const vega2Overrides = {
 const venusOverrides = {
   name: '',
   travelWarning: {
-    message: 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly easier.',
+    message: t('catalogs.planets.venus.travelWarning.message', {}, 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly easier.'),
     hint: {
-      title: 'Hint',
-      body: '- Skill points can help a lot.  \n - With few skill points, the Solis upgrade for early colony sliders can make the early game more doable.  A high worker ratio can help with resource shortage (especially components). \n - The Warp Gate Command can improve your components and electronics production. \n - The 125k Advanced Research can make an aspect of the game a lot easier.'
+      title: t('catalogs.planets.venus.travelWarning.hint.title', {}, 'Hint'),
+      body: t('catalogs.planets.venus.travelWarning.hint.body', {}, '- Skill points can help a lot.  \n - With few skill points, the Solis upgrade for early colony sliders can make the early game more doable.  A high worker ratio can help with resource shortage (especially components). \n - The Warp Gate Command can improve your components and electronics production. \n - The 125k Advanced Research can make an aspect of the game a lot easier.')
     }
   },
 
@@ -1131,7 +1131,7 @@ const umbraOverrides = {
 const solisPrimeOverrides = {
   name: '',
   travelWarning: {
-    message: 'This planet is very easy, but it is possible to grow too fast.  If this happens, pausing autobuild is usually enough to recover. \n The story will give you some initial resources, but if some mega projects are on auto start you may end up using them instantly.',
+    message: t('catalogs.planets.solisprime.travelWarning.message', {}, 'This planet is very easy, but it is possible to grow too fast.  If this happens, pausing autobuild is usually enough to recover. \n The story will give you some initial resources, but if some mega projects are on auto start you may end up using them instantly.'),
   },
   specialAttributes: {
     hasSand: false,
@@ -1299,16 +1299,19 @@ const gabbagOverrides = {
         "initialValue": 3696135227990891
       },
       "atmosphericWater": {
-        "initialValue": 1223821191070649.8
+        "initialValue": 227911776816642.75
       },
       "atmosphericMethane": {
         "initialValue": 400000000000000
+      },
+      "atmosphericAmmonia": {
+        "initialValue": 0
       },
       "oxygen": {
         "initialValue": 79141235823.26874
       },
       "inertGas": {
-        "initialValue": 250000000000000000
+        "initialValue": 50000000000000000
       },
       "hydrogen": {
         "initialValue": 0
@@ -1320,12 +1323,13 @@ const gabbagOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "liquidWater": 10376927901498830,
+      "liquidWater": 10958745240492290,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
+      "liquidHydrogen": 0,
       "biomass": 0,
       "hazardousBiomass": 0,
       "liquidMethane": 0,
@@ -1339,12 +1343,13 @@ const gabbagOverrides = {
       "buriedNitrogenIce": 0
     },
     "temperate": {
-      "liquidWater": 13520749521777934,
+      "liquidWater": 14259849940889528,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
+      "liquidHydrogen": 0,
       "biomass": 0,
       "hazardousBiomass": 0,
       "liquidMethane": 0,
@@ -1358,12 +1363,13 @@ const gabbagOverrides = {
       "buriedNitrogenIce": 0
     },
     "polar": {
-      "liquidWater": 2674188487940561,
+      "liquidWater": 2349180144090766,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
+      "liquidHydrogen": 0,
       "biomass": 0,
       "hazardousBiomass": 0,
       "liquidMethane": 0,
@@ -1379,19 +1385,19 @@ const gabbagOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 384.35758184646875,
-      "day": 384.44754567504003,
-      "night": 384.26761801789746
+      "value": 357.49717991695,
+      "day": 357.6565374525549,
+      "night": 357.3378223813451
     },
     "temperate": {
-      "value": 380.64394187786604,
-      "day": 380.71872158129815,
-      "night": 380.5691621744339
+      "value": 349.49415561505145,
+      "day": 349.6266206759527,
+      "night": 349.3616905541502
     },
     "polar": {
-      "value": 370.00441470563226,
-      "day": 370.0431368337225,
-      "night": 369.96569257754203
+      "value": 326.5195752086963,
+      "day": 326.59005684280845,
+      "night": 326.4490935745842
     }
   },
   hazards: {
@@ -1444,6 +1450,9 @@ const tartarusOverrides = {
     baseColor: '#3b3a4d',
   },
    "resources": {
+    surface: {
+      land: { initialValue: 21_330_660_136 },
+    },
     "atmospheric": {
       "carbonDioxide": {
         "initialValue": 22607199827770.934
@@ -1581,7 +1590,7 @@ const hadesOverrides = {
   },
   resources: {
     surface: {
-      land: { initialValue: 31_000_000_000 },
+      land: { initialValue: 31_415_926_536 },
       liquidWater: { initialValue: 0 },
       ice: { initialValue: 0 },
       dryIce: { initialValue: 0 },
@@ -1622,10 +1631,10 @@ const hadesOverrides = {
 const poseidonOverrides = {
   name: '',
   travelWarning: {
-    message: 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly easier.  \n It is also possible to nearly softlock if using lifters too aggressively.  You have been warned.',
+    message: t('catalogs.planets.poseidon.travelWarning.message', {}, 'This planet is much harder than usual.  Preparing is not necessary, but will make it significantly easier.  \n It is also possible to nearly softlock if using lifters too aggressively.  You have been warned.'),
     hint: {
-      title: 'Hint',
-      body: 'You can potentially save a lot of time by bringing in about 8T of superalloys from space storage.'
+      title: t('catalogs.planets.poseidon.travelWarning.hint.title', {}, 'Hint'),
+      body: t('catalogs.planets.poseidon.travelWarning.hint.body', {}, 'You can potentially save a lot of time by bringing in about 8T of superalloys from space storage.')
     }
   },
   star: {
@@ -1661,7 +1670,7 @@ const poseidonOverrides = {
   ],
   resources: {
     surface: {
-      land: { initialValue: 72_500_000_000 },
+      land: { initialValue: 72_583_356_668.53859 },
       liquidWater: { initialValue: 0 },
       ice: { initialValue: 0 },
       dryIce: { initialValue: 0 },
@@ -1672,7 +1681,7 @@ const poseidonOverrides = {
     },
     underground: {
       ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
-      geothermal: { initialValue: 72_500_000_000, maxDeposits: 72_500_000_000, areaTotal: 72500000000 }
+      geothermal: { initialValue: 72_583_356_668.53859, maxDeposits: 72_583_356_668.53859, areaTotal: 72_583_356_668.53859 }
     },
     atmospheric: {
       carbonDioxide: { initialValue: 1_000_000_000_000_000_000 },
@@ -1892,7 +1901,7 @@ const styxOverrides = {
 };
 
 const zeusOverrides = {
-  name: 'Zeus',
+  name: t('catalogs.planets.zeus.name', {}, 'Zeus'),
   travelWarning: {
     message: venusOverrides.travelWarning.message,
     hint: {
@@ -1904,9 +1913,10 @@ const zeusOverrides = {
   specialAttributes: {
     hasSand: false,
     dynamicMass: true,
+    gasGiant: true,
   },
   star: {
-    name: 'Okoth',
+    name: t('catalogs.planets.zeus.star.name', {}, 'Okoth'),
     spectralType: 'K1V',
     luminositySolar: 0.46,
     massSolar: 0.84,
@@ -2105,6 +2115,564 @@ const zeusOverrides = {
   }
 };
 
+const olympusOverrides = {
+  name: t('catalogs.planets.olympus.name', {}, 'Olympus'),
+  travelWarning: {
+    message: t('catalogs.planets.olympus.travelWarning.message', {}, 'World 15 is the narrative ending to this game.  It is very narratively heavy.  It does not unlock anything new.  \n \n Once World 15 is complete, you will be forced into World 16.  A pre-travel save between 15 and 16 will not be taken.  Therefore, you will be able to return to your current point (unless you delete your pre-travel save). \n \n World 15 does not require preparation.')
+  },
+  gravityPenaltyEnabled: true,
+  specialAttributes: {
+    hasSand: true,
+    hasOre: false,
+    terraformingRequirementId: 'human',
+    zoneKeys: ['tropical', 'temperate', 'polar'],
+    zoneLayout: 'aldersonDisk',
+    fixedZonalAverageFlux: 400,
+    diskInnerRadiusAU: 0.427,
+    diskRadiusAU: 12.021,
+    disk: { innerRadiusAU: 0.427, radiusAU: 12.021 },
+    diskConstructionCostTons: 3.044071346759389e31,
+    diskConstructionCostIncludesMetal: true,
+    disabledFeatures: {
+      tabs: ['research', 'hope'],
+      subtabs: [
+        'energy-research',
+        'industry-research',
+        'colonization-research',
+        'terraforming-research',
+        'advanced-research',
+        'awakening-hope',
+        'solis-hope',
+        'wgc-hope',
+        'patience-hope',
+        'automation-hope',
+        'space-random',
+        'space-artificial',
+        'space-atlas',
+        'space-galaxy',
+        'space-invasion',
+        'summary-terraforming',
+        'life-terraforming',
+        'hazard-terraforming',
+        'milestone-terraforming',
+        'nanocolony-colonies',
+        'followers-colonies',
+        'mega-projects',
+        'giga-projects',
+        'tera-projects'
+      ],
+      managers: [
+        'skillManager',
+        'solisManager',
+        'warpGateCommand',
+        'patienceManager',
+        'automationManager',
+        'rwgManager',
+        'artificialManager',
+        'atlasManager',
+        'galaxyManager',
+        'galaxyInvasionManager',
+        'lifeDesigner',
+        'hazardManager',
+        'milestonesManager',
+        'nanotechManager',
+        'followersManager'
+      ],
+      researchCategories: ['advanced'],
+      projectCategories: ['mega', 'giga', 'tera'],
+      resources: [
+        'colony:funding',
+        'colony:research',
+        'colony:advancedResearch',
+        'special:alienArtifact',
+        'special:antimatter',
+        'space:energy'
+      ]
+    } 
+  },
+  classification: {
+    archetype: 'artificial',
+    type: 'disk',
+    core: 'b-star'
+  },
+  star: {
+    name: t('catalogs.planets.olympus.star.name', {}, 'Vepive-015'),
+    spectralType: 'B',
+    luminositySolar: 2187,
+    massSolar: 9,
+    radiusSolar: 5.799546134795289,
+    temperatureK: 16407.51195964452,
+    habitableZone: { inner: 44.39763507136315, outer: 67.17737742552511 }
+  },
+  celestialParameters: {
+    distanceFromSun: 12.021,
+    gravity: 8.17,
+    radius: 1_270_798_963.8556244,
+    mass: 2.376486241758024e36,
+    albedo: 0.24,
+    rotationPeriod: 24,
+    spinPeriod: 24,
+    starLuminosity: 2187,
+    sector: 'R5-30',
+    baseLand: 2.0293808978395928e21
+  },
+  visualization: {
+    baseColor: '#2a3d4f',
+  },
+  effects: [
+    {
+      target: 'colony',
+      targetId: 'aerostat_colony',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'olympus-disable-aerostat-colonies'
+    },
+    {
+      target: 'colony',
+      targetId: 't1_colony',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'olympus-disable-research-outposts'
+    },
+    {
+      target: 'building',
+      targetId: 'hyperionLantern',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'olympus-disk-disable-hyperion-lanterns'
+    },
+    {
+      target: 'building',
+      targetId: 'spaceMirror',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'olympus-disk-disable-space-mirror'
+    },
+    {
+      target: 'building',
+      targetId: 'biodome',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'olympus-disk-disable-biodome'
+    },
+    {
+      target: 'building',
+      targetId: 'antimatterBattery',
+      type: 'booleanFlag',
+      flagId: 'antimatterBatteryFillDisabled',
+      value: true,
+      effectId: 'olympus-disable-antimatter-battery-fill'
+    },
+    {
+      target: 'project',
+      targetId: 'spaceMirrorFacility',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'olympus-disk-disable-space-mirror-facility'
+    },
+    {
+      target: 'project',
+      targetId: 'planetaryThruster',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'olympus-disk-disable-planetary-thrusters'
+    },
+    {
+      target: 'project',
+      targetId: 'cargo_rocket',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'olympus-disable-cargo-rockets'
+    },
+    {
+      target: 'project',
+      targetId: 'import_colonists_1',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'olympus-disable-import-colonists'
+    }
+  ],
+  resources: {
+    surface: {
+      land: {
+        initialValue: 2.0293808978395928e21,
+        baseLand: 2.0293808978395928e21,
+        baseCap: 2.0293808978395928e21
+      },
+      liquidWater: { initialValue: 8.570695396558675e22, unlocked: true },
+      ice: { initialValue: 0 },
+      dryIce: { initialValue: 0 },
+      liquidCO2: { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 },
+      biomass: { initialValue: 0 },
+      hazardousBiomass: { initialValue: 0 }
+    },
+    underground: {
+      ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 }
+    },
+    "atmospheric": {
+      "carbonDioxide": {
+        "initialValue": 2.068685930519462e+25
+      },
+      "atmosphericWater": {
+        "initialValue": 1.6396019102552818e+24
+      },
+      "atmosphericMethane": {
+        "initialValue": 0
+      },
+      "atmosphericAmmonia": {
+        "initialValue": 0
+      },
+      "oxygen": {
+        "initialValue": 0
+      },
+      "inertGas": {
+        "initialValue": 3.103028895779193e+26
+      },
+      "hydrogen": {
+        "initialValue": 8.274743722077849e+25
+      },
+      "sulfuricAcid": {
+        "initialValue": 0
+      }
+    }
+  },
+  "zonalSurface": {
+    "tropical": {
+      "liquidWater": 5.70777427170771e+26,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 0,
+      "biomass": 0,
+      "hazardousBiomass": 1e+23,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
+    },
+    "temperate": {
+      "liquidWater": 1.5057288439442677e+27,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 0,
+      "biomass": 0,
+      "hazardousBiomass": 1e+23,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
+    },
+    "polar": {
+      "liquidWater": 2.4406797374658714e+27,
+      "ice": 0,
+      "buriedIce": 0,
+      "dryIce": 0,
+      "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 0,
+      "biomass": 0,
+      "hazardousBiomass": 0,
+      "liquidMethane": 0,
+      "hydrocarbonIce": 0,
+      "buriedHydrocarbonIce": 0,
+      "liquidOxygen": 0,
+      "oxygenIce": 0,
+      "buriedOxygenIce": 0,
+      "liquidNitrogen": 0,
+      "nitrogenIce": 0,
+      "buriedNitrogenIce": 0
+    }
+  },
+  "zonalTemperatures": {
+    "tropical": {
+      "value": 301.44413632392957,
+      "day": 301.53507541667886,
+      "night": 301.3531972311803
+    },
+    "temperate": {
+      "value": 301.4441355508358,
+      "day": 301.5350746719134,
+      "night": 301.35319642975827
+    },
+    "polar": {
+      "value": 301.44413513013114,
+      "day": 301.5350742666246,
+      "night": 301.3531959936377
+    }
+  },
+  zonalTemperatures: null
+};
+
+const earthOverrides = {
+  name: '',
+  travelWarning: {
+    message: t('catalogs.planets.earth.travelWarning.message', {}, 'This is the end of the road.  This world is very short.  A pre-travel save will not be taken.')
+  },
+  gravityPenaltyEnabled: true,
+  effects: [
+    {
+      target: 'earthManager',
+      type: 'enable',
+      effectId: 'earth-enable-reconstruction-manager'
+    },
+    {
+      target: 'building',
+      targetId: 'hyperionLantern',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'earth-disable-hyperion-lanterns'
+    },
+    {
+      target: 'building',
+      targetId: 'spaceMirror',
+      type: 'permanentBuildingDisable',
+      value: true,
+      effectId: 'earth-disable-space-mirror'
+    },
+    {
+      target: 'project',
+      targetId: 'spaceMirrorFacility',
+      type: 'permanentProjectDisable',
+      value: true,
+      effectId: 'earth-disable-space-mirror-facility'
+    }
+  ],
+  specialAttributes: {
+    hasSand: true,
+    skipCurrentWorldTravelWarnings: true,
+    savePretravel: false,
+    disabledFeatures: {
+      tabs: ['buildings', 'special-projects', 'research', 'space', 'hope', { id: 'colonies', priority: 4 }],
+      subtabs: [
+        'energy-research',
+        'industry-research',
+        'colonization-research',
+        'terraforming-research',
+        'advanced-research',
+        'awakening-hope',
+        'solis-hope',
+        'wgc-hope',
+        'patience-hope',
+        'automation-hope',
+        'space-story',
+        'space-random',
+        'space-artificial',
+        'space-atlas',
+        'space-galaxy',
+        'space-invasion',
+        'summary-terraforming',
+        'life-terraforming',
+        'hazard-terraforming',
+        'milestone-terraforming',
+        'population-colonies',
+        { id: 'nanocolony-colonies', priority: 4 },
+        'followers-colonies',
+        'resources-projects',
+        'infrastructure-projects',
+        'story-projects',
+        'mega-projects',
+        'giga-projects',
+        'tera-projects'
+      ],
+      managers: [
+        'skillManager',
+        'solisManager',
+        'warpGateCommand',
+        'patienceManager',
+        'automationManager',
+        'rwgManager',
+        'artificialManager',
+        'atlasManager',
+        'galaxyManager',
+        'galaxyInvasionManager',
+        'lifeDesigner',
+        'hazardManager',
+        'milestonesManager',
+        'nanotechManager',
+        'followersManager'
+      ],
+      researchCategories: ['advanced'],
+      projectCategories: ['resources', 'infrastructure', 'story', 'mega', 'giga', 'tera'],
+      resources: {
+        'colony:funding': 4,
+        'colony:colonists': 4,
+        'colony:workers': 4,
+        'colony:energy': 4,
+        'colony:metal': 4,
+        'colony:silicon': 4,
+        'colony:glass': 4,
+        'colony:water': 4,
+        'colony:colonyHydrogen': 4,
+        'colony:food': 4,
+        'colony:components': 4,
+        'colony:electronics': 4,
+        'colony:superconductors': 4,
+        'colony:superalloys': 4,
+        'colony:androids': 4,
+        'colony:research': 4,
+        'colony:advancedResearch': 4,
+        'surface:land': 4,
+        'surface:ice': 4,
+        'surface:liquidWater': 4,
+        'surface:dryIce': 4,
+        'surface:liquidCO2': 4,
+        'surface:liquidHydrogen': 4,
+        'surface:liquidMethane': 4,
+        'surface:hydrocarbonIce': 4,
+        'surface:liquidAmmonia': 4,
+        'surface:ammoniaIce': 4,
+        'surface:liquidOxygen': 4,
+        'surface:oxygenIce': 4,
+        'surface:liquidNitrogen': 4,
+        'surface:nitrogenIce': 4,
+        'surface:fineSand': 4,
+        'surface:biomass': 4,
+        'surface:hazardousBiomass': 4,
+        'surface:hazardousMachinery': 4,
+        'surface:rocks': 4,
+        'surface:graphite': 4,
+        'surface:scrapMetal': 4,
+        'surface:garbage': 4,
+        'surface:trash': 4,
+        'surface:junk': 4,
+        'surface:radioactiveWaste': 4,
+        'underground:ore': 4,
+        'underground:geothermal': 4,
+        'underground:planetaryMass': 4,
+        'atmospheric:carbonDioxide': 4,
+        'atmospheric:inertGas': 4,
+        'atmospheric:oxygen': 4,
+        'atmospheric:atmosphericWater': 4,
+        'atmospheric:greenhouseGas': 4,
+        'atmospheric:atmosphericMethane': 4,
+        'atmospheric:atmosphericAmmonia': 4,
+        'atmospheric:hydrogen': 4,
+        'atmospheric:sulfuricAcid': 4,
+        'atmospheric:calciteAerosol': 4,
+        'atmospheric:vanadiumAerosol': 4,
+        'special:albedoUpgrades': 4,
+        'special:orbitalDebris': 4,
+        'special:spaceships': 4,
+        'special:alienArtifact': 4,
+        'special:crusaders': 4,
+        'special:warpCircuits': 4,
+        'special:antimatter': 4,
+        'space:energy': 4,
+        'spaceStorage:metal': 4,
+        'spaceStorage:silicon': 4,
+        'spaceStorage:graphite': 4,
+        'spaceStorage:glass': 4,
+        'spaceStorage:components': 4,
+        'spaceStorage:electronics': 4,
+        'spaceStorage:superconductors': 4,
+        'spaceStorage:superalloys': 4,
+        'spaceStorage:liquidWater': 4,
+        'spaceStorage:biomass': 4,
+        'spaceStorage:carbonDioxide': 4,
+        'spaceStorage:inertGas': 4,
+        'spaceStorage:oxygen': 4,
+        'spaceStorage:atmosphericMethane': 4,
+        'spaceStorage:atmosphericAmmonia': 4,
+        'spaceStorage:hydrogen': 4
+      }
+    }
+  },
+  star: {
+    name: '',
+    spectralType: 'G2V',
+    luminositySolar: 1,
+    massSolar: 1,
+    radiusSolar: 1,
+    temperatureK: 5772,
+    habitableZone: { inner: 0.82, outer: 1.17 }
+  },
+  celestialParameters: {
+    distanceFromSun: 1,
+    gravity: 7.8456,
+    hasNaturalMagnetosphere: true,
+    radius: 5096.8,
+    mass: 3.057664e24,
+    albedo: 0.05,
+    rotationPeriod: 24,
+    spinPeriod: 24,
+    starLuminosity: 1,
+    coreHeatFlux: 250_000,
+    sector: 'R5-00',
+    surfaceArea: 326446080000000
+  },
+  visualization: {
+    baseColor: '#878a81',
+    heightMapKey: 'earth'
+  },
+  resources: {
+    surface: {
+      land: { initialValue: 32644608000 },
+      ice: { initialValue: 0 },
+      liquidWater: { initialValue: 0 },
+      dryIce: { initialValue: 0 },
+      liquidCO2: { initialValue: 0 },
+      liquidHydrogen: { initialValue: 0 },
+      liquidMethane: { initialValue: 0 },
+      hydrocarbonIce: { initialValue: 0 },
+      liquidAmmonia: { initialValue: 0 },
+      ammoniaIce: { initialValue: 0 },
+      liquidOxygen: { initialValue: 0 },
+      oxygenIce: { initialValue: 0 },
+      liquidNitrogen: { initialValue: 0 },
+      nitrogenIce: { initialValue: 0 },
+      fineSand: { initialValue: 0 },
+      biomass: { initialValue: 0 },
+      hazardousBiomass: { initialValue: 0 },
+      hazardousMachinery: { initialValue: 0 },
+      rocks: { initialValue: 0 },
+      graphite: { initialValue: 0 },
+      scrapMetal: { initialValue: 0 },
+      garbage: { initialValue: 0 },
+      trash: { initialValue: 0 },
+      junk: { initialValue: 0 },
+      radioactiveWaste: { initialValue: 0 }
+    },
+    underground: {
+      ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+      planetaryMass: { initialValue: 0 }
+    },
+    atmospheric: {
+      carbonDioxide: { initialValue: 0 },
+      atmosphericWater: { initialValue: 0 },
+      atmosphericMethane: { initialValue: 0 },
+      atmosphericAmmonia: { initialValue: 0 },
+      greenhouseGas: { initialValue: 0 },
+      oxygen: { initialValue: 0 },
+      inertGas: { initialValue: 0 },
+      hydrogen: { initialValue: 0 },
+      sulfuricAcid: { initialValue: 0 },
+      calciteAerosol: { initialValue: 0 },
+      vanadiumAerosol: { initialValue: 0 }
+    }
+  },
+  zonalSurface: createZonalSurfaceDefaults(),
+  zonalTemperatures: null
+};
+
 // --- Parameter Retrieval Logic ---
 
 const planetSpecificOverrides = {
@@ -2121,7 +2689,9 @@ const planetSpecificOverrides = {
   hades: hadesOverrides,
   poseidon: poseidonOverrides,
   styx: styxOverrides,
-  zeus: zeusOverrides
+  zeus: zeusOverrides,
+  olympus: olympusOverrides,
+  earth: earthOverrides
   // Add future planets here by defining their override objects
 };
 // Expose overrides for modules needing raw planet data
@@ -2173,6 +2743,8 @@ const planetParameters = {
     poseidon: getPlanetParameters('poseidon'),
     styx: getPlanetParameters('styx'),
     zeus: getPlanetParameters('zeus'),
+    olympus: getPlanetParameters('olympus'),
+    earth: getPlanetParameters('earth'),
 };
 
 // If the codebase evolves to use the getPlanetParameters function directly,

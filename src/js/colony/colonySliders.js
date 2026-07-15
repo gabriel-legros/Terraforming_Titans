@@ -10,6 +10,27 @@ function getColonySliderText(path, fallback, vars) {
 
 const colonyIds = ['aerostat_colony', 't1_colony', 't2_colony', 't3_colony', 't4_colony', 't5_colony', 't6_colony', 't7_colony'];
 
+function getColonySliderEffectTarget(effect) {
+  if (effect.target === 'population') return populationModule;
+  if (effect.target === 'global') return globalEffects;
+  if (effect.target === 'building') return buildings[effect.targetId];
+  if (effect.target === 'colony') return colonies[effect.targetId];
+  return null;
+}
+
+function applyColonySliderEffect(effect) {
+  const target = getColonySliderEffectTarget(effect);
+  const existingEffect = target?.activeEffects?.find((activeEffect) => activeEffect.effectId === effect.effectId);
+  if (
+    existingEffect &&
+    effectsAreShallowEqual(existingEffect, effect) &&
+    canSkipShallowEqualReapply(effect)
+  ) {
+    return;
+  }
+  addEffect(effect);
+}
+
 class ColonySlidersManager extends EffectableEntity {
   constructor() {
     super({ description: getColonySliderText('ui.colony.sliders.managerDescription', 'Manages colony sliders') });
@@ -19,6 +40,11 @@ class ColonySlidersManager extends EffectableEntity {
     this.oreMineWorkers = 0;
     this.mechanicalAssistance = 0;
     this.warpnetLevel = 0;
+    this.uiDirty = true;
+  }
+
+  markUIDirty() {
+    this.uiDirty = true;
   }
 
   isMechanicalAssistanceActive() {
@@ -41,132 +67,48 @@ class ColonySlidersManager extends EffectableEntity {
     value = Math.min(0.9, Math.max(0.25, value));
     this.workerRatio = value;
     this.applyWorkforceRatioEffects(value);
-
-    if (typeof document !== 'undefined') {
-      const input = document.getElementById('workforce-slider');
-      if (input) input.value = (value * 100).toString();
-      const valueSpan = document.getElementById('workforce-slider-value');
-      const effectSpan = document.getElementById('workforce-slider-effect');
-      if (valueSpan && effectSpan) {
-        const workers = Math.round(value * 100);
-        const scientists = 100 - workers;
-        valueSpan.textContent = getColonySliderText('ui.colony.sliders.workersValue', 'Workers: {value}%', { value: workers });
-        effectSpan.textContent = getColonySliderText('ui.colony.sliders.scientistsValue', 'Scientists: {value}%', { value: scientists });
-      }
-    }
+    this.markUIDirty();
   }
 
   setFoodConsumptionMultiplier(value) {
     value = Math.min(6, Math.max(1, value));
     this.foodConsumption = value;
     this.applyFoodConsumptionEffects(value);
-
-    if (typeof document !== 'undefined') {
-      const input = document.getElementById('food-slider');
-      if (input) input.value = value.toString();
-      const valueSpan = document.getElementById('food-slider-value');
-      const effectSpan = document.getElementById('food-slider-effect');
-      if (valueSpan && effectSpan) {
-        valueSpan.textContent = `${value.toFixed(1)}x`;
-        const growthVal = 1 + (value - 1) * 0.02;
-        const percent = ((growthVal - 1) * 100).toFixed(1);
-        effectSpan.textContent = getColonySliderText('ui.colony.sliders.growthEffect', 'Growth: +{value}%', { value: percent });
-      }
-    }
+    this.markUIDirty();
   }
 
   setLuxuryWaterMultiplier(value) {
     value = Math.min(6, Math.max(1, value));
     this.luxuryWater = value;
     this.applyLuxuryWaterEffects(value);
-
-    if (typeof document !== 'undefined') {
-      const input = document.getElementById('water-slider');
-      if (input) input.value = value.toString();
-      const valueSpan = document.getElementById('water-slider-value');
-      const effectSpan = document.getElementById('water-slider-effect');
-      if (valueSpan && effectSpan) {
-        valueSpan.textContent = `${value.toFixed(1)}x`;
-        const growthVal = 1 + (value - 1) * 0.01;
-        const percent = ((growthVal - 1) * 100).toFixed(1);
-        effectSpan.textContent = getColonySliderText('ui.colony.sliders.growthEffect', 'Growth: +{value}%', { value: percent });
-      }
-    }
+    this.markUIDirty();
   }
 
   setOreMineWorkerAssist(value) {
     value = Math.min(10, Math.max(0, value));
     this.oreMineWorkers = value;
     this.applyOreMineWorkerEffects(value);
-
-    if (typeof document !== 'undefined') {
-      const input = document.getElementById('ore-worker-slider');
-      if (input) input.value = value.toString();
-      const valueSpan = document.getElementById('ore-worker-slider-value');
-      const effectSpan = document.getElementById('ore-worker-slider-effect');
-      if (valueSpan && effectSpan) {
-        const minesBuilt = Number.isFinite(buildings?.oreMine?.countNumber)
-          ? buildings.oreMine.countNumber
-          : (typeof buildingCountToNumber === 'function'
-            ? buildingCountToNumber(buildings?.oreMine?.count)
-            : Math.max(0, Math.floor(Number(buildings?.oreMine?.count) || 0)));
-        const workers = value * 10 * minesBuilt;
-        valueSpan.textContent = `${workers}`;
-        const mult = value === 0 ? 0 : value;
-        const percent = (mult * 100).toFixed(0);
-        effectSpan.textContent = getColonySliderText('ui.colony.sliders.boostEffect', 'Boost: {value}%', { value: percent });
-      }
-    }
+    this.markUIDirty();
   }
 
   setMechanicalAssistance(value) {
     value = Math.min(2, Math.max(0, value));
     this.mechanicalAssistance = value;
     this.applyMechanicalAssistanceEffects();
-
-    if (typeof document !== 'undefined') {
-      const input = document.getElementById('mechanical-assistance-slider');
-      if (input) input.value = value.toString();
-      const valueSpan = document.getElementById('mechanical-assistance-slider-value');
-      const effectSpan = document.getElementById('mechanical-assistance-slider-effect');
-      if (valueSpan && effectSpan) {
-        valueSpan.textContent = `${value.toFixed(1)}x`;
-        const coverage = populationModule?.componentsCoverage ?? 1;
-        const clampedCoverage = Math.max(0, Math.min(1, coverage));
-        const adaptationMitigation = populationModule?.isBooleanFlagSet?.('highGravityAdaptation') ? 50 : 0;
-        const sliderMitigation = Math.min(50, value * clampedCoverage * 25);
-        const totalMitigation = Math.min(100, adaptationMitigation + sliderMitigation);
-        const mitigationText = totalMitigation.toFixed(1).replace(/\.0$/, '');
-        effectSpan.textContent = getColonySliderText('ui.colony.sliders.gravityDecayReduction', 'Gravity decay reduction: -{value}%', { value: mitigationText });
-      }
-    }
+    this.markUIDirty();
   }
 
   setWarpnetLevel(value) {
     value = Math.min(10, Math.max(0, Math.round(value)));
     this.warpnetLevel = value;
     this.applyWarpnetEffects();
-
-    if (typeof document !== 'undefined') {
-      const input = document.getElementById('warpnet-slider');
-      if (input) input.value = value.toString();
-      const valueSpan = document.getElementById('warpnet-slider-value');
-      const effectSpan = document.getElementById('warpnet-slider-effect');
-      if (valueSpan && effectSpan) {
-        const label = value === 0
-          ? getColonySliderText('ui.colony.sliders.warpnetLabelBase', 'x1')
-          : getColonySliderText('ui.colony.sliders.warpnetLabelExp', 'x1e{value}', { value });
-        const percent = value * 100;
-        valueSpan.textContent = label;
-        effectSpan.textContent = getColonySliderText('ui.colony.sliders.researchEffect', 'Research: +{value}%', { value: percent });
-      }
-    }
+    this.markUIDirty();
   }
 
   applyWorkforceRatioEffects(value = this.workerRatio) {
     const researchMultiplier = (1 - value) / 0.5;
 
-    addEffect({
+    applyColonySliderEffect({
       target: 'population',
       type: 'workerRatio',
       value: value,
@@ -175,7 +117,7 @@ class ColonySlidersManager extends EffectableEntity {
     });
 
     colonyIds.forEach(colonyId => {
-      addEffect({
+      applyColonySliderEffect({
         target: 'colony',
         targetId: colonyId,
         type: 'resourceProductionMultiplier',
@@ -192,7 +134,7 @@ class ColonySlidersManager extends EffectableEntity {
   applyFoodConsumptionEffects(value = this.foodConsumption) {
     const growth = 1 + (value - 1) * 0.02;
 
-    addEffect({
+    applyColonySliderEffect({
       target: 'population',
       type: 'growthMultiplier',
       value: growth,
@@ -201,7 +143,7 @@ class ColonySlidersManager extends EffectableEntity {
     });
 
     colonyIds.forEach(colonyId => {
-      addEffect({
+      applyColonySliderEffect({
         target: 'colony',
         targetId: colonyId,
         type: 'resourceConsumptionMultiplier',
@@ -218,7 +160,7 @@ class ColonySlidersManager extends EffectableEntity {
   applyLuxuryWaterEffects(value = this.luxuryWater) {
     const growth = 1 + (value - 1) * 0.01;
 
-    addEffect({
+    applyColonySliderEffect({
       target: 'population',
       type: 'growthMultiplier',
       value: growth,
@@ -227,7 +169,7 @@ class ColonySlidersManager extends EffectableEntity {
     });
 
     colonyIds.forEach(colonyId => {
-      addEffect({
+      applyColonySliderEffect({
         target: 'colony',
         targetId: colonyId,
         type: 'maintenanceCostMultiplier',
@@ -242,7 +184,7 @@ class ColonySlidersManager extends EffectableEntity {
   }
 
   applyOreMineWorkerEffects(value = this.oreMineWorkers) {
-    addEffect({
+    applyColonySliderEffect({
       target: 'building',
       targetId: 'oreMine',
       type: 'addedWorkerNeed',
@@ -253,7 +195,7 @@ class ColonySlidersManager extends EffectableEntity {
 
     const multiplier = value === 0 ? 1 : 1 + value;
 
-    addEffect({
+    applyColonySliderEffect({
       target: 'building',
       targetId: 'oreMine',
       type: 'productionMultiplier',
@@ -280,7 +222,7 @@ class ColonySlidersManager extends EffectableEntity {
         effectId: 'mechanicalAssistanceComponents',
         sourceId: 'mechanicalAssistance'
       };
-      addEffect(effect);
+      applyColonySliderEffect(effect);
     });
   }
 
@@ -288,7 +230,7 @@ class ColonySlidersManager extends EffectableEntity {
     value = this.getEffectiveWarpnetLevel();
     const energyMultiplier = value === 0 ? 1 : Math.pow(10, value);
 
-    addEffect({
+    applyColonySliderEffect({
       target: 'global',
       type: 'globalResearchBoost',
       value: value,
@@ -296,7 +238,7 @@ class ColonySlidersManager extends EffectableEntity {
       sourceId: 'warpnet'
     });
 
-    addEffect({
+    applyColonySliderEffect({
       target: 'building',
       targetId: 'androidHousing',
       type: 'resourceConsumptionMultiplier',
@@ -308,7 +250,7 @@ class ColonySlidersManager extends EffectableEntity {
     });
 
     colonyIds.forEach(colonyId => {
-      addEffect({
+      applyColonySliderEffect({
         target: 'colony',
         targetId: colonyId,
         type: 'resourceConsumptionMultiplier',
@@ -356,7 +298,11 @@ class ColonySlidersManager extends EffectableEntity {
     super.applyBooleanFlag(effect);
   }
 
-  reset() {
+  reset(clearUnlocks = false) {
+    if (clearUnlocks) {
+      this.activeEffects = [];
+      this.booleanFlags = new Set();
+    }
     this.setWorkforceRatio(0.5);
     this.setFoodConsumptionMultiplier(1);
     this.setLuxuryWaterMultiplier(1);
@@ -398,8 +344,9 @@ function updateColonySlidersEffect() {
   colonySliderSettings.updateColonySlidersEffect();
 }
 
-function resetColonySliders() {
-  colonySliderSettings.reset();
+function resetColonySliders(clearUnlocks = false) {
+  colonySliderSettings.reset(clearUnlocks);
+  colonySliderSettings.markUIDirty();
 }
 
 if (typeof module !== 'undefined' && module.exports) {

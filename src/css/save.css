@@ -31,6 +31,29 @@
     gap: 4px;
   }
 
+  label.settings-option:has(> input[type="checkbox"]) {
+    width: fit-content;
+    max-width: 100%;
+    justify-self: start;
+  }
+
+  #resource-depletion-warning-seconds-input,
+  #scientific-notation-threshold-input {
+    width: 64px;
+    box-sizing: border-box;
+  }
+
+  /* Match the one-pixel control border used by the dark themes. */
+  body:not(.dark-mode):not(.dark-grey-mode) .settings-option input[type="text"],
+  body:not(.dark-mode):not(.dark-grey-mode) .settings-option select,
+  body:not(.dark-mode):not(.dark-grey-mode) .settings-option button {
+    border: 1px solid #767676;
+  }
+
+.settings-option.build-target-hidden {
+    display: none;
+  }
+
   .settings-stat-line {
     margin: 0;
   }
@@ -55,6 +78,106 @@
     margin-bottom: 0;
   }
 
+  .settings-grid-difficulty {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    column-gap: 28px;
+    row-gap: 8px;
+    align-items: center;
+  }
+
+  .settings-grid-difficulty-toggles {
+    margin-bottom: 12px;
+  }
+
+  .settings-grid-difficulty-inputs {
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+    margin-bottom: 16px;
+  }
+
+  .settings-grid-difficulty-mixed {
+    grid-template-columns: repeat(3, minmax(280px, 1fr));
+    margin: 4px 0 12px;
+  }
+
+  .settings-grid-difficulty-lock {
+    grid-template-columns: 1fr;
+  }
+
+  .difficulty-lock-option {
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .difficulty-lock-option button {
+    width: fit-content;
+  }
+
+  .difficulty-spoiler-sections {
+    width: min(100%, 1200px);
+    margin-bottom: 16px;
+  }
+
+  .difficulty-spoiler-section {
+    margin-bottom: 8px;
+    text-align: left;
+  }
+
+  .difficulty-spoiler-section summary {
+    cursor: pointer;
+    font-weight: 600;
+    padding: 4px 0;
+    width: fit-content;
+  }
+
+  .difficulty-spoiler-section .settings-grid-difficulty-inputs {
+    width: 100%;
+    margin: 4px 0 12px;
+  }
+
+  .difficulty-spoiler-section .settings-grid-difficulty-mixed {
+    width: 100%;
+  }
+
+  .difficulty-toggle-option {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .difficulty-multiplier-option {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 64px;
+    align-items: center;
+    column-gap: 8px;
+    text-align: left;
+  }
+
+  .difficulty-multiplier-option input {
+    width: 64px;
+    box-sizing: border-box;
+  }
+
+  .difficulty-multiplier-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  @media (max-width: 420px) {
+    .settings-grid-difficulty-inputs {
+      grid-template-columns: 1fr;
+    }
+
+    .settings-grid-difficulty-mixed {
+      grid-template-columns: 1fr;
+    }
+
+    .difficulty-multiplier-option {
+      grid-template-columns: 1fr;
+      row-gap: 4px;
+    }
+  }
+
   .settings-keybind-option {
     justify-content: flex-start;
   }
@@ -66,20 +189,107 @@
   #settings-credits-list .settings-stat-line:last-child {
     margin-bottom: 0;
   }
+
+  #settings-achievements-list {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    width: min(100%, 900px);
+    margin-top: 12px;
+  }
+
+  .settings-achievements-hidden-toggle {
+    margin: 0 auto 4px;
+    font-size: 0.95rem;
+  }
+
+  .settings-achievement-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+    align-items: start;
+    padding: 10px 12px;
+    border: 1px solid #d7d7d7;
+    border-radius: 6px;
+    text-align: left;
+    background: #fff;
+  }
+
+  .settings-achievement-status {
+    color: var(--status-failure-color);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .settings-achievement-row--complete .settings-achievement-status {
+    color: var(--status-success-color);
+  }
+
+  .settings-achievement-title {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  .settings-achievement-requirement {
+    color: #555;
+  }
+
+  .settings-achievement-requirement--hidden {
+    font-style: italic;
+  }
+
+  @media (max-width: 560px) {
+    #settings-achievements-list {
+      grid-template-columns: 1fr;
+    }
+
+    .settings-achievement-row {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+  }
+
+  @media (min-width: 561px) and (max-width: 860px) {
+    #settings-achievements-list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
   
   .save-slots {
     width: 100%;
     margin-left: 0;
   }
+
+  .save-storage-warning {
+    width: min(100%, 900px);
+    margin: -4px auto 16px;
+    text-align: center;
+  }
   
   .save-slots table {
-    width: 80%;
+    width: min(100%, 900px);
     margin: 0 auto;
     border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .save-slots th:first-child,
+  .save-slots td:first-child:not([colspan]) {
+    width: 24%;
+  }
+
+  .save-slots th:nth-child(2),
+  .save-slots td:nth-child(2) {
+    width: 36%;
+  }
+
+  .save-slots th:nth-child(3),
+  .save-slots td:nth-child(3) {
+    width: 40%;
   }
   
   .save-slots td {
-    padding: 12px;
+    padding: 8px 10px;
     text-align: center;
     border-bottom: 1px solid #ddd;
   }
@@ -90,13 +300,13 @@
   
   .save-slots th {
     background-color: #f2f2f2;
-    padding: 12px;
+    padding: 8px 10px;
     text-align: center;
   }
   
   .save-slots button {
-    padding: 8px 16px;
-    margin: 0 5px;
+    padding: 7px 13px;
+    margin: 3px;
     border: none;
     border-radius: 4px;
     background-color: #4CAF50;
@@ -107,6 +317,38 @@
   
   .save-slots button:hover {
     background-color: #45a049;
+  }
+
+  .save-slots .settings-discord-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 13px;
+    margin: 3px;
+    border-radius: 4px;
+    background-color: #5865f2;
+    color: white;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .save-slots .settings-discord-icon {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+    flex: 0 0 auto;
+  }
+
+  .save-slots .settings-discord-button:hover,
+  .save-slots .settings-discord-button:focus {
+    background-color: #4752c4;
+  }
+
+  .save-slots .settings-game-version {
+    margin-top: 2px;
+    font-size: 0.8em;
+    opacity: 0.7;
   }
   
   .save-slots button:disabled {
@@ -120,4 +362,164 @@
   
   .save-slots button.delete-button:hover {
     background-color: #d32f2f;
+  }
+
+  .save-slot-name-cell {
+    white-space: nowrap;
+  }
+
+  .save-slot-completed-star {
+    display: inline-block;
+    width: 14px;
+    margin-right: 4px;
+    color: #d9a300;
+    font-size: 12px;
+    line-height: 1;
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  .save-slot-completed-star[hidden] {
+    display: none;
+  }
+
+  .save-slot-name-text {
+    display: inline-block;
+    max-width: calc(100% - 52px);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+  }
+
+  .save-slot-name-input {
+    width: min(150px, 100%);
+    min-width: 0;
+    padding: 4px 6px;
+    border: 1px solid #bbb;
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  .save-slots .save-slot-rename-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    margin: 0;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    color: #777;
+    opacity: 0.65;
+    vertical-align: middle;
+  }
+
+  .save-slots .save-slot-rename-button::before {
+    content: "\270e";
+    font-size: 12px;
+    line-height: 1;
+  }
+
+  .save-slots .save-slot-rename-button:hover {
+    border-color: #d8d8d8;
+    background: #f7f7f7;
+    color: #333;
+    opacity: 1;
+  }
+
+  .load-string-dialog-overlay {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 10000;
+    box-sizing: border-box;
+  }
+
+  .load-string-dialog-overlay.is-visible {
+    display: flex;
+  }
+
+  .load-string-dialog-window {
+    width: min(760px, 100%);
+    padding: 20px;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #1f2937;
+    box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28);
+    box-sizing: border-box;
+    text-align: left;
+  }
+
+  .load-string-dialog-title {
+    margin: 0 0 8px;
+    font-size: 1.15rem;
+  }
+
+  .load-string-dialog-description {
+    margin: 0 0 12px;
+    color: #4b5563;
+  }
+
+  .load-string-dialog-textarea {
+    width: 100%;
+    min-height: 220px;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    box-sizing: border-box;
+    resize: vertical;
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+
+  .load-string-dialog-textarea:focus {
+    outline: 2px solid #4CAF50;
+    outline-offset: 2px;
+  }
+
+  .load-string-dialog-message {
+    min-height: 1.2em;
+    margin-top: 8px;
+    color: #b91c1c;
+    font-size: 0.95rem;
+  }
+
+  .load-string-dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .load-string-dialog-cancel,
+  .load-string-dialog-confirm {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
+  }
+
+  .load-string-dialog-cancel {
+    background: #6b7280;
+  }
+
+  .load-string-dialog-cancel:hover {
+    background: #4b5563;
+  }
+
+  .load-string-dialog-confirm {
+    background: #4CAF50;
+  }
+
+  .load-string-dialog-confirm:hover {
+    background: #45a049;
   }

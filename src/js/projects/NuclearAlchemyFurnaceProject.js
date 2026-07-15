@@ -1,26 +1,26 @@
 const NUCLEAR_ALCHEMY_RECIPES = {
   graphite: {
-    label: 'Carbon (Graphite)',
+    label: t('ui.projects.nuclearAlchemy.recipeLabels.graphite', {}, 'Carbon (Graphite)'),
     storageKey: 'graphite',
     complexity: 2
   },
   oxygen: {
-    label: 'Oxygen',
+    label: t('ui.projects.nuclearAlchemy.recipeLabels.oxygen', {}, 'Oxygen'),
     storageKey: 'oxygen',
     complexity: 3
   },
   inertGas: {
-    label: 'Nitrogen',
+    label: t('ui.projects.nuclearAlchemy.recipeLabels.inertGas', {}, 'Nitrogen'),
     storageKey: 'inertGas',
     complexity: 4
   },
   silicon: {
-    label: 'Silica',
+    label: t('ui.projects.nuclearAlchemy.recipeLabels.silicon', {}, 'Silica'),
     storageKey: 'silicon',
     complexity: 6
   },
   metal: {
-    label: 'Metal',
+    label: t('ui.projects.nuclearAlchemy.recipeLabels.metal', {}, 'Metal'),
     storageKey: 'metal',
     complexity: 10
   }
@@ -34,6 +34,32 @@ const NUCLEAR_ALCHEMY_RECIPE_KEYS = [
   'metal'
 ];
 const NUCLEAR_ALCHEMY_UNASSIGNED_KEY = 'idleUnassigned';
+const NUCLEAR_ALCHEMY_ASSIGNMENT_STEP_MAX = 1_000_000_000_000_000_000_000_000_000_000n;
+
+let NuclearAlchemyAssignmentTools = {};
+try {
+  NuclearAlchemyAssignmentTools = {
+    createProjectAssignmentBase,
+    normalizeProjectAssignmentInteger,
+    serializeProjectAssignmentInteger,
+    serializeProjectAssignments
+  };
+} catch (error) {}
+try {
+  NuclearAlchemyAssignmentTools = require('./ProjectAssignmentBase.js');
+} catch (error) {}
+
+function normalizeNuclearAlchemyInteger(value) {
+  return NuclearAlchemyAssignmentTools.normalizeProjectAssignmentInteger(value);
+}
+
+function serializeNuclearAlchemyInteger(value) {
+  return NuclearAlchemyAssignmentTools.serializeProjectAssignmentInteger(value);
+}
+
+function serializeNuclearAlchemyAssignments(assignments = {}) {
+  return NuclearAlchemyAssignmentTools.serializeProjectAssignments(assignments);
+}
 
 function getNuclearAlchemyText(path, fallback, vars) {
   try {
@@ -54,13 +80,13 @@ try {
   NuclearAlchemyContinuousExpansionBase = NuclearAlchemyContinuousExpansionBase || TerraformingDurationProject;
 } catch (error) {}
 
-class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase {
+class NuclearAlchemyFurnaceProject extends NuclearAlchemyAssignmentTools.createProjectAssignmentBase(NuclearAlchemyContinuousExpansionBase) {
   constructor(config, name) {
     super(config, name);
     this.continuousThreshold = 1000;
     this.expansionProgress = 0;
     this.furnaceAssignments = {};
-    this.assignmentStep = 1;
+    this.assignmentStep = 1n;
     this.autoAssignFlags = {};
     this.autoAssignWeights = {};
     this.isRunning = false;
@@ -76,6 +102,14 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.lastOutputRatesByResource = {};
     this.operationPreRunThisTick = false;
     this.uiElements = null;
+    this.managedAssignmentKeys = null;
+    this.assignmentsDirty = true;
+    this.assignmentsLastTotal = null;
+    this.cachedAssignedTotal = 0n;
+    this.initializeAssignmentState({
+      assignmentStateKey: 'furnaceAssignments',
+      assignmentStepMax: NUCLEAR_ALCHEMY_ASSIGNMENT_STEP_MAX
+    });
   }
 
   resolveUIElements() {
@@ -147,11 +181,11 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   }
 
   getTotalFurnaces() {
-    return this.repeatCount;
+    return normalizeNuclearAlchemyInteger(this.repeatCount);
   }
 
   getAssignmentKeys() {
-    return NUCLEAR_ALCHEMY_RECIPE_KEYS.slice();
+    return NUCLEAR_ALCHEMY_RECIPE_KEYS;
   }
 
   getUnassignedAssignmentKey() {
@@ -159,7 +193,10 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   }
 
   getManagedAssignmentKeys() {
-    return [this.getUnassignedAssignmentKey()].concat(this.getAssignmentKeys());
+    if (!this.managedAssignmentKeys) {
+      this.managedAssignmentKeys = [this.getUnassignedAssignmentKey()].concat(this.getAssignmentKeys());
+    }
+    return this.managedAssignmentKeys;
   }
 
   isUnassignedAssignmentKey(key) {
@@ -246,158 +283,12 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     return '';
   }
 
-  normalizeAssignments() {
-    const keys = this.getManagedAssignmentKeys();
-    const keySet = new Set(keys);
-    const total = this.getTotalFurnaces();
-
-    keys.forEach((key) => {
-      this.furnaceAssignments[key] = Math.max(0, Math.floor(this.furnaceAssignments[key] || 0));
-      this.autoAssignFlags[key] = this.autoAssignFlags[key] === true;
-      const weight = Number(this.autoAssignWeights[key]);
-      this.autoAssignWeights[key] = Number.isFinite(weight) ? Math.max(0, weight) : 1;
-    });
-
-    Object.keys(this.furnaceAssignments).forEach((key) => {
-      if (!keySet.has(key)) {
-        this.furnaceAssignments[key] = 0;
-      }
-    });
-
-    let usedManual = 0;
-    keys.forEach((key) => {
-      if (!this.autoAssignFlags[key]) {
-        usedManual += this.furnaceAssignments[key];
-      }
-    });
-
-    const autoKeys = keys.filter((key) => this.autoAssignFlags[key]);
-    const remaining = Math.max(0, total - usedManual);
-
-    if (autoKeys.length > 0) {
-      let totalWeight = 0;
-      autoKeys.forEach((key) => {
-        totalWeight += this.autoAssignWeights[key];
-      });
-
-      if (totalWeight <= 0) {
-        autoKeys.forEach((key) => {
-          this.furnaceAssignments[key] = 0;
-        });
-      } else {
-        const remainders = [];
-        let assigned = 0;
-        autoKeys.forEach((key) => {
-          const exact = remaining * (this.autoAssignWeights[key] / totalWeight);
-          const floorValue = Math.floor(exact);
-          this.furnaceAssignments[key] = floorValue;
-          assigned += floorValue;
-          remainders.push({ key, value: exact - floorValue });
-        });
-        let leftover = remaining - assigned;
-        remainders.sort((left, right) => right.value - left.value);
-        for (let i = 0; i < remainders.length && leftover > 0; i += 1) {
-          this.furnaceAssignments[remainders[i].key] += 1;
-          leftover -= 1;
-        }
-        if (leftover > 0 && autoKeys.length > 0) {
-          const idleKey = this.getUnassignedAssignmentKey();
-          const targetKey = autoKeys.includes(idleKey) ? idleKey : autoKeys[0];
-          this.furnaceAssignments[targetKey] += leftover;
-        }
-      }
-    }
-
-    let assignedTotal = keys.reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0), 0);
-    if (assignedTotal > total) {
-      let excess = assignedTotal - total;
-      for (let i = keys.length - 1; i >= 0 && excess > 0; i -= 1) {
-        const key = keys[i];
-        const current = this.furnaceAssignments[key] || 0;
-        const reduction = Math.min(current, excess);
-        this.furnaceAssignments[key] = current - reduction;
-        excess -= reduction;
-      }
-      assignedTotal = keys.reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0), 0);
-    }
+  getAssignmentTotalCapacity() {
+    return this.getTotalFurnaces();
   }
 
-  getAssignedTotal() {
-    this.normalizeAssignments();
-    return this.getAssignmentKeys().reduce((sum, key) => sum + (this.furnaceAssignments[key] || 0), 0);
-  }
-
-  getAvailableFurnaces() {
-    return Math.max(0, this.getTotalFurnaces() - this.getAssignedTotal());
-  }
-
-  getStoredAssignmentAmount(key) {
-    return this.furnaceAssignments[key] || 0;
-  }
-
-  getDisplayedAssignmentAmount(key) {
-    if (this.isUnassignedAssignmentKey(key)) {
-      return this.getAvailableFurnaces();
-    }
-    return this.getStoredAssignmentAmount(key);
-  }
-
-  getAssignmentMaxTarget(key) {
-    const keys = this.getManagedAssignmentKeys();
-    const total = this.getTotalFurnaces();
-    const usedOther = keys.reduce((sum, otherKey) => {
-      if (otherKey === key) {
-        return sum;
-      }
-      if (this.autoAssignFlags[otherKey]) {
-        return sum;
-      }
-      return sum + this.getStoredAssignmentAmount(otherKey);
-    }, 0);
-    return Math.max(0, total - usedOther);
-  }
-
-  setAssignmentStep(step) {
-    const next = Math.min(1e30, Math.max(1, Math.round(step)));
-    this.assignmentStep = next;
-  }
-
-  setAutoAssignTarget(key, enabled) {
-    this.autoAssignFlags[key] = enabled === true;
-    this.normalizeAssignments();
-    this.updateUI();
-  }
-
-  adjustAssignment(key, delta) {
-    if (this.autoAssignFlags[key]) {
-      return;
-    }
-    this.normalizeAssignments();
-    const current = this.getStoredAssignmentAmount(key);
-    const maxForKey = this.getAssignmentMaxTarget(key);
-    const next = Math.min(maxForKey, Math.max(0, current + delta));
-    this.furnaceAssignments[key] = next;
-    this.normalizeAssignments();
-    this.updateUI();
-  }
-
-  clearAssignment(key) {
-    if (this.autoAssignFlags[key]) {
-      return;
-    }
-    this.furnaceAssignments[key] = 0;
-    this.normalizeAssignments();
-    this.updateUI();
-  }
-
-  maximizeAssignment(key) {
-    if (this.autoAssignFlags[key]) {
-      return;
-    }
-    this.normalizeAssignments();
-    this.furnaceAssignments[key] = this.getAssignmentMaxTarget(key);
-    this.normalizeAssignments();
-    this.updateUI();
+  getAvailableFurnaces(skipNormalization = false, assignedTotal = null) {
+    return this.getAvailableAssignments(skipNormalization, assignedTotal);
   }
 
   getSpaceStorageProject() {
@@ -496,8 +387,8 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     const entries = [];
     this.getAssignmentKeys().forEach((key) => {
       const recipe = this.getRecipe(key);
-      const assigned = this.furnaceAssignments[key] || 0;
-      if (assigned <= 0 || !recipe) {
+      const assigned = Number(this.furnaceAssignments[key] || 0n);
+      if (!(assigned > 0) || !recipe) {
         return;
       }
       const rate = (assigned / recipe.complexity) * parameter;
@@ -519,7 +410,11 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.expansionShortfallLastTick = false;
     this.lastExpansionRatePerSecond = 0;
     this.expansionRateLimitedLastTick = false;
-    if (!this.autoStart) {
+    if (this.isPermanentlyDisabled()) {
+      this.isActive = false;
+      return;
+    }
+    if (!this.autoStart && !this.manualContinuousRun) {
       return;
     }
     if (!this.isExpansionContinuous() || !this.isActive) {
@@ -685,7 +580,9 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     const totals = { cost: {}, gain: {} };
     const storageState = this.createExpansionStorageState(accumulatedChanges);
 
-    const expansionActive = includeExpansion && this.isActive && (!this.isExpansionContinuous() || this.autoStart);
+    const expansionActive = includeExpansion
+      && this.isActive
+      && (!this.isExpansionContinuous() || this.autoStart || this.manualContinuousRun);
     if (expansionActive) {
       const duration = this.getEffectiveDuration();
       const limit = this.maxRepeatCount || Infinity;
@@ -787,6 +684,9 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
   }
 
   estimateExpansionCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+    if (this.isPermanentlyDisabled()) {
+      return { cost: {}, gain: {} };
+    }
     return this.estimateCostAndGainByPhase(
       deltaTime,
       applyRates,
@@ -937,20 +837,17 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     const assignmentGrid = document.createElement('div');
     assignmentGrid.classList.add('hephaestus-assignment-list', 'nuclear-alchemy-assignment-list');
 
-    const stepDownButton = document.createElement('button');
+    const stepButtons = this.createAssignmentStepButtons((key, fallback) => {
+      const paths = {
+        divideTen: 'ui.projects.common.divideTen',
+        timesTen: 'ui.projects.common.timesTen'
+      };
+      return getNuclearAlchemyText(paths[key], fallback);
+    });
+    const stepDownButton = stepButtons.stepDownButton;
     stepDownButton.dataset.nuclearUi = 'stepDownButton';
-    stepDownButton.textContent = getNuclearAlchemyText('ui.projects.common.divideTen', '/10');
-    stepDownButton.addEventListener('click', () => {
-      this.setAssignmentStep(this.assignmentStep / 10);
-      this.updateUI();
-    });
-    const stepUpButton = document.createElement('button');
+    const stepUpButton = stepButtons.stepUpButton;
     stepUpButton.dataset.nuclearUi = 'stepUpButton';
-    stepUpButton.textContent = getNuclearAlchemyText('ui.projects.common.timesTen', 'x10');
-    stepUpButton.addEventListener('click', () => {
-      this.setAssignmentStep(this.assignmentStep * 10);
-      this.updateUI();
-    });
 
     const headerRow = document.createElement('div');
     headerRow.classList.add('hephaestus-assignment-row', 'hephaestus-assignment-header-row', 'nuclear-alchemy-assignment-row');
@@ -1026,83 +923,34 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       amountEl.classList.add('stat-value');
       amountEl.dataset.nuclearRole = 'value';
 
-      const zeroButton = document.createElement('button');
-      zeroButton.dataset.nuclearRole = 'zeroButton';
-      zeroButton.textContent = getNuclearAlchemyText('ui.projects.common.zero', '0');
-      zeroButton.addEventListener('click', () => {
-        this.clearAssignment(key);
+      const assignmentControls = this.createAssignmentControls(key, {
+        rolePrefix: 'nuclear',
+        textProvider: (controlKey, fallback) => {
+          const paths = {
+            zero: 'ui.projects.common.zero',
+            max: 'ui.projects.common.max',
+            auto: 'ui.projects.common.auto'
+          };
+          return getNuclearAlchemyText(paths[controlKey], fallback);
+        }
       });
-
-      const minusButton = document.createElement('button');
-      minusButton.dataset.nuclearRole = 'minusButton';
-      minusButton.addEventListener('click', () => this.adjustAssignment(key, -this.assignmentStep));
-
-      const plusButton = document.createElement('button');
-      plusButton.dataset.nuclearRole = 'plusButton';
-      plusButton.addEventListener('click', () => this.adjustAssignment(key, this.assignmentStep));
-
-      const maxButton = document.createElement('button');
-      maxButton.dataset.nuclearRole = 'maxButton';
-      maxButton.textContent = getNuclearAlchemyText('ui.projects.common.max', 'Max');
-      maxButton.addEventListener('click', () => {
-        this.maximizeAssignment(key);
-      });
-
-      const autoAssignContainer = document.createElement('div');
-      autoAssignContainer.classList.add('hephaestus-auto-assign');
-      const autoAssign = document.createElement('input');
-      autoAssign.type = 'checkbox';
-      autoAssign.dataset.nuclearRole = 'autoAssign';
-      autoAssign.addEventListener('change', () => {
-        this.setAutoAssignTarget(key, autoAssign.checked);
-      });
-      const autoAssignLabel = document.createElement('span');
-      autoAssignLabel.textContent = getNuclearAlchemyText('ui.projects.common.auto', 'Auto');
-      autoAssignLabel.addEventListener('click', () => {
-        autoAssign.checked = !autoAssign.checked;
-        this.setAutoAssignTarget(key, autoAssign.checked);
-      });
-      autoAssignContainer.append(autoAssign, autoAssignLabel);
-
-      const weightInput = document.createElement('input');
-      weightInput.type = 'number';
-      weightInput.min = '0';
-      weightInput.step = '0.1';
-      weightInput.value = String(
-        Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
-      );
-      weightInput.classList.add('hephaestus-weight-input');
-      weightInput.dataset.nuclearRole = 'weightInput';
-      weightInput.addEventListener('input', () => {
-        const value = Number(weightInput.value);
-        this.autoAssignWeights[key] = Number.isFinite(value) ? Math.max(0, value) : 1;
-        this.normalizeAssignments();
-        this.updateUI();
-      });
-
-      const controls = document.createElement('div');
-      controls.classList.add('hephaestus-assignment-controls');
-      const controlButtons = document.createElement('div');
-      controlButtons.classList.add('hephaestus-control-buttons');
-      controlButtons.append(zeroButton, minusButton, plusButton, maxButton, autoAssignContainer);
-      controls.append(controlButtons, weightInput);
 
       const rateEl = document.createElement('div');
       rateEl.classList.add('stat-value', 'nuclear-alchemy-rate-cell');
       rateEl.dataset.nuclearRole = 'rate';
 
-      row.append(nameEl, complexityEl, amountEl, controls, rateEl);
+      row.append(nameEl, complexityEl, amountEl, assignmentControls.controls, rateEl);
       assignmentGrid.appendChild(row);
 
       rowElements[key] = {
         complexity: complexityEl,
         value: amountEl,
-        zeroButton,
-        minusButton,
-        plusButton,
-        maxButton,
-        autoAssign,
-        weightInput,
+        zeroButton: assignmentControls.zeroButton,
+        minusButton: assignmentControls.minusButton,
+        plusButton: assignmentControls.plusButton,
+        maxButton: assignmentControls.maxButton,
+        autoAssign: assignmentControls.autoAssign,
+        weightInput: assignmentControls.weightInput,
         rate: rateEl
       };
     });
@@ -1147,7 +995,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.normalizeAssignments();
     const total = this.getTotalFurnaces();
     const assigned = this.getAssignedTotal();
-    const available = Math.max(0, total - assigned);
+    const available = total > assigned ? (total - assigned) : 0n;
     const step = this.assignmentStep;
 
     elements.totalValue.textContent = formatNumber(total, true, 2);
@@ -1175,20 +1023,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       const maxForKey = this.getAssignmentMaxTarget(key);
 
       row.value.textContent = formatNumber(displayedCurrent, true, 2);
-      row.minusButton.textContent = `-${formatNumber(step, true)}`;
-      row.plusButton.textContent = `+${formatNumber(step, true)}`;
-      row.autoAssign.checked = this.autoAssignFlags[key] === true;
-      row.autoAssign.disabled = total <= 0;
-      if (document.activeElement !== row.weightInput) {
-        row.weightInput.value = String(
-          Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1
-        );
-      }
-      row.weightInput.disabled = total <= 0;
-      row.zeroButton.disabled = storedCurrent <= 0 || this.autoAssignFlags[key];
-      row.maxButton.disabled = storedCurrent >= maxForKey || total <= 0 || this.autoAssignFlags[key];
-      row.minusButton.disabled = storedCurrent <= 0 || this.autoAssignFlags[key];
-      row.plusButton.disabled = storedCurrent >= maxForKey || total <= 0 || this.autoAssignFlags[key];
+      this.updateAssignmentControls(row, key, total, step);
       row.rate.textContent = this.isUnassignedAssignmentKey(key)
         ? ''
         : `${formatNumber(this.lastOutputRatesByResource[key] || 0, true, 3)}/s`;
@@ -1199,31 +1034,16 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     return {
       ...super.saveAutomationSettings(),
       isRunning: this.isRunning === true,
-      furnaceAssignments: { ...this.furnaceAssignments },
-      assignmentStep: this.assignmentStep,
-      autoAssignFlags: { ...this.autoAssignFlags },
-      autoAssignWeights: { ...this.autoAssignWeights }
+      ...this.saveAssignmentSettings()
     };
   }
 
-  loadAutomationSettings(settings = {}) {
+  loadAutomationSettings(settings = {}, options = {}) {
     super.loadAutomationSettings(settings);
     if (Object.prototype.hasOwnProperty.call(settings, 'isRunning')) {
       this.isRunning = settings.isRunning === true;
     }
-    if (Object.prototype.hasOwnProperty.call(settings, 'furnaceAssignments')) {
-      this.furnaceAssignments = { ...(settings.furnaceAssignments || {}) };
-    }
-    if (Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')) {
-      this.assignmentStep = settings.assignmentStep || 1;
-    }
-    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags')) {
-      this.autoAssignFlags = { ...(settings.autoAssignFlags || {}) };
-    }
-    if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights')) {
-      this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
-    }
-    this.normalizeAssignments();
+    this.loadAssignmentSettings(settings, options);
   }
 
   saveState() {
@@ -1231,10 +1051,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       ...super.saveState(),
       isRunning: this.isRunning,
       expansionProgress: this.expansionProgress,
-      furnaceAssignments: { ...this.furnaceAssignments },
-      assignmentStep: this.assignmentStep,
-      autoAssignFlags: { ...this.autoAssignFlags },
-      autoAssignWeights: { ...this.autoAssignWeights }
+      ...this.saveAssignmentSettings()
     };
   }
 
@@ -1242,11 +1059,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     super.loadState(state);
     this.isRunning = state.isRunning === true;
     this.expansionProgress = state.expansionProgress || 0;
-    this.furnaceAssignments = { ...(state.furnaceAssignments || {}) };
-    this.assignmentStep = state.assignmentStep || 1;
-    this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
-    this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
-    this.normalizeAssignments();
+    this.loadAssignmentSettings(state);
     if (!this.isRunning) {
       this.setLastRunStats(0, {});
       this.updateStatus(getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle'));
@@ -1258,10 +1071,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
       repeatCount: this.repeatCount,
       expansionProgress: this.expansionProgress,
       isRunning: this.isRunning,
-      furnaceAssignments: { ...this.furnaceAssignments },
-      assignmentStep: this.assignmentStep,
-      autoAssignFlags: { ...this.autoAssignFlags },
-      autoAssignWeights: { ...this.autoAssignWeights }
+      ...this.saveAssignmentSettings()
     };
     if (this.isActive) {
       state.isActive = true;
@@ -1275,10 +1085,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
     this.repeatCount = state.repeatCount || 0;
     this.expansionProgress = state.expansionProgress || 0;
     this.isRunning = state.isRunning === true;
-    this.furnaceAssignments = { ...(state.furnaceAssignments || {}) };
-    this.assignmentStep = state.assignmentStep || 1;
-    this.autoAssignFlags = { ...(state.autoAssignFlags || {}) };
-    this.autoAssignWeights = { ...(state.autoAssignWeights || {}) };
+    this.loadAssignmentSettings(state);
     this.isCompleted = false;
     this.setLastRunStats(0, {});
     this.updateStatus(
@@ -1286,7 +1093,6 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyContinuousExpansionBase
         ? getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle')
         : getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.runDisabled', 'Run disabled')
     );
-    this.normalizeAssignments();
     if (state.isActive) {
       this.isActive = true;
       this.startingDuration = state.startingDuration || this.getEffectiveDuration();

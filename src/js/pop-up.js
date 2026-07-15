@@ -1,4 +1,14 @@
-function createPopup(title, text, buttonText) {
+let popupTypingSkip = null;
+
+function skipActivePopupTyping() {
+  if (!popupTypingSkip) {
+    return false;
+  }
+  popupTypingSkip();
+  return true;
+}
+
+function createPopup(title, text, buttonText, options = {}) {
   window.popupActive = true; // Flag that a popup is active
   game.scene.pause('mainScene');
   // Create the overlay div
@@ -33,6 +43,9 @@ function createPopup(title, text, buttonText) {
     document.body.removeChild(overlay); // Remove the pop-up
     window.popupActive = false; // Clear popup flag
     game.scene.resume('mainScene');
+    if (options.onClose instanceof Function) {
+      options.onClose();
+    }
   });
 
   // Append the text and button to the text container
@@ -50,38 +63,81 @@ function createPopup(title, text, buttonText) {
   document.body.appendChild(overlay);
 
   // Typing animation for the text
-  let index = 0;
+  const segments = buildJournalSegments(text);
+  let segmentIndex = 0;
+  let textIndex = 0;
   let lastTimestamp = 0;
+  let popupTypingFrameId = 0;
+  let popupTypingComplete = false;
+
+  const appendNextPopupCharacter = () => {
+    const segment = segments[segmentIndex];
+    if (segment.isBreak) {
+      popupText.appendChild(document.createElement('br'));
+      segmentIndex++;
+      textIndex = 0;
+      return '\n';
+    }
+
+    if (!segment._node) {
+      segment._node = segment.className ? document.createElement('span') : document.createTextNode('');
+      if (segment.className) {
+        segment._node.className = segment.className;
+      }
+      popupText.appendChild(segment._node);
+    }
+
+    const character = segment.text[textIndex];
+    segment._node.textContent += character;
+    textIndex++;
+    if (textIndex >= segment.text.length) {
+      segmentIndex++;
+      textIndex = 0;
+    }
+    return character;
+  };
+
+  const finishPopupTyping = () => {
+    if (popupTypingComplete) {
+      return;
+    }
+    popupTypingComplete = true;
+    cancelAnimationFrame(popupTypingFrameId);
+    while (segmentIndex < segments.length) {
+      appendNextPopupCharacter();
+    }
+    closeButton.style.display = 'block';
+    popupTypingSkip = null;
+  };
 
   const typeLetter = (timestamp) => {
+    if (popupTypingComplete) {
+      return;
+    }
     if (!lastTimestamp) {
       lastTimestamp = timestamp;
     }
 
     let elapsed = timestamp - lastTimestamp;
-    let delay = (index > 0 && (text[index - 1] === '.' || text[index - 1] === '\n' || text.slice(index - 4, index) === '<br>')) ? 250 : 50;
+    let previousCharacter = '';
+    let delay = 50 * (options.textSpeedMultiplier || 1);
 
-    while (elapsed >= delay && index < text.length) {
-      if (text[index] === '\n' || text.slice(index, index + 4) === '<br>') {
-        popupText.innerHTML += '<br>';
-        index += (text[index] === '\n') ? 1 : 4;
-      } else {
-        popupText.innerHTML += text[index];
-        index++;
-      }
+    while (elapsed >= delay && segmentIndex < segments.length) {
+      previousCharacter = appendNextPopupCharacter();
       elapsed -= delay;
-      delay = (index > 0 && (text[index - 1] === '.' || text[index - 1] === '\n' || text.slice(index - 4, index) === '<br>')) ? 250 : 50;
+      delay = ((previousCharacter === '.' || previousCharacter === '\n') ? 250 : 50) * (options.textSpeedMultiplier || 1);
     }
     lastTimestamp = timestamp - elapsed;
 
-    if (index < text.length) {
-      requestAnimationFrame(typeLetter);
+    if (segmentIndex < segments.length) {
+      popupTypingFrameId = requestAnimationFrame(typeLetter);
     } else {
-      closeButton.style.display = 'block';
+      finishPopupTyping();
     }
   };
 
-  requestAnimationFrame(typeLetter);
+  popupTypingSkip = finishPopupTyping;
+  popupTypingFrameId = requestAnimationFrame(typeLetter);
 }
 
 function createSystemPopup(title, text, buttonText) {

@@ -2,6 +2,8 @@ const pulsarHazardUICache = {
   doc: undefined,
   root: null,
   rootResolved: false,
+  stormContainer: null,
+  stormCountdown: null,
   card: null,
   title: null,
   titleStatus: null,
@@ -110,6 +112,44 @@ function getPulsarHazardRoot() {
   const doc = getPulsarDocument();
   pulsarHazardUICache.root = doc ? doc.getElementById('hazard-terraforming') : null;
   return pulsarHazardUICache.root;
+}
+
+function updatePulsarStormNotification() {
+  const doc = getPulsarDocument();
+  if (!doc) {
+    return;
+  }
+
+  pulsarHazardUICache.stormContainer = pulsarHazardUICache.stormContainer?.isConnected
+    ? pulsarHazardUICache.stormContainer
+    : doc.getElementById('pulsar-storm-container');
+  if (!pulsarHazardUICache.stormContainer) {
+    return;
+  }
+
+  pulsarHazardUICache.stormCountdown = pulsarHazardUICache.stormCountdown?.isConnected
+    ? pulsarHazardUICache.stormCountdown
+    : doc.getElementById('pulsar-storm-countdown');
+  if (!pulsarHazardUICache.stormCountdown) {
+    pulsarHazardUICache.stormCountdown = doc.createElement('div');
+    pulsarHazardUICache.stormCountdown.id = 'pulsar-storm-countdown';
+    pulsarHazardUICache.stormCountdown.className = 'pulsar-storm-countdown';
+    pulsarHazardUICache.stormContainer.appendChild(pulsarHazardUICache.stormCountdown);
+  }
+
+  const stormActive = hazardManager.parameters.pulsar && hazardManager.pulsarHazard.isStormActive();
+  if (!stormActive) {
+    pulsarHazardUICache.stormCountdown.textContent = '';
+    pulsarHazardUICache.stormCountdown.hidden = true;
+    return;
+  }
+
+  pulsarHazardUICache.stormCountdown.textContent = getPulsarHazardText(
+    'stormNotification',
+    'Pulsar Storm! {seconds}s',
+    { seconds: Math.ceil(hazardManager.pulsarHazard.getStormRemainingSeconds()) }
+  );
+  pulsarHazardUICache.stormCountdown.hidden = false;
 }
 
 function getPulsarTerraforming() {
@@ -481,9 +521,11 @@ function ensurePulsarLayout() {
 
 function initializePulsarHazardUI() {
   ensurePulsarLayout();
+  updatePulsarStormNotification();
 }
 
 function updatePulsarHazardUI(pulsarParameters) {
+  updatePulsarStormNotification();
   const card = ensurePulsarLayout();
   if (!card) {
     return;
@@ -742,6 +784,7 @@ function updatePulsarHazardUI(pulsarParameters) {
 try {
   window.initializePulsarHazardUI = initializePulsarHazardUI;
   window.updatePulsarHazardUI = updatePulsarHazardUI;
+  window.updatePulsarStormNotification = updatePulsarStormNotification;
 } catch (error) {
   // Window not available in tests
 }
@@ -749,7 +792,8 @@ try {
 try {
   module.exports = {
     initializePulsarHazardUI,
-    updatePulsarHazardUI
+    updatePulsarHazardUI,
+    updatePulsarStormNotification
   };
 } catch (error) {
   // Module system not available in browser
