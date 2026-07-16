@@ -12,6 +12,14 @@ class Biodome extends Building {
     this.refreshMetabolismRates();
   }
 
+  get requiresLand() {
+    return terraforming.requirements.biodomeLandRequirement ?? this.baseLandRequirement;
+  }
+
+  set requiresLand(value) {
+    this.baseLandRequirement = value;
+  }
+
   refreshMetabolismRates() {
     const process = getActiveLifeMetabolismProcess();
     const perBiomass = process.growth.perBiomass;
