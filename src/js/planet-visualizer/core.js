@@ -48,7 +48,7 @@
       this.starField = null;
       this.cityLightsGroup = null;
       this.cityLights = [];
-      this.maxCityLights = 720;
+      this.maxCityLights = 1000;
       this.lastCityLightCount = -1;
 
       // Spaceships

@@ -82,7 +82,7 @@
   PlanetVisualizer.prototype.updateCityLights = function updateCityLights() {
     const pop = this.getCurrentPopulation();
     const ecumenopolis = this.getEcumenopolisVisualizerStrength();
-    const populationTarget = Math.floor((pop / 1_000_000) * this.maxCityLights);
+    const populationTarget = Math.floor(pop / 1_000_000);
     const ecumenopolisTarget = Math.floor(smoothstep(0.01, 0.48, ecumenopolis) * this.maxCityLights);
     const target = Math.max(0, Math.min(this.maxCityLights, Math.max(populationTarget, ecumenopolisTarget)));
     this.lastCityLightCount = target;
