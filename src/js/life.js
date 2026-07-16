@@ -1254,7 +1254,7 @@ class LifeManager extends EffectableEntity {
     const processName = process.displayName || 'Photosynthesis';
     const growthReason = processName;
     const decayReason = `${processName} Decay`;
-    const naturalDecayReason = getLifeText('ui.life.rateLabels.naturalDecay', 'Natural Decay');
+    const naturalDecayReason = getLifeText('ui.life.rateLabels.naturalDecay', 'Natural Biomass Decay');
     const usesLuminosity = process.growth.usesLuminosity === true;
     const secondsMultiplier = deltaTime / 1000;
     const yggieGrowthController = this.getYggieGrowthController();

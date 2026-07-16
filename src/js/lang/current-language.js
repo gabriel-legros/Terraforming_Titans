@@ -993,7 +993,7 @@ setLanguageData({
         solidBiochemistry: 'Solid Biochemistry (ice substitution): x{value}',
       },
       rateLabels: {
-        naturalDecay: 'Natural Decay',
+        naturalDecay: 'Natural Biomass Decay',
       },
     },
     structures: {
