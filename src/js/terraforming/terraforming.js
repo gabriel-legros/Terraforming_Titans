@@ -1437,12 +1437,58 @@ class Terraforming extends EffectableEntity{
             return;
         }
 
+        // Structures calculate once per logic tick; weave their climate-facing resource
+        // changes through the fixed physics steps so outer frame grouping is irrelevant.
+        const accumulatedChanges = options.accumulatedChanges;
+        const wovenAtmosphericChanges = {};
+        const wovenSurfaceChanges = {};
+        let wovenAlbedoChange = 0;
+        if (accumulatedChanges) {
+            for (const resourceName in this.resources.atmospheric) {
+                const amount = accumulatedChanges.atmospheric[resourceName] || 0;
+                if (amount !== 0) {
+                    wovenAtmosphericChanges[resourceName] = amount;
+                    accumulatedChanges.atmospheric[resourceName] = 0;
+                }
+            }
+            for (const config of this.zonalSurfaceResourceConfigs) {
+                const amount = accumulatedChanges.surface[config.name] || 0;
+                if (amount !== 0) {
+                    wovenSurfaceChanges[config.name] = amount;
+                    accumulatedChanges.surface[config.name] = 0;
+                }
+            }
+            wovenAlbedoChange = accumulatedChanges.special.albedoUpgrades || 0;
+            accumulatedChanges.special.albedoUpgrades = 0;
+        }
+
         const combinedCycleTotals = [];
         const combinedChemChanges = {};
         let totalDurationSeconds = 0;
         let totalRealSeconds = 0;
+        let appliedFraction = 0;
 
-        for (const stepDuration of stepDurations) {
+        for (let stepIndex = 0; stepIndex < stepDurations.length; stepIndex += 1) {
+            const stepDuration = stepDurations[stepIndex];
+            const fraction = stepIndex === stepDurations.length - 1
+                ? 1 - appliedFraction
+                : stepDuration / deltaTime;
+            appliedFraction += fraction;
+
+            for (const resourceName in wovenAtmosphericChanges) {
+                const resource = this.resources.atmospheric[resourceName];
+                resource.value = Math.max(0, resource.value + wovenAtmosphericChanges[resourceName] * fraction);
+            }
+            const surfaceStepChanges = {};
+            for (const resourceName in wovenSurfaceChanges) {
+                surfaceStepChanges[resourceName] = wovenSurfaceChanges[resourceName] * fraction;
+            }
+            this.distributeSurfaceChangesToZones(surfaceStepChanges);
+            this.resources.special.albedoUpgrades.value = Math.max(
+                0,
+                this.resources.special.albedoUpgrades.value + wovenAlbedoChange * fraction
+            );
+
             this.runUpdateStep(stepDuration, options);
             const stepResult = this.runResourceUpdateStep(stepDuration);
             totalDurationSeconds += stepResult.durationSeconds || 0;
