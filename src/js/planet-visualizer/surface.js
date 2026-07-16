@@ -1579,10 +1579,6 @@
           const peakMask = smoothstep(mountainThreshold - 0.05, mountainThreshold + 0.02, hgt);
           alpha *= (1 - 0.7 * peakMask);
         }
-        const iceCover = iceAlpha[i];
-        if (iceCover > 0) {
-          alpha = Math.max(alpha, iceCover);
-        }
         blendPixel(tdata, idx, r, g, b, alpha);
       }
     };
