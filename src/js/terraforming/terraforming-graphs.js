@@ -880,6 +880,9 @@ class TerraformingGraphsManager {
     if (this.history.years.length !== startingLength) {
       this.needsRedraw = true;
     }
+  }
+
+  render() {
     if (this.isOpen) {
       if (this.needsRedraw) {
         this.draw();

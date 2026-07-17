@@ -698,6 +698,7 @@ function formatRDUpgradeBuyButtonText(key, purchases, max, cost) {
 function populateRDMenu() {
   const menu = document.getElementById('wgc-rd-menu');
   if (!menu) return;
+  cleanupDynamicTooltipsIn(menu);
   menu.innerHTML = '';
   menu.appendChild(createRDHeader());
   for (const key in rdItems) {
@@ -760,6 +761,7 @@ function createFacilityItem(key, label) {
 function populateFacilityMenu() {
   const menu = document.getElementById('wgc-facilities-menu');
   if (!menu) return;
+  cleanupDynamicTooltipsIn(menu);
   menu.innerHTML = '';
   for (const key in facilityElements) {
     delete facilityElements[key];
@@ -785,6 +787,7 @@ function closeRecruitDialog() {
     }
     editingMember.isBeingEdited = false;
   }
+  cleanupDynamicTooltipsIn(activeDialog);
   if (activeDialog.parentElement) {
     document.body.removeChild(activeDialog);
   }
@@ -1382,6 +1385,7 @@ function initializeWGCUI() {
   hideWGCTab();
   const container = document.getElementById('wgc-hope');
   if (container) {
+    cleanupDynamicTooltipsIn(container);
     container.innerHTML = generateWGCLayout();
     container.querySelector('#wgc-rd-artifact-controls').replaceWith(createWGCArtifactSidebarControls());
     wgcTeamRulesInfoIcon = container.querySelector('#wgc-team-rules-info');
@@ -2032,6 +2036,7 @@ function attachWGCPresetFormHandlers() {
 function redrawWGCTeamCards() {
   const teamContainer = document.getElementById('wgc-team-cards');
   if (teamContainer) {
+    cleanupDynamicTooltipsIn(teamContainer);
     teamContainer.innerHTML = generateWGCTeamCards();
     invalidateWGCTeamCache();
   }

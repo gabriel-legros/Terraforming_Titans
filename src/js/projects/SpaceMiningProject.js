@@ -1001,6 +1001,10 @@ class SpaceMiningProject extends SpaceshipProject {
       } else {
         removeSelectOption(elements.materialImportTargetSelect, 'planetaryMass');
         removeSelectOption(elements.materialImportTargetSelect, 'colonyAndPlanetaryMass');
+        if (elements.materialImportTargetPlanetaryMassOption) {
+          delete elements.materialImportTargetPlanetaryMassOption;
+        }
+        delete elements.materialImportTargetColonyAndPlanetaryMassOption;
         if (this.materialImportTarget === 'planetaryMass' || this.materialImportTarget === 'colonyAndPlanetaryMass') {
           this.materialImportTarget = 'colony';
         }

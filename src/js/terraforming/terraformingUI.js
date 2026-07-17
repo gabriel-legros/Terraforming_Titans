@@ -793,53 +793,37 @@ function updateEarthReconstructionControls() {
       || earthManager.isActionUnlocked('completeTerraforming')
     );
 
-  controls.container.classList.toggle('hidden', !showControls);
+  if (controls.container.classList.contains('hidden') === showControls) {
+    controls.container.classList.toggle('hidden', !showControls);
+  }
   if (!showControls) return;
 
-  const massCount = earthManager.getActionCount('increaseMass');
-  controls.increaseMassButton.classList.toggle('hidden', !earthManager.isActionUnlocked('increaseMass'));
-  controls.increaseMassButton.textContent = `${t('ui.terraforming.earthActions.increaseMass', null, 'Increase mass')} ${massCount}/${EARTH_RECONSTRUCTION_MAX_MASS_STEPS}`;
-  controls.increaseMassButton.disabled = massCount >= EARTH_RECONSTRUCTION_MAX_MASS_STEPS;
-
-  const heatCount = earthManager.getActionCount('removeHeat');
-  controls.removeHeatButton.classList.toggle('hidden', !earthManager.isActionUnlocked('removeHeat'));
-  controls.removeHeatButton.textContent = `${t('ui.terraforming.earthActions.removeHeat', null, 'Remove heat')} ${heatCount}/${EARTH_RECONSTRUCTION_MAX_HEAT_STEPS}`;
-  controls.removeHeatButton.disabled = heatCount >= EARTH_RECONSTRUCTION_MAX_HEAT_STEPS;
-
-  const shapeCount = earthManager.getActionCount('shapeSurface');
-  controls.shapeSurfaceButton.classList.toggle('hidden', !earthManager.isActionUnlocked('shapeSurface'));
-  controls.shapeSurfaceButton.textContent = `${t('ui.terraforming.earthActions.shapeSurface', null, 'Shape surface')} ${shapeCount}/${EARTH_RECONSTRUCTION_MAX_SHAPE_STEPS}`;
-  controls.shapeSurfaceButton.disabled = shapeCount >= EARTH_RECONSTRUCTION_MAX_SHAPE_STEPS;
-
-  const atmosphereCount = earthManager.getActionCount('buildAtmosphere');
-  controls.buildAtmosphereButton.classList.toggle('hidden', !earthManager.isActionUnlocked('buildAtmosphere'));
-  controls.buildAtmosphereButton.textContent = `${t('ui.terraforming.earthActions.buildAtmosphere', null, 'Build atmosphere')} ${atmosphereCount}/${EARTH_RECONSTRUCTION_MAX_ATMOSPHERE_STEPS}`;
-  controls.buildAtmosphereButton.disabled = atmosphereCount >= EARTH_RECONSTRUCTION_MAX_ATMOSPHERE_STEPS;
-
-  const waterCount = earthManager.getActionCount('addWater');
-  controls.addWaterButton.classList.toggle('hidden', !earthManager.isActionUnlocked('addWater'));
-  controls.addWaterButton.textContent = `${t('ui.terraforming.earthActions.addWater', null, 'Add water')} ${waterCount}/${EARTH_RECONSTRUCTION_MAX_WATER_STEPS}`;
-  controls.addWaterButton.disabled = waterCount >= EARTH_RECONSTRUCTION_MAX_WATER_STEPS;
-
-  const tiltCount = earthManager.getActionCount('adjustTilt');
-  controls.adjustTiltButton.classList.toggle('hidden', !earthManager.isActionUnlocked('adjustTilt'));
-  controls.adjustTiltButton.textContent = `${t('ui.terraforming.earthActions.adjustTilt', null, 'Adjust tilt')} ${tiltCount}/${EARTH_RECONSTRUCTION_MAX_TILT_STEPS}`;
-  controls.adjustTiltButton.disabled = tiltCount >= EARTH_RECONSTRUCTION_MAX_TILT_STEPS;
-
-  const biomassCount = earthManager.getActionCount('restoreBiomass');
-  controls.restoreBiomassButton.classList.toggle('hidden', !earthManager.isActionUnlocked('restoreBiomass'));
-  controls.restoreBiomassButton.textContent = `${t('ui.terraforming.earthActions.restoreBiomass', null, 'Restore biomass')} ${biomassCount}/${EARTH_RECONSTRUCTION_MAX_BIOMASS_STEPS}`;
-  controls.restoreBiomassButton.disabled = biomassCount >= EARTH_RECONSTRUCTION_MAX_BIOMASS_STEPS;
-
-  const lunaCount = earthManager.getActionCount('replaceLuna');
-  controls.replaceLunaButton.classList.toggle('hidden', !earthManager.isActionUnlocked('replaceLuna'));
-  controls.replaceLunaButton.textContent = `${t('ui.terraforming.earthActions.replaceLuna', null, 'Replace Luna')} ${lunaCount}/${EARTH_RECONSTRUCTION_MAX_LUNA_STEPS}`;
-  controls.replaceLunaButton.disabled = lunaCount >= EARTH_RECONSTRUCTION_MAX_LUNA_STEPS;
-
-  const completeCount = earthManager.getActionCount('completeTerraforming');
-  controls.completeTerraformingButton.classList.toggle('hidden', !earthManager.isActionUnlocked('completeTerraforming'));
-  controls.completeTerraformingButton.textContent = `${t('ui.terraforming.earthActions.completeTerraforming', null, 'Complete terraforming')} ${completeCount}/${EARTH_RECONSTRUCTION_MAX_COMPLETE_TERRAFORMING_STEPS}`;
-  controls.completeTerraformingButton.disabled = completeCount >= EARTH_RECONSTRUCTION_MAX_COMPLETE_TERRAFORMING_STEPS;
+  const actionRows = controls.actionRows || (controls.actionRows = [
+    ['increaseMass', controls.increaseMassButton, 'ui.terraforming.earthActions.increaseMass', 'Increase mass', EARTH_RECONSTRUCTION_MAX_MASS_STEPS],
+    ['removeHeat', controls.removeHeatButton, 'ui.terraforming.earthActions.removeHeat', 'Remove heat', EARTH_RECONSTRUCTION_MAX_HEAT_STEPS],
+    ['shapeSurface', controls.shapeSurfaceButton, 'ui.terraforming.earthActions.shapeSurface', 'Shape surface', EARTH_RECONSTRUCTION_MAX_SHAPE_STEPS],
+    ['buildAtmosphere', controls.buildAtmosphereButton, 'ui.terraforming.earthActions.buildAtmosphere', 'Build atmosphere', EARTH_RECONSTRUCTION_MAX_ATMOSPHERE_STEPS],
+    ['addWater', controls.addWaterButton, 'ui.terraforming.earthActions.addWater', 'Add water', EARTH_RECONSTRUCTION_MAX_WATER_STEPS],
+    ['adjustTilt', controls.adjustTiltButton, 'ui.terraforming.earthActions.adjustTilt', 'Adjust tilt', EARTH_RECONSTRUCTION_MAX_TILT_STEPS],
+    ['restoreBiomass', controls.restoreBiomassButton, 'ui.terraforming.earthActions.restoreBiomass', 'Restore biomass', EARTH_RECONSTRUCTION_MAX_BIOMASS_STEPS],
+    ['replaceLuna', controls.replaceLunaButton, 'ui.terraforming.earthActions.replaceLuna', 'Replace Luna', EARTH_RECONSTRUCTION_MAX_LUNA_STEPS],
+    ['completeTerraforming', controls.completeTerraformingButton, 'ui.terraforming.earthActions.completeTerraforming', 'Complete terraforming', EARTH_RECONSTRUCTION_MAX_COMPLETE_TERRAFORMING_STEPS]
+  ]);
+  actionRows.forEach(([action, button, textKey, fallback, maximum]) => {
+    const unlocked = earthManager.isActionUnlocked(action);
+    if (button.classList.contains('hidden') === unlocked) {
+      button.classList.toggle('hidden', !unlocked);
+    }
+    const count = earthManager.getActionCount(action);
+    const buttonText = `${t(textKey, null, fallback)} ${count}/${maximum}`;
+    if (button.textContent !== buttonText) {
+      button.textContent = buttonText;
+    }
+    const disabled = count >= maximum;
+    if (button.disabled !== disabled) {
+      button.disabled = disabled;
+    }
+  });
 }
 
 function createEarthReconstructionControls() {
@@ -1551,14 +1535,43 @@ function createTemperatureBox(row) {
     const zoneKeys = getZones();
     const showTemperate = zoneKeys.includes('temperate');
     const showPolar = zoneKeys.includes('polar');
-    if (els.temperateRow) els.temperateRow.style.display = showTemperate ? '' : 'none';
-    if (els.polarRow) els.polarRow.style.display = showPolar ? '' : 'none';
+    if (els.temperateRow) {
+      const display = showTemperate ? '' : 'none';
+      if (els.temperateRow.style.display !== display) {
+        els.temperateRow.style.display = display;
+      }
+    }
+    if (els.polarRow) {
+      const display = showPolar ? '' : 'none';
+      if (els.polarRow.style.display !== display) {
+        els.polarRow.style.display = display;
+      }
+    }
 
     const unit = getTemperatureUnit();
-    if (els.tropicalLabel) els.tropicalLabel.textContent = getTerraformingZoneLabel('tropical');
-    if (els.temperateLabel) els.temperateLabel.textContent = getTerraformingZoneLabel('temperate');
-    if (els.polarLabel) els.polarLabel.textContent = getTerraformingZoneLabel('polar');
-    els.tempUnits.forEach(el => el.textContent = unit);
+    if (els.tropicalLabel) {
+      const label = getTerraformingZoneLabel('tropical');
+      if (els.tropicalLabel.textContent !== label) {
+        els.tropicalLabel.textContent = label;
+      }
+    }
+    if (els.temperateLabel) {
+      const label = getTerraformingZoneLabel('temperate');
+      if (els.temperateLabel.textContent !== label) {
+        els.temperateLabel.textContent = label;
+      }
+    }
+    if (els.polarLabel) {
+      const label = getTerraformingZoneLabel('polar');
+      if (els.polarLabel.textContent !== label) {
+        els.polarLabel.textContent = label;
+      }
+    }
+    els.tempUnits.forEach(el => {
+      if (el.textContent !== unit) {
+        el.textContent = unit;
+      }
+    });
     if (els.target) {
       const minTarget = terraforming.temperature.targetMin;
       const maxTarget = terraforming.temperature.targetMax;
@@ -1571,81 +1584,173 @@ function createTemperatureBox(row) {
           unit,
         }
       );
-      els.target.textContent = formatTerraformingTargetText(targetText);
+      const formattedTargetText = formatTerraformingTargetText(targetText);
+      if (els.target.textContent !== formattedTargetText) {
+        els.target.textContent = formattedTargetText;
+      }
     }
 
-    els.current.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.value), false, 2);
-    els.equilibrium.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.equilibriumTemperature), false, 2);
+    const currentText = formatNumber(toDisplayTemperature(terraforming.temperature.value), false, 2);
+    if (els.current.textContent !== currentText) {
+      els.current.textContent = currentText;
+    }
+    const equilibriumText = formatNumber(toDisplayTemperature(terraforming.temperature.equilibriumTemperature), false, 2);
+    if (els.equilibrium.textContent !== equilibriumText) {
+      els.equilibrium.textContent = equilibriumText;
+    }
     const baseCoreHeatFlux = Math.max(0, terraforming.celestialParameters.coreHeatFlux || 0);
     const remainingCoreHeatFlux = terraforming.getCoreHeatFlux ? terraforming.getCoreHeatFlux() : baseCoreHeatFlux;
     const netCoreHeatFlux = terraforming.getNetCoreHeatFlux ? terraforming.getNetCoreHeatFlux() : remainingCoreHeatFlux;
     if (els.coreHeatLine) {
-      els.coreHeatLine.style.display = baseCoreHeatFlux > 0 ? '' : 'none';
+      const display = baseCoreHeatFlux > 0 ? '' : 'none';
+      if (els.coreHeatLine.style.display !== display) {
+        els.coreHeatLine.style.display = display;
+      }
     }
     if (els.coreHeatTooltip) {
-      setTooltipText(els.coreHeatTooltip, getCoreHeatTooltipText());
+      const tooltipText = getCoreHeatTooltipText();
+      if (els.coreHeatTooltip.textContent !== tooltipText) {
+        setTooltipText(els.coreHeatTooltip, tooltipText);
+      }
     }
     if (els.coreHeat) {
-      els.coreHeat.textContent = formatNumber(netCoreHeatFlux, false, 2);
+      const coreHeatText = formatNumber(netCoreHeatFlux, false, 2);
+      if (els.coreHeat.textContent !== coreHeatText) {
+        els.coreHeat.textContent = coreHeatText;
+      }
     }
     const factoryHeatFlux = terraforming.getFactoryHeatFlux ? terraforming.getFactoryHeatFlux() : 0;
     const netFactoryHeatFlux = terraforming.getNetFactoryHeatFlux ? terraforming.getNetFactoryHeatFlux() : factoryHeatFlux;
     if (els.factoryHeatLine) {
-      els.factoryHeatLine.style.display = factoryHeatFlux !== 0 ? '' : 'none';
+      const display = factoryHeatFlux !== 0 ? '' : 'none';
+      if (els.factoryHeatLine.style.display !== display) {
+        els.factoryHeatLine.style.display = display;
+      }
     }
     if (els.factoryHeatTooltip) {
-      setTooltipText(els.factoryHeatTooltip, getFactoryHeatTooltipText());
+      const tooltipText = getFactoryHeatTooltipText();
+      if (els.factoryHeatTooltip.textContent !== tooltipText) {
+        setTooltipText(els.factoryHeatTooltip, tooltipText);
+      }
     }
     if (els.factoryHeat) {
-      els.factoryHeat.textContent = formatNumber(netFactoryHeatFlux, false, 2);
+      const factoryHeatText = formatNumber(netFactoryHeatFlux, false, 2);
+      if (els.factoryHeat.textContent !== factoryHeatText) {
+        els.factoryHeat.textContent = factoryHeatText;
+      }
     }
 
-    els.tropicalTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.value), false, 2);
-    els.tropicalTrendTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.trendValue), false, 2);
+    const tropicalTempText = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.value), false, 2);
+    if (els.tropicalTemp.textContent !== tropicalTempText) {
+      els.tropicalTemp.textContent = tropicalTempText;
+    }
+    const tropicalTrendText = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.trendValue), false, 2);
+    if (els.tropicalTrendTemp.textContent !== tropicalTrendText) {
+      els.tropicalTrendTemp.textContent = tropicalTrendText;
+    }
     const tropicalChange = terraforming.temperature.zones.tropical.value - terraforming.temperature.zones.tropical.initial;
-    els.tropicalDelta.textContent = `${tropicalChange >= 0 ? '+' : ''}${formatNumber(tropicalChange, false, 2)}`;
-    els.tropicalDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.day), false, 2);
-    els.tropicalNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.night), false, 2);
+    const tropicalDeltaText = `${tropicalChange >= 0 ? '+' : ''}${formatNumber(tropicalChange, false, 2)}`;
+    if (els.tropicalDelta.textContent !== tropicalDeltaText) {
+      els.tropicalDelta.textContent = tropicalDeltaText;
+    }
+    const tropicalDayText = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.day), false, 2);
+    if (els.tropicalDay.textContent !== tropicalDayText) {
+      els.tropicalDay.textContent = tropicalDayText;
+    }
+    const tropicalNightText = formatNumber(toDisplayTemperature(terraforming.temperature.zones.tropical.night), false, 2);
+    if (els.tropicalNight.textContent !== tropicalNightText) {
+      els.tropicalNight.textContent = tropicalNightText;
+    }
 
-    els.temperateTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.value), false, 2);
-    els.temperateTrendTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.trendValue), false, 2);
+    const temperateTempText = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.value), false, 2);
+    if (els.temperateTemp.textContent !== temperateTempText) {
+      els.temperateTemp.textContent = temperateTempText;
+    }
+    const temperateTrendText = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.trendValue), false, 2);
+    if (els.temperateTrendTemp.textContent !== temperateTrendText) {
+      els.temperateTrendTemp.textContent = temperateTrendText;
+    }
     const temperateChange = terraforming.temperature.zones.temperate.value - terraforming.temperature.zones.temperate.initial;
-    els.temperateDelta.textContent = `${temperateChange >= 0 ? '+' : ''}${formatNumber(temperateChange, false, 2)}`;
-    els.temperateDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.day), false, 2);
-    els.temperateNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.night), false, 2);
+    const temperateDeltaText = `${temperateChange >= 0 ? '+' : ''}${formatNumber(temperateChange, false, 2)}`;
+    if (els.temperateDelta.textContent !== temperateDeltaText) {
+      els.temperateDelta.textContent = temperateDeltaText;
+    }
+    const temperateDayText = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.day), false, 2);
+    if (els.temperateDay.textContent !== temperateDayText) {
+      els.temperateDay.textContent = temperateDayText;
+    }
+    const temperateNightText = formatNumber(toDisplayTemperature(terraforming.temperature.zones.temperate.night), false, 2);
+    if (els.temperateNight.textContent !== temperateNightText) {
+      els.temperateNight.textContent = temperateNightText;
+    }
 
-    els.polarTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.value), false, 2);
-    els.polarTrendTemp.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.trendValue), false, 2);
+    const polarTempText = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.value), false, 2);
+    if (els.polarTemp.textContent !== polarTempText) {
+      els.polarTemp.textContent = polarTempText;
+    }
+    const polarTrendText = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.trendValue), false, 2);
+    if (els.polarTrendTemp.textContent !== polarTrendText) {
+      els.polarTrendTemp.textContent = polarTrendText;
+    }
     const polarChange = terraforming.temperature.zones.polar.value - terraforming.temperature.zones.polar.initial;
-    els.polarDelta.textContent = `${polarChange >= 0 ? '+' : ''}${formatNumber(polarChange, false, 2)}`;
-    els.polarDay.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.day), false, 2);
-    els.polarNight.textContent = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.night), false, 2);
+    const polarDeltaText = `${polarChange >= 0 ? '+' : ''}${formatNumber(polarChange, false, 2)}`;
+    if (els.polarDelta.textContent !== polarDeltaText) {
+      els.polarDelta.textContent = polarDeltaText;
+    }
+    const polarDayText = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.day), false, 2);
+    if (els.polarDay.textContent !== polarDayText) {
+      els.polarDay.textContent = polarDayText;
+    }
+    const polarNightText = formatNumber(toDisplayTemperature(terraforming.temperature.zones.polar.night), false, 2);
+    if (els.polarNight.textContent !== polarNightText) {
+      els.polarNight.textContent = polarNightText;
+    }
 
-    temperatureBox.style.borderColor = terraforming.getTemperatureStatus() ? getStatusColor('success') : getStatusColor('failure');
+    const borderColor = terraforming.getTemperatureStatus() ? getStatusColor('success') : getStatusColor('failure');
+    if (els.borderColor !== borderColor) {
+      temperatureBox.style.borderColor = borderColor;
+      els.borderColor = borderColor;
+    }
 
     if (els.energyPenalty) {
-      els.energyPenalty.textContent = `${getTerraformingSummaryText(
+      const energyPenaltyText = `${getTerraformingSummaryText(
         'temperature.labels.colonyEnergyMultiplier',
         'Colony energy cost multiplier from temperature :'
       )} ${terraforming.calculateColonyEnergyPenalty().toFixed(2)}`;
+      if (els.energyPenalty.textContent !== energyPenaltyText) {
+        els.energyPenalty.textContent = energyPenaltyText;
+      }
     }
     if (els.maintenancePenalty) {
       const penalty = terraforming.calculateMaintenancePenalty();
       if (penalty > 1) {
-        els.maintenancePenalty.style.display = '';
+        if (els.maintenancePenalty.style.display !== '') {
+          els.maintenancePenalty.style.display = '';
+        }
         if (els.maintenancePenaltyValue) {
-          els.maintenancePenaltyValue.textContent = formatNumber(penalty, false, 2);
+          const penaltyText = formatNumber(penalty, false, 2);
+          if (els.maintenancePenaltyValue.textContent !== penaltyText) {
+            els.maintenancePenaltyValue.textContent = penaltyText;
+          }
         } else {
-          els.maintenancePenalty.textContent = `${getTerraformingSummaryText(
+          const penaltyText = `${getTerraformingSummaryText(
             'temperature.labels.maintenanceMultiplier',
             'Maintenance cost multiplier from temperature : '
           )}${formatNumber(penalty, false, 2)}`;
+          if (els.maintenancePenalty.textContent !== penaltyText) {
+            els.maintenancePenalty.textContent = penaltyText;
+          }
         }
         if (els.maintenancePenaltyTooltip) {
-          setTooltipText(els.maintenancePenaltyTooltip, getTemperatureMaintenanceImmuneTooltip());
+          const tooltipText = getTemperatureMaintenanceImmuneTooltip();
+          if (els.maintenancePenaltyTooltip.textContent !== tooltipText) {
+            setTooltipText(els.maintenancePenaltyTooltip, tooltipText);
+          }
         }
       } else {
-        els.maintenancePenalty.style.display = 'none';
+        if (els.maintenancePenalty.style.display !== 'none') {
+          els.maintenancePenalty.style.display = 'none';
+        }
       }
     }
     if (els.maintenanceFloor) {
@@ -1653,31 +1758,40 @@ function createTemperatureBox(row) {
       const shouldShowFloor = floorContext.penalty > 1 && Number.isFinite(floorContext.temperatureK);
       if (shouldShowFloor) {
         els.maintenanceFloorHideTimer = 1;
-        els.maintenanceFloor.style.display = '';
+        if (els.maintenanceFloor.style.display !== '') {
+          els.maintenanceFloor.style.display = '';
+        }
         const floorTemperature = formatNumber(
           toDisplayTemperature(floorContext.temperatureK),
           false,
           2
         );
         if (els.maintenanceFloorValue) {
-          els.maintenanceFloorValue.textContent =
-            `${floorTemperature}${unit} (floor x${formatNumber(floorContext.penalty, false, 2)})`;
+          const floorText = `${floorTemperature}${unit} (floor x${formatNumber(floorContext.penalty, false, 2)})`;
+          if (els.maintenanceFloorValue.textContent !== floorText) {
+            els.maintenanceFloorValue.textContent = floorText;
+          }
         } else {
-          els.maintenanceFloor.textContent =
-            `${getTerraformingSummaryText(
-              'temperature.labels.oneAtmEstimate',
-              '1 atm temperature estimate : '
-            )}${floorTemperature}${unit} (floor x${formatNumber(floorContext.penalty, false, 2)})`;
+          const floorText = `${getTerraformingSummaryText(
+            'temperature.labels.oneAtmEstimate',
+            '1 atm temperature estimate : '
+          )}${floorTemperature}${unit} (floor x${formatNumber(floorContext.penalty, false, 2)})`;
+          if (els.maintenanceFloor.textContent !== floorText) {
+            els.maintenanceFloor.textContent = floorText;
+          }
         }
         if (els.maintenanceFloorTooltip) {
-          setTooltipText(
-            els.maintenanceFloorTooltip,
-            getTemperatureMaintenanceFloorTooltip(floorContext)
-          );
+          const tooltipText = getTemperatureMaintenanceFloorTooltip(floorContext);
+          if (els.maintenanceFloorTooltip.textContent !== tooltipText) {
+            setTooltipText(els.maintenanceFloorTooltip, tooltipText);
+          }
         }
       } else {
         els.maintenanceFloorHideTimer = Math.max(0, (els.maintenanceFloorHideTimer || 0) - frameDelta);
-        els.maintenanceFloor.style.display = els.maintenanceFloorHideTimer > 0 ? '' : 'none';
+        const display = els.maintenanceFloorHideTimer > 0 ? '' : 'none';
+        if (els.maintenanceFloor.style.display !== display) {
+          els.maintenanceFloor.style.display = display;
+        }
       }
     }
   }
@@ -1807,7 +1921,11 @@ function createTemperatureBox(row) {
     const els = terraformingUICache.atmosphere;
     const atmosphereBox = els.box;
     if (!atmosphereBox) return;
-    atmosphereBox.style.borderColor = terraforming.getAtmosphereStatus() ? getStatusColor('success') : getStatusColor('failure');
+    const borderColor = terraforming.getAtmosphereStatus() ? getStatusColor('success') : getStatusColor('failure');
+    if (els.borderColor !== borderColor) {
+      atmosphereBox.style.borderColor = borderColor;
+      els.borderColor = borderColor;
+    }
     const gasTargets = terraforming.gasTargets;
     const gasBody = els.gasBody;
     const frameDelta = deltaSeconds > 0 ? Math.min(1, deltaSeconds) : 0;
@@ -1865,15 +1983,20 @@ function createTemperatureBox(row) {
     });
 
     if (gasBody) {
-      sortedGasKeys.forEach((gas) => {
+      sortedGasKeys.forEach((gas, index) => {
         const row = els.gases[gas]?.row;
-        if (row) gasBody.appendChild(row);
+        if (row && gasBody.children[index] !== row) {
+          gasBody.insertBefore(row, gasBody.children[index] || null);
+        }
       });
     }
 
     const totalPressureKPa = terraforming.calculateTotalPressure();
     const totalPressurePa = totalPressureKPa * 1000;
-    els.current.textContent = formatPascalValue(totalPressurePa, 2);
+    const currentPressureText = formatPascalValue(totalPressurePa, 2);
+    if (els.current.textContent !== currentPressureText) {
+      els.current.textContent = currentPressureText;
+    }
     const pressureTarget = terraforming.atmosphere.totalPressureTargetRangeKPa;
     const hasPressureTarget = pressureTarget
       && (pressureTarget.min > 0 || pressureTarget.max > 0);
@@ -1881,7 +2004,7 @@ function createTemperatureBox(row) {
       if (hasPressureTarget) {
         const minPa = pressureTarget.min * 1000;
         const maxPa = pressureTarget.max * 1000;
-        els.pressureTarget.textContent = getTerraformingSummaryText(
+        const targetText = getTerraformingSummaryText(
           'atmosphere.targetRange',
           '{min} - {max}',
           {
@@ -1889,16 +2012,37 @@ function createTemperatureBox(row) {
             max: formatPascalValue(maxPa, 2),
           }
         );
+        if (els.pressureTarget.textContent !== targetText) {
+          els.pressureTarget.textContent = targetText;
+        }
         const inRange = totalPressureKPa >= pressureTarget.min && totalPressureKPa <= pressureTarget.max;
-        els.pressureTargetStatus.textContent = getTerraformingStatusIcon(inRange);
-        els.pressureTargetStatus.classList.toggle('status-check', inRange);
-        els.pressureTargetStatus.classList.toggle('status-cross', !inRange);
-        els.pressureTargetLine.style.display = '';
+        const statusText = getTerraformingStatusIcon(inRange);
+        if (els.pressureTargetStatus.textContent !== statusText) {
+          els.pressureTargetStatus.textContent = statusText;
+        }
+        if (els.pressureTargetStatus.classList.contains('status-check') !== inRange) {
+          els.pressureTargetStatus.classList.toggle('status-check', inRange);
+        }
+        if (els.pressureTargetStatus.classList.contains('status-cross') !== !inRange) {
+          els.pressureTargetStatus.classList.toggle('status-cross', !inRange);
+        }
+        if (els.pressureTargetLine.style.display) {
+          els.pressureTargetLine.style.display = '';
+        }
       } else {
-        els.pressureTarget.textContent = '';
-        els.pressureTargetStatus.textContent = '';
-        els.pressureTargetStatus.classList.remove('status-check', 'status-cross');
-        els.pressureTargetLine.style.display = 'none';
+        if (els.pressureTarget.textContent) {
+          els.pressureTarget.textContent = '';
+        }
+        if (els.pressureTargetStatus.textContent) {
+          els.pressureTargetStatus.textContent = '';
+        }
+        if (els.pressureTargetStatus.classList.contains('status-check')
+          || els.pressureTargetStatus.classList.contains('status-cross')) {
+          els.pressureTargetStatus.classList.remove('status-check', 'status-cross');
+        }
+        if (els.pressureTargetLine.style.display !== 'none') {
+          els.pressureTargetLine.style.display = 'none';
+        }
       }
     }
 
@@ -1906,9 +2050,14 @@ function createTemperatureBox(row) {
       const opticalDepthValue = terraforming.temperature.opticalDepth;
       const isDefaultRequirement = terraforming.requirementId === DEFAULT_TERRAFORMING_REQUIREMENT_ID;
       const warningSuffix = isDefaultRequirement && opticalDepthValue > 3 ? '\u26A0' : '';
-      els.opticalDepth.textContent = opticalDepthValue.toFixed(3);
+      const opticalDepthText = opticalDepthValue.toFixed(3);
+      if (els.opticalDepth.textContent !== opticalDepthText) {
+        els.opticalDepth.textContent = opticalDepthText;
+      }
       if (els.opticalDepthWarning) {
-        els.opticalDepthWarning.textContent = warningSuffix;
+        if (els.opticalDepthWarning.textContent !== warningSuffix) {
+          els.opticalDepthWarning.textContent = warningSuffix;
+        }
       }
     }
     if (els.opticalDepthInfo) {
@@ -1945,20 +2094,30 @@ function createTemperatureBox(row) {
     }
 
     if (els.windMultiplier) {
-      els.windMultiplier.textContent = `${(terraforming.calculateWindTurbineMultiplier()*100).toFixed(2)}`;
+      const windMultiplierText = `${(terraforming.calculateWindTurbineMultiplier()*100).toFixed(2)}`;
+      if (els.windMultiplier.textContent !== windMultiplierText) {
+        els.windMultiplier.textContent = windMultiplierText;
+      }
     }
 
     if (els.pressurePenalty && typeof terraforming.calculateColonyPressureCostPenalty === 'function') {
       const penalty = terraforming.calculateColonyPressureCostPenalty();
       if (penalty > 1) {
-        els.pressurePenalty.style.display = '';
-        els.pressurePenalty.textContent = getTerraformingSummaryText(
+        if (els.pressurePenalty.style.display) {
+          els.pressurePenalty.style.display = '';
+        }
+        const penaltyText = getTerraformingSummaryText(
           'atmosphere.labels.pressurePenalty',
           'Colony cost multiplier from pressure : {value}',
           { value: penalty.toFixed(2) }
         );
+        if (els.pressurePenalty.textContent !== penaltyText) {
+          els.pressurePenalty.textContent = penaltyText;
+        }
       } else {
-        els.pressurePenalty.style.display = 'none';
+        if (els.pressurePenalty.style.display !== 'none') {
+          els.pressurePenalty.style.display = 'none';
+        }
       }
     }
 
@@ -1988,10 +2147,16 @@ function createTemperatureBox(row) {
         gasHideTimers[gas] = timer;
         const shouldShow = shouldShowBase || timer > 0;
         if (gasEls && gasEls.row) {
-            gasEls.row.style.display = shouldShow ? '' : 'none';
+            const display = shouldShow ? '' : 'none';
+            if (gasEls.row.style.display !== display) {
+              gasEls.row.style.display = display;
+            }
         }
         if (gasEls && gasEls.pressure) {
-            gasEls.pressure.textContent = formatNumber(currentGlobalPressurePa, false, 2);
+            const pressureText = formatNumber(currentGlobalPressurePa, false, 2);
+            if (gasEls.pressure.textContent !== pressureText) {
+              gasEls.pressure.textContent = pressureText;
+            }
         }
 
         const initialAmount = currentPlanetParameters.resources.atmospheric[gas]?.initialValue || 0;
@@ -1999,25 +2164,50 @@ function createTemperatureBox(row) {
 
         if (gasEls && gasEls.delta) {
             const delta = currentGlobalPressurePa - initialGlobalPressurePa;
-            gasEls.delta.textContent = `${delta >= 0 ? '+' : ''}${formatNumber(delta, false, 2)}`;
+            const deltaText = `${delta >= 0 ? '+' : ''}${formatNumber(delta, false, 2)}`;
+            if (gasEls.delta.textContent !== deltaText) {
+              gasEls.delta.textContent = deltaText;
+            }
         }
 
         if (gasEls && gasEls.target) {
-            gasEls.target.textContent = formatGasTargetRange(target);
+            const targetText = formatGasTargetRange(target);
+            if (gasEls.target.textContent !== targetText) {
+              gasEls.target.textContent = targetText;
+            }
         }
 
         if (gasEls && gasEls.status) {
             if (!target) {
-                gasEls.status.textContent = '';
-                gasEls.status.classList.remove('status-check', 'status-cross');
+                if (gasEls.status.textContent) {
+                  gasEls.status.textContent = '';
+                }
+                if (gasEls.status.classList.contains('status-check')
+                  || gasEls.status.classList.contains('status-cross')) {
+                  gasEls.status.classList.remove('status-check', 'status-cross');
+                }
             } else if (!outsideTarget) {
-                gasEls.status.textContent = getTerraformingStatusIcon(true);
-                gasEls.status.classList.add('status-check');
-                gasEls.status.classList.remove('status-cross');
+                const statusText = getTerraformingStatusIcon(true);
+                if (gasEls.status.textContent !== statusText) {
+                  gasEls.status.textContent = statusText;
+                }
+                if (!gasEls.status.classList.contains('status-check')) {
+                  gasEls.status.classList.add('status-check');
+                }
+                if (gasEls.status.classList.contains('status-cross')) {
+                  gasEls.status.classList.remove('status-cross');
+                }
             } else {
-                gasEls.status.textContent = getTerraformingStatusIcon(false);
-                gasEls.status.classList.add('status-cross');
-                gasEls.status.classList.remove('status-check');
+                const statusText = getTerraformingStatusIcon(false);
+                if (gasEls.status.textContent !== statusText) {
+                  gasEls.status.textContent = statusText;
+                }
+                if (!gasEls.status.classList.contains('status-cross')) {
+                  gasEls.status.classList.add('status-cross');
+                }
+                if (gasEls.status.classList.contains('status-check')) {
+                  gasEls.status.classList.remove('status-check');
+                }
             }
         }
     }
@@ -2098,7 +2288,8 @@ function createWaterBox(row) {
 
     const targetSpan = document.createElement('span');
     targetSpan.id = 'water-target';
-    targetSpan.innerHTML = formatLiquidCoverageTargets(terraforming);
+    const targetHtml = formatLiquidCoverageTargets(terraforming);
+    targetSpan.innerHTML = targetHtml;
     targetSpan.style.marginTop = 'auto';
     targetSpan.style.display = terraforming.liquidCoverageTargets.length ? '' : 'none';
     targetSpan.classList.add('terraforming-target')
@@ -2132,7 +2323,8 @@ function createWaterBox(row) {
       snowfallRateKg: waterBox.querySelector('#snowfall-rate-kg'),
       meltingRateKg: waterBox.querySelector('#melting-rate-kg'),
       freezingRateKg: waterBox.querySelector('#freezing-rate-kg'),
-      target: targetSpan
+      target: targetSpan,
+      targetHtml
     };
   }
 
@@ -2239,9 +2431,17 @@ function createWaterBox(row) {
 
     const requiresCo2 = terraforming.liquidCoverageTargets.some((entry) => entry.liquidType === 'carbonDioxide');
     const requiresFineSand = terraforming.liquidCoverageTargets.some((entry) => entry.coverageKey === 'fineSand');
-    if (els.co2LiquidRow) els.co2LiquidRow.style.display = requiresCo2 ? '' : 'none';
-    if (els.co2IceRow) els.co2IceRow.style.display = requiresCo2 ? '' : 'none';
-    if (els.fineSandRow) els.fineSandRow.style.display = requiresFineSand ? '' : 'none';
+    const co2Display = requiresCo2 ? '' : 'none';
+    if (els.co2LiquidRow && els.co2LiquidRow.style.display !== co2Display) {
+      els.co2LiquidRow.style.display = co2Display;
+    }
+    if (els.co2IceRow && els.co2IceRow.style.display !== co2Display) {
+      els.co2IceRow.style.display = co2Display;
+    }
+    const fineSandDisplay = requiresFineSand ? '' : 'none';
+    if (els.fineSandRow && els.fineSandRow.style.display !== fineSandDisplay) {
+      els.fineSandRow.style.display = fineSandDisplay;
+    }
 
     let allTargetsMet = true;
     for (const entry of terraforming.liquidCoverageTargets) {
@@ -2255,44 +2455,115 @@ function createWaterBox(row) {
       }
     }
 
-    waterBox.style.borderColor = hasLiquidCoverageTargets
+    const borderColor = hasLiquidCoverageTargets
       ? (allTargetsMet && !hasLiquidHydrogen ? getStatusColor('success') : getStatusColor('failure'))
       : '';
+    if (els.borderColor !== borderColor) {
+      waterBox.style.borderColor = borderColor;
+      els.borderColor = borderColor;
+    }
     if (els.liquidHydrogenWarningRow) {
-      els.liquidHydrogenWarningRow.style.display = hasLiquidCoverageTargets && hasLiquidHydrogen ? '' : 'none';
+      const warningDisplay = hasLiquidCoverageTargets && hasLiquidHydrogen ? '' : 'none';
+      if (els.liquidHydrogenWarningRow.style.display !== warningDisplay) {
+        els.liquidHydrogenWarningRow.style.display = warningDisplay;
+      }
     }
 
-    els.waterCurrent.textContent = (avgLiquidCoverage * 100).toFixed(2);
-    els.iceCurrent.textContent = (avgIceCoverage * 100).toFixed(2);
+    const waterCurrentText = (avgLiquidCoverage * 100).toFixed(2);
+    if (els.waterCurrent.textContent !== waterCurrentText) {
+      els.waterCurrent.textContent = waterCurrentText;
+    }
+    const iceCurrentText = (avgIceCoverage * 100).toFixed(2);
+    if (els.iceCurrent.textContent !== iceCurrentText) {
+      els.iceCurrent.textContent = iceCurrentText;
+    }
     if (requiresCo2) {
-      if (els.co2LiquidCurrent) els.co2LiquidCurrent.textContent = (avgCo2LiquidCoverage * 100).toFixed(2);
-      if (els.co2IceCurrent) els.co2IceCurrent.textContent = (avgDryIceCoverage * 100).toFixed(2);
+      const co2LiquidText = (avgCo2LiquidCoverage * 100).toFixed(2);
+      if (els.co2LiquidCurrent && els.co2LiquidCurrent.textContent !== co2LiquidText) {
+        els.co2LiquidCurrent.textContent = co2LiquidText;
+      }
+      const co2IceText = (avgDryIceCoverage * 100).toFixed(2);
+      if (els.co2IceCurrent && els.co2IceCurrent.textContent !== co2IceText) {
+        els.co2IceCurrent.textContent = co2IceText;
+      }
     }
     if (requiresFineSand && els.fineSandCurrent) {
-      els.fineSandCurrent.textContent = (avgFineSandCoverage * 100).toFixed(2);
+      const fineSandText = (avgFineSandCoverage * 100).toFixed(2);
+      if (els.fineSandCurrent.textContent !== fineSandText) {
+        els.fineSandCurrent.textContent = fineSandText;
+      }
     }
 
     if (els.target) {
-      els.target.innerHTML = formatLiquidCoverageTargets(terraforming);
-      els.target.style.display = terraforming.liquidCoverageTargets.length ? '' : 'none';
+      const targetHtml = formatLiquidCoverageTargets(terraforming);
+      if (els.targetHtml !== targetHtml) {
+        els.target.innerHTML = targetHtml;
+        els.targetHtml = targetHtml;
+      }
+      const targetDisplay = terraforming.liquidCoverageTargets.length ? '' : 'none';
+      if (els.target.style.display !== targetDisplay) {
+        els.target.style.display = targetDisplay;
+      }
     }
 
-    els.evaporationRate.textContent = formatWaterRate(terraforming.totalEvaporationRate || 0);
-    els.boilingRate.textContent = formatWaterRate(terraforming.totalBoilingRate || 0);
-    els.sublimationRate.textContent = formatWaterRate(terraforming.totalWaterSublimationRate || 0);
-    els.rainfallRate.textContent = formatWaterRate(terraforming.totalRainfallRate || 0);
-    els.snowfallRate.textContent = formatWaterRate(terraforming.totalSnowfallRate || 0);
-    els.meltingRate.textContent = formatWaterRate(terraforming.totalMeltRate || 0);
-    els.freezingRate.textContent = formatWaterRate(terraforming.totalFreezeRate || 0);
+    const evaporationRateText = formatWaterRate(terraforming.totalEvaporationRate || 0);
+    if (els.evaporationRate.textContent !== evaporationRateText) {
+      els.evaporationRate.textContent = evaporationRateText;
+    }
+    const boilingRateText = formatWaterRate(terraforming.totalBoilingRate || 0);
+    if (els.boilingRate.textContent !== boilingRateText) {
+      els.boilingRate.textContent = boilingRateText;
+    }
+    const sublimationRateText = formatWaterRate(terraforming.totalWaterSublimationRate || 0);
+    if (els.sublimationRate.textContent !== sublimationRateText) {
+      els.sublimationRate.textContent = sublimationRateText;
+    }
+    const rainfallRateText = formatWaterRate(terraforming.totalRainfallRate || 0);
+    if (els.rainfallRate.textContent !== rainfallRateText) {
+      els.rainfallRate.textContent = rainfallRateText;
+    }
+    const snowfallRateText = formatWaterRate(terraforming.totalSnowfallRate || 0);
+    if (els.snowfallRate.textContent !== snowfallRateText) {
+      els.snowfallRate.textContent = snowfallRateText;
+    }
+    const meltingRateText = formatWaterRate(terraforming.totalMeltRate || 0);
+    if (els.meltingRate.textContent !== meltingRateText) {
+      els.meltingRate.textContent = meltingRateText;
+    }
+    const freezingRateText = formatWaterRate(terraforming.totalFreezeRate || 0);
+    if (els.freezingRate.textContent !== freezingRateText) {
+      els.freezingRate.textContent = freezingRateText;
+    }
 
     const safeSurfaceArea = surfaceArea > 0 ? surfaceArea : 1;
-    els.evaporationRateKg.textContent = formatWaterRate((terraforming.totalEvaporationRate || 0) * 1000 / safeSurfaceArea);
-    els.boilingRateKg.textContent = formatWaterRate((terraforming.totalBoilingRate || 0) * 1000 / safeSurfaceArea);
-    els.sublimationRateKg.textContent = formatWaterRate((terraforming.totalWaterSublimationRate || 0) * 1000 / safeSurfaceArea);
-    els.rainfallRateKg.textContent = formatWaterRate((terraforming.totalRainfallRate || 0) * 1000 / safeSurfaceArea);
-    els.snowfallRateKg.textContent = formatWaterRate((terraforming.totalSnowfallRate || 0) * 1000 / safeSurfaceArea);
-    els.meltingRateKg.textContent = formatWaterRate((terraforming.totalMeltRate || 0) * 1000 / safeSurfaceArea);
-    els.freezingRateKg.textContent = formatWaterRate((terraforming.totalFreezeRate || 0) * 1000 / safeSurfaceArea);
+    const evaporationRateKgText = formatWaterRate((terraforming.totalEvaporationRate || 0) * 1000 / safeSurfaceArea);
+    if (els.evaporationRateKg.textContent !== evaporationRateKgText) {
+      els.evaporationRateKg.textContent = evaporationRateKgText;
+    }
+    const boilingRateKgText = formatWaterRate((terraforming.totalBoilingRate || 0) * 1000 / safeSurfaceArea);
+    if (els.boilingRateKg.textContent !== boilingRateKgText) {
+      els.boilingRateKg.textContent = boilingRateKgText;
+    }
+    const sublimationRateKgText = formatWaterRate((terraforming.totalWaterSublimationRate || 0) * 1000 / safeSurfaceArea);
+    if (els.sublimationRateKg.textContent !== sublimationRateKgText) {
+      els.sublimationRateKg.textContent = sublimationRateKgText;
+    }
+    const rainfallRateKgText = formatWaterRate((terraforming.totalRainfallRate || 0) * 1000 / safeSurfaceArea);
+    if (els.rainfallRateKg.textContent !== rainfallRateKgText) {
+      els.rainfallRateKg.textContent = rainfallRateKgText;
+    }
+    const snowfallRateKgText = formatWaterRate((terraforming.totalSnowfallRate || 0) * 1000 / safeSurfaceArea);
+    if (els.snowfallRateKg.textContent !== snowfallRateKgText) {
+      els.snowfallRateKg.textContent = snowfallRateKgText;
+    }
+    const meltingRateKgText = formatWaterRate((terraforming.totalMeltRate || 0) * 1000 / safeSurfaceArea);
+    if (els.meltingRateKg.textContent !== meltingRateKgText) {
+      els.meltingRateKg.textContent = meltingRateKgText;
+    }
+    const freezingRateKgText = formatWaterRate((terraforming.totalFreezeRate || 0) * 1000 / safeSurfaceArea);
+    if (els.freezingRateKg.textContent !== freezingRateKgText) {
+      els.freezingRateKg.textContent = freezingRateKgText;
+    }
   }
 
   function createLifeBox(row) {

@@ -69,6 +69,7 @@ function createPlanetVisualizerStub(window) {
     debug: { mode: 'game', container: null },
     viz: { coverage: {} },
     onResize() {},
+    dispose() {},
     resetSurfaceTextureThrottle() {},
     updateSurfaceTextureFromPressure() {},
     setBaseColor() {}
@@ -307,7 +308,15 @@ function setupBrowserStubs(window, options = {}) {
   };
 
   window.PlanetVisualizer = function PlanetVisualizer() {};
+  window.destroyPlanetVisualizerUI = function destroyPlanetVisualizerUI() {
+    if (!window.planetVisualizer) {
+      return;
+    }
+    window.planetVisualizer.dispose();
+    window.planetVisualizer = null;
+  };
   window.initializePlanetVisualizerUI = function initializePlanetVisualizerUI() {
+    window.destroyPlanetVisualizerUI();
     const stub = createPlanetVisualizerStub(window);
     window.planetVisualizer = stub;
     return stub;
@@ -350,6 +359,9 @@ async function createGameDom(options = {}) {
   });
 
   await waitForWindowLoad(dom.window);
+  // The Phaser stub schedules its create callback on the next timer turn.
+  // Let the required ordered globals exist before callers invoke loadGame().
+  await new Promise(resolve => dom.window.setTimeout(resolve, 0));
   dom.window.initializePlanetVisualizerUI();
   exposeGameGlobal(dom.window, 'projectManager');
   return dom;

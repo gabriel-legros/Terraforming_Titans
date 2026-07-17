@@ -275,11 +275,6 @@ class SpaceshipProject extends Project {
       this.assignedSpaceships = 0;
     }
     this.finalizeAssignmentChange(wasContinuous);
-    try {
-      updateProjectUI(this.name);
-    } catch (error) {
-      // no-op
-    }
     return loss;
   }
 
@@ -546,7 +541,10 @@ class SpaceshipProject extends Project {
           elements.totalCostElement.textContent = totalCostText;
           elements._cachedTotalCostText = totalCostText;
         }
-        elements.totalCostElement.style.color = hasShortfall ? 'red' : '';
+        const totalCostColor = hasShortfall ? 'red' : '';
+        if (elements.totalCostElement.style.color !== totalCostColor) {
+          elements.totalCostElement.style.color = totalCostColor;
+        }
       } else {
         updateTotalCostDisplayElement(elements.totalCostElement, totalCost, this, perSecond);
       }
@@ -577,10 +575,17 @@ class SpaceshipProject extends Project {
       const perSecond = this.isContinuous();
       const totalGain = this.calculateSpaceshipTotalResourceGain(perSecond);
       if (Object.keys(totalGain).length > 0) {
-        elements.totalGainElement.textContent = formatTotalResourceGainDisplay(totalGain, perSecond);
-        elements.totalGainElement.style.display = 'block';
+        const totalGainText = formatTotalResourceGainDisplay(totalGain, perSecond);
+        if (elements.totalGainElement.textContent !== totalGainText) {
+          elements.totalGainElement.textContent = totalGainText;
+        }
+        if (elements.totalGainElement.style.display !== 'block') {
+          elements.totalGainElement.style.display = 'block';
+        }
       } else {
-        elements.totalGainElement.style.display = 'none';
+        if (elements.totalGainElement.style.display !== 'none') {
+          elements.totalGainElement.style.display = 'none';
+        }
       }
     }
   }

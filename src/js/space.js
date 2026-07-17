@@ -3797,7 +3797,6 @@ class SpaceManager extends EffectableEntity {
             this.planetStatuses[this.currentPlanetKey].visited = true;
         }
 
-         console.log("SpaceManager state loaded:", this.saveState());
     }
 }
 

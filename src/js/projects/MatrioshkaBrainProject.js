@@ -103,7 +103,6 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
   complete() {
     super.complete();
     this.applyEffects();
-    this.updateUI();
   }
 
   getTargetLabel(target) {
@@ -188,7 +187,6 @@ class MatrioshkaBrainProject extends TerraformingDurationProject {
     this.bonusTotals[targetKey] = (this.bonusTotals[targetKey] || 0) + bonus;
     this.experiment = null;
     this.applyEffects();
-    this.updateUI();
   }
 
   removeEffects() {

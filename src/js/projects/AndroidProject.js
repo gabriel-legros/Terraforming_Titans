@@ -50,7 +50,6 @@ class AndroidProject extends Project {
     this.assignedAndroids = 0;
     this.adjustActiveDuration();
     populationModule.updateWorkerCap();
-    updateProjectUI(this.name);
   }
 
   shouldReleaseAndroidAssignmentsForCompleteOrDisabled() {
@@ -112,9 +111,6 @@ class AndroidProject extends Project {
     this.adjustActiveDuration();
     if (typeof populationModule !== 'undefined' && typeof populationModule.updateWorkerCap === 'function') {
       populationModule.updateWorkerCap();
-    }
-    if (typeof updateProjectUI === 'function') {
-      updateProjectUI(this.name);
     }
   }
 

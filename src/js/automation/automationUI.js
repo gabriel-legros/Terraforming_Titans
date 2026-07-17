@@ -955,6 +955,7 @@ function cacheAutomationElements() {
 
 function createAutomationCardHeader(card, titleText, onToggle, orderKey) {
   const header = card.querySelector('.automation-card-header');
+  const status = header.querySelector('.automation-status');
   header.textContent = '';
   const titleGroup = document.createElement('div');
   titleGroup.classList.add('automation-title-group');
@@ -968,6 +969,9 @@ function createAutomationCardHeader(card, titleText, onToggle, orderKey) {
   titleGroup.append(collapse, title);
   const headerRight = document.createElement('div');
   headerRight.classList.add('project-header-right');
+  if (status) {
+    headerRight.appendChild(status);
+  }
   const reorderButtons = document.createElement('div');
   reorderButtons.classList.add('reorder-buttons');
   const moveUpButton = document.createElement('button');
@@ -2290,32 +2294,49 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       const nextIncluded = !draftEntry || draftEntry.included !== false;
       const includeCheckbox = details._jsonIncludeCheckboxMap[pathKey];
       if (includeCheckbox) {
-        includeCheckbox.checked = nextIncluded;
-        includeCheckbox.indeterminate = false;
+        if (includeCheckbox.checked !== nextIncluded) {
+          includeCheckbox.checked = nextIncluded;
+        }
+        if (includeCheckbox.indeterminate) {
+          includeCheckbox.indeterminate = false;
+        }
       }
       const isParameterInput = details._parameterInputPathKeys.has(pathKey);
       const nextDisabled = isParameterInput || !nextIncluded;
       if (input.disabled !== nextDisabled) {
         input.disabled = nextDisabled;
       }
-      if (nextIncluded && !isParameterInput) {
-        input.classList.remove('automation-preset-json-field-input-disabled');
-      } else {
-        input.classList.add('automation-preset-json-field-input-disabled');
+      const disabledClass = 'automation-preset-json-field-input-disabled';
+      if (input.classList.contains(disabledClass) !== nextDisabled) {
+        input.classList.toggle(disabledClass, nextDisabled);
       }
       if (isParameterInput) {
-        input.value = getAutomationCardText('parameterizedPresetInputPlaceholder', {}, 'INPUT');
-        input.size = input.value.length;
+        const nextValue = getAutomationCardText('parameterizedPresetInputPlaceholder', {}, 'INPUT');
+        if (input.value !== nextValue) {
+          input.value = nextValue;
+        }
+        if (input.size !== nextValue.length) {
+          input.size = nextValue.length;
+        }
       } else if (input.tagName === 'SELECT') {
         const fieldOptions = fieldOptionsResolver ? fieldOptionsResolver(leafPath, valueToRender, effectivePreset) : null;
         if (fieldOptions && Array.isArray(fieldOptions.selectOptions) && fieldOptions.selectOptions.length) {
           syncAutomationSelectOptions(input, fieldOptions.selectOptions, String(valueToRender));
         } else {
-          input.value = valueToRender ? 'true' : 'false';
+          const nextValue = valueToRender ? 'true' : 'false';
+          if (input.value !== nextValue) {
+            input.value = nextValue;
+          }
         }
       } else {
-        input.value = formatAutomationPresetJsonFieldValue(valueToRender);
-        input.size = Math.max(1, input.value.length);
+        const nextValue = formatAutomationPresetJsonFieldValue(valueToRender);
+        if (input.value !== nextValue) {
+          input.value = nextValue;
+        }
+        const nextSize = Math.max(1, nextValue.length);
+        if (input.size !== nextSize) {
+          input.size = nextSize;
+        }
       }
     }
     const nodePaths = collectAutomationPresetJsonNodePaths(visibleLeafPaths);
@@ -2328,9 +2349,16 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       }
       const descendantLeafPaths = getAutomationPresetJsonDescendantLeafPaths(nodePath, visibleLeafPaths);
       const includeState = getAutomationPresetJsonIncludeState(details, descendantLeafPaths);
-      includeCheckbox.checked = includeState.checked;
-      includeCheckbox.indeterminate = includeState.indeterminate;
-      includeCheckbox.disabled = descendantLeafPaths.length === 0;
+      if (includeCheckbox.checked !== includeState.checked) {
+        includeCheckbox.checked = includeState.checked;
+      }
+      if (includeCheckbox.indeterminate !== includeState.indeterminate) {
+        includeCheckbox.indeterminate = includeState.indeterminate;
+      }
+      const nextDisabled = descendantLeafPaths.length === 0;
+      if (includeCheckbox.disabled !== nextDisabled) {
+        includeCheckbox.disabled = nextDisabled;
+      }
     }
   }
 

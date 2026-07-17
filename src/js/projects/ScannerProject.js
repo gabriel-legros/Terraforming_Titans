@@ -193,9 +193,6 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
       const limit = this.getWorkerCapLimit();
       if (this.buildCount < limit) {
         this.buildCount = limit;
-        if (typeof updateProjectUI === 'function') {
-          updateProjectUI(this.name);
-        }
       }
     }
     if (this.scanData) {

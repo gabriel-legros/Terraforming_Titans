@@ -532,6 +532,11 @@ function initializeProjectsUI() {
         container.removeChild(container.firstChild);
       }
     });
+    const spaceStorageOverlay = projectElements.spaceStorage?.capOverlay;
+    if (spaceStorageOverlay) {
+      cleanupDynamicTooltipsIn(spaceStorageOverlay);
+      spaceStorageOverlay.remove();
+    }
     projectElements = {};
   }
   if (!globalGameIsTraveling) {
@@ -1180,10 +1185,16 @@ function updateCategoryReorderButtons(category, entries) {
     }
     const position = indexMap.has(entry) ? indexMap.get(entry) : -1;
     if (elements.upButton) {
-      elements.upButton.classList.toggle('disabled', position <= 0);
+      const disabled = position <= 0;
+      if (elements.upButton.classList.contains('disabled') !== disabled) {
+        elements.upButton.classList.toggle('disabled', disabled);
+      }
     }
     if (elements.downButton) {
-      elements.downButton.classList.toggle('disabled', position === -1 || position >= lastVisible);
+      const disabled = position === -1 || position >= lastVisible;
+      if (elements.downButton.classList.contains('disabled') !== disabled) {
+        elements.downButton.classList.toggle('disabled', disabled);
+      }
     }
   });
 }
@@ -1283,17 +1294,32 @@ function updateCostDisplay(project) {
         const resourceDisplayName = resources[category]?.[resource]?.displayName ||
           resource.charAt(0).toUpperCase() + resource.slice(1);
         const prefix = item.dataset.leadingComma === 'true' && hasPreviousItem ? ', ' : '';
-        item._refs.separator.textContent = prefix;
-        item._refs.text.textContent = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
+        if (item._refs.separator.textContent !== prefix) {
+          item._refs.separator.textContent = prefix;
+        }
+        const costText = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
+        if (item._refs.text.textContent !== costText) {
+          item._refs.text.textContent = costText;
+        }
         const highlight = shouldHighlightProjectCost(project, category, resource, availableAmount, requiredAmount);
-        item._refs.text.style.color = highlight ? 'red' : '';
-        item.style.display = '';
+        const color = highlight ? 'red' : '';
+        if (item._refs.text.style.color !== color) {
+          item._refs.text.style.color = color;
+        }
+        if (item.style.display !== '') {
+          item.style.display = '';
+        }
       } else {
-        item.style.display = 'none';
+        if (item.style.display !== 'none') {
+          item.style.display = 'none';
+        }
       }
     }
     elements.hasVisibleCostItems = hasItem;
-    elements.costElement.style.display = hasItem ? 'block' : 'none';
+    const display = hasItem ? 'block' : 'none';
+    if (elements.costElement.style.display !== display) {
+      elements.costElement.style.display = display;
+    }
   }
 }
 

@@ -358,7 +358,6 @@ class ParticleAcceleratorProject extends Project {
       this.bestRadiusMeters = this.clampRadiusMeters(this.selectedRadiusMeters);
     }
     this.applyResearchBoostEffect();
-    this.refreshProjectUI();
   }
 
   getCompletedCount() {

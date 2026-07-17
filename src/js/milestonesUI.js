@@ -174,34 +174,52 @@ function updateMilestonesUI() {
     }
 
     if (totalFundingBonusElement) {
-        totalFundingBonusElement.textContent = totalFundingBonus;
+        const fundingBonusText = String(totalFundingBonus);
+        if (totalFundingBonusElement.textContent !== fundingBonusText) {
+            totalFundingBonusElement.textContent = fundingBonusText;
+        }
     }
 
     if (totalHappinessBonusElement) {
-        totalHappinessBonusElement.textContent = getMilestonesUiText(
+        const happinessBonusText = getMilestonesUiText(
             'totalHappinessBonus',
             'Total Happiness Bonus: {value}',
             { value: `${(milestonesManager.getHappinessBonus()).toFixed(2)}%` }
         );
+        if (totalHappinessBonusElement.textContent !== happinessBonusText) {
+            totalHappinessBonusElement.textContent = happinessBonusText;
+        }
     }
 
     if (claimAllMilestonesButton) {
-        claimAllMilestonesButton.disabled = completableMilestones.length === 0;
+        const claimAllDisabled = completableMilestones.length === 0;
+        if (claimAllMilestonesButton.disabled !== claimAllDisabled) {
+            claimAllMilestonesButton.disabled = claimAllDisabled;
+        }
     }
 
     milestonesManager.countdownElement = festivalCountdownElement;
     festivalCountdownElement.isConnected || festivalContainerElement.appendChild(festivalCountdownElement);
     if (milestonesManager.countdownActive) {
         const seconds = Math.ceil(milestonesManager.countdownRemainingTime / 1000);
-        festivalCountdownElement.textContent = getMilestonesUiText(
+        const countdownText = getMilestonesUiText(
             'festivalCountdown',
             'Festival 3x multiplier! {seconds}s',
             { seconds }
         );
-        festivalCountdownElement.hidden = false;
+        if (festivalCountdownElement.textContent !== countdownText) {
+            festivalCountdownElement.textContent = countdownText;
+        }
+        if (festivalCountdownElement.hidden) {
+            festivalCountdownElement.hidden = false;
+        }
     } else {
-        festivalCountdownElement.textContent = '';
-        festivalCountdownElement.hidden = true;
+        if (festivalCountdownElement.textContent !== '') {
+            festivalCountdownElement.textContent = '';
+        }
+        if (!festivalCountdownElement.hidden) {
+            festivalCountdownElement.hidden = true;
+        }
     }
 
     checkMilestoneAlert();

@@ -490,6 +490,8 @@ function invalidateLifeUICache() {
 // Function to initialize the life terraforming designer UI
 function initializeLifeTerraformingDesignerUI() {
     const lifeTerraformingDiv = document.getElementById('life-terraforming');
+    cleanupDynamicTooltipsIn(lifeTerraformingDiv);
+    invalidateLifeUICache();
 
     // Generate the HTML content
     lifeTerraformingDiv.innerHTML = `

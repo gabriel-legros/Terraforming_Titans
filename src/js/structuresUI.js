@@ -2561,9 +2561,9 @@ function updateDecreaseButtonText(button, buildCount) {
             );
             setTooltipText(tooltip, text, span._costTooltipCache, 'text');
           };
-            addTrackedUIListener(costElement, span, 'mouseenter', span._updateCostTooltip);
-            addTrackedUIListener(costElement, span, 'focusin', span._updateCostTooltip);
-            addTrackedUIListener(costElement, span, 'pointerdown', span._updateCostTooltip);
+            span.addEventListener('mouseenter', span._updateCostTooltip);
+            span.addEventListener('focusin', span._updateCostTooltip);
+            span.addEventListener('pointerdown', span._updateCostTooltip);
         } else if (!item.isWorkerRequirement) {
           const textSpan = document.createElement('span');
           span.appendChild(textSpan);

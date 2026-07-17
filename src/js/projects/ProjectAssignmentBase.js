@@ -573,18 +573,46 @@ function createProjectAssignmentBase(BaseClass) {
     updateAssignmentControls(row, key, total, step) {
       const storedCurrent = this.getStoredAssignmentAmount(key);
       const maxForKey = this.getAssignmentMaxTarget(key);
-      row.minusButton.textContent = `-${formatNumber(step, true, 0)}`;
-      row.plusButton.textContent = `+${formatNumber(step, true, 0)}`;
-      row.autoAssign.checked = this.autoAssignFlags[key] === true;
-      row.autoAssign.disabled = total <= 0n;
-      if (document.activeElement !== row.weightInput) {
-        row.weightInput.value = String(Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1);
+      const stepText = formatNumber(step, true, 0);
+      const minusText = `-${stepText}`;
+      const plusText = `+${stepText}`;
+      const autoAssigned = this.autoAssignFlags[key] === true;
+      const noCapacity = total <= 0n;
+      if (row.minusButton.textContent !== minusText) {
+        row.minusButton.textContent = minusText;
       }
-      row.weightInput.disabled = total <= 0n;
-      row.zeroButton.disabled = storedCurrent <= 0n || this.autoAssignFlags[key];
-      row.maxButton.disabled = storedCurrent >= maxForKey || total <= 0n || this.autoAssignFlags[key];
-      row.minusButton.disabled = storedCurrent <= 0n || this.autoAssignFlags[key];
-      row.plusButton.disabled = storedCurrent >= maxForKey || total <= 0n || this.autoAssignFlags[key];
+      if (row.plusButton.textContent !== plusText) {
+        row.plusButton.textContent = plusText;
+      }
+      if (row.autoAssign.checked !== autoAssigned) {
+        row.autoAssign.checked = autoAssigned;
+      }
+      if (row.autoAssign.disabled !== noCapacity) {
+        row.autoAssign.disabled = noCapacity;
+      }
+      if (document.activeElement !== row.weightInput) {
+        const weight = String(Object.prototype.hasOwnProperty.call(this.autoAssignWeights, key) ? this.autoAssignWeights[key] : 1);
+        if (row.weightInput.value !== weight) {
+          row.weightInput.value = weight;
+        }
+      }
+      if (row.weightInput.disabled !== noCapacity) {
+        row.weightInput.disabled = noCapacity;
+      }
+      const zeroDisabled = storedCurrent <= 0n || autoAssigned;
+      const maxDisabled = storedCurrent >= maxForKey || noCapacity || autoAssigned;
+      if (row.zeroButton.disabled !== zeroDisabled) {
+        row.zeroButton.disabled = zeroDisabled;
+      }
+      if (row.maxButton.disabled !== maxDisabled) {
+        row.maxButton.disabled = maxDisabled;
+      }
+      if (row.minusButton.disabled !== zeroDisabled) {
+        row.minusButton.disabled = zeroDisabled;
+      }
+      if (row.plusButton.disabled !== maxDisabled) {
+        row.plusButton.disabled = maxDisabled;
+      }
     }
   };
 }

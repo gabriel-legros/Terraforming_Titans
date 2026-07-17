@@ -2711,6 +2711,8 @@ class SpaceStorageProject extends SpaceshipProject {
     if (els.costElement) {
       els.costElement.remove();
       delete els.costElement;
+      delete els.costItems;
+      delete els.costList;
     }
 
     const topSection = document.createElement('div');

@@ -185,7 +185,8 @@ class StoryManager {
         this.currentChapterPlanet = null;
 
         // --- Add event listener for journal completion ---
-        document.addEventListener('storyJournalFinishedTyping', this.handleJournalFinished.bind(this));
+        this.boundHandleJournalFinished = this.handleJournalFinished.bind(this);
+        document.addEventListener('storyJournalFinishedTyping', this.boundHandleJournalFinished);
         console.log("StoryManager initialized and listening for storyJournalFinishedTyping.");
     }
 
@@ -215,7 +216,7 @@ class StoryManager {
 
     // Method to clean up the listener if the StoryManager is ever destroyed
     destroy() {
-        document.removeEventListener('storyJournalFinishedTyping', this.handleJournalFinished.bind(this));
+        document.removeEventListener('storyJournalFinishedTyping', this.boundHandleJournalFinished);
         console.log("StoryManager listener removed.");
     }
 
@@ -746,10 +747,15 @@ class StoryManager {
         if (!el) return;
         const texts = this.getCurrentObjectiveTexts();
         if (texts.length === 0) {
-            el.textContent = '';
+            if (el.textContent !== '') {
+                el.textContent = '';
+            }
             return;
         }
-        el.textContent = `${texts.length === 1 ? 'Objective' : 'Objectives'}: ${texts.join('; ')}`;
+        const objectiveText = `${texts.length === 1 ? 'Objective' : 'Objectives'}: ${texts.join('; ')}`;
+        if (el.textContent !== objectiveText) {
+            el.textContent = objectiveText;
+        }
     }
 
     shouldApplyEffect(effect) {
@@ -778,8 +784,8 @@ class StoryManager {
                     && (storyEffect.type === 'activateTab' || storyEffect.type === 'activateSubtab')
                     && storyEffect.onTravel !== true;
                 setTimeout(() => {
-                    if (!window.storyManager) {
-                        console.warn("StoryManager gone, skipping delayed reward application.");
+                    if (window.storyManager !== this) {
+                        console.warn("StoryManager replaced, skipping delayed reward application.");
                         return;
                     }
                     if (!storyEffect.oneTimeFlag) {
@@ -987,7 +993,6 @@ class StoryManager {
     }
 
     loadState(savedState) { // Add loading for waiting state
-        console.log("StoryManager.loadState received:", savedState);
         if (!savedState) {
             console.warn("StoryManager.loadState called with null/undefined state.");
             return;
@@ -1039,7 +1044,6 @@ class StoryManager {
          });
 
 
-        console.log(`StoryManager state loaded. Active: [${Array.from(this.activeEventIds).join(', ')}], Completed: [${Array.from(this.completedEventIds).join(', ')}], Waiting: ${this.waitingForJournalEventId}`);
 
         // If loading while waiting for a journal event, the typing animation
         // will not resume. Immediately finalize the event so any rewards are

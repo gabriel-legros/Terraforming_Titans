@@ -171,9 +171,6 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
         }
       }
     }
-    if (storageProj && typeof updateSpaceStorageUI === 'function') {
-      updateSpaceStorageUI(storageProj);
-    }
     return colonyCost;
   }
 
@@ -400,9 +397,6 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
         },
         onApplied: ({ storageState }) => {
           this.clampCollectorTotals();
-          if (storageState?.storageProject && !accumulatedChanges && typeof updateSpaceStorageUI === 'function') {
-            updateSpaceStorageUI(storageState.storageProject);
-          }
         },
         applyRates: true,
         seconds: deltaTime / 1000,

@@ -83,11 +83,19 @@ function setColonySubtabVisibility(subtabId, visible) {
     return;
   }
   if (visible) {
-    tab.classList.remove('hidden');
-    content.classList.remove('hidden');
+    if (tab.classList.contains('hidden')) {
+      tab.classList.remove('hidden');
+    }
+    if (content.classList.contains('hidden')) {
+      content.classList.remove('hidden');
+    }
   } else {
-    tab.classList.add('hidden');
-    content.classList.add('hidden');
+    if (!tab.classList.contains('hidden')) {
+      tab.classList.add('hidden');
+    }
+    if (!content.classList.contains('hidden')) {
+      content.classList.add('hidden');
+    }
   }
 }
 

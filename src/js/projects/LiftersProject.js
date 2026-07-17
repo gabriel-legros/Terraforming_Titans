@@ -1160,9 +1160,6 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     this.applySpaceStorageDeltaForTick(resourceKey, stored, accumulatedChanges);
     if (!accumulatedChanges) {
       storage.reconcileUsedStorage?.();
-      if (typeof updateSpaceStorageUI === 'function') {
-        updateSpaceStorageUI(storage);
-      }
     }
 
     return stored;

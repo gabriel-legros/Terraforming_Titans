@@ -44,6 +44,7 @@
     return acc;
   }, {});
   let resortVacationGoldButton = null;
+  let resortVacationGoldContainer = null;
 
   class ResortWorldProject extends SpecializationProject {
     constructor(config, name) {
@@ -726,16 +727,19 @@
   }
 
   function updateResortVacationGoldButton() {
-    const container = document.getElementById('gold-asteroid-container');
+    if (!resortVacationGoldContainer || !resortVacationGoldContainer.isConnected) {
+      resortVacationGoldContainer = document.getElementById('gold-asteroid-container');
+    }
     const project = getResortWorldProject();
     if (!project) {
-      if (resortVacationGoldButton) {
+      if (resortVacationGoldButton && resortVacationGoldButton.style.display !== 'none') {
         resortVacationGoldButton.style.display = 'none';
       }
       return;
     }
-    if (!project.showVacationButtonAboveResources || !project.canStartVacation()) {
-      if (resortVacationGoldButton) {
+    const canStart = project.canStartVacation();
+    if (!project.showVacationButtonAboveResources || !canStart) {
+      if (resortVacationGoldButton && resortVacationGoldButton.style.display !== 'none') {
         resortVacationGoldButton.style.display = 'none';
       }
       return;
@@ -751,12 +755,19 @@
         updateResortVacationGoldButton();
       });
     }
-    if (resortVacationGoldButton.parentElement !== container) {
-      container.appendChild(resortVacationGoldButton);
+    if (resortVacationGoldButton.parentElement !== resortVacationGoldContainer) {
+      resortVacationGoldContainer.appendChild(resortVacationGoldButton);
     }
-    resortVacationGoldButton.textContent = getResortWorldText('catalogs.specializations.resort.vacation.button');
-    resortVacationGoldButton.disabled = !project.canStartVacation();
-    resortVacationGoldButton.style.display = 'inline-block';
+    const text = getResortWorldText('catalogs.specializations.resort.vacation.button');
+    if (resortVacationGoldButton.textContent !== text) {
+      resortVacationGoldButton.textContent = text;
+    }
+    if (resortVacationGoldButton.disabled !== !canStart) {
+      resortVacationGoldButton.disabled = !canStart;
+    }
+    if (resortVacationGoldButton.style.display !== 'inline-block') {
+      resortVacationGoldButton.style.display = 'inline-block';
+    }
   }
 
   window.ResortWorldProject = ResortWorldProject;

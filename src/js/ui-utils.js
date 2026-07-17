@@ -357,7 +357,7 @@ function attachDynamicInfoTooltip(iconElement, text, clickToPin = true) {
 function cleanupDynamicTooltipsIn(root) {
   if (!root || !root.querySelectorAll) return;
   dynamicTooltipAnchors.forEach(anchor => {
-    if (!anchor.isConnected && anchor._cleanupTooltipHover) {
+    if ((anchor === root || root.contains(anchor)) && anchor._cleanupTooltipHover) {
       anchor._cleanupTooltipHover();
     }
   });

@@ -67,10 +67,6 @@ class OpenTheBoxProject extends Project {
   update(deltaTime) {
     if (this.shatterElapsed > 0) {
       this.shatterElapsed = Math.max(0, this.shatterElapsed - deltaTime);
-      this.updateScreenFracture(false);
-      if (this.shatterElapsed <= 0) {
-        this.clearScreenFracture();
-      }
     }
   }
 

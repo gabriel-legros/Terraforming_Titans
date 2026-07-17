@@ -332,6 +332,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
   }
 
   if(recreate){
+    storyManager.destroy();
     initializeDefaultGlobals();
   }
 
@@ -1591,12 +1592,17 @@ function updateAutosaveText(overrideText) {
   const autosaveText = autosaveTextElement;
   if (!autosaveText) return;
   if (overrideText) {
-    autosaveText.textContent = overrideText;
+    if (autosaveText.textContent !== overrideText) {
+      autosaveText.textContent = overrideText;
+    }
     return;
   }
   const intervalSeconds = getAutosaveIntervalSeconds();
   if (intervalSeconds <= 0) {
-    autosaveText.textContent = t('ui.settings.autosaveDisabled', null, 'Autosave disabled');
+    const disabledText = t('ui.settings.autosaveDisabled', null, 'Autosave disabled');
+    if (autosaveText.textContent !== disabledText) {
+      autosaveText.textContent = disabledText;
+    }
     return;
   }
   autosaveTimer = Math.min(autosaveTimer, intervalSeconds);
@@ -1605,8 +1611,14 @@ function updateAutosaveText(overrideText) {
   const minutes = Math.floor((clampedTimer % 3600) / 60);
   const seconds = Math.floor(clampedTimer % 60);
   if (hours > 0) {
-    autosaveText.textContent = t('ui.settings.nextAutosaveLong', { hours, minutes, seconds }, `Next autosave in ${hours}h ${minutes}m ${seconds}s`);
+    const autosaveLongText = t('ui.settings.nextAutosaveLong', { hours, minutes, seconds }, `Next autosave in ${hours}h ${minutes}m ${seconds}s`);
+    if (autosaveText.textContent !== autosaveLongText) {
+      autosaveText.textContent = autosaveLongText;
+    }
     return;
   }
-  autosaveText.textContent = t('ui.settings.nextAutosaveShort', { minutes, seconds }, `Next autosave in ${minutes}m ${seconds}s`);
+  const autosaveShortText = t('ui.settings.nextAutosaveShort', { minutes, seconds }, `Next autosave in ${minutes}m ${seconds}s`);
+  if (autosaveText.textContent !== autosaveShortText) {
+    autosaveText.textContent = autosaveShortText;
+  }
 }

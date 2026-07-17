@@ -139,17 +139,26 @@ function updatePulsarStormNotification() {
 
   const stormActive = hazardManager.parameters.pulsar && hazardManager.pulsarHazard.isStormActive();
   if (!stormActive) {
-    pulsarHazardUICache.stormCountdown.textContent = '';
-    pulsarHazardUICache.stormCountdown.hidden = true;
+    if (pulsarHazardUICache.stormCountdown.textContent !== '') {
+      pulsarHazardUICache.stormCountdown.textContent = '';
+    }
+    if (!pulsarHazardUICache.stormCountdown.hidden) {
+      pulsarHazardUICache.stormCountdown.hidden = true;
+    }
     return;
   }
 
-  pulsarHazardUICache.stormCountdown.textContent = getPulsarHazardText(
+  const countdownText = getPulsarHazardText(
     'stormNotification',
     'Pulsar Storm! {seconds}s',
     { seconds: Math.ceil(hazardManager.pulsarHazard.getStormRemainingSeconds()) }
   );
-  pulsarHazardUICache.stormCountdown.hidden = false;
+  if (pulsarHazardUICache.stormCountdown.textContent !== countdownText) {
+    pulsarHazardUICache.stormCountdown.textContent = countdownText;
+  }
+  if (pulsarHazardUICache.stormCountdown.hidden) {
+    pulsarHazardUICache.stormCountdown.hidden = false;
+  }
 }
 
 function getPulsarTerraforming() {

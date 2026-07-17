@@ -50,6 +50,19 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Run `npm run screenshot:ui -- --help` for selector match index, page URL, theme, viewport, padding, settle time, timeout, full-page, and headed options.
 - Inspect every generated PNG with the local image viewer before reporting visual results.
 
+## Chromium Memory and DOM Churn Audit
+- Use the repository-owned Playwright/CDP harness for repeatable heap, listener, DOM-node, connected-node-move, and repeated-write measurements:
+  - `npm run audit:memory -- --channel bundled --headless --force-gc`
+- Add `--story-projects` for the exhaustive project sweep. It travels to every story-project world plus special-seed-only project worlds and reports aggregate registered/relevant/rendered/interacted coverage. The isolated setup force-enables target story cards so this proves UI/lifecycle coverage, not natural story-progression correctness.
+- Use `--rounds 1 --phase-duration 0 --settle 0 --no-heap-sampling --no-string-duplicates --no-stack-attribution` for a fast structural smoke run. Use multiple rounds and a nonzero phase duration for retained-growth verification.
+- The audit uses the real manual-pause path so rendering continues while simulation time is stopped. `--freeze-loop` belongs to the simpler idle sampler and stops the game loop entirely.
+- JSON/CSV reports under `scripts/manual-tests/memory-reports/` are ignored by Git. Record durable conclusions and before/after report names in `docs/chromium-memory-churn-audit.md`, not by committing generated reports.
+- Compare forced-GC snapshots at the same logical state. A different world can legitimately have different live DOM/listener totals, so normalized lifecycle checks must return to the same save before treating a delta as retained growth.
+- Save/load and travel lifecycle checks record a forced-GC snapshot after every cycle. Compare live elements, listeners, tooltip anchors, and known detached caches alongside heap size; heap movement by itself is not proof of retained game objects.
+- Forced-GC audit snapshots discard Chromium's stored console entries after the harness has captured errors. Do not log full manager/save/sandbox object graphs or growing state summaries from load, travel, generation, or other repeatable lifecycle paths; an attached inspector retains console arguments and can mimic a game heap leak.
+- CDP's broad DOM-node counter includes detached/native nodes and can make one-time lazy-initialization steps. Confirm a DOM leak with repeated monotonic growth and compare connected all-node, Element, Text, listener, tooltip-anchor, and cache-reference counts before attributing it to the game.
+- A detached cache reference that stays numerically flat is not a growing leak, but it is still a stale-cache or broken-UI defect unless the node has an explicit temporary-detachment and reattachment path.
+
 ## Project Overview
 - Browser incremental game with script entry via `index.html`.
 - Core simulation: `terraforming.js`, `physics.js`, cycle modules.
@@ -152,12 +165,13 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - `SubtabManager` tracks tabs hidden by world restrictions and restores only those tabs when the manager resets on another world, preserving unrelated unlock-driven visibility.
 - Creating static layout once during `build...UI` / `initialize...UI` is fine. Recreating the same layout during `update...UI` is not.
 - If a UI element can appear in more than one update tick with the same semantic identity, cache it and update it in place.
+- Guard hot-path writes. Only assign `textContent`, `value`, `disabled`, `hidden`, classes, attributes, and inline styles when the desired value differs; writing the same value still creates observer/style work.
 - Use stable keys from game data, not list position, for repeated rows/cards wherever possible:
   - Good: project id, building id, colony target id, automation assignment id, preset id, world key, resource id.
   - Acceptable only for fixed-shape detail rows: small row indices inside a cached tooltip/table where the row meaning is controlled by the same function.
   - Avoid `Date.now()`, random ids, incrementing spare keys, or `nth-of-type` assumptions for reusable UI identity.
 - Keep caches attached to the owning DOM container or local module cache, for example `container._rowCache`, `select._automationOptionsSignature`, or a module-level `uiCache`.
-- When a panel is rebuilt intentionally, clear or replace its associated cache at the same time so stale references do not point at detached nodes.
+- When a panel is rebuilt intentionally, clean listeners/tooltips in the exact subtree being removed and clear or replace its associated cache at the same time so stale references do not point at detached nodes. Do not clean a broader parent that also contains surviving controls.
 
 ### Render Path Boundary
 - Logic paths must not render UI. `updateLogic`, `produceResources`, manager `update(...)` methods, project/building production, automation execution, travel/reset state rebuilds, and other simulation paths should mutate game state only.
@@ -168,6 +182,14 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Direct UI calls are acceptable from explicit UI events and lifecycle entry points whose purpose is presentation setup, such as button/input handlers, `initialize...UI`, first unlock reveal, load/travel final render refreshes, or `updateRender()` itself. Keep these calls out of recurring simulation loops.
 - When fixing a logic-to-UI leak, remove the UI call from the logic path instead of hiding it behind a DOM-active guard. Move the refresh to the render path and preserve any needed state on the manager.
 
+### Lifecycle Cleanup
+- Managers that own document/window listeners must keep the exact bound callback and expose cleanup that removes it before manager replacement. Do not call `.bind(...)` again while removing a listener.
+- Reuse and reset tab/subtab managers when their existing DOM controls survive load or travel. If a main-tab manager is replaced, its one stable DOM handler must dispatch to the current manager rather than capture and retain an old instance; never add another handler to the same button.
+- If a UI controller or DOM cache survives while its gameplay manager is replaced on load/new game, rebind the current manager context during every lifecycle initialization. Do not leave a long-lived closure or controller pointing at the manager supplied only during its first build.
+- Before replacing the planet visualizer, call its full `dispose()` path. Disposal owns window/debug listeners, geometries, materials, textures and uniform textures, renderer/context state, the canvas, and cached scene references.
+- Tracked-listener cleanup must be owned by the same subtree that owns the target. Do not store cleanup closures for a transient child on a longer-lived ancestor unless removing that child also removes the ancestor's cleanup entry.
+- Never assign `textContent` or `innerHTML` to a control that owns a dynamic-tooltip child. Give the changing label its own cached span and update that span so the tooltip node and listeners remain attached.
+
 ### Repeated Lists, Cards, and Rows
 - Reconcile repeated children instead of rebuilding them:
   1. Build or reuse a `Map` from stable id to row/card.
@@ -175,7 +197,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
   3. Update active rows in current order.
   4. Hide or remove inactive rows based on whether reuse is valuable.
   5. Append only rows that did not already exist.
-- Preserve order without recreating nodes. If order matters, append the existing row in the desired order; moving an existing node is cheaper and cleaner than creating a new one.
+- Preserve order without recreating nodes, but move an existing row only when its current sibling/index is wrong. Unconditionally appending an already-correct child every update is connected-node churn.
 - Do not prewarm large pools of hidden rows. Hidden spare pools showed up as extra DOM and made diagnostics noisy. Reuse hidden stale rows only when they already exist naturally, or remove extras.
 - If data ids can be regenerated across travel/load, mark stale rows reusable before processing active rows. Otherwise the update may create a fresh row before old rows are available.
 - Hide inactive rows only when preserving their controls is useful. Remove inactive rows when the cache is speculative, large, or unlikely to be reused.
@@ -204,6 +226,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
   - Hide unused rows when optional sections disappear.
 - Plain text tooltip updates can set `textContent` directly on the existing tooltip content.
 - Avoid creating detached tooltip spans or body-level duplicate tooltips for the same icon.
+- Before intentionally removing or clearing a tooltip-bearing subtree, call `cleanupDynamicTooltipsIn(...)` on the exact subtree being removed, then invalidate any cached tooltip/content references owned by it.
 
 ### Hot UI Areas Already Converted
 - Automation cards use shared select reconciliation for presets, combinations, next-travel presets, builder targets, and sidebar automation shortcuts.

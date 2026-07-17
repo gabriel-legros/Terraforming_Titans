@@ -570,29 +570,29 @@ class SpaceshipAutomation {
 
   unlockManualControls() {
     if (!this.lockedAssignments) return;
-    this.updateManualControls(false);
+    this.lockedAssignments = false;
   }
 
-  updateManualControls(locked) {
-    if (typeof projectElements === 'undefined') return;
-    this.lockedAssignments = locked;
+  updateManualControlsUI() {
+    const locked = this.lockedAssignments;
     const projects = this.getSpaceshipProjects();
     for (let index = 0; index < projects.length; index += 1) {
       const project = projects[index];
       const elements = projectElements[project.name];
       if (!elements) continue;
-      if (elements.autoAssignCheckbox) {
+      if (elements.autoAssignCheckbox && elements.autoAssignCheckbox.disabled !== locked) {
         elements.autoAssignCheckbox.disabled = locked;
       }
       if (elements.assignmentButtons) {
         for (let buttonIndex = 0; buttonIndex < elements.assignmentButtons.length; buttonIndex += 1) {
-          elements.assignmentButtons[buttonIndex].disabled = locked;
+          const button = elements.assignmentButtons[buttonIndex];
+          if (button.disabled !== locked) button.disabled = locked;
         }
       }
-      if (elements.assignmentContainer) {
+      if (elements.assignmentContainer && elements.assignmentContainer.classList.contains('automation-locked') !== locked) {
         elements.assignmentContainer.classList.toggle('automation-locked', locked);
       }
-      if (elements.autoAssignAutomationLockInfo) {
+      if (elements.autoAssignAutomationLockInfo && elements.autoAssignAutomationLockInfo.hidden === locked) {
         elements.autoAssignAutomationLockInfo.hidden = !locked;
       }
     }
@@ -646,7 +646,7 @@ class SpaceshipAutomation {
       return;
     }
 
-    this.updateManualControls(true);
+    this.lockedAssignments = true;
 
     const massDriverTargetId = this.getMassDriverAutomationId();
     const massDriverProject = this.getMassDriverDisposalProject();

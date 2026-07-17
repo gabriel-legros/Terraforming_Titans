@@ -270,8 +270,12 @@ function registerDefaultTabActivationHandlers() {
     updateGalacticInvasionUI({ force: true });
   });
   registerTabActivationHandler('settings', () => {
-    updateStatisticsDisplay();
-    updateAchievementsDisplay();
+    const activeSettingsSubtab = settingsSubtabManager.getActiveId();
+    if (activeSettingsSubtab === 'statistics-settings-subtab') {
+      updateStatisticsDisplay();
+    } else if (activeSettingsSubtab === 'achievements-settings-subtab') {
+      updateAchievementsDisplay();
+    }
   });
 }
 
@@ -292,12 +296,19 @@ function showAutoTravelLoadingPopup() {
     autoTravelLoadingPopupElement.className = 'auto-travel-loading-popup auto-travel-loading-popup--hidden';
     document.body.appendChild(autoTravelLoadingPopupElement);
   }
-  autoTravelLoadingPopupElement.textContent = t('ui.autoTravelLoading', {}, 'Auto travel in progress...');
+  const loadingText = t('ui.autoTravelLoading', {}, 'Auto travel in progress...');
+  if (autoTravelLoadingPopupElement.textContent !== loadingText) {
+    autoTravelLoadingPopupElement.textContent = loadingText;
+  }
   if (!autoTravelLoadingPopupElement.parentNode) {
     document.body.appendChild(autoTravelLoadingPopupElement);
   }
-  autoTravelLoadingPopupElement.classList.remove('auto-travel-loading-popup--hidden');
-  autoTravelLoadingPopupElement.setAttribute('aria-hidden', 'false');
+  if (autoTravelLoadingPopupElement.classList.contains('auto-travel-loading-popup--hidden')) {
+    autoTravelLoadingPopupElement.classList.remove('auto-travel-loading-popup--hidden');
+  }
+  if (autoTravelLoadingPopupElement.getAttribute('aria-hidden') !== 'false') {
+    autoTravelLoadingPopupElement.setAttribute('aria-hidden', 'false');
+  }
 }
 
 function hideAutoTravelLoadingPopup() {
@@ -307,8 +318,12 @@ function hideAutoTravelLoadingPopup() {
   if (!autoTravelLoadingPopupElement) {
     return;
   }
-  autoTravelLoadingPopupElement.classList.add('auto-travel-loading-popup--hidden');
-  autoTravelLoadingPopupElement.setAttribute('aria-hidden', 'true');
+  if (!autoTravelLoadingPopupElement.classList.contains('auto-travel-loading-popup--hidden')) {
+    autoTravelLoadingPopupElement.classList.add('auto-travel-loading-popup--hidden');
+  }
+  if (autoTravelLoadingPopupElement.getAttribute('aria-hidden') !== 'true') {
+    autoTravelLoadingPopupElement.setAttribute('aria-hidden', 'true');
+  }
 }
 
 function updateAutoTravelLoadingPopupVisibility() {
@@ -563,49 +578,11 @@ function initializeGameState(options = {}) {
   if (skipVisualizerInitialization) {
     suppressPlanetVisualizerRuntime = true;
     if (typeof window !== 'undefined') {
-      try {
-        const pv = window.planetVisualizer;
-        if (pv) {
-          if (typeof pv.onResize === 'function') {
-            window.removeEventListener('resize', pv.onResize);
-          }
-          const canvas = pv.renderer && pv.renderer.domElement;
-          if (canvas && canvas.parentNode) {
-            canvas.parentNode.removeChild(canvas);
-          }
-          if (pv.debug && pv.debug.container && pv.debug.container.parentNode) {
-            pv.debug.container.parentNode.removeChild(pv.debug.container);
-          }
-          window.planetVisualizer = null;
-        }
-      } catch (e) {}
+      window.destroyPlanetVisualizerUI();
     }
   } else if (typeof window !== 'undefined') {
     suppressPlanetVisualizerRuntime = false;
-    try {
-      const pv = window.planetVisualizer;
-      if (pv) {
-        // Detach resize listener
-        if (typeof pv.onResize === 'function') {
-          window.removeEventListener('resize', pv.onResize);
-        }
-        // Remove canvas
-        const canvas = pv.renderer && pv.renderer.domElement;
-        if (canvas && canvas.parentNode) {
-          canvas.parentNode.removeChild(canvas);
-        }
-        // Remove debug panel if present
-        if (pv.debug && pv.debug.container && pv.debug.container.parentNode) {
-          pv.debug.container.parentNode.removeChild(pv.debug.container);
-        }
-        window.planetVisualizer = null;
-      }
-      if (typeof window.initializePlanetVisualizerUI === 'function') {
-        window.initializePlanetVisualizerUI();
-      }
-    } catch (e) {
-      // Non-fatal if visualizer not yet available
-    }
+    window.initializePlanetVisualizerUI();
   }
 
   goldenAsteroid = new GoldenAsteroid();
@@ -658,6 +635,7 @@ function initializeGameState(options = {}) {
   }
   warpGateNetworkManager.syncUnlocks();
   if (!preserveManagers) {
+    storyManager.destroy();
     storyManager = new StoryManager(progressData);  // Pass the progressData object
     if (!skipStoryInitialization) {
       storyManager.initializeStory();
@@ -896,6 +874,8 @@ function updateRender(force = false, options = {}) {
 
   // Gate heavy per-tab UI updates behind tab visibility
   if (typeof document !== 'undefined') {
+    updateResortVacationGoldButton();
+    terraformingGraphsManager.render();
     const tabContentCache = updateRender.tabContentCache || (updateRender.tabContentCache = {});
     const isActive = (id) => {
       if (force) return true;
@@ -937,6 +917,7 @@ function updateRender(force = false, options = {}) {
 
     if (isActive('special-projects')) {
       renderProjects();
+      automationManager.spaceshipAutomation.updateManualControlsUI();
       if (projectManager) projectManager.uiDirty = false;
     }
 
@@ -1036,8 +1017,13 @@ function updateRender(force = false, options = {}) {
     }
 
     if (isActive('settings')) {
-      updateStatisticsDisplay();
-      updateAchievementsDisplay();
+      const activeSettingsSubtab = settingsSubtabManager.getActiveId();
+      if (force || forceAllSubtabs || activeSettingsSubtab === 'statistics-settings-subtab') {
+        updateStatisticsDisplay();
+      }
+      if (force || forceAllSubtabs || activeSettingsSubtab === 'achievements-settings-subtab') {
+        updateAchievementsDisplay();
+      }
     }
   } else {
     // Non-DOM environment fallback (tests or headless): keep previous behavior

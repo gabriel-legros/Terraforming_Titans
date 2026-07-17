@@ -1396,20 +1396,32 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const step = this.getMassDriverStep();
     const formattedStep = formatNumber(step, true);
     if (elements.massDriverDecreaseButton) {
-      elements.massDriverDecreaseButton.textContent = `-${formattedStep}`;
+      const decreaseText = `-${formattedStep}`;
+      if (elements.massDriverDecreaseButton.textContent !== decreaseText) {
+        elements.massDriverDecreaseButton.textContent = decreaseText;
+      }
     }
     if (elements.massDriverIncreaseButton) {
-      elements.massDriverIncreaseButton.textContent = `+${formattedStep}`;
+      const increaseText = `+${formattedStep}`;
+      if (elements.massDriverIncreaseButton.textContent !== increaseText) {
+        elements.massDriverIncreaseButton.textContent = increaseText;
+      }
     }
     if (elements.massDriverQuickBuildButton) {
       const structure = this.getMassDriverStructure();
       const buildCount = this.getMassDriverBuildCount();
-      elements.massDriverQuickBuildButton.textContent = this.getSpaceDisposalText(
+      const quickBuildText = this.getSpaceDisposalText(
         'ui.projects.spaceDisposal.quickBuild.build',
         `Build ${formatNumber(buildCount, true)} ${structure.displayName}`,
         { count: formatNumber(buildCount, true), name: structure.displayName }
       );
-      elements.massDriverQuickBuildButton.classList.toggle('cant-afford', !structure.canAfford(buildCount));
+      if (elements.massDriverQuickBuildButton.textContent !== quickBuildText) {
+        elements.massDriverQuickBuildButton.textContent = quickBuildText;
+      }
+      const cannotAfford = !structure.canAfford(buildCount);
+      if (elements.massDriverQuickBuildButton.classList.contains('cant-afford') !== cannotAfford) {
+        elements.massDriverQuickBuildButton.classList.toggle('cant-afford', cannotAfford);
+      }
       updateQuickBuildCostDisplay(elements.massDriverQuickBuildCost, structure, buildCount);
     }
   }
@@ -2084,63 +2096,100 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     this.syncProjectAutoStartState();
 
     if (elements.autoStartCheckboxContainer) {
-      elements.autoStartCheckboxContainer.style.display = 'none';
+      if (elements.autoStartCheckboxContainer.style.display !== 'none') {
+        elements.autoStartCheckboxContainer.style.display = 'none';
+      }
     }
     if (elements.waitCapacityCheckboxContainer) {
-      elements.waitCapacityCheckboxContainer.style.display = 'none';
+      if (elements.waitCapacityCheckboxContainer.style.display !== 'none') {
+        elements.waitCapacityCheckboxContainer.style.display = 'none';
+      }
     }
     if (elements.temperatureControl) {
-      elements.temperatureControl.style.display = 'none';
+      if (elements.temperatureControl.style.display !== 'none') {
+        elements.temperatureControl.style.display = 'none';
+      }
     }
     if (elements.pressureControl) {
-      elements.pressureControl.style.display = 'none';
+      if (elements.pressureControl.style.display !== 'none') {
+        elements.pressureControl.style.display = 'none';
+      }
     }
     if (elements.coverageControl) {
-      elements.coverageControl.style.display = 'none';
+      if (elements.coverageControl.style.display !== 'none') {
+        elements.coverageControl.style.display = 'none';
+      }
     }
 
     if (elements.massDriverInfoSection && elements.massDriverInfoElement) {
       if (this.isBooleanFlagSet('massDriverEnabled')) {
         if (elements.massDriverTitleElement) {
-          elements.massDriverTitleElement.style.display = '';
+          if (elements.massDriverTitleElement.style.display !== '') {
+            elements.massDriverTitleElement.style.display = '';
+          }
         }
         const structure = this.getMassDriverStructure();
         if (elements.massDriverActiveElement) {
-          elements.massDriverActiveElement.textContent = formatBuildingCount(structure.active);
+          const activeText = formatBuildingCount(structure.active);
+          if (elements.massDriverActiveElement.textContent !== activeText) {
+            elements.massDriverActiveElement.textContent = activeText;
+          }
         }
         if (elements.massDriverBuiltElement) {
-          elements.massDriverBuiltElement.textContent = formatBuildingCount(structure.count);
+          const builtText = formatBuildingCount(structure.count);
+          if (elements.massDriverBuiltElement.textContent !== builtText) {
+            elements.massDriverBuiltElement.textContent = builtText;
+          }
         }
         const autoActiveLocked = structure.enforceAutoActiveLock
           ? structure.enforceAutoActiveLock()
           : (structure.isAutoActiveLocked && structure.isAutoActiveLocked());
         if (elements.massDriverMaxAutoActiveCheckbox) {
-          elements.massDriverMaxAutoActiveCheckbox.checked = structure.autoActiveEnabled;
-          elements.massDriverMaxAutoActiveCheckbox.disabled = autoActiveLocked;
+          if (elements.massDriverMaxAutoActiveCheckbox.checked !== structure.autoActiveEnabled) {
+            elements.massDriverMaxAutoActiveCheckbox.checked = structure.autoActiveEnabled;
+          }
+          if (elements.massDriverMaxAutoActiveCheckbox.disabled !== autoActiveLocked) {
+            elements.massDriverMaxAutoActiveCheckbox.disabled = autoActiveLocked;
+          }
         }
         if (elements.massDriverAutoActiveContainer) {
-          elements.massDriverAutoActiveContainer.classList.toggle('automation-locked', autoActiveLocked);
+          if (elements.massDriverAutoActiveContainer.classList.contains('automation-locked') !== autoActiveLocked) {
+            elements.massDriverAutoActiveContainer.classList.toggle('automation-locked', autoActiveLocked);
+          }
         }
-        elements.massDriverInfoElement.style.display = '';
-        elements.massDriverInfoNoteElement.style.display = '';
+        if (elements.massDriverInfoElement.style.display !== '') {
+          elements.massDriverInfoElement.style.display = '';
+        }
+        if (elements.massDriverInfoNoteElement.style.display !== '') {
+          elements.massDriverInfoNoteElement.style.display = '';
+        }
         this.updateMassDriverButtonLabels();
       } else {
         if (elements.massDriverTitleElement) {
-          elements.massDriverTitleElement.style.display = 'none';
+          if (elements.massDriverTitleElement.style.display !== 'none') {
+            elements.massDriverTitleElement.style.display = 'none';
+          }
         }
-        elements.massDriverInfoElement.style.display = 'none';
-        elements.massDriverInfoNoteElement.style.display = 'none';
+        if (elements.massDriverInfoElement.style.display !== 'none') {
+          elements.massDriverInfoElement.style.display = 'none';
+        }
+        if (elements.massDriverInfoNoteElement.style.display !== 'none') {
+          elements.massDriverInfoNoteElement.style.display = 'none';
+        }
       }
     }
 
     const displayTargets = this.getDisposalTargetsForDisplay();
 
     if (elements.disposalPerShipElement) {
-      elements.disposalPerShipElement.textContent = this.getSpaceDisposalText(
+      const disposalPerShipText = this.getSpaceDisposalText(
         'ui.projects.spaceDisposal.maxExportPerShip',
         `Max Export/Ship: ${formatNumber(this.getShipCapacity(), true)}`,
         { value: formatNumber(this.getShipCapacity(), true) }
       );
+      if (elements.disposalPerShipElement.textContent !== disposalPerShipText) {
+        elements.disposalPerShipElement.textContent = disposalPerShipText;
+      }
     }
 
     if (elements.totalDisposalElement) {
@@ -2151,44 +2200,63 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
           total += totalDisposal[category][resource];
         }
       }
+      let totalDisposalText;
       if (this.isContinuous()) {
         total *= 1000 / this.getEffectiveDuration();
-        elements.totalDisposalElement.textContent = this.getSpaceDisposalText(
+        totalDisposalText = this.getSpaceDisposalText(
           'ui.projects.spaceDisposal.totalExportPerSecond',
           `Total Export: ${formatNumber(total, true)}/s`,
           { value: formatNumber(total, true) }
         );
       } else {
-        elements.totalDisposalElement.textContent = this.getSpaceDisposalText(
+        totalDisposalText = this.getSpaceDisposalText(
           'ui.projects.spaceDisposal.totalExport',
           `Total Export: ${formatNumber(total, true)}`,
           { value: formatNumber(total, true) }
         );
       }
-      elements.totalDisposalElement.style.color = this.disposalShortfallLastTick === true ? 'red' : '';
+      if (elements.totalDisposalElement.textContent !== totalDisposalText) {
+        elements.totalDisposalElement.textContent = totalDisposalText;
+      }
+      const totalDisposalColor = this.disposalShortfallLastTick === true ? 'red' : '';
+      if (elements.totalDisposalElement.style.color !== totalDisposalColor) {
+        elements.totalDisposalElement.style.color = totalDisposalColor;
+      }
     }
 
     if (elements.temperatureReductionElement) {
       const reduction = this.calculateTemperatureReduction();
       if (reduction > 0) {
         const suffix = this.isContinuous() ? `${getTemperatureUnit()}/s` : getTemperatureUnit();
-        elements.temperatureReductionElement.textContent =
-          this.getSpaceDisposalText(
-            'ui.projects.spaceDisposal.temperatureReduction',
-            `Temperature Reduction: ${formatNumber(toDisplayTemperatureDelta(reduction), false, 2)}${suffix}`,
-            { value: `${formatNumber(toDisplayTemperatureDelta(reduction), false, 2)}${suffix}` }
-          );
-        elements.temperatureReductionElement.style.display = 'block';
+        const temperatureReductionText = this.getSpaceDisposalText(
+          'ui.projects.spaceDisposal.temperatureReduction',
+          `Temperature Reduction: ${formatNumber(toDisplayTemperatureDelta(reduction), false, 2)}${suffix}`,
+          { value: `${formatNumber(toDisplayTemperatureDelta(reduction), false, 2)}${suffix}` }
+        );
+        if (elements.temperatureReductionElement.textContent !== temperatureReductionText) {
+          elements.temperatureReductionElement.textContent = temperatureReductionText;
+        }
+        if (elements.temperatureReductionElement.style.display !== 'block') {
+          elements.temperatureReductionElement.style.display = 'block';
+        }
       } else {
-        elements.temperatureReductionElement.style.display = 'none';
+        if (elements.temperatureReductionElement.style.display !== 'none') {
+          elements.temperatureReductionElement.style.display = 'none';
+        }
       }
     }
 
     if (elements.disposalBuilderCount) {
-      elements.disposalBuilderCount.textContent = `${this.disposalTargets.length}/${this.maxDisposalTargets}`;
+      const builderCountText = `${this.disposalTargets.length}/${this.maxDisposalTargets}`;
+      if (elements.disposalBuilderCount.textContent !== builderCountText) {
+        elements.disposalBuilderCount.textContent = builderCountText;
+      }
     }
     if (elements.disposalAddTargetButton) {
-      elements.disposalAddTargetButton.disabled = this.disposalTargets.length >= this.maxDisposalTargets;
+      const addTargetDisabled = this.disposalTargets.length >= this.maxDisposalTargets;
+      if (elements.disposalAddTargetButton.disabled !== addTargetDisabled) {
+        elements.disposalAddTargetButton.disabled = addTargetDisabled;
+      }
     }
     const temperatureUnit = getTemperatureUnit();
     if (elements.disposalLiquidHydrogenTemperatureUnit !== temperatureUnit) {
