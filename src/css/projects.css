@@ -2423,7 +2423,7 @@
 }
 
 .galactic-market-right-row {
-    grid-template-columns: minmax(190px, auto) minmax(110px, auto) 100px minmax(40px, 1fr);
+    grid-template-columns: max-content minmax(110px, auto) 100px minmax(0, 1fr);
 }
 
 .galactic-market-header {
