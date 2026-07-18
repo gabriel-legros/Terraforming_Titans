@@ -329,22 +329,28 @@ function refreshAutoBuildTarget(structure) {
           : autoBuildUsesAndroidCapacityShare
             ? structure.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
           : roundedPercentTarget;
+  const aerostatCapacity = colonies.aerostat_colony
+    ? getAerostatSupportedBuildingLimit(structure)
+    : Infinity;
+  const aerostatCapacitySuffix = aerostatCapacity === Infinity
+    ? ''
+    : ` (${formatNumber(aerostatCapacity, true)})`;
 
   if (els.autoBuildTarget) {
     const targetText = autoBuildUsesFill
-      ? getStructuresUIText('ui.structures.autoBuild.maxFill', 'Max fill : {value}%', {
+      ? `${getStructuresUIText('ui.structures.autoBuild.maxFill', 'Max fill : {value}%', {
           value: formatNumber(structure.autoBuildFillPercent || 0, true)
-        })
+        })}${aerostatCapacitySuffix}`
       : autoBuildUsesMax
         ? autoBuildUsesAdjustableMax
           ? getStructuresUIText('ui.structures.autoBuild.targetText', 'Target : {value}', {
-              value: formatNumber(targetCount, true)
+              value: `${formatNumber(targetCount, true)}${aerostatCapacitySuffix}`
             })
           : getStructuresUIText('ui.structures.autoBuild.targetText', 'Target : {value}', {
-              value: getAutoBuildMaxBasisLabel(structure)
+              value: `${getAutoBuildMaxBasisLabel(structure)}${aerostatCapacitySuffix}`
             })
         : getStructuresUIText('ui.structures.autoBuild.targetText', 'Target : {value}', {
-            value: formatNumber(targetCount, true)
+            value: `${formatNumber(targetCount, true)}${aerostatCapacitySuffix}`
           });
     if (els.autoBuildTarget.textContent !== targetText) {
       els.autoBuildTarget.textContent = targetText;
