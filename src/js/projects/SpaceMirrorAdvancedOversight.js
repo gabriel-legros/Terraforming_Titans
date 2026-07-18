@@ -589,7 +589,10 @@ class SpaceMirrorAdvancedOversight {
       const solveIdealFluxesNewton = () => {
         const startingError = simulation.error;
         simulation = refineFluxesWithNewton(idealFluxes, simulation, solveOrder);
-        if (!(simulation.error < startingError * 0.95)) {
+        if (
+          !withinIdealTolerance(simulation.metrics) &&
+          !(simulation.error < startingError * 0.95)
+        ) {
           solveIdealFluxesCurrent();
         }
       };

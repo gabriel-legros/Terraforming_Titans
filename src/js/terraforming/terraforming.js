@@ -1498,6 +1498,10 @@ class Terraforming extends EffectableEntity{
                 albedoResource.decrease(-albedoStepChange);
             }
 
+            runAdvancedOversightAssignments(
+                projectManager.projects.spaceMirrorFacility,
+                stepDuration
+            );
             this.runUpdateStep(stepDuration, options);
             const stepResult = this.runResourceUpdateStep(stepDuration);
             totalDurationSeconds += stepResult.durationSeconds || 0;

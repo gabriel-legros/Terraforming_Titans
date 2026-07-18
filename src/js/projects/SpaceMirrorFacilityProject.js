@@ -1962,18 +1962,17 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
   return Math.max(totalFluxForZone, 2.4e-5);
 }
 
-// Priority-aware batched solver with warm start and tiny number of physics calls.
-// Strategy:
-//  - Warm start from last tick's assignments (or current ones if present), then adjust.
-//  - For each priority pass, build a small set of candidate batched moves:
-//      (+Δ mirrors to zone with/without reversal, +Δ lanterns to zone, +Δ focus)
-//    where Δ is computed from a probe to estimate per-unit impact.
-//  - Evaluate candidates by calling terraforming.updateSurfaceTemperature() only a handful of times,
-//    pick the best improving candidate(s), commit, repeat a small, capped number of times per pass.
-//  - Save the resulting assignment as lastSolution for next tick.
+// The solver starts from the current assignment fluxes, then tunes the distribution
+// for the climate state that will enter the next fixed physics step.
 function runAdvancedOversightAssignments(project, deltaTime) {
-  if (!SpaceMirrorAdvancedOversightModule) return;
-  SpaceMirrorAdvancedOversightModule.runAssignments(project, mirrorOversightSettings, deltaTime);
+  if (
+    !mirrorOversightSettings.advancedOversight ||
+    !isSpaceMirrorFacilityFlagActive('advancedOversight')
+  ) {
+    return;
+  }
+  sanitizeMirrorDistribution();
+  SpaceMirrorAdvancedOversight.runAssignments(project, mirrorOversightSettings, deltaTime);
 }
 
 class SpaceMirrorFacilityProject extends Project {
@@ -2040,11 +2039,6 @@ class SpaceMirrorFacilityProject extends Project {
   update(deltaTime) {
     this.enforceMirrorLockout();
     sanitizeMirrorDistribution();
-    try {
-      if (mirrorOversightSettings.advancedOversight && isSpaceMirrorFacilityFlagActive('advancedOversight')) {
-        runAdvancedOversightAssignments(this, deltaTime);
-      }
-    } catch (e) { /* swallow to avoid breaking tick */ }
     super.update(deltaTime);
   }
 
