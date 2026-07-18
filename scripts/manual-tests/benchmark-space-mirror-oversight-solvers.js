@@ -52,7 +52,12 @@ function computeOversightMetric(window) {
 
   let waterError = 0;
   const waterTarget = settings.targets?.water || 0;
-  if (waterTarget > 0) {
+  const availableSurfaceIce = zones.reduce(
+    (sum, zone) => sum + Math.max(0, terraforming.zonalSurface[zone].ice || 0),
+    0
+  );
+  const effectiveWaterTarget = Math.min(waterTarget, availableSurfaceIce);
+  if (effectiveWaterTarget > 0) {
     const mirrors = Math.abs(settings.assignments?.mirrors?.focus || 0);
     const lanterns = settings.assignments?.lanterns?.focus || 0;
     const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower || 0;
@@ -69,7 +74,7 @@ function computeOversightMetric(window) {
     const melt = energyPerKg > 0
       ? Math.max(0, focusPower / energyPerKg / 1000) * 86400
       : 0;
-    waterError = Math.abs(melt - waterTarget) / Math.max(1, waterTarget);
+    waterError = Math.abs(melt - effectiveWaterTarget) / Math.max(1, effectiveWaterTarget);
   }
 
   return { tempError, maxTempError, waterError };

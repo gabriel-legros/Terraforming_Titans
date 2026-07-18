@@ -1,183 +1,18 @@
-const fs = require('fs');
-const path = require('path');
-const { JSDOM, ResourceLoader } = require('jsdom');
+const {
+  advanceTicks,
+  createGameDom,
+  loadSaveFromRelativePath,
+} = require('./helpers/jsdom-game-harness.js');
 
 const shouldRunSlowTest = process.env.RUN_SLOW_OVERSIGHT_TEST === '1';
 const runIt = shouldRunSlowTest ? it : it.skip;
-
-class GameResourceLoader extends ResourceLoader {
-  fetch(url, options) {
-    if ((url.includes('phaser') || url.includes('three')) && url.includes('.min.js')) {
-      return Promise.resolve(Buffer.from(''));
-    }
-    if (url.includes('/planet-visualizer/')) {
-      if (url.endsWith('/planet-visualizer/core.js')) {
-        return Promise.resolve(Buffer.from(
-          'window.PlanetVisualizer = function PlanetVisualizer() {};\n' +
-          'window.initializePlanetVisualizerUI = function initializePlanetVisualizerUI() {};'
-        ));
-      }
-      return Promise.resolve(Buffer.from(''));
-    }
-    return super.fetch(url, options);
-  }
-}
-
-function setupWindow(window) {
-  window.console.log = () => {};
-  window.console.warn = () => {};
-
-  window.requestAnimationFrame = (callback) => window.setTimeout(() => callback(Date.now()), 16);
-  window.cancelAnimationFrame = (handle) => window.clearTimeout(handle);
-
-  window.matchMedia = () => ({
-    matches: false,
-    media: '',
-    onchange: null,
-    addListener() {},
-    removeListener() {},
-    addEventListener() {},
-    removeEventListener() {},
-    dispatchEvent() { return false; },
-  });
-
-  window.ResizeObserver = class {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  };
-
-  const canvasProto = window.HTMLCanvasElement.prototype;
-  canvasProto.getContext = () => ({
-    fillRect() {},
-    clearRect() {},
-    getImageData() { return { data: [] }; },
-    putImageData() {},
-    createImageData() { return {}; },
-    drawImage() {},
-    save() {},
-    restore() {},
-    beginPath() {},
-    closePath() {},
-    moveTo() {},
-    lineTo() {},
-    stroke() {},
-    arc() {},
-    fill() {},
-    fillText() {},
-    measureText() { return { width: 0 }; },
-    createLinearGradient() {
-      return { addColorStop() {} };
-    },
-    createPattern() { return {}; },
-    setTransform() {},
-  });
-
-  window.HTMLMediaElement.prototype.play = () => Promise.resolve();
-  window.HTMLMediaElement.prototype.pause = () => {};
-
-  window.Phaser = {
-    AUTO: 'AUTO',
-    Game: class {
-      constructor(config = {}) {
-        this.config = config;
-        this.scene = {
-          pause() {},
-          resume() {},
-        };
-        const scene = config.scene || {};
-        const preload = scene.preload || (() => {});
-        const create = scene.create || (() => {});
-        preload.call(window);
-        window.setTimeout(() => create.call(window), 0);
-      }
-      destroy() {}
-    },
-  };
-
-  window.initializePlanetVisualizerUI = window.initializePlanetVisualizerUI || (() => {});
-  window.Image = class {};
-  window.structuredClone = (value) => JSON.parse(JSON.stringify(value));
-
-  const storageFactory = () => {
-    const store = new Map();
-    return {
-      get length() {
-        return store.size;
-      },
-      clear() {
-        store.clear();
-      },
-      getItem(key) {
-        return store.has(key) ? store.get(key) : null;
-      },
-      key(index) {
-        return Array.from(store.keys())[index] ?? null;
-      },
-      removeItem(key) {
-        store.delete(key);
-      },
-      setItem(key, value) {
-        store.set(String(key), String(value));
-      },
-    };
-  };
-
-  Object.defineProperty(window, 'localStorage', {
-    value: storageFactory(),
-    configurable: true,
-  });
-  Object.defineProperty(window, 'sessionStorage', {
-    value: storageFactory(),
-    configurable: true,
-  });
-}
 
 function getGlobal(window, expression) {
   return window.eval(expression);
 }
 
-function installPlanetVisualizerStub(window) {
-  const stub = {
-    resetSurfaceTextureThrottle() {},
-    updateSurfaceTextureFromPressure() {},
-  };
-  window.updateRender = () => {
-    window.planetVisualizer = stub;
-  };
-  window.planetVisualizer = stub;
-}
-
-async function createGameDom() {
-  const indexPath = path.resolve(__dirname, '..', 'index.html');
-  const dom = await JSDOM.fromFile(indexPath, {
-    runScripts: 'dangerously',
-    resources: new GameResourceLoader(),
-    pretendToBeVisual: true,
-    url: `file://${indexPath}`,
-    beforeParse: setupWindow,
-  });
-
-  const { window } = dom;
-  await (window.document.readyState === 'complete'
-    ? Promise.resolve()
-    : new Promise((resolve, reject) => {
-        const timer = window.setTimeout(() => reject(new Error('Timed out waiting for window load')), 15000);
-        window.addEventListener('load', () => {
-          window.clearTimeout(timer);
-          resolve();
-        }, { once: true });
-      }));
-
-  installPlanetVisualizerStub(window);
-  return dom;
-}
-
 function loadSave(window, saveName) {
-  installPlanetVisualizerStub(window);
-  const savePath = path.resolve(__dirname, '..', 'test_saves', 'debug', saveName);
-  const saveText = fs.readFileSync(savePath, 'utf8');
-  window.loadGame(saveText, true);
+  loadSaveFromRelativePath(window, `test_saves/debug/${saveName}`);
 }
 
 function computeOversightMetric(window) {
@@ -208,7 +43,12 @@ function computeOversightMetric(window) {
 
   let waterError = 0;
   const waterTarget = settings.targets?.water || 0;
-  if (waterTarget > 0) {
+  const availableSurfaceIce = zones.reduce(
+    (sum, zone) => sum + Math.max(0, terraforming.zonalSurface[zone].ice || 0),
+    0
+  );
+  const effectiveWaterTarget = Math.min(waterTarget, availableSurfaceIce);
+  if (effectiveWaterTarget > 0) {
     const mirrors = Math.abs(settings.assignments?.mirrors?.focus || 0);
     const lanterns = settings.assignments?.lanterns?.focus || 0;
     const mirrorPowerPer = terraforming.calculateMirrorEffect().interceptedPower || 0;
@@ -225,7 +65,7 @@ function computeOversightMetric(window) {
     const melt = energyPerKg > 0
       ? Math.max(0, focusPower / energyPerKg / 1000) * 86400
       : 0;
-    waterError = Math.abs(melt - waterTarget) / Math.max(1, waterTarget);
+    waterError = Math.abs(melt - effectiveWaterTarget) / Math.max(1, effectiveWaterTarget);
   }
 
   return { tempError, maxTempError, waterError };
@@ -241,11 +81,7 @@ function runAdvancedOversight(window, iterations) {
 }
 
 function advanceGameTicks(window, tickCount, deltaMs) {
-  for (let index = 0; index < tickCount; index += 1) {
-    window.updateLogic(deltaMs);
-    window.updateRender.lastDelta = deltaMs;
-    window.updateRender(false, { forceAllSubtabs: false });
-  }
+  advanceTicks(window, tickCount, deltaMs);
 }
 
 const DEBUG_SAVES = [

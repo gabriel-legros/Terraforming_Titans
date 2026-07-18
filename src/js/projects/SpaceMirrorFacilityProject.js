@@ -159,6 +159,7 @@ function isMirrorAssignmentReversed(settings, zone) {
 
 function syncMirrorAssignmentMode(settings) {
   const mirrors = settings.assignments.mirrors || (settings.assignments.mirrors = {});
+  const lanterns = settings.assignments.lanterns || (settings.assignments.lanterns = {});
   const reverse = settings.assignments.reversalMode || (
     settings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false }
   );
@@ -181,7 +182,8 @@ function syncMirrorAssignmentMode(settings) {
 
     const zoneReverse = signedValue < 0 || !!reverse[zone];
     reverse[zone] = zoneReverse;
-    mirrors[zone] = Math.abs(signedValue);
+    mirrors[zone] = Math.floor(Math.abs(signedValue));
+    lanterns[zone] = Math.floor(Math.max(0, Number(lanterns[zone]) || 0));
   });
 
   if (settings.advancedOversight) {
@@ -240,8 +242,14 @@ function applyMirrorOversightSettings(settings, saved = {}, options = {}) {
   });
 
   const savedAvailableHeating = saved.availableHeating || {};
-  settings.availableHeating.mirrors = Math.max(0, Math.floor(Number(savedAvailableHeating.mirrors) || 0));
-  settings.availableHeating.lanterns = Math.max(0, Math.floor(Number(savedAvailableHeating.lanterns) || 0));
+  const availableMirrorCount = Math.max(0, Number(savedAvailableHeating.mirrors) || 0);
+  const availableLanternCount = Math.max(0, Number(savedAvailableHeating.lanterns) || 0);
+  settings.availableHeating.mirrors = settings.advancedOversight
+    ? availableMirrorCount
+    : Math.floor(availableMirrorCount);
+  settings.availableHeating.lanterns = settings.advancedOversight
+    ? availableLanternCount
+    : Math.floor(availableLanternCount);
 
   const savedAuto = saved.autoAssign || {};
   mergeSettingKeys(settings.autoAssign, savedAuto).forEach(zone => {
