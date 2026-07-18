@@ -3106,11 +3106,19 @@ function updateDecreaseButtonText(button, buildCount) {
       buildProdConsElement(productionConsumptionElement, sections);
     }
     const combinedCosts = {};
+    const combinedProduction = {};
     sections.forEach(sec => {
       if (isPlainProdConsSection(sec.key)) {
         return;
       }
-      if (sec.key === 'consumption') {
+      if (sec.key === 'production') {
+        for (const category in sec.data) {
+          for (const resource in sec.data[category]) {
+            const k = `${category}.${resource}`;
+            combinedProduction[k] = (combinedProduction[k] || 0) + sec.data[category][resource];
+          }
+        }
+      } else if (sec.key === 'consumption') {
         for (const category in sec.data) {
           for (const resource in sec.data[category]) {
             const k = `${category}.${resource}`;
@@ -3183,9 +3191,12 @@ function updateDecreaseButtonText(button, buildCount) {
             if (sec.key === 'production') {
               color = swapResourceRateColor(resObj, netRate < 0 ? 'green' : '');
             } else if (sec.key === 'consumption' || sec.key === 'maintenance') {
-              const totalCost = combinedCosts[`${category}.${resource}`] || amount;
-              const projectedNet = netRate - totalCost;
-              color = projectedNet < 0 ? 'orange' : '';
+              const resourceKey = `${category}.${resource}`;
+              const totalCost = combinedCosts[resourceKey] || amount;
+              const addedProduction = combinedProduction[resourceKey] || 0;
+              const projectedNet = netRate + addedProduction - totalCost;
+              const coversOwnDemand = addedProduction >= totalCost;
+              color = projectedNet < 0 && !coversOwnDemand ? 'orange' : '';
             }
             if (textSpan.style.color !== color) {
               textSpan.style.color = color;
