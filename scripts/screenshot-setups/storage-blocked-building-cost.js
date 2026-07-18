@@ -7,8 +7,10 @@ document.getElementById('building-container').classList.remove('hidden');
 buildings.storageDepot.unlocked = true;
 buildings.storageDepot.cost.colony.silicon = 25;
 resources.colony.metal.value = 0;
+resources.colony.metal.baseCap = 50;
 resources.colony.metal.cap = 50;
 resources.colony.silicon.value = 0;
+resources.colony.silicon.baseCap = 1000;
 resources.colony.silicon.cap = 1000;
 
 gameSettings.colorblindPalette = 'redGreen';
