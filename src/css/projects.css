@@ -2188,7 +2188,7 @@
 
 .mass-driver-assignment-buttons {
     display: grid;
-    grid-template-columns: 24px 72px 72px 36px;
+    grid-template-columns: 24px 72px 72px 44px;
     gap: 5px;
 }
 

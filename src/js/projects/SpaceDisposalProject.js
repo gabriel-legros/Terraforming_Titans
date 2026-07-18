@@ -672,7 +672,6 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     assignmentContainer.classList.add('mass-driver-assignment-row');
     const assignmentButtons = document.createElement('div');
     assignmentButtons.classList.add('mass-driver-assignment-buttons');
-    assignmentContainer.appendChild(assignmentButtons);
     const assignmentLabel = document.createElement('span');
     assignmentLabel.classList.add('mass-driver-assignment-label');
     assignmentLabel.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.assignment', 'Assignment:');
@@ -737,7 +736,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     const autoLabel = document.createElement('span');
     autoLabel.textContent = this.getSpaceDisposalText('ui.projects.spaceDisposal.setActiveToTarget', 'Set active to target');
     autoContainer.append(maxAutoActiveCheckbox, autoLabel);
-    assignmentContainer.append(assignmentLabel, autoContainer);
+    assignmentContainer.append(assignmentLabel, assignmentButtons, autoContainer);
 
     quickBuildButton.addEventListener('click', () => {
       this.getMassDriverStructure().buildStructure(this.getMassDriverBuildCount());
