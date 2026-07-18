@@ -1467,6 +1467,7 @@ class Terraforming extends EffectableEntity{
         let totalDurationSeconds = 0;
         let totalRealSeconds = 0;
         let appliedFraction = 0;
+        let wovenAlbedoOverflow = 0;
 
         for (let stepIndex = 0; stepIndex < stepDurations.length; stepIndex += 1) {
             const stepDuration = stepDurations[stepIndex];
@@ -1484,10 +1485,18 @@ class Terraforming extends EffectableEntity{
                 surfaceStepChanges[resourceName] = wovenSurfaceChanges[resourceName] * fraction;
             }
             this.distributeSurfaceChangesToZones(surfaceStepChanges);
-            this.resources.special.albedoUpgrades.value = Math.max(
-                0,
-                this.resources.special.albedoUpgrades.value + wovenAlbedoChange * fraction
-            );
+            const albedoResource = this.resources.special.albedoUpgrades;
+            const albedoStepChange = wovenAlbedoChange * fraction;
+            if (albedoStepChange > 0) {
+                const previousAlbedoValue = albedoResource.value;
+                albedoResource.increase(albedoStepChange);
+                wovenAlbedoOverflow += Math.max(
+                    0,
+                    albedoStepChange - (albedoResource.value - previousAlbedoValue)
+                );
+            } else if (albedoStepChange < 0) {
+                albedoResource.decrease(-albedoStepChange);
+            }
 
             this.runUpdateStep(stepDuration, options);
             const stepResult = this.runResourceUpdateStep(stepDuration);
@@ -1517,6 +1526,10 @@ class Terraforming extends EffectableEntity{
 
         this.runHazardUpdate(deltaTime, options);
         this.finalizeUpdate(options);
+
+        if (wovenAlbedoOverflow > 0) {
+            accumulatedChanges.special.albedoUpgrades += wovenAlbedoOverflow;
+        }
 
         for (const combined of combinedCycleTotals) {
             if (combined && typeof combined.cycle.updateResourceRates === 'function') {
