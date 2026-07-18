@@ -2230,6 +2230,11 @@ const specialSeedDefinitions = {
         id: 'teleporters-disabled',
         descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.teleportersDisabled',
         description: 'The 100Q advanced research is disabled.'
+      },
+      {
+        id: 'starting-research-warning',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.startingResearchWarning',
+        description: 'You may need at least 1M starting research from Solis to acquire some critical researches.'
       }
     ],
     completionRewards: [
