@@ -5743,7 +5743,7 @@ setLanguageData({
       },
       resortWorld: {
         name: 'Resort World',
-        description: 'Designate this world as a planet-scale resort. Requires 75% liquid-water coverage, every zone at least 293.15 K, and enough silica to beach the non-water surface. Resort effects will be added later.',
+        description: 'Designate this world as a planet-scale resort. Requires 75% liquid-water coverage, warm temperatures, and enough silica to beach the non-water surface.',
       },
       callisto_cult_security: {
         name: 'Factory Security',
