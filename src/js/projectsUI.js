@@ -1263,7 +1263,7 @@ function shouldHighlightProjectCost(project, category, resource, availableAmount
 
 function updateCostDisplay(project) {
   const elements = projectElements[project.name];
-  if (elements && elements.costItems) {
+  if (elements && elements.costElement && elements.costItems && elements.costList) {
     const cost = project.getScaledCost();
     let costItemCount = Object.keys(elements.costItems).length;
     for (const category in cost) {
