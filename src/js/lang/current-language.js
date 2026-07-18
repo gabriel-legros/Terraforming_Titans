@@ -5174,6 +5174,7 @@ setLanguageData({
         rewards: {
           revealEcumenopolisCapacity: 'Reveals a new Awakening skill',
           enablePyrolyzer: 'Chemical reactor research will also enable pyrolyzers.',
+          unlockDebrisDiskHazard: 'Unlocks Debris Disk as a hazard in the Random World Generator.',
         },
       },
       wolfysnightmare: {

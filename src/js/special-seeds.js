@@ -2259,6 +2259,19 @@ const specialSeedDefinitions = {
             value: true
           }
         ]
+      },
+      {
+        id: 'unlock-debris-disk-hazard',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.rewards.unlockDebrisDiskHazard',
+        description: 'Unlocks Debris Disk as a hazard in the Random World Generator.',
+        effects: [
+          {
+            target: 'rwgManager',
+            targetId: 'debrisDisk',
+            type: 'unlockHazard',
+            value: true
+          }
+        ]
       }
     ],
     overrides: shadesNightmareOverrides

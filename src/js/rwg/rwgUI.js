@@ -111,7 +111,8 @@ const hazardDisplayNames = {
   hazardousBiomass: 'Hazardous Biomass',
   garbage: 'Garbage',
   kessler: 'Kessler Skies',
-  pulsar: 'Pulsar'
+  pulsar: 'Pulsar',
+  debrisDisk: 'Debris Disk'
 };
 const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 'Fritizian', oommaa: 'Oommaa', klishy: 'Klishy', kerati: 'Kerati', shrilek: 'Shrilek', vanadophore: 'Vanadophore', random: 'Random' };
 const RWG_DOMINION_RANDOM = 'random';

@@ -624,7 +624,7 @@ function populateAutoTravelDominionOptions(select) {
 function updateAutoTravelHazards(preset) {
   const wrap = automationElements.autoTravelHazardsWrap;
   if (!wrap) return;
-  const hazardIds = ['hazardousBiomass', 'garbage', 'kessler', 'pulsar', 'hazardousMachinery'];
+  const hazardIds = rwgManager.getAvailableHazards();
   const selected = new Set(Array.isArray(preset?.hazards) ? preset.hazards : []);
   const signature = hazardIds.map((id) => `${id}:${selected.has(id) ? 1 : 0}`).join('|');
   if (wrap.dataset.signature === signature) {
