@@ -2476,12 +2476,14 @@ function updateDecreaseButtonText(button, buildCount) {
     const effectiveCost = structure.getEffectiveCost(buildCount);
     for (const category in effectiveCost) {
       for (const resource in effectiveCost[category]) {
+        const resourceState = resources[category][resource];
         items.push({
           key: `${category}.${resource}`,
           label: capitalizeFirstLetter(resource),
           required: effectiveCost[category][resource],
-          available: resources[category][resource]?.value || 0,
-          insufficientColor: 'red',
+          available: resourceState.value,
+          capacity: resourceState.cap,
+          insufficientColor: getStatusColor('failure'),
           category,
           resource,
           isCostResource: true
@@ -2507,7 +2509,7 @@ function updateDecreaseButtonText(button, buildCount) {
         label: getStructuresUIText('ui.structures.costLabels.land', 'Land'),
         required: structure.requiresLand,
         available: structure.canAffordLand(buildCount) ? requiredLand : 0,
-        insufficientColor: 'red'
+        insufficientColor: getStatusColor('failure')
       });
     }
 
@@ -2518,7 +2520,7 @@ function updateDecreaseButtonText(button, buildCount) {
         label: getStructuresUIText('ui.structures.costLabels.deposit', 'Deposit'),
         required: 1,
         available: structure.canAffordDeposit(buildCount) ? requiredDeposit : 0,
-        insufficientColor: 'red'
+        insufficientColor: getStatusColor('failure')
       });
     }
 
@@ -2713,7 +2715,12 @@ function updateDecreaseButtonText(button, buildCount) {
         };
       }
       const hasEnough = item.available >= requiredAmount;
-      const color = hasEnough ? '' : item.insufficientColor;
+      const isStorageBlocked = item.isCostResource
+        && !hasEnough
+        && requiredAmount > item.capacity;
+      const color = hasEnough
+        ? ''
+        : (isStorageBlocked ? getStatusColor('storageBlocked') : item.insufficientColor);
       if (item.key === 'colony.workers') {
         if (span.style.color) {
           span.style.color = '';

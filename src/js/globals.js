@@ -157,22 +157,27 @@ const colorblindPalettes = {
   redGreen: {
     success: '#4caf50',
     failure: 'red',
+    storageBlocked: '#c026d3',
   },
   blueOrange: {
     success: '#0072b2',
     failure: '#e69f00',
+    storageBlocked: '#9c4dcc',
   },
   purpleYellow: {
     success: '#7b3294',
     failure: '#fdb863',
+    storageBlocked: '#00897b',
   },
   cyanMagenta: {
     success: '#00bfc4',
     failure: '#cc79a7',
+    storageBlocked: '#b45309',
   },
   grayscale: {
     success: '#111111',
     failure: '#777777',
+    storageBlocked: '#444444',
   },
 };
 
@@ -191,6 +196,12 @@ function getStatusColor(status) {
   if (status === 'failure' && paletteKey === 'redGreen' && gameSettings.themeMode === 'oledBlack') {
     return '#ef7070';
   }
+  if (status === 'storageBlocked' && paletteKey === 'redGreen' && gameSettings.themeMode === 'oledBlack') {
+    return '#f472f4';
+  }
+  if (status === 'storageBlocked') {
+    return palette.storageBlocked;
+  }
   return status === 'success' ? palette.success : palette.failure;
 }
 
@@ -202,6 +213,7 @@ function applyColorblindPaletteSettings() {
   const root = document.documentElement;
   root.style.setProperty('--status-success-color', getStatusColor('success'));
   root.style.setProperty('--status-failure-color', getStatusColor('failure'));
+  root.style.setProperty('--status-storage-blocked-color', getStatusColor('storageBlocked'));
 }
 
 applyColorblindPaletteSettings();
