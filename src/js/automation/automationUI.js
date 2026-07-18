@@ -1181,6 +1181,7 @@ function resetAutomationPresetJsonDetailsState(details, presetId) {
 }
 
 function parseAutomationPresetJsonFieldValue(rawValue, options = {}) {
+  options = options || {};
   const trimmed = String(rawValue).trim();
   if (!trimmed) {
     return '';
