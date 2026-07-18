@@ -1180,7 +1180,7 @@ function resetAutomationPresetJsonDetailsState(details, presetId) {
   }
 }
 
-function parseAutomationPresetJsonFieldValue(rawValue) {
+function parseAutomationPresetJsonFieldValue(rawValue, options = {}) {
   const trimmed = String(rawValue).trim();
   if (!trimmed) {
     return '';
@@ -1196,6 +1196,9 @@ function parseAutomationPresetJsonFieldValue(rawValue) {
   }
   const compactNumberText = trimmed.replace(/[,_\s]/g, '');
   if (/^[+-]?(?:\d+\.?\d*|\d*\.?\d+)(?:e[+-]?\d+)?(?:Dd|dd|Ud|ud|De|de|Dc|dc|No|no|Oc|oc|Sp|sp|Sx|sx|Qi|qi|Q|q|T|t|B|b|M|K|k|m|µ|u|U|n|N|p|P|f|F)?$/i.test(compactNumberText)) {
+    if (options.projectAssignmentInteger) {
+      return serializeProjectAssignmentInteger(compactNumberText);
+    }
     const numeric = parseFlexibleNumber(compactNumberText);
     if (Number.isFinite(numeric)) {
       return numeric;
@@ -1582,12 +1585,12 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
         const nextValue = isParameterInput
           ? existingBaseValue
           : hasCustomSelectOptions
-            ? parseAutomationPresetJsonFieldValue(input.value)
+            ? parseAutomationPresetJsonFieldValue(input.value, fieldOptions)
             : isBooleanLeaf
               ? input.value === 'true'
-              : isString
+              : isString && !(fieldOptions && fieldOptions.projectAssignmentInteger)
                 ? input.value
-                : parseAutomationPresetJsonFieldValue(input.value);
+                : parseAutomationPresetJsonFieldValue(input.value, fieldOptions);
         const hasBaseValue = hasAutomationPresetValueAtPath(basePreset, path);
         const baseValue = getAutomationPresetJsonBaseValue(basePreset, path, nextValue);
         const baseMatches = JSON.stringify(baseValue) === JSON.stringify(nextValue);
@@ -1611,12 +1614,12 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
     input.addEventListener('change', (event) => {
       try {
         const nextValue = hasCustomSelectOptions
-          ? parseAutomationPresetJsonFieldValue(event.target.value)
+          ? parseAutomationPresetJsonFieldValue(event.target.value, fieldOptions)
           : isBooleanLeaf
             ? event.target.value === 'true'
-            : isString
+            : isString && !(fieldOptions && fieldOptions.projectAssignmentInteger)
               ? event.target.value
-              : parseAutomationPresetJsonFieldValue(event.target.value);
+              : parseAutomationPresetJsonFieldValue(event.target.value, fieldOptions);
         const basePreset = details._activePresetRef || preset;
         const nextIncluded = includeCheckbox ? includeCheckbox.checked : true;
         const hasBaseValue = hasAutomationPresetValueAtPath(basePreset, path);
@@ -1767,7 +1770,11 @@ function applyAutomationPresetJsonFieldRemoval(preset, path, options = {}) {
   return true;
 }
 
-function isValidAutomationPresetLeafReplacement(baseValue, nextValue) {
+function isValidAutomationPresetLeafReplacement(baseValue, nextValue, options = {}) {
+  if (options.projectAssignmentInteger) {
+    return Number.isSafeInteger(nextValue)
+      || (Object.prototype.toString.call(nextValue) === '[object String]' && /^\d+$/.test(nextValue));
+  }
   if (baseValue === null) {
     return nextValue === null;
   }
@@ -2164,7 +2171,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
         const hasCustomSelectOptions = !!(fieldOptions
           && Array.isArray(fieldOptions.selectOptions)
           && fieldOptions.selectOptions.length);
-        if (!hasCustomSelectOptions && !isValidAutomationPresetLeafReplacement(baseValue, draftEntry.value)) {
+        if (!hasCustomSelectOptions && !isValidAutomationPresetLeafReplacement(baseValue, draftEntry.value, fieldOptions || {})) {
           if (showStatus) {
             showStatus(
               getAutomationCardText(

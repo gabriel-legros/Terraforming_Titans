@@ -1,5 +1,63 @@
 const PROJECT_ASSIGNMENT_STEP_MAX = 1_000_000_000_000_000_000_000_000_000_000n;
 const PROJECT_ASSIGNMENT_WEIGHT_SCALE = 1000000;
+const PROJECT_ASSIGNMENT_SUFFIX_EXPONENTS = {
+  Dd: 39,
+  dd: 39,
+  Ud: 36,
+  ud: 36,
+  De: 33,
+  de: 33,
+  Dc: 33,
+  dc: 33,
+  No: 30,
+  no: 30,
+  Oc: 27,
+  oc: 27,
+  Sp: 24,
+  sp: 24,
+  Sx: 21,
+  sx: 21,
+  Qi: 18,
+  qi: 18,
+  Q: 15,
+  q: 15,
+  T: 12,
+  t: 12,
+  B: 9,
+  b: 9,
+  M: 6,
+  K: 3,
+  k: 3,
+  m: -3,
+  u: -6,
+  U: -6,
+  n: -9,
+  N: -9,
+  p: -12,
+  P: -12,
+  f: -15,
+  F: -15
+};
+
+function parseExactProjectAssignmentInteger(value) {
+  const match = value.match(/^\+?((?:\d+\.?\d*|\d*\.?\d+))(?:e([+-]?\d+))?(Dd|dd|Ud|ud|De|de|Dc|dc|No|no|Oc|oc|Sp|sp|Sx|sx|Qi|qi|Q|q|T|t|B|b|M|K|k|m|u|U|n|N|p|P|f|F)?$/);
+  if (!match) {
+    return null;
+  }
+  const decimalParts = match[1].split('.');
+  const fraction = decimalParts[1] || '';
+  const digits = `${decimalParts[0] || '0'}${fraction}`.replace(/^0+(?=\d)/, '');
+  const exponent = Number(match[2] || 0)
+    + (PROJECT_ASSIGNMENT_SUFFIX_EXPONENTS[match[3]] || 0)
+    - fraction.length;
+  if (Math.abs(exponent) > 1000) {
+    return null;
+  }
+  const magnitude = BigInt(digits || '0');
+  return exponent >= 0
+    ? magnitude * (10n ** BigInt(exponent))
+    : magnitude / (10n ** BigInt(-exponent));
+}
 
 function normalizeProjectAssignmentInteger(value) {
   if (value === undefined || value === null || value === '') {
@@ -13,6 +71,10 @@ function normalizeProjectAssignmentInteger(value) {
     const trimmed = value.trim();
     if (/^\d+$/.test(trimmed)) {
       return BigInt(trimmed);
+    }
+    const exactInteger = parseExactProjectAssignmentInteger(trimmed);
+    if (exactInteger !== null) {
+      return exactInteger;
     }
     const parsed = parseFlexibleNumber(trimmed);
     if (Number.isFinite(parsed) && parsed > 0) {

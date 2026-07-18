@@ -34,6 +34,13 @@ const PROJECT_AUTOMATION_UI_SPACE_STORAGE_IMPORT_LIMIT_RESOURCES = new Set([
   'inertGas',
   'hydrogen'
 ]);
+const PROJECT_AUTOMATION_UI_ASSIGNMENT_INTEGER_FIELDS = new Set([
+  'assignmentStep',
+  'lifterAssignments',
+  'manufacturingAssignments',
+  'yardAssignments',
+  'furnaceAssignments'
+]);
 const SPACE_MINING_WATER_ONLY_FIELDS = new Set([
   'waterImportTarget',
   'disableAboveWaterCoverage',
@@ -168,6 +175,9 @@ function getProjectPresetJsonFieldOptions(fieldPath, value, preset) {
   }
   if (presetSection !== 'operations') {
     return null;
+  }
+  if (PROJECT_AUTOMATION_UI_ASSIGNMENT_INTEGER_FIELDS.has(fieldPath[3])) {
+    return { projectAssignmentInteger: true };
   }
   if ((projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID || projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID)
     && fieldPath[3] === 'transferMethod') {
