@@ -496,10 +496,9 @@ class AndroidProject extends Project {
       return;
     }
     if (!this.autoAssignAndroids) return;
-    if (this.shouldReleaseAndroidAssignmentsForCompleteOrDisabled()) {
-      if (this.releaseAndroidsOnComplete !== false) {
-        this.releaseAndroidAssignments();
-      }
+    if (this.shouldReleaseAndroidAssignmentsForCompleteOrDisabled()
+      && this.releaseAndroidsOnComplete !== false) {
+      this.releaseAndroidAssignments();
       return;
     }
     if (this.isPermanentlyDisabled()) {
