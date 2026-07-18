@@ -86,7 +86,7 @@ class HydrogenReservoir extends MultiRecipesBuilding {
 }
 
 try {
-  registerBuildingConstructor('hydrogenReservoir', HydrogenReservoir);
+  registerBuildingConstructor(HydrogenReservoir);
 } catch (error) {}
 
 try {

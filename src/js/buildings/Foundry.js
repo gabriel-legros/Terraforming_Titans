@@ -63,7 +63,7 @@ class Foundry extends Building {
   }
 }
 
-registerBuildingConstructor('foundry', Foundry);
+registerBuildingConstructor(Foundry);
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { Foundry };

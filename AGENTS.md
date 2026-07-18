@@ -18,7 +18,8 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Do not add try/catch or fallback shim code just to probe required globals/functions from ordered script includes. If a function is required by load order, call it directly and fix tests/harnesses instead of weakening the runtime code.
 - Do not add trivial wrapper helpers that only rename, "resolve", "normalize", or "get" already-available values unless they contain real shared logic. Avoid helper chains where a module calls another tiny helper that just reads globals, clamps one value, or forwards arguments unchanged.
 - Cache and reuse UI elements. Do not repeatedly query the DOM with new selectors.
-- Building-specific logic belongs in dedicated subclasses under `src/js/buildings/` and must be registered in `initializeBuildings`.
+- Building-specific logic belongs in dedicated subclasses under `src/js/buildings/`; select the subclass with the building parameter entry's `type` field.
+- Building, colony, and project parameter entries select specialized subclasses with `type`; keep constructor selection in the parameter definition instead of hard-coded id-to-class maps in initialization code.
 - Do not use `globalThis`; use the actual global variable directly.
 - Keep code short, readable, and direct.
 - For automated world-visualizer screenshots, use `npm run screenshot:visualizer`; it drives the visualizer debug API directly, so leave `DEBUG_MODE` unchanged. Set `DEBUG_MODE` to `true` only for interactive manual screenshots that need intro skip paths, then restore it to `false`.

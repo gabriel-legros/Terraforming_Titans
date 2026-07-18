@@ -224,7 +224,7 @@ function getVanadiumAutomationSettings(context) {
 
 const vanadiumHazeSeederSettings = VanadiumHazeSeeder.getAutomationSettings();
 
-registerBuildingConstructor('vanadiumHazeSeeder', VanadiumHazeSeeder);
+registerBuildingConstructor(VanadiumHazeSeeder);
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { VanadiumHazeSeeder, vanadiumHazeSeederSettings };

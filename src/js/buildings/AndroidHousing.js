@@ -92,7 +92,7 @@ class AndroidHousing extends Building {
 }
 
 try {
-  registerBuildingConstructor('androidHousing', AndroidHousing);
+  registerBuildingConstructor(AndroidHousing);
 } catch (error) {}
 
 try {

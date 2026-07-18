@@ -30,7 +30,7 @@ class Pyrolyzer extends MultiRecipesBuilding {
   }
 }
 
-registerBuildingConstructor('pyrolyzer', Pyrolyzer);
+registerBuildingConstructor(Pyrolyzer);
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { Pyrolyzer };

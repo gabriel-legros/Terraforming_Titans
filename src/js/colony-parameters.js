@@ -1,5 +1,7 @@
 const colonyParameters = {
     aerostat_colony: {
+      type: 'Aerostat',
+      constructorFile: 'aerostat',
       name: '',
       category: 'Colony',
       description: '',
@@ -17,6 +19,7 @@ const colonyParameters = {
       requiresLand: 0
     },
     t1_colony: {
+      type: 'Colony',
       name: '',
       category: 'Colony',
       description: '',
@@ -34,6 +37,7 @@ const colonyParameters = {
       requiresLand : 1
     },
     t2_colony: {
+      type: 'Colony',
       name: '',
       category: 'Colony',
       description: '',
@@ -52,6 +56,7 @@ const colonyParameters = {
     }
     ,
     t3_colony: {
+      type: 'Colony',
       name: '',
       category: 'Colony',
       description: '',
@@ -70,6 +75,7 @@ const colonyParameters = {
     }
     ,
     t4_colony: {
+      type: 'Colony',
       name: '',
       category: 'Colony',
       description: '',
@@ -87,6 +93,7 @@ const colonyParameters = {
       requiresLand : 1000
     },
     t5_colony: {
+      type: 'Colony',
       name: '',
       category: 'Colony',
       description: '',
@@ -104,6 +111,7 @@ const colonyParameters = {
       requiresLand : 10000
     },
     t6_colony: {
+      type: 'Colony',
       name: '',
       category: 'Colony',
       description: '',
@@ -122,6 +130,7 @@ const colonyParameters = {
       autoBuildMaxOption: true
     },
     t7_colony: {
+      type: 'Ecumenopolis',
       name: '',
       category: 'Colony',
       description: '',
