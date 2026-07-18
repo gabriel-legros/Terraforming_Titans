@@ -371,7 +371,7 @@ function initializeResearchTabs() {
     updateCompletedResearchVisibility();
     updateAdvancedResearchVisibility();
 
-    researchSubtabManager.activate('energy-research');
+    researchSubtabManager.activate(researchSubtabManager.getActiveId() || 'energy-research');
 }
 
 function activateResearchSubtab(subtabId) {
