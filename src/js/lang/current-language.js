@@ -7186,7 +7186,7 @@ setLanguageData({
           waterCoverage: 'Liquid water coverage at least 75% ({value}%)',
           zoneTemperature: 'Every zone at least {target} {unit} (coldest: {value} {unit})',
           beachSilica: 'Available silica for beaches: {value}',
-          ecumenopolisCount: 'Fewer than 1,000 Ecumenopolis Districts constructed (not active)',
+          ecumenopolisCount: 'At most {value} Ecumenopolis Districts constructed (Max Land / 1M; not active)',
           otherSpecialization: 'No other specialization started or completed',
         },
         shop: {

@@ -102,6 +102,14 @@
       return estimateAmountForCoverage(1, surfaceArea * landFraction);
     }
 
+    getEcumenopolisLimit() {
+      return Math.max(0, resolveWorldGeometricLand(terraforming, resources.surface.land) / 1000000);
+    }
+
+    isEcumenopolisCountWithinLimit() {
+      return colonies.t7_colony.count <= this.getEcumenopolisLimit();
+    }
+
     getEffectiveCost(buildCount = 1) {
       const cost = super.getEffectiveCost(buildCount);
       const beachSilicaCost = this.getBeachSilicaCost() * buildCount;
@@ -149,8 +157,10 @@
         },
         {
           id: 'ecumenopolisCount',
-          label: getResortWorldText('catalogs.specializations.resort.requirements.ecumenopolisCount'),
-          met: colonies.t7_colony.count < 1000,
+          label: getResortWorldText('catalogs.specializations.resort.requirements.ecumenopolisCount', {
+            value: formatNumber(this.getEcumenopolisLimit(), true, 2),
+          }),
+          met: this.isEcumenopolisCountWithinLimit(),
         },
         {
           id: 'otherSpecialization',
@@ -165,7 +175,7 @@
         && spaceManager.isCurrentWorldTerraformed()
         && this.getWaterCoverage() >= 0.75
         && this.getMinimumZoneTemperature() >= 293.15
-        && colonies.t7_colony.count < 1000;
+        && this.isEcumenopolisCountWithinLimit();
     }
 
     getTravelPointGain() {
