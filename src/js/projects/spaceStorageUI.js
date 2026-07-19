@@ -62,6 +62,11 @@ function getSpaceStorageResourceLabel(option) {
   );
 }
 
+function isSpaceStorageAtmosphericWithdrawalTarget(project, resourceKey) {
+  const config = SPACE_STORAGE_FLUID_TRANSFER_TARGETS[resourceKey];
+  return !config || project.getFluidTransferTarget(resourceKey).category === 'atmospheric';
+}
+
 function getSpaceStorageCapLimitForDraft(project, resourceKey, mode, value) {
   if (!resourceKey) {
     return Math.max(0, project.maxStorage);
@@ -1019,7 +1024,7 @@ function renderSpaceStorageUI(project, container) {
     limitBiomassDensityWithdrawalsRow.style.display = resourceKey === 'biomass' ? '' : 'none';
     respectImportLimitsRow.style.display = SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES.has(resourceKey) ? '' : 'none';
     pressureWithdrawLimitRow.style.display = (SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES.has(resourceKey)
-      && !(resourceKey === 'hydrogen' && project.hydrogenTransferTarget === 'colony')) ? '' : 'none';
+      && isSpaceStorageAtmosphericWithdrawalTarget(project, resourceKey)) ? '' : 'none';
     amountWithdrawLimitRow.style.display = SPACE_STORAGE_UI_AMOUNT_LIMIT_RESOURCES.has(resourceKey) ? '' : 'none';
     updateCapInputState();
     updateReserveInputState();
@@ -1101,43 +1106,28 @@ function renderSpaceStorageUI(project, container) {
       openCapWindow(opt.resource, getSpaceStorageResourceLabel(opt));
     });
 
-    let waterSelect;
-    let hydrogenSelect;
-    if (opt.resource === 'liquidWater') {
-      waterSelect = document.createElement('select');
-      waterSelect.id = `${project.name}-water-destination`;
-      waterSelect.style.fontSize = '12px';
-      const colonyOpt = document.createElement('option');
-      colonyOpt.value = 'colony';
-      colonyOpt.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.colony', 'Colony');
-      const surfaceOpt = document.createElement('option');
-      surfaceOpt.value = 'surface';
-      surfaceOpt.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.surface', 'Surface');
-      waterSelect.append(colonyOpt, surfaceOpt);
-      waterSelect.addEventListener('change', e => {
-        project.waterWithdrawTarget = e.target.value;
-        if (typeof updateSpaceStorageUI === 'function') {
-          updateSpaceStorageUI(project);
-        }
+    const fluidConfig = SPACE_STORAGE_FLUID_TRANSFER_TARGETS[opt.resource];
+    let fluidDestinationSelect = null;
+    if (fluidConfig) {
+      fluidDestinationSelect = document.createElement('select');
+      const destinationId = opt.resource === 'liquidWater' ? 'water' : opt.resource;
+      fluidDestinationSelect.id = `${project.name}-${destinationId}-destination`;
+      fluidDestinationSelect.style.fontSize = '12px';
+      fluidConfig.optionOrder.forEach((targetKey) => {
+        const target = fluidConfig.targets[targetKey];
+        const option = document.createElement('option');
+        option.value = targetKey;
+        option.textContent = getSpaceStorageUIText(
+          `ui.projects.spaceStorage.${target.labelKey}`,
+          target.fallbackLabel
+        );
+        fluidDestinationSelect.appendChild(option);
       });
-      textSpan.append(' ', waterSelect);
-    }
-    if (opt.resource === 'hydrogen') {
-      hydrogenSelect = document.createElement('select');
-      hydrogenSelect.id = `${project.name}-hydrogen-destination`;
-      hydrogenSelect.style.fontSize = '12px';
-      const atmosphereOpt = document.createElement('option');
-      atmosphereOpt.value = 'atmospheric';
-      atmosphereOpt.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.atmosphere', 'Atmosphere');
-      const colonyOpt = document.createElement('option');
-      colonyOpt.value = 'colony';
-      colonyOpt.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.colony', 'Colony');
-      hydrogenSelect.append(atmosphereOpt, colonyOpt);
-      hydrogenSelect.addEventListener('change', e => {
-        project.hydrogenTransferTarget = e.target.value === 'colony' ? 'colony' : 'atmospheric';
+      fluidDestinationSelect.addEventListener('change', () => {
+        project.setFluidTransferTarget(opt.resource, fluidDestinationSelect.value);
         updateSpaceStorageUI(project);
       });
-      textSpan.append(' ', hydrogenSelect);
+      textSpan.append(' ', fluidDestinationSelect);
     }
 
     if (biomassInfo) {
@@ -1200,8 +1190,10 @@ function renderSpaceStorageUI(project, container) {
         ...(projectElements[project.name]?.resourceItems || {}),
         [opt.resource]: resourceItem
       },
-      ...(opt.resource === 'liquidWater' ? { waterDestinationSelect: waterSelect } : {}),
-      ...(opt.resource === 'hydrogen' ? { hydrogenDestinationSelect: hydrogenSelect } : {})
+      fluidDestinationSelects: {
+        ...(projectElements[project.name]?.fluidDestinationSelects || {}),
+        ...(fluidDestinationSelect ? { [opt.resource]: fluidDestinationSelect } : {})
+      }
     };
   });
 
@@ -1565,17 +1557,16 @@ function updateSpaceStorageUI(project) {
       separator.style.display = visibleLookup[opt.resource] && hasVisiblePrevious ? '' : 'none';
     });
   }
-  if (els.waterDestinationSelect) {
-    els.waterDestinationSelect.value = project.waterWithdrawTarget || 'colony';
-    const hasWaterSelected = Array.isArray(project.selectedResources)
-      && project.selectedResources.some(entry => entry?.resource === 'liquidWater');
-    els.waterDestinationSelect.style.display = hasWaterSelected ? '' : 'none';
-  }
-  if (els.hydrogenDestinationSelect) {
-    els.hydrogenDestinationSelect.value = project.hydrogenTransferTarget === 'colony' ? 'colony' : 'atmospheric';
-    const hasHydrogenSelected = Array.isArray(project.selectedResources)
-      && project.selectedResources.some(entry => entry?.resource === 'hydrogen');
-    els.hydrogenDestinationSelect.style.display = hasHydrogenSelected ? '' : 'none';
+  if (els.fluidDestinationSelects) {
+    for (const resourceKey in SPACE_STORAGE_FLUID_TRANSFER_TARGETS) {
+      const select = els.fluidDestinationSelects[resourceKey];
+      select.value = project.setFluidTransferTarget(
+        resourceKey,
+        project[SPACE_STORAGE_FLUID_TRANSFER_TARGETS[resourceKey].property]
+      );
+      const isSelected = project.selectedResources.some(entry => entry?.resource === resourceKey);
+      select.style.display = isSelected ? '' : 'none';
+    }
   }
   if (els.transferButtons) {
     const withdrawalDisabled = project.isWithdrawalDisabled && project.isWithdrawalDisabled();
@@ -1610,21 +1601,16 @@ function updateSpaceStorageUI(project) {
       if (icon) {
         const mode = project.getResourceTransferMode(opt.resource);
         let tooltipText = getSpaceStorageUIText('ui.projects.spaceStorage.colonyStorageFull', 'Colony storage full');
-        if (opt.resource === 'liquidWater' && mode === 'withdraw') {
-          res = project.waterWithdrawTarget === 'surface'
-            ? resources.surface.liquidWater
-            : resources.colony.water;
-          tooltipText = project.waterWithdrawTarget === 'surface'
-            ? getSpaceStorageUIText('ui.projects.spaceStorage.surfaceStorageFull', 'Surface storage full')
-            : getSpaceStorageUIText('ui.projects.spaceStorage.colonyStorageFull', 'Colony storage full');
-        }
-        if (opt.resource === 'hydrogen' && mode === 'withdraw') {
-          res = project.hydrogenTransferTarget === 'colony'
-            ? resources.colony.colonyHydrogen
-            : resources.atmospheric.hydrogen;
-          tooltipText = project.hydrogenTransferTarget === 'colony'
-            ? getSpaceStorageUIText('ui.projects.spaceStorage.colonyStorageFull', 'Colony storage full')
-            : getSpaceStorageUIText('ui.projects.spaceStorage.atmosphereStorageFull', 'Atmosphere storage full');
+        const fluidConfig = SPACE_STORAGE_FLUID_TRANSFER_TARGETS[opt.resource];
+        if (fluidConfig && mode === 'withdraw') {
+          const target = project.getFluidTransferTarget(opt.resource);
+          res = resources[target.category][target.resource];
+          const tooltipByCategory = {
+            atmospheric: getSpaceStorageUIText('ui.projects.spaceStorage.atmosphereStorageFull', 'Atmosphere storage full'),
+            colony: getSpaceStorageUIText('ui.projects.spaceStorage.colonyStorageFull', 'Colony storage full'),
+            surface: getSpaceStorageUIText('ui.projects.spaceStorage.surfaceStorageFull', 'Surface storage full')
+          };
+          tooltipText = tooltipByCategory[target.category];
         }
         if (tooltip) {
           tooltip.textContent = tooltipText;
@@ -1712,7 +1698,7 @@ function updateSpaceStorageUI(project) {
         els.pressureWithdrawLimitInput.value = formatNumber(Math.max(0, pressureWithdrawLimit), true, 2);
       }
       els.pressureWithdrawLimitRow.style.display = (SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES.has(els.capResourceKey)
-        && !(els.capResourceKey === 'hydrogen' && project.hydrogenTransferTarget === 'colony')) ? '' : 'none';
+        && isSpaceStorageAtmosphericWithdrawalTarget(project, els.capResourceKey)) ? '' : 'none';
     }
     if (els.amountWithdrawLimitInput) {
       const amountWithdrawLimit = els.amountWithdrawLimitDraft || 0;

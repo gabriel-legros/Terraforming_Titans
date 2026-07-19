@@ -60,6 +60,60 @@ const SPACE_STORAGE_AMOUNT_LIMIT_RESOURCES = {
   graphite: 'graphite'
 };
 const SPACE_STORAGE_DEFAULT_EXPANSION_RECIPE_KEY = 'standard';
+const SPACE_STORAGE_FLUID_TRANSFER_TARGETS = {
+  liquidWater: {
+    property: 'waterWithdrawTarget',
+    defaultTarget: 'colony',
+    optionOrder: ['colony', 'colonyOnly', 'surface'],
+    targets: {
+      colony: {
+        category: 'colony',
+        resource: 'water',
+        labelKey: 'colony',
+        fallbackLabel: 'Colony'
+      },
+      colonyOnly: {
+        category: 'colony',
+        resource: 'water',
+        labelKey: 'colonyOnly',
+        fallbackLabel: 'Colony only',
+        noOverflowChangeKey: 'colonyWaterNoOverflow'
+      },
+      surface: {
+        category: 'surface',
+        resource: 'liquidWater',
+        labelKey: 'surface',
+        fallbackLabel: 'Surface'
+      }
+    }
+  },
+  hydrogen: {
+    property: 'hydrogenTransferTarget',
+    defaultTarget: 'atmospheric',
+    optionOrder: ['atmospheric', 'colony', 'colonyOnly'],
+    targets: {
+      atmospheric: {
+        category: 'atmospheric',
+        resource: 'hydrogen',
+        labelKey: 'atmosphere',
+        fallbackLabel: 'Atmosphere'
+      },
+      colony: {
+        category: 'colony',
+        resource: 'colonyHydrogen',
+        labelKey: 'colony',
+        fallbackLabel: 'Colony'
+      },
+      colonyOnly: {
+        category: 'colony',
+        resource: 'colonyHydrogen',
+        labelKey: 'colonyOnly',
+        fallbackLabel: 'Colony only',
+        noOverflowChangeKey: 'colonyHydrogenNoOverflow'
+      }
+    }
+  }
+};
 
 function getSpaceStorageProjectText(path, vars, fallback = '') {
   try {
@@ -912,29 +966,22 @@ class SpaceStorageProject extends SpaceshipProject {
     return this.getResourceValueForTick(entry.category, entry.resource, accumulatedChanges);
   }
 
-  getWaterTransferEndpoint(mode) {
-    if (mode === 'withdraw') {
-      return this.waterWithdrawTarget === 'surface'
-        ? { category: 'surface', resource: 'liquidWater' }
-        : { category: 'colony', resource: 'water' };
-    }
-    return this.waterWithdrawTarget === 'surface'
-      ? { category: 'surface', resource: 'liquidWater' }
-      : { category: 'colony', resource: 'water' };
+  setFluidTransferTarget(resourceKey, target) {
+    const config = SPACE_STORAGE_FLUID_TRANSFER_TARGETS[resourceKey];
+    const selectedTarget = config.targets[target] ? target : config.defaultTarget;
+    this[config.property] = selectedTarget;
+    return selectedTarget;
   }
 
-  getHydrogenTransferEndpoint() {
-    return this.hydrogenTransferTarget === 'colony'
-      ? { category: 'colony', resource: 'colonyHydrogen' }
-      : { category: 'atmospheric', resource: 'hydrogen' };
+  getFluidTransferTarget(resourceKey) {
+    const config = SPACE_STORAGE_FLUID_TRANSFER_TARGETS[resourceKey];
+    return config.targets[this[config.property]] || config.targets[config.defaultTarget];
   }
 
-  getTransferEndpoint(entry, mode) {
-    if (entry.resource === 'liquidWater') {
-      return this.getWaterTransferEndpoint(mode);
-    }
-    if (entry.resource === 'hydrogen') {
-      return this.getHydrogenTransferEndpoint();
+  getTransferEndpoint(entry) {
+    if (SPACE_STORAGE_FLUID_TRANSFER_TARGETS[entry.resource]) {
+      const target = this.getFluidTransferTarget(entry.resource);
+      return { category: target.category, resource: target.resource };
     }
     return { category: entry.category, resource: entry.resource };
   }
@@ -983,7 +1030,7 @@ class SpaceStorageProject extends SpaceshipProject {
       ) {
         return;
       }
-      const target = this.getTransferEndpoint(entry, 'withdraw');
+      const target = this.getTransferEndpoint(entry);
       const stored = this.getAvailableStoredResourceForTick(entry.resource, 'transfers', accumulatedChanges);
       if (!(stored > 0)) {
         return;
@@ -1039,7 +1086,7 @@ class SpaceStorageProject extends SpaceshipProject {
       if (this.getShipTransferModeForResource(entry.resource) !== 'store') {
         return;
       }
-      const source = this.getTransferEndpoint(entry, 'store');
+      const source = this.getTransferEndpoint(entry);
       const sourceResource = resources?.[source.category]?.[source.resource];
       if (!sourceResource) {
         return;
@@ -1659,7 +1706,7 @@ class SpaceStorageProject extends SpaceshipProject {
       if (entry.resource === 'biomass' && !this.canWithdrawBiomass()) return;
       const stored = this.getAvailableStoredResource(entry.resource, 'transfers');
       if (stored <= 0) return;
-      const target = this.getTransferEndpoint(entry, 'withdraw');
+      const target = this.getTransferEndpoint(entry);
       const targetRes = resources[target.category][target.resource];
       const destFree = targetRes && Number.isFinite(targetRes.cap) ? Math.max(0, targetRes.cap - targetRes.value) : Infinity;
       const importLimitRemaining = this.getImportLimitRemainingForWithdrawal(entry.resource, target);
@@ -1695,7 +1742,7 @@ class SpaceStorageProject extends SpaceshipProject {
         return;
       }
       if (entry.resource === 'liquidWater') {
-        const source = this.getTransferEndpoint(entry, 'store');
+        const source = this.getTransferEndpoint(entry);
         const sourceRes = resources[source.category][source.resource];
         const available = sourceRes.value;
         amount = Math.min(weightedCapacity, available, capRemaining, availableFreeSpace);
@@ -1716,7 +1763,7 @@ class SpaceStorageProject extends SpaceshipProject {
         return;
       }
       if (entry.resource === 'hydrogen') {
-        const source = this.getTransferEndpoint(entry, 'store');
+        const source = this.getTransferEndpoint(entry);
         const sourceRes = resources[source.category][source.resource];
         const available = sourceRes.value;
         amount = Math.min(weightedCapacity, available, capRemaining, availableFreeSpace);
@@ -1783,7 +1830,7 @@ class SpaceStorageProject extends SpaceshipProject {
       if (entry.resource === 'biomass' && !this.canWithdrawBiomass()) return;
       const stored = this.getAvailableStoredResourceForTick(entry.resource, 'transfers', accumulatedChanges);
       if (stored <= 0) return;
-      const target = this.getTransferEndpoint(entry, 'withdraw');
+      const target = this.getTransferEndpoint(entry);
       const destFree = this.getTransferDestinationFreeForTick(target.category, target.resource, accumulatedChanges);
       const importLimitRemaining = this.getImportLimitRemainingForWithdrawal(entry.resource, target, accumulatedChanges);
       const amountLimitRemaining = this.getAmountWithdrawLimitRemaining(entry.resource, target, accumulatedChanges);
@@ -1801,7 +1848,7 @@ class SpaceStorageProject extends SpaceshipProject {
       if (!Number.isFinite(availableFreeSpace) || availableFreeSpace <= 0) return;
       const capRemaining = this.getStorageCapRemainingForTick(entry.resource, accumulatedChanges);
       if (capRemaining <= 0) return;
-      const source = this.getTransferEndpoint(entry, 'store');
+      const source = this.getTransferEndpoint(entry);
       const sourceEntry = { category: source.category, resource: source.resource };
       const available = this.getTransferSourceAvailableForTick(sourceEntry, accumulatedChanges);
       const amount = Math.min(weightedCapacity, available, capRemaining, availableFreeSpace);
@@ -2109,6 +2156,11 @@ class SpaceStorageProject extends SpaceshipProject {
       const deliveredRate = seconds > 0 ? delivered / seconds : 0;
       const storageResource = this.getSpaceStorageResource(t.storageKey || t.resource);
       if (t.mode === 'withdraw') {
+        const fluidConfig = SPACE_STORAGE_FLUID_TRANSFER_TARGETS[t.storageKey];
+        const fluidTarget = fluidConfig ? this.getFluidTransferTarget(t.storageKey) : null;
+        const isColonyOnlyFluidWithdrawal = fluidTarget?.noOverflowChangeKey
+          && t.category === fluidTarget.category
+          && t.resource === fluidTarget.resource;
         this.applyAccumulatedResourceDelta('spaceStorage', t.storageKey, -t.amount, accumulatedChanges);
         if (t.resource === 'biomass') {
           this.addBiomassToZones(delivered);
@@ -2122,8 +2174,14 @@ class SpaceStorageProject extends SpaceshipProject {
           this.applyAccumulatedResourceDelta(t.category, t.resource, delivered, accumulatedChanges);
           resources[t.category][t.resource].modifyRate(deliveredRate, 'Space storage transfer', 'project');
           storageResource?.modifyRate?.(-rate, 'Space storage transfer', 'project');
+          if (isColonyOnlyFluidWithdrawal && options?.accumulatedSpecialChanges) {
+            options.accumulatedSpecialChanges[fluidTarget.noOverflowChangeKey] += delivered;
+          }
         }
-        if (options?.recordTentativeWithdrawals === true) {
+        if (
+          options?.recordTentativeWithdrawals === true
+          || (options?.recordColonyOnlyFluidWithdrawal === true && isColonyOnlyFluidWithdrawal)
+        ) {
           this.recordTentativeWithdrawal(
             options.accumulatedSpecialChanges,
             t,
@@ -2269,7 +2327,7 @@ class SpaceStorageProject extends SpaceshipProject {
     }
   }
 
-  applyPostProjectShipOperation(deltaTime, accumulatedChanges) {
+  applyPostProjectShipOperation(deltaTime, accumulatedChanges, accumulatedSpecialChanges = null) {
     if (!this.shipOperationIsActive || this.shipOperationIsPaused || (!this.isTeleporterTransferActive() && this.assignedSpaceships <= 0)) {
       return;
     }
@@ -2337,7 +2395,13 @@ class SpaceStorageProject extends SpaceshipProject {
 
     this.applyShipOperationCostForTick(totalCost, accumulatedChanges, 1);
     const reservePlan = { transfers: this.pendingTransfers };
-    this.applyTransferPlanToAccumulated(reservePlan, accumulatedChanges, 1, durationSeconds);
+    this.applyTransferPlanToAccumulated(
+      reservePlan,
+      accumulatedChanges,
+      1,
+      durationSeconds,
+      { accumulatedSpecialChanges, recordColonyOnlyFluidWithdrawal: true }
+    );
     this.completeShipOperation();
   }
 
@@ -2863,10 +2927,10 @@ class SpaceStorageProject extends SpaceshipProject {
       this.megaProjectSpaceOnlyOnTravel = settings.megaProjectSpaceOnlyOnTravel === true;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'waterWithdrawTarget')) {
-      this.waterWithdrawTarget = settings.waterWithdrawTarget || 'colony';
+      this.setFluidTransferTarget('liquidWater', settings.waterWithdrawTarget);
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'hydrogenTransferTarget')) {
-      this.hydrogenTransferTarget = settings.hydrogenTransferTarget === 'colony' ? 'colony' : 'atmospheric';
+      this.setFluidTransferTarget('hydrogen', settings.hydrogenTransferTarget);
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'artificialEcosystemsEnabled')) {
       this.artificialEcosystemsEnabled = settings.artificialEcosystemsEnabled === true;
@@ -3044,8 +3108,8 @@ class SpaceStorageProject extends SpaceshipProject {
     if (!state.resourceStrategicReserves && state.strategicReserve > 0) {
       this.applyLegacyStrategicReserve(state.strategicReserve);
     }
-    this.waterWithdrawTarget = state.waterWithdrawTarget || 'colony';
-    this.hydrogenTransferTarget = state.hydrogenTransferTarget === 'colony' ? 'colony' : 'atmospheric';
+    this.setFluidTransferTarget('liquidWater', state.waterWithdrawTarget);
+    this.setFluidTransferTarget('hydrogen', state.hydrogenTransferTarget);
     this.artificialEcosystemsEnabled = state.artificialEcosystemsEnabled === true;
     this.resourceCaps = state.resourceCaps || {};
     this.sanitizeResourceCaps();
@@ -3101,6 +3165,7 @@ class SpaceStorageProject extends SpaceshipProject {
       megaProjectSpaceOnlyOnTravel: this.megaProjectSpaceOnlyOnTravel,
       resourceStrategicReserves: this.resourceStrategicReserves,
       artificialEcosystemsEnabled: this.artificialEcosystemsEnabled,
+      waterWithdrawTarget: this.waterWithdrawTarget,
       hydrogenTransferTarget: this.hydrogenTransferTarget,
       resourceCaps: this.resourceCaps,
       resourceTransferWeights: this.resourceTransferWeights,
@@ -3130,7 +3195,8 @@ class SpaceStorageProject extends SpaceshipProject {
       this.applyLegacyStrategicReserve(state.strategicReserve);
     }
     this.artificialEcosystemsEnabled = state.artificialEcosystemsEnabled === true;
-    this.hydrogenTransferTarget = state.hydrogenTransferTarget === 'colony' ? 'colony' : 'atmospheric';
+    this.setFluidTransferTarget('liquidWater', state.waterWithdrawTarget);
+    this.setFluidTransferTarget('hydrogen', state.hydrogenTransferTarget);
     this.resourceCaps = state.resourceCaps || {};
     this.sanitizeResourceCaps();
     this.shipTransferMode = state.shipTransferMode || this.shipTransferMode;

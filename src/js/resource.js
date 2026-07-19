@@ -188,13 +188,14 @@ function routeColonyResourceOverflow(deltaTime, accumulatedChanges, config) {
   }
 
   const previousValue = resource.value;
-  const newValue = resource.value + accumulatedChanges[config.sourceCategory][config.sourceResource];
+  const totalChange = accumulatedChanges[config.sourceCategory][config.sourceResource];
+  const newValue = resource.value + totalChange;
   const limit = previousValue >= resource.cap ? previousValue : resource.cap;
-  let overflow = newValue > limit ? newValue - limit : 0;
   const protectedOverflow = config.getProtectedOverflow ? config.getProtectedOverflow() : 0;
-  if (protectedOverflow > 0) {
-    overflow = Math.max(0, overflow - protectedOverflow);
-  }
+  const overflowValue = protectedOverflow > 0
+    ? resource.value + (totalChange - protectedOverflow)
+    : newValue;
+  const overflow = overflowValue > limit ? overflowValue - limit : 0;
   if (overflow <= 0) {
     return;
   }
@@ -2173,7 +2174,11 @@ function produceResources(deltaTime, buildings) {
   }
 
   if (spaceStorageProject?.applyPostProjectShipOperation) {
-    spaceStorageProject.applyPostProjectShipOperation(deltaTime, accumulatedChanges);
+    spaceStorageProject.applyPostProjectShipOperation(
+      deltaTime,
+      accumulatedChanges,
+      accumulatedSpecialChanges
+    );
   }
   if (galacticMarketProject?.applyPostProjectTrade) {
     galacticMarketProject.applyPostProjectTrade(

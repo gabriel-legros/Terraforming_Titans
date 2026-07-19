@@ -10,6 +10,15 @@ const PROJECT_AUTOMATION_SPACE_STORAGE_SINGLE_RESOURCE_ID = 'spaceStorageSingleR
 const PROJECT_AUTOMATION_SPACE_STORAGE_SINGLE_RESOURCE_PREFIX = `${PROJECT_AUTOMATION_SPACE_STORAGE_SINGLE_RESOURCE_ID}:`;
 const PROJECT_AUTOMATION_LEGACY_SPACE_STORAGE_CAPS_AND_RESERVE_ID = 'spaceStorageCapsReserve';
 const PROJECT_AUTOMATION_LEGACY_SPACE_STORAGE_OTHER_ID = 'spaceStorageOther';
+const PROJECT_AUTOMATION_SPACE_STORAGE_FLUID_TARGETS = {
+  liquidWater: { defaultTarget: 'colony', allowedTargets: new Set(['colony', 'colonyOnly', 'surface']) },
+  hydrogen: { defaultTarget: 'atmospheric', allowedTargets: new Set(['atmospheric', 'colony', 'colonyOnly']) }
+};
+
+function normalizeProjectAutomationSpaceStorageFluidTarget(resourceKey, target) {
+  const config = PROJECT_AUTOMATION_SPACE_STORAGE_FLUID_TARGETS[resourceKey];
+  return config.allowedTargets.has(target) ? target : config.defaultTarget;
+}
 const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS = new Set([
   'resourceStrategicReserves',
   'resourceCaps',
@@ -927,10 +936,16 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       };
     }
     if (resourceKey === 'liquidWater' && Object.prototype.hasOwnProperty.call(source, 'waterWithdrawTarget')) {
-      filtered.waterWithdrawTarget = source.waterWithdrawTarget === 'surface' ? 'surface' : 'colony';
+      filtered.waterWithdrawTarget = normalizeProjectAutomationSpaceStorageFluidTarget(
+        resourceKey,
+        source.waterWithdrawTarget
+      );
     }
     if (resourceKey === 'hydrogen' && Object.prototype.hasOwnProperty.call(source, 'hydrogenTransferTarget')) {
-      filtered.hydrogenTransferTarget = source.hydrogenTransferTarget === 'colony' ? 'colony' : 'atmospheric';
+      filtered.hydrogenTransferTarget = normalizeProjectAutomationSpaceStorageFluidTarget(
+        resourceKey,
+        source.hydrogenTransferTarget
+      );
     }
     if (!Object.prototype.hasOwnProperty.call(filtered, 'transferWeight')) {
       filtered.transferWeight = Object.prototype.hasOwnProperty.call(weightSource, resourceKey)
@@ -1262,11 +1277,17 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       changed = changed || !this.areSettingsEqual(beforeAmountLimit, project.resourceAmountWithdrawLimits?.[resourceKey]);
     }
     if (hasWaterWithdrawTarget) {
-      project.waterWithdrawTarget = settings.waterWithdrawTarget === 'surface' ? 'surface' : 'colony';
+      project.waterWithdrawTarget = normalizeProjectAutomationSpaceStorageFluidTarget(
+        resourceKey,
+        settings.waterWithdrawTarget
+      );
       changed = changed || beforeWaterWithdrawTarget !== project.waterWithdrawTarget;
     }
     if (hasHydrogenTransferTarget) {
-      project.hydrogenTransferTarget = settings.hydrogenTransferTarget === 'colony' ? 'colony' : 'atmospheric';
+      project.hydrogenTransferTarget = normalizeProjectAutomationSpaceStorageFluidTarget(
+        resourceKey,
+        settings.hydrogenTransferTarget
+      );
       changed = changed || beforeHydrogenTransferTarget !== project.hydrogenTransferTarget;
     }
     if (hasSelectedFlag) {

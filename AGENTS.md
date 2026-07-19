@@ -104,6 +104,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Resource Disposal Mass Drivers: its status card combines Lantern-style quick construction (build quantity, `x10`/`/10`, cost) with active-assignment controls (`0`, `-`/`+`, `Max`, and Set active to target).
 - Mega Heat Sink and Planetary Thrusters are infrastructure projects; their gameplay identities and project ids remain unchanged.
 - Shared project assignment controls: `projects/ProjectAssignmentBase.js` centralizes BigInt assignment normalization, auto-assignment weights, step controls, row button wiring, and save/preset serialization for Manufacturing World, Lifters, Hephaestus Yards, and Nuclear Alchemy-style projects.
+- Space Storage water and hydrogen withdrawals support Colony only targets; Colony only transfers never overflow into the surface or atmosphere.
 - Autobuild: `autobuild.js`
 - General setting `Upgrading any building also unchecks autobuild` disables autobuild when the player manually enables Auto-upgrade or successfully performs a manual upgrade, including Fusion Power Plant upgrades to Superalloy Fusion Reactors. Automation presets and automated upgrade execution do not trigger it.
 - General setting `Autobuild ignores auto-upgrade colonies` makes the autobuilder skip building colony structures that have Auto-upgrade checked and an available next tier, while leaving their auto-upgrade behavior active.

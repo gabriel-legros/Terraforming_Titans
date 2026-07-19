@@ -28,6 +28,22 @@ const PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID = 'spaceStorageExpansion'
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID = 'spaceStorageOperations';
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID = 'spaceStorageSingleResource';
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_PREFIX = `${PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID}:`;
+const PROJECT_AUTOMATION_UI_SPACE_STORAGE_FLUID_RESOURCE_BY_FIELD = {
+  waterWithdrawTarget: 'liquidWater',
+  hydrogenTransferTarget: 'hydrogen'
+};
+const PROJECT_AUTOMATION_UI_SPACE_STORAGE_FLUID_TARGETS = {
+  liquidWater: [
+    { value: 'colony', labelKey: 'spaceStorageWaterTargetColony', fallback: 'Colony' },
+    { value: 'colonyOnly', labelKey: 'spaceStorageWaterTargetColonyOnly', fallback: 'Colony only' },
+    { value: 'surface', labelKey: 'spaceStorageWaterTargetSurface', fallback: 'Surface' }
+  ],
+  hydrogen: [
+    { value: 'atmospheric', labelKey: 'spaceStorageHydrogenTargetAtmosphere', fallback: 'Atmosphere' },
+    { value: 'colony', labelKey: 'spaceStorageHydrogenTargetColony', fallback: 'Colony' },
+    { value: 'colonyOnly', labelKey: 'spaceStorageHydrogenTargetColonyOnly', fallback: 'Colony only' }
+  ]
+};
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_IMPORT_LIMIT_RESOURCES = new Set([
   'liquidWater',
   'carbonDioxide',
@@ -200,22 +216,13 @@ function getProjectPresetJsonFieldOptions(fieldPath, value, preset) {
   const singleResourceKey = getSpaceStorageSingleResourceKey(projectId);
   const isSpaceStorageOperationsProject = projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID
     || projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID;
-  if ((isSpaceStorageOperationsProject || singleResourceKey === 'liquidWater')
-    && fieldPath[3] === 'waterWithdrawTarget') {
+  const fluidResourceKey = PROJECT_AUTOMATION_UI_SPACE_STORAGE_FLUID_RESOURCE_BY_FIELD[fieldPath[3]];
+  if (fluidResourceKey && (isSpaceStorageOperationsProject || singleResourceKey === fluidResourceKey)) {
     return {
-      selectOptions: [
-        { value: 'colony', label: getAutomationCardText('spaceStorageWaterTargetColony', {}, 'Colony') },
-        { value: 'surface', label: getAutomationCardText('spaceStorageWaterTargetSurface', {}, 'Surface') }
-      ]
-    };
-  }
-  if ((isSpaceStorageOperationsProject || singleResourceKey === 'hydrogen')
-    && fieldPath[3] === 'hydrogenTransferTarget') {
-    return {
-      selectOptions: [
-        { value: 'atmospheric', label: getAutomationCardText('spaceStorageHydrogenTargetAtmosphere', {}, 'Atmosphere') },
-        { value: 'colony', label: getAutomationCardText('spaceStorageHydrogenTargetColony', {}, 'Colony') }
-      ]
+      selectOptions: PROJECT_AUTOMATION_UI_SPACE_STORAGE_FLUID_TARGETS[fluidResourceKey].map(target => ({
+        value: target.value,
+        label: getAutomationCardText(target.labelKey, {}, target.fallback)
+      }))
     };
   }
   if (fieldPath[3] === 'resourceImportLimitRespects'
