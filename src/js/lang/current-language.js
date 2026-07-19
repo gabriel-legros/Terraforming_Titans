@@ -1962,7 +1962,7 @@ setLanguageData({
         surface: 'Surface',
         colony: 'Colony',
         colonyAndAtmosphere: 'Colony and Atmosphere',
-        colonyAndSpaceStorage: 'Colony and Space Storage',
+        colonyAndSpaceStorage: 'Colony then Space Storage',
         colonyOnly: 'Colony only',
         spaceStorage: 'Space Storage',
         colonyAndPlanetaryMass: 'Colony and Planetary Mass',

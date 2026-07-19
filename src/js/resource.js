@@ -114,6 +114,9 @@ function initializeAccumulatedSpecialChanges() {
     planetaryMassImports: {},
     materialOverflowToPlanetaryMass: {},
     colonyWaterNoOverflow: 0,
+    colonyWaterOverflowToSpaceStorage: 0,
+    colonyMetalOverflowToSpaceStorage: 0,
+    colonySiliconOverflowToSpaceStorage: 0,
     colonyHydrogenOverflowToSpaceStorage: 0,
     colonyHydrogenNoOverflow: 0
   };
@@ -276,6 +279,43 @@ function routeColonyHydrogenOverflowToSpaceStorage(deltaTime, accumulatedChanges
   const rate = seconds > 0 ? routedOverflow / seconds : 0;
   resources.spaceStorage.hydrogen.modifyRate(rate, 'Overflow', 'overflow');
   resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
+}
+
+function routeColonyMiningOverflowToSpaceStorage(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
+  const routes = [
+    { sourceResource: 'water', targetResource: 'liquidWater', specialChangeKey: 'colonyWaterOverflowToSpaceStorage' },
+    { sourceResource: 'metal', targetResource: 'metal', specialChangeKey: 'colonyMetalOverflowToSpaceStorage' },
+    { sourceResource: 'silicon', targetResource: 'silicon', specialChangeKey: 'colonySiliconOverflowToSpaceStorage' }
+  ];
+
+  for (const route of routes) {
+    const eligibleOverflow = accumulatedSpecialChanges[route.specialChangeKey] || 0;
+    if (!(eligibleOverflow > 0)) {
+      continue;
+    }
+
+    const resource = resources.colony[route.sourceResource];
+    if (!resource.hasCap) {
+      continue;
+    }
+
+    const previousValue = resource.value;
+    const newValue = resource.value + accumulatedChanges.colony[route.sourceResource];
+    const limit = previousValue >= resource.cap ? previousValue : resource.cap;
+    const overflow = newValue > limit ? newValue - limit : 0;
+    const routedOverflow = Math.min(overflow, eligibleOverflow);
+    if (!(routedOverflow > 0)) {
+      continue;
+    }
+
+    accumulatedChanges.colony[route.sourceResource] -= routedOverflow;
+    accumulatedChanges.spaceStorage[route.targetResource] += routedOverflow;
+
+    const seconds = deltaTime / 1000;
+    const rate = seconds > 0 ? routedOverflow / seconds : 0;
+    resources.spaceStorage[route.targetResource].modifyRate(rate, 'Overflow', 'overflow');
+    resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
+  }
 }
 
 function routeColonyMaterialOverflowToPlanetaryMass(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
@@ -2241,6 +2281,7 @@ function produceResources(deltaTime, buildings) {
   }
 
   if (terraforming) {
+    routeColonyMiningOverflowToSpaceStorage(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
     routeColonyWaterOverflow(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
     routeColonyHydrogenOverflowToSpaceStorage(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
     routeColonyHydrogenOverflow(deltaTime, accumulatedChanges, accumulatedSpecialChanges);

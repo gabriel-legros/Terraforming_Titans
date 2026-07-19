@@ -9,14 +9,17 @@ function getSpaceMiningText(path, fallback, vars) {
 }
 
 function normalizeWaterImportTarget(target) {
-  if (target === 'colony' || target === 'colonyOnly' || target === 'spaceStorage') {
+  if (target === 'colony' || target === 'colonyOnly' || target === 'colonyAndSpaceStorage' || target === 'spaceStorage') {
     return target;
   }
   return 'surface';
 }
 
 function normalizeMaterialImportTarget(target) {
-  if (target === 'planetaryMass' || target === 'spaceStorage' || target === 'colonyAndPlanetaryMass') {
+  if (target === 'planetaryMass'
+    || target === 'spaceStorage'
+    || target === 'colonyAndSpaceStorage'
+    || target === 'colonyAndPlanetaryMass') {
     return target;
   }
   return 'colony';
@@ -464,6 +467,7 @@ class SpaceMiningProject extends SpaceshipProject {
     [
       { value: 'surface', text: getSpaceMiningText('ui.projects.spaceMining.surface', 'Surface') },
       { value: 'colony', text: getSpaceMiningText('ui.projects.spaceMining.colony', 'Colony') },
+      { value: 'colonyAndSpaceStorage', text: getSpaceMiningText('ui.projects.spaceMining.colonyAndSpaceStorage', 'Colony then Space Storage') },
       { value: 'colonyOnly', text: getSpaceMiningText('ui.projects.spaceMining.colonyOnly', 'Colony only') },
       { value: 'spaceStorage', text: getSpaceMiningText('ui.projects.spaceMining.spaceStorage', 'Space Storage') }
     ].forEach(optionData => {
@@ -472,6 +476,11 @@ class SpaceMiningProject extends SpaceshipProject {
       option.textContent = optionData.text;
       if (optionData.value === 'spaceStorage') {
         option.style.display = this.isSpaceStorageTargetAvailable() ? '' : 'none';
+      }
+      if (optionData.value === 'colonyAndSpaceStorage') {
+        option.style.display = this.isSpaceStorageTargetAvailable() && this.isBooleanFlagSet('waterImportTargeting')
+          ? ''
+          : 'none';
       }
       select.appendChild(option);
     });
@@ -488,6 +497,7 @@ class SpaceMiningProject extends SpaceshipProject {
       waterImportTargetLabel: label,
       waterImportTargetSelect: select,
       waterImportTargetColonyOption: select.querySelector('option[value="colony"]'),
+      waterImportTargetColonyAndSpaceStorageOption: select.querySelector('option[value="colonyAndSpaceStorage"]'),
       waterImportTargetColonyOnlyOption: select.querySelector('option[value="colonyOnly"]'),
       waterImportTargetSpaceStorageOption: select.querySelector('option[value="spaceStorage"]'),
     };
@@ -517,6 +527,10 @@ class SpaceMiningProject extends SpaceshipProject {
     return this.canImportToPlanetaryMass() && this.materialImportTarget === 'colonyAndPlanetaryMass';
   }
 
+  isMaterialColonyAndSpaceStorageImportSelected() {
+    return this.getPlanetaryMassImportResource() && this.materialImportTarget === 'colonyAndSpaceStorage';
+  }
+
   isGasStorageImportSelected() {
     return this.getTargetAtmosphericResource() && this.gasImportTarget === 'spaceStorage';
   }
@@ -529,8 +543,10 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   isSpaceStorageImportSelected() {
-    return (this.attributes.dynamicWaterImport && this.waterImportTarget === 'spaceStorage')
-      || (this.getPlanetaryMassImportResource() && this.materialImportTarget === 'spaceStorage')
+    return (this.attributes.dynamicWaterImport
+        && (this.waterImportTarget === 'spaceStorage' || this.waterImportTarget === 'colonyAndSpaceStorage'))
+      || (this.getPlanetaryMassImportResource()
+        && (this.materialImportTarget === 'spaceStorage' || this.materialImportTarget === 'colonyAndSpaceStorage'))
       || this.isGasStorageImportSelected()
       || this.gasImportTarget === 'colonyAndSpaceStorage';
   }
@@ -596,7 +612,8 @@ class SpaceMiningProject extends SpaceshipProject {
   }
 
   shouldShowDisableIfControls() {
-    if (this.attributes.dynamicWaterImport && this.waterImportTarget === 'spaceStorage') {
+    if (this.attributes.dynamicWaterImport
+      && (this.waterImportTarget === 'spaceStorage' || this.waterImportTarget === 'colonyAndSpaceStorage')) {
       return false;
     }
     if (this.getTargetAtmosphericResource() && this.gasImportTarget === 'spaceStorage') {
@@ -631,6 +648,7 @@ class SpaceMiningProject extends SpaceshipProject {
     select.classList.add('material-import-target-select');
     [
       { value: 'colony', text: getSpaceMiningText('ui.projects.spaceMining.colony', 'Colony') },
+      { value: 'colonyAndSpaceStorage', text: getSpaceMiningText('ui.projects.spaceMining.colonyAndSpaceStorage', 'Colony then Space Storage') },
       { value: 'spaceStorage', text: getSpaceMiningText('ui.projects.spaceMining.spaceStorage', 'Space Storage') },
       { value: 'colonyAndPlanetaryMass', text: getSpaceMiningText('ui.projects.spaceMining.colonyAndPlanetaryMass', 'Colony and Planetary Mass') },
       { value: 'planetaryMass', text: getSpaceMiningText('ui.projects.spaceMining.planetaryMass', 'Planetary Mass') }
@@ -638,7 +656,7 @@ class SpaceMiningProject extends SpaceshipProject {
       const option = document.createElement('option');
       option.value = optionData.value;
       option.textContent = optionData.text;
-      if (optionData.value === 'spaceStorage') {
+      if (optionData.value === 'spaceStorage' || optionData.value === 'colonyAndSpaceStorage') {
         option.style.display = this.isSpaceStorageTargetAvailable() ? '' : 'none';
       }
       if (optionData.value === 'planetaryMass') {
@@ -661,6 +679,7 @@ class SpaceMiningProject extends SpaceshipProject {
       materialImportTargetLabel: label,
       materialImportTargetSelect: select,
       materialImportTargetSpaceStorageOption: select.querySelector('option[value="spaceStorage"]'),
+      materialImportTargetColonyAndSpaceStorageOption: select.querySelector('option[value="colonyAndSpaceStorage"]'),
       materialImportTargetColonyAndPlanetaryMassOption: select.querySelector('option[value="colonyAndPlanetaryMass"]'),
     };
 
@@ -695,7 +714,7 @@ class SpaceMiningProject extends SpaceshipProject {
         1,
         0,
         { value: 'colony', text: getSpaceMiningText('ui.projects.spaceMining.colonyAndAtmosphere', 'Colony and Atmosphere') },
-        { value: 'colonyAndSpaceStorage', text: getSpaceMiningText('ui.projects.spaceMining.colonyAndSpaceStorage', 'Colony and Space Storage') },
+        { value: 'colonyAndSpaceStorage', text: getSpaceMiningText('ui.projects.spaceMining.colonyAndSpaceStorage', 'Colony then Space Storage') },
         { value: 'colonyOnly', text: getSpaceMiningText('ui.projects.spaceMining.colonyOnly', 'Colony only') }
       );
     }
@@ -940,6 +959,13 @@ class SpaceMiningProject extends SpaceshipProject {
         getSpaceMiningText('ui.projects.spaceMining.colonyOnly', 'Colony only')
       );
     }
+    if (elements.waterImportTargetSelect && !elements.waterImportTargetColonyAndSpaceStorageOption) {
+      elements.waterImportTargetColonyAndSpaceStorageOption = ensureSelectOption(
+        elements.waterImportTargetSelect,
+        'colonyAndSpaceStorage',
+        getSpaceMiningText('ui.projects.spaceMining.colonyAndSpaceStorage', 'Colony then Space Storage')
+      );
+    }
     if (elements.waterImportTargetSelect && !elements.waterImportTargetSpaceStorageOption) {
       elements.waterImportTargetSpaceStorageOption = ensureSelectOption(
         elements.waterImportTargetSelect,
@@ -947,18 +973,26 @@ class SpaceMiningProject extends SpaceshipProject {
         getSpaceMiningText('ui.projects.spaceMining.spaceStorage', 'Space Storage')
       );
     }
-    if (elements.waterImportTargetColonyOption && elements.waterImportTargetColonyOnlyOption) {
+    if (elements.waterImportTargetColonyOption
+      && elements.waterImportTargetColonyOnlyOption
+      && elements.waterImportTargetColonyAndSpaceStorageOption) {
       const allowColonyTargets = this.isBooleanFlagSet('waterImportTargeting');
       elements.waterImportTargetColonyOption.style.display = allowColonyTargets ? '' : 'none';
       elements.waterImportTargetColonyOnlyOption.style.display = allowColonyTargets ? '' : 'none';
-      if (!allowColonyTargets && (this.waterImportTarget === 'colony' || this.waterImportTarget === 'colonyOnly')) {
+      const allowCombinedTarget = allowColonyTargets && this.isSpaceStorageTargetAvailable();
+      elements.waterImportTargetColonyAndSpaceStorageOption.style.display = allowCombinedTarget ? '' : 'none';
+      if (!allowColonyTargets
+        && (this.waterImportTarget === 'colony'
+          || this.waterImportTarget === 'colonyOnly'
+          || this.waterImportTarget === 'colonyAndSpaceStorage')) {
         this.waterImportTarget = 'surface';
       }
     }
     if (elements.waterImportTargetSpaceStorageOption) {
       const allowSpaceStorage = this.isSpaceStorageTargetAvailable();
       elements.waterImportTargetSpaceStorageOption.style.display = allowSpaceStorage ? '' : 'none';
-      if (!allowSpaceStorage && this.waterImportTarget === 'spaceStorage') {
+      if (!allowSpaceStorage
+        && (this.waterImportTarget === 'spaceStorage' || this.waterImportTarget === 'colonyAndSpaceStorage')) {
         this.waterImportTarget = 'surface';
       }
     }
@@ -977,10 +1011,19 @@ class SpaceMiningProject extends SpaceshipProject {
         getSpaceMiningText('ui.projects.spaceMining.spaceStorage', 'Space Storage')
       );
     }
-    if (elements.materialImportTargetSpaceStorageOption) {
+    if (elements.materialImportTargetSelect && !elements.materialImportTargetColonyAndSpaceStorageOption) {
+      elements.materialImportTargetColonyAndSpaceStorageOption = ensureSelectOption(
+        elements.materialImportTargetSelect,
+        'colonyAndSpaceStorage',
+        getSpaceMiningText('ui.projects.spaceMining.colonyAndSpaceStorage', 'Colony then Space Storage')
+      );
+    }
+    if (elements.materialImportTargetSpaceStorageOption && elements.materialImportTargetColonyAndSpaceStorageOption) {
       const allowSpaceStorage = this.isSpaceStorageTargetAvailable();
       elements.materialImportTargetSpaceStorageOption.style.display = allowSpaceStorage ? '' : 'none';
-      if (!allowSpaceStorage && this.materialImportTarget === 'spaceStorage') {
+      elements.materialImportTargetColonyAndSpaceStorageOption.style.display = allowSpaceStorage ? '' : 'none';
+      if (!allowSpaceStorage
+        && (this.materialImportTarget === 'spaceStorage' || this.materialImportTarget === 'colonyAndSpaceStorage')) {
         this.materialImportTarget = 'colony';
       }
     }
@@ -1079,6 +1122,7 @@ class SpaceMiningProject extends SpaceshipProject {
       && this.attributes.dynamicWaterImport
       && this.disableAboveWaterCoverage
       && this.waterImportTarget !== 'colonyOnly'
+      && this.waterImportTarget !== 'colonyAndSpaceStorage'
       && this.waterImportTarget !== 'spaceStorage';
   }
 
@@ -1208,6 +1252,7 @@ class SpaceMiningProject extends SpaceshipProject {
       && showDisableIfControls
       && this.attributes.dynamicWaterImport
       && this.waterImportTarget !== 'colonyOnly'
+      && this.waterImportTarget !== 'colonyAndSpaceStorage'
       && this.waterImportTarget !== 'spaceStorage';
   }
 
@@ -1841,6 +1886,28 @@ class SpaceMiningProject extends SpaceshipProject {
       const allBelow = zones.every(z => (temps[z]?.value || 0) <= 273.15);
       let amount = entry[resourceName] * fraction * productivity;
       if (this.isBooleanFlagSet('waterImportTargeting') && this.waterImportTarget !== 'surface') {
+        if (this.waterImportTarget === 'colonyAndSpaceStorage') {
+          if (accumulatedChanges) {
+            this.applyColonyResourceImport(
+              'water',
+              amount,
+              accumulatedChanges,
+              accumulatedSpecialChanges,
+              {
+                allowOverflow: true,
+                specialChangeKey: 'colonyWaterOverflowToSpaceStorage'
+              }
+            );
+          } else {
+            const overflow = this.applyColonyResourceImport('water', amount, null, null, { deferOverflow: true });
+            if (overflow > 0) {
+              const scale = fraction * productivity;
+              const storageGain = { spaceStorage: { liquidWater: scale > 0 ? overflow / scale : 0 } };
+              this.applySpaceshipResourceGain(storageGain, fraction, null, productivity, accumulatedSpecialChanges);
+            }
+          }
+          return;
+        }
         const importWithoutOverflow = this.waterImportTarget === 'colonyOnly';
         const colonyCapacity = this.waterImportTarget === 'colony'
           ? this.getColonyResourceCapacityRemaining('water', accumulatedChanges)
@@ -1902,7 +1969,22 @@ class SpaceMiningProject extends SpaceshipProject {
         );
         return;
       }
-      const overflow = this.applyColonyResourceImport(
+      if (this.gasImportTarget === 'colonyAndSpaceStorage') {
+        const overflow = this.applyColonyResourceImport(
+          'colonyHydrogen',
+          amount,
+          null,
+          null,
+          { deferOverflow: true }
+        );
+        if (overflow > 0) {
+          const scale = fraction * productivity;
+          const storageGain = { spaceStorage: { hydrogen: scale > 0 ? overflow / scale : 0 } };
+          this.applySpaceshipResourceGain(storageGain, fraction, null, productivity, accumulatedSpecialChanges);
+        }
+        return;
+      }
+      this.applyColonyResourceImport(
         'colonyHydrogen',
         amount,
         accumulatedChanges,
@@ -1912,10 +1994,34 @@ class SpaceMiningProject extends SpaceshipProject {
           specialChangeKey: importWithoutOverflow ? 'colonyHydrogenNoOverflow' : null
         }
       );
-      if (this.gasImportTarget === 'colonyAndSpaceStorage' && overflow > 0) {
-        const scale = fraction * productivity;
-        const storageGain = { spaceStorage: { hydrogen: scale > 0 ? overflow / scale : 0 } };
-        this.applySpaceshipResourceGain(storageGain, fraction, accumulatedChanges, productivity, accumulatedSpecialChanges);
+      return;
+    }
+    if (this.isMaterialColonyAndSpaceStorageImportSelected()) {
+      const material = this.getPlanetaryMassImportResource();
+      if (!material || !gain.colony?.[material]) {
+        return;
+      }
+      const amount = gain.colony[material] * fraction * productivity;
+      if (accumulatedChanges) {
+        this.applyColonyResourceImport(
+          material,
+          amount,
+          accumulatedChanges,
+          accumulatedSpecialChanges,
+          {
+            allowOverflow: true,
+            specialChangeKey: material === 'metal'
+              ? 'colonyMetalOverflowToSpaceStorage'
+              : 'colonySiliconOverflowToSpaceStorage'
+          }
+        );
+      } else {
+        const overflow = this.applyColonyResourceImport(material, amount, null, null, { deferOverflow: true });
+        if (overflow > 0) {
+          const scale = fraction * productivity;
+          const storageGain = { spaceStorage: { [material]: scale > 0 ? overflow / scale : 0 } };
+          this.applySpaceshipResourceGain(storageGain, fraction, null, productivity, accumulatedSpecialChanges);
+        }
       }
       return;
     }
