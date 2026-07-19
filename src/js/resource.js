@@ -2191,6 +2191,13 @@ function produceResources(deltaTime, buildings) {
 
   autoActivateStructures(buildings);
 
+  // Call lifeManager.updateLife AFTER buildings but potentially before or after terraforming,
+  // depending on desired interaction. Assuming it runs after buildings and before applying changes.
+  // It should call modifyRate with type 'life'.
+  if(lifeManager){
+    lifeManager.updateLife(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
+  }
+
   // Call terraforming.updateResources AFTER accumulating building/funding changes
   // but BEFORE applying accumulatedChanges to resource values.
   // terraforming.updateResources will call modifyRate with type 'terraforming'.
@@ -2199,13 +2206,6 @@ function produceResources(deltaTime, buildings) {
       accumulatedChanges,
       accumulatedSpecialChanges
     });
-  }
-
-  // Call lifeManager.updateLife AFTER buildings but potentially before or after terraforming,
-  // depending on desired interaction. Assuming it runs after buildings and before applying changes.
-  // It should call modifyRate with type 'life'.
-  if(lifeManager){
-    lifeManager.updateLife(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
   }
 
   if(researchManager && typeof researchManager.update === 'function'){
