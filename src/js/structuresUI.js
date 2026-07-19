@@ -3576,10 +3576,9 @@ function updateDecreaseButtonText(button, buildCount) {
       info.container.style.display = '';
       expectedChildren.push(info.container);
       if (idx < sections.length - 1) {
-        const currentSec = sections[idx];
         const nextSec = sections[idx + 1];
         let separator = separators[idx];
-        const shouldUseLineBreak = currentSec.key === 'consumption' && nextSec.key === 'maintenance';
+        const shouldUseLineBreak = ['production', 'consumption', 'maintenance'].includes(nextSec.key);
         if (shouldUseLineBreak) {
           if (!separator || separator.nodeName !== 'BR') {
             if (separator) {
