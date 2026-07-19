@@ -860,7 +860,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
         gameSettings.difficultySettingsLockedWorldName = '';
       }
       normalizeDifficultySettings();
-      applyDifficultySettingEffects();
+      reapplySharedManagerEffects({ includeConditionalReconcile: true });
       setPauseKeybindCode(gameSettings.pauseKeybind);
       setDialogueSkipKeybindCode(gameSettings.dialogueSkipKeybind);
       setFullscreenKeybindCode(gameSettings.fullscreenKeybind);
