@@ -1,10 +1,25 @@
-# Local Mod Development
+# Mod Development
 
-The local loader is the first development slice of the Terraforming Titans mod system. It supports complete renderer-file replacements and declarative JSON patches. Steam Workshop discovery, publishing, additive scripts, additive styles, dependencies, save isolation, and the in-game Mods UI are not implemented yet.
+The Terraforming Titans mod loader supports complete renderer-file replacements and declarative JSON patches from both local development folders and subscribed Steam Workshop items. In-game publishing, additive scripts, additive styles, dependencies, save isolation, and the Mods UI are not implemented yet.
+
+## Steam Workshop subscriptions
+
+Before downloads can work, enable **ISteamUGC for file transfer** under the app's Steam Workshop Configuration, configure the Steam Cloud quotas required by Workshop, and publish both configuration changes in Steamworks. Uploading an item alone does not enable client file transfer.
+
+Steam builds automatically consume the current user's subscribed items at launch. The game:
+
+1. Enumerates subscriptions for the game's AppID through Steamworks.
+2. Requests a high-priority download for every missing or outdated item.
+3. Waits up to 30 seconds for all pending downloads as one batch.
+4. Loads only items Steam reports as fully installed and current.
+
+Each Workshop item's content folder must contain `terraforming-titans.mod.json` at its root, using the same format as a local mod. A download that is still pending after the startup window is skipped for that session and retried on the next launch. Invalid Workshop mods are also skipped without changing their installed files.
+
+The game does not guess Steam's library path. It uses `GetItemInstallInfo`, so subscriptions work across additional Steam library drives. Workshop mods participate in the same `loadOrder` and id ordering as local mods. If two loaded folders declare the same mod id, the first one is used and the duplicate is reported as an error.
 
 ## Mod folders
 
-The Electron build scans these locations in order:
+For local development, the Electron build scans these locations in order:
 
 1. `TERRAFORMING_TITANS_MODS_DIR`, when set.
 2. The `mods/local` folder under Electron's user-data directory.
@@ -106,4 +121,4 @@ Patches are applied after the winning replacement file executes, so a full param
 
 ## Diagnostics
 
-The renderer exposes the read-only session as `activeModSession` in DevTools. It lists active mods, validation errors, replacement conflicts, and the deterministic session fingerprint. Invalid mods are skipped and reported there. Restart Electron after changing any mod file.
+The renderer exposes the read-only session as `activeModSession` in DevTools. It lists active mods, their `local` or `workshop` source, validation errors, replacement conflicts, the deterministic session fingerprint, and Workshop download state under `activeModSession.workshop`. Invalid mods are skipped and reported there. Restart Electron after changing a local mod file or changing Workshop subscriptions.

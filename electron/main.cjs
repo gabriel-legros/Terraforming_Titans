@@ -2,7 +2,8 @@ const { app, BrowserWindow, Menu, session, shell, powerSaveBlocker, screen, dial
 const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
-const { createLocalModService } = require('./mods/mod-service.cjs');
+const { createModService } = require('./mods/mod-service.cjs');
+const { resolveSubscribedWorkshopMods } = require('./mods/workshop-service.cjs');
 
 const appDisplayName = 'Terraforming Titans';
 const defaultSteamAppId = 4864000;
@@ -16,7 +17,7 @@ const recentCrashSignatures = new Map();
 let crashWindow = null;
 let latestCrashReport = null;
 let quitting = false;
-let localModService = null;
+let modService = null;
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -340,9 +341,6 @@ function activateSteamAchievement(id) {
   if (!steamIntegration.initialized) {
     return false;
   }
-  if (localModService.publicSession.mods.length) {
-    return false;
-  }
 
   const achievementId = getSteamAchievementApiName(id);
   try {
@@ -405,7 +403,7 @@ function registerWindowControlHandlers() {
   });
 }
 
-function registerLocalModProtocol() {
+function registerModProtocol() {
   protocol.handle('tt-game', request => {
     const requestUrl = new URL(request.url);
     if (requestUrl.host !== 'app') {
@@ -417,7 +415,7 @@ function registerLocalModProtocol() {
     } catch (_error) {
       return new Response('Invalid mod content path.', { status: 400 });
     }
-    const filePath = localModService.resolveGameFile(gamePath);
+    const filePath = modService.resolveGameFile(gamePath);
     if (!filePath) {
       return new Response('Game content not found.', { status: 404 });
     }
@@ -433,11 +431,11 @@ function isGameFrame(frame) {
   return frameUrl.protocol === 'tt-game:' && frameUrl.host === 'app';
 }
 
-function registerLocalModHandlers() {
+function registerModHandlers() {
   const { ipcMain } = require('electron');
   ipcMain.on('mods:get-session', event => {
     event.returnValue = isGameFrame(event.senderFrame)
-      ? localModService.publicSession
+      ? modService.publicSession
       : null;
   });
 }
@@ -548,30 +546,41 @@ function createWindow() {
   win.loadURL('tt-game://app/index.html');
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   Menu.setApplicationMenu(null);
   app.setAppUserModelId('terraforming-titans');
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
     callback(false);
   });
-  localModService = createLocalModService({
+  const workshopResult = await resolveSubscribedWorkshopMods(steamIntegration);
+  modService = createModService({
     appRoot: path.join(__dirname, '..'),
     userDataPath: app.getPath('userData'),
-    isPackaged: app.isPackaged
+    isPackaged: app.isPackaged,
+    workshopMods: workshopResult.installedMods,
+    workshopStatus: workshopResult.status
   });
-  if (localModService.publicSession.mods.length) {
-    const modIds = localModService.publicSession.mods.map(mod => mod.id).join(', ');
-    console.log(`Local mods active: ${modIds}. Steam achievements are disabled for this session.`);
+  workshopResult.status.items.forEach(item => {
+    if (item.status === 'installed') {
+      console.log(`Steam Workshop item ${item.workshopId} is installed and ready.`);
+    } else {
+      console.warn(`Steam Workshop item ${item.workshopId} ${item.status}: ${item.message}`);
+    }
+  });
+  if (modService.publicSession.mods.length) {
+    const modIds = modService.publicSession.mods.map(mod => mod.id).join(', ');
+    console.log(`Mods active: ${modIds}.`);
   }
-  localModService.publicSession.errors.forEach(error => {
-    console.warn(`Local mod skipped (${error.folder}): ${error.message}`);
+  modService.publicSession.errors.forEach(error => {
+    const source = error.workshopId ? `Workshop ${error.workshopId}` : error.folder;
+    console.warn(`Mod skipped (${source}): ${error.message}`);
   });
-  registerLocalModProtocol();
+  registerModProtocol();
   registerCrashHandlers();
   registerSaveStorageHandlers();
   registerSteamAchievementHandlers();
   registerWindowControlHandlers();
-  registerLocalModHandlers();
+  registerModHandlers();
   powerSaveBlocker.start('prevent-app-suspension');
   createWindow();
 

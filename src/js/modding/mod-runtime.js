@@ -7,7 +7,13 @@ var activeModSession = window.electronMods
       patches: {},
       replacements: [],
       conflicts: [],
-      errors: []
+      errors: [],
+      workshop: {
+        enabled: false,
+        initialized: false,
+        error: '',
+        items: []
+      }
     };
 
 const MOD_PATCH_DELETE = {};

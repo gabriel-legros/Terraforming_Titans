@@ -159,7 +159,7 @@ function getLocalModRoots(appRoot, userDataPath, isPackaged) {
   return [...new Set(roots.map(root => path.resolve(root)))];
 }
 
-function loadLocalMod(modRoot, hash) {
+function loadMod(modRoot, hash, source) {
   const manifestPath = path.join(modRoot, MOD_MANIFEST_FILE);
   if (!fs.existsSync(manifestPath)) {
     throw new Error(`Missing ${MOD_MANIFEST_FILE}.`);
@@ -198,33 +198,61 @@ function loadLocalMod(modRoot, hash) {
     replacements.push({ gamePath, file: declaredFile.normalized, filePath: declaredFile.filePath });
   });
 
-  return { ...manifest, patches, replacements };
+  return { ...manifest, ...source, patches, replacements };
 }
 
-function createLocalModService({ appRoot, userDataPath, isPackaged }) {
+function createModService({ appRoot, userDataPath, isPackaged, workshopMods = [], workshopStatus }) {
   fs.mkdirSync(path.join(userDataPath, 'mods', 'local'), { recursive: true });
   const localRoots = getLocalModRoots(appRoot, userDataPath, isPackaged);
-  const discoveredFolders = localRoots.flatMap(discoverModFolders);
+  const discoveredMods = localRoots.flatMap(root => discoverModFolders(root).map(modRoot => ({
+    modRoot,
+    source: 'local',
+    workshopId: ''
+  })));
+  workshopMods.forEach(workshopMod => {
+    discoveredMods.push({
+      modRoot: workshopMod.folder,
+      source: 'workshop',
+      workshopId: workshopMod.workshopId
+    });
+  });
   const errors = [];
   const loadedMods = [];
 
-  discoveredFolders.forEach(modRoot => {
+  discoveredMods.forEach(discoveredMod => {
     const preliminaryHash = crypto.createHash('sha256');
     try {
-      const mod = loadLocalMod(modRoot, preliminaryHash);
+      const mod = loadMod(discoveredMod.modRoot, preliminaryHash, {
+        source: discoveredMod.source,
+        workshopId: discoveredMod.workshopId
+      });
       mod.contentHash = preliminaryHash.digest('hex');
       loadedMods.push(mod);
     } catch (error) {
-      errors.push({ folder: path.basename(modRoot), message: error.message });
+      errors.push({
+        folder: path.basename(discoveredMod.modRoot),
+        source: discoveredMod.source,
+        workshopId: discoveredMod.workshopId,
+        message: error.message
+      });
     }
   });
 
-  loadedMods.sort((a, b) => a.loadOrder - b.loadOrder || a.id.localeCompare(b.id));
+  loadedMods.sort((a, b) => a.loadOrder - b.loadOrder
+    || a.id.localeCompare(b.id)
+    || a.source.localeCompare(b.source)
+    || a.workshopId.localeCompare(b.workshopId, 'en', { numeric: true })
+    || a.folderName.localeCompare(b.folderName));
   const ids = new Set();
   const activeMods = [];
   loadedMods.forEach(mod => {
     if (ids.has(mod.id)) {
-      errors.push({ folder: mod.folderName, message: `Duplicate mod id ${mod.id}.` });
+      errors.push({
+        folder: mod.folderName,
+        source: mod.source,
+        workshopId: mod.workshopId,
+        message: `Duplicate mod id ${mod.id}.`
+      });
       return;
     }
     ids.add(mod.id);
@@ -236,6 +264,8 @@ function createLocalModService({ appRoot, userDataPath, isPackaged }) {
   const conflicts = [];
   const sessionHash = crypto.createHash('sha256');
   activeMods.forEach(mod => {
+    sessionHash.update(mod.source);
+    sessionHash.update(mod.workshopId);
     sessionHash.update(mod.id);
     sessionHash.update(mod.version);
     sessionHash.update(mod.contentHash);
@@ -261,7 +291,9 @@ function createLocalModService({ appRoot, userDataPath, isPackaged }) {
       id: mod.id,
       name: mod.name,
       version: mod.version,
-      contentHash: mod.contentHash
+      contentHash: mod.contentHash,
+      source: mod.source,
+      workshopId: mod.workshopId
     })),
     patches,
     replacements: [...replacements.entries()].map(([gamePath, replacement]) => ({
@@ -269,7 +301,13 @@ function createLocalModService({ appRoot, userDataPath, isPackaged }) {
       modId: replacement.modId
     })),
     conflicts,
-    errors
+    errors,
+    workshop: workshopStatus || {
+      enabled: false,
+      initialized: false,
+      error: '',
+      items: []
+    }
   };
 
   function resolveGameFile(gamePath) {
@@ -288,4 +326,4 @@ function createLocalModService({ appRoot, userDataPath, isPackaged }) {
   return { publicSession, resolveGameFile };
 }
 
-module.exports = { createLocalModService };
+module.exports = { createModService };
