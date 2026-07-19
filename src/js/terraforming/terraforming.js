@@ -490,6 +490,8 @@ class Terraforming extends EffectableEntity{
     // Clone so config values remain immutable
     this.celestialParameters = structuredClone(celestialParameters);
     this.initialCelestialParameters = structuredClone(celestialParameters);
+    this.celestialParameters.dayNightPeriod = this.celestialParameters.dayNightPeriod || this.celestialParameters.rotationPeriod || 24;
+    this.initialCelestialParameters.dayNightPeriod = this.initialCelestialParameters.dayNightPeriod || this.initialCelestialParameters.rotationPeriod || 24;
     this.baseLand = resolveWorldBaseLand(this, this.resources.surface?.land);
     this.initialLand = this.baseLand;
 
@@ -944,7 +946,7 @@ class Terraforming extends EffectableEntity{
       }
       if (requirement.type === 'rotationPeriodMinimum') {
         const minimumHours = Math.max(0, requirement.minimumHours || 0);
-        const rotationHours = Math.abs(this.celestialParameters?.rotationPeriod || 0);
+        const rotationHours = Math.abs(this.celestialParameters?.dayNightPeriod || 0);
         statuses.push({
           key: `rotationPeriodMinimum:${minimumHours}`,
           label: requirement.labelKey
@@ -1711,7 +1713,7 @@ class Terraforming extends EffectableEntity{
 
     updateSurfaceTemperature(deltaTimeMs = 0, options = {}) {
         const groundAlbedo = this.luminosity.groundAlbedo;
-        const rotationPeriodH = Math.abs(this.celestialParameters.rotationPeriod) || 24;
+        const rotationPeriodH = Math.abs(this.celestialParameters.dayNightPeriod) || 24;
         const gSurface = this.celestialParameters.gravity || 9.81;
 
         const { composition, totalMass } = this.calculateAtmosphericComposition();
@@ -2202,7 +2204,7 @@ class Terraforming extends EffectableEntity{
     }
 
     _updateHeatCapacityCache() {
-        const rotationPeriodH = Math.abs(this.celestialParameters.rotationPeriod) || 24;
+        const rotationPeriodH = Math.abs(this.celestialParameters.dayNightPeriod) || 24;
         const gSurface = this.celestialParameters.gravity || 9.81;
         const { totalMass } = this.calculateAtmosphericComposition();
         const surfacePressurePa = calculateAtmosphericPressure(
@@ -3242,6 +3244,11 @@ synchronizeGlobalResources() {
       if (terraformingState.celestialParameters) {
           Object.assign(this.celestialParameters, terraformingState.celestialParameters);
       }
+
+      this.initialCelestialParameters.dayNightPeriod = this.initialCelestialParameters.dayNightPeriod || this.initialCelestialParameters.rotationPeriod || 24;
+      this.celestialParameters.dayNightPeriod = terraformingState.celestialParameters?.dayNightPeriod === undefined
+          ? (this.celestialParameters.rotationPeriod || 24)
+          : (this.celestialParameters.dayNightPeriod || 24);
 
       // Ensure current has values for all initial parameters
       for (const key in this.initialCelestialParameters) {

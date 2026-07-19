@@ -81,6 +81,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Direct browser and Steam builds verify that all three source version files agree before packaging. Browser builds use the current version without the `-playtest.N` suffix in the generated artifact and do not increment the source version.
 
 ## Key Systems
+- Antimatter Battery Auto Fill is a resource-production-loop operation: its projected rate participates in project availability and percentage-power calculations, and its actual transfer is added through `accumulatedChanges` before projects consume colony energy.
 - Skills: `skills.js`, `skillsUI.js`
 - Life Designer: `life.js`, `lifeUI.js`
 - Space travel/systems: `space.js`, `spaceUI.js`
@@ -489,6 +490,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Advanced research now includes `High-agility freighters` (200B), adding per-project checkboxes during uncleared Kessler Skies that make spaceship activities pay `100 research x current large-debris cost multiplier` per ship activity in exchange for no Kessler debris generation or failure; checkboxes save in project presets, auto-disable when Kessler is cleared, and exclude Resource Disposal Mass Drivers.
 - While Kessler Skies is active, Followers Orbitals are limited to `research`; non-research orbital outputs are disabled and the Orbitals card shows a warning banner.
 - Followers Orbitals can optionally cap available orbitals to the current world geometric land value through the Post-World 11 Orbital cap difficulty setting; manual and weight assignments normalize against that capped availability.
+- Followers Orbitals weight assignment uses exact integer quotient/remainder allocation and reconciles the final numeric assignment in display order, preventing floating-point gaps at orbital counts beyond JavaScript's safe-integer range.
 - `Kerati Hive` is a zero-cost custom project with its own hive-simulation UI and save state: colony food can be transferred into hive food, drones convert food into honey, builders spend honey on spawning pools, hunters consume biomass for hive food and claim `Kerati Territory` independently while free land remains, spawners produce larva, and batch `/10`/`x10` controls exist for every hatch and promotion action; completion requires Kerati Territory to reach `100%` of initial land.
 - Callisto chapter `chapter7.3` unlocks `Factory Security Crackdown`, a cult-security story project that applies four live factory output penalties (`componentFactory`, `electronicsFactory`, `superconductorFactory`, `androidFactory`) starting at `-20%`; spending the matching output resource reduces that chain's penalty by `2%` per purchase with `10x` escalating costs until secured.
 - Pulsar hazard clear paths now support three routes on affected worlds: fully build all `Artificial Sky` segments, use Planetary Thrusters to `Go Rogue`, or meet a hazard-specific distance threshold (`hazards.pulsar.clearAtDistanceAU`, in AU) when defined.

@@ -622,7 +622,7 @@ class RingworldTerraformingProject extends Project {
 
   getAutoShadeTrend(shadingStrength) {
     const groundAlbedo = terraforming.luminosity.groundAlbedo;
-    const rotationPeriodH = Math.abs(terraforming.celestialParameters.rotationPeriod) || 24;
+    const rotationPeriodH = Math.abs(terraforming.celestialParameters.dayNightPeriod) || 24;
     const gSurface = terraforming.celestialParameters.gravity || 9.81;
     const compositionData = terraforming.calculateAtmosphericComposition();
     const composition = compositionData.composition || {};

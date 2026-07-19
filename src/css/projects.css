@@ -92,6 +92,32 @@
     display: none;
 }
 
+.lantern-day-night-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+    margin-top: 12px;
+}
+
+.lantern-day-night-control .quick-build-label {
+    white-space: nowrap;
+}
+
+.lantern-day-night-period-input {
+    width: 80px;
+    flex-shrink: 0;
+    border: 1px solid #adb5bd;
+    border-radius: 3px;
+    padding: 3px 5px;
+    background-color: #fff;
+    color: #212529;
+}
+
+.dark-mode .lantern-day-night-period-input {
+    color-scheme: dark;
+}
+
 .card-footer {
     background-color: #f8f9fa;
     padding: 10px 12px;

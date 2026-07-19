@@ -137,7 +137,7 @@ function initializeDefaultGlobals(){
   }
 
   // Set up the game scene, objects, and initial state
-  const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;
+  const rotation = currentPlanetParameters.celestialParameters.dayNightPeriod || currentPlanetParameters.celestialParameters.rotationPeriod || 24;
   const { duration: dayDuration, direction: rotationDirection } = rotationPeriodToDuration(rotation);
   dayNightCycle = new DayNightCycle(dayDuration, rotationDirection);
   updateDayNightDisplay();
@@ -469,7 +469,7 @@ function initializeGameState(options = {}) {
   realPlayTimeSeconds = 0;
   patienceManager.resetWorldPatience();
 
-  const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;
+  const rotation = currentPlanetParameters.celestialParameters.dayNightPeriod || currentPlanetParameters.celestialParameters.rotationPeriod || 24;
   const dayDurationData = rotationPeriodToDuration(rotation);
   dayNightCycle = new DayNightCycle(dayDurationData.duration, dayDurationData.direction);
   const existingResources = resources;
@@ -789,7 +789,6 @@ function updateLogic(delta, realDelta = delta) {
   const allStructures = {...buildings, ...colonies};
 
   produceResources(delta, allStructures);
-  buildings.antimatterBattery.updateAutoFillAfterProductionTick(delta);
 
   // Update happiness for each colony
   for (const colonyName in colonies) {

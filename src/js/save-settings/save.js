@@ -400,6 +400,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
                 celestialParams.spinPeriod = celestialParams.rotationPeriod;
               }
             }
+            if (celestialParams && celestialParams.dayNightPeriod === undefined) {
+              celestialParams.dayNightPeriod = celestialParams.rotationPeriod || 24;
+            }
 
             // Ensure procedural worlds carry a star definition on load.
             // Prefer RWG-provided star, else regenerate via RWG using the saved seed,

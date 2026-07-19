@@ -242,7 +242,32 @@ class AntimatterBattery extends Building {
     return { energyGain, spaceEnergySpent };
   }
 
-  updateAutoFillAfterProductionTick(deltaTime) {
+  getAutoFillEnergyGain(energyValue) {
+    const antimatter = resources.special.antimatter;
+    const energy = resources.colony.energy;
+    const missingEnergy = Math.max(0, energy.cap - energyValue);
+    const availableAntimatter = isAntimatterSpaceEnergySyncActive()
+      ? getAntimatterEquivalentValue(resources)
+      : antimatter.value;
+    return Math.min(missingEnergy, availableAntimatter * this.getEnergyPerAntimatter());
+  }
+
+  getAutoFillEnergyRate(deltaTime) {
+    if (
+      this.isBooleanFlagSet('antimatterBatteryFillDisabled') ||
+      !this.isBooleanFlagSet('antimatterWarpLogistics') ||
+      !this.autoFillingEnabled
+    ) {
+      return 0;
+    }
+    const energyGain = this.getAutoFillEnergyGain(resources.colony.energy.value);
+    if (energyGain <= 0 || deltaTime <= 0) {
+      return 0;
+    }
+    return energyGain * (1000 / deltaTime);
+  }
+
+  applyAutoFillProduction(deltaTime, accumulatedChanges) {
     if (
       this.isBooleanFlagSet('antimatterBatteryFillDisabled') ||
       !this.isBooleanFlagSet('antimatterWarpLogistics') ||
@@ -250,13 +275,20 @@ class AntimatterBattery extends Building {
     ) {
       return;
     }
-    const fillResult = this.fillFromAntimatter({ updateDisplay: false });
-    if (!fillResult || deltaTime <= 0) {
+    const pendingEnergy = accumulatedChanges.colony.energy || 0;
+    const energyGain = this.getAutoFillEnergyGain(resources.colony.energy.value + pendingEnergy);
+    if (energyGain <= 0 || deltaTime <= 0) {
       return;
     }
-    const perSecondMultiplier = 1000 / deltaTime;
-    const energyPerSecond = fillResult.energyGain * perSecondMultiplier;
-    const spaceEnergyPerSecond = fillResult.spaceEnergySpent * perSecondMultiplier;
+    const antimatterConsumed = energyGain / this.getEnergyPerAntimatter();
+    if (!spendAntimatterEquivalent(antimatterConsumed, resources)) {
+      return;
+    }
+    accumulatedChanges.colony.energy = pendingEnergy + energyGain;
+    const energyPerSecond = energyGain * (1000 / deltaTime);
+    const spaceEnergyPerSecond = isAntimatterSpaceEnergySyncActive()
+      ? antimatterToSpaceEnergy(antimatterConsumed) * (1000 / deltaTime)
+      : 0;
     resources.colony.energy.modifyRate(energyPerSecond, 'Antimatter Battery Auto Fill', 'building');
     if (spaceEnergyPerSecond > 0) {
       resources.space.energy.modifyRate(-spaceEnergyPerSecond, 'Antimatter Battery Auto Fill', 'building');

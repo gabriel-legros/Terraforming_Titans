@@ -15,16 +15,6 @@ const THRUSTER_MOTION_TARGET_AU = 'au';
 const THRUSTER_MOTION_TARGET_FLUX = 'flux';
 const THRUSTER_SOLAR_CONSTANT_WM2 = 1361;
 
-// rotationPeriodToDuration is defined globally in the browser but must be
-// required explicitly when running under Node.js for tests
-let rotationPeriodToDurationFunc = (typeof globalThis !== 'undefined' &&
-  globalThis.rotationPeriodToDuration) ? globalThis.rotationPeriodToDuration : null;
-try {
-  if (typeof require === 'function') {
-    ({ rotationPeriodToDuration: rotationPeriodToDurationFunc } = require('../day-night-cycle.js'));
-  }
-} catch (e) {}
-
 if (typeof makeCollapsibleCard === 'undefined') {
   var makeCollapsibleCard = (typeof globalThis !== 'undefined' && globalThis.makeCollapsibleCard)
     ? globalThis.makeCollapsibleCard
@@ -656,6 +646,9 @@ class PlanetaryThrustersProject extends Project{
       if (cel.rotationPeriod === undefined || cel.rotationPeriod === 0) {
         cel.rotationPeriod = 24; // Default to 24h day-night cycle
       }
+      if (cel.dayNightPeriod === undefined || cel.dayNightPeriod === 0) {
+        cel.dayNightPeriod = cel.rotationPeriod;
+      }
     });
     [currentPlanetParameters, spaceManager?.currentPlanetParameters]
       .filter(Boolean)
@@ -968,33 +961,14 @@ class PlanetaryThrustersProject extends Project{
       const periodHours = magnitude ? (2 * Math.PI) / (magnitude * 3600) : Math.max(Math.abs(targetHours), 1e-6);
       const newPeriod = nextOmega < 0 ? -periodHours : periodHours;
       
-      // Update spinPeriod and rotationPeriod
-      // For rogue worlds: only update spinPeriod, rotationPeriod stays at 24h for day-night cycle
-      // For non-rogue worlds: update both to the same value
+      // Thrusters control physical spin. The Space Mirror Facility independently
+      // controls the effective day-night period when a Lantern override is active.
       const isRogue = p.rogue;
       p.spinPeriod = newPeriod;
       if (!isRogue) {
         p.rotationPeriod = newPeriod;
       }
-      
-      // Only update day-night cycle for non-rogue worlds
-      if (!isRogue && typeof dayNightCycle !== 'undefined' && rotationPeriodToDurationFunc) {
-        const oldDur = dayNightCycle.dayDuration;
-        const progress = typeof dayNightCycle.getDayProgress === 'function'
-          ? dayNightCycle.getDayProgress()
-          : 0;
-        const daysElapsed = oldDur > 0 ? dayNightCycle.elapsedTime / oldDur : 0;
-        const durationData = rotationPeriodToDurationFunc(newPeriod);
-        dayNightCycle.dayDuration = durationData.duration;
-        dayNightCycle.rotationDirection = durationData.direction;
-        dayNightCycle.elapsedTime = daysElapsed * dayNightCycle.dayDuration;
-        if (typeof dayNightCycle.setDayProgress === 'function') {
-          dayNightCycle.setDayProgress(progress);
-        } else {
-          dayNightCycle.dayProgress = progress;
-          dayNightCycle.rotationTime = progress * dayNightCycle.dayDuration;
-        }
-      }
+      syncLanternDayNightPeriod(projectManager.projects.spaceMirrorFacility);
       this.lastActiveTime = 0;
       return;
     }

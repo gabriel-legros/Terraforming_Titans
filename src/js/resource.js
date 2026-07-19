@@ -1726,6 +1726,14 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
     }
   }
 
+  const antimatterBattery = buildings.antimatterBattery;
+  if (antimatterBattery) {
+    const antimatterAutoFillRate = antimatterBattery.getAutoFillEnergyRate(deltaTime);
+    if (antimatterAutoFillRate > 0) {
+      resources.colony.energy.modifyRate(antimatterAutoFillRate, 'Antimatter Battery Auto Fill', 'building');
+    }
+  }
+
   if (projectManager) {
     for (const name in projectManager.projects) {
       const project = projectManager.projects[name];
@@ -1870,6 +1878,7 @@ function updateFactoryHeatPower(deltaTime, structures) {
 }
 
 function produceResources(deltaTime, buildings) {
+  const antimatterBattery = buildings.antimatterBattery;
   if (typeof spaceManager !== 'undefined') {
     spaceManager.beginTerraformedWorldCountCache?.();
   }
@@ -2099,6 +2108,10 @@ function produceResources(deltaTime, buildings) {
     const building = buildings[buildingName];
     // Apply maintenance after production/consumption so conversions respect availability
     building.applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime);
+  }
+
+  if (antimatterBattery) {
+    antimatterBattery.applyAutoFillProduction(deltaTime, accumulatedChanges);
   }
 
   updateFactoryHeatPower(deltaTime, buildings);

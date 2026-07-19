@@ -367,6 +367,24 @@ function canControlLanternDayNightCycle() {
     || projectManager?.projects?.artificialSky?.isCompleted === true;
 }
 
+function syncLanternDayNightPeriod(project) {
+  const celestial = terraforming.celestialParameters;
+  const period = project.lanternDayNightPeriod === null
+    ? (celestial.rogue
+      ? (project.lanternDayNightFallbackPeriod || celestial.dayNightPeriod || celestial.rotationPeriod || 24)
+      : (celestial.rotationPeriod || celestial.spinPeriod || 24))
+    : project.lanternDayNightPeriod;
+  if (celestial.dayNightPeriod === period) return;
+
+  celestial.dayNightPeriod = period;
+  const durationData = rotationPeriodToDuration(period);
+  const progress = dayNightCycle.getDayProgress();
+  dayNightCycle.dayDuration = durationData.duration;
+  dayNightCycle.nightDuration = durationData.duration;
+  dayNightCycle.rotationDirection = durationData.direction;
+  dayNightCycle.setDayProgress(progress);
+}
+
 function isLanternMirrorFacilityAvailable() {
   const lantern = buildings.hyperionLantern;
   return !!(lantern
@@ -1999,6 +2017,9 @@ class SpaceMirrorFacilityProject extends Project {
   constructor(config, name) {
     super(config, name);
     this.reversalAvailable = false;
+    this.lanternDayNightPeriod = null;
+    this.lanternDayNightFallbackPeriod = null;
+    this.needsLanternDayNightPeriodMigration = false;
     this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
     mirrorOversightSettings = this.mirrorOversightSettings;
   }
@@ -2166,10 +2187,10 @@ class SpaceMirrorFacilityProject extends Project {
             <span id="total-lantern-area" class="stat-value">0 W/m²</span>
           </div>
         </div>
-        <div id="rogue-day-night-control" class="control-group" style="display:none; margin-top:12px; gap:8px; flex-wrap:nowrap; align-items:center;">
-          <label for="rogue-day-night-period" style="white-space:nowrap;">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.dayNight.periodHours', 'Day-Night Period (hours):')}</label>
-          <input type="number" id="rogue-day-night-period" min="1" max="1000" step="1" value="24" style="width:80px; flex-shrink:0;">
-          <span class="info-tooltip-icon" style="flex-shrink:0;" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.dayNight.tooltip', 'Control the day-night cycle duration for this world (1-1000 hours). Lanterns can provide artificial sunlight on a custom schedule.')}">&#9432;</span>
+        <div id="rogue-day-night-control" class="lantern-day-night-control" style="display:none;">
+          <label class="quick-build-label" for="rogue-day-night-period">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.dayNight.periodHours', 'Day-Night Period (hours):')}</label>
+          <input type="number" id="rogue-day-night-period" class="lantern-day-night-period-input" min="1" max="1000" step="1">
+          <span class="info-tooltip-icon" style="flex-shrink:0;" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.dayNight.tooltip', 'Set a 1-1000 hour day-night period for Lanterns. Leave this blank to follow the world\'s current natural day-night cycle, including changes made by Planetary Thrusters. Delete the number to return to the natural cycle.')}">&#9432;</span>
         </div>
       </div>
       <div class="mirror-facility-overlay">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.incompleteLanternOverlay', 'Complete facility to enable lanterns')}</div>
@@ -2328,16 +2349,19 @@ class SpaceMirrorFacilityProject extends Project {
     
     if (rogueDayNightInput) {
       const applyRogueDayNightPeriod = () => {
-        const newPeriod = Math.max(1, Math.min(1000, Number(rogueDayNightInput.value) || 24));
+        if (rogueDayNightInput.value === '') {
+          this.lanternDayNightPeriod = null;
+          syncLanternDayNightPeriod(this);
+          return;
+        }
+        const newPeriod = Math.max(1, Math.min(1000, Number(rogueDayNightInput.value)));
+        if (this.lanternDayNightPeriod === null) {
+          this.lanternDayNightFallbackPeriod = terraforming.celestialParameters.dayNightPeriod || 24;
+        }
+        this.lanternDayNightPeriod = newPeriod;
         rogueDayNightInput.value = newPeriod;
         if (canControlLanternDayNightCycle()) {
-          terraforming.celestialParameters.rotationPeriod = newPeriod;
-          const durationData = rotationPeriodToDuration(newPeriod);
-          const progress = dayNightCycle.getDayProgress();
-          dayNightCycle.dayDuration = durationData.duration;
-          dayNightCycle.nightDuration = durationData.duration;
-          dayNightCycle.rotationDirection = durationData.direction;
-          dayNightCycle.setDayProgress(progress);
+          syncLanternDayNightPeriod(this);
         }
       };
 
@@ -2427,18 +2451,16 @@ class SpaceMirrorFacilityProject extends Project {
         elements.lanternDetails.rogueDayNightControl.style.display = (showLantern && canControlDayNight) ? 'flex' : 'none';
       }
       if (elements.lanternDetails.rogueDayNightInput && canControlDayNight && typeof terraforming !== 'undefined') {
-        const rawPeriod = terraforming.celestialParameters.rotationPeriod || 24;
-        const clampedPeriod = Math.max(1, Math.min(1000, rawPeriod));
-        if (clampedPeriod !== rawPeriod) {
-          terraforming.celestialParameters.rotationPeriod = clampedPeriod;
-          const durationData = rotationPeriodToDuration(clampedPeriod);
-          dayNightCycle.dayDuration = durationData.duration;
-          dayNightCycle.nightDuration = durationData.duration;
-          dayNightCycle.rotationDirection = durationData.direction;
+        if (this.needsLanternDayNightPeriodMigration) {
+          const storedPeriod = terraforming.celestialParameters.dayNightPeriod || 24;
+          this.lanternDayNightPeriod = Math.max(1, Math.min(1000, storedPeriod));
+          this.lanternDayNightFallbackPeriod = storedPeriod;
+          this.needsLanternDayNightPeriodMigration = false;
         }
         const dayNightInput = elements.lanternDetails.rogueDayNightInput;
         if (document.activeElement !== dayNightInput && dayNightInput.dataset.editing !== 'true') {
-          dayNightInput.value = clampedPeriod;
+          const inputValue = this.lanternDayNightPeriod === null ? '' : this.lanternDayNightPeriod;
+          if (dayNightInput.value !== String(inputValue)) dayNightInput.value = inputValue;
         }
       }
       
@@ -2547,12 +2569,26 @@ class SpaceMirrorFacilityProject extends Project {
   saveState() {
     return {
       ...super.saveState(),
+      lanternDayNightPeriod: this.lanternDayNightPeriod,
+      lanternDayNightFallbackPeriod: this.lanternDayNightFallbackPeriod,
       mirrorOversightSettings: JSON.parse(JSON.stringify(this.mirrorOversightSettings)),
     };
   }
 
   loadState(state) {
     super.loadState(state);
+    if (Object.prototype.hasOwnProperty.call(state || {}, 'lanternDayNightPeriod')) {
+      const savedPeriod = Number(state.lanternDayNightPeriod);
+      this.lanternDayNightPeriod = state.lanternDayNightPeriod === null
+        ? null
+        : Math.max(1, Math.min(1000, savedPeriod));
+      this.lanternDayNightFallbackPeriod = state.lanternDayNightFallbackPeriod || null;
+      this.needsLanternDayNightPeriodMigration = false;
+    } else {
+      this.lanternDayNightPeriod = null;
+      this.lanternDayNightFallbackPeriod = null;
+      this.needsLanternDayNightPeriodMigration = true;
+    }
     this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
     mirrorOversightSettings = this.mirrorOversightSettings;
     applyMirrorOversightSettings(

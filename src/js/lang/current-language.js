@@ -1943,7 +1943,7 @@ setLanguageData({
         },
         dayNight: {
           periodHours: 'Day-Night Period (hours):',
-          tooltip: 'Control the day-night cycle duration for this world (1-1000 hours). Lanterns can provide artificial sunlight on a custom schedule.',
+          tooltip: 'Set a 1-1000 hour day-night period for Lanterns. Leave this blank to follow the world\'s current natural day-night cycle, including changes made by Planetary Thrusters. Delete the number to return to the natural cycle.',
         },
       },
       spaceMining: {
