@@ -455,7 +455,14 @@ class AutomationPresetManagerBase {
       return;
     }
     this.selectedCombinationId = combo.id;
-    this.setAssignments(combo.assignments);
+    const assignmentsMatch = this.assignments.length === combo.assignments.length
+      && this.assignments.every((assignment, index) => (
+        assignment.presetId === combo.assignments[index].presetId
+        && (assignment.enabled !== false) === (combo.assignments[index].enabled !== false)
+      ));
+    if (!assignmentsMatch) {
+      this.setAssignments(combo.assignments);
+    }
   }
 
   serializeAssignments() {

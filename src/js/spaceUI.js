@@ -857,7 +857,9 @@ function updateSpaceStatsUI() {
     const effectiveCount = _spaceManagerInstance.getTerraformedPlanetCount();
     const populationStats = _spaceManagerInstance.getTotalPopulationStats();
     const uniqueText = formatGroupedNumber(uniqueCount, 2, 0);
-    const effectiveText = formatGroupedNumber(effectiveCount, 2, 0);
+    const effectiveText = effectiveCount >= 1e6
+        ? formatNumber(effectiveCount, false, 3)
+        : formatGroupedNumber(effectiveCount, 2, 0);
     if (spaceStatUniqueValueEl.textContent !== uniqueText) spaceStatUniqueValueEl.textContent = uniqueText;
     if (spaceStatEffectiveValueEl.textContent !== effectiveText) spaceStatEffectiveValueEl.textContent = effectiveText;
     if (spaceStatGalacticPopulationValueEl) {

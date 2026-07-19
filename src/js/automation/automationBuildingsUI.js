@@ -51,7 +51,10 @@ function updateBuildingAutomationApplyDetail(detail, automation, presetId) {
           return building.displayName || id;
         }).join(', ')
     : '';
-  detail.textContent = buildingList ? `${detailText} / ${buildingList}` : detailText;
+  const text = buildingList ? `${detailText} / ${buildingList}` : detailText;
+  if (detail.textContent !== text) {
+    detail.textContent = text;
+  }
 }
 
 function createBuildingAutomationApplyRow(automation) {
@@ -134,8 +137,13 @@ function getBuildingAutomationPresetOptionData(presets) {
 
 function prepareBuildingAutomationApplyRow(row, automation, presets, assignment, index, assignmentCount) {
   row._automation = automation;
-  row.dataset.assignmentId = String(assignment.id);
-  row.style.display = '';
+  const assignmentId = String(assignment.id);
+  if (row.dataset.assignmentId !== assignmentId) {
+    row.dataset.assignmentId = assignmentId;
+  }
+  if (row.style.display !== '') {
+    row.style.display = '';
+  }
   setToggleButtonState(row._refs.toggle, assignment.enabled);
   syncAutomationSelectOptions(
     row._refs.select,
@@ -143,8 +151,14 @@ function prepareBuildingAutomationApplyRow(row, automation, presets, assignment,
     presets.length ? assignment.presetId : ''
   );
   updateBuildingAutomationApplyDetail(row._refs.detail, automation, assignment.presetId);
-  row._refs.moveUp.disabled = index === 0;
-  row._refs.moveDown.disabled = index === assignmentCount - 1;
+  const moveUpDisabled = index === 0;
+  const moveDownDisabled = index === assignmentCount - 1;
+  if (row._refs.moveUp.disabled !== moveUpDisabled) {
+    row._refs.moveUp.disabled = moveUpDisabled;
+  }
+  if (row._refs.moveDown.disabled !== moveDownDisabled) {
+    row._refs.moveDown.disabled = moveDownDisabled;
+  }
 }
 
 function prepareBuildingAutomationApplySpareRow(row, presets) {
@@ -182,7 +196,6 @@ function getBuildingAutomationApplyRow(container, automation, assignmentId) {
 
   row = createBuildingAutomationApplyRow(automation);
   container._applyRows.set(assignmentId, row);
-  container.appendChild(row);
   return row;
 }
 
@@ -205,7 +218,9 @@ function syncBuildingAutomationApplyRows(container, automation, presets, assignm
   assignments.forEach((assignment, index) => {
     const row = getBuildingAutomationApplyRow(container, automation, assignment.id);
     prepareBuildingAutomationApplyRow(row, automation, presets, assignment, index, assignments.length);
-    container.appendChild(row);
+    if (container.children[index] !== row) {
+      container.insertBefore(row, container.children[index] || null);
+    }
   });
 }
 

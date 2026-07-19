@@ -157,10 +157,16 @@ function formatCylinderCount(value) {
   if (!Number.isFinite(value) || value <= 0) {
     return '0.00';
   }
+  if (value >= 1e6) {
+    return formatNumber(value, false, 3);
+  }
   return formatGroupedNumber(value, 2, 2);
 }
 
 function formatCapacity(value) {
+  if (value >= 1e6) {
+    return formatNumber(value, false, 3);
+  }
   return formatGroupedNumber(Math.round(value), 0, 0);
 }
 

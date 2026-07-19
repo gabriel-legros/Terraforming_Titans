@@ -638,13 +638,24 @@ function createProjectsApplyRow(automation, assignment) {
 
 function updateProjectsApplyRow(row, automation, assignment, index, assignments, presets, automatableProjectLookup) {
   row._automation = automation;
-  row.dataset.assignmentId = String(assignment.id);
-  row.style.display = '';
+  const assignmentId = String(assignment.id);
+  if (row.dataset.assignmentId !== assignmentId) {
+    row.dataset.assignmentId = assignmentId;
+  }
+  if (row.style.display !== '') {
+    row.style.display = '';
+  }
   const refs = row._projectsApplyRefs;
   setToggleButtonState(refs.toggle, assignment.enabled);
   syncProjectsApplyPresetOptions(refs.select, presets, assignment.presetId);
-  refs.moveUp.disabled = index === 0;
-  refs.moveDown.disabled = index === assignments.length - 1;
+  const moveUpDisabled = index === 0;
+  const moveDownDisabled = index === assignments.length - 1;
+  if (refs.moveUp.disabled !== moveUpDisabled) {
+    refs.moveUp.disabled = moveUpDisabled;
+  }
+  if (refs.moveDown.disabled !== moveDownDisabled) {
+    refs.moveDown.disabled = moveDownDisabled;
+  }
   const detailText = getProjectsApplyDetailText(automation, assignment.presetId, automatableProjectLookup);
   if (refs.detail.textContent !== detailText) {
     refs.detail.textContent = detailText;
@@ -683,7 +694,6 @@ function getProjectsApplyRow(container, automation, assignmentId) {
 
   row = createProjectsApplyRow(automation, { id: assignmentId, enabled: false });
   container._applyRows.set(assignmentId, row);
-  container.appendChild(row);
   return row;
 }
 
@@ -706,7 +716,9 @@ function syncProjectsApplyRows(container, automation, presets, assignments, auto
   assignments.forEach((assignment, index) => {
     const row = getProjectsApplyRow(container, automation, assignment.id);
     updateProjectsApplyRow(row, automation, assignment, index, assignments, presets, automatableProjectLookup);
-    container.appendChild(row);
+    if (container.children[index] !== row) {
+      container.insertBefore(row, container.children[index] || null);
+    }
   });
 }
 

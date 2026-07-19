@@ -46,7 +46,10 @@ function updateColonyAutomationApplyDetail(detail, automation, presetId) {
       ? getAutomationCardText('allAvailableTargets', {}, 'All available targets')
       : Object.keys(preset.targets).map(targetId => automation.getTargetLabel(targetId)).join(', ')
     : '';
-  detail.textContent = targetList ? `${detailText} / ${targetList}` : detailText;
+  const text = targetList ? `${detailText} / ${targetList}` : detailText;
+  if (detail.textContent !== text) {
+    detail.textContent = text;
+  }
 }
 
 function getColonyAutomationPresetOptionData(presets) {
@@ -129,8 +132,13 @@ function createColonyAutomationApplyRow(automation) {
 
 function prepareColonyAutomationApplyRow(row, automation, presets, assignment, index, assignmentCount) {
   row._automation = automation;
-  row.dataset.assignmentId = String(assignment.id);
-  row.style.display = '';
+  const assignmentId = String(assignment.id);
+  if (row.dataset.assignmentId !== assignmentId) {
+    row.dataset.assignmentId = assignmentId;
+  }
+  if (row.style.display !== '') {
+    row.style.display = '';
+  }
   setToggleButtonState(row._refs.toggle, assignment.enabled);
   syncAutomationSelectOptions(
     row._refs.select,
@@ -138,8 +146,14 @@ function prepareColonyAutomationApplyRow(row, automation, presets, assignment, i
     presets.length ? assignment.presetId : ''
   );
   updateColonyAutomationApplyDetail(row._refs.detail, automation, assignment.presetId);
-  row._refs.moveUp.disabled = index === 0;
-  row._refs.moveDown.disabled = index === assignmentCount - 1;
+  const moveUpDisabled = index === 0;
+  const moveDownDisabled = index === assignmentCount - 1;
+  if (row._refs.moveUp.disabled !== moveUpDisabled) {
+    row._refs.moveUp.disabled = moveUpDisabled;
+  }
+  if (row._refs.moveDown.disabled !== moveDownDisabled) {
+    row._refs.moveDown.disabled = moveDownDisabled;
+  }
 }
 
 function prepareColonyAutomationApplySpareRow(row, presets) {
@@ -175,33 +189,25 @@ function getColonyAutomationApplyRow(container, automation, assignmentId) {
   }
   row = createColonyAutomationApplyRow(automation);
   container._applyRows.set(assignmentId, row);
-  container.appendChild(row);
   return row;
 }
 
 function syncColonyAutomationApplyRows(container, automation, presets, assignments) {
   container._applyRows ||= new Map();
   const activeIds = new Set();
-  assignments.forEach((assignment, index) => {
-    activeIds.add(assignment.id);
-    const row = getColonyAutomationApplyRow(container, automation, assignment.id);
-    prepareColonyAutomationApplyRow(row, automation, presets, assignment, index, assignments.length);
-    container.appendChild(row);
-  });
+  assignments.forEach(assignment => activeIds.add(assignment.id));
   container._applyRows.forEach((row, assignmentId) => {
     if (!activeIds.has(assignmentId)) {
       prepareColonyAutomationApplySpareRow(row, presets);
     }
   });
-
-  const spareCount = Array.from(container._applyRows.values()).filter(row => row.style.display === 'none').length;
-  if (spareCount === 0) {
-    const spareKey = `spare-${Date.now()}-${container._applyRows.size}`;
-    const row = createColonyAutomationApplyRow(automation);
-    container._applyRows.set(spareKey, row);
-    container.appendChild(row);
-    prepareColonyAutomationApplySpareRow(row, presets);
-  }
+  assignments.forEach((assignment, index) => {
+    const row = getColonyAutomationApplyRow(container, automation, assignment.id);
+    prepareColonyAutomationApplyRow(row, automation, presets, assignment, index, assignments.length);
+    if (container.children[index] !== row) {
+      container.insertBefore(row, container.children[index] || null);
+    }
+  });
 }
 
 function getColonyAutomationAutoBuildBasisOptions(structure, currentValue) {
