@@ -33,7 +33,7 @@ const AEROSTAT_LAND_LIMIT_TOOLTIP =
 const AEROSTAT_TEMPERATURE_TOOLTIP_INTRO =
   getAerostatText(
     'ui.buildings.aerostat.temperatureTooltipIntro',
-    'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their total housing capacity. Eligible worker requirement is summed from active buildings using active buildings x worker need x effective worker multiplier x current worker availability ratio. Some buildings also have an Aerostat Support value; active aerostats cover up to active aerostats x support structures for that building, and any uncovered share keeps that portion of the penalty. This mitigation cannot reduce buildings below the dry-adiabatic 1 atm maintenance floor.'
+    'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their total housing capacity. Eligible staffed worker requirement is calculated from current active buildings, effective worker needs, current worker capacity, and worker priority allocation. Cap workers to aerostat capacity guarantees no temperature maintenance penalty for staffed factories. Some buildings also have an Aerostat Support value; active aerostats cover up to active aerostats x support structures for that building, and any uncovered share keeps that portion of the penalty. Without the worker cap, mitigation cannot reduce buildings below the dry-adiabatic 1 atm maintenance floor.'
   );
 const AEROSTAT_TOTAL_CAPACITY = 10;
 const AEROSTAT_ANDROID_SPACE_TOOLTIP =
@@ -1350,6 +1350,7 @@ function getAerostatMaintenanceMitigation(context = {}) {
   result.aerostatCount = activeAerostats;
 
   let totalWorkerRequirement = 0;
+  let workerAvailabilityRatios = null;
 
   for (const id in buildingCollection) {
     if (!Object.prototype.hasOwnProperty.call(buildingCollection, id)) continue;
@@ -1370,16 +1371,25 @@ function getAerostatMaintenanceMitigation(context = {}) {
           building.activeNumber ?? building.countNumber ?? 0
         );
         if (activeCount > 0) {
+          if (!workerAvailabilityRatios) {
+            const currentWorkerRequirements = populationModule.getWorkerRequirementBreakdown();
+            const currentWorkerCapacity = populationModule.getWorkerCapacityBreakdown(false).totalWorkers;
+            workerAvailabilityRatios = populationModule.getWorkerAvailabilityRatios(
+              currentWorkerCapacity,
+              currentWorkerRequirements
+            );
+          }
           const workerMultiplierValue = building.getEffectiveWorkerMultiplier?.();
           const workerMultiplier = Number.isFinite(workerMultiplierValue)
             ? workerMultiplierValue
             : 1;
-          const workerAvailabilityRatio = Math.max(
-            0,
-            Math.min(1, populationModule.getWorkerAvailabilityRatio(building.workerPriority))
-          );
+          const priority = building.workerPriority > 0
+            ? 'high'
+            : building.workerPriority < 0
+              ? 'low'
+              : 'normal';
           totalWorkerRequirement +=
-            activeCount * perBuildingNeed * workerMultiplier * workerAvailabilityRatio;
+            activeCount * perBuildingNeed * workerMultiplier * workerAvailabilityRatios[priority];
         }
       }
     }
@@ -1416,6 +1426,11 @@ function getAerostatMaintenanceMitigation(context = {}) {
 
   result.buildingCoverage.list.sort((a, b) => a.name.localeCompare(b.name));
   result.totalWorkerRequirement = totalWorkerRequirement;
+
+  if (aerostat?.shouldCapWorkersToAerostatCapacity()) {
+    result.workerShare = 1;
+    return result;
+  }
 
   if (totalWorkerRequirement <= 0) {
     result.workerShare = 1;

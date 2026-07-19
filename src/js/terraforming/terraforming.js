@@ -2824,6 +2824,8 @@ class Terraforming extends EffectableEntity{
           : this.getFactoryTemperatureMaintenancePenaltyReduction();
       const buildingMitigationById =
         aerostatMitigationDetails?.buildingCoverage?.byId ?? {};
+      const workerCapGuaranteesFactoryMitigation =
+        colonies.aerostat_colony.shouldCapWorkersToAerostatCapacity();
       const applyTerraformingPenaltyEffect = (effect) => {
         let targetObject = null;
         if (effect.target === 'building') {
@@ -2940,6 +2942,10 @@ class Terraforming extends EffectableEntity{
             typeof b.getTotalWorkerNeed === 'function'
               ? b.getTotalWorkerNeed()
               : b.requiresWorker || 0;
+          const fullyMitigatedByWorkerCap =
+            workerCapGuaranteesFactoryMitigation &&
+            workerNeed > 0 &&
+            countsTowardFactoryMitigation;
 
           let penaltyValue = maintenancePenalty;
 
@@ -2964,10 +2970,12 @@ class Terraforming extends EffectableEntity{
               remainingFactor *= buildingMitigation.remainingFraction;
             }
 
-            penaltyValue = Math.max(
-              maintenanceFloorPenalty,
-              1 + baseIncrease * remainingFactor
-            );
+            penaltyValue = fullyMitigatedByWorkerCap
+              ? 1
+              : Math.max(
+                  maintenanceFloorPenalty,
+                  1 + baseIncrease * remainingFactor
+                );
           }
 
           const categoryCosts = b.cost?.colony;
