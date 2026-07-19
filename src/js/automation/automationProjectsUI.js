@@ -17,10 +17,9 @@ const projectAutomationUIState = {
   combinationName: '',
   combinationShowInSidebar: true
 };
-let projectsBuilderPresetSignature = '';
 let projectsBuilderCategorySignature = '';
 let projectsBuilderProjectSignature = '';
-let projectsBuilderSelectedSignature = '';
+let projectAutomationPresetController;
 
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID = 'spaceStorage';
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID = 'spaceStorageCapsReserve';
@@ -539,10 +538,95 @@ function buildAutomationProjectsUI() {
   automationElements.projectsApplyHint = applyParts.applyHint;
   automationElements.projectsAddApplyButton = applyParts.addApplyButton;
 
+  projectAutomationPresetController = createAutomationTargetPresetController({
+    getAutomation: () => automationManager.projectsAutomation,
+    isPresetModeAvailable: () => automationManager.hasFeature('automationScripts'),
+    uiState: projectAutomationUIState,
+    collectionKey: 'projects',
+    selectedIdsKey: 'builderSelectedProjects',
+    filterIdKey: 'jsonFilterProjectId',
+    pickerValueKey: 'builderProjectValue',
+    pillClasses: ['project-automation-builder-pill', 'building-automation-builder-pill'],
+    getPresetType: (preset) => (preset.includeExpansion !== false) && (preset.includeOperations !== false)
+      ? 'both'
+      : preset.includeExpansion !== false
+        ? 'expansion'
+        : 'operations',
+    getTargetLabel: (projectId, context) => getAutomatableProjectDisplayName(
+      projectId,
+      context.projectLookup
+    ),
+    normalizeTargetId: (automation, projectId) => automation.normalizeProjectId(projectId),
+    getRemoveTitle: () => getAutomationCardText('removeProject', {}, 'Remove project'),
+    transferType: 'projects',
+    getImportTitle: () => getAutomationCardText('importProjectsPresetTitle', {}, 'Import Projects Preset'),
+    createEmptyPreset: (automation, name) => automation.addPreset(name, [], {
+      createEmpty: true,
+      includeExpansion: true,
+      includeOperations: true,
+      scopeAll: false,
+      showInSidebar: true
+    }),
+    getSaveRequest: (automation, state) => {
+      const type = state.builderType;
+      const scopeAll = state.builderScope === 'all';
+      return {
+        targetIds: scopeAll
+          ? getAutomatableProjects(state.builderSelectedProjects).map(project => project.name)
+          : state.builderSelectedProjects.slice(),
+        options: {
+          includeExpansion: type === 'expansion' || type === 'both',
+          includeOperations: type === 'operations' || type === 'both',
+          scopeAll,
+          showInSidebar: state.builderShowInSidebar,
+          presetMode: state.builderPresetMode
+        }
+      };
+    },
+    resetExtraState: (state) => {
+      state.builderSpaceStorageResourceValue = '';
+    },
+    onPresetSynced: ({ targetIds, state }) => {
+      for (let index = 0; index < targetIds.length; index += 1) {
+        const resourceKey = getSpaceStorageSingleResourceKey(targetIds[index]);
+        if (resourceKey) {
+          state.builderSpaceStorageResourceValue = resourceKey;
+          break;
+        }
+      }
+    },
+    refs: {
+      presetSelect: builderRowParts.presetSelect,
+      moveUpButton: builderRowParts.presetMoveUpButton,
+      moveDownButton: builderRowParts.presetMoveDownButton,
+      presetNameInput: builderRowParts.presetNameInput,
+      newButton: builderRowParts.newButton,
+      saveButton: builderRowParts.saveButton,
+      duplicateButton: builderRowParts.duplicateButton,
+      deleteButton: builderRowParts.deleteButton,
+      importButton: builderRowParts.importButton,
+      exportButton: builderRowParts.exportButton,
+      applyOnceButton: builderRowParts.applyOnceButton,
+      showInSidebarCheckbox: builderRowParts.showInSidebarCheckbox,
+      typeSelect,
+      scopeSelect,
+      presetModeSelect,
+      presetModeMessage,
+      dirtyIndicator: builderDirty,
+      categorySelect,
+      clearButton,
+      addCategoryButton,
+      selectedList,
+      presetJsonDetails,
+      applyCombinationButton: applyParts.applyCombinationButton,
+      combinationSaveButton: applyParts.combinationSaveButton
+    }
+  });
+
   attachProjectsAutomationHandlers();
 }
 
-function getProjectsApplyDetailText(automation, presetId, automatableProjectLookup) {
+function getProjectsApplyDetailText(automation, presetId) {
   const preset = automation.getPresetById(presetId);
   if (!preset) {
     return getAutomationCardText('selectPreset', {}, 'Select a preset');
@@ -550,183 +634,8 @@ function getProjectsApplyDetailText(automation, presetId, automatableProjectLook
   const presetType = formatProjectAutomationPresetType(preset);
   const projectList = preset.scopeAll
     ? getAutomationCardText('allNonStoryProjects', {}, 'All non-story projects')
-    : Object.keys(preset.projects).map(id => getAutomatableProjectDisplayName(id, automatableProjectLookup)).join(', ');
+    : Object.keys(preset.projects).map(id => getAutomatableProjectDisplayName(id)).join(', ');
   return projectList ? `${presetType} / ${projectList}` : presetType;
-}
-
-function syncProjectsApplyPresetOptions(select, presets, selectedPresetId) {
-  syncAutomationSelectOptions(
-    select,
-    presets.length
-      ? presets.map(preset => ({
-        value: preset.id,
-        label: getDefaultAutomationPresetLabel(preset)
-      }))
-      : [{
-      value: '',
-      label: getAutomationCardText('noPresetsSaved', {}, 'No presets saved'),
-      disabled: true
-    }],
-    presets.length ? selectedPresetId : ''
-  );
-}
-
-function createProjectsApplyRow(automation, assignment) {
-  const row = document.createElement('div');
-  row.classList.add('project-automation-apply-row', 'building-automation-apply-row');
-  row.dataset.assignmentId = String(assignment.id);
-  row._automation = automation;
-  const getAssignmentId = () => Number(row.dataset.assignmentId);
-
-  const primary = document.createElement('div');
-  primary.classList.add('project-automation-apply-primary', 'building-automation-apply-primary');
-  const toggle = createToggleButton({
-    onLabel: getAutomationCardText('applyOn', {}, 'Apply On'),
-    offLabel: getAutomationCardText('applyOff', {}, 'Apply Off'),
-    isOn: assignment.enabled
-  });
-  toggle.classList.add('project-automation-apply-toggle', 'building-automation-apply-toggle');
-  toggle.addEventListener('click', () => {
-    const currentAutomation = row._automation;
-    const assignmentId = getAssignmentId();
-    const current = currentAutomation.getAssignments().find(item => item.id === assignmentId);
-    if (!current) return;
-    currentAutomation.setAssignmentEnabled(current.id, !current.enabled);
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  const select = document.createElement('select');
-  select.addEventListener('change', (event) => {
-    const currentAutomation = row._automation;
-    const assignmentId = getAssignmentId();
-    const presetId = Number(event.target.value);
-    currentAutomation.setAssignmentPreset(assignmentId, presetId);
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  const detail = document.createElement('span');
-  detail.classList.add('project-automation-apply-detail', 'building-automation-apply-detail');
-
-  const controls = document.createElement('div');
-  controls.classList.add('project-automation-apply-controls', 'building-automation-apply-controls');
-  const moveUp = document.createElement('button');
-  moveUp.textContent = '↑';
-  moveUp.title = getAutomationCardText('moveApplyUp', {}, 'Move up');
-  moveUp.addEventListener('click', () => {
-    row._automation.moveAssignment(getAssignmentId(), -1);
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-  const moveDown = document.createElement('button');
-  moveDown.textContent = '↓';
-  moveDown.title = getAutomationCardText('moveApplyDown', {}, 'Move down');
-  moveDown.addEventListener('click', () => {
-    row._automation.moveAssignment(getAssignmentId(), 1);
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-  const remove = document.createElement('button');
-  remove.textContent = '✕';
-  remove.title = getAutomationCardText('removePresetFromApply', {}, 'Remove preset');
-  remove.addEventListener('click', () => {
-    row._automation.removeAssignment(getAssignmentId());
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  controls.append(moveUp, moveDown, remove);
-  primary.append(toggle, select);
-  row.append(primary, detail, controls);
-  row._projectsApplyRefs = { toggle, select, detail, moveUp, moveDown };
-  return row;
-}
-
-function updateProjectsApplyRow(row, automation, assignment, index, assignments, presets, automatableProjectLookup) {
-  row._automation = automation;
-  const assignmentId = String(assignment.id);
-  if (row.dataset.assignmentId !== assignmentId) {
-    row.dataset.assignmentId = assignmentId;
-  }
-  if (row.style.display !== '') {
-    row.style.display = '';
-  }
-  const refs = row._projectsApplyRefs;
-  setToggleButtonState(refs.toggle, assignment.enabled);
-  syncProjectsApplyPresetOptions(refs.select, presets, assignment.presetId);
-  const moveUpDisabled = index === 0;
-  const moveDownDisabled = index === assignments.length - 1;
-  if (refs.moveUp.disabled !== moveUpDisabled) {
-    refs.moveUp.disabled = moveUpDisabled;
-  }
-  if (refs.moveDown.disabled !== moveDownDisabled) {
-    refs.moveDown.disabled = moveDownDisabled;
-  }
-  const detailText = getProjectsApplyDetailText(automation, assignment.presetId, automatableProjectLookup);
-  if (refs.detail.textContent !== detailText) {
-    refs.detail.textContent = detailText;
-  }
-}
-
-function prepareProjectsApplySpareRow(row, presets) {
-  row.dataset.assignmentId = '';
-  row.style.display = 'none';
-  const refs = row._projectsApplyRefs;
-  setToggleButtonState(refs.toggle, false);
-  syncProjectsApplyPresetOptions(refs.select, presets, presets.length ? presets[0].id : '');
-  refs.detail.textContent = '';
-  refs.moveUp.disabled = true;
-  refs.moveDown.disabled = true;
-}
-
-function getProjectsApplyRow(container, automation, assignmentId) {
-  let row = container._applyRows.get(assignmentId);
-  if (row) {
-    return row;
-  }
-
-  let reusableKey = null;
-  container._applyRows.forEach((candidate, key) => {
-    if (reusableKey === null && candidate.style.display === 'none') {
-      reusableKey = key;
-      row = candidate;
-    }
-  });
-  if (row) {
-    container._applyRows.delete(reusableKey);
-    container._applyRows.set(assignmentId, row);
-    return row;
-  }
-
-  row = createProjectsApplyRow(automation, { id: assignmentId, enabled: false });
-  container._applyRows.set(assignmentId, row);
-  return row;
-}
-
-function syncProjectsApplyRows(container, automation, presets, assignments, automatableProjectLookup) {
-  container._applyRows ||= new Map();
-  const activeIds = new Set();
-  assignments.forEach(assignment => activeIds.add(assignment.id));
-  container._applyRows.forEach((row, assignmentId) => {
-    if (!activeIds.has(assignmentId)) {
-      if (String(assignmentId).indexOf('spare-') === 0) {
-        container._applyRows.delete(assignmentId);
-        if (row.parentNode === container) {
-          container.removeChild(row);
-        }
-        return;
-      }
-      prepareProjectsApplySpareRow(row, presets);
-    }
-  });
-  assignments.forEach((assignment, index) => {
-    const row = getProjectsApplyRow(container, automation, assignment.id);
-    updateProjectsApplyRow(row, automation, assignment, index, assignments, presets, automatableProjectLookup);
-    if (container.children[index] !== row) {
-      container.insertBefore(row, container.children[index] || null);
-    }
-  });
 }
 
 function updateProjectsAutomationUI() {
@@ -735,34 +644,15 @@ function updateProjectsAutomationUI() {
     projectsAutomationDescription,
     projectsPanelBody,
     projectsCollapseButton,
-    projectsBuilderPresetSelect,
-    projectsBuilderMoveUpButton,
-    projectsBuilderMoveDownButton,
-    projectsBuilderPresetNameInput,
-    projectsBuilderNewButton,
-    projectsBuilderSaveButton,
-    projectsBuilderDuplicateButton,
-    projectsBuilderDeleteButton,
-    projectsBuilderImportButton,
-    projectsBuilderExportButton,
-    projectsBuilderApplyOnceButton,
-    projectsBuilderShowInSidebarCheckbox,
-    projectsBuilderDirty,
-    projectsBuilderTypeSelect,
-    projectsBuilderScopeSelect,
-    projectsBuilderPresetModeSelect,
-    projectsBuilderPresetModeMessage,
     projectsBuilderCategorySelect,
     projectsBuilderProjectSelect,
     projectsBuilderResourceSelect,
     projectsBuilderAddButton,
     projectsBuilderAddCategoryButton,
     projectsBuilderClearButton,
-    projectsBuilderSelectedList,
     projectsPresetJsonDetails,
     projectsApplyList,
     projectsApplyHint,
-    projectsApplyCombinationButton,
     projectsApplyNextTravelSelect,
     projectsApplyNextTravelPersistToggle,
     projectsAddApplyButton,
@@ -770,8 +660,6 @@ function updateProjectsAutomationUI() {
     projectsCombinationMoveUpButton,
     projectsCombinationMoveDownButton,
     projectsCombinationNameInput,
-    projectsCombinationNewButton,
-    projectsCombinationSaveButton,
     projectsCombinationDirtyIndicator,
     projectsCombinationDeleteButton,
     projectsCombinationShowInSidebarCheckbox,
@@ -799,64 +687,10 @@ function updateProjectsAutomationUI() {
   automatableProjects.forEach(project => {
     automatableProjectLookup[project.name] = project;
   });
-
-  const selectedPresetIdForSignature = automation.getSelectedPresetId() || '';
-  const presetSignature = `${selectedPresetIdForSignature}|${presets.map((preset) => `${preset.id}:${preset.name || ''}`).join('|')}`;
-  if (document.activeElement !== projectsBuilderPresetSelect && presetSignature !== projectsBuilderPresetSignature) {
-    projectsBuilderPresetSignature = presetSignature;
-    const selectedPresetId = automation.getSelectedPresetId();
-    syncAutomationSelectOptions(
-      projectsBuilderPresetSelect,
-      presets.map(preset => ({
-        value: preset.id,
-        label: getDefaultAutomationPresetLabel(preset)
-      })),
-      selectedPresetId || ''
-    );
-    if (!selectedPresetId) {
-      projectsBuilderPresetSelect.selectedIndex = -1;
-    }
-  }
-
-  const activePresetId = automation.getSelectedPresetId();
-  const activePreset = activePresetId ? automation.getPresetById(Number(activePresetId)) : null;
-  const activePresetIndex = activePreset
-    ? presets.findIndex(preset => preset.id === activePreset.id)
-    : -1;
-  if (activePreset && projectAutomationUIState.syncedPresetId !== activePresetId) {
-    const names = Object.keys(activePreset.projects);
-    const includeExpansion = activePreset.includeExpansion !== false;
-    const includeOperations = activePreset.includeOperations !== false;
-    const previousSpaceStorageResourceValue = projectAutomationUIState.builderSpaceStorageResourceValue || '';
-    projectAutomationUIState.builderType = includeExpansion && includeOperations
-      ? 'both'
-      : includeExpansion
-        ? 'expansion'
-        : 'operations';
-    projectAutomationUIState.builderPresetMode = automation.getPresetModeValue(activePreset.presetMode);
-    projectAutomationUIState.builderScope = activePreset.scopeAll ? 'all' : 'manual';
-    projectAutomationUIState.builderSelectedProjects = names.slice();
-    projectAutomationUIState.builderSpaceStorageResourceValue = previousSpaceStorageResourceValue;
-    for (let index = 0; index < names.length; index += 1) {
-      const resourceKey = getSpaceStorageSingleResourceKey(names[index]);
-      if (resourceKey) {
-        projectAutomationUIState.builderSpaceStorageResourceValue = resourceKey;
-        break;
-      }
-    }
-    projectAutomationUIState.builderShowInSidebar = activePreset.showInSidebar !== false;
-    projectAutomationUIState.jsonFilterProjectId = '';
-    projectAutomationUIState.syncedPresetId = activePresetId;
-  }
-  if (!activePreset && projectAutomationUIState.syncedPresetId) {
-    projectAutomationUIState.syncedPresetId = null;
-    projectAutomationUIState.jsonFilterProjectId = '';
-  }
-  const selectedProjectIds = activePreset ? Object.keys(activePreset.projects) : [];
-  if (projectAutomationUIState.jsonFilterProjectId
-    && selectedProjectIds.indexOf(projectAutomationUIState.jsonFilterProjectId) < 0) {
-    projectAutomationUIState.jsonFilterProjectId = '';
-  }
+  const presetContext = projectAutomationPresetController.syncPresetSelection(presets);
+  presetContext.projectLookup = automatableProjectLookup;
+  const activePreset = presetContext.activePreset;
+  const selectedProjectIds = presetContext.savedTargetIds;
   updateAutomationPresetJsonDetails(projectsPresetJsonDetails, activePreset, {
     rootPath: ['projects'],
     getParameterInputPaths: (preset) => automation.isParameterizedPreset(preset)
@@ -895,7 +729,7 @@ function updateProjectsAutomationUI() {
       if (!activePreset) {
         return;
       }
-      const changed = automation.snapshotProjectIntoPreset(activePreset.id, projectId);
+      const changed = automation.snapshotPresetTarget(activePreset.id, projectId);
       if (changed) {
         projectAutomationUIState.builderSelectedProjects = Object.keys(activePreset.projects);
         showAutomationPresetJsonStatus(
@@ -968,39 +802,7 @@ function updateProjectsAutomationUI() {
     }
   });
   updateAutomationPresetUsageLine(automationElements.projectsPresetUsage, 'projects', activePreset);
-
-  if (document.activeElement !== projectsBuilderPresetNameInput) {
-    projectsBuilderPresetNameInput.value = activePreset ? activePreset.name : projectAutomationUIState.builderName;
-  }
-  projectsBuilderShowInSidebarCheckbox.checked = activePreset
-    ? activePreset.showInSidebar !== false
-    : projectAutomationUIState.builderShowInSidebar;
-  if (document.activeElement !== projectsBuilderTypeSelect) {
-    projectsBuilderTypeSelect.value = projectAutomationUIState.builderType;
-  }
-  if (document.activeElement !== projectsBuilderScopeSelect) {
-    projectsBuilderScopeSelect.value = projectAutomationUIState.builderScope;
-  }
-  const showPresetMode = manager.hasFeature('automationScripts');
-  projectsBuilderPresetModeSelect.style.display = showPresetMode ? '' : 'none';
-  if (!showPresetMode) {
-    projectAutomationUIState.builderPresetMode = 'regular';
-  }
-  if (document.activeElement !== projectsBuilderPresetModeSelect) {
-    projectsBuilderPresetModeSelect.value = projectAutomationUIState.builderPresetMode;
-  }
-  const parameterizedInvalidMessage = activePreset
-    && showPresetMode
-    ? automation.getParameterizedPresetInvalidMessage(activePreset)
-    : projectAutomationUIState.builderPresetModeInvalidMessage;
-  projectsBuilderPresetModeMessage.textContent = parameterizedInvalidMessage;
-  projectsBuilderPresetModeMessage.style.display = parameterizedInvalidMessage ? '' : 'none';
-
-  const showManual = projectAutomationUIState.builderScope === 'manual';
-  projectsBuilderCategorySelect.parentElement.style.display = showManual ? 'flex' : 'none';
-  projectsBuilderSelectedList.style.display = showManual ? 'flex' : 'none';
-  projectsBuilderClearButton.style.display = showManual ? '' : 'none';
-  projectsBuilderAddCategoryButton.style.display = showManual ? '' : 'none';
+  projectAutomationPresetController.syncControls(presetContext);
 
   const categories = getProjectAutomationCategories(automatableProjects);
   const categorySignature = categories.join('|');
@@ -1093,15 +895,6 @@ function updateProjectsAutomationUI() {
   projectsBuilderAddCategoryButton.disabled = projectsBuilderCategorySelect.options.length === 0
     || !automatableProjects.length;
   projectsBuilderClearButton.disabled = projectAutomationUIState.builderSelectedProjects.length === 0;
-  projectsBuilderDeleteButton.disabled = !activePreset;
-  projectsBuilderDuplicateButton.disabled = !activePreset;
-  projectsBuilderImportButton.disabled = false;
-  projectsBuilderExportButton.disabled = !activePreset;
-  projectsBuilderApplyOnceButton.disabled = !activePreset;
-  projectsBuilderMoveUpButton.disabled = activePresetIndex <= 0;
-  projectsBuilderMoveDownButton.disabled = activePresetIndex < 0 || activePresetIndex >= presets.length - 1;
-  projectsApplyCombinationButton.disabled = automation.getAssignments().length === 0;
-  projectsCombinationSaveButton.disabled = automation.getAssignments().length === 0;
 
   updateAutomationNextTravelCombinationControls({
     automation,
@@ -1128,96 +921,21 @@ function updateProjectsAutomationUI() {
     combinationControlState ? combinationControlState.activeCombination : null
   );
 
-  const selectedHasFocus = projectsBuilderSelectedList.contains(document.activeElement)
-    && document.activeElement.tagName === 'INPUT';
-  const selectedSignature = projectAutomationUIState.builderSelectedProjects.join('|');
-  if (!selectedHasFocus && selectedSignature !== projectsBuilderSelectedSignature) {
-    projectsBuilderSelectedList.textContent = '';
-    if (projectAutomationUIState.builderSelectedProjects.length === 0) {
-      const emptyState = document.createElement('span');
-      emptyState.classList.add('automation-empty-selection');
-      emptyState.textContent = getAutomationCardText('nothingSelected', {}, 'Nothing selected');
-      projectsBuilderSelectedList.appendChild(emptyState);
-    } else {
-      projectAutomationUIState.builderSelectedProjects.forEach(name => {
-        const pill = document.createElement('div');
-        pill.classList.add('project-automation-builder-pill', 'building-automation-builder-pill');
-        const label = document.createElement('span');
-        label.textContent = getAutomatableProjectDisplayName(name, automatableProjectLookup);
-        label.style.cursor = 'pointer';
-        label.title = getAutomationCardText('filterSelectionOption', {}, 'Filter selection');
-        label.addEventListener('click', () => {
-          projectAutomationUIState.jsonFilterProjectId = name;
-          queueAutomationUIRefresh();
-          updateAutomationUI();
-        });
-        const remove = document.createElement('button');
-        remove.textContent = '✕';
-        remove.title = getAutomationCardText('removeProject', {}, 'Remove project');
-        remove.addEventListener('click', (event) => {
-          event.stopPropagation();
-        });
-        remove.addEventListener('click', () => {
-          projectAutomationUIState.builderSelectedProjects = projectAutomationUIState.builderSelectedProjects.filter(id => id !== name);
-          const presetId = automationManager.projectsAutomation.getSelectedPresetId();
-          if (presetId) {
-            const normalizedProjectId = automationManager.projectsAutomation.normalizeProjectId(name);
-            const preset = automationManager.projectsAutomation.getPresetById(Number(presetId));
-            if (preset && preset.projects[normalizedProjectId]) {
-              delete preset.projects[normalizedProjectId];
-            }
-          }
-          queueAutomationUIRefresh();
-          updateAutomationUI();
-        });
-        pill.append(label, remove);
-        projectsBuilderSelectedList.appendChild(pill);
-      });
-    }
-    projectsBuilderSelectedSignature = selectedSignature;
-  }
+  projectAutomationPresetController.syncSelection(presetContext);
 
-  const savedType = activePreset
-    ? (activePreset.includeExpansion !== false) && (activePreset.includeOperations !== false)
-      ? 'both'
-      : (activePreset.includeExpansion !== false)
-        ? 'expansion'
-        : 'operations'
-    : 'both';
-  const savedScope = activePreset
-    ? activePreset.scopeAll
-      ? 'all'
-      : 'manual'
-    : 'all';
-  const savedPresetMode = activePreset && showPresetMode ? automation.getPresetModeValue(activePreset.presetMode) : 'regular';
-  const savedProjectIds = activePreset ? Object.keys(activePreset.projects) : [];
-  const savedProjectSet = new Set(savedProjectIds);
-  const manualSelection = projectAutomationUIState.builderScope === 'manual';
-  const selectionChanged = manualSelection
-    && (projectAutomationUIState.builderSelectedProjects.length !== savedProjectIds.length
-      || projectAutomationUIState.builderSelectedProjects.some(id => !savedProjectSet.has(id)));
-  const newDirty = !activePreset
-    && (
-      projectAutomationUIState.builderName.trim() !== ''
-      || projectAutomationUIState.builderType !== 'both'
-      || (showPresetMode && projectAutomationUIState.builderPresetMode !== 'regular')
-      || projectAutomationUIState.builderScope !== 'all'
-      || projectAutomationUIState.builderSelectedProjects.length > 0
-    );
-  const existingDirty = !!activePreset
-    && (
-      projectAutomationUIState.builderType !== savedType
-      || (showPresetMode && projectAutomationUIState.builderPresetMode !== savedPresetMode)
-      || projectAutomationUIState.builderScope !== savedScope
-      || selectionChanged
-    );
-  projectsBuilderDirty.style.display = newDirty || existingDirty ? '' : 'none';
-
-  const applyHasFocus = projectsApplyList.contains(document.activeElement)
-    && document.activeElement.tagName === 'SELECT';
-  if (!applyHasFocus) {
-    syncProjectsApplyRows(projectsApplyList, automation, presets, automation.getAssignments(), automatableProjectLookup);
-  }
+  syncAutomationApplyAssignmentRows({
+    container: projectsApplyList,
+    automation,
+    getAutomation: () => automationManager.projectsAutomation,
+    presets,
+    assignments: automation.getAssignments(),
+    getDetailText: getProjectsApplyDetailText,
+    rowClasses: ['project-automation-apply-row', 'building-automation-apply-row'],
+    primaryClasses: ['project-automation-apply-primary', 'building-automation-apply-primary'],
+    toggleClasses: ['project-automation-apply-toggle', 'building-automation-apply-toggle'],
+    detailClasses: ['project-automation-apply-detail', 'building-automation-apply-detail'],
+    controlsClasses: ['project-automation-apply-controls', 'building-automation-apply-controls']
+  });
 
   projectsAddApplyButton.disabled = presets.length === 0;
   projectsApplyHint.textContent = presets.length === 0
@@ -1227,25 +945,10 @@ function updateProjectsAutomationUI() {
 
 function attachProjectsAutomationHandlers() {
   const {
-    projectsBuilderPresetSelect,
-    projectsBuilderMoveUpButton,
-    projectsBuilderMoveDownButton,
-    projectsBuilderPresetNameInput,
-    projectsBuilderNewButton,
-    projectsBuilderSaveButton,
-    projectsBuilderDuplicateButton,
-    projectsBuilderDeleteButton,
-    projectsBuilderImportButton,
-    projectsBuilderExportButton,
-    projectsBuilderTypeSelect,
-    projectsBuilderScopeSelect,
-    projectsBuilderPresetModeSelect,
-    projectsBuilderShowInSidebarCheckbox,
     projectsBuilderCategorySelect,
     projectsBuilderProjectSelect,
     projectsBuilderResourceSelect,
     projectsBuilderAddButton,
-    projectsBuilderApplyOnceButton,
     projectsBuilderAddCategoryButton,
     projectsBuilderClearButton,
     projectsApplyCombinationButton,
@@ -1261,115 +964,7 @@ function attachProjectsAutomationHandlers() {
     projectsCombinationShowInSidebarCheckbox,
     projectsAddApplyButton
   } = automationElements;
-  const getAutomation = () => automationManager.projectsAutomation;
-
-  projectsBuilderPresetSelect.addEventListener('change', (event) => {
-    automationManager.projectsAutomation.setSelectedPresetId(event.target.value || null);
-    projectAutomationUIState.syncedPresetId = null;
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-  projectsBuilderMoveUpButton.addEventListener('click', () => {
-    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
-    if (!presetId) {
-      return;
-    }
-    automationManager.projectsAutomation.movePreset(Number(presetId), -1);
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-  projectsBuilderMoveDownButton.addEventListener('click', () => {
-    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
-    if (!presetId) {
-      return;
-    }
-    automationManager.projectsAutomation.movePreset(Number(presetId), 1);
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  projectsBuilderPresetNameInput.addEventListener('input', (event) => {
-    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
-    if (!presetId) {
-      projectAutomationUIState.builderName = event.target.value || '';
-      queueAutomationUIRefresh();
-      updateAutomationUI();
-      return;
-    }
-    const preset = automationManager.projectsAutomation.getPresetById(Number(presetId));
-    if (!preset) {
-      return;
-    }
-    automationManager.projectsAutomation.renamePreset(preset.id, event.target.value || '');
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  projectsBuilderNewButton.addEventListener('click', () => {
-    const automation = automationManager.projectsAutomation;
-    const suggestedName = getAutomationCardText('presetWithId', { id: automation.nextPresetId }, `Preset ${automation.nextPresetId}`);
-    const presetId = automation.addPreset(suggestedName, [], {
-      createEmpty: true,
-      includeExpansion: true,
-      includeOperations: true,
-      scopeAll: false,
-      showInSidebar: true
-    });
-    projectAutomationUIState.syncedPresetId = null;
-    projectAutomationUIState.builderName = '';
-    projectAutomationUIState.builderType = 'both';
-    projectAutomationUIState.builderPresetMode = 'regular';
-    projectAutomationUIState.builderScope = 'manual';
-    projectAutomationUIState.builderShowInSidebar = true;
-    projectAutomationUIState.builderSelectedProjects = [];
-    projectAutomationUIState.builderCategoryValue = 'all';
-    projectAutomationUIState.builderProjectValue = '';
-    projectAutomationUIState.builderSpaceStorageResourceValue = '';
-    if (presetId) {
-      resetAutomationPresetJsonDetailsState(automationElements.projectsPresetJsonDetails, Number(presetId));
-    }
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  projectsBuilderTypeSelect.addEventListener('change', (event) => {
-    projectAutomationUIState.builderType = event.target.value || 'both';
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  projectsBuilderScopeSelect.addEventListener('change', (event) => {
-    projectAutomationUIState.builderScope = event.target.value;
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  projectsBuilderPresetModeSelect.addEventListener('change', (event) => {
-    projectAutomationUIState.builderPresetMode = event.target.value === 'parameterized' ? 'parameterized' : 'regular';
-    projectAutomationUIState.builderPresetModeInvalidMessage = '';
-    if (projectAutomationUIState.builderPresetMode === 'parameterized' && projectAutomationUIState.builderScope === 'all') {
-      projectAutomationUIState.builderScope = 'manual';
-    }
-    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
-    if (presetId) {
-      const preset = automationManager.projectsAutomation.getPresetById(Number(presetId));
-      if (preset) {
-        preset.presetMode = projectAutomationUIState.builderPresetMode;
-      }
-    }
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  projectsBuilderShowInSidebarCheckbox.addEventListener('change', () => {
-    projectAutomationUIState.builderShowInSidebar = projectsBuilderShowInSidebarCheckbox.checked;
-    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
-    if (presetId) {
-      automationManager.projectsAutomation.setPresetShowInSidebar(Number(presetId), projectAutomationUIState.builderShowInSidebar);
-    }
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
+  projectAutomationPresetController.attachHandlers();
 
   projectsBuilderCategorySelect.addEventListener('change', () => {
     projectAutomationUIState.builderCategoryValue = projectsBuilderCategorySelect.value || 'all';
@@ -1424,7 +1019,7 @@ function attachProjectsAutomationHandlers() {
       projectAutomationUIState.syncedPresetId = null;
     }
     if (presetId) {
-      automationManager.projectsAutomation.mergeMissingProjectsIntoPreset(Number(presetId), [selectedProjectId]);
+      automationManager.projectsAutomation.mergeMissingPresetTargets(Number(presetId), [selectedProjectId]);
     }
     queueAutomationUIRefresh();
     updateAutomationUI();
@@ -1459,7 +1054,7 @@ function attachProjectsAutomationHandlers() {
       projectAutomationUIState.syncedPresetId = null;
     }
     if (presetId) {
-      automationManager.projectsAutomation.mergeMissingProjectsIntoPreset(
+      automationManager.projectsAutomation.mergeMissingPresetTargets(
         Number(presetId),
         additions.map(project => project.name)
       );
@@ -1485,107 +1080,6 @@ function attachProjectsAutomationHandlers() {
     updateAutomationUI();
   });
 
-  projectsBuilderSaveButton.addEventListener('click', () => {
-    const automation = automationManager.projectsAutomation;
-    const name = projectsBuilderPresetNameInput.value || projectAutomationUIState.builderName || '';
-    const type = projectAutomationUIState.builderType;
-    const includeExpansion = type === 'expansion' || type === 'both';
-    const includeOperations = type === 'operations' || type === 'both';
-    const scopeAll = projectAutomationUIState.builderScope === 'all';
-    const presetMode = projectAutomationUIState.builderPresetMode;
-    const showInSidebar = projectAutomationUIState.builderShowInSidebar;
-    const projectIds = scopeAll
-      ? getAutomatableProjects(projectAutomationUIState.builderSelectedProjects).map(project => project.name)
-      : projectAutomationUIState.builderSelectedProjects.slice();
-    const presetId = automation.getSelectedPresetId();
-    if (presetId) {
-      resetAutomationPresetJsonDetailsState(automationElements.projectsPresetJsonDetails, Number(presetId));
-    }
-    const candidatePreset = automation.buildPreset(name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar, presetMode }, presetId || automation.nextPresetId);
-    if (automation.isParameterizedPreset(candidatePreset) && !automation.getPresetParameterInfo(candidatePreset).valid) {
-      projectAutomationUIState.builderPresetModeInvalidMessage = automation.getParameterizedPresetInvalidMessage(candidatePreset);
-      queueAutomationUIRefresh();
-      updateAutomationUI();
-      return;
-    }
-    if (presetId) {
-      automation.updatePreset(Number(presetId), name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar, presetMode });
-    } else {
-      automation.addPreset(name, projectIds, { includeExpansion, includeOperations, scopeAll, showInSidebar, presetMode });
-      projectAutomationUIState.syncedPresetId = null;
-      projectAutomationUIState.builderName = '';
-    }
-    projectAutomationUIState.builderPresetModeInvalidMessage = '';
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  projectsBuilderDuplicateButton.addEventListener('click', () => {
-    const automation = getAutomation();
-    const activePreset = automation.getSelectedPreset();
-    if (!activePreset) {
-      return;
-    }
-    automation.duplicatePreset(activePreset.id);
-    projectAutomationUIState.builderName = '';
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  projectsBuilderDeleteButton.addEventListener('click', () => {
-    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
-    if (!presetId) {
-      return;
-    }
-    automationManager.projectsAutomation.deletePreset(Number(presetId));
-    projectAutomationUIState.syncedPresetId = null;
-    projectAutomationUIState.builderName = '';
-    projectAutomationUIState.builderSelectedProjects = [];
-    queueAutomationUIRefresh();
-    updateAutomationUI();
-  });
-
-  projectsBuilderImportButton.addEventListener('click', () => {
-    openAutomationPresetImportDialog({
-      title: getAutomationCardText('importProjectsPresetTitle', {}, 'Import Projects Preset'),
-      description: getAutomationCardText(
-        'importPresetDescription',
-        {},
-        'Paste an exported preset string below. Import adds it as a new preset.'
-      ),
-      onImport: (text) => {
-        const parsed = parseAutomationPresetTransferPayload(text, 'projects');
-        if (!parsed.ok) {
-          return parsed;
-        }
-        automationManager.projectsAutomation.importPreset(parsed.preset);
-        projectAutomationUIState.syncedPresetId = null;
-        queueAutomationUIRefresh();
-        updateAutomationUI();
-        return { ok: true };
-      }
-    });
-  });
-
-  projectsBuilderExportButton.addEventListener('click', () => {
-    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
-    if (!presetId) {
-      return;
-    }
-    exportAutomationPresetToClipboard(
-      'projects',
-      automationManager.projectsAutomation.exportPreset(presetId),
-      projectsBuilderExportButton
-    );
-  });
-
-  projectsBuilderApplyOnceButton.addEventListener('click', () => {
-    const presetId = automationManager.projectsAutomation.getSelectedPresetId();
-    if (presetId) {
-      automationManager.projectsAutomation.applyPresetOnce(presetId);
-    }
-  });
-
   attachAutomationCombinationHandlers({
     getAutomation: () => automationManager.projectsAutomation,
     uiState: projectAutomationUIState,
@@ -1604,6 +1098,42 @@ function attachProjectsAutomationHandlers() {
   });
 }
 
+function addProjectAutomationCatalogEntry(catalog, seen, project) {
+  if (!project || project.category === 'story' || seen[project.name]) {
+    return;
+  }
+  if (project.name === PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID) {
+    seen[project.name] = true;
+    seen[PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID] = true;
+    seen[PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID] = true;
+    seen[PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID] = true;
+    seen[PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID] = true;
+    catalog.push({
+      name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID,
+      displayName: getAutomationCardText('spaceStorageExpansionPreset', {}, 'Space Storage (Expansion)'),
+      category: project.category || 'general'
+    });
+    catalog.push({
+      name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID,
+      displayName: getAutomationCardText('spaceStorageCapsAndReservePreset', {}, 'Space Storage (Caps and Reserve)'),
+      category: project.category || 'general'
+    });
+    catalog.push({
+      name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID,
+      displayName: getAutomationCardText('spaceStorageOperationsPreset', {}, 'Space Storage (Operations)'),
+      category: project.category || 'general'
+    });
+    catalog.push({
+      name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID,
+      displayName: getAutomationCardText('spaceStorageSingleResourcePreset', {}, 'Space Storage (Single Resource)'),
+      category: project.category || 'general'
+    });
+    return;
+  }
+  seen[project.name] = true;
+  catalog.push(project);
+}
+
 function getAutomatableProjects(extraProjectIds = []) {
   const projects = [];
   const seen = {};
@@ -1620,35 +1150,7 @@ function getAutomatableProjects(extraProjectIds = []) {
     if (automation && !automation.shouldShowProjectInAutomation(project, extraProjectIds)) {
       return;
     }
-    if (project.name === PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID) {
-      seen[project.name] = true;
-      seen[PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID] = true;
-      seen[PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID] = true;
-      seen[PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID] = true;
-      projects.push({
-        name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID,
-        displayName: getAutomationCardText('spaceStorageExpansionPreset', {}, 'Space Storage (Expansion)'),
-        category: project.category || 'general'
-      });
-      projects.push({
-        name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID,
-        displayName: getAutomationCardText('spaceStorageCapsAndReservePreset', {}, 'Space Storage (Caps and Reserve)'),
-        category: project.category || 'general'
-      });
-      projects.push({
-        name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID,
-        displayName: getAutomationCardText('spaceStorageOperationsPreset', {}, 'Space Storage (Operations)'),
-        category: project.category || 'general'
-      });
-      projects.push({
-        name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID,
-        displayName: getAutomationCardText('spaceStorageSingleResourcePreset', {}, 'Space Storage (Single Resource)'),
-        category: project.category || 'general'
-      });
-      return;
-    }
-    seen[project.name] = true;
-    projects.push(project);
+    addProjectAutomationCatalogEntry(projects, seen, project);
   });
 
   for (const projectId in projectManager.projects) {
@@ -1659,8 +1161,7 @@ function getAutomatableProjects(extraProjectIds = []) {
     if (automation && !automation.shouldShowProjectInAutomation(project, extraProjectIds)) {
       continue;
     }
-    seen[project.name] = true;
-    projects.push(project);
+    addProjectAutomationCatalogEntry(projects, seen, project);
   }
 
   return projects;
@@ -1673,47 +1174,12 @@ function getProjectAutomationCatalog() {
     ? projectManager.projectOrder
     : Object.keys(projectManager.projects || {});
 
-  const addProject = (project) => {
-    if (!project || project.category === 'story' || seen[project.name]) {
-      return;
-    }
-    if (project.name === PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID) {
-      seen[project.name] = true;
-      seen[PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID] = true;
-      seen[PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID] = true;
-      seen[PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID] = true;
-      projects.push({
-        name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID,
-        displayName: getAutomationCardText('spaceStorageExpansionPreset', {}, 'Space Storage (Expansion)'),
-        category: project.category || 'general'
-      });
-      projects.push({
-        name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID,
-        displayName: getAutomationCardText('spaceStorageCapsAndReservePreset', {}, 'Space Storage (Caps and Reserve)'),
-        category: project.category || 'general'
-      });
-      projects.push({
-        name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID,
-        displayName: getAutomationCardText('spaceStorageOperationsPreset', {}, 'Space Storage (Operations)'),
-        category: project.category || 'general'
-      });
-      projects.push({
-        name: PROJECT_AUTOMATION_UI_SPACE_STORAGE_SINGLE_RESOURCE_ID,
-        displayName: getAutomationCardText('spaceStorageSingleResourcePreset', {}, 'Space Storage (Single Resource)'),
-        category: project.category || 'general'
-      });
-      return;
-    }
-    seen[project.name] = true;
-    projects.push(project);
-  };
-
   order.forEach((projectId) => {
-    addProject(projectManager.projects[projectId]);
+    addProjectAutomationCatalogEntry(projects, seen, projectManager.projects[projectId]);
   });
 
   for (const projectId in projectManager.projects) {
-    addProject(projectManager.projects[projectId]);
+    addProjectAutomationCatalogEntry(projects, seen, projectManager.projects[projectId]);
   }
 
   return projects;
@@ -1733,13 +1199,13 @@ function getAutomatableProjectDisplayName(projectId, projectLookup = null) {
     return getAutomationCardText('spaceStorageSingleResourcePreset', {}, 'Space Storage (Single Resource)');
   }
   if (projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID) {
-    return 'Space Storage (Expansion)';
+    return getAutomationCardText('spaceStorageExpansionPreset', {}, 'Space Storage (Expansion)');
   }
   if (projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID) {
-    return 'Space Storage (Caps and Reserve)';
+    return getAutomationCardText('spaceStorageCapsAndReservePreset', {}, 'Space Storage (Caps and Reserve)');
   }
   if (projectId === PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID) {
-    return 'Space Storage (Operations)';
+    return getAutomationCardText('spaceStorageOperationsPreset', {}, 'Space Storage (Operations)');
   }
   if (projectLookup && projectLookup[projectId]) {
     return projectLookup[projectId].displayName || projectLookup[projectId].name || projectId;

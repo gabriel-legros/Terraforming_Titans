@@ -78,6 +78,13 @@ The audit covers:
 - The story sweep completed real travel to Titan, Callisto, Ganymede, Vega 2, Venus, Umbra, Solis Prime, Gabbag, Hades, Poseidon, Styx, Zeus, and Olympus, plus the `teebeepee` special-seed world.
 - No duplicate DOM ids, duplicate placeholder options, disconnected tooltip anchors, console errors, or page errors remained. After the final cache-ownership fixes, all 13 matrix phases also began and ended with zero detached references in the expanded known-cache scan.
 
+### 2026-07-19 - Automation preset refactor smoke pass
+
+- Post-refactor report: `chrome-memory-2026-07-19T23-03-39-639Z.json`.
+- All 13 phases retained zero detached references in the known-cache scan, including both save/load and travel while running and manually paused. This covers the automation preset controllers and cached assignment rows that now rebind through weak manager identities and current-manager resolvers.
+- Coverage validation failed only on disconnected project-cost tooltip anchors from the unchanged `projectsUI.js` cost path (`Energy: 10B / Required: 10B / Colony available: 0`). The count was already 1 in the first navigation phase and rose across save/load and travel; no automation tooltip or detached-cache finding was reported.
+- The Buildings, Projects, and Colony automation cards were captured and inspected at `artifacts/screenshots/automation-buildings-refactor.png`, `artifacts/screenshots/automation-projects-refactor.png`, and `artifacts/screenshots/automation-colony-refactor.png`.
+
 ## Findings and Fixes
 
 ### Retained listeners and lifecycle cleanup
