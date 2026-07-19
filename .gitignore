@@ -11,3 +11,4 @@ npm-ci.log
 scripts/manual-tests/memory-reports/
 artifacts/screenshots/
 src/js/build-target.js
+/local-mods/

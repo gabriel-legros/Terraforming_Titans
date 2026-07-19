@@ -7,6 +7,7 @@
   "scripts": {
     "audit:memory": "node scripts/manual-tests/run-chrome-memory-repro.js --audit",
     "audit:localization": "node scripts/audit-localization.js",
+    "mod:generate-lorem": "node scripts/generate-lorem-language-mod.js",
     "screenshot:ui": "node scripts/capture-game-ui.js",
     "screenshot:visualizer": "node scripts/capture-world-visualizer.js",
     "dist": "electron-builder",

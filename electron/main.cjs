@@ -1,6 +1,8 @@
-const { app, BrowserWindow, Menu, session, shell, powerSaveBlocker, screen, dialog, clipboard } = require('electron');
+const { app, BrowserWindow, Menu, session, shell, powerSaveBlocker, screen, dialog, clipboard, protocol, net } = require('electron');
 const fs = require('fs');
 const path = require('path');
+const { pathToFileURL } = require('url');
+const { createLocalModService } = require('./mods/mod-service.cjs');
 
 const appDisplayName = 'Terraforming Titans';
 const defaultSteamAppId = 4864000;
@@ -14,12 +16,25 @@ const recentCrashSignatures = new Map();
 let crashWindow = null;
 let latestCrashReport = null;
 let quitting = false;
+let localModService = null;
+
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: 'tt-game',
+    privileges: {
+      standard: true,
+      secure: true,
+      supportFetchAPI: true,
+      stream: true,
+      corsEnabled: true
+    }
+  }
+]);
 
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 app.commandLine.appendSwitch('disable-features', 'CalculateNativeWinOcclusion');
-app.commandLine.appendSwitch('no-sandbox');
 app.setName(appDisplayName);
 
 function getCrashLogPath() {
@@ -325,6 +340,9 @@ function activateSteamAchievement(id) {
   if (!steamIntegration.initialized) {
     return false;
   }
+  if (localModService.publicSession.mods.length) {
+    return false;
+  }
 
   const achievementId = getSteamAchievementApiName(id);
   try {
@@ -384,6 +402,43 @@ function registerWindowControlHandlers() {
   ipcMain.on('window:exit-game', event => {
     const win = BrowserWindow.fromWebContents(event.sender);
     win.close();
+  });
+}
+
+function registerLocalModProtocol() {
+  protocol.handle('tt-game', request => {
+    const requestUrl = new URL(request.url);
+    if (requestUrl.host !== 'app') {
+      return new Response('Unknown mod content host.', { status: 404 });
+    }
+    let gamePath;
+    try {
+      gamePath = decodeURIComponent(requestUrl.pathname.replace(/^\/+/, '') || 'index.html');
+    } catch (_error) {
+      return new Response('Invalid mod content path.', { status: 400 });
+    }
+    const filePath = localModService.resolveGameFile(gamePath);
+    if (!filePath) {
+      return new Response('Game content not found.', { status: 404 });
+    }
+    return net.fetch(pathToFileURL(filePath).toString());
+  });
+}
+
+function isGameFrame(frame) {
+  if (!frame) {
+    return false;
+  }
+  const frameUrl = new URL(frame.url);
+  return frameUrl.protocol === 'tt-game:' && frameUrl.host === 'app';
+}
+
+function registerLocalModHandlers() {
+  const { ipcMain } = require('electron');
+  ipcMain.on('mods:get-session', event => {
+    event.returnValue = isGameFrame(event.senderFrame)
+      ? localModService.publicSession
+      : null;
   });
 }
 
@@ -472,7 +527,7 @@ function createWindow() {
 
   win.webContents.on('will-navigate', event => {
     const targetUrl = event.url;
-    if (!targetUrl.startsWith('file://')) {
+    if (!targetUrl.startsWith('tt-game://app/')) {
       event.preventDefault();
       openExternalUrl(targetUrl);
     }
@@ -490,7 +545,7 @@ function createWindow() {
     );
   });
 
-  win.loadFile(path.join(__dirname, '..', 'index.html'));
+  win.loadURL('tt-game://app/index.html');
 }
 
 app.whenReady().then(() => {
@@ -499,10 +554,24 @@ app.whenReady().then(() => {
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
     callback(false);
   });
+  localModService = createLocalModService({
+    appRoot: path.join(__dirname, '..'),
+    userDataPath: app.getPath('userData'),
+    isPackaged: app.isPackaged
+  });
+  if (localModService.publicSession.mods.length) {
+    const modIds = localModService.publicSession.mods.map(mod => mod.id).join(', ');
+    console.log(`Local mods active: ${modIds}. Steam achievements are disabled for this session.`);
+  }
+  localModService.publicSession.errors.forEach(error => {
+    console.warn(`Local mod skipped (${error.folder}): ${error.message}`);
+  });
+  registerLocalModProtocol();
   registerCrashHandlers();
   registerSaveStorageHandlers();
   registerSteamAchievementHandlers();
   registerWindowControlHandlers();
+  registerLocalModHandlers();
   powerSaveBlocker.start('prevent-app-suspension');
   createWindow();
 
