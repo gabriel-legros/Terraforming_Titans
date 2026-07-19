@@ -2012,6 +2012,8 @@ function updateDecreaseButtonText(button, buildCount) {
         items.push({
           key: `${category}.${resource}`,
           text: `${capitalizeFirstLetter(resource)}: ${formatNumber(cost[category][resource], true)}`,
+          required: cost[category][resource],
+          available,
           hasEnough: available >= cost[category][resource]
         });
       }
@@ -2043,6 +2045,8 @@ function updateDecreaseButtonText(button, buildCount) {
       button._spans = new Map();
       items.forEach((item, idx) => {
         const span = document.createElement('span');
+        span._costTextNode = document.createElement('span');
+        span.appendChild(span._costTextNode);
         list.appendChild(span);
         button._spans.set(item.key, span);
         if (idx < items.length - 1) {
@@ -2054,9 +2058,18 @@ function updateDecreaseButtonText(button, buildCount) {
     items.forEach(item => {
       const span = button._spans.get(item.key);
       if (!span) return;
-      if (span.textContent !== item.text) {
-        span.textContent = item.text;
+      if (span._costTextNode.textContent !== item.text) {
+        span._costTextNode.textContent = item.text;
       }
+      const tooltipLines = [
+        getStructuresUIText('ui.structures.tooltips.required', 'Required: {value}', {
+          value: formatNumber(item.required, true)
+        }),
+        getStructuresUIText('ui.structures.tooltips.available', 'Available: {value}', {
+          value: formatNumber(item.available, true)
+        })
+      ];
+      syncCostExplanationTooltip(span, tooltipLines.join('\n'), !item.hasEnough);
       const color = item.hasEnough ? '' : 'red';
       if (span.style.color !== color) {
         span.style.color = color;
@@ -2127,6 +2140,9 @@ function updateDecreaseButtonText(button, buildCount) {
   }
 
   function buildStructureCostTooltip(structure, category, resource, buildCount) {
+    const selectedCost = structure.getEffectiveCost(buildCount)?.[category]?.[resource] ?? 0;
+    const resourceState = resources[category][resource];
+    const available = resourceState.value;
     const isAerostatResearchCost =
       structure?.name === 'aerostat_colony'
       && category === 'colony'
@@ -2144,6 +2160,9 @@ function updateDecreaseButtonText(button, buildCount) {
           value: formatNumber(selectedTotalCost, true)
         })
       ];
+      aerostatLines.push(getStructuresUIText('ui.structures.tooltips.available', 'Available: {value}', {
+        value: formatNumber(available, true)
+      }));
       const aerostatMultipliers = [];
       const aerostatKesslerMultiplier = structure.getKesslerCostMultiplier();
 
@@ -2191,6 +2210,12 @@ function updateDecreaseButtonText(button, buildCount) {
     const lines = [getStructuresUIText('ui.structures.tooltips.baseCost', 'Base cost: {value}', {
       value: formatNumber(totalBaseCost, true)
     })];
+    lines.push(getStructuresUIText('ui.structures.tooltips.selectedCost', 'Selected cost: {value}', {
+      value: formatNumber(selectedCost, true)
+    }));
+    lines.push(getStructuresUIText('ui.structures.tooltips.available', 'Available: {value}', {
+      value: formatNumber(available, true)
+    }));
     const multipliers = [];
 
     if (kesslerMultiplier !== 1) {
@@ -2510,12 +2535,18 @@ function updateDecreaseButtonText(button, buildCount) {
 
     if (structure.requiresLand) {
       const requiredLand = structure.requiresLand * buildCount;
+      const landResource = resources.surface.land;
+      const availableLand = landResource.getAvailableAmount
+        ? landResource.getAvailableAmount()
+        : landResource.value - landResource.reserved;
       items.push({
         key: 'colony.land',
         label: getStructuresUIText('ui.structures.costLabels.land', 'Land'),
         required: structure.requiresLand,
         available: structure.canAffordLand(buildCount) ? requiredLand : 0,
-        insufficientColor: getStatusColor('failure')
+        actualAvailable: availableLand,
+        insufficientColor: getStatusColor('failure'),
+        isLandRequirement: true
       });
     }
 
@@ -2526,7 +2557,8 @@ function updateDecreaseButtonText(button, buildCount) {
         label: getStructuresUIText('ui.structures.costLabels.deposit', 'Deposit'),
         required: 1,
         available: structure.canAffordDeposit(buildCount) ? requiredDeposit : 0,
-        insufficientColor: getStatusColor('failure')
+        insufficientColor: getStatusColor('failure'),
+        isDepositRequirement: true
       });
     }
 
@@ -2556,7 +2588,7 @@ function updateDecreaseButtonText(button, buildCount) {
           span.appendChild(textSpan);
           span._textSpan = textSpan;
 
-          const tooltip = attachDynamicInfoTooltip(span, '');
+          const tooltip = syncCostExplanationTooltip(span, '', false);
           span._costTooltip = tooltip;
           span._costTooltipCache = {};
           span._updateCostTooltip = () => {
@@ -2576,6 +2608,7 @@ function updateDecreaseButtonText(button, buildCount) {
           const textSpan = document.createElement('span');
           span.appendChild(textSpan);
           span._textSpan = textSpan;
+          syncCostExplanationTooltip(span, '', false);
         }
         costElement._spans.set(item.key, span);
       }
@@ -2727,6 +2760,35 @@ function updateDecreaseButtonText(button, buildCount) {
       const color = hasEnough
         ? ''
         : (isStorageBlocked ? getStatusColor('storageBlocked') : item.insufficientColor);
+      if (item.isCostResource) {
+        syncCostExplanationTooltip(span, span._costTooltip.textContent, !hasEnough && !isStorageBlocked);
+      }
+      if (item.isLandRequirement) {
+        const tooltipLines = [
+          getStructuresUIText('ui.structures.tooltips.required', 'Required: {value}', {
+            value: formatNumber(requiredAmount, true)
+          }),
+          getStructuresUIText('ui.structures.tooltips.availableLand', 'Available unreserved land: {value}', {
+            value: formatNumber(item.actualAvailable, true)
+          })
+        ];
+        syncCostExplanationTooltip(span, tooltipLines.join('\n'), !hasEnough);
+      } else if (item.isDepositRequirement) {
+        const tooltipLines = [];
+        for (const category in structure.requiresDeposit) {
+          for (const resource in structure.requiresDeposit[category]) {
+            const required = structure.requiresDeposit[category][resource] * buildCount;
+            const resourceState = resources[category][resource];
+            const available = Math.max(0, resourceState.value - resourceState.reserved);
+            tooltipLines.push(getStructuresUIText('ui.structures.tooltips.depositRequirement', '{resource}: {available} available / {required} required', {
+              resource: resourceState.displayName || capitalizeFirstLetter(resource),
+              available: formatNumber(available, true),
+              required: formatNumber(required, true)
+            }));
+          }
+        }
+        syncCostExplanationTooltip(span, tooltipLines.join('\n'), !hasEnough);
+      }
       if (item.key === 'colony.workers') {
         if (span.style.color) {
           span.style.color = '';

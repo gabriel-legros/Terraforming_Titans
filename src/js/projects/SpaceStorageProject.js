@@ -2632,34 +2632,14 @@ class SpaceStorageProject extends SpaceshipProject {
       const totalCost = perSecond
         ? this.estimateShipTransferCostAndGain(1000, false, this.continuousProductivity ?? 1, null).cost
         : this.calculateSpaceshipTotalCost(false);
-      const suffix = perSecond ? '/s' : '';
-      const costParts = [];
-      let hasShortfall = false;
-      for (const category in totalCost) {
-        for (const resource in totalCost[category]) {
-          const requiredAmount = totalCost[category][resource];
-          let availableAmount = getAvailableProjectCostAmount(this, category, resource);
-          // Space storage ship operations always spend colony energy, never stored space energy.
-          // Keep UI shortfall highlighting aligned with the real payment source.
-          if (category === 'colony' && resource === 'energy') {
-            availableAmount = resources.colony.energy.value;
-          }
-          const resourceDisplayName = resources[category][resource].displayName ||
-            resource.charAt(0).toUpperCase() + resource.slice(1);
-          costParts.push(`${resourceDisplayName}: ${formatNumber(requiredAmount, true)}${suffix}`);
-          if (!hasShortfall && shouldHighlightProjectCost(this, category, resource, availableAmount, requiredAmount)) {
-            hasShortfall = true;
-          }
-        }
-      }
-      const totalCostText = getProjectsUIText('ui.projects.totalCost', 'Total Cost: {items}', {
-        items: costParts.join(', ')
-      });
-      if (elements._cachedTotalCostText !== totalCostText) {
-        elements.totalCostElement.textContent = totalCostText;
-        elements._cachedTotalCostText = totalCostText;
-      }
-      elements.totalCostElement.style.color = hasShortfall ? 'red' : '';
+      updateTotalCostDisplayElement(
+        elements.totalCostElement,
+        totalCost,
+        this,
+        perSecond,
+        null,
+        { colonyOnlyResources: ['colony.energy'] }
+      );
     }
 
     if (elements.resourceGainPerShipElement && this.attributes.resourceGainPerShip) {

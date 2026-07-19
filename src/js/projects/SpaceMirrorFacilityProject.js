@@ -399,6 +399,7 @@ function attachProjectInfoTooltips(rootElement) {
 
 function clearQuickBuildCost(element) {
   if (!element) return;
+  cleanupDynamicTooltipsIn(element);
   element.textContent = '';
   element.dataset.keys = '';
   element._list = null;
@@ -453,6 +454,8 @@ function updateQuickBuildCostDisplay(element, building, buildCount) {
     element.appendChild(list);
     items.forEach((item, idx) => {
       const span = document.createElement('span');
+      span._costTextNode = document.createElement('span');
+      span.appendChild(span._costTextNode);
       element._spans.set(item.key, span);
       list.appendChild(span);
       if (idx < items.length - 1) {
@@ -465,10 +468,19 @@ function updateQuickBuildCostDisplay(element, building, buildCount) {
     const span = element._spans.get(item.key);
     if (!span) return;
     const text = `${item.label}: ${formatNumber(item.required, true)}`;
-    if (span.textContent !== text) {
-      span.textContent = text;
+    if (span._costTextNode.textContent !== text) {
+      span._costTextNode.textContent = text;
     }
+    const tooltipLines = [
+      getSpaceMirrorText('ui.projects.costTooltip.required', 'Required: {value}', {
+        value: formatNumber(item.required, true)
+      }),
+      getSpaceMirrorText('ui.projects.costTooltip.colonyAvailable', 'Colony available: {value}', {
+        value: formatNumber(item.available, true)
+      })
+    ];
     const hasEnough = item.available >= item.required;
+    syncCostExplanationTooltip(span, tooltipLines.join('\n'), !hasEnough);
     const color = hasEnough ? '' : 'red';
     if (span.style.color !== color) {
       span.style.color = color;
