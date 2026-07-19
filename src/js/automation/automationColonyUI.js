@@ -858,7 +858,6 @@ function updateColonyAutomationUI() {
             const preset = automationManager.colonyAutomation.getPresetById(Number(presetId));
             if (preset && preset.targets[targetId]) {
               delete preset.targets[targetId];
-              colonyAutomationUIState.syncedPresetId = null;
             }
           }
           queueAutomationUIRefresh();
@@ -1100,7 +1099,6 @@ function attachColonyAutomationHandlers() {
     }
     if (presetId) {
       automationManager.colonyAutomation.mergeMissingTargetsIntoPreset(Number(presetId), [targetId]);
-      colonyAutomationUIState.syncedPresetId = null;
     }
     queueAutomationUIRefresh();
     updateAutomationUI();
@@ -1137,7 +1135,6 @@ function attachColonyAutomationHandlers() {
         Number(presetId),
         additions.map(target => target.id)
       );
-      colonyAutomationUIState.syncedPresetId = null;
     }
     queueAutomationUIRefresh();
     updateAutomationUI();
@@ -1152,7 +1149,6 @@ function attachColonyAutomationHandlers() {
         for (let index = 0; index < selected.length; index += 1) {
           delete preset.targets[selected[index]];
         }
-        colonyAutomationUIState.syncedPresetId = null;
       }
     }
     colonyAutomationUIState.builderSelectedTargets = [];

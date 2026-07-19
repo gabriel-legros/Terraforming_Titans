@@ -1165,7 +1165,6 @@ function updateProjectsAutomationUI() {
             const preset = automationManager.projectsAutomation.getPresetById(Number(presetId));
             if (preset && preset.projects[normalizedProjectId]) {
               delete preset.projects[normalizedProjectId];
-              projectAutomationUIState.syncedPresetId = null;
             }
           }
           queueAutomationUIRefresh();
@@ -1426,7 +1425,6 @@ function attachProjectsAutomationHandlers() {
     }
     if (presetId) {
       automationManager.projectsAutomation.mergeMissingProjectsIntoPreset(Number(presetId), [selectedProjectId]);
-      projectAutomationUIState.syncedPresetId = null;
     }
     queueAutomationUIRefresh();
     updateAutomationUI();
@@ -1465,7 +1463,6 @@ function attachProjectsAutomationHandlers() {
         Number(presetId),
         additions.map(project => project.name)
       );
-      projectAutomationUIState.syncedPresetId = null;
     }
     queueAutomationUIRefresh();
     updateAutomationUI();
@@ -1481,7 +1478,6 @@ function attachProjectsAutomationHandlers() {
           const normalizedProjectId = automationManager.projectsAutomation.normalizeProjectId(selected[index]);
           delete preset.projects[normalizedProjectId];
         }
-        projectAutomationUIState.syncedPresetId = null;
       }
     }
     projectAutomationUIState.builderSelectedProjects = [];
