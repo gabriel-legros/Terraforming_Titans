@@ -128,6 +128,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Modded Electron sessions load game content through the protected `tt-game://app` overlay. Never expose Workshop/local filesystem paths to renderer code or allow replacements of `electron/`, preload, `index.html`, vendor files, build metadata, or `src/js/modding/`. Keep `nodeIntegration: false`, `contextIsolation: true`, `sandbox: true`, `webSecurity: true`, and do not restore the Chromium `--no-sandbox` switch.
 - Mod patch stages are ordered explicitly in `index.html` through `src/js/modding/mod-runtime.js` and `apply-stage.js`. Patch live parameter objects after their defining script and before downstream consumers; do not parse or splice JavaScript source to merge parameter keys. Patch objects merge recursively, arrays/scalars replace, and `$delete`, `$replace`, and `$number` are reserved operations.
 - Active local and Workshop mods do not change Steam achievement publication. The active read-only diagnostic summary is `activeModSession`; log only compact mod ids/error counts rather than full session or patch graphs.
+- AI language example mods live under `examples/local-mods/ai-*-translation`. Run `npm run mod:seed-english-translations` to regenerate their complete English placeholder patches (retaining only each locale's `meta.code`), then run `npm run mod:validate-translations`.
 - Gold asteroid event: `gold-asteroid.js`
 - ResearchManager persists across travel; regular research is reset while advanced is retained.
 

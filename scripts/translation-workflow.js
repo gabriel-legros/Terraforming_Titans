@@ -70,6 +70,29 @@ function transformLanguage(value, translations, language, pathParts = []) {
   return output;
 }
 
+function writeLanguageMod(slug, language, languageData) {
+  const modRoot = path.join(repositoryRoot, 'examples', 'local-mods', `ai-${slug}-translation`);
+  const patchRoot = path.join(modRoot, 'patches');
+  const entries = [];
+  collectUniqueStrings(languageData, entries, new Set());
+  fs.mkdirSync(patchRoot, { recursive: true });
+  fs.writeFileSync(path.join(patchRoot, 'language.json'), `${JSON.stringify(languageData, null, 2)}\n`, 'utf8');
+  const manifest = {
+    schemaVersion: 1,
+    id: `ai-${slug}-translation`,
+    name: language.name,
+    version: '1.0.0',
+    loadOrder: 1000,
+    generatedFrom: 'src/js/lang/current-language.js + src/js/lang/story-language.js',
+    generatedStringCount: entries.length,
+    content: {
+      patches: [{ target: 'language.current', file: 'patches/language.json' }],
+      replacements: [],
+    },
+  };
+  fs.writeFileSync(path.join(modRoot, 'terraforming-titans.mod.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+}
+
 function protectedTokens(value) {
   return value.match(protectedPattern) || [];
 }
@@ -131,35 +154,30 @@ function assemble(slug, language, sourceLanguage) {
     });
   });
   const translatedLanguage = transformLanguage(sourceLanguage, translations, language);
-  const modRoot = path.join(repositoryRoot, 'examples', 'local-mods', `ai-${slug}-translation`);
-  const patchRoot = path.join(modRoot, 'patches');
-  fs.mkdirSync(patchRoot, { recursive: true });
-  fs.writeFileSync(path.join(patchRoot, 'language.json'), `${JSON.stringify(translatedLanguage, null, 2)}\n`, 'utf8');
-  const manifest = {
-    schemaVersion: 1,
-    id: `ai-${slug}-translation`,
-    name: language.name,
-    version: '1.0.0',
-    loadOrder: 1000,
-    generatedFrom: 'src/js/lang/current-language.js + src/js/lang/story-language.js',
-    generatedStringCount: 6766,
-    content: {
-      patches: [{ target: 'language.current', file: 'patches/language.json' }],
-      replacements: [],
-    },
-  };
-  fs.writeFileSync(path.join(modRoot, 'terraforming-titans.mod.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  writeLanguageMod(slug, language, translatedLanguage);
   console.log(`Assembled ${language.name} from ${translations.size} unique translations.`);
+}
+
+function seedEnglish(slug, language, sourceLanguage) {
+  const englishLanguage = JSON.parse(JSON.stringify(sourceLanguage));
+  englishLanguage.meta.code = language.code;
+  writeLanguageMod(slug, language, englishLanguage);
+  console.log(`Seeded ${language.name} with English text.`);
 }
 
 const [command, slug] = process.argv.slice(2);
 const language = languages[slug];
-if (!language || !['prepare', 'assemble'].includes(command)) {
-  throw new Error('Usage: node scripts/translation-workflow.js <prepare|assemble> <french|italian|german|spanish|chinese|korean|japanese>');
+if (!['prepare', 'assemble', 'seed-english'].includes(command) || (!language && slug !== 'all')) {
+  throw new Error('Usage: node scripts/translation-workflow.js <prepare|assemble|seed-english> <french|italian|german|spanish|chinese|korean|japanese|all>');
 }
 const sourceLanguage = readSourceLanguage();
-if (command === 'prepare') {
-  prepare(slug, language, sourceLanguage);
-} else {
-  assemble(slug, language, sourceLanguage);
-}
+const selectedLanguages = slug === 'all' ? Object.entries(languages) : [[slug, language]];
+selectedLanguages.forEach(([selectedSlug, selectedLanguage]) => {
+  if (command === 'prepare') {
+    prepare(selectedSlug, selectedLanguage, sourceLanguage);
+  } else if (command === 'assemble') {
+    assemble(selectedSlug, selectedLanguage, sourceLanguage);
+  } else {
+    seedEnglish(selectedSlug, selectedLanguage, sourceLanguage);
+  }
+});

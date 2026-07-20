@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "id": "ai-german-translation",
-  "name": "AI-German-translation",
+  "id": "ai-italian-translation",
+  "name": "AI-Italian-translation",
   "version": "1.0.0",
   "loadOrder": 1000,
   "generatedFrom": "src/js/lang/current-language.js + src/js/lang/story-language.js",
