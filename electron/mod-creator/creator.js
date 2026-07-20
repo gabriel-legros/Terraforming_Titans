@@ -178,7 +178,7 @@ function renderSelection() {
     ? `Updated ${formatDate(item.timeUpdated)} · Workshop ${item.workshopId}${item.banned ? ' · Banned' : ''}`
     : 'A new item ID will be created and linked to this mod after the first upload.');
   setText(previewHelp, item
-    ? 'Choose an image smaller than 1 MB only when you want to replace the current Workshop preview.'
+    ? 'Optional. Choose an image smaller than 1 MB to replace the current preview.'
     : 'A PNG, JPEG, or GIF smaller than 1 MB is required for a new item.');
   editorFields.disabled = !mod || !mod.valid || busy;
   localModSelect.disabled = busy || !creatorState.localMods.length;
