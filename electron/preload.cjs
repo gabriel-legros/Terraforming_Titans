@@ -24,6 +24,12 @@ contextBridge.exposeInMainWorld('electronMods', {
   }
 });
 
+contextBridge.exposeInMainWorld('electronStartup', {
+  getSelection() {
+    return ipcRenderer.sendSync('startup:get-selection');
+  }
+});
+
 contextBridge.exposeInMainWorld('steamAchievements', {
   activate(id) {
     ipcRenderer.send('steam-achievements:activate', String(id));

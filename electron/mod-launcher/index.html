@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Terraforming Titans</title>
+  <link rel="stylesheet" href="launcher.css">
+</head>
+<body>
+  <main class="launcher-shell">
+    <header class="launcher-header">
+      <div>
+        <h1>Terraforming Titans</h1>
+      </div>
+      <div class="header-actions">
+        <button id="refresh-button" type="button">Refresh</button>
+        <button id="local-mods-button" type="button">Local Mods Folder</button>
+        <button id="workshop-button" type="button">Steam Workshop</button>
+      </div>
+    </header>
+
+    <div id="global-status" class="global-status" role="status" hidden></div>
+
+    <div class="launcher-columns">
+      <section class="panel mods-panel" aria-labelledby="mods-heading">
+        <div class="panel-heading">
+          <div>
+            <h2 id="mods-heading">Mods</h2>
+            <p>Top loads first. Mods lower in the list win conflicts.</p>
+          </div>
+          <button id="reset-order-button" class="quiet-button" type="button">Reset order</button>
+        </div>
+        <div id="workshop-status-list" class="workshop-status-list"></div>
+        <div id="mod-list" class="mod-list" aria-live="polite"></div>
+        <div id="mod-empty" class="empty-state" hidden>No local or Workshop mods were found.</div>
+      </section>
+
+      <section class="panel saves-panel" aria-labelledby="saves-heading">
+        <div class="panel-heading">
+          <div>
+            <h2 id="saves-heading">Starting save</h2>
+            <p>The newest valid save is selected by default.</p>
+          </div>
+        </div>
+        <div id="save-list" class="save-list">
+          <label class="save-row save-row-new">
+            <input type="radio" name="starting-save" value="new">
+            <span class="save-radio"></span>
+            <span class="save-body">
+              <span class="save-title">New Game</span>
+              <span class="save-detail">Start safely without loading an existing save.</span>
+            </span>
+          </label>
+        </div>
+      </section>
+    </div>
+
+    <footer class="launcher-footer">
+      <div id="launch-summary" class="launch-summary"></div>
+      <div class="launch-actions">
+        <button id="play-vanilla-button" class="secondary-action" type="button">Play Vanilla</button>
+        <button id="play-button" class="primary-action" type="button">Play</button>
+      </div>
+    </footer>
+  </main>
+  <script src="launcher.js"></script>
+</body>
+</html>

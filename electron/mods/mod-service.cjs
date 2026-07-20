@@ -201,7 +201,7 @@ function loadMod(modRoot, hash, source) {
   return { ...manifest, ...source, patches, replacements };
 }
 
-function createModService({ appRoot, userDataPath, isPackaged, workshopMods = [], workshopStatus }) {
+function createModCatalog({ appRoot, userDataPath, isPackaged, workshopMods = [] }) {
   fs.mkdirSync(path.join(userDataPath, 'mods', 'local'), { recursive: true });
   const localRoots = getLocalModRoots(appRoot, userDataPath, isPackaged);
   const discoveredMods = localRoots.flatMap(root => discoverModFolders(root).map(modRoot => ({
@@ -216,36 +216,82 @@ function createModService({ appRoot, userDataPath, isPackaged, workshopMods = []
       workshopId: workshopMod.workshopId
     });
   });
-  const errors = [];
-  const loadedMods = [];
+  const entries = [];
 
   discoveredMods.forEach(discoveredMod => {
     const preliminaryHash = crypto.createHash('sha256');
     try {
       const mod = loadMod(discoveredMod.modRoot, preliminaryHash, {
         source: discoveredMod.source,
-        workshopId: discoveredMod.workshopId
+        workshopId: discoveredMod.workshopId,
+        modRoot: discoveredMod.modRoot
       });
       mod.contentHash = preliminaryHash.digest('hex');
-      loadedMods.push(mod);
+      mod.valid = true;
+      mod.validationError = '';
+      entries.push(mod);
     } catch (error) {
-      errors.push({
-        folder: path.basename(discoveredMod.modRoot),
+      entries.push({
+        id: '',
+        name: path.basename(discoveredMod.modRoot),
+        version: '',
+        loadOrder: 0,
+        folderName: path.basename(discoveredMod.modRoot),
         source: discoveredMod.source,
         workshopId: discoveredMod.workshopId,
-        message: error.message
+        modRoot: discoveredMod.modRoot,
+        contentHash: '',
+        patches: [],
+        replacements: [],
+        valid: false,
+        validationError: error.message
       });
     }
   });
 
-  loadedMods.sort((a, b) => a.loadOrder - b.loadOrder
+  entries.sort((a, b) => a.loadOrder - b.loadOrder
     || a.id.localeCompare(b.id)
     || a.source.localeCompare(b.source)
     || a.workshopId.localeCompare(b.workshopId, 'en', { numeric: true })
     || a.folderName.localeCompare(b.folderName));
+  const instanceIds = new Map();
+  entries.forEach(mod => {
+    const localIdentity = mod.id || mod.folderName;
+    const baseId = mod.source === 'workshop'
+      ? `workshop:${mod.workshopId}`
+      : `local:${localIdentity}`;
+    const occurrence = (instanceIds.get(baseId) || 0) + 1;
+    instanceIds.set(baseId, occurrence);
+    mod.instanceId = occurrence === 1 ? baseId : `${baseId}:${occurrence}`;
+  });
+
+  const publicItems = entries.map(mod => ({
+    instanceId: mod.instanceId,
+    id: mod.id,
+    name: mod.name,
+    version: mod.version,
+    loadOrder: mod.loadOrder,
+    folderName: mod.folderName,
+    source: mod.source,
+    workshopId: mod.workshopId,
+    contentHash: mod.contentHash,
+    valid: mod.valid,
+    validationError: mod.validationError,
+    patchTargets: [...new Set(mod.patches.map(patch => patch.target))],
+    replacementPaths: mod.replacements.map(replacement => replacement.gamePath)
+  }));
+
+  return { entries, publicItems };
+}
+
+function createModService({ appRoot, mods, workshopStatus }) {
+  const errors = [];
   const ids = new Set();
   const activeMods = [];
-  loadedMods.forEach(mod => {
+  mods.forEach(mod => {
+    if (!mod.valid) {
+      return;
+    }
     if (ids.has(mod.id)) {
       errors.push({
         folder: mod.folderName,
@@ -326,4 +372,4 @@ function createModService({ appRoot, userDataPath, isPackaged, workshopMods = []
   return { publicSession, resolveGameFile };
 }
 
-module.exports = { createModService };
+module.exports = { createModCatalog, createModService };

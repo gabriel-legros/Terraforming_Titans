@@ -1,6 +1,19 @@
 # Mod Development
 
-The Terraforming Titans mod loader supports complete renderer-file replacements and declarative JSON patches from both local development folders and subscribed Steam Workshop items. In-game publishing, additive scripts, additive styles, dependencies, save isolation, and the Mods UI are not implemented yet.
+The Terraforming Titans mod loader supports complete renderer-file replacements and declarative JSON patches from both local development folders and subscribed Steam Workshop items. A pre-game launcher controls the active mod loadout and starting save. In-game publishing, additive scripts, additive styles, dependencies, and save isolation are not implemented yet.
+
+## Launch control
+
+Electron starts in the Launch Control window before creating the game renderer. The launcher:
+
+- Defaults to the newest valid save and also offers every valid slot and New Game.
+- Keeps invalid JSON saves visible but prevents selecting them.
+- Enables or disables installed local and Workshop mods without changing Workshop subscriptions.
+- Reorders mods with drag-and-drop or the arrow buttons. The top mod loads first; lower mods load later and win conflicts.
+- Offers Play Vanilla for a temporary empty mod session without overwriting the saved mod loadout.
+- Displays Workshop installation progress and prevents launching while Steam is actively resolving subscriptions.
+
+The saved loadout is `mods/loadout.json` under Electron's user-data directory. New mods are enabled by default and appended after the player's existing configured mods. The manifest's numeric `loadOrder` controls initial/default order only; after the player saves a custom list, launcher order is authoritative. Mod and save choices are fixed for the launched game session, so changing them requires restarting the game.
 
 ## Steam Workshop subscriptions
 
@@ -25,7 +38,7 @@ For local development, the Electron build scans these locations in order:
 2. The `mods/local` folder under Electron's user-data directory.
 3. `local-mods` in the repository when running unpackaged Electron.
 
-Every direct child folder is treated as one enabled local mod. Folders beginning with `_` or `.` are ignored. Loaded mods are ordered by numeric `loadOrder`, then by manifest id. Later replacements and patch values win.
+Every direct child folder is treated as one discovered local mod. Folders beginning with `_` or `.` are ignored. Newly discovered mods default to enabled and use numeric `loadOrder`, then manifest id, for their initial order. The launcher can override both enabled state and order. Later replacements and patch values win.
 
 For a quick test, copy a folder from `examples/local-mods` into `local-mods`. Launching Electron with `TERRAFORMING_TITANS_MODS_DIR` pointing at `examples/local-mods` enables all bundled examples together.
 

@@ -70,6 +70,9 @@ async function resolveSubscribedWorkshopMods(steamIntegration, options = {}) {
     .map(itemId => ({ itemId, publicItem: createPublicItem(itemId), complete: false }))
     .sort((a, b) => a.publicItem.workshopId.localeCompare(b.publicItem.workshopId, 'en', { numeric: true }));
   status.items = records.map(record => record.publicItem);
+  if (options.onUpdate) {
+    options.onUpdate(status);
+  }
 
   function finishInstalled(record) {
     const installInfo = workshop.installInfo(record.itemId);
@@ -110,6 +113,9 @@ async function resolveSubscribedWorkshopMods(steamIntegration, options = {}) {
       record.complete = true;
     }
   });
+  if (options.onUpdate) {
+    options.onUpdate(status);
+  }
 
   const deadline = Date.now() + timeoutMs;
   while (records.some(record => !record.complete) && Date.now() < deadline) {
@@ -129,6 +135,9 @@ async function resolveSubscribedWorkshopMods(steamIntegration, options = {}) {
         record.complete = true;
       }
     });
+    if (options.onUpdate) {
+      options.onUpdate(status);
+    }
   }
 
   records.filter(record => !record.complete).forEach(record => {
@@ -141,6 +150,9 @@ async function resolveSubscribedWorkshopMods(steamIntegration, options = {}) {
     }
     record.complete = true;
   });
+  if (options.onUpdate) {
+    options.onUpdate(status);
+  }
 
   return { installedMods, status };
 }

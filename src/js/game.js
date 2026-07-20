@@ -97,7 +97,17 @@ function create() {
   // Initialize the Planet Visualizer (Terraforming -> World subtab)
   window.initializePlanetVisualizerUI();
   
-  if(!loadMostRecentSave()){  // Handle initial game state (building counts, etc.)
+  const startupSelection = window.electronStartup
+    ? window.electronStartup.getSelection()
+    : { mode: 'latest', slot: '' };
+  let startupSaveLoaded = false;
+  if (startupSelection.mode === 'slot') {
+    startupSaveLoaded = loadGame(`gameState_${startupSelection.slot}`, false);
+  } else if (startupSelection.mode === 'latest') {
+    startupSaveLoaded = loadMostRecentSave();
+  }
+
+  if (!startupSaveLoaded) {  // Handle initial game state (building counts, etc.)
       initializeGameState();
       if (typeof openTerraformingWorldTab === 'function') {
         openTerraformingWorldTab();

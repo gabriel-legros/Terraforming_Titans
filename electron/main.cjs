@@ -2,14 +2,18 @@ const { app, BrowserWindow, Menu, session, shell, powerSaveBlocker, screen, dial
 const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
-const { createModService } = require('./mods/mod-service.cjs');
+const { createModCatalog, createModService } = require('./mods/mod-service.cjs');
+const { readModLoadout, reconcileModLoadout, writeModLoadout } = require('./mods/mod-loadout.cjs');
 const { resolveSubscribedWorkshopMods } = require('./mods/workshop-service.cjs');
+const { createSaveCatalog } = require('./mod-launcher/save-catalog.cjs');
 
 const appDisplayName = 'Terraforming Titans';
 const defaultSteamAppId = 4864000;
 const appIconPath = path.join(__dirname, '..', 'assets', 'images', 'cover_small.png');
 const preloadPath = path.join(__dirname, 'preload.cjs');
 const crashPreloadPath = path.join(__dirname, 'crash-preload.cjs');
+const launcherPath = path.join(__dirname, 'mod-launcher', 'index.html');
+const launcherPreloadPath = path.join(__dirname, 'mod-launcher', 'preload.cjs');
 const saveSlotNames = new Set(['autosave', 'exitsave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5']);
 let fullscreenKeybindCode = 'F11';
 const fullscreenKeybindCaptureResolvers = new Map();
@@ -18,6 +22,18 @@ let crashWindow = null;
 let latestCrashReport = null;
 let quitting = false;
 let modService = null;
+let launcherWindow = null;
+let launcherCatalog = null;
+let launcherLoadout = null;
+let launcherSaveCatalog = null;
+let launcherWorkshopResult = {
+  installedMods: [],
+  status: { enabled: false, initialized: false, error: '', items: [] }
+};
+let launcherRefreshing = false;
+let launcherSelectedSave = '';
+let startupSelection = { mode: 'latest', slot: '' };
+let gameLaunchStarted = false;
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -438,6 +454,215 @@ function registerModHandlers() {
       ? modService.publicSession
       : null;
   });
+  ipcMain.on('startup:get-selection', event => {
+    event.returnValue = isGameFrame(event.senderFrame) ? startupSelection : null;
+  });
+}
+
+function isLauncherFrame(frame) {
+  return frame && frame.url === pathToFileURL(launcherPath).toString();
+}
+
+function getLauncherState() {
+  const reconciled = reconcileModLoadout(launcherCatalog.entries, launcherLoadout);
+  const publicById = new Map(launcherCatalog.publicItems.map(item => [item.instanceId, item]));
+  const enabledById = new Map(reconciled.publicItems.map(item => [item.instanceId, item.enabled]));
+  return {
+    version: app.getVersion(),
+    mods: reconciled.ordered.map(entry => ({
+      ...publicById.get(entry.instanceId),
+      enabled: enabledById.get(entry.instanceId)
+    })),
+    saves: launcherSaveCatalog.saves,
+    selectedSave: launcherSelectedSave,
+    workshop: launcherWorkshopResult.status,
+    refreshing: launcherRefreshing,
+    error: launcherLoadout.error || ''
+  };
+}
+
+function sendLauncherState() {
+  if (launcherWindow && !launcherWindow.isDestroyed()) {
+    launcherWindow.webContents.send('mod-launcher:state-changed', getLauncherState());
+  }
+}
+
+function refreshLauncherCatalog() {
+  if (launcherRefreshing) {
+    return;
+  }
+  launcherRefreshing = true;
+  sendLauncherState();
+  resolveSubscribedWorkshopMods(steamIntegration, {
+    onUpdate(workshopStatus) {
+      launcherWorkshopResult.status = workshopStatus;
+      if (launcherWindow && !launcherWindow.isDestroyed()) {
+        launcherWindow.webContents.send('mod-launcher:workshop-changed', workshopStatus);
+      }
+    }
+  }).then(workshopResult => {
+    launcherWorkshopResult = workshopResult;
+    workshopResult.status.items.forEach(item => {
+      if (item.status === 'installed') {
+        console.log(`Steam Workshop item ${item.workshopId} is installed and ready.`);
+      } else {
+        console.warn(`Steam Workshop item ${item.workshopId} ${item.status}: ${item.message}`);
+      }
+    });
+    launcherCatalog = createModCatalog({
+      appRoot: path.join(__dirname, '..'),
+      userDataPath: app.getPath('userData'),
+      isPackaged: app.isPackaged,
+      workshopMods: workshopResult.installedMods
+    });
+    launcherLoadout = readModLoadout(app.getPath('userData'));
+    launcherSaveCatalog = createSaveCatalog(app.getPath('userData'));
+    const selectionAvailable = launcherSelectedSave === 'new'
+      || launcherSaveCatalog.saves.some(save => save.selectionId === launcherSelectedSave && save.valid);
+    if (!selectionAvailable) {
+      launcherSelectedSave = launcherSaveCatalog.defaultSelection;
+    }
+    launcherRefreshing = false;
+    sendLauncherState();
+  }).catch(error => {
+    launcherWorkshopResult.status.error = error.message;
+    launcherRefreshing = false;
+    sendLauncherState();
+  });
+}
+
+function createLauncherWindow() {
+  if (launcherWindow && !launcherWindow.isDestroyed()) {
+    launcherWindow.show();
+    launcherWindow.focus();
+    return launcherWindow;
+  }
+  launcherWindow = new BrowserWindow({
+    width: 1180,
+    height: 790,
+    minWidth: 920,
+    minHeight: 640,
+    title: appDisplayName,
+    backgroundColor: '#07111f',
+    icon: appIconPath,
+    show: false,
+    webPreferences: {
+      preload: launcherPreloadPath,
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      webSecurity: true
+    }
+  });
+  launcherWindow.once('ready-to-show', () => launcherWindow.show());
+  launcherWindow.setMenuBarVisibility(false);
+  launcherWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  launcherWindow.on('closed', () => {
+    launcherWindow = null;
+  });
+  launcherWindow.loadFile(launcherPath);
+  return launcherWindow;
+}
+
+function registerModLauncherHandlers() {
+  const { ipcMain } = require('electron');
+  ipcMain.handle('mod-launcher:get-state', event => {
+    return isLauncherFrame(event.senderFrame) ? getLauncherState() : null;
+  });
+  ipcMain.handle('mod-launcher:refresh', event => {
+    if (!isLauncherFrame(event.senderFrame)) {
+      return null;
+    }
+    launcherSaveCatalog = createSaveCatalog(app.getPath('userData'));
+    refreshLauncherCatalog();
+    return getLauncherState();
+  });
+  ipcMain.handle('mod-launcher:open-local-mods', event => {
+    if (!isLauncherFrame(event.senderFrame)) {
+      return false;
+    }
+    const localModsPath = path.join(app.getPath('userData'), 'mods', 'local');
+    fs.mkdirSync(localModsPath, { recursive: true });
+    shell.openPath(localModsPath);
+    return true;
+  });
+  ipcMain.handle('mod-launcher:open-workshop', event => {
+    if (!isLauncherFrame(event.senderFrame)) {
+      return false;
+    }
+    shell.openExternal(`https://steamcommunity.com/app/${getSteamAppId(readBuildTargetSource())}/workshop/`);
+    return true;
+  });
+  ipcMain.handle('mod-launcher:launch', (event, options) => {
+    if (!isLauncherFrame(event.senderFrame) || launcherRefreshing || gameLaunchStarted) {
+      return { success: false, error: 'The launcher is not ready.' };
+    }
+    try {
+      const availableIds = launcherCatalog.entries.map(entry => entry.instanceId);
+      const requestedOrder = options.order.map(value => String(value));
+      const requestedDisabled = options.disabled.map(value => String(value));
+      const saveSelection = String(options.saveSelection);
+      const temporaryVanilla = options.temporaryVanilla === true;
+      const entriesById = new Map(launcherCatalog.entries.map(entry => [entry.instanceId, entry]));
+      if (requestedOrder.length !== availableIds.length
+          || new Set(requestedOrder).size !== availableIds.length
+          || requestedOrder.some(instanceId => !entriesById.has(instanceId))) {
+        throw new Error('The mod catalog changed. Refresh the launcher and try again.');
+      }
+      const disabled = new Set(requestedDisabled);
+      if (requestedDisabled.some(instanceId => !entriesById.has(instanceId))) {
+        throw new Error('The disabled mod list contains an unknown mod.');
+      }
+      const orderedEntries = requestedOrder.map(instanceId => entriesById.get(instanceId));
+      const activeEntries = temporaryVanilla
+        ? []
+        : orderedEntries.filter(entry => entry.valid && !disabled.has(entry.instanceId));
+      const activeManifestIds = new Set();
+      activeEntries.forEach(entry => {
+        if (activeManifestIds.has(entry.id)) {
+          throw new Error(`Disable one copy of duplicate mod id ${entry.id}.`);
+        }
+        activeManifestIds.add(entry.id);
+      });
+
+      if (saveSelection === 'new') {
+        startupSelection = { mode: 'new', slot: '' };
+      } else {
+        const selectedSave = launcherSaveCatalog.saves.find(save => save.selectionId === saveSelection && save.valid);
+        if (!selectedSave) {
+          throw new Error('The selected save is no longer available. Refresh the launcher.');
+        }
+        startupSelection = { mode: 'slot', slot: selectedSave.slot };
+      }
+
+      if (!temporaryVanilla) {
+        launcherLoadout = writeModLoadout(
+          app.getPath('userData'),
+          launcherLoadout,
+          availableIds,
+          requestedOrder,
+          requestedDisabled
+        );
+      }
+      modService = createModService({
+        appRoot: path.join(__dirname, '..'),
+        mods: activeEntries,
+        workshopStatus: launcherWorkshopResult.status
+      });
+      if (modService.publicSession.mods.length) {
+        const modIds = modService.publicSession.mods.map(mod => mod.id).join(', ');
+        console.log(`Mods active: ${modIds}.`);
+      }
+      gameLaunchStarted = true;
+      if (launcherWindow && !launcherWindow.isDestroyed()) {
+        launcherWindow.hide();
+      }
+      createWindow();
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
 }
 
 function openExternalUrl(url) {
@@ -474,6 +699,9 @@ function createWindow() {
 
   win.once('ready-to-show', () => {
     win.show();
+    if (launcherWindow && !launcherWindow.isDestroyed()) {
+      launcherWindow.close();
+    }
   });
 
   win.webContents.on('before-input-event', (event, input) => {
@@ -546,47 +774,39 @@ function createWindow() {
   win.loadURL('tt-game://app/index.html');
 }
 
-app.whenReady().then(async () => {
+app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
   app.setAppUserModelId('terraforming-titans');
   session.defaultSession.setPermissionRequestHandler((_webContents, _permission, callback) => {
     callback(false);
   });
-  const workshopResult = await resolveSubscribedWorkshopMods(steamIntegration);
-  modService = createModService({
+  launcherCatalog = createModCatalog({
     appRoot: path.join(__dirname, '..'),
     userDataPath: app.getPath('userData'),
     isPackaged: app.isPackaged,
-    workshopMods: workshopResult.installedMods,
-    workshopStatus: workshopResult.status
+    workshopMods: []
   });
-  workshopResult.status.items.forEach(item => {
-    if (item.status === 'installed') {
-      console.log(`Steam Workshop item ${item.workshopId} is installed and ready.`);
-    } else {
-      console.warn(`Steam Workshop item ${item.workshopId} ${item.status}: ${item.message}`);
-    }
-  });
-  if (modService.publicSession.mods.length) {
-    const modIds = modService.publicSession.mods.map(mod => mod.id).join(', ');
-    console.log(`Mods active: ${modIds}.`);
-  }
-  modService.publicSession.errors.forEach(error => {
-    const source = error.workshopId ? `Workshop ${error.workshopId}` : error.folder;
-    console.warn(`Mod skipped (${source}): ${error.message}`);
-  });
+  launcherLoadout = readModLoadout(app.getPath('userData'));
+  launcherSaveCatalog = createSaveCatalog(app.getPath('userData'));
+  launcherSelectedSave = launcherSaveCatalog.defaultSelection;
   registerModProtocol();
   registerCrashHandlers();
   registerSaveStorageHandlers();
   registerSteamAchievementHandlers();
   registerWindowControlHandlers();
   registerModHandlers();
+  registerModLauncherHandlers();
   powerSaveBlocker.start('prevent-app-suspension');
-  createWindow();
+  createLauncherWindow();
+  refreshLauncherCatalog();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+      if (gameLaunchStarted) {
+        createWindow();
+      } else {
+        createLauncherWindow();
+      }
     }
   });
 });
