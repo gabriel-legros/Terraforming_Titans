@@ -1,6 +1,6 @@
 # Mod Development
 
-The Terraforming Titans mod loader supports complete renderer-file replacements and declarative JSON patches from both local development folders and subscribed Steam Workshop items. A pre-game launcher controls the active mod loadout and starting save. In-game publishing, additive scripts, additive styles, dependencies, and save isolation are not implemented yet.
+The Terraforming Titans mod loader supports complete renderer-file replacements and declarative JSON patches from both local development folders and subscribed Steam Workshop items. A pre-game launcher controls the active mod loadout and starting save, and opens Creator Tools for Workshop publishing. Additive scripts, additive styles, dependencies, and save isolation are not implemented yet.
 
 ## Launch control
 
@@ -14,9 +14,25 @@ Electron starts in the Launch Control window before creating the game renderer. 
 
 The saved loadout is `mods/loadout.json` under Electron's user-data directory. New mods are enabled by default and appended after the player's existing configured mods. The manifest's numeric `loadOrder` controls initial/default order only; after the player saves a custom list, launcher order is authoritative. Mod and save choices are fixed for the launched game session, so changing them requires restarting the game.
 
+## Creator Tools
+
+Open **Creator Tools** from the launcher. Publishing uses the signed-in Steam client through ISteamUGC; creators never enter Steam credentials or use SteamCMD.
+
+1. Put the finished mod in the Local Mods folder and select it in Creator Tools.
+2. Fix any manifest, patch, or replacement validation error shown by the tool.
+3. Choose **Create a new Workshop item**, enter the title and description, choose visibility, and select a PNG, JPEG, or GIF preview image smaller than 1 MB. Creator Tools rejects an oversized preview before creating or updating a Steam item.
+4. Select **Create & Upload**. The tool creates the Workshop item, records its ID, uploads the complete mod folder, and opens its Workshop page.
+5. Accept the Steam Workshop legal agreement if Steam requests it. An item remains hidden until its author accepts the agreement.
+
+For later releases, select the linked item, enter a change note, and choose **Update Workshop Item**. A new preview image is optional when updating. Creator Tools lists every item published by the signed-in Steam account for the current AppID, so an existing item can also be selected and linked to a local mod. Destructive management such as deleting an item remains on the Steam Workshop item page, opened with **Open Workshop Item**.
+
+Creator links are stored outside the uploaded mod in `mods/creator-items.json` under Electron's user-data directory. This prevents machine-specific publishing data from entering Workshop content. Creator Tools never exposes absolute local or Workshop filesystem paths to renderer code.
+
+Publishing targets the AppID of the running build. A production build publishes to the production Workshop; a Playtest build publishes to the Playtest Workshop. Uploading requires a packaged Steam build launched through Steam. Steam Family Sharing and temporary licenses cannot publish Workshop items.
+
 ## Steam Workshop subscriptions
 
-Before downloads can work, enable **ISteamUGC for file transfer** under the app's Steam Workshop Configuration, configure the Steam Cloud quotas required by Workshop, and publish both configuration changes in Steamworks. Uploading an item alone does not enable client file transfer.
+Before uploads or downloads can work, enable **ISteamUGC for file transfer** under the app's Steam Workshop Configuration, configure the Steam Cloud quotas required by Workshop, and publish both configuration changes in Steamworks. Uploading an item alone does not enable client file transfer.
 
 Steam builds automatically consume the current user's subscribed items at launch. The game:
 

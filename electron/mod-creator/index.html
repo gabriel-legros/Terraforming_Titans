@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>Terraforming Titans Creator Tools</title>
+  <link rel="stylesheet" href="creator.css">
+</head>
+<body>
+  <main class="creator-shell">
+    <header class="creator-header">
+      <div>
+        <h1>Terraforming Titans</h1>
+        <div class="tool-name">Creator Tools</div>
+      </div>
+      <div class="header-actions">
+        <button id="refresh-button" type="button">Refresh</button>
+        <button id="local-mods-button" type="button">Local Mods Folder</button>
+        <button id="workshop-button" type="button">Steam Workshop</button>
+      </div>
+    </header>
+
+    <div id="global-status" class="global-status" role="status"></div>
+
+    <div class="creator-columns">
+      <section class="panel source-panel" aria-labelledby="source-heading">
+        <div class="panel-heading">
+          <div>
+            <h2 id="source-heading">Local mod</h2>
+            <p>Only validated local mods can be uploaded.</p>
+          </div>
+        </div>
+        <div class="panel-content">
+          <label class="field-label" for="local-mod-select">Mod folder</label>
+          <select id="local-mod-select"></select>
+          <div id="mod-details" class="mod-details"></div>
+          <div id="mod-validation" class="validation-message"></div>
+          <button id="open-mod-folder-button" type="button">Open Mod Folder</button>
+
+          <div class="source-divider"></div>
+
+          <label class="field-label" for="workshop-item-select">Workshop item</label>
+          <select id="workshop-item-select">
+            <option value="">Create a new Workshop item</option>
+          </select>
+          <p id="item-details" class="item-details"></p>
+          <button id="open-item-button" type="button">Open Workshop Item</button>
+        </div>
+      </section>
+
+      <section class="panel editor-panel" aria-labelledby="editor-heading">
+        <div class="panel-heading">
+          <div>
+            <h2 id="editor-heading">Workshop listing</h2>
+            <p id="app-id-label"></p>
+          </div>
+        </div>
+        <form id="publisher-form" class="publisher-form">
+          <fieldset id="editor-fields">
+            <label class="field-label" for="title-input">Title</label>
+            <input id="title-input" maxlength="128" required>
+
+            <label class="field-label" for="description-input">Description</label>
+            <textarea id="description-input" maxlength="8000" rows="7" required></textarea>
+
+            <div class="field-grid">
+              <div>
+                <label class="field-label" for="visibility-select">Visibility</label>
+                <select id="visibility-select">
+                  <option value="0">Public</option>
+                  <option value="1">Friends only</option>
+                  <option value="2">Private</option>
+                  <option value="3">Unlisted</option>
+                </select>
+              </div>
+              <div>
+                <label class="field-label" for="tags-input">Tags</label>
+                <input id="tags-input" placeholder="Comma-separated">
+              </div>
+            </div>
+
+            <label class="field-label" for="change-note-input">Change note</label>
+            <textarea id="change-note-input" maxlength="8000" rows="3" placeholder="What changed in this upload?"></textarea>
+
+            <div class="preview-row">
+              <div>
+                <div class="field-label">Preview image</div>
+                <div id="preview-name" class="preview-name">No image selected</div>
+                <div id="preview-help" class="field-help">A PNG, JPEG, or GIF smaller than 1 MB is required for a new item.</div>
+              </div>
+              <div class="preview-actions">
+                <button id="choose-preview-button" type="button">Choose Image</button>
+                <button id="clear-preview-button" class="quiet-button" type="button">Clear</button>
+              </div>
+            </div>
+          </fieldset>
+
+          <div id="upload-progress" class="upload-progress" hidden>
+            <div class="progress-heading">
+              <span id="progress-label">Preparing upload</span>
+              <span id="progress-percent"></span>
+            </div>
+            <div class="progress-track"><div id="progress-fill" class="progress-fill"></div></div>
+          </div>
+
+          <div class="publish-footer">
+            <p class="legal-copy">By submitting this item, you agree to the <button id="terms-button" class="link-button" type="button">Steam Workshop terms of service</button>.</p>
+            <button id="publish-button" class="primary-action" type="submit">Create &amp; Upload</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+  <script src="creator.js"></script>
+</body>
+</html>

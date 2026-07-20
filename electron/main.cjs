@@ -5,6 +5,7 @@ const { pathToFileURL } = require('url');
 const { createModCatalog, createModService } = require('./mods/mod-service.cjs');
 const { readModLoadout, reconcileModLoadout, writeModLoadout } = require('./mods/mod-loadout.cjs');
 const { resolveSubscribedWorkshopMods } = require('./mods/workshop-service.cjs');
+const { createWorkshopPublisher } = require('./mods/workshop-publisher.cjs');
 const { createSaveCatalog } = require('./mod-launcher/save-catalog.cjs');
 
 const appDisplayName = 'Terraforming Titans';
@@ -14,6 +15,8 @@ const preloadPath = path.join(__dirname, 'preload.cjs');
 const crashPreloadPath = path.join(__dirname, 'crash-preload.cjs');
 const launcherPath = path.join(__dirname, 'mod-launcher', 'index.html');
 const launcherPreloadPath = path.join(__dirname, 'mod-launcher', 'preload.cjs');
+const creatorPath = path.join(__dirname, 'mod-creator', 'index.html');
+const creatorPreloadPath = path.join(__dirname, 'mod-creator', 'preload.cjs');
 const saveSlotNames = new Set(['autosave', 'exitsave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5']);
 let fullscreenKeybindCode = 'F11';
 const fullscreenKeybindCaptureResolvers = new Map();
@@ -23,6 +26,8 @@ let latestCrashReport = null;
 let quitting = false;
 let modService = null;
 let launcherWindow = null;
+let creatorWindow = null;
+let workshopPublisher = null;
 let launcherCatalog = null;
 let launcherLoadout = null;
 let launcherSaveCatalog = null;
@@ -85,6 +90,17 @@ function redactCrashPaths(value) {
     });
   });
   return redacted;
+}
+
+function getPublicCreatorError(error) {
+  let message = redactCrashPaths(error && error.message ? error.message : String(error));
+  if (launcherCatalog) {
+    launcherCatalog.entries.forEach(entry => {
+      const escapedPath = entry.modRoot.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      message = message.replace(new RegExp(escapedPath, 'gi'), '<mod-folder>');
+    });
+  }
+  return message.replace(/[A-Za-z]:[\\/][^\r\n]*/g, '<local-file>');
 }
 
 function createCrashReport(type, message, stack, details) {
@@ -477,6 +493,7 @@ function getLauncherState() {
     selectedSave: launcherSelectedSave,
     workshop: launcherWorkshopResult.status,
     refreshing: launcherRefreshing,
+    creatorBusy: workshopPublisher ? workshopPublisher.isBusy() : false,
     error: launcherLoadout.error || ''
   };
 }
@@ -485,6 +502,15 @@ function sendLauncherState() {
   if (launcherWindow && !launcherWindow.isDestroyed()) {
     launcherWindow.webContents.send('mod-launcher:state-changed', getLauncherState());
   }
+}
+
+function rebuildLauncherCatalog() {
+  launcherCatalog = createModCatalog({
+    appRoot: path.join(__dirname, '..'),
+    userDataPath: app.getPath('userData'),
+    isPackaged: app.isPackaged,
+    workshopMods: launcherWorkshopResult.installedMods
+  });
 }
 
 function refreshLauncherCatalog() {
@@ -509,12 +535,7 @@ function refreshLauncherCatalog() {
         console.warn(`Steam Workshop item ${item.workshopId} ${item.status}: ${item.message}`);
       }
     });
-    launcherCatalog = createModCatalog({
-      appRoot: path.join(__dirname, '..'),
-      userDataPath: app.getPath('userData'),
-      isPackaged: app.isPackaged,
-      workshopMods: workshopResult.installedMods
-    });
+    rebuildLauncherCatalog();
     launcherLoadout = readModLoadout(app.getPath('userData'));
     launcherSaveCatalog = createSaveCatalog(app.getPath('userData'));
     const selectionAvailable = launcherSelectedSave === 'new'
@@ -564,6 +585,160 @@ function createLauncherWindow() {
   return launcherWindow;
 }
 
+function isCreatorFrame(frame) {
+  return frame && frame.url === pathToFileURL(creatorPath).toString();
+}
+
+function sendCreatorState(state) {
+  if (creatorWindow && !creatorWindow.isDestroyed()) {
+    creatorWindow.webContents.send('mod-creator:state-changed', state || workshopPublisher.getState());
+  }
+  sendLauncherState();
+}
+
+function sendCreatorProgress(progress) {
+  if (creatorWindow && !creatorWindow.isDestroyed()) {
+    creatorWindow.webContents.send('mod-creator:progress', progress);
+  }
+}
+
+function createCreatorWindow() {
+  if (creatorWindow && !creatorWindow.isDestroyed()) {
+    creatorWindow.show();
+    creatorWindow.focus();
+    return creatorWindow;
+  }
+  creatorWindow = new BrowserWindow({
+    width: 1344,
+    height: 936,
+    minWidth: 900,
+    minHeight: 650,
+    title: `${appDisplayName} Creator Tools`,
+    backgroundColor: '#07111f',
+    icon: appIconPath,
+    parent: launcherWindow,
+    show: false,
+    webPreferences: {
+      preload: creatorPreloadPath,
+      contextIsolation: true,
+      nodeIntegration: false,
+      sandbox: true,
+      webSecurity: true
+    }
+  });
+  creatorWindow.once('ready-to-show', () => creatorWindow.show());
+  creatorWindow.setMenuBarVisibility(false);
+  creatorWindow.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
+  creatorWindow.on('close', event => {
+    if (!quitting && workshopPublisher.isBusy()) {
+      event.preventDefault();
+    }
+  });
+  creatorWindow.on('closed', () => {
+    creatorWindow = null;
+  });
+  creatorWindow.loadFile(creatorPath);
+  return creatorWindow;
+}
+
+function registerModCreatorHandlers() {
+  const { ipcMain } = require('electron');
+  ipcMain.handle('mod-creator:get-state', event => {
+    return isCreatorFrame(event.senderFrame) ? workshopPublisher.getState() : null;
+  });
+  ipcMain.handle('mod-creator:refresh', async event => {
+    if (!isCreatorFrame(event.senderFrame) || workshopPublisher.isBusy()) {
+      return workshopPublisher.getState();
+    }
+    rebuildLauncherCatalog();
+    sendLauncherState();
+    await workshopPublisher.refreshPublishedItems();
+    return workshopPublisher.getState();
+  });
+  ipcMain.handle('mod-creator:choose-preview', async (event, instanceId) => {
+    if (!isCreatorFrame(event.senderFrame) || workshopPublisher.isBusy()) {
+      return { success: false, error: 'Creator Tools is busy.' };
+    }
+    try {
+      const modRoot = workshopPublisher.getModFolder(String(instanceId));
+      const result = await dialog.showOpenDialog(creatorWindow, {
+        title: 'Choose Workshop Preview Image',
+        defaultPath: modRoot,
+        properties: ['openFile'],
+        filters: [
+          { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif'] }
+        ]
+      });
+      if (result.canceled || !result.filePaths.length) {
+        return { success: true, canceled: true };
+      }
+      workshopPublisher.setPreview(String(instanceId), result.filePaths[0]);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: getPublicCreatorError(error) };
+    }
+  });
+  ipcMain.handle('mod-creator:clear-preview', (event, instanceId) => {
+    if (!isCreatorFrame(event.senderFrame) || workshopPublisher.isBusy()) {
+      return false;
+    }
+    workshopPublisher.clearPreview(String(instanceId));
+    return true;
+  });
+  ipcMain.handle('mod-creator:open-mod-folder', (event, instanceId) => {
+    if (!isCreatorFrame(event.senderFrame)) {
+      return false;
+    }
+    try {
+      const folder = instanceId
+        ? workshopPublisher.getModFolder(String(instanceId))
+        : path.join(app.getPath('userData'), 'mods', 'local');
+      fs.mkdirSync(folder, { recursive: true });
+      shell.openPath(folder);
+      return true;
+    } catch (_error) {
+      return false;
+    }
+  });
+  ipcMain.handle('mod-creator:open-workshop-item', (event, workshopId) => {
+    const itemId = String(workshopId || '');
+    if (!isCreatorFrame(event.senderFrame) || !/^[1-9]\d*$/.test(itemId)) {
+      return false;
+    }
+    openExternalUrl(`https://steamcommunity.com/sharedfiles/filedetails/?id=${itemId}`);
+    return true;
+  });
+  ipcMain.handle('mod-creator:open-workshop', event => {
+    if (!isCreatorFrame(event.senderFrame)) {
+      return false;
+    }
+    openExternalUrl(`https://steamcommunity.com/app/${getSteamAppId(readBuildTargetSource())}/workshop/`);
+    return true;
+  });
+  ipcMain.handle('mod-creator:open-terms', event => {
+    if (!isCreatorFrame(event.senderFrame)) {
+      return false;
+    }
+    openExternalUrl('https://steamcommunity.com/sharedfiles/workshoplegalagreement');
+    return true;
+  });
+  ipcMain.handle('mod-creator:publish', async (event, details) => {
+    if (!isCreatorFrame(event.senderFrame)) {
+      return { success: false, error: 'Invalid Creator Tools request.' };
+    }
+    try {
+      rebuildLauncherCatalog();
+      const result = await workshopPublisher.publish(details);
+      if (result.created || result.needsToAcceptAgreement) {
+        openExternalUrl(`https://steamcommunity.com/sharedfiles/filedetails/?id=${result.workshopId}`);
+      }
+      return { ...result, state: workshopPublisher.getState() };
+    } catch (error) {
+      return { success: false, error: getPublicCreatorError(error), state: workshopPublisher.getState() };
+    }
+  });
+}
+
 function registerModLauncherHandlers() {
   const { ipcMain } = require('electron');
   ipcMain.handle('mod-launcher:get-state', event => {
@@ -593,8 +768,15 @@ function registerModLauncherHandlers() {
     shell.openExternal(`https://steamcommunity.com/app/${getSteamAppId(readBuildTargetSource())}/workshop/`);
     return true;
   });
+  ipcMain.handle('mod-launcher:open-creator-tools', event => {
+    if (!isLauncherFrame(event.senderFrame) || launcherRefreshing) {
+      return false;
+    }
+    createCreatorWindow();
+    return true;
+  });
   ipcMain.handle('mod-launcher:launch', (event, options) => {
-    if (!isLauncherFrame(event.senderFrame) || launcherRefreshing || gameLaunchStarted) {
+    if (!isLauncherFrame(event.senderFrame) || launcherRefreshing || workshopPublisher.isBusy() || gameLaunchStarted) {
       return { success: false, error: 'The launcher is not ready.' };
     }
     try {
@@ -784,6 +966,16 @@ app.whenReady().then(() => {
   launcherLoadout = readModLoadout(app.getPath('userData'));
   launcherSaveCatalog = createSaveCatalog(app.getPath('userData'));
   launcherSelectedSave = launcherSaveCatalog.defaultSelection;
+  workshopPublisher = createWorkshopPublisher({
+    appId: getSteamAppId(readBuildTargetSource()),
+    userDataPath: app.getPath('userData'),
+    steamIntegration,
+    getLocalEntries() {
+      return launcherCatalog.entries;
+    },
+    onStateChanged: sendCreatorState,
+    onProgress: sendCreatorProgress
+  });
   registerModProtocol();
   registerCrashHandlers();
   registerSaveStorageHandlers();
@@ -791,6 +983,7 @@ app.whenReady().then(() => {
   registerWindowControlHandlers();
   registerModHandlers();
   registerModLauncherHandlers();
+  registerModCreatorHandlers();
   powerSaveBlocker.start('prevent-app-suspension');
   createLauncherWindow();
   refreshLauncherCatalog();

@@ -8,6 +8,7 @@ const refreshButton = document.getElementById('refresh-button');
 const resetOrderButton = document.getElementById('reset-order-button');
 const playButton = document.getElementById('play-button');
 const localModsButton = document.getElementById('local-mods-button');
+const creatorToolsButton = document.getElementById('creator-tools-button');
 const workshopButton = document.getElementById('workshop-button');
 
 let launcherState = null;
@@ -202,7 +203,7 @@ function renderMods() {
   const save = launcherState.saves.find(item => item.selectionId === selectedSave);
   const saveName = selectedSave === 'new' ? 'New Game' : (save ? save.label : 'Unknown save');
   launchSummary.textContent = `${activeCount} mod${activeCount === 1 ? '' : 's'} enabled · ${saveName}`;
-  playButton.disabled = launcherState.refreshing || duplicates.size > 0;
+  playButton.disabled = launcherState.refreshing || launcherState.creatorBusy || duplicates.size > 0;
   resetOrderButton.disabled = launcherState.refreshing || orderedMods.length < 2;
 }
 
@@ -295,11 +296,14 @@ function applyState(state) {
   orderedMods = state.mods.slice();
   enabledMods = new Set(state.mods.filter(mod => mod.enabled).map(mod => mod.instanceId));
   selectedSave = state.selectedSave;
-  const statusText = state.error || (state.refreshing ? 'Checking Steam Workshop and validating mods…' : '');
+  const statusText = state.error
+    || (state.creatorBusy ? 'A Workshop upload is in progress…' : '')
+    || (state.refreshing ? 'Checking Steam Workshop and validating mods…' : '');
   globalStatus.textContent = statusText;
   globalStatus.hidden = !statusText;
   globalStatus.classList.toggle('is-error', !!state.error);
   refreshButton.disabled = state.refreshing;
+  creatorToolsButton.disabled = state.refreshing;
   renderWorkshop(state.workshop);
   renderSaves();
   renderMods();
@@ -331,6 +335,7 @@ async function launch() {
 
 refreshButton.addEventListener('click', () => window.modLauncher.refresh());
 localModsButton.addEventListener('click', () => window.modLauncher.openLocalMods());
+creatorToolsButton.addEventListener('click', () => window.modLauncher.openCreatorTools());
 workshopButton.addEventListener('click', () => window.modLauncher.openWorkshop());
 resetOrderButton.addEventListener('click', () => {
   orderedMods.sort((a, b) => a.loadOrder - b.loadOrder || a.id.localeCompare(b.id));

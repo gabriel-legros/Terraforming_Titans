@@ -16,6 +16,9 @@ contextBridge.exposeInMainWorld('modLauncher', {
   openWorkshop() {
     return ipcRenderer.invoke('mod-launcher:open-workshop');
   },
+  openCreatorTools() {
+    return ipcRenderer.invoke('mod-launcher:open-creator-tools');
+  },
   onStateChanged(callback) {
     ipcRenderer.on('mod-launcher:state-changed', (_event, state) => callback(state));
   },
