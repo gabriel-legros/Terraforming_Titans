@@ -790,6 +790,18 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'resourceDepletionWarningSeconds')) {
         gameSettings.resourceDepletionWarningSeconds = 120;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'autoPauseEnergyEnabled')) {
+        gameSettings.autoPauseEnergyEnabled = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'autoPauseEnergyThreshold')) {
+        gameSettings.autoPauseEnergyThreshold = 0;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'autoPauseColonistsEnabled')) {
+        gameSettings.autoPauseColonistsEnabled = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'autoPauseColonistsThreshold')) {
+        gameSettings.autoPauseColonistsThreshold = 0;
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'immigrationPool')) {
         gameSettings.immigrationPool = false;
       }
@@ -865,6 +877,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       setDialogueSkipKeybindCode(gameSettings.dialogueSkipKeybind);
       setFullscreenKeybindCode(gameSettings.fullscreenKeybind);
       applySpeedControlsSetting();
+      resetAutoPauseRateTracking();
       applyColorblindPaletteSettings();
       if (gameSettings.showSpaceStorageInDefaultPanel) {
         gameSettings.showSpaceStorageResources = false;
@@ -895,6 +908,12 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       cachedSettings.highlightFullResourceCapsToggle.checked = gameSettings.highlightFullResourceCaps;
       cachedSettings.resourceDepletionWarningSecondsInput.value = String(gameSettings.resourceDepletionWarningSeconds);
       cachedSettings.resourceDepletionWarningSecondsInput.dataset.resourceDepletionWarningSeconds = String(gameSettings.resourceDepletionWarningSeconds);
+      cachedSettings.autoPauseEnergyToggle.checked = gameSettings.autoPauseEnergyEnabled;
+      cachedSettings.autoPauseEnergyThresholdInput.value = String(formatNumber(gameSettings.autoPauseEnergyThreshold, false, 3, true));
+      cachedSettings.autoPauseEnergyThresholdInput.dataset.autoPauseEnergyThreshold = String(gameSettings.autoPauseEnergyThreshold);
+      cachedSettings.autoPauseColonistsToggle.checked = gameSettings.autoPauseColonistsEnabled;
+      cachedSettings.autoPauseColonistsThresholdInput.value = String(formatNumber(gameSettings.autoPauseColonistsThreshold, false, 3, true));
+      cachedSettings.autoPauseColonistsThresholdInput.dataset.autoPauseColonistsThreshold = String(gameSettings.autoPauseColonistsThreshold);
       cachedSettings.immigrationPoolToggle.checked = gameSettings.immigrationPool;
       cachedSettings.unlockToggle.checked = gameSettings.silenceUnlockAlert;
       cachedSettings.dayNightToggle.checked = gameSettings.disableDayNightCycle;

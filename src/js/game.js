@@ -1078,7 +1078,11 @@ function update(time, delta) {
     return;
   }
   updateLogic(quantizedDelta, deltaMs);   // Update game state
+  const autoPaused = checkAutoPauseRates();
   updateRender.lastDelta = quantizedDelta;
+  if (autoPaused) {
+    updatePauseControls();
+  }
   updateRender();             // Render updated game state
 
   autosave(quantizedDelta);      // Call the autosave function

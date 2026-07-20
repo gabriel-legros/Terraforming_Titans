@@ -1167,6 +1167,34 @@
                   <input type="checkbox" id="suppress-faith-toggle"> <span data-i18n="ui.settings.suppressFaith">Suppress Faith</span> <span id="suppress-faith-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
               </div>
+              <h3 class="settings-section-title" data-i18n="ui.settings.autoPauseTitle">Auto Pause</h3>
+              <div class="settings-grid settings-grid-auto-pause">
+                <label class="settings-option auto-pause-option">
+                  <input type="checkbox" id="auto-pause-energy-toggle">
+                  <span data-i18n="ui.settings.autoPauseEnergy">When net energy rate &lt;</span>
+                  <input type="text" id="auto-pause-energy-threshold-input" value="0">
+                </label>
+                <label class="settings-option auto-pause-option">
+                  <input type="checkbox" id="auto-pause-colonists-toggle">
+                  <span data-i18n="ui.settings.autoPauseColonists">When net colonist rate &lt;</span>
+                  <input type="text" id="auto-pause-colonists-threshold-input" value="0">
+                </label>
+              </div>
+              <h3 class="settings-section-title" data-i18n="ui.settings.keybindsTitle">Keybinds</h3>
+              <div class="settings-grid settings-grid-keybinds">
+                <label class="settings-option settings-keybind-option">
+                  <span data-i18n="ui.settings.pauseKeybindLabel">Pause key</span>
+                  <button id="pause-keybind-capture-button" type="button"></button>
+                </label>
+                <label class="settings-option settings-keybind-option">
+                  <span data-i18n="ui.settings.dialogueSkipKeybindLabel">Skip dialogue typing</span>
+                  <button id="dialogue-skip-keybind-capture-button" type="button"></button>
+                </label>
+                <label id="electron-fullscreen-keybind-option" class="settings-option settings-keybind-option build-target-hidden" hidden>
+                  <span data-i18n="ui.settings.fullscreenKeybindLabel">Fullscreen</span>
+                  <button id="fullscreen-keybind-capture-button" type="button"></button>
+                </label>
+              </div>
               <h3 class="settings-section-title" data-i18n="ui.settings.difficultyTitle">Difficulty</h3>
               <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-lock">
                 <div class="settings-option difficulty-lock-option">
@@ -1323,21 +1351,6 @@
                     </label>
                   </div>
                 </details>
-              </div>
-              <h3 class="settings-section-title" data-i18n="ui.settings.keybindsTitle">Keybinds</h3>
-              <div class="settings-grid settings-grid-keybinds">
-                <label class="settings-option settings-keybind-option">
-                  <span data-i18n="ui.settings.pauseKeybindLabel">Pause key</span>
-                  <button id="pause-keybind-capture-button" type="button"></button>
-                </label>
-                <label class="settings-option settings-keybind-option">
-                  <span data-i18n="ui.settings.dialogueSkipKeybindLabel">Skip dialogue typing</span>
-                  <button id="dialogue-skip-keybind-capture-button" type="button"></button>
-                </label>
-                <label id="electron-fullscreen-keybind-option" class="settings-option settings-keybind-option build-target-hidden" hidden>
-                  <span data-i18n="ui.settings.fullscreenKeybindLabel">Fullscreen</span>
-                  <button id="fullscreen-keybind-capture-button" type="button"></button>
-                </label>
               </div>
             </div>
             <div id="statistics-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">

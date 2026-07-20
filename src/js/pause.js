@@ -15,6 +15,10 @@
   let pauseKeybindCode = DEFAULT_PAUSE_KEYBIND_CODE;
   let dialogueSkipKeybindCode = DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE;
   let fullscreenKeybindCode = DEFAULT_FULLSCREEN_KEYBIND_CODE;
+  const autoPauseRateState = {
+    energy: { resource: null, wasAtOrAbove: null },
+    colonists: { resource: null, wasAtOrAbove: null },
+  };
 
   function isEditableTarget(target) {
     if (!target || !target.tagName) return false;
@@ -235,6 +239,56 @@
     updateRender(true);
   }
 
+  function resetAutoPauseRateTracking() {
+    autoPauseRateState.energy.resource = null;
+    autoPauseRateState.energy.wasAtOrAbove = null;
+    autoPauseRateState.colonists.resource = null;
+    autoPauseRateState.colonists.wasAtOrAbove = null;
+  }
+
+  function crossedBelowAutoPauseThreshold(state, resource, enabled, threshold) {
+    if (state.resource !== resource) {
+      state.resource = resource;
+      state.wasAtOrAbove = null;
+    }
+    if (!enabled) {
+      state.wasAtOrAbove = null;
+      return false;
+    }
+    const netRate = resource.productionRate - resource.consumptionRate;
+    const atOrAbove = netRate >= threshold;
+    const crossedBelow = state.wasAtOrAbove === true && !atOrAbove;
+    state.wasAtOrAbove = atOrAbove;
+    return crossedBelow;
+  }
+
+  function checkAutoPauseRates() {
+    const energyCrossed = crossedBelowAutoPauseThreshold(
+      autoPauseRateState.energy,
+      resources.colony.energy,
+      gameSettings.autoPauseEnergyEnabled,
+      gameSettings.autoPauseEnergyThreshold
+    );
+    const colonistsCrossed = crossedBelowAutoPauseThreshold(
+      autoPauseRateState.colonists,
+      resources.colony.colonists,
+      gameSettings.autoPauseColonistsEnabled,
+      gameSettings.autoPauseColonistsThreshold
+    );
+    if (!energyCrossed && !colonistsCrossed) {
+      return false;
+    }
+    paused = true;
+    window.manualPause = true;
+    setGameSpeed(0);
+    return true;
+  }
+
+  function updatePauseControls() {
+    updatePauseButton();
+    updateSpeedControls();
+  }
+
   function applySpeedControlsSetting() {
     if (gameSettings.disableSpeedControls) {
       lastActiveGameSpeed = 1;
@@ -274,7 +328,7 @@
   }
 
   if(typeof module !== 'undefined' && module.exports){
-    module.exports = { togglePause, isGamePaused, getPauseKeybindDisplay, getPauseKeybindCode, setPauseKeybindCode, getDialogueSkipKeybindDisplay, getDialogueSkipKeybindCode, setDialogueSkipKeybindCode, getFullscreenKeybindDisplay, getFullscreenKeybindCode, setFullscreenKeybindCode, initializeGameSpeedControls, setGameSpeedChoice, updateSpeedControls, applySpeedControlsSetting, DEFAULT_PAUSE_KEYBIND_CODE, DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE, DEFAULT_FULLSCREEN_KEYBIND_CODE };
+    module.exports = { togglePause, isGamePaused, getPauseKeybindDisplay, getPauseKeybindCode, setPauseKeybindCode, getDialogueSkipKeybindDisplay, getDialogueSkipKeybindCode, setDialogueSkipKeybindCode, getFullscreenKeybindDisplay, getFullscreenKeybindCode, setFullscreenKeybindCode, initializeGameSpeedControls, setGameSpeedChoice, updateSpeedControls, applySpeedControlsSetting, resetAutoPauseRateTracking, checkAutoPauseRates, updatePauseControls, DEFAULT_PAUSE_KEYBIND_CODE, DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE, DEFAULT_FULLSCREEN_KEYBIND_CODE };
   } else {
     window.togglePause = togglePause;
     window.isGamePaused = isGamePaused;
@@ -291,6 +345,9 @@
     window.setGameSpeedChoice = setGameSpeedChoice;
     window.updateSpeedControls = updateSpeedControls;
     window.applySpeedControlsSetting = applySpeedControlsSetting;
+    window.resetAutoPauseRateTracking = resetAutoPauseRateTracking;
+    window.checkAutoPauseRates = checkAutoPauseRates;
+    window.updatePauseControls = updatePauseControls;
     window.DEFAULT_PAUSE_KEYBIND_CODE = DEFAULT_PAUSE_KEYBIND_CODE;
     window.DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE = DEFAULT_DIALOGUE_SKIP_KEYBIND_CODE;
     window.DEFAULT_FULLSCREEN_KEYBIND_CODE = DEFAULT_FULLSCREEN_KEYBIND_CODE;
