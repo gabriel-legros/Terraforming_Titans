@@ -1999,6 +1999,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
 // for the climate state that will enter the next fixed physics step.
 function runAdvancedOversightAssignments(project, deltaTime) {
   if (
+    isEquilibrating ||
     !mirrorOversightSettings.advancedOversight ||
     !isSpaceMirrorFacilityFlagActive('advancedOversight')
   ) {

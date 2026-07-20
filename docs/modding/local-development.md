@@ -122,16 +122,6 @@ Supported targets are:
 
 Language patches contain the language object directly rather than an `entries` wrapper.
 
-## Generated Lorem ipsum language
-
-Run the deterministic language generator with:
-
-```powershell
-npm run mod:generate-lorem
-```
-
-It evaluates the repository-owned `src/js/lang/current-language.js`, recursively replaces every string leaf, and writes the ready-to-load mod under `examples/local-mods/lorem-ipsum-language`. It preserves interpolation tokens such as `{value}` in their original order, changes empty and placeholder-only strings as well, and uses `la` for `meta.code` so the document language remains valid. Re-running the command updates the generated patch after localization keys change.
-
 ## File replacements
 
 Replacement declarations map an existing logical game path to a file inside the mod:

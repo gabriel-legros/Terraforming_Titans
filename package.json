@@ -1,13 +1,13 @@
 {
   "name": "terraforming-titans",
-  "version": "1.1.6-playtest.1",
+  "version": "1.1.6",
   "private": true,
   "productName": "Terraforming Titans",
   "main": "electron/main.cjs",
   "scripts": {
     "audit:memory": "node scripts/manual-tests/run-chrome-memory-repro.js --audit",
     "audit:localization": "node scripts/audit-localization.js",
-    "mod:generate-lorem": "node scripts/generate-lorem-language-mod.js",
+    "mod:validate-translations": "node scripts/validate-language-mods.js",
     "screenshot:ui": "node scripts/capture-game-ui.js",
     "screenshot:visualizer": "node scripts/capture-world-visualizer.js",
     "dist": "electron-builder",
