@@ -1879,22 +1879,22 @@ class SpaceStorageProject extends SpaceshipProject {
 
   applyShipOperationRateTooltip(durationSeconds, includeWithdraw = false) {
     if (durationSeconds <= 0) return;
-    this.pendingTransfers.forEach(t => {
-      if (t.mode !== 'store' && (!includeWithdraw || t.mode !== 'withdraw')) return;
-      if (!Number.isFinite(t.amount) || t.amount <= 0) return;
-      const spaceResource = this.getSpaceStorageResource(t.storageKey || t.resource);
-      const res = t.resource === 'liquidWater'
+    this.pendingTransfers.forEach(transfer => {
+      if (transfer.mode !== 'store' && (!includeWithdraw || transfer.mode !== 'withdraw')) return;
+      if (!Number.isFinite(transfer.amount) || transfer.amount <= 0) return;
+      const spaceResource = this.getSpaceStorageResource(transfer.storageKey || transfer.resource);
+      const res = transfer.resource === 'liquidWater'
         ? resources.surface.liquidWater
-        : resources[t.category][t.resource];
-      const rate = t.amount / durationSeconds;
+        : resources[transfer.category][transfer.resource];
+      const rate = transfer.amount / durationSeconds;
       if (spaceResource?.modifyRate) {
         spaceResource.modifyRate(
-          t.mode === 'store' ? rate : -rate,
+          transfer.mode === 'store' ? rate : -rate,
           t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'),
           'project'
         );
       }
-      res.modifyRate(t.mode === 'store' ? -rate : rate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
+      res.modifyRate(transfer.mode === 'store' ? -rate : rate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
     });
   }
 
@@ -2147,32 +2147,32 @@ class SpaceStorageProject extends SpaceshipProject {
     if (!plan?.transfers?.length) {
       return;
     }
-    plan.transfers.forEach(t => {
-      if (!Number.isFinite(t.amount) || t.amount <= 0) {
+    plan.transfers.forEach(transfer => {
+      if (!Number.isFinite(transfer.amount) || transfer.amount <= 0) {
         return;
       }
-      const delivered = t.amount * successChance;
-      const rate = seconds > 0 ? t.amount / seconds : 0;
+      const delivered = transfer.amount * successChance;
+      const rate = seconds > 0 ? transfer.amount / seconds : 0;
       const deliveredRate = seconds > 0 ? delivered / seconds : 0;
-      const storageResource = this.getSpaceStorageResource(t.storageKey || t.resource);
-      if (t.mode === 'withdraw') {
-        const fluidConfig = SPACE_STORAGE_FLUID_TRANSFER_TARGETS[t.storageKey];
-        const fluidTarget = fluidConfig ? this.getFluidTransferTarget(t.storageKey) : null;
+      const storageResource = this.getSpaceStorageResource(transfer.storageKey || transfer.resource);
+      if (transfer.mode === 'withdraw') {
+        const fluidConfig = SPACE_STORAGE_FLUID_TRANSFER_TARGETS[transfer.storageKey];
+        const fluidTarget = fluidConfig ? this.getFluidTransferTarget(transfer.storageKey) : null;
         const isColonyOnlyFluidWithdrawal = fluidTarget?.noOverflowChangeKey
-          && t.category === fluidTarget.category
-          && t.resource === fluidTarget.resource;
-        this.applyAccumulatedResourceDelta('spaceStorage', t.storageKey, -t.amount, accumulatedChanges);
-        if (t.resource === 'biomass') {
+          && transfer.category === fluidTarget.category
+          && transfer.resource === fluidTarget.resource;
+        this.applyAccumulatedResourceDelta('spaceStorage', transfer.storageKey, -transfer.amount, accumulatedChanges);
+        if (transfer.resource === 'biomass') {
           this.addBiomassToZones(delivered);
           resources.surface.biomass?.modifyRate(deliveredRate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
           storageResource?.modifyRate?.(-rate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
-        } else if (t.resource === 'liquidWater') {
+        } else if (transfer.resource === 'liquidWater') {
           this.addLiquidWaterToZones(delivered);
           resources.surface.liquidWater.modifyRate(deliveredRate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
           storageResource?.modifyRate?.(-rate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
         } else {
-          this.applyAccumulatedResourceDelta(t.category, t.resource, delivered, accumulatedChanges);
-          resources[t.category][t.resource].modifyRate(deliveredRate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
+          this.applyAccumulatedResourceDelta(transfer.category, transfer.resource, delivered, accumulatedChanges);
+          resources[transfer.category][transfer.resource].modifyRate(deliveredRate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
           storageResource?.modifyRate?.(-rate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
           if (isColonyOnlyFluidWithdrawal && options?.accumulatedSpecialChanges) {
             options.accumulatedSpecialChanges[fluidTarget.noOverflowChangeKey] += delivered;
@@ -2184,39 +2184,39 @@ class SpaceStorageProject extends SpaceshipProject {
         ) {
           this.recordTentativeWithdrawal(
             options.accumulatedSpecialChanges,
-            t,
+            transfer,
             delivered,
             options.refundCostPerDelivered || null
           );
         }
-      } else if (t.mode === 'store') {
-        if (t.resource === 'biomass') {
-          const removed = this.removeBiomassFromZones(t.amount);
+      } else if (transfer.mode === 'store') {
+        if (transfer.resource === 'biomass') {
+          const removed = this.removeBiomassFromZones(transfer.amount);
           if (removed > 0) {
             const deliveredRemoved = removed * successChance;
             resources.surface.biomass?.modifyRate(-removed / seconds, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
-            this.applyAccumulatedResourceDelta('spaceStorage', t.resource, deliveredRemoved, accumulatedChanges);
+            this.applyAccumulatedResourceDelta('spaceStorage', transfer.resource, deliveredRemoved, accumulatedChanges);
             storageResource?.modifyRate?.(deliveredRate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
           }
-        } else if (t.storageKey === 'liquidWater') {
-          if (t.category === 'surface' && t.resource === 'liquidWater') {
-            const removed = this.removeLiquidWaterFromZones(t.amount);
+        } else if (transfer.storageKey === 'liquidWater') {
+          if (transfer.category === 'surface' && transfer.resource === 'liquidWater') {
+            const removed = this.removeLiquidWaterFromZones(transfer.amount);
             if (removed > 0) {
               const deliveredRemoved = removed * successChance;
               resources.surface.liquidWater.modifyRate(-removed / seconds, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
-              this.applyAccumulatedResourceDelta('spaceStorage', t.storageKey, deliveredRemoved, accumulatedChanges);
+              this.applyAccumulatedResourceDelta('spaceStorage', transfer.storageKey, deliveredRemoved, accumulatedChanges);
               storageResource?.modifyRate?.(deliveredRate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
             }
           } else {
-            this.applyAccumulatedResourceDelta(t.category, t.resource, -t.amount, accumulatedChanges);
-            this.applyAccumulatedResourceDelta('spaceStorage', t.storageKey, delivered, accumulatedChanges);
-            resources[t.category][t.resource].modifyRate(-rate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
+            this.applyAccumulatedResourceDelta(transfer.category, transfer.resource, -transfer.amount, accumulatedChanges);
+            this.applyAccumulatedResourceDelta('spaceStorage', transfer.storageKey, delivered, accumulatedChanges);
+            resources[transfer.category][transfer.resource].modifyRate(-rate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
             storageResource?.modifyRate?.(deliveredRate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
           }
         } else {
-          this.applyAccumulatedResourceDelta(t.category, t.resource, -t.amount, accumulatedChanges);
-          this.applyAccumulatedResourceDelta('spaceStorage', t.storageKey || t.resource, delivered, accumulatedChanges);
-          resources[t.category][t.resource].modifyRate(-rate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
+          this.applyAccumulatedResourceDelta(transfer.category, transfer.resource, -transfer.amount, accumulatedChanges);
+          this.applyAccumulatedResourceDelta('spaceStorage', transfer.storageKey || transfer.resource, delivered, accumulatedChanges);
+          resources[transfer.category][transfer.resource].modifyRate(-rate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
           storageResource?.modifyRate?.(deliveredRate, t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer'), 'project');
         }
       }
