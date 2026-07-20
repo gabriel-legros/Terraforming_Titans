@@ -1703,6 +1703,27 @@ class SpaceManager extends EffectableEntity {
         return this._syncGalacticPopulationTotals();
     }
 
+    withdrawGalacticPopulation(amount) {
+        let remaining = Math.min(
+            Math.max(0, Number(amount) || 0),
+            Math.max(0, Number(this.galacticPopulation) || 0)
+        );
+        const withdrawn = remaining;
+        const nonBirchWithdrawal = Math.min(
+            remaining,
+            Math.max(0, Number(this.nonBirchGalacticPopulation) || 0)
+        );
+        this.nonBirchGalacticPopulation -= nonBirchWithdrawal;
+        remaining -= nonBirchWithdrawal;
+
+        if (remaining > 0 && !this._isCurrentWorldBirchWorld()) {
+            this.birchWorldPopulation = Math.max(0, this.birchWorldPopulation - remaining);
+        }
+
+        this._syncGalacticPopulationTotals();
+        return withdrawn;
+    }
+
     _setBirchWorldPopulationTotals(population, populationCapacity) {
         this.birchWorldPopulation = Math.max(0, Number(population) || 0);
         this.birchWorldPopulationCapacity = Math.max(0, Number(populationCapacity) || 0);

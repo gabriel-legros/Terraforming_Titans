@@ -368,7 +368,7 @@ class PopulationModule extends EffectableEntity {
         this.populationResource.decrease(-populationChange);
       }
       if (immigration > 0) {
-        spaceManager.galacticPopulation = Math.max(0, spaceManager.galacticPopulation - immigration);
+        spaceManager.withdrawGalacticPopulation(immigration);
       }
 
       currentPopulation = this.populationResource.value;
