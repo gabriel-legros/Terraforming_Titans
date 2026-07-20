@@ -752,7 +752,11 @@ class StoryManager {
             }
             return;
         }
-        const objectiveText = `${texts.length === 1 ? 'Objective' : 'Objectives'}: ${texts.join('; ')}`;
+        const objectiveText = t(
+            texts.length === 1 ? 'ui.journal.objective' : 'ui.journal.objectives',
+            { text: texts.join('; ') },
+            `${texts.length === 1 ? 'Objective' : 'Objectives'}: ${texts.join('; ')}`
+        );
         if (el.textContent !== objectiveText) {
             el.textContent = objectiveText;
         }

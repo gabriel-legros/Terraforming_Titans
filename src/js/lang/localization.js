@@ -577,9 +577,21 @@ function applyLocalizedStoryFields(localizedStory) {
       chapter.narrative = localizedChapter.narrative;
       chapter.narrativeLines = languageTextToLines(localizedChapter.narrative);
     }
-    if (chapter.parameters && localizedChapter.text !== undefined) {
-      chapter.parameters.text = localizedChapter.text;
-      chapter.parameters.textLines = languageTextToLines(localizedChapter.text);
+    if (localizedChapter.title !== undefined) {
+      chapter.title = localizedChapter.title;
+    }
+    const localizedParameters = localizedChapter.parameters;
+    if (chapter.parameters && localizedParameters) {
+      if (localizedParameters.title !== undefined) {
+        chapter.parameters.title = localizedParameters.title;
+      }
+      if (localizedParameters.text !== undefined) {
+        chapter.parameters.text = localizedParameters.text;
+        chapter.parameters.textLines = languageTextToLines(localizedParameters.text);
+      }
+      if (localizedParameters.buttonText !== undefined) {
+        chapter.parameters.buttonText = localizedParameters.buttonText;
+      }
     }
   }
 
@@ -599,6 +611,46 @@ function applyLocalizedStoryFields(localizedStory) {
     if (Array.isArray(localizedProject.storySteps)) {
       project.attributes.storySteps = localizedProject.storySteps.slice();
       project.attributes.storyStepLines = localizedProject.storySteps.map(languageTextToLines);
+    }
+    if (Array.isArray(localizedProject.sequenceSteps)) {
+      for (let i = 0; i < localizedProject.sequenceSteps.length; i += 1) {
+        const localizedStep = localizedProject.sequenceSteps[i];
+        const step = project.attributes.sequenceSteps[i];
+        if (localizedStep.label !== undefined) {
+          step.label = localizedStep.label;
+        }
+        if (localizedStep.text !== undefined) {
+          step.text = localizedStep.text;
+        }
+      }
+    }
+    if (localizedProject.branchOptions) {
+      for (const optionId in localizedProject.branchOptions) {
+        const localizedOption = localizedProject.branchOptions[optionId];
+        const option = project.attributes.branchOptions.find(entry => entry.id === optionId);
+        if (localizedOption.label !== undefined) {
+          option.label = localizedOption.label;
+        }
+        if (localizedOption.text !== undefined) {
+          option.text = localizedOption.text;
+        }
+      }
+    }
+    if (localizedProject.battleFrames) {
+      for (const frameId in localizedProject.battleFrames) {
+        const localizedFrame = localizedProject.battleFrames[frameId];
+        const frame = project.attributes.battleFrames.find(entry => String(entry.id) === frameId);
+        for (let unitIndex = 0; unitIndex < localizedFrame.units.length; unitIndex += 1) {
+          const localizedUnit = localizedFrame.units[unitIndex];
+          const unit = frame.units[unitIndex];
+          if (localizedUnit.label !== undefined) {
+            unit.label = localizedUnit.label;
+          }
+          if (localizedUnit.subLabel !== undefined) {
+            unit.subLabel = localizedUnit.subLabel;
+          }
+        }
+      }
     }
   }
 }

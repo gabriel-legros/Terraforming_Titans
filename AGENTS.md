@@ -66,6 +66,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ## Project Overview
 - Browser incremental game with script entry via `index.html`.
+- English localization is split between `src/js/lang/current-language.js` for shared game/UI text and `src/js/lang/story-language.js` for chapter titles, narratives, prompts, story-project content, and story-project-specific UI.
 - Core simulation: `terraforming.js`, `physics.js`, cycle modules.
 - Economy/colony: `resource.js`, `building.js`, `colony.js`, related UI modules.
 - Story progression: `StoryManager` in `progress.js`.

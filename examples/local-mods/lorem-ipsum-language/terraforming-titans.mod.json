@@ -4,8 +4,8 @@
   "name": "Lorem Ipsum Language",
   "version": "1.0.0",
   "loadOrder": 1000,
-  "generatedFrom": "src/js/lang/current-language.js",
-  "generatedStringCount": 5431,
+  "generatedFrom": "src/js/lang/current-language.js + src/js/lang/story-language.js",
+  "generatedStringCount": 6766,
   "content": {
     "patches": [
       {

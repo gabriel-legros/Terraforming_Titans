@@ -4,7 +4,11 @@ const path = require('path');
 const vm = require('vm');
 
 const repositoryRoot = path.resolve(__dirname, '..');
-const sourcePath = path.join(repositoryRoot, 'src', 'js', 'lang', 'current-language.js');
+const sourcePaths = [
+  path.join(repositoryRoot, 'src', 'js', 'lang', 'current-language.js'),
+  path.join(repositoryRoot, 'src', 'js', 'lang', 'story-language.js'),
+];
+const localizationPath = path.join(repositoryRoot, 'src', 'js', 'lang', 'localization.js');
 const modRoot = path.join(repositoryRoot, 'examples', 'local-mods', 'lorem-ipsum-language');
 const patchPath = path.join(modRoot, 'patches', 'language.json');
 const manifestPath = path.join(modRoot, 'terraforming-titans.mod.json');
@@ -21,20 +25,19 @@ const loremWords = [
 ];
 
 function readLanguageData() {
-  const source = fs.readFileSync(sourcePath, 'utf8');
-  let languageData = null;
-  vm.runInNewContext(source, {
-    setLanguageData(data) {
-      languageData = data;
-    }
-  }, {
-    filename: sourcePath,
-    timeout: 5000
+  const context = {};
+  vm.createContext(context);
+  vm.runInContext(fs.readFileSync(localizationPath, 'utf8'), context, {
+    filename: localizationPath,
+    timeout: 5000,
   });
-  if (!languageData) {
-    throw new Error('current-language.js did not call setLanguageData.');
-  }
-  return languageData;
+  sourcePaths.forEach(sourcePath => {
+    vm.runInContext(fs.readFileSync(sourcePath, 'utf8'), context, {
+      filename: sourcePath,
+      timeout: 5000,
+    });
+  });
+  return context.activeLanguageData;
 }
 
 function getLoremOffset(seed) {
@@ -152,7 +155,7 @@ function writeGeneratedMod(languageData, stringCount) {
     name: 'Lorem Ipsum Language',
     version: '1.0.0',
     loadOrder: 1000,
-    generatedFrom: 'src/js/lang/current-language.js',
+    generatedFrom: 'src/js/lang/current-language.js + src/js/lang/story-language.js',
     generatedStringCount: stringCount,
     content: {
       patches: [
