@@ -145,15 +145,17 @@ class NanotechManager extends EffectableEntity {
     this.ensureNanobotsResource().value = value;
   }
 
-  syncNanobotsResourceVisibility() {
+  syncNanobotsResource() {
     const resource = this.ensureNanobotsResource();
+    resource.hasCap = true;
+    resource.cap = this.getMaxNanobots();
     resource.unlocked = this.enabled && !isCurrentWorldManagerDisabled('nanotechManager');
     resource.showInSidebar = this.showNanobotsInSidebar;
   }
 
   setNanobotsSidebarVisibility(show) {
     this.showNanobotsInSidebar = show === true;
-    this.syncNanobotsResourceVisibility();
+    this.syncNanobotsResource();
   }
 
   getExtraNanotechStages() {
@@ -379,6 +381,7 @@ class NanotechManager extends EffectableEntity {
     if(deltaTime == 0){
       return;
     }
+    this.syncNanobotsResource();
     if (!isManagerEffectivelyEnabled(this, 'nanotechManager')) {
       this.resetActivityState();
       this.applyMaintenanceEffects();
@@ -898,7 +901,7 @@ class NanotechManager extends EffectableEntity {
       return;
     }
     this.enabled = true;
-    this.syncNanobotsResourceVisibility();
+    this.syncNanobotsResource();
     this.markUIDirty();
   }
 
@@ -2861,12 +2864,12 @@ class NanotechManager extends EffectableEntity {
     this.maxGraphitePercent = 10;
     this.maxGraphiteAbsolute = 1e6;
     this.graphiteLimitMode = 'percent';
-    this.syncNanobotsResourceVisibility();
+    this.syncNanobotsResource();
     this.markUIDirty();
   }
 
   reapplyEffects() {
-    this.syncNanobotsResourceVisibility();
+    this.syncNanobotsResource();
     if (isCurrentWorldManagerDisabled('nanotechManager')) {
       return;
     }

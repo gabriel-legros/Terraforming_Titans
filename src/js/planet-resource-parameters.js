@@ -295,7 +295,7 @@
       orbitalDebris: { name: '', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
       systemDebris: { name: '', hasCap: false, initialValue: 0, unlocked: false, unit: 'ton', hideWhenSmall: true, reverseColor: true },
       spaceships: {name: '', hasCap: false, initialValue: 0, unlocked: false},
-      nanobots: { name: '', hasCap: false, initialValue: 1, unlocked: false, hideRate: true, showInSidebar: false, preserveOnTravel: true },
+      nanobots: { name: '', hasCap: true, baseCap: 1, initialValue: 1, unlocked: false, hideRate: true, showInSidebar: false, preserveOnTravel: true },
       solisPoints: { name: '', hasCap: false, initialValue: 0, unlocked: false, hideRate: true, showInSidebar: false, preserveOnTravel: true },
       alienArtifact: { name: '', hasCap: false, initialValue: 0, unlocked: false, preserveOnTravel: true },
       crusaders: { name: '', hasCap: false, initialValue: 0, hideWhenSmall : true, unlocked: false },
