@@ -996,7 +996,6 @@ class PlanetaryThrustersProject extends Project{
           this.energySpentMotion = 0;
           const starM2 = getStarMassKgFromCurrent();
           this.dVreq = spiralDeltaV(this.startAU, this.tgtAU, G*starM2);
-          this.calcMotionCost();
           this.lastActiveTime = 0;
           return;
         }
