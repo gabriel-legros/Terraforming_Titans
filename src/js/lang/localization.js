@@ -162,7 +162,7 @@ function applyLocalizedResourceFields(resourceGroups, localizedGroups) {
     if (!targetGroup) {
       continue;
     }
-    applyLocalizedEntryFields(targetGroup, localizedGroup, ['name', 'displayName', 'description']);
+    applyLocalizedEntryFields(targetGroup, localizedGroup, ['name', 'displayName', 'description', 'unit']);
   }
 }
 

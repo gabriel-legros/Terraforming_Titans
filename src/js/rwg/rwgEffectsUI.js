@@ -5,23 +5,23 @@ let _rwgEffectsInitialized = false;
 let _rwgEffectsCardEl = null;
 let _rwgEffectsListEl = null;
 let _rwgEffectsLastKey = '';
-const RWG_EFFECTS_TOOLTIP_TEXT = 'Bonuses from terraforming random worlds of each type';
+const RWG_EFFECTS_TOOLTIP_TEXT = t('ui.rwg.effectsSummary.tooltip', {}, 'Bonuses from terraforming random worlds of each type');
 
 // Friendly labels for projects and buildings
 const RWG_PROJECT_NAMES = {
-  nitrogenSpaceMining: 'Nitrogen Importation',
-  hydrogenSpaceMining: 'Hydrogen Importation',
-  carbonSpaceMining: 'Carbon Importation',
-  waterSpaceMining: 'Water Importation',
+  nitrogenSpaceMining: t('ui.rwg.effectsSummary.projects.nitrogenImportation', {}, 'Nitrogen Importation'),
+  hydrogenSpaceMining: t('ui.rwg.effectsSummary.projects.hydrogenImportation', {}, 'Hydrogen Importation'),
+  carbonSpaceMining: t('ui.rwg.effectsSummary.projects.carbonImportation', {}, 'Carbon Importation'),
+  waterSpaceMining: t('ui.rwg.effectsSummary.projects.waterImportation', {}, 'Water Importation'),
 };
 const RWG_BUILDING_OUTPUT = {
-  oreMine: 'Ore Mine',
-  sandQuarry: 'Sand Harvester',
-  geothermalGenerator: 'Geothermal Generator',
-  fusionPowerPlant: 'Fusion Reactor',
-  superalloyFusionReactor: 'Superalloy Fusion Reactor',
-  spaceMirror: 'Space Mirror',
-  hyperionLantern: 'Hyperion Lantern',
+  oreMine: t('ui.rwg.effectsSummary.buildings.oreMine', {}, 'Ore Mine'),
+  sandQuarry: t('ui.rwg.effectsSummary.buildings.sandHarvester', {}, 'Sand Harvester'),
+  geothermalGenerator: t('ui.rwg.effectsSummary.buildings.geothermalGenerator', {}, 'Geothermal Generator'),
+  fusionPowerPlant: t('ui.rwg.effectsSummary.buildings.fusionReactor', {}, 'Fusion Reactor'),
+  superalloyFusionReactor: t('ui.rwg.effectsSummary.buildings.superalloyFusionReactor', {}, 'Superalloy Fusion Reactor'),
+  spaceMirror: t('ui.rwg.effectsSummary.buildings.spaceMirror', {}, 'Space Mirror'),
+  hyperionLantern: t('ui.rwg.effectsSummary.buildings.hyperionLantern', {}, 'Hyperion Lantern'),
 };
 
 function _titleCaseArchetype(t) {
@@ -56,7 +56,7 @@ function _ensureRWGEffectsUI() {
   card.open = true;
   card.innerHTML = `
     <summary class="rwg-collapsible-summary">
-      <span class="summary-arrow">▼</span>Random World Effects <span id="rwg-effects-info" class="info-tooltip-icon">&#9432;</span>
+      <span class="summary-arrow">▼</span>${getRwgUiText('effectsSummary.title', 'Random World Effects')} <span id="rwg-effects-info" class="info-tooltip-icon">&#9432;</span>
     </summary>
     <div class="rwg-collapsible-body">
       <div id="rwg-effects-list" class="card-body rwg-effects-list"></div>
@@ -145,59 +145,59 @@ function _computeRWGEffectsSummary() {
         : (eff.description || '');
       if (eff.type === 'productionMultiplier') {
         const percent = (raw - 1) * 100;
-        const what = RWG_BUILDING_OUTPUT[eff.targetId] || 'Production';
+        const what = RWG_BUILDING_OUTPUT[eff.targetId] || getRwgUiText('effectsSummary.production', 'Production');
         const fEach = (eff.factor ?? 0.2) * 100;
-        descr = descr || `${what} production increased (+${fEach.toFixed(0)}% each)`;
+        descr = descr || getRwgUiText('effectsSummary.productionIncreased', '{name} production increased (+{percent}% each)', { name: what, percent: fEach.toFixed(0) });
         display = `${percent >= 0 ? '+' : ''}${percent.toFixed(0)}%`;
       } else if (eff.type === 'projectDurationMultiplier') {
         // Show from computed value so capped formulas display correctly.
         const divisor = raw > 0 ? 1 / raw : 0;
-        const name = RWG_PROJECT_NAMES[eff.targetId] || eff.targetId || 'Project';
+        const name = RWG_PROJECT_NAMES[eff.targetId] || eff.targetId || getRwgUiText('effectsSummary.project', 'Project');
         const fEach = ((eff.factor ?? 0.2) * 100).toFixed(0);
-        descr = descr || `${name} duration (${fEach}% each)`;
+        descr = descr || getRwgUiText('effectsSummary.projectDuration', '{name} duration ({percent}% each)', { name, percent: fEach });
         display = `/${divisor.toFixed(2)}`;
       } else if (eff.type === 'globalPopulationGrowth') {
         const percent = raw * 100;
         const fEach = (eff.factor ?? 0.02) * 100;
-        descr = descr || `Population growth rate increased (+${fEach.toFixed(0)}% each)`;
+        descr = descr || getRwgUiText('effectsSummary.populationGrowth', 'Population growth rate increased (+{percent}% each)', { percent: fEach.toFixed(0) });
         display = `${percent >= 0 ? '+' : ''}${percent.toFixed(0)}%`;
       } else if (eff.type === 'lifeDesignPointBonus') {
         const fEach = eff.factor ?? 1;
-        descr = descr || `Life design points (+${fEach} each)`;
+        descr = descr || getRwgUiText('effectsSummary.lifeDesignPoints', 'Life design points (+{value} each)', { value: fEach });
         display = `${raw >= 0 ? '+' : ''}${raw}`;
       } else if (eff.type === 'globalWorkerReduction') {
         const each = eff.factor ?? 0.02;
         const divisor = 1 + each * effectiveCount;
         const eachPct = (each * 100).toFixed(0);
-        descr = descr || `Worker requirements divided by (1+${eachPct}% each)`;
+        descr = descr || getRwgUiText('effectsSummary.workerRequirements', 'Worker requirements divided by (1+{percent}% each)', { percent: eachPct });
         display = divisor > 0 ? `/${divisor.toFixed(2)}` : '—';
       } else if (eff.type === 'extraTerraformedWorlds') {
         // Super-Earth: counts as extra worlds; display +N not xN
-        descr = descr || 'Counts as an extra world';
+        descr = descr || getRwgUiText('effectsSummary.extraWorld', 'Counts as an extra world');
         display = `+${(raw ?? effectiveCount)}`;
       } else if (eff.type === 'globalMaintenanceReduction') {
         const each = eff.factor ?? 0.02;
         const divisor = 1 + each * effectiveCount;
         const eachPct = (each * 100).toFixed(0);
-        descr = descr || `Maintenance divided by (${eachPct}% each)`;
+        descr = descr || getRwgUiText('effectsSummary.maintenance', 'Maintenance divided by ({percent}% each)', { percent: eachPct });
         display = divisor > 0 ? `/${divisor.toFixed(2)}` : '—';
       } else if (eff.type === 'globalCostReduction') {
         const each = eff.factor ?? 0.01;
         const divisor = 1 + each * Math.sqrt(Math.max(0, effectiveCount));
         const eachPct = (each * 100).toFixed(0);
-        descr = descr || `Building and colony construction cost divided by (1+${eachPct}% × √N)`;
+        descr = descr || getRwgUiText('effectsSummary.constructionCost', 'Building and colony construction cost divided by (1+{percent}% × √N)', { percent: eachPct });
         display = divisor > 0 ? `/${divisor.toFixed(3)}` : '—';
       } else if (eff.type === 'resourceCostMultiplier') {
         const divisor = raw > 0 ? 1 / raw : 0;
-        const what = RWG_BUILDING_OUTPUT[eff.targetId] || (eff.targetId || 'Cost');
+        const what = RWG_BUILDING_OUTPUT[eff.targetId] || (eff.targetId || getRwgUiText('effectsSummary.cost', 'Cost'));
         const perWorld = eff.factor ?? 0;
-        descr = descr || `${what} construction cost (/(1+${perWorld.toFixed(1)}xN))`;
+        descr = descr || getRwgUiText('effectsSummary.resourceConstructionCost', '{name} construction cost (/(1+{value}xN))', { name: what, value: perWorld.toFixed(1) });
         display = divisor > 0 ? `/${divisor.toFixed(1)}` : '—';
       } else if (eff.type === 'importCapMultiplier') {
         const each = eff.factor ?? 0.2;
         const divisor = raw > 0 ? 1 / raw : 0;
         const eachPct = (each * 100).toFixed(0);
-        descr = descr || `Import cap divided by (1+${eachPct}% each)`;
+        descr = descr || getRwgUiText('effectsSummary.importCap', 'Import cap divided by (1+{percent}% each)', { percent: eachPct });
         display = divisor > 0 ? `/${divisor.toFixed(2)}` : '—';
       } else if (eff.type === 'flavorText') {
         descr = descr || '';
@@ -225,9 +225,9 @@ function updateRWGEffectsUI() {
   rows.push({
     kind: 'table-head',
     className: 'rwg-effects-row rwg-effects-table-head',
-    type: 'Type',
-    count: 'Amount',
-    effect: 'Value'
+    type: getRwgUiText('effectsSummary.type', 'Type'),
+    count: getRwgUiText('effectsSummary.amount', 'Amount'),
+    effect: getRwgUiText('effectsSummary.value', 'Value')
   });
   let altFlip = false; // alternate background per group (header + effects)
   for (const entry of summary) {

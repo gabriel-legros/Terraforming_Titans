@@ -51,17 +51,17 @@ function formatMetabolismGrowthEquationForUI(process, options) {
 function buildMetabolismEfficiencyUIStrings() {
   const process = getActiveLifeMetabolismProcessForUI();
   const usesLuminosity = !!process?.growth?.usesLuminosity;
-  const displayName = `${process.displayName} Efficiency`;
+  const displayName = getLifeUIText('ui.life.metabolismEfficiency.name', '{name} Efficiency', { name: process.displayName });
   const description = usesLuminosity
-    ? 'Efficiency of converting light to energy; affects growth rate.'
-    : 'Efficiency of converting chemical energy into biomass; affects growth rate.';
+    ? getLifeUIText('ui.life.metabolismEfficiency.lightDescription', 'Efficiency of converting light to energy; affects growth rate.')
+    : getLifeUIText('ui.life.metabolismEfficiency.chemicalDescription', 'Efficiency of converting chemical energy into biomass; affects growth rate.');
   const equation = formatMetabolismGrowthEquationForUI(process);
   const tooltipText = [
-    `${displayName} determines the base growth rate.`,
+    getLifeUIText('ui.life.metabolismEfficiency.tooltipBase', '{name} determines the base growth rate.', { name: displayName }),
     '',
-    `Growth chemistry: ${equation}`,
+    getLifeUIText('ui.life.metabolismEfficiency.growthChemistry', 'Growth chemistry: {equation}', { equation }),
     '',
-    `Detailed: ${formatMetabolismGrowthEquationForUI(process, { includeCoefficients: true })}`,
+    getLifeUIText('ui.life.metabolismEfficiency.detailed', 'Detailed: {equation}', { equation: formatMetabolismGrowthEquationForUI(process, { includeCoefficients: true }) }),
   ].join('\n');
 
   return { displayName, description, equation, tooltipText };
@@ -74,7 +74,11 @@ function getOptimalGrowthTemperatureDescription() {
     false,
     2
   );
-  return `Daytime temperature for peak growth. Costs 1 point per degree from the ${baseTemperature}${getTemperatureUnit()} base.`;
+  return getLifeUIText(
+    'ui.life.attributes.optimalGrowthTemperature.dynamicDescription',
+    'Daytime temperature for peak growth. Costs 1 point per degree from the {temperature}{unit} base.',
+    { temperature: baseTemperature, unit: getTemperatureUnit() }
+  );
 }
 
 function ensureDynamicInfoTooltip(iconElement, cachedTooltip, text) {
@@ -496,17 +500,17 @@ function initializeLifeTerraformingDesignerUI() {
     // Generate the HTML content
     lifeTerraformingDiv.innerHTML = `
       <p id="life-designer-locked-message" class="empty-message" style="display:none;">
-        Complete the "Life Designing and Production" research to unlock the Life Designer.
+        ${getLifeUIText('ui.life.designer.locked', 'Complete the "Life Designing and Production" research to unlock the Life Designer.')}
       </p>
       <div id="life-terraforming-content">
-        <h2>Life Designer</h2>
+        <h2>${getLifeUIText('ui.life.designer.title', 'Life Designer')}</h2>
         <div id="life-designer-main-area" style="display: flex; gap: 20px; align-items: stretch;">
             <table id="life-designs-table" style="flex: 3;">
             <thead>
                 <tr>
-                <th>Attribute</th>
-                <th>Current Design</th>
-                <th id="tentative-design-header" style="display: none;">Tentative Design</th>
+                <th>${getLifeUIText('ui.life.designer.attribute', 'Attribute')}</th>
+                <th>${getLifeUIText('ui.life.designer.currentDesign', 'Current Design')}</th>
+                <th id="tentative-design-header" style="display: none;">${getLifeUIText('ui.life.designer.tentativeDesign', 'Tentative Design')}</th>
                 <th id="modify-header" style="display: none;"><button id="life-modify-step-divide">/10</button> <button id="life-modify-step-multiply">x10</button> <span id="life-modify-tooltip" class="info-tooltip-icon">&#9432;</span></th>
                 </tr>
             </thead>
@@ -515,33 +519,33 @@ function initializeLifeTerraformingDesignerUI() {
             </tbody>
             </table>
             <div id="life-point-shop" style="flex: 1; border: 1px solid #ccc; border-radius: 5px; padding: 10px;">
-               <h4>Controls</h4>
+               <h4>${getLifeUIText('ui.life.designer.controls', 'Controls')}</h4>
                <div id="life-points-display" style="margin-top: 5px;">
-                 <p>Points Available: <span id="life-points-available"></span> / <span id="life-points-remaining-display" style="display: none;">Remaining: <span id="life-points-remaining"></span></span></p>
+                 <p>${getLifeUIText('ui.life.designer.pointsAvailable', 'Points Available:')} <span id="life-points-available"></span> / <span id="life-points-remaining-display" style="display: none;">${getLifeUIText('ui.life.designer.remaining', 'Remaining:')} <span id="life-points-remaining"></span></span></p>
                </div>
                <div id="life-design-edit-controls" style="margin-top: 10px;">
-                   <button id="life-new-design-btn">Create New Design</button>
-                   <button id="life-revert-btn" style="display: none;">Cancel</button>
+                   <button id="life-new-design-btn">${getLifeUIText('ui.life.designer.createNewDesign', 'Create New Design')}</button>
+                   <button id="life-revert-btn" style="display: none;">${getLifeUIText('ui.life.designer.cancel', 'Cancel')}</button>
                </div>
                <div id="life-apply-progress-container" style="margin-top: 10px;">
                  <button id="life-apply-btn" style="visibility: hidden;">
-                   <span id="life-apply-title">Deploy</span>
+                   <span id="life-apply-title">${getLifeUIText('ui.life.designer.deploy', 'Deploy')}</span>
                    <span id="life-apply-reason" style="display: none;"></span>
                  </button>
                </div>
                <hr style="margin: 15px 0;">
                <div id="life-biodomes-section" style="margin-top: 10px;">
-                 <h4>Biodomes</h4>
-                 <p>Points from biodomes :
+                 <h4>${getLifeUIText('ui.life.designer.biodomes', 'Biodomes')}</h4>
+                 <p>${getLifeUIText('ui.life.designer.pointsFromBiodomes', 'Points from biodomes:')}
                    <span id="life-biodome-points">0</span>
                    <span id="life-biodome-rate">+0/hour</span>
                   <span class="info-tooltip-icon" id="life-biodome-tooltip">&#9432;</span>
                 </p>
               </div>
                <hr style="margin: 15px 0;">
-               <h3>Point Shop</h3>
+               <h3>${getLifeUIText('ui.life.designer.pointShop', 'Point Shop')}</h3>
                <div id="life-point-quantity-controls" style="display: flex; align-items: center; gap: 8px; margin: 8px 0;">
-                <span>Buying <span id="life-point-quantity-display">1</span> at a time</span>
+                <span>${getLifeUIText('ui.life.designer.buyingPrefix', 'Buying')} <span id="life-point-quantity-display">1</span> ${getLifeUIText('ui.life.designer.buyingSuffix', 'at a time')}</span>
                 <button id="life-point-quantity-divide">/10</button>
                 <button id="life-point-quantity-multiply">x10</button>
                </div>
@@ -554,30 +558,30 @@ function initializeLifeTerraformingDesignerUI() {
             <table id="life-status-table" style="width: 100%; border-collapse: collapse;">
                 <thead>
                     <tr>
-                        <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">Requirement <small>(Tap ❌ for details)</small></th>
-                        <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">Global</th>
-                        <th id="life-status-header-tropical" style="border: 1px solid #ccc; padding: 5px; text-align: center;">Tropical</th>
-                        <th id="life-status-header-temperate" style="border: 1px solid #ccc; padding: 5px; text-align: center;">Temperate</th>
-                        <th id="life-status-header-polar" style="border: 1px solid #ccc; padding: 5px; text-align: center;">Polar <span id="life-status-polar-tooltip" class="info-tooltip-icon">&#9432;</span></th>
+                        <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">${getLifeUIText('ui.life.designer.requirement', 'Requirement')} <small>${getLifeUIText('ui.life.designer.tapForDetails', '(Tap ❌ for details)')}</small></th>
+                        <th style="border: 1px solid #ccc; padding: 5px; text-align: center;">${getLifeUIText('ui.life.designer.global', 'Global')}</th>
+                        <th id="life-status-header-tropical" style="border: 1px solid #ccc; padding: 5px; text-align: center;">${getLifeZoneLabel('tropical')}</th>
+                        <th id="life-status-header-temperate" style="border: 1px solid #ccc; padding: 5px; text-align: center;">${getLifeZoneLabel('temperate')}</th>
+                        <th id="life-status-header-polar" style="border: 1px solid #ccc; padding: 5px; text-align: center;">${getLifeZoneLabel('polar')} <span id="life-status-polar-tooltip" class="info-tooltip-icon">&#9432;</span></th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr>
-                        <td style="border: 1px solid #ccc; padding: 5px;">Day Temp (<span class="temp-unit"></span>)</td>
+                        <td style="border: 1px solid #ccc; padding: 5px;">${getLifeUIText('ui.life.designer.dayTemperature', 'Day Temp')} (<span class="temp-unit"></span>)</td>
                         <td id="day-temp-global" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-status"></span></td>
                         <td id="day-temp-tropical" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
                         <td id="day-temp-temperate" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
                         <td id="day-temp-polar" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
                     </tr>
                     <tr>
-                        <td style="border: 1px solid #ccc; padding: 5px;">Night Temp (<span class="temp-unit"></span>)</td>
+                        <td style="border: 1px solid #ccc; padding: 5px;">${getLifeUIText('ui.life.designer.nightTemperature', 'Night Temp')} (<span class="temp-unit"></span>)</td>
                         <td id="night-temp-global" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-status"></span></td>
                         <td id="night-temp-tropical" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
                         <td id="night-temp-temperate" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
                         <td id="night-temp-polar" style="border: 1px solid #ccc; padding: 5px; text-align: center;"><span class="temp-value"></span> <span class="temp-status"></span></td>
                     </tr>
                     <tr>
-                        <td style="border: 1px solid #ccc; padding: 5px;">Temp Multiplier</td>
+                        <td style="border: 1px solid #ccc; padding: 5px;">${getLifeUIText('ui.life.designer.temperatureMultiplier', 'Temp Multiplier')}</td>
                         <td id="temp-multiplier-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="temp-multiplier-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="temp-multiplier-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
@@ -585,28 +589,28 @@ function initializeLifeTerraformingDesignerUI() {
                     </tr>
                     <tr id="life-liquid-rows-anchor"></tr>
                      <tr>
-                        <td style="border: 1px solid #ccc; padding: 5px;">Radiation</td>
+                        <td style="border: 1px solid #ccc; padding: 5px;">${getLifeUIText('ui.life.designer.radiation', 'Radiation')}</td>
                         <td id="radiation-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="radiation-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="radiation-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="radiation-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                     </tr>
                     <tr>
-                        <td style="border: 1px solid #ccc; padding: 5px;">Biomass Amount (tons)</td>
+                        <td style="border: 1px solid #ccc; padding: 5px;">${getLifeUIText('ui.life.designer.biomassAmount', 'Biomass Amount (tons)')}</td>
                         <td id="biomass-amount-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="biomass-amount-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="biomass-amount-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="biomass-amount-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                     </tr>
                     <tr>
-                        <td style="border: 1px solid #ccc; padding: 5px;">Biomass Density (tons/m²)</td>
+                        <td style="border: 1px solid #ccc; padding: 5px;">${getLifeUIText('ui.life.designer.biomassDensity', 'Biomass Density (tons/m²)')}</td>
                         <td id="biomass-density-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="biomass-density-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="biomass-density-temperate-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="biomass-density-polar-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                     </tr>
                     <tr>
-                        <td style="border: 1px solid #ccc; padding: 5px;">Growth Rate (%/s)</td>
+                        <td style="border: 1px solid #ccc; padding: 5px;">${getLifeUIText('ui.life.designer.growthRate', 'Growth Rate (%/s)')}</td>
                         <td id="growth-rate-global-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">-</td>
                         <td id="growth-rate-tropical-status" style="border: 1px solid #ccc; padding: 5px; text-align: center;">
                             <span id="growth-rate-tropical-value">-</span>
@@ -682,8 +686,8 @@ function initializeLifeTerraformingDesignerUI() {
         rows += `
           <tr id="life-attribute-row-${attributeName}" data-life-attribute-ui="${attributeName}"${rowHidden ? ' style="display:none;"' : ''}>
             <td class="life-attribute-name">
-              ${isMetabolismEfficiency ? `<span id="${attributeName}-display-name">${displayName}</span>` : displayName} (Max <span id="${attributeName}-max-upgrades">${getLifeAttributeMaxDisplay(attribute)}</span>)
-              <div class="life-attribute-description">${isMetabolismEfficiency ? `<span id="${attributeName}-metabolism-description">${description}</span> <span id="${attributeName}-metabolism-tooltip" class="info-tooltip-icon">&#9432;</span><div id="${attributeName}-growth-equation" class="life-metabolism-equation">${metabolismStrings.equation}</div>` : `${description}${attributeName === 'geologicalBurial' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently.  Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.">&#9432;</span>' : ''}${attributeName === 'spaceEfficiency' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.">&#9432;</span>' : ''}${attributeName === 'growthTemperatureTolerance' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.">&#9432;</span>' : ''}${attributeName === 'radiationTolerance' ? ' <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="Radiation mitigation is quadratic. Each point contributes points² × 0.01 mSv/day of shielding (10 points = 1.00 mSv/day, 100 points = 100.00 mSv/day). Remaining radiation after mitigation drives the growth penalty.">&#9432;</span>' : ''}${attributeName === 'bioworkforce' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${bioworkforceTooltip}">&#9432;</span>` : ''}${attributeName === 'bioships' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.lifeDesigner.attributes.bioships.tooltip', 'Each point converts {percent}% of global biomass per second into spaceships after life growth and decay are resolved.', { percent: bioshipsPercentPerPoint })}">&#9432;</span>` : ''}`}</div>
+              ${isMetabolismEfficiency ? `<span id="${attributeName}-display-name">${displayName}</span>` : displayName} (${getLifeUIText('ui.life.designer.max', 'Max')} <span id="${attributeName}-max-upgrades">${getLifeAttributeMaxDisplay(attribute)}</span>)
+              <div class="life-attribute-description">${isMetabolismEfficiency ? `<span id="${attributeName}-metabolism-description">${description}</span> <span id="${attributeName}-metabolism-tooltip" class="info-tooltip-icon">&#9432;</span><div id="${attributeName}-growth-equation" class="life-metabolism-equation">${metabolismStrings.equation}</div>` : `${description}${attributeName === 'geologicalBurial' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.life.attributes.geologicalBurial.tooltip', 'Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently. Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.')}">&#9432;</span>` : ''}${attributeName === 'spaceEfficiency' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.life.attributes.spaceEfficiency.tooltip', 'Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.')}">&#9432;</span>` : ''}${attributeName === 'growthTemperatureTolerance' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.life.attributes.growthTemperatureTolerance.tooltip', 'Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.')}">&#9432;</span>` : ''}${attributeName === 'radiationTolerance' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.life.attributes.radiationTolerance.tooltip', 'Radiation mitigation is quadratic. Each point contributes points² × 0.01 mSv/day of shielding (10 points = 1.00 mSv/day, 100 points = 100.00 mSv/day). Remaining radiation after mitigation drives the growth penalty.')}">&#9432;</span>` : ''}${attributeName === 'bioworkforce' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${bioworkforceTooltip}">&#9432;</span>` : ''}${attributeName === 'bioships' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.lifeDesigner.attributes.bioships.tooltip', 'Each point converts {percent}% of global biomass per second into spaceships after life growth and decay are resolved.', { percent: bioshipsPercentPerPoint })}">&#9432;</span>` : ''}`}</div>
             </td>
             <td>
               <div id="${attributeName}-current-value" data-attribute="${attributeName}">${attribute.value} / ${convertedValue !== null ? `${convertedValue}` : '-'}</div>
@@ -928,9 +932,9 @@ function initializeLifeTerraformingDesignerUI() {
 
   // Cache frequently used node lists for hot paths
   const staticTooltips = [
-    { id: 'life-biodome-tooltip', text: 'Each active Biodome generates life design points at log10(10 x Active Biodomes) per hour. Points accumulate fractionally. Only whole points increase your maximum design points, which equals purchased points plus these whole biodome points.' },
-    { id: 'life-status-polar-tooltip', text: 'Not required to complete terraforming. Can be ignored. Or not. Tip: keeping a zone colder than others can be good to force more water condensation, a very potent greenhouse gas.' },
-    { id: 'life-modify-tooltip', text: 'Hold Shift on -/+ to apply the maximum change for that direction.' }
+    { id: 'life-biodome-tooltip', text: getLifeUIText('ui.life.designer.biodomeTooltip', 'Each active Biodome generates life design points at log10(10 x Active Biodomes) per hour. Points accumulate fractionally. Only whole points increase your maximum design points, which equals purchased points plus these whole biodome points.') },
+    { id: 'life-status-polar-tooltip', text: getLifeUIText('ui.life.designer.polarTooltip', 'Not required to complete terraforming. Can be ignored. Or not. Tip: keeping a zone colder than others can be good to force more water condensation, a very potent greenhouse gas.') },
+    { id: 'life-modify-tooltip', text: getLifeUIText('ui.life.designer.modifyTooltip', 'Hold Shift on -/+ to apply the maximum change for that direction.') }
   ];
   staticTooltips.forEach(config => {
     attachDynamicInfoTooltip(document.getElementById(config.id), config.text);
@@ -1201,7 +1205,7 @@ function updateLifeUI() {
         if (currentValueDiv && currentAttribute) {
           currentValueDiv.textContent = `${currentAttribute.value} / ${getConvertedDisplay(attributeName, currentAttribute)}`;
         } else if (currentValueDiv) {
-          currentValueDiv.textContent = 'N/A';
+          currentValueDiv.textContent = getLifeUIText('ui.life.status.notAvailable', 'N/A');
         }
 
         ac.maxSpan.textContent = getLifeAttributeMaxDisplay(currentAttribute);
@@ -1308,14 +1312,19 @@ function updateLifeStatusTable() {
     });
 
     const updateStatusCell = (cell, result, isGlobalRadiation = false) => {
-        const status = result || { pass: false, warning: false, reason: 'Status unavailable', reduction: 0, missing: true };
+        const status = result || { pass: false, warning: false, reason: getLifeUIText('ui.life.status.unavailable', 'Status unavailable'), reduction: 0, missing: true };
         if (status.missing) {
             updateStatusCellIcon(cell, '?', status.reason, '');
             return;
         }
 
         const radiationTooltip = isGlobalRadiation
-            ? `Surface dose: ${formatNumber(status.baseDose || 0, false, 2)} mSv/day\nMitigation: ${formatNumber(status.mitigationDose || 0, false, 2)} mSv/day\nEffective dose: ${formatNumber(status.effectiveDose || 0, false, 2)} mSv/day\nGrowth penalty: ${formatNumber(status.reduction || 0, false, 1)}%`
+            ? getLifeUIText('ui.life.status.radiationTooltip', 'Surface dose: {baseDose} mSv/day\nMitigation: {mitigationDose} mSv/day\nEffective dose: {effectiveDose} mSv/day\nGrowth penalty: {reduction}%', {
+                baseDose: formatNumber(status.baseDose || 0, false, 2),
+                mitigationDose: formatNumber(status.mitigationDose || 0, false, 2),
+                effectiveDose: formatNumber(status.effectiveDose || 0, false, 2),
+                reduction: formatNumber(status.reduction || 0, false, 1),
+            })
             : '';
 
         if (status.warning) {
@@ -1324,9 +1333,9 @@ function updateLifeStatusTable() {
         } else if (status.pass) {
             updateStatusCellIcon(cell, '✅', radiationTooltip, '');
         } else {
-            const reason = status.reason || 'Failed';
+            const reason = status.reason || getLifeUIText('ui.life.status.failed', 'Failed');
             const reductionText = (isGlobalRadiation && status.reduction > 0)
-                ? ` (-${status.reduction.toFixed(0)}% Growth)`
+                ? getLifeUIText('ui.life.status.growthReduction', ' (-{reduction}% Growth)', { reduction: status.reduction.toFixed(0) })
                 : '';
             updateStatusCellIcon(cell, '❌', isGlobalRadiation ? `${reason}\n${radiationTooltip}` : reason, reductionText);
         }
@@ -1399,7 +1408,7 @@ function updateLifeStatusTable() {
             } else if (daySurvivalStatus.warning || dayMult === 0) {
                 symbol = '⚠';
                 if (daySurvivalStatus.warning && dayMult === 0 && title) {
-                    title += '; cannot grow';
+                    title += getLifeUIText('ui.life.status.cannotGrowSuffix', '; cannot grow');
                 } else if (daySurvivalStatus.warning) {
                     title = daySurvivalStatus.reason || '';
                 } else {
@@ -1453,8 +1462,8 @@ function updateLifeStatusTable() {
                 ? zoneList.reduce((sum, zoneName) => sum + (terraforming.zonalSurface[zoneName]?.[resourceKey] || 0), 0)
                 : (terraforming.zonalSurface[zone]?.[resourceKey] || 0);
             const status = zone === 'global'
-                ? { pass: zoneAmount > 1e-9, reason: zoneAmount > 1e-9 ? '' : `Need ${label}` }
-                : { pass: zoneAmount > 1e-9, reason: `Need ${label}` };
+                ? { pass: zoneAmount > 1e-9, reason: zoneAmount > 1e-9 ? '' : getLifeUIText('ui.life.status.needResource', 'Need {resource}', { resource: label }) }
+                : { pass: zoneAmount > 1e-9, reason: getLifeUIText('ui.life.status.needResource', 'Need {resource}', { resource: label }) };
             updateStatusCell(cell, status);
         });
         updateStatusCell(lifeUICache.cells.radiation[zone], radiationResult, zone === 'global');
@@ -1494,8 +1503,8 @@ function updateLifeStatusTable() {
                 if (valueSpan) valueSpan.textContent = formatNumber(0, false, 2);
                 if (tooltipIcon) {
                     const lines = [
-                        'Low Gravity: x0.00',
-                        'Growth is disabled because Ringworld gravity is below 0.1g, so atmosphere cannot be retained.',
+                        getLifeUIText('ui.life.growthTooltip.lowGravity', 'Low Gravity: x0.00'),
+                        getLifeUIText('ui.life.growthTooltip.lowGravityDisabled', 'Growth is disabled because Ringworld gravity is below 0.1g, so atmosphere cannot be retained.'),
                     ];
                     growthObj.tooltipEl = ensureDynamicInfoTooltip(tooltipIcon, growthObj.tooltipEl, lines.join('\n'));
                 }
@@ -1536,23 +1545,23 @@ function updateLifeStatusTable() {
             if (valueSpan) valueSpan.textContent = formatNumber(finalRate * 100, false, 2);
             if (tooltipIcon) {
                 const lines = [
-                    `Base: ${(baseRate * 100).toFixed(2)}%`,
-                    `Temp: x${formatNumber(tempMult, false, 2)}`,
-                    `Capacity: x${formatNumber(capacityMult, false, 2)}`,
-                    `Radiation: x${formatNumber(radMult, false, 2)}`,
-                    `Radiation dose: ${formatNumber(radiationResult.baseDose || 0, false, 2)} mSv/day`,
-                    `Radiation mitigation: ${formatNumber(radiationResult.mitigationDose || 0, false, 2)} mSv/day`,
-                    `Effective radiation: ${formatNumber(radiationResult.effectiveDose || 0, false, 2)} mSv/day`,
+                    getLifeUIText('ui.life.growthTooltip.base', 'Base: {value}%', { value: (baseRate * 100).toFixed(2) }),
+                    getLifeUIText('ui.life.growthTooltip.temperature', 'Temp: x{value}', { value: formatNumber(tempMult, false, 2) }),
+                    getLifeUIText('ui.life.growthTooltip.capacity', 'Capacity: x{value}', { value: formatNumber(capacityMult, false, 2) }),
+                    getLifeUIText('ui.life.growthTooltip.radiation', 'Radiation: x{value}', { value: formatNumber(radMult, false, 2) }),
+                    getLifeUIText('ui.life.growthTooltip.radiationDose', 'Radiation dose: {value} mSv/day', { value: formatNumber(radiationResult.baseDose || 0, false, 2) }),
+                    getLifeUIText('ui.life.growthTooltip.radiationMitigation', 'Radiation mitigation: {value} mSv/day', { value: formatNumber(radiationResult.mitigationDose || 0, false, 2) }),
+                    getLifeUIText('ui.life.growthTooltip.effectiveRadiation', 'Effective radiation: {value} mSv/day', { value: formatNumber(radiationResult.effectiveDose || 0, false, 2) }),
                 ];
                 if (usesLuminosity) {
-                    lines.splice(2, 0, `Luminosity: x${formatNumber(lumMult, false, 2)}`);
+                    lines.splice(2, 0, getLifeUIText('ui.life.growthTooltip.luminosity', 'Luminosity: x{value}', { value: formatNumber(lumMult, false, 2) }));
                 }
                 if (growthBreakdown.effectMultiplier !== 1) {
-                    lines.push(`Life Effects: x${formatNumber(growthBreakdown.effectMultiplier, false, 2)}`);
+                    lines.push(getLifeUIText('ui.life.growthTooltip.lifeEffects', 'Life Effects: x{value}', { value: formatNumber(growthBreakdown.effectMultiplier, false, 2) }));
                 }
                 if (isLifeFlagActive('engineeredNitrogenFixation')) {
                     lines.push(
-                        `Engineered Nitrogen Fixation: x${formatNumber(growthBreakdown.nitrogenMultiplier, false, 2)} (${formatNumber(growthBreakdown.nitrogenPressureKPa, false, 2)} kPa)`
+                        getLifeUIText('ui.life.growthTooltip.engineeredNitrogenFixation', 'Engineered Nitrogen Fixation: x{value} ({pressure} kPa)', { value: formatNumber(growthBreakdown.nitrogenMultiplier, false, 2), pressure: formatNumber(growthBreakdown.nitrogenPressureKPa, false, 2) })
                     );
                 }
                 if (usesIceForWater) {
@@ -1564,9 +1573,9 @@ function updateLifeStatusTable() {
                 }
                 if (ecoFraction > 0) {
                     const ecumenopolisReduction = (1 - ecumenopolisLandMult) * 100;
-                    lines.push(`Ecumenopolis: x${formatNumber(ecumenopolisLandMult, false, 2)} (-${ecumenopolisReduction.toFixed(2)}%)`);
+                    lines.push(getLifeUIText('ui.life.growthTooltip.ecumenopolis', 'Ecumenopolis: x{value} (-{reduction}%)', { value: formatNumber(ecumenopolisLandMult, false, 2), reduction: ecumenopolisReduction.toFixed(2) }));
                     if (landMult > ecumenopolisLandMult) {
-                        lines.push(`Biodome protection floor: x${formatNumber(landMult, false, 2)} (${formatNumber(biodomeFraction * 100, false, 2)}% base land)`);
+                        lines.push(getLifeUIText('ui.life.growthTooltip.biodomeProtection', 'Biodome protection floor: x{value} ({land}% base land)', { value: formatNumber(landMult, false, 2), land: formatNumber(biodomeFraction * 100, false, 2) }));
                     }
                 }
                 liquidKeys.forEach((resourceKey) => {
@@ -1599,9 +1608,9 @@ function updateLifeStatusTable() {
             } else if (!failReason) failReason = status.reason;
         });
         if (!pass) {
-            updateStatusSpan(dayGlobalCell, '❌', failReason || 'Fails in all zones');
+            updateStatusSpan(dayGlobalCell, '❌', failReason || getLifeUIText('ui.life.checks.failsAllZones', 'Fails in all zones'));
         } else if (!anySafe && anyWarning) {
-            updateStatusSpan(dayGlobalCell, '⚠', 'Growth reduced in all zones');
+            updateStatusSpan(dayGlobalCell, '⚠', getLifeUIText('ui.life.checks.growthReducedAllZones', 'Growth reduced in all zones'));
         } else {
             updateStatusSpan(dayGlobalCell, '✅', '');
         }
@@ -1621,9 +1630,9 @@ function updateLifeStatusTable() {
             } else if (!failReason) failReason = status.reason;
         });
         if (!pass) {
-            updateStatusSpan(nightGlobalCell, '❌', failReason || 'Fails in all zones');
+            updateStatusSpan(nightGlobalCell, '❌', failReason || getLifeUIText('ui.life.checks.failsAllZones', 'Fails in all zones'));
         } else if (!anySafe && anyWarning) {
-            updateStatusSpan(nightGlobalCell, '⚠', 'Growth reduced in all zones');
+            updateStatusSpan(nightGlobalCell, '⚠', getLifeUIText('ui.life.checks.growthReducedAllZones', 'Growth reduced in all zones'));
         } else {
             updateStatusSpan(nightGlobalCell, '✅', '');
         }

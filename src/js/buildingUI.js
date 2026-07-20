@@ -26,7 +26,8 @@ function createBuildingCategoryTabs() {
     // Create tabs and content for each category
     categories.forEach(category => {
         const categoryId = `${category}-buildings`;
-        const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+        const fallbackCategoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+        const categoryLabel = t(`ui.buildings.categories.${category}`, {}, fallbackCategoryLabel);
         
         // Create tab button
         let tab = document.getElementById(`${categoryId}-tab`);
@@ -36,12 +37,18 @@ function createBuildingCategoryTabs() {
             tab.className = 'building-subtab';
             tab.dataset.subtab = categoryId;
             const label = document.createTextNode(categoryLabel);
+            tab._categoryLabelText = label;
             const alert = document.createElement('span');
             alert.id = `${categoryId}-alert`;
             alert.className = 'unlock-alert';
             alert.textContent = '!';
             tab.append(label, alert);
             subtabsContainer.appendChild(tab);
+        }
+        const labelText = tab._categoryLabelText || tab.firstChild;
+        tab._categoryLabelText = labelText;
+        if (labelText.nodeValue !== categoryLabel) {
+            labelText.nodeValue = categoryLabel;
         }
 
         // Create content section

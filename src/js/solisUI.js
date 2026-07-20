@@ -845,8 +845,9 @@ function updateSolisQuestArea(refs) {
       if (refs.questUnitsText.nodeValue !== unitsText) {
         refs.questUnitsText.nodeValue = unitsText;
       }
-      if (refs.questResource.textContent !== quest.resource) {
-        refs.questResource.textContent = quest.resource;
+      const resourceName = resources.colony[quest.resource].displayName;
+      if (refs.questResource.textContent !== resourceName) {
+        refs.questResource.textContent = resourceName;
       }
       if (!refs.questMessage.classList.contains('hidden')) {
         refs.questMessage.classList.add('hidden');

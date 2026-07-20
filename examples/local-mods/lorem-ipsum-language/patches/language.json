@@ -94,6 +94,16 @@
       "uaMemoryUnavailableApi": "Ea commodo consequat duis",
       "consoleHelp": "Dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip."
     },
+    "skills": {
+      "common": {
+        "rank": "Ullamco {current}Dolor{max}",
+        "cost": "Adipiscing: {value}",
+        "max": "Velit",
+        "valueProgress": "{current} Non {next}",
+        "shipEfficiencyValue": "Magna{value} Consequat duis",
+        "lifeDesignValue": "Magna{points} Duis{percent}Elit"
+      }
+    },
     "rwg": {
       "title": "Sunt culpa",
       "common": {
@@ -136,6 +146,41 @@
         "icyMoonOxygenFactoryThroughput": "Irure in reprehenderit voluptate velit esse",
         "titanLikeGhgFactoryThroughput": "Ea commodo consequat duis aute irure in reprehenderit voluptate",
         "carbonDustAndBiodomeThroughput": "Aliquip ex ea commodo consequat duis aute irure"
+      },
+      "effectsSummary": {
+        "title": "Sunt culpa qui",
+        "tooltip": "Qui officia deserunt mollit anim id est laborum",
+        "type": "Est",
+        "amount": "Irure",
+        "value": "Excepteur",
+        "production": "Non",
+        "project": "Lorem",
+        "cost": "Sit",
+        "productionIncreased": "{name} Consequat duis{percent}Esse",
+        "projectDuration": "{name} Laboris{percent}Eu",
+        "populationGrowth": "Dolore magna aliqua enim{percent}Sed",
+        "lifeDesignPoints": "Irure in reprehenderit{value} Duis",
+        "workerRequirements": "Id est laborum lorem ipsum{percent}Exercitation",
+        "extraWorld": "Est laborum lorem ipsum dolor",
+        "maintenance": "Nisi aliquip ex{percent}Mollit",
+        "constructionCost": "Et dolore magna aliqua enim ad minim veniam{percent}Consequat",
+        "resourceConstructionCost": "{name} Ullamco laboris nisi{value}Occaecat",
+        "importCap": "Est laborum lorem ipsum dolor{percent}Sunt",
+        "projects": {
+          "nitrogenImportation": "Sint occaecat",
+          "hydrogenImportation": "Laborum lorem",
+          "carbonImportation": "Exercitation ullamco",
+          "waterImportation": "In reprehenderit"
+        },
+        "buildings": {
+          "oreMine": "Eu fugiat",
+          "sandHarvester": "Ullamco laboris",
+          "geothermalGenerator": "Eu fugiat",
+          "fusionReactor": "Qui officia",
+          "superalloyFusionReactor": "Duis aute irure",
+          "spaceMirror": "Occaecat cupidatat",
+          "hyperionLantern": "Minim veniam"
+        }
       },
       "worldTypes": {
         "marsLike": "Reprehenderit",
@@ -833,6 +878,14 @@
     "buildings": {
       "categoryTitle": "{category} Mollit",
       "unhideObsolete": "Excepteur sint occaecat",
+      "categories": {
+        "resource": "Veniam",
+        "production": "In",
+        "energy": "Nulla",
+        "storage": "Et",
+        "terraforming": "Incididunt",
+        "waste": "Mollit"
+      },
       "common": {
         "recipeLabel": "Do: "
       },
@@ -979,6 +1032,94 @@
       }
     },
     "life": {
+      "designer": {
+        "title": "Officia deserunt",
+        "locked": "Deserunt mollit anim id est laborum lorem ipsum dolor sit amet consectetur.",
+        "attribute": "Nisi",
+        "currentDesign": "Consequat duis",
+        "tentativeDesign": "Et dolore",
+        "controls": "Ea",
+        "pointsAvailable": "Fugiat nulla:",
+        "remaining": "Est:",
+        "createNewDesign": "Nisi aliquip ex",
+        "cancel": "Est",
+        "deploy": "Aute",
+        "biodomes": "Sunt",
+        "pointsFromBiodomes": "Consequat duis aute:",
+        "pointShop": "Ipsum dolor",
+        "buyingPrefix": "Esse",
+        "buyingSuffix": "Anim id est",
+        "requirement": "Ad",
+        "tapForDetails": "Occaecat cupidatat non",
+        "global": "Enim",
+        "dayTemperature": "Duis aute",
+        "nightTemperature": "In reprehenderit",
+        "temperatureMultiplier": "Ullamco laboris",
+        "radiation": "Est",
+        "biomassAmount": "Esse cillum eu",
+        "biomassDensity": "Ullamco laboris nisi aliquip",
+        "growthRate": "Nisi aliquip ex",
+        "max": "Cillum",
+        "biodomeTooltip": "Exercitation ullamco laboris nisi aliquip ex ea commodo consequat duis aute irure in reprehenderit voluptate velit esse cillum eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt mollit anim.",
+        "polarTooltip": "Esse cillum eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt mollit anim id est laborum lorem ipsum dolor sit amet consectetur adipiscing elit.",
+        "modifyTooltip": "Dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco."
+      },
+      "metabolismEfficiency": {
+        "name": "{name} Amet",
+        "lightDescription": "Laboris nisi aliquip ex ea commodo consequat duis aute.",
+        "chemicalDescription": "Do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+        "tooltipBase": "{name} Veniam quis nostrud exercitation ullamco.",
+        "growthChemistry": "Dolore magna: {equation}",
+        "detailed": "Ex: {equation}"
+      },
+      "attributes": {
+        "minTemperatureTolerance": {
+          "name": "Dolor sit amet",
+          "description": "Anim id est laborum lorem ipsum."
+        },
+        "maxTemperatureTolerance": {
+          "name": "Dolore magna aliqua",
+          "description": "Duis aute irure in reprehenderit voluptate."
+        },
+        "optimalGrowthTemperature": {
+          "name": "Magna aliqua enim",
+          "description": "Ea commodo consequat duis aute irure in reprehenderit voluptate velit esse cillum eu fugiat.",
+          "dynamicDescription": "Anim id est laborum lorem ipsum dolor sit amet consectetur adipiscing elit {temperature}{unit} Tempor."
+        },
+        "growthTemperatureTolerance": {
+          "name": "Exercitation ullamco laboris",
+          "description": "Adipiscing elit sed do eiusmod tempor incididunt ut labore et.",
+          "tooltip": "Ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat."
+        },
+        "photosynthesisEfficiency": {
+          "name": "Cupidatat non",
+          "description": "Id est laborum lorem ipsum dolor sit amet consectetur."
+        },
+        "radiationTolerance": {
+          "name": "Elit sed",
+          "description": "Commodo consequat duis aute irure in reprehenderit voluptate.",
+          "tooltip": "Anim id est laborum lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip."
+        },
+        "invasiveness": {
+          "name": "Officia",
+          "description": "Tempor incididunt ut labore et dolore magna aliqua enim."
+        },
+        "spaceEfficiency": {
+          "name": "Reprehenderit voluptate",
+          "description": "Enim ad minim veniam quis nostrud exercitation.",
+          "tooltip": "Non proident sunt culpa qui officia deserunt mollit anim id est laborum lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut."
+        },
+        "geologicalBurial": {
+          "name": "Adipiscing elit",
+          "description": "Deserunt mollit anim id est laborum.",
+          "tooltip": "Enim ad minim veniam quis nostrud exercitation ullamco laboris nisi aliquip ex ea commodo consequat duis aute irure in reprehenderit voluptate velit esse cillum eu fugiat nulla pariatur excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt mollit anim id est laborum lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua enim ad."
+        },
+        "bioworkforce": {
+          "name": "Nostrud",
+          "description": "Occaecat cupidatat non proident sunt culpa qui officia deserunt mollit.",
+          "convertedValue": "{value} Dolore magna aliqua enim"
+        }
+      },
       "shop": {
         "buyWithLabel": "Anim {quantity} Laborum {label}",
         "buyWithCost": "Commodo {quantity} Ipsum {cost} Dolore {label}",
@@ -1015,9 +1156,57 @@
       "cannotDeploy": "Do eiusmod",
       "cannotSurviveAnywhere": "Incididunt ut labore et",
       "metabolismFallback": "Non",
+      "manager": "Dolor sit",
+      "photosynthesis": "Occaecat",
       "survivesCannotGrow": "Consectetur adipiscing elit sed",
+      "metabolismEquation": {
+        "biomass": "Irure",
+        "metal": "Ut",
+        "silica": "Sed",
+        "energy": "Velit",
+        "light": "Elit"
+      },
+      "checks": {
+        "dayTooCold": "Consequat duis aute{value}{unit} Eu {limit}{unit}Consequat",
+        "dayTooHot": "Culpa qui officia{value}{unit} Reprehenderit {limit}{unit}Enim",
+        "nightTooCold": "Lorem ipsum dolor{value}{unit} Dolor {limit}{unit}Incididunt",
+        "nightTooHot": "Exercitation ullamco laboris{value}{unit} Dolor {limit}{unit}Id",
+        "growthScaled": "Aute irure in {percent}Adipiscing",
+        "growthReducedAllZones": "Culpa qui officia deserunt mollit",
+        "failsAllZones": "Excepteur sint occaecat cupidatat",
+        "magnetosphereActive": "Consequat duis",
+        "doseFullyMitigated": "Elit sed do{baseDose} Excepteur {mitigationDose} Officia deserunt",
+        "effectiveDose": "Veniam quis: {dose} Cupidatat non",
+        "unknownZoneFailure": "Consequat duis aute irure in",
+        "zoneFailure": "{zone}Lorem: {reason}",
+        "dataUnavailable": "Elit sed",
+        "needLiquidWater": "Irure in reprehenderit"
+      },
+      "status": {
+        "notAvailable": "Occaecat cupidatat",
+        "unavailable": "Tempor incididunt",
+        "failed": "Exercitation",
+        "radiationTooltip": "Pariatur excepteur: {baseDose} Aliqua enim\nAute: {mitigationDose} Ea commodo\nQuis nostrud: {effectiveDose} Commodo consequat\nAute irure: {reduction}Nisi",
+        "growthReduction": " Eu{reduction}Excepteur",
+        "cannotGrowSuffix": "Nisi aliquip",
+        "needResource": "Non {resource}"
+      },
       "growthTooltip": {
-        "solidBiochemistry": "Pariatur excepteur sint occaecat cupidatat{value}"
+        "solidBiochemistry": "Pariatur excepteur sint occaecat cupidatat{value}",
+        "lowGravity": "Sint occaecat cupidatat non",
+        "lowGravityDisabled": "Ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et.",
+        "base": "Duis: {value}Consectetur",
+        "temperature": "Anim id{value}",
+        "capacity": "Deserunt mollit{value}",
+        "radiation": "Magna aliqua{value}",
+        "radiationDose": "Incididunt ut: {value} Ad minim",
+        "radiationMitigation": "Ex ea: {value} Do eiusmod",
+        "effectiveRadiation": "Reprehenderit voluptate: {value} Exercitation ullamco",
+        "luminosity": "Ullamco laboris{value}",
+        "lifeEffects": "Commodo consequat duis{value}",
+        "engineeredNitrogenFixation": "Cillum eu fugiat nulla{value} Esse{pressure} Amet",
+        "ecumenopolis": "Culpa qui{value} Nulla{reduction}Lorem",
+        "biodomeProtection": "Laborum lorem ipsum dolor{value} Cillum{land}Mollit anim"
       },
       "rateLabels": {
         "processDecay": "{name} Cupidatat",
@@ -3943,6 +4132,43 @@
           "gamma": "Et",
           "delta": "Reprehenderit"
         },
+        "logs": {
+          "operationStart": "Adipiscing elit sed do eiusmod",
+          "operationHeader": "Est{number} Non {difficulty}Deserunt",
+          "teamName": "Reprehenderit {team}",
+          "teamUnlocked": "{name} Nulla",
+          "facility": "Elit",
+          "damageEach": "Eu{damage} Dolor sit",
+          "damageMember": "Fugiat{damage} Est{name}",
+          "rerollFailSafe": " Veniam {facility} Amet {initial}Pariatur{reroll} Fugiat nulla",
+          "rerollSuccess": " Qui {facility} Nisi {initial}Officia{reroll}",
+          "rerollFailed": " Reprehenderit {facility} Ut {initial}Aliquip{reroll} Veniam quis",
+          "failSafeSuccess": " Sit {facility} Excepteur sint",
+          "barracksXp": " Voluptate velit esse{value}",
+          "criticalSuccess": "Elit sed",
+          "success": "Id",
+          "fail": "Laborum",
+          "artifactReward": " Veniam{count} Velit",
+          "artifactsReward": " Enim{count} Reprehenderit",
+          "leaderBonus": "{skill} Irure {leader}",
+          "eventSummary": "{event}{roller}Lorem{rolls}Sunt {skill} Do {total}Anim id {dc} Quis {outcome}{artifact}{damage}{reroll}{critical}",
+          "teamOperation": "Voluptate {team} Qui {operation} Ut {summary}",
+          "operationComplete": "Minim {operation} Laboris: {successes} Adipiscing elit {artifacts} Nostrud exercitation",
+          "teamSummary": "Ut {team} Minim {summary}",
+          "highestDifficultyArtifact": "Irure {team} Sint occaecat {difficulty} Pariatur{count} Proident",
+          "highestDifficultyArtifacts": "Occaecat {team} Pariatur excepteur {difficulty} Labore{count} Ipsum",
+          "teamRecalled": "Ut {team} Laborum",
+          "injuryRecallJournal": "Deserunt {team} Sint occaecat {name} Consequat duis.",
+          "events": {
+            "individualPower": "Dolore magna aliqua enim",
+            "teamAthletics": "Voluptate velit esse",
+            "teamWits": "Id est laborum",
+            "individualAthletics": "Fugiat nulla pariatur",
+            "naturalScience": "Qui officia deserunt",
+            "socialScience": "Sed do eiusmod",
+            "combat": "Enim ad"
+          }
+        },
         "rdItems": {
           "wgtEquipment": "Ex ea commodo",
           "componentsEfficiency": "Aliquip ex ea",
@@ -4061,6 +4287,11 @@
         "facilityCooldownReady": "Sit"
       },
       "automationCards": {
+        "exportAllAutomationsButton": "Anim id est",
+        "importAllAutomationsButton": "Ad minim veniam",
+        "importAllAutomationsTitle": "Adipiscing elit sed",
+        "importAllAutomationsDescription": "Anim id est laborum lorem ipsum.\nIpsum dolor sit amet consectetur adipiscing elit.",
+        "importAllWrongFormatError": "Nulla pariatur excepteur sint occaecat cupidatat non proident.",
         "autoTravelTitle": "Occaecat cupidatat",
         "autoTravel": {
           "enabledOn": "Sed do eiusmod",
@@ -5118,6 +5349,7 @@
       },
       "teebeepee": {
         "name": "Nisi",
+        "starName": "Ea commodo consequat duis",
         "difficulty": "Amet consectetur",
         "effects": {
           "threeStars": "Commodo consequat duis aute irure in reprehenderit voluptate velit esse cillum eu fugiat nulla pariatur excepteur sint.",
@@ -5138,6 +5370,7 @@
       },
       "shadesnightmare": {
         "name": "Eiusmod",
+        "starName": "Anim",
         "difficulty": "Nisi",
         "effects": {
           "allFiveHazards": "Consectetur adipiscing elit sed do eiusmod tempor incididunt ut.",
@@ -6600,7 +6833,8 @@
           "name": "Ipsum"
         },
         "energy": {
-          "name": "Deserunt"
+          "name": "Deserunt",
+          "unit": "Tempor"
         },
         "metal": {
           "name": "Pariatur"
@@ -6821,7 +7055,8 @@
       },
       "space": {
         "energy": {
-          "name": "Velit esse"
+          "name": "Velit esse",
+          "unit": "Laborum"
         }
       },
       "spaceStorage": {
@@ -7670,14 +7905,6 @@
       }
     },
     "skills": {
-      "common": {
-        "rank": "Minim {current}Consectetur{max}",
-        "cost": "Ipsum: {value}",
-        "max": "Eiusmod",
-        "valueProgress": "{current} Mollit {next}",
-        "shipEfficiencyValue": "Sed{value} Sit amet",
-        "lifeDesignValue": "Anim{points} Mollit{percent}Est"
-      },
       "build_cost": {
         "name": "Dolor sit",
         "description": "Anim id est laborum lorem ipsum dolor sit amet consectetur",

@@ -225,16 +225,45 @@ function escapeWGCLogHTML(value) {
     .replace(/'/g, '&#39;');
 }
 
+function escapeWGCLogRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function buildWGCLogCountPattern(path, fallback) {
+  const marker = 'WGC_COUNT_TOKEN';
+  const localized = escapeWGCLogHTML(getWGCText(path, fallback, { count: marker }));
+  const source = escapeWGCLogRegex(localized).replace(marker, '[0-9][0-9.,]*');
+  return new RegExp(source, 'g');
+}
+
 function formatWGCLogLine(line) {
   const escaped = escapeWGCLogHTML(line);
   if (!escaped) return '&nbsp;';
   const damagePattern = /Damage:\s*(-[0-9][0-9.,]*(?:\s?[A-Za-z%]+)*)/g;
-  const artifactPattern = /\+\s*[0-9][0-9.,]*\sArtifact[s]?/g;
-  const successPattern = /\bSuccess\b/g;
-  const failurePattern = /\bFail(?:ure)?\b/g;
+  const artifactPatterns = [
+    /\+\s*[0-9][0-9.,]*\sArtifact[s]?/g,
+    buildWGCLogCountPattern('logs.artifactReward', ' +{count} Artifact'),
+    buildWGCLogCountPattern('logs.artifactsReward', ' +{count} Artifacts')
+  ];
+  const successLabels = [
+    'Critical Success',
+    'Success',
+    getWGCText('logs.criticalSuccess', 'Critical Success'),
+    getWGCText('logs.success', 'Success')
+  ].map(escapeWGCLogHTML).filter((value, index, values) => values.indexOf(value) === index);
+  const failureLabels = [
+    'Fail',
+    'Failure',
+    getWGCText('logs.fail', 'Fail')
+  ].map(escapeWGCLogHTML).filter((value, index, values) => values.indexOf(value) === index);
+  const successPattern = new RegExp(successLabels.map(escapeWGCLogRegex).join('|'), 'g');
+  const failurePattern = new RegExp(failureLabels.map(escapeWGCLogRegex).join('|'), 'g');
   const withDamage = escaped.replace(damagePattern, (_, amount) => `Damage: <span class="wgc-log-damage">${amount}</span>`);
-  const withArtifacts = withDamage.replace(artifactPattern, match => `<span class="wgc-log-artifact">${match}</span>`);
-  const withSuccess = withArtifacts.replace(successPattern, () => '<span class="wgc-log-success">Success</span>');
+  const withArtifacts = artifactPatterns.reduce(
+    (text, pattern) => text.replace(pattern, match => `<span class="wgc-log-artifact">${match}</span>`),
+    withDamage
+  );
+  const withSuccess = withArtifacts.replace(successPattern, match => `<span class="wgc-log-success">${match}</span>`);
   return withSuccess.replace(failurePattern, match => `<span class="wgc-log-failure">${match}</span>`);
 }
 
