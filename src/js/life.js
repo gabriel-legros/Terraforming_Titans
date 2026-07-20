@@ -1253,7 +1253,7 @@ class LifeManager extends EffectableEntity {
       && getAtmosphericAvailable('oxygen') <= 0;
     const processName = process.displayName || 'Photosynthesis';
     const growthReason = processName;
-    const decayReason = `${processName} Decay`;
+    const decayReason = getLifeText('ui.life.rateLabels.processDecay', '{name} Decay', { name: processName });
     const naturalDecayReason = getLifeText('ui.life.rateLabels.naturalDecay', 'Natural Biomass Decay');
     const usesLuminosity = process.growth.usesLuminosity === true;
     const secondsMultiplier = deltaTime / 1000;
@@ -1900,7 +1900,7 @@ class LifeManager extends EffectableEntity {
       terraforming.zonalSurface[zoneName].biomass -= overflowDecay;
       biomassDyingChangeByZone[zoneName] -= overflowDecay;
       if (secondsMultiplier > 0 && overflowDecay > 1e-9) {
-        resources.surface.biomass.modifyRate(-overflowDecay / secondsMultiplier, 'Life Density Decay', 'life');
+        resources.surface.biomass.modifyRate(-overflowDecay / secondsMultiplier, t('ui.resourceRates.sources.lifeDensityDecay', {}, 'Life Density Decay'), 'life');
       }
     });
 
@@ -2057,11 +2057,11 @@ class LifeManager extends EffectableEntity {
           if (burialAmount > 1e-9) { // Only apply if significant
             terraforming.zonalSurface[zoneName].biomass -= burialAmount;
             if (resources.surface.biomass) {
-              resources.surface.biomass.modifyRate(-burialAmount / secondsMultiplier, 'Geological Burial', 'life');
+              resources.surface.biomass.modifyRate(-burialAmount / secondsMultiplier, t('ui.resourceRates.sources.geologicalBurial', {}, 'Geological Burial'), 'life');
             }
             accumulateSpecialPlanetaryMassImport(
               accumulatedSpecialChanges,
-              'Geological Burial',
+              t('ui.resourceRates.sources.geologicalBurial', {}, 'Geological Burial'),
               'organic',
               burialAmount,
               true,
@@ -2079,7 +2079,7 @@ class LifeManager extends EffectableEntity {
 
       if (foodResource && biomassAmount > 0) {
         const foodPerSecond = biomassAmount * 0.01;
-        foodResource.modifyRate(foodPerSecond, 'Surface Biomass', 'life');
+        foodResource.modifyRate(foodPerSecond, t('ui.resourceRates.sources.surfaceBiomass', {}, 'Surface Biomass'), 'life');
 
         if (secondsMultiplier > 0) {
           foodResource.increase(foodPerSecond * secondsMultiplier);

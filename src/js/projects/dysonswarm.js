@@ -239,7 +239,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
     accumulatedChanges.space ||= {};
     accumulatedChanges.space.energy = (accumulatedChanges.space.energy || 0) + overflowAmount;
     if (collectorPowerPerSecond > 0) {
-      resources?.space?.energy?.modifyRate?.(collectorPowerPerSecond, 'Dyson Collectors', 'project');
+      resources?.space?.energy?.modifyRate?.(collectorPowerPerSecond, t('ui.resourceRates.sources.dysonCollectors', {}, 'Dyson Collectors'), 'project');
     }
     accumulatedChanges.dysonSpaceEnergyInjected = true;
   }
@@ -279,7 +279,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
       totals.gain.space ||= {};
       totals.gain.space.energy = (totals.gain.space.energy || 0) + collectorEnergyGain;
       if (applyRates) {
-        resources?.space?.energy?.modifyRate?.(collectorPowerPerSecond, 'Dyson Collectors', 'project');
+        resources?.space?.energy?.modifyRate?.(collectorPowerPerSecond, t('ui.resourceRates.sources.dysonCollectors', {}, 'Dyson Collectors'), 'project');
       }
     }
     
@@ -321,7 +321,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
         storageState,
         {
           applyRates: false,
-          sourceLabel: 'Dyson Collector'
+          sourceLabel: t('ui.resourceRates.sources.dysonCollector', {}, 'Dyson Collector')
         }
       );
       this.mergeResourceTotals(totals.cost, expansionTotals);
@@ -344,7 +344,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
           if (rateValue > 0) {
             resources[category][resource].modifyRate(
               -rateValue,
-              'Dyson Collector',
+              t('ui.resourceRates.sources.dysonCollector', {}, 'Dyson Collector'),
               'project'
             );
           }

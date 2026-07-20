@@ -647,7 +647,7 @@ class KesslerHazard {
     });
     resource.value = Math.max(0, updatedTotal);
     const decayRate = deltaSeconds ? decayedTons / deltaSeconds : 0;
-    resource.modifyRate(-decayRate, 'Debris decay', 'hazard');
+    resource.modifyRate(-decayRate, t('ui.resourceRates.sources.debrisDecay', {}, 'Debris decay'), 'hazard');
 
     this.decaySummary = {
       dragThresholdDensity: DEBRIS_DECAY_DENSITY_REFERENCE,

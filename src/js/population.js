@@ -349,16 +349,16 @@ class PopulationModule extends EffectableEntity {
         }
       }
       if (starvationDecayPerSecond > 0) {
-        this.populationResource.modifyRate(-starvationDecayPerSecond, 'Starvation', 'population');
+        this.populationResource.modifyRate(-starvationDecayPerSecond, t('ui.resourceRates.sources.starvation', {}, 'Starvation'), 'population');
       }
       if (energyDecayPerSecond > 0) {
-        this.populationResource.modifyRate(-energyDecayPerSecond, 'Energy Shortage', 'population');
+        this.populationResource.modifyRate(-energyDecayPerSecond, t('ui.resourceRates.sources.energyShortage', {}, 'Energy Shortage'), 'population');
       }
       if (gravityDecayPerSecond > 0) {
-        this.populationResource.modifyRate(-gravityDecayPerSecond, 'Gravity Strain', 'population');
+        this.populationResource.modifyRate(-gravityDecayPerSecond, t('ui.resourceRates.sources.gravityStrain', {}, 'Gravity Strain'), 'population');
       }
       if (overpopulationDecayPerSecond > 0) {
-        this.populationResource.modifyRate(-overpopulationDecayPerSecond, 'Overpopulation', 'population');
+        this.populationResource.modifyRate(-overpopulationDecayPerSecond, t('ui.resourceRates.sources.overpopulation', {}, 'Overpopulation'), 'population');
       }
 
       // Apply the population change and update production/consumption rates

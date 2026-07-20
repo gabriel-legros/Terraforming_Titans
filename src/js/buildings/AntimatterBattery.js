@@ -287,7 +287,7 @@ class AntimatterBattery extends Building {
     if (energyRate <= 0) {
       return;
     }
-    resources.colony.energy.modifyRate(energyRate, 'Antimatter Battery Auto Fill', 'building');
+    resources.colony.energy.modifyRate(energyRate, t('ui.resourceRates.sources.antimatterBatteryAutoFill', {}, 'Antimatter Battery Auto Fill'), 'building');
 
     const pendingEnergy = accumulatedChanges.colony.energy || 0;
     const energyGain = this.getAutoFillEnergyGain(resources.colony.energy.value + pendingEnergy, deltaTime);
@@ -303,7 +303,7 @@ class AntimatterBattery extends Building {
       ? antimatterToSpaceEnergy(antimatterConsumed) * (1000 / deltaTime)
       : 0;
     if (spaceEnergyPerSecond > 0) {
-      resources.space.energy.modifyRate(-spaceEnergyPerSecond, 'Antimatter Battery Auto Fill', 'building');
+      resources.space.energy.modifyRate(-spaceEnergyPerSecond, t('ui.resourceRates.sources.antimatterBatteryAutoFill', {}, 'Antimatter Battery Auto Fill'), 'building');
     }
   }
 

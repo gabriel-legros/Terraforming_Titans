@@ -500,7 +500,7 @@ class HazardousBiomassHazard {
       }
 
       if (crusaderDelta) {
-        hazardResource.modifyRate(crusaderDelta / deltaSeconds, 'Crusader Patrols', 'terraforming');
+        hazardResource.modifyRate(crusaderDelta / deltaSeconds, t('ui.resourceRates.sources.crusaderPatrols', {}, 'Crusader Patrols'), 'terraforming');
       }
     }
 
@@ -521,7 +521,7 @@ class HazardousBiomassHazard {
           const decayDelta = naturalDecayDelta * ratio;
           const currentValue = Number.isFinite(targetResource.value) ? targetResource.value : 0;
           targetResource.value = Math.max(0, currentValue + decayDelta);
-          targetResource.modifyRate(decayRate * ratio, 'Hazard Decay', 'terraforming');
+          targetResource.modifyRate(decayRate * ratio, t('ui.resourceRates.sources.hazardDecay', {}, 'Hazard Decay'), 'terraforming');
         });
       }
     }

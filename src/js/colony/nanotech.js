@@ -498,7 +498,7 @@ class NanotechManager extends EffectableEntity {
           usedJunk = Math.min(junkNeed, junkAvailable);
           if (usedJunk > 0) {
             accumulatedChanges.surface.junk = (accumulatedChanges.surface.junk || 0) - usedJunk;
-            junkResForSilicon.modifyRate(-usedJunk / (deltaTime / 1000), 'Nanotech Junk', 'nanotech');
+            junkResForSilicon.modifyRate(-usedJunk / (deltaTime / 1000), getNanotechText('ui.colony.nanotech.sources.junk', 'Nanotech Junk'), 'nanotech');
           }
         }
         
@@ -520,7 +520,7 @@ class NanotechManager extends EffectableEntity {
         
         if (usedSilicon > 0) {
           accumulatedChanges.colony.silicon = (accumulatedChanges.colony.silicon || 0) - usedSilicon;
-          siliconRes.modifyRate(-usedSilicon / (deltaTime / 1000), 'Nanotech Silica', 'nanotech');
+          siliconRes.modifyRate(-usedSilicon / (deltaTime / 1000), getNanotechText('ui.colony.nanotech.sources.silica', 'Nanotech Silica'), 'nanotech');
         }
         
         siliconFraction = this.hasEnoughSilicon ? 1 : (needed > 0 ? totalUsed / needed : 1);
@@ -554,7 +554,7 @@ class NanotechManager extends EffectableEntity {
             usedScrap = Math.min(scrapNeed, scrapAvailable);
             if (usedScrap > 0) {
               accumulatedChanges.surface.scrapMetal = (accumulatedChanges.surface.scrapMetal || 0) - usedScrap;
-              scrapRes.modifyRate(-usedScrap / (deltaTime / 1000), 'Nanotech Scrap', 'nanotech');
+              scrapRes.modifyRate(-usedScrap / (deltaTime / 1000), getNanotechText('ui.colony.nanotech.sources.scrap', 'Nanotech Scrap'), 'nanotech');
             }
           }
           
@@ -576,7 +576,7 @@ class NanotechManager extends EffectableEntity {
           
           if (usedMetal > 0) {
             accumulatedChanges.colony.metal = (accumulatedChanges.colony.metal || 0) - usedMetal;
-            metalRes.modifyRate(-usedMetal / (deltaTime / 1000), 'Nanotech Metal', 'nanotech');
+            metalRes.modifyRate(-usedMetal / (deltaTime / 1000), getNanotechText('ui.colony.nanotech.sources.metal', 'Nanotech Metal'), 'nanotech');
           }
           
           metalFraction = this.hasEnoughMetal ? 1 : (needed > 0 ? totalUsed / needed : 1);
@@ -662,7 +662,7 @@ class NanotechManager extends EffectableEntity {
           usedTrash = Math.min(trashNeed, trashAvailable);
           if (usedTrash > 0) {
             accumulatedChanges.surface.trash = (accumulatedChanges.surface.trash || 0) - usedTrash;
-            trashRes.modifyRate(-usedTrash / (deltaTime / 1000), 'Nanotech Trash', 'nanotech');
+            trashRes.modifyRate(-usedTrash / (deltaTime / 1000), getNanotechText('ui.colony.nanotech.sources.trash', 'Nanotech Trash'), 'nanotech');
           }
         }
 
@@ -682,7 +682,7 @@ class NanotechManager extends EffectableEntity {
 
         if (usedBiomass > 0) {
           accumulatedChanges.surface.biomass = (accumulatedChanges.surface.biomass || 0) - usedBiomass;
-          biomassRes.modifyRate(-usedBiomass / (deltaTime / 1000), 'Nanotech Biomass', 'nanotech');
+          biomassRes.modifyRate(-usedBiomass / (deltaTime / 1000), getNanotechText('ui.colony.nanotech.sources.biomass', 'Nanotech Biomass'), 'nanotech');
         }
 
         biomassFraction = this.hasEnoughBiomass ? 1 : (needed > 0 ? totalUsed / needed : 1);
@@ -711,7 +711,7 @@ class NanotechManager extends EffectableEntity {
 
           if (usedGraphite > 0) {
             accumulatedChanges.surface.graphite = (accumulatedChanges.surface.graphite || 0) - usedGraphite;
-            graphiteRes.modifyRate(-usedGraphite / (deltaTime / 1000), 'Nanotech Graphite', 'nanotech');
+            graphiteRes.modifyRate(-usedGraphite / (deltaTime / 1000), getNanotechText('ui.colony.nanotech.sources.graphite', 'Nanotech Graphite'), 'nanotech');
           }
 
           graphiteFraction = this.hasEnoughGraphite ? 1 : (needed > 0 ? usedGraphite / needed : 1);
@@ -736,7 +736,7 @@ class NanotechManager extends EffectableEntity {
           this.currentHazardousBiomassConsumption = deltaTime > 0 ? usedHazardousBiomass / (deltaTime / 1000) : 0;
           if (usedHazardousBiomass > 0) {
             accumulatedChanges.surface.hazardousBiomass = (accumulatedChanges.surface.hazardousBiomass || 0) - usedHazardousBiomass;
-            hazardousBiomassRes.modifyRate(-this.currentHazardousBiomassConsumption, 'Grey Goo', 'nanotech');
+            hazardousBiomassRes.modifyRate(-this.currentHazardousBiomassConsumption, getNanotechText('ui.colony.nanotech.sources.greyGoo', 'Grey Goo'), 'nanotech');
           }
           hazardousBiomassFraction = needed > 0 ? usedHazardousBiomass / needed : 1;
         } else {
@@ -765,7 +765,7 @@ class NanotechManager extends EffectableEntity {
         if (actualGlassProduced > 0) {
           accumulatedChanges.colony.glass =
             (accumulatedChanges.colony.glass || 0) + actualGlassProduced;
-          glassRes.modifyRate(this.currentGlassProduction, 'Nanotech Glass', 'nanotech');
+          glassRes.modifyRate(this.currentGlassProduction, getNanotechText('ui.colony.nanotech.sources.glass', 'Nanotech Glass'), 'nanotech');
         }
       }
 
@@ -780,7 +780,7 @@ class NanotechManager extends EffectableEntity {
         if (componentsAmount > 0) {
           accumulatedChanges.colony.components =
             (accumulatedChanges.colony.components || 0) + componentsAmount;
-          componentsRes.modifyRate(this.currentComponentsProduction, 'Nanotech Components', 'nanotech');
+          componentsRes.modifyRate(this.currentComponentsProduction, getNanotechText('ui.colony.nanotech.sources.components', 'Nanotech Components'), 'nanotech');
         }
       }
 
@@ -796,7 +796,7 @@ class NanotechManager extends EffectableEntity {
         if (electronicsAmount > 0) {
           accumulatedChanges.colony.electronics =
             (accumulatedChanges.colony.electronics || 0) + electronicsAmount;
-          electronicsRes.modifyRate(this.currentElectronicsProduction, 'Nanotech Electronics', 'nanotech');
+          electronicsRes.modifyRate(this.currentElectronicsProduction, getNanotechText('ui.colony.nanotech.sources.electronics', 'Nanotech Electronics'), 'nanotech');
         }
       }
 
@@ -812,7 +812,7 @@ class NanotechManager extends EffectableEntity {
         if (grapheneAmount > 0) {
           accumulatedChanges.colony.metal =
             (accumulatedChanges.colony.metal || 0) + grapheneAmount;
-          grapheneRes.modifyRate(this.currentGrapheneProduction, 'Nanotech Graphene', 'nanotech');
+          grapheneRes.modifyRate(this.currentGrapheneProduction, getNanotechText('ui.colony.nanotech.sources.graphene', 'Nanotech Graphene'), 'nanotech');
         }
       }
 
@@ -840,7 +840,7 @@ class NanotechManager extends EffectableEntity {
         this.hasEnoughEnergy = allowedPower >= this.optimalEnergyConsumption;
 
         accumulatedChanges.colony.energy -= actualEnergy;
-        energyRes.modifyRate(-this.currentEnergyConsumption, 'Nanotech Growth', 'nanotech');
+        energyRes.modifyRate(-this.currentEnergyConsumption, getNanotechText('ui.colony.nanotech.sources.growth', 'Nanotech Growth'), 'nanotech');
       } else if (baseRate > 0) {
         powerFraction = 0;
       }

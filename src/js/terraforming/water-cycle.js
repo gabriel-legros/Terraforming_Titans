@@ -270,8 +270,9 @@ class WaterCycle extends ResourceCycleClass {
     const focusRate = durationSeconds > 0 ? focusMeltAmount / durationSeconds * 86400 : 0;
     terraforming.focusMeltRate = focusRate;
     if (focusRate > 0) {
-      resources.surface.liquidWater?.modifyRate(focusRate, 'Focused Melt', rateType);
-      resources.surface.ice?.modifyRate(-focusRate, 'Focused Melt', rateType);
+      const focusedMeltSource = t('ui.resourceRates.sources.focusedMelt', {}, 'Focused Melt');
+      resources.surface.liquidWater?.modifyRate(focusRate, focusedMeltSource, rateType);
+      resources.surface.ice?.modifyRate(-focusRate, focusedMeltSource, rateType);
     }
 
     // Alias expected fields

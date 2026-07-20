@@ -30,7 +30,7 @@ class FundingModule extends EffectableEntity {
     const fundingIncrease = baseFundingIncrease * deltaTime / 1000; // Calculate the increase in funding based on the rate
       resources.colony.funding.modifyRate(
         baseFundingIncrease,
-        'Funding',
+        t('ui.resourceRates.sources.funding', {}, 'Funding'),
         'funding'
       );
   }

@@ -879,7 +879,7 @@ class PlanetaryThrustersProject extends Project{
     this.syncPowerFromMode();
     if(!this.isCompleted || this.power<=0 || (!this.spinInvest && !this.motionInvest)) return totals;
     if (applyRates && resources?.colony?.energy?.modifyRate) {
-      resources.colony.energy.modifyRate(-this.power * productivity, 'Planetary Thrusters', 'project');
+      resources.colony.energy.modifyRate(-this.power * productivity, this.displayName, 'project');
     }
     totals.cost.colony = { energy: this.power * (deltaTime / 1000) };
     return totals;
@@ -893,7 +893,7 @@ class PlanetaryThrustersProject extends Project{
     const p = terraforming.celestialParameters;
     if(!p){ this.lastActiveTime = 0; return; }
     if(this.autoStart === false && resources?.colony?.energy?.modifyRate){
-      resources.colony.energy.modifyRate(-this.power * productivity, 'Planetary Thrusters', 'project');
+      resources.colony.energy.modifyRate(-this.power * productivity, this.displayName, 'project');
     }
     const dt = deltaTime / 1000;
     const colonyEnergy = resources?.colony?.energy;

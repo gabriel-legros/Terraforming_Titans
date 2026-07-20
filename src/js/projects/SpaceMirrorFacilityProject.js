@@ -403,11 +403,6 @@ function canShowLanternMirrorFacilityStatus(project) {
 
 var mirrorOversightSettings = null;
 
-function formatResourceLabel(resource) {
-  if (!resource) return '';
-  return resource.charAt(0).toUpperCase() + resource.slice(1);
-}
-
 function attachProjectInfoTooltips(rootElement) {
   if (!rootElement) return;
   rootElement.querySelectorAll('.info-tooltip-icon[data-tooltip-text]').forEach(icon => {
@@ -443,7 +438,7 @@ function updateQuickBuildCostDisplay(element, building, buildCount) {
     for (const resource in categoryCost) {
       items.push({
         key: `${category}.${resource}`,
-        label: formatResourceLabel(resource),
+        label: resources[category][resource].displayName,
         required: categoryCost[resource],
         available: resources?.[category]?.[resource]?.value ?? 0,
       });

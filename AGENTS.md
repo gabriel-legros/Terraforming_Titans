@@ -153,6 +153,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ## UI Requirements
 - Features with UI must use an `enabled` flag to reveal/hide.
+- Player-facing resource-rate source labels and building cost resource names must use localized language data or localized `Resource.displayName` values; do not derive them from internal ids or pass hard-coded English labels to `modifyRate(...)`.
 - Do not persist UI enabled flags in saves; re-enable via story/research/effects.
 - The Status colours setting controls the red/green status palette for terraforming requirement boxes, project progress bars, and resource/building rate colours; use `getStatusColor(...)` / `getStatusProgressBackground(...)` for those surfaces instead of hard-coded red/green. OLED Black uses Festival green (`#6AA84F`) for success and clear red (`#ef7070`) for failure in the default red/green palette while leaving alternative colourblind palettes unchanged.
 - Building resource costs use the palette's storage-blocked colour when the selected construction cost exceeds both the current resource amount and its storage cap, distinguishing storage expansion from ordinary resource shortages.

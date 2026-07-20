@@ -342,7 +342,8 @@ class SpaceshipProject extends Project {
   }
 
   getExportRateLabel(baseLabel) {
-    return baseLabel;
+    const key = baseLabel === 'Spaceship Mining' ? 'mining' : 'export';
+    return getSpaceshipProjectText(`ui.projects.spaceship.rateSources.${key}`, baseLabel);
   }
 
   getCostRateLabel() {

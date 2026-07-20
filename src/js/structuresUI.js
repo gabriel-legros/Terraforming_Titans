@@ -817,7 +817,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   button.classList.add('building-button', 'building-header-button');
   // Initial button text with a dedicated span for the build count to keep width stable
   button.textContent = '';
-  button.append('Build ');
+  button.append(getStructuresUIText('ui.structures.controls.buildPrefix', 'Build '));
   const countSpan = document.createElement('span');
   countSpan.classList.add('build-button-count');
   countSpan.textContent = '1';
@@ -2011,7 +2011,7 @@ function updateDecreaseButtonText(button, buildCount) {
         }
         items.push({
           key: `${category}.${resource}`,
-          text: `${capitalizeFirstLetter(resource)}: ${formatNumber(cost[category][resource], true)}`,
+          text: `${resources[category][resource].displayName}: ${formatNumber(cost[category][resource], true)}`,
           required: cost[category][resource],
           available,
           hasEnough: available >= cost[category][resource]
@@ -2510,7 +2510,7 @@ function updateDecreaseButtonText(button, buildCount) {
         const resourceState = resources[category][resource];
         items.push({
           key: `${category}.${resource}`,
-          label: capitalizeFirstLetter(resource),
+          label: resourceState.displayName,
           required: effectiveCost[category][resource],
           available: resourceState.value,
           capacity: resourceState.cap,

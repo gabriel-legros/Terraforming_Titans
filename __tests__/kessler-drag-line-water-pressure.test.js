@@ -1,3 +1,6 @@
+const originalT = global.t;
+global.t = (path, vars, fallback) => fallback;
+
 const { KesslerHazard } = require('../src/js/terraforming/hazards/kesslerHazard.js');
 const { JSDOM } = require('jsdom');
 
@@ -75,6 +78,10 @@ function createDynamicRadiusTerraforming() {
 
 describe('Kessler drag line altitude for low-pressure water-only atmospheres', () => {
   const originalResources = global.resources;
+
+  afterAll(() => {
+    global.t = originalT;
+  });
 
   afterEach(() => {
     global.resources = originalResources;

@@ -38,6 +38,37 @@
       "close": "Minim",
       "cancel": "Est"
     },
+    "resourceRates": {
+      "sources": {
+        "oneillCylinders": "Exercitation ullamco",
+        "replication": "Anim",
+        "androidHiveMind": "Esse cillum eu",
+        "dysonCollectors": "Eiusmod tempor",
+        "dysonCollector": "Occaecat cupidatat",
+        "terraformedWorlds": "Sit amet",
+        "antimatterBatteryAutoFill": "Deserunt mollit anim id",
+        "overflow": "Aliquip",
+        "overflowExcluded": "Voluptate velit esse",
+        "funding": "Sit",
+        "researchManager": "Deserunt mollit",
+        "galacticMarket": "Qui officia",
+        "spaceStorageTransfer": "In reprehenderit voluptate",
+        "evaporation": "Consectetur",
+        "condensation": "Nulla",
+        "focusedMelt": "Labore et",
+        "debrisDecay": "Incididunt ut",
+        "starvation": "Magna",
+        "energyShortage": "Enim ad",
+        "gravityStrain": "Incididunt ut",
+        "overpopulation": "Qui",
+        "lifeDensityDecay": "Do eiusmod tempor",
+        "geologicalBurial": "Sint occaecat",
+        "surfaceBiomass": "Excepteur sint",
+        "crusaderPatrols": "Do eiusmod",
+        "hazardDecay": "Aliquip ex",
+        "radioactiveAttrition": "In reprehenderit"
+      }
+    },
     "gameEffects": {
       "difficultySettings": "Duis aute"
     },
@@ -989,6 +1020,7 @@
         "solidBiochemistry": "Pariatur excepteur sint occaecat cupidatat{value}"
       },
       "rateLabels": {
+        "processDecay": "{name} Cupidatat",
         "naturalDecay": "Culpa qui officia"
       }
     },
@@ -1314,7 +1346,11 @@
         "costLabel": "Do eiusmod",
         "costPerShipmentValue": "Adipiscing elit sed: {value}",
         "gainPerShipmentValue": "Laboris nisi aliquip: {value}",
-        "controlledByAutomation": "Commodo consequat duis"
+        "controlledByAutomation": "Commodo consequat duis",
+        "rateSources": {
+          "mining": "Cupidatat non",
+          "export": "Quis nostrud"
+        }
       },
       "lifters": {
         "title": "Exercitation ullamco",
@@ -1333,6 +1369,10 @@
         "recipe": "Voluptate",
         "complexity": "Pariatur",
         "maxAssignment": "Veniam",
+        "rateSources": {
+          "expansion": "Id est",
+          "operation": "Aliqua"
+        },
         "operationNote": "Aute irure in reprehenderit voluptate velit esse {value} Laborum lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
         "maxAssignmentTooltip": "Aliqua: {pool}\nDuis aute: {divisor} Laboris nisi\nReprehenderit voluptate velit esse cillum eu {averageLevel}Qui {levelCap} Commodo {networkScale}\nEiusmod tempor incididunt: {pool} Ipsum {divisor} Adipiscing {networkScale} Proident {capRate}Et\nVoluptate velit esse: {unitRate} Id {outputMultiplier} Labore {complexity}\nEst laborum lorem{capRate} Nostrud {complexity} Proident{unitRate} Mollit {outputMultiplier}Cupidatat {max}",
         "strippingMaxAssignmentTooltip": "Aliquip ex {max} Laboris nisi aliquip ex ea commodo consequat duis.",
@@ -1370,6 +1410,10 @@
         "complexity": "Adipiscing",
         "maxAssignment": "Culpa",
         "expansionRate": "{value} Reprehenderit voluptate",
+        "rateSources": {
+          "expansion": "Aliquip ex ea commodo",
+          "operation": "Exercitation ullamco laboris"
+        },
         "operationNote": "Cillum eu fugiat nulla {value} Pariatur excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt mollit anim id.",
         "maxAssignmentTooltip": "Ut labore et: {base}\nDolor sit amet consectetur adipiscing elit {averageLevel}Aliqua {levelCap} Ut {networkScale}\nLaborum lorem ipsum dolor sit: {max}",
         "starLiftingTooltip": "Lorem ipsum",
@@ -2465,6 +2509,7 @@
           "assigned": "Voluptate: {value}",
           "autoAssign": "Fugiat nulla",
           "perOrbital": "Voluptate velit{value}Anim",
+          "rateSource": "Sunt",
           "totalRate": "Qui{value}Mollit",
           "weight": "Dolor",
           "tooltip": {
@@ -2788,7 +2833,20 @@
           "noHazardousBiomass": "Nostrud exercitation ullamco laboris."
         },
         "sources": {
-          "stage3Graphite": "Irure in reprehenderit voluptate"
+          "junk": "Consectetur adipiscing",
+          "silica": "Veniam quis",
+          "scrap": "Cupidatat non",
+          "metal": "Est laborum",
+          "stage3Graphite": "Irure in reprehenderit voluptate",
+          "trash": "Commodo consequat",
+          "biomass": "Incididunt ut",
+          "graphite": "Sunt culpa",
+          "greyGoo": "Ut labore",
+          "glass": "Culpa qui",
+          "components": "Pariatur excepteur",
+          "electronics": "Sed do",
+          "graphene": "Pariatur excepteur",
+          "growth": "Consequat duis"
         },
         "status": {
           "disabled": "Consequat",
@@ -5705,7 +5763,7 @@
       },
       "particleAccelerator": {
         "name": "Consequat duis",
-        "description": "Excepteur sint occaecat cupidatat non proident sunt culpa."
+        "description": "Excepteur sint occaecat cupidatat non proident sunt culpa qui officia deserunt mollit anim."
       },
       "megaHeatSink": {
         "name": "Laboris nisi aliquip",

@@ -210,8 +210,8 @@ function routeColonyResourceOverflow(deltaTime, accumulatedChanges, config) {
   const rate = seconds > 0 ? overflow / seconds : 0;
 
   accumulatedChanges[target.category][target.resource] += overflow;
-  resources[target.category][target.resource].modifyRate(rate, 'Overflow', 'overflow');
-  resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
+  resources[target.category][target.resource].modifyRate(rate, t('ui.resourceRates.sources.overflow', {}, 'Overflow'), 'overflow');
+  resource.modifyRate(-rate, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)'), 'overflow');
 }
 
 function routeColonyWaterOverflow(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
@@ -277,8 +277,8 @@ function routeColonyHydrogenOverflowToSpaceStorage(deltaTime, accumulatedChanges
 
   const seconds = deltaTime / 1000;
   const rate = seconds > 0 ? routedOverflow / seconds : 0;
-  resources.spaceStorage.hydrogen.modifyRate(rate, 'Overflow', 'overflow');
-  resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
+  resources.spaceStorage.hydrogen.modifyRate(rate, t('ui.resourceRates.sources.overflow', {}, 'Overflow'), 'overflow');
+  resource.modifyRate(-rate, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)'), 'overflow');
 }
 
 function routeColonyMiningOverflowToSpaceStorage(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
@@ -313,8 +313,8 @@ function routeColonyMiningOverflowToSpaceStorage(deltaTime, accumulatedChanges, 
 
     const seconds = deltaTime / 1000;
     const rate = seconds > 0 ? routedOverflow / seconds : 0;
-    resources.spaceStorage[route.targetResource].modifyRate(rate, 'Overflow', 'overflow');
-    resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
+    resources.spaceStorage[route.targetResource].modifyRate(rate, t('ui.resourceRates.sources.overflow', {}, 'Overflow'), 'overflow');
+    resource.modifyRate(-rate, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)'), 'overflow');
   }
 }
 
@@ -348,7 +348,7 @@ function routeColonyMaterialOverflowToPlanetaryMass(deltaTime, accumulatedChange
     accumulatedChanges.colony[materialKey] -= totalRoutedOverflow;
     const seconds = deltaTime / 1000;
     const rate = seconds > 0 ? totalRoutedOverflow / seconds : 0;
-    resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
+    resource.modifyRate(-rate, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)'), 'overflow');
     for (const source in sourceEntries) {
       if (routedOverflow <= 0) {
         break;
@@ -1771,7 +1771,7 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
   if (antimatterBattery) {
     const antimatterAutoFillRate = antimatterBattery.getAutoFillEnergyRate(deltaTime);
     if (antimatterAutoFillRate > 0) {
-      resources.colony.energy.modifyRate(antimatterAutoFillRate, 'Antimatter Battery Auto Fill', 'building');
+      resources.colony.energy.modifyRate(antimatterAutoFillRate, t('ui.resourceRates.sources.antimatterBatteryAutoFill', {}, 'Antimatter Battery Auto Fill'), 'building');
     }
   }
 
@@ -1816,9 +1816,10 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
   if (fundingModule) {
     const fundingIncreaseRate = fundingModule.getEffectiveFunding(); // Get funding rate from funding module
     // Specify 'funding' as the rateType
-    resources.colony.funding.modifyRate(fundingIncreaseRate, 'Funding', 'funding'); // Update funding production rate
+    const fundingRateSource = t('ui.resourceRates.sources.funding', {}, 'Funding');
+    resources.colony.funding.modifyRate(fundingIncreaseRate, fundingRateSource, 'funding'); // Update funding production rate
     if (resourceDebugRateTracking && fundingIncreaseRate) {
-      trackResourceDebugRate(localProduction, 'colony', 'funding', 'Funding', fundingIncreaseRate);
+      trackResourceDebugRate(localProduction, 'colony', 'funding', fundingRateSource, fundingIncreaseRate);
     }
   }
 
