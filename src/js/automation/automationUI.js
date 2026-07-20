@@ -52,6 +52,9 @@ const automationElements = {
   scriptAutoRestartToggle: null,
   scriptGoToRowOneOnTravelToggle: null,
   scriptStatusLine: null,
+  scriptStatusSummary: null,
+  scriptStatusCurrent: null,
+  scriptStatusHistory: null,
   scriptSelect: null,
   scriptNameInput: null,
   scriptNewButton: null,
@@ -464,6 +467,15 @@ function cacheAutomationElements() {
   }
   if (!automationElements.scriptStatusLine && automationElements.scriptAutomation) {
     automationElements.scriptStatusLine = automationElements.scriptAutomation.querySelector('.script-automation-status-line');
+  }
+  if (!automationElements.scriptStatusSummary && automationElements.scriptStatusLine) {
+    automationElements.scriptStatusSummary = automationElements.scriptStatusLine.querySelector('.script-automation-status-summary');
+  }
+  if (!automationElements.scriptStatusCurrent && automationElements.scriptStatusLine) {
+    automationElements.scriptStatusCurrent = automationElements.scriptStatusLine.querySelector('.script-automation-status-current');
+  }
+  if (!automationElements.scriptStatusHistory && automationElements.scriptStatusLine) {
+    automationElements.scriptStatusHistory = automationElements.scriptStatusLine.querySelector('.script-automation-status-history');
   }
   if (!automationElements.scriptSelect && automationElements.scriptAutomation) {
     automationElements.scriptSelect = automationElements.scriptAutomation.querySelector('.script-automation-select');

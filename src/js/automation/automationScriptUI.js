@@ -100,8 +100,21 @@ function buildScriptAutomationUI() {
   nextTravelRow.appendChild(nextTravelLabel);
   body.appendChild(nextTravelRow);
 
-  const statusLine = document.createElement('div');
+  const statusLine = document.createElement('details');
   statusLine.classList.add('script-automation-status-line');
+  const statusSummary = document.createElement('summary');
+  statusSummary.classList.add('script-automation-status-summary');
+  const statusCurrent = document.createElement('span');
+  statusCurrent.classList.add('script-automation-status-current');
+  const statusHistory = document.createElement('div');
+  statusHistory.classList.add('script-automation-status-history');
+  statusHistory.setAttribute('role', 'log');
+  statusHistory.setAttribute('aria-label', getAutomationCardText('scriptConsoleOutputLabel', {}, 'Recent script console output'));
+  statusSummary.appendChild(statusCurrent);
+  statusLine.append(statusSummary, statusHistory);
+  statusLine.addEventListener('toggle', () => {
+    if (statusLine.open) statusHistory.scrollTop = statusHistory.scrollHeight;
+  });
   body.appendChild(statusLine);
 
   const scriptRow = document.createElement('div');
@@ -152,6 +165,9 @@ function buildScriptAutomationUI() {
   automationElements.scriptNextTravelSelect = nextTravelSelect;
   automationElements.scriptNextTravelPersistToggle = nextTravelPersistToggle;
   automationElements.scriptStatusLine = statusLine;
+  automationElements.scriptStatusSummary = statusSummary;
+  automationElements.scriptStatusCurrent = statusCurrent;
+  automationElements.scriptStatusHistory = statusHistory;
   automationElements.scriptSelect = scriptSelect;
   automationElements.scriptNameInput = scriptName;
   automationElements.scriptNewButton = newButton;
@@ -403,16 +419,11 @@ function updateScriptAutomationUI() {
   automationElements.scriptImportButton.disabled = false;
   automationElements.scriptExportButton.disabled = !script;
 
-  const displayLineId = automation.getDisplayLineId ? automation.getDisplayLineId() : automation.pcLineId;
-  const currentLine = script?.lines.find(line => line.id === displayLineId);
-  const statusParts = [automation.lastStatus || 'Idle'];
-  if (currentLine) statusParts.push(`Line: ${automation.getLineLabel(script, currentLine)}`);
-  if (automation.lastActionSummary) statusParts.push(`Last action: ${automation.lastActionSummary}`);
-  if (automation.lastError) statusParts.push(`Error: ${automation.lastError}`);
-  else if (automation.lastLineOutcomeSummary && automation.lastLineOutcomeLineId === displayLineId) {
-    statusParts.push(automation.lastLineOutcomeSummary);
+  const statusText = automation.getConsoleOutputText();
+  if (automationElements.scriptStatusCurrent.textContent !== statusText) {
+    automationElements.scriptStatusCurrent.textContent = statusText;
   }
-  automationElements.scriptStatusLine.textContent = statusParts.join(' | ');
+  updateScriptAutomationConsole(automation, statusText);
   automationElements.scriptStatusLine.classList.toggle('script-automation-status-line-paused', automation.lastStatus === 'Paused');
 
   const signature = getScriptLinesSignature(automation, script);
@@ -431,6 +442,38 @@ function updateScriptAutomationUI() {
   }
   updateScriptAutomationLiveReferenceValues(automation, automationElements.scriptLinesContainer);
   updateCurrentScriptLineHighlight(automation, automationElements.scriptLinesContainer);
+}
+
+function updateScriptAutomationConsole(automation, statusText) {
+  const history = automationElements.scriptStatusHistory;
+  const wasPinnedToBottom = history.scrollHeight - history.clientHeight - history.scrollTop <= 8;
+  const added = automation.captureConsoleOutput(statusText);
+  const entries = automation.consoleOutputHistory;
+  const entryCache = history._entryCache || new Map();
+  const activeIds = new Set(entries.map(entry => entry.id));
+
+  entryCache.forEach((node, id) => {
+    if (activeIds.has(id)) return;
+    node.remove();
+    entryCache.delete(id);
+  });
+
+  entries.forEach((entry, index) => {
+    let node = entryCache.get(entry.id);
+    if (!node) {
+      node = document.createElement('div');
+      node.classList.add('script-automation-status-entry');
+      entryCache.set(entry.id, node);
+    }
+    if (node.textContent !== entry.text) node.textContent = entry.text;
+    const currentNode = history.children[index];
+    if (currentNode !== node) history.insertBefore(node, currentNode || null);
+  });
+
+  history._entryCache = entryCache;
+  if (added && automationElements.scriptStatusLine.open && wasPinnedToBottom) {
+    history.scrollTop = history.scrollHeight;
+  }
 }
 
 function getScriptLinesSignature(automation, script) {
