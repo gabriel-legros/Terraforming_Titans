@@ -1026,6 +1026,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
     if (typeof applyRWGEffects === 'function') {
       applyRWGEffects();
     }
+    populationModule.updateWorkerRequirements();
+    populationModule.updateWorkerCap();
+    populationModule.workerResource.value = populationModule.workerResource.cap - populationModule.totalWorkersRequired;
     galaxyManager?.finalizeLoadedDefenseAssignments?.();
     globalGameIsLoadingFromSave = false;
     if (!options.skipRender && typeof updateRender === 'function') {

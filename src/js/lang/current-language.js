@@ -5727,7 +5727,7 @@ setLanguageData({
       },
       particleAccelerator: {
         name: 'Particle Accelerator',
-        description: 'Physicists can always use a bigger particle accelerator.',
+        description: 'Physicists can always use a bigger particle accelerator. Maximum radius: 500Qi (5e20) meters.',
       },
       megaHeatSink: {
         name: 'Mega Heat Sink',
