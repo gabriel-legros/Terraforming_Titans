@@ -4914,6 +4914,7 @@ setLanguageData({
       uiScale: 'UI scale',
       uiScales: {
         p75: '75%',
+        p80: '80%',
         p90: '90%',
         p100: '100%',
         p110: '110%',

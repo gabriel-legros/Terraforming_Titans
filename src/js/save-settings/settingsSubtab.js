@@ -192,7 +192,7 @@ function applyThemeModeSetting() {
 
 function normalizeUIScale(value) {
   const scale = Number(value);
-  const options = [0.75, 0.9, 1, 1.1, 1.25, 1.5];
+  const options = [0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5];
   for (let i = 0; i < options.length; i += 1) {
     if (Math.abs(scale - options[i]) < 0.001) {
       return options[i];

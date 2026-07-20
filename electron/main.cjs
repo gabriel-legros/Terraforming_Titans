@@ -392,7 +392,7 @@ function registerWindowControlHandlers() {
   }));
   ipcMain.handle('window:set-zoom-factor', (event, scale) => {
     const win = BrowserWindow.fromWebContents(event.sender);
-    const allowedScales = [0.75, 0.9, 1, 1.1, 1.25, 1.5];
+    const allowedScales = [0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5];
     const nextScale = allowedScales.includes(scale) ? scale : 1;
     win.webContents.setZoomFactor(nextScale);
     return nextScale;
