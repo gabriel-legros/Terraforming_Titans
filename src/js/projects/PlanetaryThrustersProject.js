@@ -1029,7 +1029,7 @@ class PlanetaryThrustersProject extends Project{
   }
 
   saveAutomationSettings() {
-    return {
+    const settings = {
       ...super.saveAutomationSettings(),
       power: this.power,
       powerMode: this.powerMode,
@@ -1040,9 +1040,14 @@ class PlanetaryThrustersProject extends Project{
       motionInvest: this.motionInvest === true,
       autoGoRogue: this.autoGoRogue === true,
       tgtDays: this.tgtDays,
-      tgtAU: this.tgtAU,
       motionTargetMode: this.motionTargetMode
     };
+    if (this.motionTargetMode === THRUSTER_MOTION_TARGET_FLUX) {
+      settings.tgtFlux = stellarFluxFromOrbitAU(this.tgtAU);
+    } else {
+      settings.tgtAU = this.tgtAU;
+    }
+    return settings;
   }
 
   loadAutomationSettings(settings = {}) {
@@ -1082,13 +1087,16 @@ class PlanetaryThrustersProject extends Project{
     if (Object.prototype.hasOwnProperty.call(settings, 'tgtDays')) {
       this.tgtDays = Math.max(0.1, settings.tgtDays || 1);
     }
-    if (Object.prototype.hasOwnProperty.call(settings, 'tgtAU')) {
-      this.tgtAU = Math.max(0.1, settings.tgtAU || 0.1);
-    }
     if (Object.prototype.hasOwnProperty.call(settings, 'motionTargetMode')) {
       this.motionTargetMode = settings.motionTargetMode === THRUSTER_MOTION_TARGET_FLUX
         ? THRUSTER_MOTION_TARGET_FLUX
         : THRUSTER_MOTION_TARGET_AU;
+    }
+    if (this.motionTargetMode === THRUSTER_MOTION_TARGET_FLUX
+      && Object.prototype.hasOwnProperty.call(settings, 'tgtFlux')) {
+      this.tgtAU = Math.max(0.1, orbitAUFromStellarFlux(settings.tgtFlux));
+    } else if (Object.prototype.hasOwnProperty.call(settings, 'tgtAU')) {
+      this.tgtAU = Math.max(0.1, settings.tgtAU || 0.1);
     }
     const spinTargetChanged = this.tgtDays !== previousTargetDays;
     const motionTargetChanged = this.tgtAU !== previousTargetAU;
