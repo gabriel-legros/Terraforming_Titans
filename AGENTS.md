@@ -81,7 +81,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Direct browser and Steam builds verify that all three source version files agree before packaging. Browser builds use the current version without the `-playtest.N` suffix in the generated artifact and do not increment the source version.
 
 ## Key Systems
-- Antimatter Battery Auto Fill is a resource-production-loop operation: its projected rate participates in project availability and percentage-power calculations, and its actual transfer is added through `accumulatedChanges` before projects consume colony energy.
+- Antimatter Battery Auto Fill is a resource-production-loop operation capped at 10 times colony energy capacity per second and scaled by delta time. Colony Energy displays that constant available rate even when storage is full, reducing it only when the antimatter-equivalent supply cannot sustain the rate; Space Energy displays only the amount actually consumed. Its projected rate participates in project availability and percentage-power calculations, and its actual transfer is added through `accumulatedChanges` before projects consume colony energy. Manual filling remains instant.
 - Skills: `skills.js`, `skillsUI.js`
 - Life Designer: `life.js`, `lifeUI.js`
 - Space travel/systems: `space.js`, `spaceUI.js`
