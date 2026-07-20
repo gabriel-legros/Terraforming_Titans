@@ -7,7 +7,6 @@ const launchSummary = document.getElementById('launch-summary');
 const refreshButton = document.getElementById('refresh-button');
 const resetOrderButton = document.getElementById('reset-order-button');
 const playButton = document.getElementById('play-button');
-const playVanillaButton = document.getElementById('play-vanilla-button');
 const localModsButton = document.getElementById('local-mods-button');
 const workshopButton = document.getElementById('workshop-button');
 
@@ -204,7 +203,6 @@ function renderMods() {
   const saveName = selectedSave === 'new' ? 'New Game' : (save ? save.label : 'Unknown save');
   launchSummary.textContent = `${activeCount} mod${activeCount === 1 ? '' : 's'} enabled · ${saveName}`;
   playButton.disabled = launcherState.refreshing || duplicates.size > 0;
-  playVanillaButton.disabled = launcherState.refreshing;
   resetOrderButton.disabled = launcherState.refreshing || orderedMods.length < 2;
 }
 
@@ -307,19 +305,15 @@ function applyState(state) {
   renderMods();
 }
 
-async function launch(vanilla) {
+async function launch() {
   globalStatus.textContent = 'Preparing game session…';
   globalStatus.hidden = false;
   playButton.disabled = true;
-  playVanillaButton.disabled = true;
   try {
     const result = await window.modLauncher.launch({
       order: orderedMods.map(mod => mod.instanceId),
-      disabled: vanilla
-        ? orderedMods.map(mod => mod.instanceId)
-        : orderedMods.filter(mod => !enabledMods.has(mod.instanceId)).map(mod => mod.instanceId),
-      saveSelection: selectedSave,
-      temporaryVanilla: vanilla
+      disabled: orderedMods.filter(mod => !enabledMods.has(mod.instanceId)).map(mod => mod.instanceId),
+      saveSelection: selectedSave
     });
     if (!result.success) {
       globalStatus.textContent = result.error;
@@ -342,8 +336,7 @@ resetOrderButton.addEventListener('click', () => {
   orderedMods.sort((a, b) => a.loadOrder - b.loadOrder || a.id.localeCompare(b.id));
   renderMods();
 });
-playButton.addEventListener('click', () => launch(false));
-playVanillaButton.addEventListener('click', () => launch(true));
+playButton.addEventListener('click', launch);
 saveList.querySelector('input[value="new"]').addEventListener('change', event => {
   if (event.target.checked) {
     selectedSave = 'new';

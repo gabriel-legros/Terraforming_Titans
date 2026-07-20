@@ -10,7 +10,6 @@ Electron starts in the Launch Control window before creating the game renderer. 
 - Keeps invalid JSON saves visible but prevents selecting them.
 - Enables or disables installed local and Workshop mods without changing Workshop subscriptions.
 - Reorders mods with drag-and-drop or the arrow buttons. The top mod loads first; lower mods load later and win conflicts.
-- Offers Play Vanilla for a temporary empty mod session without overwriting the saved mod loadout.
 - Displays Workshop installation progress and prevents launching while Steam is actively resolving subscriptions.
 
 The saved loadout is `mods/loadout.json` under Electron's user-data directory. New mods are enabled by default and appended after the player's existing configured mods. The manifest's numeric `loadOrder` controls initial/default order only; after the player saves a custom list, launcher order is authoritative. Mod and save choices are fixed for the launched game session, so changing them requires restarting the game.

@@ -602,7 +602,6 @@ function registerModLauncherHandlers() {
       const requestedOrder = options.order.map(value => String(value));
       const requestedDisabled = options.disabled.map(value => String(value));
       const saveSelection = String(options.saveSelection);
-      const temporaryVanilla = options.temporaryVanilla === true;
       const entriesById = new Map(launcherCatalog.entries.map(entry => [entry.instanceId, entry]));
       if (requestedOrder.length !== availableIds.length
           || new Set(requestedOrder).size !== availableIds.length
@@ -614,9 +613,7 @@ function registerModLauncherHandlers() {
         throw new Error('The disabled mod list contains an unknown mod.');
       }
       const orderedEntries = requestedOrder.map(instanceId => entriesById.get(instanceId));
-      const activeEntries = temporaryVanilla
-        ? []
-        : orderedEntries.filter(entry => entry.valid && !disabled.has(entry.instanceId));
+      const activeEntries = orderedEntries.filter(entry => entry.valid && !disabled.has(entry.instanceId));
       const activeManifestIds = new Set();
       activeEntries.forEach(entry => {
         if (activeManifestIds.has(entry.id)) {
@@ -635,15 +632,13 @@ function registerModLauncherHandlers() {
         startupSelection = { mode: 'slot', slot: selectedSave.slot };
       }
 
-      if (!temporaryVanilla) {
-        launcherLoadout = writeModLoadout(
-          app.getPath('userData'),
-          launcherLoadout,
-          availableIds,
-          requestedOrder,
-          requestedDisabled
-        );
-      }
+      launcherLoadout = writeModLoadout(
+        app.getPath('userData'),
+        launcherLoadout,
+        availableIds,
+        requestedOrder,
+        requestedDisabled
+      );
       modService = createModService({
         appRoot: path.join(__dirname, '..'),
         mods: activeEntries,

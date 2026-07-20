@@ -173,15 +173,18 @@ h2 { font-size: 19px; }
 .empty-state { padding: 28px; color: var(--muted); text-align: center; }
 
 .launcher-footer {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   min-height: 62px;
-  padding: 12px 14px 12px 18px;
+  padding: 12px 18px;
   border: 1px solid var(--line);
   border-radius: 0;
   background: rgba(14, 27, 45, 0.96);
 }
 
-.launch-summary { color: var(--muted); font-size: 13px; }
-.primary-action, .secondary-action { min-width: 138px; padding: 12px 18px; font-weight: 800; }
+.launch-summary { grid-column: 1; grid-row: 1; color: var(--muted); font-size: 13px; }
+.launch-actions { grid-column: 2; grid-row: 1; }
+.primary-action { min-width: 138px; padding: 12px 18px; font-weight: 800; }
 .primary-action { border-color: #3da8ff; background: var(--accent-strong); color: white; }
 .primary-action:hover:not(:disabled) { background: #2d9cf4; }
 
