@@ -764,6 +764,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       skillManager.loadState(gameState.skills);
     }
 
+    resetDifficultySettings();
     if(gameState.settings){
       Object.assign(gameSettings, gameState.settings);
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'autosaveIntervalSeconds')) {
