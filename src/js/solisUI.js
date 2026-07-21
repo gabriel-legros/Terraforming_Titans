@@ -21,10 +21,7 @@ const solisUIElements = {
   questContainer: null,
   questMessage: null,
   questDetail: null,
-  questPrefixText: null,
-  questQuantity: null,
-  questUnitsText: null,
-  questResource: null,
+  questText: null,
   cooldownContainer: null,
   cooldownText: null,
   cooldownBar: null,
@@ -239,28 +236,12 @@ function ensureSolisQuestElements() {
   }
 
   if (
-    !refs.questPrefixText
-    || refs.questPrefixText.parentNode !== refs.questDetail
-    || !refs.questQuantity
-    || refs.questQuantity.parentElement !== refs.questDetail
-    || !refs.questUnitsText
-    || refs.questUnitsText.parentNode !== refs.questDetail
-    || !refs.questResource
-    || refs.questResource.parentElement !== refs.questDetail
+    !refs.questText
+    || refs.questText.parentElement !== refs.questDetail
   ) {
     refs.questDetail.textContent = '';
-    refs.questPrefixText = document.createTextNode('');
-    refs.questQuantity = document.createElement('span');
-    refs.questQuantity.classList.add('solis-quest-quantity');
-    refs.questUnitsText = document.createTextNode('');
-    refs.questResource = document.createElement('span');
-    refs.questResource.classList.add('solis-quest-resource');
-    refs.questDetail.append(
-      refs.questPrefixText,
-      refs.questQuantity,
-      refs.questUnitsText,
-      refs.questResource
-    );
+    refs.questText = document.createElement('span');
+    refs.questDetail.append(refs.questText);
   }
 
   return refs;
@@ -834,20 +815,14 @@ function updateSolisQuestArea(refs) {
   if (refs.questMessage && refs.questDetail) {
     if (quest) {
       const quantity = formatSolisValue(quest.quantity, true, 2);
-      const prefixText = `${getSolisUIText('deliverPrefix', {}, 'Deliver')} `;
-      const unitsText = ` ${getSolisUIText('deliverUnitsOf', {}, 'units of')} `;
-      if (refs.questPrefixText.nodeValue !== prefixText) {
-        refs.questPrefixText.nodeValue = prefixText;
-      }
-      if (refs.questQuantity.textContent !== quantity) {
-        refs.questQuantity.textContent = quantity;
-      }
-      if (refs.questUnitsText.nodeValue !== unitsText) {
-        refs.questUnitsText.nodeValue = unitsText;
-      }
       const resourceName = resources.colony[quest.resource].displayName;
-      if (refs.questResource.textContent !== resourceName) {
-        refs.questResource.textContent = resourceName;
+      const questText = getSolisUIText(
+        'deliverQuest',
+        { quantity, resource: resourceName },
+        `Deliver ${quantity} units of ${resourceName}`
+      );
+      if (refs.questText.textContent !== questText) {
+        refs.questText.textContent = questText;
       }
       if (!refs.questMessage.classList.contains('hidden')) {
         refs.questMessage.classList.add('hidden');

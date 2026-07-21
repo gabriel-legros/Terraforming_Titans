@@ -165,6 +165,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - The Net resource rate display setting makes compact resource row rates use net rate including autobuild; keep this in sync with the resource tooltip net-rate calculation.
 - The Full resource cap highlight setting optionally colours full resource values and caps for the active theme when their displayed rate is positive and is off by default.
 - Dialogue and typed pop-up text can be completed instantly with the rebindable `gameSettings.dialogueSkipKeybind`, defaulting to `NumpadAdd`.
+- Journal objective progress, status, travel, hazard, and operation text uses `ui.journal` localization entries. Solis quest delivery text uses the localized `ui.hope.solisUi.deliverQuest` template.
 - Use refresh helpers correctly:
   - New game: `startNewGame()`
   - Load: `loadGame()` -> `initializeGameState({ skipStoryInitialization: true })`
