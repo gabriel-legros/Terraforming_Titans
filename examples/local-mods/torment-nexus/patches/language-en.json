@@ -3,7 +3,14 @@
     "buildings": {
       "tormentNexus": {
         "name": "The Torment Nexus",
-        "description": "Consumes 1 colonist per second to produce 10 funding per second."
+        "description": "Consumes 1 colonist per second to produce 10 funding and 1 tear per second."
+      }
+    },
+    "resources": {
+      "special": {
+        "tears": {
+          "name": "Tears"
+        }
       }
     },
     "research": {

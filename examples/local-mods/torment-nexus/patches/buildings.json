@@ -19,6 +19,9 @@
       "production": {
         "colony": {
           "funding": 10
+        },
+        "special": {
+          "tears": 1
         }
       },
       "storage": {},

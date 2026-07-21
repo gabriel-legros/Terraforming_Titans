@@ -11,6 +11,10 @@
         "file": "patches/language-en.json"
       },
       {
+        "target": "parameters.planetResources",
+        "file": "patches/resources.json"
+      },
+      {
         "target": "parameters.buildings",
         "file": "patches/buildings.json"
       },
