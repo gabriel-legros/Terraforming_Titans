@@ -106,6 +106,24 @@ Then merge stable entry keys in the patch:
 
 Objects merge recursively. Scalars and arrays replace the existing value. Use `{ "$delete": true }` to delete a key, `{ "$replace": value }` to replace a whole subtree, and `{ "$number": "Infinity" }` for non-JSON numeric values. `null` is a normal replacement value.
 
+Research patches group stable research ids under their category because the runtime research parameters use category arrays:
+
+```json
+{
+  "entries": {
+    "colonization": {
+      "torment_nexus": {
+        "cost": { "research": 5000000000 },
+        "prerequisites": [],
+        "effects": []
+      }
+    }
+  }
+}
+```
+
+An existing research id is merged in place, while a new id is appended to its category. Use `$delete` on a research id to remove it or `$replace` on a category to replace its complete array.
+
 Supported targets are:
 
 - `language.current`
@@ -117,6 +135,7 @@ Supported targets are:
 - `parameters.colonies`
 - `parameters.orbitals`
 - `parameters.projects`
+- `parameters.research`
 - `parameters.skills`
 - `parameters.terraformingRequirements`
 

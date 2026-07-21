@@ -75,6 +75,42 @@ function applyModPatchObject(target, patchData) {
   applyModPatchValue(target, patchBody);
 }
 
+function applyResearchModPatch(target, patchData) {
+  const patchBody = isModPatchObject(patchData.entries) ? patchData.entries : patchData;
+  for (const category in patchBody) {
+    const categoryPatch = patchBody[category];
+    if (isModPatchObject(categoryPatch) && categoryPatch.$delete === true) {
+      delete target[category];
+      continue;
+    }
+    if (isModPatchObject(categoryPatch) && Object.prototype.hasOwnProperty.call(categoryPatch, '$replace')) {
+      target[category] = applyModPatchValue(undefined, categoryPatch.$replace);
+      continue;
+    }
+
+    const researchList = target[category] || (target[category] = []);
+    for (const researchId in categoryPatch) {
+      const researchPatch = categoryPatch[researchId];
+      const index = researchList.findIndex(research => research.id === researchId);
+      if (isModPatchObject(researchPatch) && researchPatch.$delete === true) {
+        if (index !== -1) {
+          researchList.splice(index, 1);
+        }
+        continue;
+      }
+
+      const current = index === -1 ? undefined : researchList[index];
+      const research = applyModPatchValue(current, researchPatch);
+      research.id = researchId;
+      if (index === -1) {
+        researchList.push(research);
+      } else {
+        researchList[index] = research;
+      }
+    }
+  }
+}
+
 function getModPatchTarget(targetId) {
   switch (targetId) {
     case 'parameters.planetResources':
@@ -93,6 +129,8 @@ function getModPatchTarget(targetId) {
       return followersOrbitalParameters;
     case 'parameters.projects':
       return projectParameters;
+    case 'parameters.research':
+      return researchParameters;
     case 'parameters.skills':
       return skillParameters;
     case 'parameters.terraformingRequirements':
@@ -107,6 +145,8 @@ function applyModStage(targetId) {
     const patch = targetPatches[i];
     if (targetId === 'language.current') {
       setLanguageData(patch.data);
+    } else if (targetId === 'parameters.research') {
+      applyResearchModPatch(getModPatchTarget(targetId), patch.data);
     } else {
       applyModPatchObject(getModPatchTarget(targetId), patch.data);
     }

@@ -13,6 +13,7 @@ const SUPPORTED_PATCH_TARGETS = new Set([
   'parameters.colonies',
   'parameters.orbitals',
   'parameters.projects',
+  'parameters.research',
   'parameters.skills',
   'parameters.terraformingRequirements'
 ]);
