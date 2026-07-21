@@ -136,8 +136,8 @@ function restoreSmbhShellworldSpaceStorageSettings(project, state = {}) {
   project.megaProjectSpaceOnlyOnTravel = state.megaProjectSpaceOnlyOnTravel === true;
   project.resourceStrategicReserves = cloneSmbhShellworldSnapshotData(state.resourceStrategicReserves || {});
   project.sanitizeResourceStrategicReserves();
-  project.waterWithdrawTarget = state.waterWithdrawTarget || 'colony';
-  project.hydrogenTransferTarget = state.hydrogenTransferTarget === 'colony' ? 'colony' : 'atmospheric';
+  project.setFluidTransferTarget('liquidWater', state.waterWithdrawTarget);
+  project.setFluidTransferTarget('hydrogen', state.hydrogenTransferTarget);
   project.artificialEcosystemsEnabled = state.artificialEcosystemsEnabled === true;
   project.resourceCaps = cloneSmbhShellworldSnapshotData(state.resourceCaps || {});
   project.sanitizeResourceCaps();

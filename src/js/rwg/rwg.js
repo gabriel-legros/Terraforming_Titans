@@ -769,10 +769,16 @@ const RWG_HAZARD_PRESETS = {
   hazardousMachinery: planetParameters.styx.hazards.hazardousMachinery,
   garbage: planetParameters.gabbag.hazards.garbage,
   kessler: planetParameters.tartarus.hazards.kessler,
-  pulsar: planetParameters.hades.hazards.pulsar
+  pulsar: planetParameters.hades.hazards.pulsar,
+  debrisDisk: {
+    debrisPerLand: 1e11,
+    attritionRatePerSecond: 0.0025,
+    colonistGrowthPenalty: 0.9,
+    kesslerRegenerationRatePerBinPerSecond: 0.001
+  }
 };
 
-const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage', 'kessler', 'pulsar', 'hazardousMachinery'];
+const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage', 'kessler', 'pulsar', 'hazardousMachinery', 'debrisDisk'];
 const RWG_DOMINION_BASE_ORDER = ['human', 'gabbagian', 'ammonia', 'oommaa', 'klishy', 'kerati', 'shrilek', 'vanadophore'];
 const RWG_STEAM_EXCLUSIVE_DOMINIONS = ['yggies'];
 const RWG_DOMINION_BASE_LOCKS = ['gabbagian'];
@@ -2088,7 +2094,7 @@ class RwgManager extends EffectableEntity {
     this.lockedOrbits = new Set(["very-hot", "hot"]);
     this.lockedTypes = new Set(["venus-like", "molten", "rogue", "ammonia-rich", "jupiter-like"]);
     this.lockedFeatures = new Set(['hazards', 'dominions']);
-    this.lockedHazards = new Set(['hazardousBiomass', 'hazardousMachinery', 'garbage', 'kessler', 'pulsar']);
+    this.lockedHazards = new Set(['hazardousBiomass', 'hazardousMachinery', 'garbage', 'kessler', 'pulsar', 'debrisDisk']);
     const dominionLocks = RWG_DOMINION_BASE_LOCKS.concat(
       getRwgDominionOrder().filter((dominionId) => getDominionUnlockRule(dominionId).type !== 'always')
     );

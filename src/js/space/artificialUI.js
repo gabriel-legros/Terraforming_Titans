@@ -70,9 +70,11 @@ const artificialUICache = {
   autoStore: null,
   autoStoreWithMaxStockpile: null,
   startBtn: null,
+  startBtnLabel: null,
   travelBtn: null,
   storeBtn: null,
   stopBtn: null,
+  stopBtnLabel: null,
   progressFill: null,
   progressLabel: null,
   supermassivePanel: null,
@@ -375,10 +377,12 @@ function buildHistoryRow(entry) {
     event.stopPropagation();
     if (name.dataset.editing === 'true') return;
     name.dataset.editing = 'true';
+    const historyId = row.dataset.historyId;
+    const currentName = nameText.textContent;
     const input = document.createElement('input');
     input.type = 'text';
     input.className = 'artificial-history-name-input';
-    input.value = entry.name;
+    input.value = currentName;
     name.replaceChild(input, nameText);
     editBtn.disabled = true;
     input.focus();
@@ -388,15 +392,15 @@ function buildHistoryRow(entry) {
         input.blur();
       }
       if (keyEvent.key === 'Escape') {
-        input.value = entry.name;
+        input.value = currentName;
         input.blur();
       }
     });
     input.addEventListener('blur', () => {
       name.dataset.editing = '';
       editBtn.disabled = false;
-      artificialManager?.setWorldNameById(entry.id, input.value);
-      nameText.textContent = (String(input.value || '').trim()) || getArtificialText('history.fallbackName', 'Artificial {value}', { value: entry.id });
+      artificialManager?.setWorldNameById(historyId, input.value);
+      nameText.textContent = (String(input.value || '').trim()) || getArtificialText('history.fallbackName', 'Artificial {value}', { value: historyId });
       name.replaceChild(nameText, input);
     });
   });
@@ -1380,9 +1384,12 @@ function ensureArtificialLayout() {
 
   const startBtn = document.createElement('button');
   startBtn.className = 'artificial-primary';
-  startBtn.textContent = getArtificialText('actions.startArtificialWorld', 'Start Artificial World');
+  const startBtnLabel = document.createElement('span');
+  startBtnLabel.textContent = getArtificialText('actions.startArtificialWorld', 'Start Artificial World');
+  startBtn.appendChild(startBtnLabel);
   artificialUICache.startBtnTooltipContent = attachDynamicInfoTooltip(startBtn, '', false);
   artificialUICache.startBtn = startBtn;
+  artificialUICache.startBtnLabel = startBtnLabel;
   costs.appendChild(startBtn);
 
   const gains = document.createElement('div');
@@ -1528,6 +1535,8 @@ function ensureArtificialLayout() {
 
     const staged = document.createElement('div');
     staged.className = 'artificial-stash-stock';
+    const stockLabel = document.createElement('span');
+    staged.appendChild(stockLabel);
     body.appendChild(staged);
 
     const controls = document.createElement('div');
@@ -1540,10 +1549,14 @@ function ensureArtificialLayout() {
     mulBtn.textContent = getArtificialText('common.timesTen', 'x10');
     const addBtn = document.createElement('button');
     addBtn.className = 'artificial-stash-btn artificial-stash-add';
+    const addLabel = document.createElement('span');
+    addBtn.appendChild(addLabel);
     controls.append(addBtn, mulBtn, divBtn);
     const maxBtn = document.createElement('button');
     maxBtn.className = 'artificial-stash-btn artificial-stash-max';
-    maxBtn.textContent = getArtificialText('stash.max', '+Max');
+    const maxLabel = document.createElement('span');
+    maxLabel.textContent = getArtificialText('stash.max', '+Max');
+    maxBtn.appendChild(maxLabel);
     controls.insertBefore(maxBtn, mulBtn);
     body.appendChild(controls);
     row.appendChild(body);
@@ -1552,8 +1565,11 @@ function ensureArtificialLayout() {
       divBtn,
       mulBtn,
       addBtn,
+      addLabel,
       maxBtn,
+      maxLabel,
       stock: staged,
+      stockLabel,
       capInfo,
       capTooltipContent: attachDynamicInfoTooltip(capInfo, ''),
       addTooltipContent: attachDynamicInfoTooltip(addBtn, '', false),
@@ -1631,9 +1647,12 @@ function ensureArtificialLayout() {
   actions.className = 'artificial-actions';
   const stopBtn = document.createElement('button');
   stopBtn.className = 'artificial-secondary';
-  stopBtn.textContent = getArtificialText('actions.cancelConstruction', 'Cancel Construction');
+  const stopBtnLabel = document.createElement('span');
+  stopBtnLabel.textContent = getArtificialText('actions.cancelConstruction', 'Cancel Construction');
+  stopBtn.appendChild(stopBtnLabel);
   artificialUICache.stopBtnTooltipContent = attachDynamicInfoTooltip(stopBtn, '', false);
   artificialUICache.stopBtn = stopBtn;
+  artificialUICache.stopBtnLabel = stopBtnLabel;
   actions.appendChild(stopBtn);
   const travelBtn = document.createElement('button');
   travelBtn.className = 'artificial-primary';
@@ -2218,11 +2237,11 @@ function renderArtificialHistory(force = false) {
     } else {
       updateHistoryHeader(header);
     }
-    if (header.parentNode !== list) {
-      list.appendChild(header);
+    if (list.children[0] !== header) {
+      list.insertBefore(header, list.children[0] || null);
     }
     const usedRows = new Set();
-    slice.forEach((entry) => {
+    slice.forEach((entry, index) => {
       let row = list._historyRows.get(entry.id);
       if (!row) {
         row = buildHistoryRow(entry);
@@ -2230,22 +2249,36 @@ function renderArtificialHistory(force = false) {
       } else {
         updateHistoryRow(row, entry);
       }
-      list.appendChild(row);
-      row.style.display = '';
+      const desiredIndex = index + 1;
+      if (list.children[desiredIndex] !== row) {
+        list.insertBefore(row, list.children[desiredIndex] || null);
+      }
+      if (row.style.display) {
+        row.style.display = '';
+      }
       usedRows.add(row);
     });
     list._historyRows.forEach((row) => {
-      if (!usedRows.has(row)) {
+      if (!usedRows.has(row) && row.style.display !== 'none') {
         row.style.display = 'none';
       }
     });
   });
-  artificialUICache.historyPage.textContent = `${entries.length ? artificialHistoryPage + 1 : 0}/${Math.max(maxPage + 1, 1)}`;
+  const pageText = `${entries.length ? artificialHistoryPage + 1 : 0}/${Math.max(maxPage + 1, 1)}`;
+  if (artificialUICache.historyPage.textContent !== pageText) {
+    artificialUICache.historyPage.textContent = pageText;
+  }
   if (artificialUICache.historyPrev) {
-    artificialUICache.historyPrev.disabled = artificialHistoryPage === 0;
+    const disabled = artificialHistoryPage === 0;
+    if (artificialUICache.historyPrev.disabled !== disabled) {
+      artificialUICache.historyPrev.disabled = disabled;
+    }
   }
   if (artificialUICache.historyNext) {
-    artificialUICache.historyNext.disabled = artificialHistoryPage >= maxPage;
+    const disabled = artificialHistoryPage >= maxPage;
+    if (artificialUICache.historyNext.disabled !== disabled) {
+      artificialUICache.historyNext.disabled = disabled;
+    }
   }
 }
 
@@ -2258,14 +2291,16 @@ function renderProgress(project, prepayState) {
       const prepaid = (prepayState?.paid?.metal || 0) + (prepayState?.paid?.superalloys || 0);
       if (prepaid > 0) {
         artificialUICache.stopBtn.disabled = false;
-        artificialUICache.stopBtn.textContent = getArtificialText('actions.discardPrepay', 'Discard Prepay');
+        const stopText = getArtificialText('actions.discardPrepay', 'Discard Prepay');
+        if (artificialUICache.stopBtnLabel.textContent !== stopText) artificialUICache.stopBtnLabel.textContent = stopText;
         setTooltipText(
           artificialUICache.stopBtnTooltipContent,
           getArtificialText('actions.discardPrepayTitle', 'Clear staged prepayments for this artificial world.')
         );
       } else {
         artificialUICache.stopBtn.disabled = true;
-        artificialUICache.stopBtn.textContent = getArtificialText('actions.cancelConstruction', 'Cancel Construction');
+        const stopText = getArtificialText('actions.cancelConstruction', 'Cancel Construction');
+        if (artificialUICache.stopBtnLabel.textContent !== stopText) artificialUICache.stopBtnLabel.textContent = stopText;
         setTooltipText(artificialUICache.stopBtnTooltipContent, '');
       }
     }
@@ -2283,7 +2318,8 @@ function renderProgress(project, prepayState) {
     const remaining = formatDuration(project.remainingMs / 1000);
     label.textContent = getArtificialText('progress.remaining', '{name} — {value} remaining', { name: project.name, value: remaining });
     artificialUICache.stopBtn.disabled = false;
-    artificialUICache.stopBtn.textContent = getArtificialText('actions.cancelConstruction', 'Cancel Construction');
+    const stopText = getArtificialText('actions.cancelConstruction', 'Cancel Construction');
+    if (artificialUICache.stopBtnLabel.textContent !== stopText) artificialUICache.stopBtnLabel.textContent = stopText;
     setTooltipText(
       artificialUICache.stopBtnTooltipContent,
       getArtificialText('actions.cancelActiveBuildTitle', 'Cancel the active build')
@@ -2299,7 +2335,8 @@ function renderProgress(project, prepayState) {
     artificialUICache.progressFill.style.width = '100%';
     label.textContent = getArtificialText('progress.complete', '{name} complete. Ready to travel.', { name: project.name });
     artificialUICache.stopBtn.disabled = false;
-    artificialUICache.stopBtn.textContent = getArtificialText('actions.discardWorld', 'Discard World');
+    const stopText = getArtificialText('actions.discardWorld', 'Discard World');
+    if (artificialUICache.stopBtnLabel.textContent !== stopText) artificialUICache.stopBtnLabel.textContent = stopText;
     setTooltipText(
       artificialUICache.stopBtnTooltipContent,
       getArtificialText('actions.discardWorldTitle', 'Discard this completed world')
@@ -2316,7 +2353,8 @@ function renderProgress(project, prepayState) {
   }
   label.textContent = getArtificialText('progress.idle', 'Idle');
   artificialUICache.stopBtn.disabled = true;
-  artificialUICache.stopBtn.textContent = getArtificialText('actions.cancelConstruction', 'Cancel Construction');
+  const stopText = getArtificialText('actions.cancelConstruction', 'Cancel Construction');
+  if (artificialUICache.stopBtnLabel.textContent !== stopText) artificialUICache.stopBtnLabel.textContent = stopText;
   setTooltipText(artificialUICache.stopBtnTooltipContent, '');
   artificialUICache.travelBtn.disabled = true;
   if (artificialUICache.storeBtn) {
@@ -2389,7 +2427,8 @@ function renderStash(project, manager) {
       setTooltipText(controls.capTooltipContent, capTitle);
     }
     if (controls.stock) {
-      controls.stock.textContent = active ? fmt(staged, false, 2) : '—';
+      const stockText = active ? fmt(staged, false, 2) : '—';
+      if (controls.stockLabel.textContent !== stockText) controls.stockLabel.textContent = stockText;
       setTooltipText(
         controls.stockTooltipContent,
         active ? getArtificialText('stash.capValue', 'Cap: {value}', { value: capLabel }) : ''
@@ -2398,7 +2437,8 @@ function renderStash(project, manager) {
       controls.stock.classList.toggle('artificial-stash-capped', active && cappedOut);
     }
     if (controls.addBtn) {
-      controls.addBtn.textContent = `+${fmt(planned, false, 0)}`;
+      const addText = `+${fmt(planned, false, 0)}`;
+      if (controls.addLabel.textContent !== addText) controls.addLabel.textContent = addText;
       controls.addBtn.disabled = !active || !canAfford || cappedOut || planned <= 0;
       controls.addBtn.classList.toggle('artificial-stash-unaffordable', active && !cappedOut && !canAfford);
       controls.addBtn.classList.toggle('artificial-stash-capped', active && cappedOut);
@@ -2416,7 +2456,8 @@ function renderStash(project, manager) {
     if (controls.mulBtn) controls.mulBtn.disabled = !active;
     if (controls.maxBtn) {
       const disabled = !active || maxAmount <= 0;
-      controls.maxBtn.textContent = maxAmount > 0 ? `+${fmt(maxAmount, false, 0)}` : getArtificialText('stash.max', '+Max');
+      const maxText = maxAmount > 0 ? `+${fmt(maxAmount, false, 0)}` : getArtificialText('stash.max', '+Max');
+      if (controls.maxLabel.textContent !== maxText) controls.maxLabel.textContent = maxText;
       controls.maxBtn.disabled = disabled;
       controls.maxBtn.classList.toggle('artificial-stash-unaffordable', disabled);
       if (!active) {
@@ -2700,7 +2741,8 @@ function renderStartButton(project, manager, preview) {
   const btn = artificialUICache.startBtn;
   if (project) {
     btn.disabled = true;
-    btn.textContent = getArtificialText('actions.constructionLocked', 'Construction locked');
+    const buttonText = getArtificialText('actions.constructionLocked', 'Construction locked');
+    if (artificialUICache.startBtnLabel.textContent !== buttonText) artificialUICache.startBtnLabel.textContent = buttonText;
     setTooltipText(artificialUICache.startBtnTooltipContent, '');
     return;
   }
@@ -2714,29 +2756,35 @@ function renderStartButton(project, manager, preview) {
   const supermassiveBlocked = type === 'shell' && core === 'smbh' && manager.hasSupermassiveShellworld?.();
   btn.disabled = durationBlocked || supermassiveBlocked || !supported || (!canStart && !canPrepay);
   if (supermassiveBlocked) {
-    btn.textContent = getArtificialText('actions.supermassiveExists', 'Already exists');
+    const buttonText = getArtificialText('actions.supermassiveExists', 'Already exists');
+    if (artificialUICache.startBtnLabel.textContent !== buttonText) artificialUICache.startBtnLabel.textContent = buttonText;
     setTooltipText(
       artificialUICache.startBtnTooltipContent,
       getArtificialText('supermassive.singleWarning', 'Only one supermassive black hole shellworld can exist.')
     );
   } else if (durationBlocked) {
-    btn.textContent = getArtificialText('actions.exceedsLimit', 'Exceeds 5-hour limit');
+    const buttonText = getArtificialText('actions.exceedsLimit', 'Exceeds 5-hour limit');
+    if (artificialUICache.startBtnLabel.textContent !== buttonText) artificialUICache.startBtnLabel.textContent = buttonText;
     setTooltipText(
       artificialUICache.startBtnTooltipContent,
       getArtificialText('actions.exceedsLimitTitle', 'Reduce size or gain more terraformed worlds to shorten construction below 5 hours.')
     );
   } else {
     if (!supported) {
-      btn.textContent = getArtificialText('actions.comingSoon', 'Coming soon');
+      const buttonText = getArtificialText('actions.comingSoon', 'Coming soon');
+      if (artificialUICache.startBtnLabel.textContent !== buttonText) artificialUICache.startBtnLabel.textContent = buttonText;
       setTooltipText(artificialUICache.startBtnTooltipContent, '');
     } else if (canStart) {
-      btn.textContent = getArtificialText('actions.startConstruction', 'Start Construction');
+      const buttonText = getArtificialText('actions.startConstruction', 'Start Construction');
+      if (artificialUICache.startBtnLabel.textContent !== buttonText) artificialUICache.startBtnLabel.textContent = buttonText;
       setTooltipText(artificialUICache.startBtnTooltipContent, '');
     } else if (canPrepay) {
-      btn.textContent = getArtificialText('actions.prepay', 'Prepay');
+      const buttonText = getArtificialText('actions.prepay', 'Prepay');
+      if (artificialUICache.startBtnLabel.textContent !== buttonText) artificialUICache.startBtnLabel.textContent = buttonText;
       setTooltipText(artificialUICache.startBtnTooltipContent, '');
     } else {
-      btn.textContent = getArtificialText('actions.insufficient', 'Insufficient');
+      const buttonText = getArtificialText('actions.insufficient', 'Insufficient');
+      if (artificialUICache.startBtnLabel.textContent !== buttonText) artificialUICache.startBtnLabel.textContent = buttonText;
       setTooltipText(artificialUICache.startBtnTooltipContent, '');
     }
   }

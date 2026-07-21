@@ -30,7 +30,7 @@ class CloningFacility extends MultiRecipesBuilding {
 }
 
 try {
-  registerBuildingConstructor('cloningFacility', CloningFacility);
+  registerBuildingConstructor(CloningFacility);
 } catch (error) {}
 
 try {

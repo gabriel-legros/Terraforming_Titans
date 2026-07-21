@@ -1,7 +1,7 @@
 class SuperalloyFusionReactor extends MultiRecipesBuilding {}
 
 try {
-  registerBuildingConstructor('superalloyFusionReactor', SuperalloyFusionReactor);
+  registerBuildingConstructor(SuperalloyFusionReactor);
 } catch (error) {}
 
 try {

@@ -1160,9 +1160,6 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     this.applySpaceStorageDeltaForTick(resourceKey, stored, accumulatedChanges);
     if (!accumulatedChanges) {
       storage.reconcileUsedStorage?.();
-      if (typeof updateSpaceStorageUI === 'function') {
-        updateSpaceStorageUI(storage);
-      }
     }
 
     return stored;
@@ -1360,11 +1357,11 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
   }
 
   getExpansionRateSourceLabel() {
-    return 'Lifter expansion';
+    return getLiftersProjectText('rateSources.expansion', null, 'Lifter expansion');
   }
 
   getOperationRateSourceLabel() {
-    return 'Lifting';
+    return getLiftersProjectText('rateSources.operation', null, 'Lifting');
   }
 
   shouldKeepRunningOnTravel() {

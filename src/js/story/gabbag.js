@@ -408,7 +408,7 @@ progressGabbag.chapters.push(
     id: 'gabbag.29.11',
     type: 'journal',
     chapter: 29,
-    narrative: "Primary Directives : Humanity's survival demands a solution to hazardous biomass superweapons. Gabbag habitat already colonized.  **New terraforming target designated: Tartarus.**",
+    narrative: "Primary Directives : Humanity's survival demands a solution to hazardous biomass superweapons. Mars habitat already colonized.  **New terraforming target designated: Tartarus.**",
     prerequisites: ['gabbag.29.10'],
     objectives: [
      { type: 'currentPlanet', planetId: 'tartarus' }

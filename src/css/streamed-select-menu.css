@@ -1,0 +1,125 @@
+.streamed-select-menu {
+    position: fixed;
+    z-index: 20000;
+    box-sizing: border-box;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 4px;
+    border: 1px solid #8d99a6;
+    border-radius: 6px;
+    background: #ffffff;
+    color: #1f2933;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.3);
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+}
+
+.streamed-select-menu[hidden] {
+    display: none;
+}
+
+.streamed-select-menu-option {
+    display: grid;
+    grid-template-columns: 1.25rem minmax(0, 1fr);
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    padding: 7px 10px;
+    border: 0;
+    border-radius: 4px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    line-height: 1.25;
+    text-align: left;
+    cursor: pointer;
+}
+
+.streamed-select-menu-option::before {
+    content: '';
+    width: 1.25rem;
+    font-weight: 700;
+    text-align: left;
+}
+
+.streamed-select-menu-measuring .streamed-select-menu-option span {
+    white-space: nowrap;
+}
+
+.streamed-select-menu-option[aria-selected="true"]::before {
+    content: '\2713';
+}
+
+.streamed-select-menu-option:hover:not(:disabled),
+.streamed-select-menu-option.is-active:not(:disabled) {
+    background: #dbeafe;
+    color: #102a43;
+}
+
+.streamed-select-menu-option:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: -2px;
+}
+
+.streamed-select-menu-option:disabled {
+    color: #8a949e;
+    cursor: default;
+}
+
+.streamed-select-menu-group {
+    padding: 8px 10px 4px 2.1rem;
+    color: #5d6873;
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.dark-mode .streamed-select-menu {
+    border-color: #41516b;
+    background: #161b26;
+    color: #e7ecf7;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.58);
+}
+
+.dark-mode .streamed-select-menu-option:hover:not(:disabled),
+.dark-mode .streamed-select-menu-option.is-active:not(:disabled) {
+    background: #253958;
+    color: #ffffff;
+}
+
+.dark-mode .streamed-select-menu-option:disabled,
+.dark-mode .streamed-select-menu-group {
+    color: #8e99a8;
+}
+
+.dark-grey-mode .streamed-select-menu {
+    border-color: #555;
+    background: #1e1e1e;
+    color: #ffffff;
+}
+
+.dark-grey-mode .streamed-select-menu-option:hover:not(:disabled),
+.dark-grey-mode .streamed-select-menu-option.is-active:not(:disabled) {
+    background: #3a3a3a;
+    color: #ffffff;
+}
+
+.oled-black-mode .streamed-select-menu {
+    border-color: var(--oled-border-strong);
+    background: var(--oled-surface);
+    color: var(--oled-text);
+}
+
+.oled-black-mode .streamed-select-menu-option:hover:not(:disabled),
+.oled-black-mode .streamed-select-menu-option.is-active:not(:disabled) {
+    background: var(--oled-surface-active);
+    color: var(--oled-text);
+}
+
+@media (pointer: coarse) {
+    .streamed-select-menu-option {
+        min-height: 48px;
+        padding-top: 9px;
+        padding-bottom: 9px;
+    }
+}

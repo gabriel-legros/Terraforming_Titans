@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex, nofollow">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; frame-src 'none'">
     <!-- Update title maybe? -->
     <title data-i18n="meta.documentTitle">Terraforming Titans</title>
     <link rel="icon" type="image/png" href="assets/images/cover_small.png">
@@ -48,26 +49,41 @@
     <link rel="stylesheet" href="src/css/automation.css">
     <link rel="stylesheet" href="src/css/dark-grey-mode.css">
     <link rel="stylesheet" href="src/css/oled-black-mode.css">
+    <link rel="stylesheet" href="src/css/streamed-select-menu.css">
 
     <script src="src/js/lang/localization.js"></script>
     <script src="src/js/lang/current-language.js"></script>
+    <script src="src/js/lang/story-language.js"></script>
 
     <!-- Parameter Scripts -->
     <script src="src/js/debug_constants.js"></script>
     <script src="src/js/build-target.js"></script>
     <script src="src/js/game-version.js"></script>
     <script src="src/js/electron-crash-reporting.js"></script>
+    <script src="src/js/modding/mod-runtime.js"></script>
+    <script src="src/js/modding/apply-stage.js" data-mod-stage="language.current"></script>
     <script src="src/js/planet-resource-parameters.js"></script>
+    <script src="src/js/modding/apply-stage.js" data-mod-stage="parameters.planetResources"></script>
     <script src="src/js/planet-parameters.js"></script>
+    <script src="src/js/modding/apply-stage.js" data-mod-stage="parameters.planets"></script>
     <script src="src/js/special-seeds.js"></script>
+    <script src="src/js/modding/apply-stage.js" data-mod-stage="parameters.specialSeeds"></script>
     <script src="src/js/life-parameters.js"></script>
+    <script src="src/js/modding/apply-stage.js" data-mod-stage="parameters.life"></script>
     <script src="src/js/buildings-parameters.js"></script>
+    <script src="src/js/modding/apply-stage.js" data-mod-stage="parameters.buildings"></script>
     <script src="src/js/colony-parameters.js"></script>
+    <script src="src/js/modding/apply-stage.js" data-mod-stage="parameters.colonies"></script>
     <script src="src/js/colony/orbital-parameters.js"></script>
+    <script src="src/js/modding/apply-stage.js" data-mod-stage="parameters.orbitals"></script>
     <script src="src/js/project-parameters.js"></script>
+    <script src="src/js/modding/apply-stage.js" data-mod-stage="parameters.projects"></script>
     <script src="src/js/research-parameters.js"></script>
+    <script src="src/js/modding/apply-stage.js" data-mod-stage="parameters.research"></script>
     <script src="src/js/skills-parameters.js"></script>
+    <script src="src/js/modding/apply-stage.js" data-mod-stage="parameters.skills"></script>
     <script src="src/js/terraforming/terraforming-requirements.js"></script>
+    <script src="src/js/modding/apply-stage.js" data-mod-stage="parameters.terraformingRequirements"></script>
     <script src="src/js/story/mars.js"></script>
     <script src="src/js/story/titan.js"></script>
     <script src="src/js/story/callisto.js"></script>
@@ -102,6 +118,7 @@
     <script src="src/js/buildCount.js"></script>
     <script src="src/js/tab.js"></script>
     <script src="src/js/ui-utils.js"></script>
+    <script src="src/js/streamed-select-menu.js"></script>
     <script src="src/js/silent-audio.js"></script>
     <script src="src/js/subtab-manager.js"></script>
     <script src="src/js/save-settings/settingsSubtab.js"></script>
@@ -1073,6 +1090,7 @@
                   <span data-i18n="ui.settings.uiScale">UI scale</span>
                   <select id="electron-ui-scale-select">
                     <option value="0.75" data-i18n="ui.settings.uiScales.p75">75%</option>
+                    <option value="0.8" data-i18n="ui.settings.uiScales.p80">80%</option>
                     <option value="0.9" data-i18n="ui.settings.uiScales.p90">90%</option>
                     <option value="1" selected data-i18n="ui.settings.uiScales.p100">100%</option>
                     <option value="1.1" data-i18n="ui.settings.uiScales.p110">110%</option>
@@ -1149,6 +1167,34 @@
                 </label>
                 <label class="settings-option">
                   <input type="checkbox" id="suppress-faith-toggle"> <span data-i18n="ui.settings.suppressFaith">Suppress Faith</span> <span id="suppress-faith-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+              </div>
+              <h3 class="settings-section-title" data-i18n="ui.settings.autoPauseTitle">Auto Pause</h3>
+              <div class="settings-grid settings-grid-auto-pause">
+                <label class="settings-option auto-pause-option">
+                  <input type="checkbox" id="auto-pause-energy-toggle">
+                  <span data-i18n="ui.settings.autoPauseEnergy">When net energy rate &lt;</span>
+                  <input type="text" id="auto-pause-energy-threshold-input" value="0">
+                </label>
+                <label class="settings-option auto-pause-option">
+                  <input type="checkbox" id="auto-pause-colonists-toggle">
+                  <span data-i18n="ui.settings.autoPauseColonists">When net colonist rate &lt;</span>
+                  <input type="text" id="auto-pause-colonists-threshold-input" value="0">
+                </label>
+              </div>
+              <h3 class="settings-section-title" data-i18n="ui.settings.keybindsTitle">Keybinds</h3>
+              <div class="settings-grid settings-grid-keybinds">
+                <label class="settings-option settings-keybind-option">
+                  <span data-i18n="ui.settings.pauseKeybindLabel">Pause key</span>
+                  <button id="pause-keybind-capture-button" type="button"></button>
+                </label>
+                <label class="settings-option settings-keybind-option">
+                  <span data-i18n="ui.settings.dialogueSkipKeybindLabel">Skip dialogue typing</span>
+                  <button id="dialogue-skip-keybind-capture-button" type="button"></button>
+                </label>
+                <label id="electron-fullscreen-keybind-option" class="settings-option settings-keybind-option build-target-hidden" hidden>
+                  <span data-i18n="ui.settings.fullscreenKeybindLabel">Fullscreen</span>
+                  <button id="fullscreen-keybind-capture-button" type="button"></button>
                 </label>
               </div>
               <h3 class="settings-section-title" data-i18n="ui.settings.difficultyTitle">Difficulty</h3>
@@ -1307,21 +1353,6 @@
                     </label>
                   </div>
                 </details>
-              </div>
-              <h3 class="settings-section-title" data-i18n="ui.settings.keybindsTitle">Keybinds</h3>
-              <div class="settings-grid settings-grid-keybinds">
-                <label class="settings-option settings-keybind-option">
-                  <span data-i18n="ui.settings.pauseKeybindLabel">Pause key</span>
-                  <button id="pause-keybind-capture-button" type="button"></button>
-                </label>
-                <label class="settings-option settings-keybind-option">
-                  <span data-i18n="ui.settings.dialogueSkipKeybindLabel">Skip dialogue typing</span>
-                  <button id="dialogue-skip-keybind-capture-button" type="button"></button>
-                </label>
-                <label id="electron-fullscreen-keybind-option" class="settings-option settings-keybind-option build-target-hidden" hidden>
-                  <span data-i18n="ui.settings.fullscreenKeybindLabel">Fullscreen</span>
-                  <button id="fullscreen-keybind-capture-button" type="button"></button>
-                </label>
               </div>
             </div>
             <div id="statistics-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">

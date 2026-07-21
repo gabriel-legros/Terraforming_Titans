@@ -130,7 +130,7 @@ function produceAntimatter(deltaTime, resources, accumulatedChanges) {
     resources[target.category][target.resource].value += target.amount;
   }
 
-  resources[target.category][target.resource].modifyRate?.(displayRate, 'Terraformed Worlds', 'global');
+  resources[target.category][target.resource].modifyRate?.(displayRate, t('ui.resourceRates.sources.terraformedWorlds', {}, 'Terraformed Worlds'), 'global');
 }
 
 function updateAntimatterStorageCap(resources) {

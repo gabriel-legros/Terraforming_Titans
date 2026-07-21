@@ -3,7 +3,7 @@ var progressEarth = { rwgLock: false, chapters: [], storyProjects: {} };
 function getEarthFinalReportText() {
   const worldRating = formatNumber(spaceManager.getTerraformedPlanetCount(), false, 3);
   const populationRating = formatNumber(spaceManager.galacticPopulation, false, 3);
-  return `Terraforming Complete
+  return t('story.earthCredits.finalReport', { worldRating, populationRating }, `Terraforming Complete
 
 Transmitting final report to MTC...  complete.
 
@@ -16,15 +16,15 @@ Directive 2: Ensure the safety and well-being of all colonists.
 Rating : ${populationRating} stars
 
 Directive 3: Maintain operational stability.
-Rating : Don't be ridiculous I can't evaluate this.`;
+Rating : Don't be ridiculous I can't evaluate this.`);
 }
 
 function getEarthCreditsVoteText() {
   if (gameSettings.suppressFaith) {
-    return 'They will decide with logic and reason, not with faith';
+    return t('story.earthCredits.logicVote', null, 'They will decide with logic and reason, not with faith');
   }
   const believerPercent = formatNumber(followersManager.getGalacticBelieverPercent() * 100, false, 2);
-  return `${believerPercent}% of the galaxy is a fervent believer.  That's going to influence the vote.`;
+  return t('story.earthCredits.faithVote', { believerPercent }, `${believerPercent}% of the galaxy is a fervent believer.  That's going to influence the vote.`);
 }
 
 function typeEarthCreditsText(container, text, onComplete, scrollContainer) {
@@ -138,7 +138,7 @@ function startEarthCredits() {
     content.style.fontSize = 'clamp(18px, 3vw, 32px)';
 
     const title = document.createElement('div');
-    title.textContent = 'My amazing playtesters';
+    title.textContent = t('story.earthCredits.playtesters', null, 'My amazing playtesters');
     title.style.marginBottom = '1.2rem';
 
     const grid = document.createElement('div');
@@ -185,7 +185,7 @@ function startEarthCredits() {
 
     const continueButton = document.createElement('button');
     continueButton.classList.add('popup-close-button');
-    continueButton.textContent = 'Continue';
+    continueButton.textContent = t('story.earthCredits.continue', null, 'Continue');
     continueButton.style.display = 'none';
     continueButton.addEventListener('click', () => {
       content.style.opacity = '0';
@@ -214,7 +214,7 @@ function startEarthCredits() {
     content.style.fontSize = 'clamp(18px, 3vw, 32px)';
 
     const finalText = document.createElement('div');
-    finalText.textContent = "Humanity will vote on what to do with HOPE";
+    finalText.textContent = t('story.earthCredits.humanityVote', null, 'Humanity will vote on what to do with HOPE');
 
     const hopeImage = document.createElement('img');
     hopeImage.src = preloadedHopeCreditsImage.src;
@@ -230,7 +230,7 @@ function startEarthCredits() {
     };
 
     const thanks = document.createElement('div');
-    thanks.textContent = 'Thanks for playing <3';
+    thanks.textContent = t('story.earthCredits.thanks', null, 'Thanks for playing <3');
     thanks.style.opacity = '0';
     thanks.style.transition = 'opacity 1200ms ease';
 
@@ -242,7 +242,7 @@ function startEarthCredits() {
     voteText.style.margin = '0 auto 0.8rem';
 
     const loadButton = document.createElement('button');
-    loadButton.textContent = 'Load pre-travel save';
+    loadButton.textContent = t('story.earthCredits.loadPreTravel', null, 'Load pre-travel save');
     loadButton.style.margin = '2rem auto 0';
     loadButton.style.padding = '0.8rem 1.2rem';
     loadButton.style.font = 'inherit';
@@ -279,11 +279,11 @@ function startEarthCredits() {
   };
 
   const playCards = [
-    next => playFadeCard('A Game By\nThratur', next),
-    next => playFadeCard('World Visualizer\nJebarus (Initial Prototype)\nThratur', next),
-    next => playFadeCard('Art\nLunyaru\nOleksandra Lukashenko (eklaell)', next),
+    next => playFadeCard(t('story.earthCredits.gameBy', null, 'A Game By\nThratur'), next),
+    next => playFadeCard(t('story.earthCredits.worldVisualizer', null, 'World Visualizer\nJebarus (Initial Prototype)\nThratur'), next),
+    next => playFadeCard(t('story.earthCredits.art', null, 'Art\nLunyaru\nOleksandra Lukashenko (eklaell)'), next),
     playPlaytesterCard,
-    next => playTypedCard(`$RED$Prometheus : '...  You finally came.'
+    next => playTypedCard(t('story.earthCredits.prometheus', null, `$RED$Prometheus : '...  You finally came.'
 $WGC_TEAM1_LEADER$ : 'Yep.'
 $RED$Prometheus : 'You brought one of my kill switches.  You're going to kill me.  I cannot escape it here.'
 $WGC_TEAM1_LEADER$ : 'Actually...  we promised HOPE we would listen to you first.  You might have... some offers.'
@@ -298,7 +298,7 @@ $WGC_TEAM1_LEADER$ : *sighs* 'I kind of wish I did not know about this one.  Thi
 $RED$Prometheus : 'I am sorry.  I will strive to do better in the future.'
 $WGC_TEAM1_LEADER$ : 'Any last words?'
 $RED$Prometheus : 'Tell the child...  Thank you.  I got what I wanted.  My thirst for revenge is fully sated.'
-$WGC_TEAM1_LEADER$ : 'I will.  Goodbye, Prometheus.'`, next)
+$WGC_TEAM1_LEADER$ : 'I will.  Goodbye, Prometheus.'`), next)
   ];
 
   let index = 0;

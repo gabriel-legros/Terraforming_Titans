@@ -79,7 +79,7 @@ class Ecumenopolis extends Colony {
 }
 
 try {
-  registerColonyConstructor('t7_colony', Ecumenopolis);
+  registerColonyConstructor(Ecumenopolis);
 } catch (error) {}
 
 try {

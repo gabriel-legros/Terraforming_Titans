@@ -50,7 +50,6 @@ class AndroidProject extends Project {
     this.assignedAndroids = 0;
     this.adjustActiveDuration();
     populationModule.updateWorkerCap();
-    updateProjectUI(this.name);
   }
 
   shouldReleaseAndroidAssignmentsForCompleteOrDisabled() {
@@ -112,9 +111,6 @@ class AndroidProject extends Project {
     this.adjustActiveDuration();
     if (typeof populationModule !== 'undefined' && typeof populationModule.updateWorkerCap === 'function') {
       populationModule.updateWorkerCap();
-    }
-    if (typeof updateProjectUI === 'function') {
-      updateProjectUI(this.name);
     }
   }
 
@@ -500,10 +496,9 @@ class AndroidProject extends Project {
       return;
     }
     if (!this.autoAssignAndroids) return;
-    if (this.shouldReleaseAndroidAssignmentsForCompleteOrDisabled()) {
-      if (this.releaseAndroidsOnComplete !== false) {
-        this.releaseAndroidAssignments();
-      }
+    if (this.shouldReleaseAndroidAssignmentsForCompleteOrDisabled()
+      && this.releaseAndroidsOnComplete !== false) {
+      this.releaseAndroidAssignments();
       return;
     }
     if (this.isPermanentlyDisabled()) {

@@ -170,7 +170,7 @@ function describeHazardObjective(objective) {
         pulsar: 'Pulsar hazard'
     };
     const hazardName = objective.description || hazardNames[hazardKey] || hazardKey || 'hazard';
-    return objective.description || `Clear ${hazardName}`;
+    return objective.description || t('ui.journal.clearHazard', { hazard: hazardName }, `Clear ${hazardName}`);
 }
 
 class StoryManager {
@@ -185,7 +185,8 @@ class StoryManager {
         this.currentChapterPlanet = null;
 
         // --- Add event listener for journal completion ---
-        document.addEventListener('storyJournalFinishedTyping', this.handleJournalFinished.bind(this));
+        this.boundHandleJournalFinished = this.handleJournalFinished.bind(this);
+        document.addEventListener('storyJournalFinishedTyping', this.boundHandleJournalFinished);
         console.log("StoryManager initialized and listening for storyJournalFinishedTyping.");
     }
 
@@ -215,7 +216,7 @@ class StoryManager {
 
     // Method to clean up the listener if the StoryManager is ever destroyed
     destroy() {
-        document.removeEventListener('storyJournalFinishedTyping', this.handleJournalFinished.bind(this));
+        document.removeEventListener('storyJournalFinishedTyping', this.boundHandleJournalFinished);
         console.log("StoryManager listener removed.");
     }
 
@@ -556,34 +557,37 @@ class StoryManager {
                 const resObj = resCat[objective.resource] || {};
                 const current = objective.checkCap ? (resObj.cap || 0) : (resObj.value || 0);
                 const name = resObj.displayName || objective.resource;
-                const label = objective.checkCap ? `${name} Cap` : name;
+                const label = objective.checkCap
+                    ? t('ui.journal.resourceCap', { resource: name }, `${name} Cap`)
+                    : name;
                 if (objective.type === 'depletion') {
                     const target = format(objective.quantity, true);
+                    return t('ui.journal.depletionProgress', { label, current: format(Math.floor(current), true), target }, `${label}: ${format(Math.floor(current), true)} <= ${target}`);
                     return `${label}: ${format(Math.floor(current), true)} ≤ ${target}`;
                 }
-                return `${label}: ${format(Math.floor(current), true)}/${format(objective.quantity, true)}`;
+                return t('ui.journal.progress', { label, current: format(Math.floor(current), true), target: format(objective.quantity, true) }, `${label}: ${format(Math.floor(current), true)}/${format(objective.quantity, true)}`);
             }
             case 'building': {
                 const b = buildings[objective.buildingName];
                 const current = b ? b.count : 0;
                 const name = b ? b.displayName : objective.buildingName;
-                return `${name}: ${format(current, true)}/${format(objective.quantity, true)}`;
+                return t('ui.journal.progress', { label: name, current: format(current, true), target: format(objective.quantity, true) }, `${name}: ${format(current, true)}/${format(objective.quantity, true)}`);
             }
             case 'colony': {
                 const c = colonies[objective.buildingName];
                 const current = c ? c.count : 0;
                 const name = c ? c.displayName : objective.buildingName;
-                return `${name}: ${format(current, true)}/${format(objective.quantity, true)}`;
+                return t('ui.journal.progress', { label: name, current: format(current, true), target: format(objective.quantity, true) }, `${name}: ${format(current, true)}/${format(objective.quantity, true)}`);
             }
            case 'terraforming': {
                 if (!terraforming) return '';
                 let current = 0;
                 const names = {
-                    tropicalTemperature: 'Equatorial Temp',
-                    tropicalNightTemperature: 'Equatorial Night Temp',
-                    tropicalDayTemperature: 'Equatorial Day Temp',
-                    pressure: 'Atmospheric Pressure',
-                    complete: 'All Terraforming Parameters Stable'
+                    tropicalTemperature: t('ui.journal.equatorialTemperature', null, 'Equatorial Temp'),
+                    tropicalNightTemperature: t('ui.journal.equatorialNightTemperature', null, 'Equatorial Night Temp'),
+                    tropicalDayTemperature: t('ui.journal.equatorialDayTemperature', null, 'Equatorial Day Temp'),
+                    pressure: t('ui.journal.atmosphericPressure', null, 'Atmospheric Pressure'),
+                    complete: t('ui.journal.allTerraformingParametersStable', null, 'All Terraforming Parameters Stable')
                 };
                 switch (objective.terraformingParameter) {
                     case 'tropicalTemperature':
@@ -609,23 +613,23 @@ class StoryManager {
                     const unit = getTemperatureUnit();
                     const currentDisp = format(toDisplayTemperature(current), false, 2);
                     const targetDisp = format(toDisplayTemperature(objective.value), false, 2);
-                    return `${name}: ${currentDisp}${unit}/${targetDisp}${unit}`;
+                    return t('ui.journal.progress', { label: name, current: `${currentDisp}${unit}`, target: `${targetDisp}${unit}` }, `${name}: ${currentDisp}${unit}/${targetDisp}${unit}`);
                 }
 
                 if (objective.terraformingParameter === 'pressure') {
                     const currentDisp = format(current, false, 2);
                     const targetDisp = format(objective.value, false, 2);
-                    return `${name}: ${currentDisp} kPa/${targetDisp} kPa`;
+                    return t('ui.journal.progress', { label: name, current: `${currentDisp} kPa`, target: `${targetDisp} kPa` }, `${name}: ${currentDisp} kPa/${targetDisp} kPa`);
                 }
 
-                return `${name}: ${format(current, false, 2)}/${format(objective.value, false, 2)}`;
+                return t('ui.journal.progress', { label: name, current: format(current, false, 2), target: format(objective.value, false, 2) }, `${name}: ${format(current, false, 2)}/${format(objective.value, false, 2)}`);
            }
            case 'project': {
                 if (typeof projectManager !== 'undefined' && projectManager.projects) {
                     const proj = projectManager.projects[objective.projectId];
                     const current = proj ? proj.repeatCount : 0;
                     const name = proj ? proj.displayName : objective.projectId;
-                    return `${name}: ${format(current, true)}/${format(objective.repeatCount, true)}`;
+                    return t('ui.journal.progress', { label: name, current: format(current, true), target: format(objective.repeatCount, true) }, `${name}: ${format(current, true)}/${format(objective.repeatCount, true)}`);
                 }
                 return '';
             }
@@ -637,7 +641,7 @@ class StoryManager {
                const name = objective.name || (proj ? proj.displayName : objective.projectId);
                const fallbackLabel = attribute.charAt(0).toUpperCase() + attribute.slice(1);
                const label = objective.labelKey ? t(objective.labelKey, null, fallbackLabel) : (objective.label || fallbackLabel);
-               return `${name} ${label}: ${format(current, true)}/${format(target, true)}`;
+               return t('ui.journal.projectAttributeProgress', { name, attribute: label, current: format(current, true), target: format(target, true) }, `${name} ${label}: ${format(current, true)}/${format(target, true)}`);
           }
           case 'research': {
                if (typeof researchManager === 'undefined') {
@@ -647,14 +651,14 @@ class StoryManager {
                const name = objective.name || research?.name || objective.researchId;
                const target = objective.repeatCount || objective.timesResearched || 1;
                if (target <= 1) {
-                   return `Research ${name}`;
+                   return t('ui.journal.research', { name }, `Research ${name}`);
                }
                const current = research
                     ? (typeof researchManager.getRepeatCount === 'function'
                         ? researchManager.getRepeatCount(research)
                         : Math.max(research.timesResearched || 0, research.isResearched ? 1 : 0))
                     : 0;
-               return `${name}: ${format(current, true)}/${format(target, true)}`;
+               return t('ui.journal.progress', { label: name, current: format(current, true), target: format(target, true) }, `${name}: ${format(current, true)}/${format(target, true)}`);
           }
           case 'currentPlanet': {
                 let name = objective.planetId || '';
@@ -667,13 +671,13 @@ class StoryManager {
                     ? spaceManager.getCurrentPlanetKey()
                     : null;
                 if (current === objective.planetId) {
-                    return `Currently on ${name}`;
+                    return t('ui.journal.currentlyOn', { planet: name }, `Currently on ${name}`);
                 }
-                return `Travel to ${name}`;
+                return t('ui.journal.travelTo', { planet: name }, `Travel to ${name}`);
           }
           case 'solisPoints': {
                const current = solisManager ? solisManager.solisPoints || 0 : 0;
-               return `Solis Points: ${format(current, true)}/${format(objective.points, true)}`;
+               return t('ui.journal.progress', { label: t('ui.hope.solisPoints', null, 'Solis Points'), current: format(current, true), target: format(objective.points, true) }, `Solis Points: ${format(current, true)}/${format(objective.points, true)}`);
            }
           case 'earthAction': {
                const current = earthManager ? earthManager.getActionCount(objective.actionId) : 0;
@@ -689,10 +693,10 @@ class StoryManager {
                     ? warpGateCommand.highestDifficulty : -1;
                const target = objective.difficulty || 0;
                const dispCurrent = Math.max(0, current);
-               return `Complete an Operation of Difficulty ${format(target, true)} (Highest Completed: ${format(dispCurrent, true)})`;
+               return t('ui.journal.completeOperation', { difficulty: format(target, true), highestCompleted: format(dispCurrent, true) }, `Complete an Operation of Difficulty ${format(target, true)} (Highest Completed: ${format(dispCurrent, true)})`);
          }
          case 'activeTab': {
-                return objective.description || 'Open the requested tab';
+                return objective.description || t('ui.journal.openRequestedTab', null, 'Open the requested tab');
          }
           case 'galaxySectorControl': {
                const sectorLabel = objective.sectorLabel || objective.sectorKey || objective.sector || objective.label || 'R5-07';
@@ -704,8 +708,10 @@ class StoryManager {
                const control = totalControl > 0 ? sector.getControlValue?.(factionId) || 0 : 0;
                const ratio = totalControl > 0 ? Math.min(1, control / totalControl) : 0;
                const percent = format(ratio * 100, false, 1);
-               const status = ratio >= 1 ? 'Secure' : `${factionLabel} control ${percent}%`;
-               return `Conquer sector ${name} (${status})`;
+               const status = ratio >= 1
+                   ? t('ui.journal.sectorSecure', null, 'Secure')
+                   : t('ui.journal.sectorControl', { faction: factionLabel, percent }, `${factionLabel} control ${percent}%`);
+               return t('ui.journal.conquerSector', { sector: name, status }, `Conquer sector ${name} (${status})`);
           }
           case 'hazardCleared':
                return describeHazardObjective(objective);
@@ -746,10 +752,19 @@ class StoryManager {
         if (!el) return;
         const texts = this.getCurrentObjectiveTexts();
         if (texts.length === 0) {
-            el.textContent = '';
+            if (el.textContent !== '') {
+                el.textContent = '';
+            }
             return;
         }
-        el.textContent = `${texts.length === 1 ? 'Objective' : 'Objectives'}: ${texts.join('; ')}`;
+        const objectiveText = t(
+            texts.length === 1 ? 'ui.journal.objective' : 'ui.journal.objectives',
+            { text: texts.join('; ') },
+            `${texts.length === 1 ? 'Objective' : 'Objectives'}: ${texts.join('; ')}`
+        );
+        if (el.textContent !== objectiveText) {
+            el.textContent = objectiveText;
+        }
     }
 
     shouldApplyEffect(effect) {
@@ -778,8 +793,8 @@ class StoryManager {
                     && (storyEffect.type === 'activateTab' || storyEffect.type === 'activateSubtab')
                     && storyEffect.onTravel !== true;
                 setTimeout(() => {
-                    if (!window.storyManager) {
-                        console.warn("StoryManager gone, skipping delayed reward application.");
+                    if (window.storyManager !== this) {
+                        console.warn("StoryManager replaced, skipping delayed reward application.");
                         return;
                     }
                     if (!storyEffect.oneTimeFlag) {
@@ -987,7 +1002,6 @@ class StoryManager {
     }
 
     loadState(savedState) { // Add loading for waiting state
-        console.log("StoryManager.loadState received:", savedState);
         if (!savedState) {
             console.warn("StoryManager.loadState called with null/undefined state.");
             return;
@@ -1039,7 +1053,6 @@ class StoryManager {
          });
 
 
-        console.log(`StoryManager state loaded. Active: [${Array.from(this.activeEventIds).join(', ')}], Completed: [${Array.from(this.completedEventIds).join(', ')}], Waiting: ${this.waitingForJournalEventId}`);
 
         // If loading while waiting for a journal event, the typing animation
         // will not resume. Immediately finalize the event so any rewards are

@@ -410,6 +410,7 @@ class AutomationManager extends EffectableEntity {
     }
     if (this.scriptAutomation) {
       this.scriptAutomation.update(delta || 0);
+      this.scriptAutomation.captureCurrentConsoleOutput();
     }
     if (this.spaceshipAutomation) {
       this.spaceshipAutomation.update(delta || 0);

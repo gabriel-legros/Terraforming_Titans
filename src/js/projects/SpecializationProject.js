@@ -499,23 +499,50 @@
       if (!elements || !elements.pointsValue || !elements.potentialValue || !elements.shopRows) {
         return;
       }
-      elements.pointsValue.textContent = formatNumber(this.getSpecializationPoints(), true, 2, false, true);
-      elements.potentialValue.textContent = formatNumber(this.getTravelPointGain(), true, 2);
+      const pointsText = formatNumber(this.getSpecializationPoints(), true, 2, false, true);
+      if (elements.pointsValue.textContent !== pointsText) {
+        elements.pointsValue.textContent = pointsText;
+      }
+      const potentialText = formatNumber(this.getTravelPointGain(), true, 2);
+      if (elements.potentialValue.textContent !== potentialText) {
+        elements.potentialValue.textContent = potentialText;
+      }
       this.shopItems.forEach((item) => {
         const row = elements.shopRows[item.id];
         const visible = this.isShopItemVisible(item);
-        row.row.style.display = visible ? '' : 'none';
+        const display = visible ? '' : 'none';
+        if (row.row.style.display !== display) {
+          row.row.style.display = display;
+        }
         const purchases = this.getShopPurchaseCount(item.id);
         const maxPurchases = this.getShopItemMaxPurchases(item);
-        row.cost.textContent = `${formatNumber(this.getShopItemCost(item), true)} ${this.pointsUnit}`;
-        row.count.textContent = this.getShopPurchaseCountText(item, purchases, maxPurchases);
-        const canBuy = this.canPurchaseUpgrade(item);
-        row.button.disabled = !canBuy;
-        if (row.maxButton) {
-          row.maxButton.disabled = this.shouldDisableShopMaxButton(item, canBuy);
-          row.maxButton.textContent = this.getShopMaxButtonText(item);
+        const costText = `${formatNumber(this.getShopItemCost(item), true)} ${this.pointsUnit}`;
+        if (row.cost.textContent !== costText) {
+          row.cost.textContent = costText;
         }
-        row.button.textContent = this.getShopBuyButtonText(item, purchases, maxPurchases);
+        const countText = this.getShopPurchaseCountText(item, purchases, maxPurchases);
+        if (row.count.textContent !== countText) {
+          row.count.textContent = countText;
+        }
+        const canBuy = this.canPurchaseUpgrade(item);
+        const buyDisabled = !canBuy;
+        if (row.button.disabled !== buyDisabled) {
+          row.button.disabled = buyDisabled;
+        }
+        if (row.maxButton) {
+          const maxDisabled = this.shouldDisableShopMaxButton(item, canBuy);
+          if (row.maxButton.disabled !== maxDisabled) {
+            row.maxButton.disabled = maxDisabled;
+          }
+          const maxButtonText = this.getShopMaxButtonText(item);
+          if (row.maxButton.textContent !== maxButtonText) {
+            row.maxButton.textContent = maxButtonText;
+          }
+        }
+        const buyButtonText = this.getShopBuyButtonText(item, purchases, maxPurchases);
+        if (row.button.textContent !== buyButtonText) {
+          row.button.textContent = buyButtonText;
+        }
       });
     }
 

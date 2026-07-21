@@ -18,6 +18,18 @@ contextBridge.exposeInMainWorld('electronSaveStorage', {
   }
 });
 
+contextBridge.exposeInMainWorld('electronMods', {
+  getSession() {
+    return ipcRenderer.sendSync('mods:get-session');
+  }
+});
+
+contextBridge.exposeInMainWorld('electronStartup', {
+  getSelection() {
+    return ipcRenderer.sendSync('startup:get-selection');
+  }
+});
+
 contextBridge.exposeInMainWorld('steamAchievements', {
   activate(id) {
     ipcRenderer.send('steam-achievements:activate', String(id));

@@ -45,11 +45,11 @@ const OxygenFactoryClass = OxygenFactoryRef || class OxygenFactoryFallback {};
 const DustFactoryClass = DustFactoryRef || class DustFactoryFallback {};
 let BuildingAutomationPresetManagerBaseRef;
 try {
-  BuildingAutomationPresetManagerBaseRef = AutomationPresetManagerBase;
+  BuildingAutomationPresetManagerBaseRef = AutomationTwoBucketPresetManagerBase;
 } catch (error) {}
 try {
   BuildingAutomationPresetManagerBaseRef = BuildingAutomationPresetManagerBaseRef
-    || require('./automation-preset-manager-base.js').AutomationPresetManagerBase;
+    || require('./automation-preset-manager-base.js').AutomationTwoBucketPresetManagerBase;
 } catch (error) {}
 const BuildingAutomationPresetManagerBaseClass = BuildingAutomationPresetManagerBaseRef || class BuildingAutomationPresetManagerBaseFallback {};
 
@@ -63,19 +63,14 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       useAssignments: true,
       useCombinations: true,
       nextTravelKind: 'combination',
-      presetCollectionKey: 'buildings'
+      presetCollectionKey: 'buildings',
+      bucketKeys: ['control', 'automation'],
+      includeKeys: ['includeControl', 'includeAutomation'],
+      allowLegacyApplyOnNextTravel: true
     });
     this.encounteredTargets = encounteredTargets;
     this.everEnabledBuildings = new Set();
     this.elapsed = 0;
-  }
-
-  setCollapsed(collapsed) {
-    super.setCollapsed(collapsed);
-  }
-
-  setMasterEnabled(enabled) {
-    super.setMasterEnabled(enabled);
   }
 
   isBuildingAvailableNow(building) {
@@ -129,234 +124,55 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     }
   }
 
-  isActive() {
-    return super.isActive();
+  capturePresetEntry(buildingId, includeControl, includeAutomation) {
+    const building = buildings[buildingId];
+    return building
+      ? this.captureBuildingSettings(building, includeControl, includeAutomation)
+      : null;
   }
 
-  getPresetById(id) {
-    return super.getPresetById(id);
-  }
-
-  getSelectedPresetId() {
-    return super.getSelectedPresetId();
-  }
-
-  getSelectedPreset() {
-    return super.getSelectedPreset();
-  }
-
-  setSelectedPresetId(id) {
-    return super.setSelectedPresetId(id);
-  }
-
-  getAssignments() {
-    return super.getAssignments();
-  }
-
-  getCombinations() {
-    return super.getCombinations();
-  }
-
-  getCombinationById(id) {
-    return super.getCombinationById(id);
-  }
-
-  getSelectedCombinationId() {
-    return super.getSelectedCombinationId();
-  }
-
-  getSelectedCombination() {
-    return super.getSelectedCombination();
-  }
-
-  setSelectedCombinationId(id) {
-    return super.setSelectedCombinationId(id);
-  }
-
-  addAssignment(presetId) {
-    return super.addAssignment(presetId);
-  }
-
-  setAssignments(assignments) {
-    super.setAssignments(assignments);
-  }
-
-  removeAssignment(assignmentId) {
-    super.removeAssignment(assignmentId);
-  }
-
-  moveAssignment(assignmentId, direction) {
-    super.moveAssignment(assignmentId, direction);
-  }
-
-  setAssignmentPreset(assignmentId, presetId) {
-    super.setAssignmentPreset(assignmentId, presetId);
-  }
-
-  setAssignmentEnabled(assignmentId, enabled) {
-    super.setAssignmentEnabled(assignmentId, enabled);
-  }
-
-  moveCombination(id, direction) {
-    return super.moveCombination(id, direction);
-  }
-
-  addCombination(name, assignments) {
-    return super.addCombination(name, assignments);
-  }
-
-  updateCombination(id, name, assignments) {
-    return super.updateCombination(id, name, assignments);
-  }
-
-  deleteCombination(id) {
-    super.deleteCombination(id);
-  }
-
-  setCombinationShowInSidebar(id, showInSidebar) {
-    return super.setCombinationShowInSidebar(id, showInSidebar);
-  }
-
-  applyCombination(id) {
-    super.applyCombination(id);
-  }
-
-  addPreset(name, buildingIds, options = {}) {
-    const shouldCreateEmpty = options.createEmpty === true;
-    const preset = this.buildPreset(
-      name,
-      shouldCreateEmpty ? [] : buildingIds,
-      shouldCreateEmpty ? { ...options, scopeAll: false } : options
-    );
-    this.presets.push(preset);
-    this.selectedPresetId = preset.id;
-    return preset.id;
-  }
-
-  movePreset(id, direction) {
-    return super.movePreset(id, direction);
-  }
-
-  updatePreset(id, name, buildingIds, options = {}) {
-    const index = this.presets.findIndex(preset => preset.id === id);
-    if (index < 0) {
-      return false;
-    }
-    const preset = this.buildPreset(name, buildingIds, options, id);
-    this.presets.splice(index, 1, preset);
-    return true;
-  }
-
-  deletePreset(id) {
-    super.deletePreset(id);
-  }
-
-  renamePreset(id, name) {
-    super.renamePreset(id, name);
-  }
-
-  setPresetShowInSidebar(id, showInSidebar) {
-    return super.setPresetShowInSidebar(id, showInSidebar);
-  }
-
-  deepClone(value) {
-    return super.deepClone(value);
-  }
-
-  exportPreset(presetId) {
-    const preset = this.getPresetById(Number(presetId));
-    if (!preset) {
-      return null;
-    }
-    return {
-      name: preset.name,
-      showInSidebar: preset.showInSidebar !== false,
-      presetMode: this.getPresetModeValue(preset.presetMode),
-      includeControl: preset.includeControl !== false,
-      includeAutomation: preset.includeAutomation !== false,
-      scopeAll: preset.scopeAll === true,
-      buildings: Object.fromEntries(
-        Object.entries(preset.buildings || {}).map(([buildingId, entry]) => [
-          buildingId,
-          {
-            control: entry.control ? this.deepClone(entry.control) : null,
-            automation: entry.automation ? {
-              ...this.deepClone(entry.automation),
-              autoBuildBasis: entry.automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : entry.automation.autoBuildBasis
-            } : null
-          }
-        ])
-      )
-    };
-  }
-
-  importPreset(presetData = {}) {
-    const id = this.nextPresetId++;
-    const importedPreset = {
-      id,
-      name: presetData.name || `Preset ${id}`,
-      showInSidebar: presetData.showInSidebar !== false,
-      presetMode: this.getPresetModeValue(presetData.presetMode),
-      includeControl: presetData.includeControl !== false,
-      includeAutomation: presetData.includeAutomation !== false,
-      scopeAll: presetData.scopeAll === true,
-      buildings: {}
-    };
-    const importedBuildings = presetData.buildings || {};
-    for (const buildingId in importedBuildings) {
-      const entry = importedBuildings[buildingId] || {};
-      const control = entry.control ? this.deepClone(entry.control) : null;
-      const automation = entry.automation ? this.deepClone(entry.automation) : null;
+  normalizePresetCollection(collection = {}) {
+    const normalized = {};
+    for (const buildingId in collection) {
+      const entry = collection[buildingId] || {};
+      let control = entry.control && entry.control.constructor === Object
+        ? this.deepClone(entry.control)
+        : null;
+      let automation = entry.automation && entry.automation.constructor === Object
+        ? this.deepClone(entry.automation)
+        : null;
+      if (control && Object.prototype.hasOwnProperty.call(control, 'autoUpgradeEnabled')) {
+        automation ||= {};
+        if (!Object.prototype.hasOwnProperty.call(automation, 'autoUpgradeEnabled')) {
+          automation.autoUpgradeEnabled = control.autoUpgradeEnabled === true;
+        }
+        delete control.autoUpgradeEnabled;
+      }
       if (automation && automation.autoBuildBasis === 'initialLand') {
         automation.autoBuildBasis = 'geometricLand';
       }
       if (buildingId === 'dysonReceiver'
         && automation
         && automation.autoBuildBasis === 'max'
-        && !('autoBuildMaxPercent' in automation)
-        && 'autoBuildPercent' in automation) {
+        && !Object.prototype.hasOwnProperty.call(automation, 'autoBuildMaxPercent')
+        && Object.prototype.hasOwnProperty.call(automation, 'autoBuildPercent')) {
         automation.autoBuildMaxPercent = automation.autoBuildPercent;
       }
-      if (!control && !automation) {
-        continue;
+      if (control && Object.keys(control).length === 0) {
+        control = null;
       }
-      importedPreset.buildings[buildingId] = { control, automation };
+      if (automation && Object.keys(automation).length === 0) {
+        automation = null;
+      }
+      if (control || automation) {
+        normalized[buildingId] = { control, automation };
+      }
     }
-    this.recordPresetTargets(importedPreset);
-    this.presets.push(importedPreset);
-    this.selectedPresetId = importedPreset.id;
-    return importedPreset.id;
+    return normalized;
   }
 
-  buildPreset(name, buildingIds, options = {}, idOverride) {
-    const includeControl = options.includeControl !== false;
-    const includeAutomation = options.includeAutomation !== false;
-    const scopeAll = options.scopeAll === true;
-    const id = idOverride || this.nextPresetId++;
-    const preset = {
-      id,
-      name: name || `Preset ${id}`,
-      showInSidebar: options.showInSidebar !== false,
-      presetMode: this.getPresetModeValue(options.presetMode),
-      includeControl,
-      includeAutomation,
-      scopeAll,
-      buildings: {}
-    };
-    const ids = Array.isArray(buildingIds) ? buildingIds : [];
-    for (let index = 0; index < ids.length; index += 1) {
-      const buildingId = ids[index];
-      const building = buildings[buildingId];
-      if (!building) {
-        continue;
-      }
-      const entry = this.captureBuildingSettings(building, includeControl, includeAutomation);
-      if (entry.control || entry.automation) {
-        preset.buildings[buildingId] = entry;
-      }
-    }
-    this.recordPresetTargets(preset);
-    return preset;
+  serializePresetCollection(preset) {
+    return this.normalizePresetCollection(preset.buildings);
   }
 
   recordPresetTargets(preset) {
@@ -368,57 +184,6 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
         this.encounteredTargets.record('buildings', buildingId);
       }
     }
-  }
-
-  mergeMissingBuildingsIntoPreset(presetId, buildingIds = []) {
-    const preset = this.getPresetById(Number(presetId));
-    if (!preset) {
-      return false;
-    }
-    const ids = Array.isArray(buildingIds) ? buildingIds : [];
-    let changed = false;
-    for (let index = 0; index < ids.length; index += 1) {
-      const buildingId = ids[index];
-      if (preset.buildings[buildingId]) {
-        continue;
-      }
-      const building = buildings[buildingId];
-      if (!building) {
-        continue;
-      }
-      const entry = this.captureBuildingSettings(
-        building,
-        preset.includeControl !== false,
-        preset.includeAutomation !== false
-      );
-      if (!entry.control && !entry.automation) {
-        continue;
-      }
-      preset.buildings[buildingId] = entry;
-      changed = true;
-    }
-    if (changed) {
-      this.recordPresetTargets(preset);
-    }
-    return changed;
-  }
-
-  snapshotBuildingIntoPreset(presetId, buildingId) {
-    const preset = this.getPresetById(Number(presetId));
-    const building = buildings[buildingId];
-    if (!preset || !building) {
-      return false;
-    }
-    const entry = this.captureBuildingSettings(
-      building,
-      preset.includeControl !== false,
-      preset.includeAutomation !== false
-    );
-    if (!entry.control && !entry.automation) {
-      return false;
-    }
-    preset.buildings[buildingId] = entry;
-    return true;
   }
 
   isPresetParameterPathEligible(preset, path) {
@@ -450,7 +215,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     }
     if (leafKey === 'autoBuildMaxPercent') {
       const building = buildings[buildingId];
-      return mode === 'max' && building.hasAdjustableAutoBuildMaxTarget();
+      return mode === 'max' && !!building && building.hasAdjustableAutoBuildMaxTarget();
     }
     return true;
   }
@@ -470,9 +235,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
   }
 
   captureControlSettings(building) {
-    const control = {};
-    control.workerPriority = building.workerPriority;
-    control.hidden = building.isHidden === true;
+    const control = this.captureStructureControlSettings(building);
     if (building.name === 'antimatterBattery') {
       control.autoFillingEnabled = building.autoFillingEnabled === true;
     }
@@ -495,18 +258,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
   }
 
   captureAutomationSettings(building) {
-    const settings = {
-      autoBuildEnabled: building.autoBuildEnabled,
-      autoBuildPriority: building.autoBuildPriority,
-      autoBuildBasis: building.autoBuildBasis === 'initialLand' ? 'geometricLand' : building.autoBuildBasis,
-      autoBuildPercent: building.autoBuildPercent,
-      autoBuildFixed: building.autoBuildFixed,
-      autoBuildFillPercent: building.autoBuildFillPercent,
-      autoBuildFillResourcePrimary: building.autoBuildFillResourcePrimary,
-      autoBuildFillResourceSecondary: building.autoBuildFillResourceSecondary,
-      autoActiveEnabled: building.autoActiveEnabled,
-      autoUpgradeEnabled: building.autoUpgradeEnabled === true
-    };
+    const settings = this.captureStructureAutomationSettings(building);
     if (building.name === 'dysonReceiver') {
       settings.autoBuildMaxPercent = building.autoBuildMaxPercent;
       settings.capActiveToDysonCapacity = building.capActiveToDysonCapacity === true;
@@ -514,108 +266,24 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     return settings;
   }
 
-  resolveAssignments() {
-    const resolved = {
-      control: {},
-      automation: {}
-    };
-    for (let index = 0; index < this.assignments.length; index += 1) {
-      const assignment = this.assignments[index];
-      if (!assignment.enabled) {
-        continue;
-      }
-      const preset = this.getPresetById(assignment.presetId);
-      if (!preset) {
-        continue;
-      }
-      if (this.isParameterizedPreset(preset) && !this.getPresetParameterInfo(preset).valid) {
-        continue;
-      }
-      const entries = preset.buildings;
-      for (const buildingId in entries) {
-        const entry = entries[buildingId];
-        if (preset.includeControl && entry.control) {
-          resolved.control[buildingId] = entry.control;
-        }
-        if (preset.includeAutomation && entry.automation) {
-          resolved.automation[buildingId] = entry.automation;
-        }
-      }
-    }
-    return resolved;
-  }
-
-  applyPresets() {
-    const resolved = this.resolveAssignments();
-    this.applyResolvedMaps(resolved.control, resolved.automation);
-  }
-
-  applyCombinationPresets(id) {
-    if (id) {
-      this.applyCombination(id);
-    }
-    this.applyPresets();
-  }
-
-  applyPresetOnce(presetId, parameterValue = null) {
-    const preset = this.buildPresetForApplication(this.getPresetById(presetId), parameterValue);
-    if (!preset) {
-      return;
-    }
-    const controlMap = {};
-    const automationMap = {};
-    const entries = preset.buildings || {};
-    for (const buildingId in entries) {
-      const entry = entries[buildingId];
-      if (preset.includeControl && entry.control) {
-        controlMap[buildingId] = entry.control;
-      }
-      if (preset.includeAutomation && entry.automation) {
-        automationMap[buildingId] = entry.automation;
-      }
-    }
-    this.applyResolvedMaps(controlMap, automationMap);
-  }
-
   applyResolvedMaps(controlMap, automationMap) {
     const buildingList = Object.values(buildings);
-    let changed = false;
 
     for (let index = 0; index < buildingList.length; index += 1) {
       const building = buildingList[index];
       const control = controlMap[building.name];
       const automation = automationMap[building.name];
       if (control) {
-        if (this.applyControlSettings(building, control)) {
-          changed = true;
-        }
+        this.applyControlSettings(building, control);
       }
       if (automation) {
-        if (this.applyAutomationSettings(building, automation)) {
-          changed = true;
-        }
+        this.applyAutomationSettings(building, automation);
       }
-    }
-
-    if (changed) {
-      updateBuildingDisplay(buildings);
     }
   }
 
   applyControlSettings(building, control) {
-    let changed = false;
-    if ('workerPriority' in control && building.workerPriority !== control.workerPriority) {
-      building.workerPriority = control.workerPriority;
-      changed = true;
-    }
-    if ('hidden' in control) {
-      const shouldHide = control.hidden === true && building.active <= 0n;
-      if (building.isHidden !== shouldHide) {
-        building.isHidden = shouldHide;
-        updateStructureHiddenPreference(building.name, shouldHide);
-        changed = true;
-      }
-    }
+    let changed = this.applyStructureControlSettings(building, control);
     if (control.recipeKey && building.currentRecipeKey !== control.recipeKey) {
       const applied = building.setRecipe(control.recipeKey);
       if (applied) {
@@ -657,55 +325,9 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
   }
 
   applyAutomationSettings(building, automation) {
-    let changed = false;
-    if ('autoBuildEnabled' in automation && building.autoBuildEnabled !== automation.autoBuildEnabled) {
-      building.autoBuildEnabled = automation.autoBuildEnabled;
-      changed = true;
-    }
-    if ('autoBuildPriority' in automation && building.autoBuildPriority !== automation.autoBuildPriority) {
-      building.autoBuildPriority = automation.autoBuildPriority;
-      changed = true;
-    }
-    if ('autoBuildBasis' in automation) {
-      const automationBasis = automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : automation.autoBuildBasis;
-      if (building.autoBuildBasis !== automationBasis) {
-        building.autoBuildBasis = automationBasis;
-        if (typeof building.normalizeAutoBuildBasis === 'function') {
-          building.normalizeAutoBuildBasis();
-        }
-        changed = true;
-      }
-    }
-    if ('autoBuildPercent' in automation && building.autoBuildPercent !== automation.autoBuildPercent) {
-      building.autoBuildPercent = automation.autoBuildPercent;
-      changed = true;
-    }
+    let changed = this.applyStructureAutomationSettings(building, automation);
     if ('autoBuildMaxPercent' in automation && building.autoBuildMaxPercent !== automation.autoBuildMaxPercent) {
       building.autoBuildMaxPercent = automation.autoBuildMaxPercent;
-      changed = true;
-    }
-    if ('autoBuildFixed' in automation && building.autoBuildFixed !== automation.autoBuildFixed) {
-      building.autoBuildFixed = automation.autoBuildFixed;
-      changed = true;
-    }
-    if ('autoBuildFillPercent' in automation && building.autoBuildFillPercent !== automation.autoBuildFillPercent) {
-      building.autoBuildFillPercent = automation.autoBuildFillPercent;
-      changed = true;
-    }
-    if ('autoBuildFillResourcePrimary' in automation && building.autoBuildFillResourcePrimary !== automation.autoBuildFillResourcePrimary) {
-      building.autoBuildFillResourcePrimary = automation.autoBuildFillResourcePrimary;
-      changed = true;
-    }
-    if ('autoBuildFillResourceSecondary' in automation && building.autoBuildFillResourceSecondary !== automation.autoBuildFillResourceSecondary) {
-      building.autoBuildFillResourceSecondary = automation.autoBuildFillResourceSecondary;
-      changed = true;
-    }
-    if ('autoActiveEnabled' in automation && building.autoActiveEnabled !== automation.autoActiveEnabled) {
-      building.autoActiveEnabled = automation.autoActiveEnabled;
-      changed = true;
-    }
-    if ('autoUpgradeEnabled' in automation && building.autoUpgradeEnabled !== automation.autoUpgradeEnabled) {
-      building.autoUpgradeEnabled = automation.autoUpgradeEnabled === true;
       changed = true;
     }
     if (
@@ -719,21 +341,6 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     return changed;
   }
 
-  areSettingsEqual(left, right) {
-    const leftKeys = Object.keys(left);
-    const rightKeys = Object.keys(right);
-    if (leftKeys.length !== rightKeys.length) {
-      return false;
-    }
-    for (let index = 0; index < leftKeys.length; index += 1) {
-      const key = leftKeys[index];
-      if (left[key] !== right[key]) {
-        return false;
-      }
-    }
-    return true;
-  }
-
   update(delta) {
     if (!this.isActive()) {
       return;
@@ -745,92 +352,13 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     }
   }
 
-  saveState() {
+  getAdditionalSaveState() {
     return {
-      presets: this.presets.map(preset => ({
-        id: preset.id,
-        name: preset.name,
-        showInSidebar: preset.showInSidebar !== false,
-        presetMode: this.getPresetModeValue(preset.presetMode),
-        includeControl: !!preset.includeControl,
-        includeAutomation: !!preset.includeAutomation,
-        scopeAll: !!preset.scopeAll,
-        buildings: Object.fromEntries(
-          Object.entries(preset.buildings).map(([key, entry]) => [
-            key,
-            {
-              control: entry.control ? { ...entry.control } : null,
-              automation: entry.automation ? {
-                ...entry.automation,
-                autoBuildBasis: entry.automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : entry.automation.autoBuildBasis
-              } : null
-            }
-          ])
-        )
-      })),
-      assignments: this.serializeAssignments(),
-      combinations: this.serializeCombinations(),
-      everEnabledBuildings: Array.from(this.everEnabledBuildings),
-      collapsed: this.collapsed,
-      masterEnabled: this.masterEnabled,
-      nextTravelCombinationId: this.nextTravelCombinationId,
-      nextTravelCombinationPersistent: this.nextTravelCombinationPersistent,
-      selectedPresetId: this.selectedPresetId,
-      selectedCombinationId: this.selectedCombinationId,
-      nextPresetId: this.nextPresetId,
-      nextAssignmentId: this.nextAssignmentId,
-      nextCombinationId: this.nextCombinationId
+      everEnabledBuildings: Array.from(this.everEnabledBuildings)
     };
   }
 
-  loadState(data = {}) {
-    this.presets = Array.isArray(data.presets) ? data.presets.map(preset => ({
-      id: preset.id,
-      name: preset.name || 'Preset',
-      showInSidebar: preset.showInSidebar !== false,
-      presetMode: this.getPresetModeValue(preset.presetMode),
-      includeControl: preset.includeControl !== false,
-      includeAutomation: preset.includeAutomation !== false,
-      scopeAll: preset.scopeAll === true,
-      buildings: Object.fromEntries(
-        Object.entries(preset.buildings || {}).map(([buildingId, entry]) => {
-          let control = entry?.control ? { ...entry.control } : null;
-          let automation = entry?.automation ? { ...entry.automation } : null;
-          if (control && 'autoUpgradeEnabled' in control && !automation) {
-            automation = {
-              autoUpgradeEnabled: control.autoUpgradeEnabled === true
-            };
-            delete control.autoUpgradeEnabled;
-          }
-          if (control && 'autoUpgradeEnabled' in control && automation && !('autoUpgradeEnabled' in automation)) {
-            automation.autoUpgradeEnabled = control.autoUpgradeEnabled === true;
-            delete control.autoUpgradeEnabled;
-          }
-          if (automation && automation.autoBuildBasis === 'initialLand') {
-            automation.autoBuildBasis = 'geometricLand';
-          }
-          if (buildingId === 'dysonReceiver'
-            && automation
-            && automation.autoBuildBasis === 'max'
-            && !('autoBuildMaxPercent' in automation)
-            && 'autoBuildPercent' in automation) {
-            automation.autoBuildMaxPercent = automation.autoBuildPercent;
-          }
-          if (control && Object.keys(control).length === 0) {
-            control = null;
-          }
-          if (automation && Object.keys(automation).length === 0) {
-            automation = null;
-          }
-          return [buildingId, {
-            control,
-            automation
-          }];
-        })
-      )
-    })) : [];
-    this.loadAssignmentsFromState(data.assignments);
-    this.loadCombinationsFromState(data.combinations);
+  loadAdditionalState(data = {}) {
     this.everEnabledBuildings = new Set(
       Array.isArray(data.everEnabledBuildings) ? data.everEnabledBuildings : []
     );
@@ -839,8 +367,9 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
         this.encounteredTargets.record('buildings', buildingId);
       }
     });
-    this.presets.forEach(preset => this.recordPresetTargets(preset));
-    this.loadCommonListState(data, { allowLegacyApplyOnNextTravel: true });
+  }
+
+  afterLoadState() {
     this.recordCurrentlyAvailableBuildings();
   }
 }

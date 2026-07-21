@@ -595,7 +595,6 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
 
     if (!accumulatedChanges) {
       storage.reconcileUsedStorage();
-      updateSpaceStorageUI(storage);
     }
 
     for (const resourceKey in totals.inputRates) {

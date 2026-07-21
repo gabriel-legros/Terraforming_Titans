@@ -339,9 +339,8 @@ class AutoTravelAutomation {
   }
 
   _captureCurrentTabState() {
-    const activeTabButton = document.querySelector('.tab.active[data-tab]');
     return {
-      mainTabId: activeTabButton ? activeTabButton.dataset.tab : tabManager?.getActiveTabId?.() || '',
+      mainTabId: tabManager.getActiveTabId() || '',
       hopeSubtabId: hopeSubtabManager?.getActiveId?.() || 'awakening-hope',
       spaceSubtabId: spaceSubtabManager?.getActiveId?.() || 'space-story',
       terraformingSubtabId: terraformingSubtabManager?.getActiveId?.() || 'world-terraforming',

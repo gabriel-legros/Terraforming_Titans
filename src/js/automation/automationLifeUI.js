@@ -265,6 +265,7 @@ function updateLifeAutomationUI() {
       }))
     });
     if (lifeDesignStepsContainer._renderSignature !== stepsSignature) {
+      cleanupDynamicTooltipsIn(lifeDesignStepsContainer);
       lifeDesignStepsContainer.textContent = '';
       normalizeLifeAutomationStepAttributes(automation, activePreset);
       renderLifeAutomationSteps(automation, activePreset, lifeDesignStepsContainer);

@@ -349,16 +349,16 @@ class PopulationModule extends EffectableEntity {
         }
       }
       if (starvationDecayPerSecond > 0) {
-        this.populationResource.modifyRate(-starvationDecayPerSecond, 'Starvation', 'population');
+        this.populationResource.modifyRate(-starvationDecayPerSecond, t('ui.resourceRates.sources.starvation', {}, 'Starvation'), 'population');
       }
       if (energyDecayPerSecond > 0) {
-        this.populationResource.modifyRate(-energyDecayPerSecond, 'Energy Shortage', 'population');
+        this.populationResource.modifyRate(-energyDecayPerSecond, t('ui.resourceRates.sources.energyShortage', {}, 'Energy Shortage'), 'population');
       }
       if (gravityDecayPerSecond > 0) {
-        this.populationResource.modifyRate(-gravityDecayPerSecond, 'Gravity Strain', 'population');
+        this.populationResource.modifyRate(-gravityDecayPerSecond, t('ui.resourceRates.sources.gravityStrain', {}, 'Gravity Strain'), 'population');
       }
       if (overpopulationDecayPerSecond > 0) {
-        this.populationResource.modifyRate(-overpopulationDecayPerSecond, 'Overpopulation', 'population');
+        this.populationResource.modifyRate(-overpopulationDecayPerSecond, t('ui.resourceRates.sources.overpopulation', {}, 'Overpopulation'), 'population');
       }
 
       // Apply the population change and update production/consumption rates
@@ -368,7 +368,7 @@ class PopulationModule extends EffectableEntity {
         this.populationResource.decrease(-populationChange);
       }
       if (immigration > 0) {
-        spaceManager.galacticPopulation = Math.max(0, spaceManager.galacticPopulation - immigration);
+        spaceManager.withdrawGalacticPopulation(immigration);
       }
 
       currentPopulation = this.populationResource.value;
@@ -402,8 +402,7 @@ class PopulationModule extends EffectableEntity {
 
   }
 
-  updateWorkerRequirements() {
-    let totalWorkersRequired = 0;
+  getWorkerRequirementBreakdown() {
     const totals = { high: 0, normal: 0, low: 0 };
 
     // Calculate total workers required based on active buildings
@@ -411,7 +410,6 @@ class PopulationModule extends EffectableEntity {
       const building = buildings[buildingName];
       if (building.active > 0n && building.getTotalWorkerNeed() > 0) {
         const req = building.activeNumber * (building.getTotalWorkerNeed()) * building.getEffectiveWorkerMultiplier();
-        totalWorkersRequired += req;
         const level = building.workerPriority > 0 ? 'high' : building.workerPriority < 0 ? 'low' : 'normal';
         totals[level] += req;
       }
@@ -431,44 +429,43 @@ class PopulationModule extends EffectableEntity {
       totals.high += high;
       totals.normal += normal;
       totals.low += low;
-      totalWorkersRequired += high + normal + low;
     }
 
-    this.totalWorkersRequired = totalWorkersRequired; // Store the total workers required
+    return {
+      high: totals.high,
+      normal: totals.normal,
+      low: totals.low,
+      total: totals.high + totals.normal + totals.low,
+    };
+  }
+
+  updateWorkerRequirements() {
+    const totals = this.getWorkerRequirementBreakdown();
+    this.totalWorkersRequired = totals.total;
     this.totalWorkersRequiredHigh = totals.high;
     this.totalWorkersRequiredNormal = totals.normal;
     this.totalWorkersRequiredLow = totals.low;
   }
 
+  getWorkerAvailabilityRatios(workerCap = this.workerResource.cap, requirements = null) {
+    const totals = requirements || {
+      high: this.totalWorkersRequiredHigh,
+      normal: this.totalWorkersRequiredNormal,
+      low: this.totalWorkersRequiredLow,
+    };
+    let remaining = Math.max(0, workerCap);
+    const high = totals.high === 0 ? 1 : Math.min(1, remaining / totals.high);
+    remaining = Math.max(0, remaining - totals.high);
+    const normal = totals.normal === 0 ? 1 : Math.min(1, remaining / totals.normal);
+    remaining = Math.max(0, remaining - totals.normal);
+    const low = totals.low === 0 ? 1 : Math.min(1, remaining / totals.low);
+    return { high, normal, low };
+  }
+
   // Method to return the ratio of available workers to required workers
   getWorkerAvailabilityRatio(priority) {
-    if (this.totalWorkersRequired === 0) {
-      return 1; // If no workers are required, ratio is 1 (everything is fulfilled)
-    }
-
-    let remaining = this.workerResource.cap;
-
-    if (priority > 0) {
-      return this.totalWorkersRequiredHigh === 0
-        ? 1
-        : Math.min(1, remaining / this.totalWorkersRequiredHigh);
-    }
-
-    remaining = Math.max(0, remaining - this.totalWorkersRequiredHigh);
-    if (priority === 0) {
-      return this.totalWorkersRequiredNormal === 0
-        ? 1
-        : Math.min(1, remaining / this.totalWorkersRequiredNormal);
-    }
-
-    remaining = Math.max(0, remaining - this.totalWorkersRequiredNormal);
-    if (priority < 0) {
-      return this.totalWorkersRequiredLow === 0
-        ? 1
-        : Math.min(1, remaining / this.totalWorkersRequiredLow);
-    }
-
-    return 1;
+    const ratios = this.getWorkerAvailabilityRatios();
+    return priority > 0 ? ratios.high : priority < 0 ? ratios.low : ratios.normal;
   }
 
   applyWorkerRatio(effect){

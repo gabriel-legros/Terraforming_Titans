@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "id": "example.cheaper-ore-mine",
+  "name": "Cheaper Ore Mine Example",
+  "version": "1.0.0",
+  "loadOrder": 0,
+  "content": {
+    "patches": [
+      {
+        "target": "language.current",
+        "file": "patches/language-en.json"
+      },
+      {
+        "target": "parameters.buildings",
+        "file": "patches/buildings.json"
+      }
+    ],
+    "replacements": [
+      {
+        "gamePath": "src/js/debug_constants.js",
+        "file": "replacements/src/js/debug_constants.js"
+      }
+    ]
+  }
+}

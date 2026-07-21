@@ -108,6 +108,9 @@ function updateCollectorCostDisplay(project, costDisplay) {
       const available = getMegaProjectResourceAvailability(storageProj, storageKey, resourceData.value || 0);
       items.push({
         key: `${category}.${resource}`,
+        category,
+        resource,
+        required,
         text: `${displayName}: ${formatNumber(required, true)}`,
         missing: available < required,
       });
@@ -121,6 +124,8 @@ function updateCollectorCostDisplay(project, costDisplay) {
     costDisplay._collectorCostSpans = new Map();
     items.forEach((item, idx) => {
       const span = document.createElement('span');
+      span._costTextNode = document.createElement('span');
+      span.appendChild(span._costTextNode);
       costDisplay._collectorCostSpans.set(item.key, span);
       costDisplay.appendChild(span);
       if (idx < items.length - 1) {
@@ -133,9 +138,14 @@ function updateCollectorCostDisplay(project, costDisplay) {
   items.forEach(item => {
     const span = spans.get(item.key);
     const color = item.missing ? 'red' : '';
-    if (span.textContent !== item.text) {
-      span.textContent = item.text;
+    if (span._costTextNode.textContent !== item.text) {
+      span._costTextNode.textContent = item.text;
     }
+    syncCostExplanationTooltip(
+      span,
+      buildProjectCostTooltip(project, item.category, item.resource, item.required, storageProj),
+      item.missing
+    );
     if (span.style.color !== color) {
       span.style.color = color;
     }

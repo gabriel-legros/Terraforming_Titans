@@ -263,33 +263,59 @@ function updateGalacticInvasionUI() {
     const card = refreshedCache.cards.get(letter.key);
     const completed = galaxyInvasionManager.completedLetters.has(letter.key);
     const active = galaxyInvasionManager.currentLetterKey === letter.key;
-    const blockedByActive = galaxyInvasionManager.currentLetterKey && !active;
+    const blockedByActive = !!galaxyInvasionManager.currentLetterKey && !active;
     const blockedByCooldown = galaxyInvasionManager.cooldownRemainingMs > 0 && !active;
-    card.element.classList.toggle('completed', completed);
-    card.element.classList.toggle('active', active);
-    card.element.style.display = completed && completedInvasionsHidden ? 'none' : '';
-    card.status.textContent = completed
+    if (card.element.classList.contains('completed') !== completed) {
+      card.element.classList.toggle('completed', completed);
+    }
+    if (card.element.classList.contains('active') !== active) {
+      card.element.classList.toggle('active', active);
+    }
+    const display = completed && completedInvasionsHidden ? 'none' : '';
+    if (card.element.style.display !== display) {
+      card.element.style.display = display;
+    }
+    const statusText = completed
       ? getGalacticInvasionText('complete', 'Complete')
       : active
         ? getGalacticInvasionText('active', 'Active')
         : '';
-    card.power.textContent = getGalacticInvasionText('fleetPower', 'Fleet Power: {value}', {
+    if (card.status.textContent !== statusText) {
+      card.status.textContent = statusText;
+    }
+    const powerText = getGalacticInvasionText('fleetPower', 'Fleet Power: {value}', {
       value: formatGalacticInvasionPower(galaxyInvasionManager.getLetterFleetPower(letter))
     });
-    card.traits.textContent = getGalacticInvasionTraitListText(letter.traits);
-    card.reward.textContent = getGalacticInvasionRewardText(letter.key);
-    card.button.disabled = completed || blockedByActive || blockedByCooldown || !conquered;
+    if (card.power.textContent !== powerText) {
+      card.power.textContent = powerText;
+    }
+    const traitsText = getGalacticInvasionTraitListText(letter.traits);
+    if (card.traits.textContent !== traitsText) {
+      card.traits.textContent = traitsText;
+    }
+    const rewardText = getGalacticInvasionRewardText(letter.key);
+    if (card.reward.textContent !== rewardText) {
+      card.reward.textContent = rewardText;
+    }
+    let buttonText;
+    let buttonDisabled = completed || blockedByActive || blockedByCooldown || !conquered;
     if (active) {
-      card.button.textContent = getGalacticInvasionText('cancelButton', 'Cancel Invasion');
-      card.button.disabled = !conquered;
+      buttonText = getGalacticInvasionText('cancelButton', 'Cancel Invasion');
+      buttonDisabled = !conquered;
     } else if (blockedByCooldown) {
-      card.button.textContent = getGalacticInvasionText('cooldownButton', 'Cooldown: {value}', {
+      buttonText = getGalacticInvasionText('cooldownButton', 'Cooldown: {value}', {
         value: formatGalacticInvasionDuration(galaxyInvasionManager.cooldownRemainingMs)
       });
     } else if (completed) {
-      card.button.textContent = getGalacticInvasionText('completedButton', 'Completed');
+      buttonText = getGalacticInvasionText('completedButton', 'Completed');
     } else {
-      card.button.textContent = getGalacticInvasionText('startButton', 'Start Invasion');
+      buttonText = getGalacticInvasionText('startButton', 'Start Invasion');
+    }
+    if (card.button.textContent !== buttonText) {
+      card.button.textContent = buttonText;
+    }
+    if (card.button.disabled !== buttonDisabled) {
+      card.button.disabled = buttonDisabled;
     }
   });
   updateCompletedInvasionVisibilityToggle(refreshedCache.hideCompletedButton);
@@ -372,6 +398,7 @@ function updateGalacticInvasionTraitSummary(container) {
   }
   list._traitItems ||= new Map();
   const usedItems = new Set();
+  let activeIndex = 0;
   GALACTIC_INVASION_TRAIT_ORDER.forEach((traitKey) => {
     if (!activeTraits.has(traitKey)) {
       return;
@@ -393,12 +420,15 @@ function updateGalacticInvasionTraitSummary(container) {
     const descriptionText = getGalacticInvasionTraitDescription(traitKey);
     if (item._name.textContent !== nameText) item._name.textContent = nameText;
     if (item._description.textContent !== descriptionText) item._description.textContent = descriptionText;
-    item.style.display = '';
+    if (item.style.display) item.style.display = '';
     usedItems.add(item);
-    list.appendChild(item);
+    if (list.children[activeIndex] !== item) {
+      list.insertBefore(item, list.children[activeIndex] || null);
+    }
+    activeIndex += 1;
   });
   list._traitItems.forEach((item) => {
-    if (!usedItems.has(item)) {
+    if (!usedItems.has(item) && item.style.display !== 'none') {
       item.style.display = 'none';
     }
   });

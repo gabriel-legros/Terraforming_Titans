@@ -114,6 +114,9 @@ function initializeAccumulatedSpecialChanges() {
     planetaryMassImports: {},
     materialOverflowToPlanetaryMass: {},
     colonyWaterNoOverflow: 0,
+    colonyWaterOverflowToSpaceStorage: 0,
+    colonyMetalOverflowToSpaceStorage: 0,
+    colonySiliconOverflowToSpaceStorage: 0,
     colonyHydrogenOverflowToSpaceStorage: 0,
     colonyHydrogenNoOverflow: 0
   };
@@ -188,13 +191,14 @@ function routeColonyResourceOverflow(deltaTime, accumulatedChanges, config) {
   }
 
   const previousValue = resource.value;
-  const newValue = resource.value + accumulatedChanges[config.sourceCategory][config.sourceResource];
+  const totalChange = accumulatedChanges[config.sourceCategory][config.sourceResource];
+  const newValue = resource.value + totalChange;
   const limit = previousValue >= resource.cap ? previousValue : resource.cap;
-  let overflow = newValue > limit ? newValue - limit : 0;
   const protectedOverflow = config.getProtectedOverflow ? config.getProtectedOverflow() : 0;
-  if (protectedOverflow > 0) {
-    overflow = Math.max(0, overflow - protectedOverflow);
-  }
+  const overflowValue = protectedOverflow > 0
+    ? resource.value + (totalChange - protectedOverflow)
+    : newValue;
+  const overflow = overflowValue > limit ? overflowValue - limit : 0;
   if (overflow <= 0) {
     return;
   }
@@ -206,8 +210,8 @@ function routeColonyResourceOverflow(deltaTime, accumulatedChanges, config) {
   const rate = seconds > 0 ? overflow / seconds : 0;
 
   accumulatedChanges[target.category][target.resource] += overflow;
-  resources[target.category][target.resource].modifyRate(rate, 'Overflow', 'overflow');
-  resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
+  resources[target.category][target.resource].modifyRate(rate, t('ui.resourceRates.sources.overflow', {}, 'Overflow'), 'overflow');
+  resource.modifyRate(-rate, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)'), 'overflow');
 }
 
 function routeColonyWaterOverflow(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
@@ -273,8 +277,45 @@ function routeColonyHydrogenOverflowToSpaceStorage(deltaTime, accumulatedChanges
 
   const seconds = deltaTime / 1000;
   const rate = seconds > 0 ? routedOverflow / seconds : 0;
-  resources.spaceStorage.hydrogen.modifyRate(rate, 'Overflow', 'overflow');
-  resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
+  resources.spaceStorage.hydrogen.modifyRate(rate, t('ui.resourceRates.sources.overflow', {}, 'Overflow'), 'overflow');
+  resource.modifyRate(-rate, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)'), 'overflow');
+}
+
+function routeColonyMiningOverflowToSpaceStorage(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
+  const routes = [
+    { sourceResource: 'water', targetResource: 'liquidWater', specialChangeKey: 'colonyWaterOverflowToSpaceStorage' },
+    { sourceResource: 'metal', targetResource: 'metal', specialChangeKey: 'colonyMetalOverflowToSpaceStorage' },
+    { sourceResource: 'silicon', targetResource: 'silicon', specialChangeKey: 'colonySiliconOverflowToSpaceStorage' }
+  ];
+
+  for (const route of routes) {
+    const eligibleOverflow = accumulatedSpecialChanges[route.specialChangeKey] || 0;
+    if (!(eligibleOverflow > 0)) {
+      continue;
+    }
+
+    const resource = resources.colony[route.sourceResource];
+    if (!resource.hasCap) {
+      continue;
+    }
+
+    const previousValue = resource.value;
+    const newValue = resource.value + accumulatedChanges.colony[route.sourceResource];
+    const limit = previousValue >= resource.cap ? previousValue : resource.cap;
+    const overflow = newValue > limit ? newValue - limit : 0;
+    const routedOverflow = Math.min(overflow, eligibleOverflow);
+    if (!(routedOverflow > 0)) {
+      continue;
+    }
+
+    accumulatedChanges.colony[route.sourceResource] -= routedOverflow;
+    accumulatedChanges.spaceStorage[route.targetResource] += routedOverflow;
+
+    const seconds = deltaTime / 1000;
+    const rate = seconds > 0 ? routedOverflow / seconds : 0;
+    resources.spaceStorage[route.targetResource].modifyRate(rate, t('ui.resourceRates.sources.overflow', {}, 'Overflow'), 'overflow');
+    resource.modifyRate(-rate, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)'), 'overflow');
+  }
 }
 
 function routeColonyMaterialOverflowToPlanetaryMass(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
@@ -307,7 +348,7 @@ function routeColonyMaterialOverflowToPlanetaryMass(deltaTime, accumulatedChange
     accumulatedChanges.colony[materialKey] -= totalRoutedOverflow;
     const seconds = deltaTime / 1000;
     const rate = seconds > 0 ? totalRoutedOverflow / seconds : 0;
-    resource.modifyRate(-rate, 'Overflow (not summed)', 'overflow');
+    resource.modifyRate(-rate, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)'), 'overflow');
     for (const source in sourceEntries) {
       if (routedOverflow <= 0) {
         break;
@@ -1726,6 +1767,14 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
     }
   }
 
+  const antimatterBattery = buildings.antimatterBattery;
+  if (antimatterBattery) {
+    const antimatterAutoFillRate = antimatterBattery.getAutoFillEnergyRate(deltaTime);
+    if (antimatterAutoFillRate > 0) {
+      resources.colony.energy.modifyRate(antimatterAutoFillRate, t('ui.resourceRates.sources.antimatterBatteryAutoFill', {}, 'Antimatter Battery Auto Fill'), 'building');
+    }
+  }
+
   if (projectManager) {
     for (const name in projectManager.projects) {
       const project = projectManager.projects[name];
@@ -1767,9 +1816,10 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
   if (fundingModule) {
     const fundingIncreaseRate = fundingModule.getEffectiveFunding(); // Get funding rate from funding module
     // Specify 'funding' as the rateType
-    resources.colony.funding.modifyRate(fundingIncreaseRate, 'Funding', 'funding'); // Update funding production rate
+    const fundingRateSource = t('ui.resourceRates.sources.funding', {}, 'Funding');
+    resources.colony.funding.modifyRate(fundingIncreaseRate, fundingRateSource, 'funding'); // Update funding production rate
     if (resourceDebugRateTracking && fundingIncreaseRate) {
-      trackResourceDebugRate(localProduction, 'colony', 'funding', 'Funding', fundingIncreaseRate);
+      trackResourceDebugRate(localProduction, 'colony', 'funding', fundingRateSource, fundingIncreaseRate);
     }
   }
 
@@ -1870,6 +1920,7 @@ function updateFactoryHeatPower(deltaTime, structures) {
 }
 
 function produceResources(deltaTime, buildings) {
+  const antimatterBattery = buildings.antimatterBattery;
   if (typeof spaceManager !== 'undefined') {
     spaceManager.beginTerraformedWorldCountCache?.();
   }
@@ -2101,6 +2152,10 @@ function produceResources(deltaTime, buildings) {
     building.applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime);
   }
 
+  if (antimatterBattery) {
+    antimatterBattery.applyAutoFillProduction(deltaTime, accumulatedChanges);
+  }
+
   updateFactoryHeatPower(deltaTime, buildings);
 
   if (projectManager) {
@@ -2160,7 +2215,11 @@ function produceResources(deltaTime, buildings) {
   }
 
   if (spaceStorageProject?.applyPostProjectShipOperation) {
-    spaceStorageProject.applyPostProjectShipOperation(deltaTime, accumulatedChanges);
+    spaceStorageProject.applyPostProjectShipOperation(
+      deltaTime,
+      accumulatedChanges,
+      accumulatedSpecialChanges
+    );
   }
   if (galacticMarketProject?.applyPostProjectTrade) {
     galacticMarketProject.applyPostProjectTrade(
@@ -2178,6 +2237,13 @@ function produceResources(deltaTime, buildings) {
 
   autoActivateStructures(buildings);
 
+  // Call lifeManager.updateLife AFTER buildings but potentially before or after terraforming,
+  // depending on desired interaction. Assuming it runs after buildings and before applying changes.
+  // It should call modifyRate with type 'life'.
+  if(lifeManager){
+    lifeManager.updateLife(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
+  }
+
   // Call terraforming.updateResources AFTER accumulating building/funding changes
   // but BEFORE applying accumulatedChanges to resource values.
   // terraforming.updateResources will call modifyRate with type 'terraforming'.
@@ -2186,13 +2252,6 @@ function produceResources(deltaTime, buildings) {
       accumulatedChanges,
       accumulatedSpecialChanges
     });
-  }
-
-  // Call lifeManager.updateLife AFTER buildings but potentially before or after terraforming,
-  // depending on desired interaction. Assuming it runs after buildings and before applying changes.
-  // It should call modifyRate with type 'life'.
-  if(lifeManager){
-    lifeManager.updateLife(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
   }
 
   if(researchManager && typeof researchManager.update === 'function'){
@@ -2223,6 +2282,7 @@ function produceResources(deltaTime, buildings) {
   }
 
   if (terraforming) {
+    routeColonyMiningOverflowToSpaceStorage(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
     routeColonyWaterOverflow(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
     routeColonyHydrogenOverflowToSpaceStorage(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
     routeColonyHydrogenOverflow(deltaTime, accumulatedChanges, accumulatedSpecialChanges);

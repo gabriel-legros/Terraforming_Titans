@@ -89,10 +89,10 @@ const METABOLISM_EQUATION_SPECIES = {
   vanadiumAerosol: { key: 'v_aerosol', label: 'V aerosol' },
   liquidWater: { key: 'h2o_liq', label: 'H₂O (l)' },
   liquidCO2: { key: 'co2_liq', label: 'CO₂ (l)' },
-  biomass: { key: 'biomass', label: 'Biomass' },
-  metal: { key: 'metal', label: 'Metal' },
-  silicon: { key: 'silica', label: 'Silica' },
-  energy: { key: 'energy', label: 'Energy' },
+  biomass: { key: 'biomass', label: getLifeText('ui.life.metabolismEquation.biomass', 'Biomass') },
+  metal: { key: 'metal', label: getLifeText('ui.life.metabolismEquation.metal', 'Metal') },
+  silicon: { key: 'silica', label: getLifeText('ui.life.metabolismEquation.silica', 'Silica') },
+  energy: { key: 'energy', label: getLifeText('ui.life.metabolismEquation.energy', 'Energy') },
 };
 
 function formatMetabolismCoefficient(value) {
@@ -155,7 +155,7 @@ function formatMetabolismGrowthEquation(process, options = {}) {
   });
 
   const usesLuminosity = !!process?.growth?.usesLuminosity;
-  if (mergedOptions.includeLight && usesLuminosity) left.push('Light');
+  if (mergedOptions.includeLight && usesLuminosity) left.push(getLifeText('ui.life.metabolismEquation.light', 'Light'));
 
   const leftSide = left.length ? left.join(' + ') : '—';
   const rightSide = right.length ? right.join(' + ') : '—';
@@ -285,7 +285,11 @@ class LifeAttribute {
         const bioworkersPerBiomassPerPoint = requirements.bioworkersPerBiomassPerPoint
           ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.bioworkersPerBiomassPerPoint
           ?? 0.00001;
-        return `${(effectiveValue * bioworkersPerBiomassPerPoint).toFixed(5)} workers per ton biomass`;
+        return getLifeText(
+          'ui.life.attributes.bioworkforce.convertedValue',
+          '{value} workers per ton biomass',
+          { value: (effectiveValue * bioworkersPerBiomassPerPoint).toFixed(5) }
+        );
       case 'bioships':
         return getLifeText(
           'ui.lifeDesigner.attributes.bioships.convertedValue',
@@ -311,22 +315,22 @@ class LifeDesign {
     bioworkforce = 0,
     bioships = 0
   ) {
-    this.minTemperatureTolerance = new LifeAttribute('minTemperatureTolerance', minTemperatureTolerance, 'Minimum Temperature Tolerance', 'Lowest survivable temperature (day or night).', getAttributeMaxUpgrades('minTemperatureTolerance'));
-    this.maxTemperatureTolerance = new LifeAttribute('maxTemperatureTolerance', maxTemperatureTolerance, 'Maximum Temperature Tolerance', 'Highest survivable temperature (day or night).', getAttributeMaxUpgrades('maxTemperatureTolerance'));
+    this.minTemperatureTolerance = new LifeAttribute('minTemperatureTolerance', minTemperatureTolerance, getLifeText('ui.life.attributes.minTemperatureTolerance.name', 'Minimum Temperature Tolerance'), getLifeText('ui.life.attributes.minTemperatureTolerance.description', 'Lowest survivable temperature (day or night).'), getAttributeMaxUpgrades('minTemperatureTolerance'));
+    this.maxTemperatureTolerance = new LifeAttribute('maxTemperatureTolerance', maxTemperatureTolerance, getLifeText('ui.life.attributes.maxTemperatureTolerance.name', 'Maximum Temperature Tolerance'), getLifeText('ui.life.attributes.maxTemperatureTolerance.description', 'Highest survivable temperature (day or night).'), getAttributeMaxUpgrades('maxTemperatureTolerance'));
     this.optimalGrowthTemperature = new LifeAttribute(
       'optimalGrowthTemperature',
       0,
-      'Optimal Growth Temperature',
-      'Daytime temperature for peak growth. Costs 1 point per degree from the base temperature.',
+      getLifeText('ui.life.attributes.optimalGrowthTemperature.name', 'Optimal Growth Temperature'),
+      getLifeText('ui.life.attributes.optimalGrowthTemperature.description', 'Daytime temperature for peak growth. Costs 1 point per degree from the base temperature.'),
       getAttributeMaxUpgrades('optimalGrowthTemperature')
     );
-    this.growthTemperatureTolerance = new LifeAttribute('growthTemperatureTolerance', growthTemperatureTolerance, 'Growth Temperature Tolerance', 'Controls how quickly growth falls off from the optimal temperature.', getAttributeMaxUpgrades('growthTemperatureTolerance'));
-    this.photosynthesisEfficiency = new LifeAttribute('photosynthesisEfficiency', photosynthesisEfficiency, 'Photosynthesis Efficiency', 'Efficiency of converting light to energy; affects growth rate.', getAttributeMaxUpgrades('photosynthesisEfficiency'));
-    this.radiationTolerance = new LifeAttribute('radiationTolerance', radiationTolerance, 'Radiation Tolerance', 'Mitigates radiation quadratically: points² × 0.01 mSv/day.', getAttributeMaxUpgrades('radiationTolerance'));
-    this.invasiveness = new LifeAttribute('invasiveness', invasiveness, 'Invasiveness', 'Speed of spreading/replacing existing life; reduces deployment time.', getAttributeMaxUpgrades('invasiveness'));
-    this.spaceEfficiency = new LifeAttribute('spaceEfficiency', spaceEfficiency, 'Space Efficiency', 'Increases maximum biomass density per unit area.', getAttributeMaxUpgrades('spaceEfficiency'));
-    this.geologicalBurial = new LifeAttribute('geologicalBurial', geologicalBurial, 'Geological Burial', 'Removes existing biomass into inert storage.', getAttributeMaxUpgrades('geologicalBurial'));
-    this.bioworkforce = new LifeAttribute('bioworkforce', bioworkforce, 'Bioworkforce', 'Allocates a fraction of global biomass to work for you.', getAttributeMaxUpgrades('bioworkforce'));
+    this.growthTemperatureTolerance = new LifeAttribute('growthTemperatureTolerance', growthTemperatureTolerance, getLifeText('ui.life.attributes.growthTemperatureTolerance.name', 'Growth Temperature Tolerance'), getLifeText('ui.life.attributes.growthTemperatureTolerance.description', 'Controls how quickly growth falls off from the optimal temperature.'), getAttributeMaxUpgrades('growthTemperatureTolerance'));
+    this.photosynthesisEfficiency = new LifeAttribute('photosynthesisEfficiency', photosynthesisEfficiency, getLifeText('ui.life.attributes.photosynthesisEfficiency.name', 'Photosynthesis Efficiency'), getLifeText('ui.life.attributes.photosynthesisEfficiency.description', 'Efficiency of converting light to energy; affects growth rate.'), getAttributeMaxUpgrades('photosynthesisEfficiency'));
+    this.radiationTolerance = new LifeAttribute('radiationTolerance', radiationTolerance, getLifeText('ui.life.attributes.radiationTolerance.name', 'Radiation Tolerance'), getLifeText('ui.life.attributes.radiationTolerance.description', 'Mitigates radiation quadratically: points² × 0.01 mSv/day.'), getAttributeMaxUpgrades('radiationTolerance'));
+    this.invasiveness = new LifeAttribute('invasiveness', invasiveness, getLifeText('ui.life.attributes.invasiveness.name', 'Invasiveness'), getLifeText('ui.life.attributes.invasiveness.description', 'Speed of spreading/replacing existing life; reduces deployment time.'), getAttributeMaxUpgrades('invasiveness'));
+    this.spaceEfficiency = new LifeAttribute('spaceEfficiency', spaceEfficiency, getLifeText('ui.life.attributes.spaceEfficiency.name', 'Space Efficiency'), getLifeText('ui.life.attributes.spaceEfficiency.description', 'Increases maximum biomass density per unit area.'), getAttributeMaxUpgrades('spaceEfficiency'));
+    this.geologicalBurial = new LifeAttribute('geologicalBurial', geologicalBurial, getLifeText('ui.life.attributes.geologicalBurial.name', 'Geological Burial'), getLifeText('ui.life.attributes.geologicalBurial.description', 'Removes existing biomass into inert storage.'), getAttributeMaxUpgrades('geologicalBurial'));
+    this.bioworkforce = new LifeAttribute('bioworkforce', bioworkforce, getLifeText('ui.life.attributes.bioworkforce.name', 'Bioworkforce'), getLifeText('ui.life.attributes.bioworkforce.description', 'Allocates a fraction of global biomass to work for you.'), getAttributeMaxUpgrades('bioworkforce'));
     this.bioships = new LifeAttribute(
       'bioships',
       bioships,
@@ -477,10 +481,10 @@ class LifeDesign {
         1
       );
 
-      if (zoneData.day < ranges.min - 0.5) reason = `Day too cold (${fmt(zoneData.day)}${unit} < ${fmt(ranges.min - 0.5)}${unit})`;
-      else if (zoneData.day > ranges.max + 0.5) reason = `Day too hot (${fmt(zoneData.day)}${unit} > ${fmt(ranges.max + 0.5)}${unit})`;
-      else if (zoneData.night < ranges.min - 0.5) reason = `Night too cold (${fmt(zoneData.night)}${unit} < ${fmt(ranges.min - 0.5)}${unit})`;
-      else if (zoneData.night > ranges.max + 0.5) reason = `Night too hot (${fmt(zoneData.night)}${unit} > ${fmt(ranges.max + 0.5)}${unit})`;
+      if (zoneData.day < ranges.min - 0.5) reason = getLifeText('ui.life.checks.dayTooCold', 'Day too cold ({value}{unit} < {limit}{unit})', { value: fmt(zoneData.day), limit: fmt(ranges.min - 0.5), unit });
+      else if (zoneData.day > ranges.max + 0.5) reason = getLifeText('ui.life.checks.dayTooHot', 'Day too hot ({value}{unit} > {limit}{unit})', { value: fmt(zoneData.day), limit: fmt(ranges.max + 0.5), unit });
+      else if (zoneData.night < ranges.min - 0.5) reason = getLifeText('ui.life.checks.nightTooCold', 'Night too cold ({value}{unit} < {limit}{unit})', { value: fmt(zoneData.night), limit: fmt(ranges.min - 0.5), unit });
+      else if (zoneData.night > ranges.max + 0.5) reason = getLifeText('ui.life.checks.nightTooHot', 'Night too hot ({value}{unit} > {limit}{unit})', { value: fmt(zoneData.night), limit: fmt(ranges.max + 0.5), unit });
 
       if (reason) {
           return { pass: false, reason };
@@ -491,7 +495,7 @@ class LifeDesign {
       const penalty = Math.max(dayPen, nightPen);
       if (penalty > 0) {
           const growthPercent = Math.round((1 - penalty) * 100);
-          return { pass: true, warning: true, reason: `Growth scaled to ${growthPercent}%` };
+          return { pass: true, warning: true, reason: getLifeText('ui.life.checks.growthScaled', 'Growth scaled to {percent}%', { percent: growthPercent }) };
       }
       return { pass: true, warning: false, reason: null };
   }
@@ -511,11 +515,12 @@ class LifeDesign {
       if (penalty === 1) {
           const limit = temp < ranges.min ? ranges.min - 0.5 : ranges.max + 0.5;
           const comparison = temp < ranges.min ? '<' : '>';
-          const text = temp < ranges.min ? 'cold' : 'hot';
-          return { pass: false, reason: `Day too ${text} (${fmt(temp)}${unit} ${comparison} ${fmt(limit)}${unit})` };
+          const key = temp < ranges.min ? 'dayTooCold' : 'dayTooHot';
+          const fallback = temp < ranges.min ? 'Day too cold ({value}{unit} < {limit}{unit})' : 'Day too hot ({value}{unit} > {limit}{unit})';
+          return { pass: false, reason: getLifeText(`ui.life.checks.${key}`, fallback, { value: fmt(temp), limit: fmt(limit), unit, comparison }) };
       }
       if (penalty > 0) {
-          return { pass: true, warning: true, reason: `Growth scaled to ${Math.round((1 - penalty) * 100)}%` };
+          return { pass: true, warning: true, reason: getLifeText('ui.life.checks.growthScaled', 'Growth scaled to {percent}%', { percent: Math.round((1 - penalty) * 100) }) };
       }
       return { pass: true, warning: false, reason: null };
   }
@@ -535,11 +540,12 @@ class LifeDesign {
       if (penalty === 1) {
           const limit = temp < ranges.min ? ranges.min - 0.5 : ranges.max + 0.5;
           const comparison = temp < ranges.min ? '<' : '>';
-          const text = temp < ranges.min ? 'cold' : 'hot';
-          return { pass: false, reason: `Night too ${text} (${fmt(temp)}${unit} ${comparison} ${fmt(limit)}${unit})` };
+          const key = temp < ranges.min ? 'nightTooCold' : 'nightTooHot';
+          const fallback = temp < ranges.min ? 'Night too cold ({value}{unit} < {limit}{unit})' : 'Night too hot ({value}{unit} > {limit}{unit})';
+          return { pass: false, reason: getLifeText(`ui.life.checks.${key}`, fallback, { value: fmt(temp), limit: fmt(limit), unit, comparison }) };
       }
       if (penalty > 0) {
-          return { pass: true, warning: true, reason: `Growth scaled to ${Math.round((1 - penalty) * 100)}%` };
+          return { pass: true, warning: true, reason: getLifeText('ui.life.checks.growthScaled', 'Growth scaled to {percent}%', { percent: Math.round((1 - penalty) * 100) }) };
       }
       return { pass: true, warning: false, reason: null };
   }
@@ -563,7 +569,9 @@ class LifeDesign {
       results.global = {
           pass: globalPass,
           warning: globalWarning,
-          reason: globalPass ? (globalWarning ? 'Growth reduced in all zones' : null) : 'Fails in all zones'
+          reason: globalPass
+            ? (globalWarning ? getLifeText('ui.life.checks.growthReducedAllZones', 'Growth reduced in all zones') : null)
+            : getLifeText('ui.life.checks.failsAllZones', 'Fails in all zones')
       };
       return results;
   }
@@ -612,10 +620,10 @@ class LifeDesign {
 
         const pass = finalPenalty === 0;
         const reason = hasShield
-          ? 'Magnetosphere active'
+          ? getLifeText('ui.life.checks.magnetosphereActive', 'Magnetosphere active')
           : (pass
-            ? `Dose fully mitigated (${formatNumber(baseDose, false, 2)} - ${formatNumber(mitigationDose, false, 2)} mSv/day)`
-            : `Effective dose: ${formatNumber(effectiveDose, false, 2)} mSv/day`);
+            ? getLifeText('ui.life.checks.doseFullyMitigated', 'Dose fully mitigated ({baseDose} - {mitigationDose} mSv/day)', { baseDose: formatNumber(baseDose, false, 2), mitigationDose: formatNumber(mitigationDose, false, 2) })
+            : getLifeText('ui.life.checks.effectiveDose', 'Effective dose: {dose} mSv/day', { dose: formatNumber(effectiveDose, false, 2) }));
         const reductionPercent = finalPenalty * 100;
         return {
           pass,
@@ -676,12 +684,13 @@ class LifeDesign {
       });
 
       if (closestZone) {
-          const zoneLabel = `${closestZone[0].toUpperCase()}${closestZone.slice(1)}`;
-          const reason = tempResults[closestZone].reason || 'Unsure why this zone fails';
-          return `${zoneLabel}: ${reason}`;
+          const fallbackZoneLabel = `${closestZone[0].toUpperCase()}${closestZone.slice(1)}`;
+          const zoneLabel = getLifeText(`ui.terraforming.summaryUi.zones.${closestZone}`, fallbackZoneLabel);
+          const reason = tempResults[closestZone].reason || getLifeText('ui.life.checks.unknownZoneFailure', 'Unsure why this zone fails');
+          return getLifeText('ui.life.checks.zoneFailure', '{zone}: {reason}', { zone: zoneLabel, reason });
       }
 
-      return tempResults.global.reason || 'Life cannot survive anywhere';
+      return tempResults.global.reason || getLifeText('ui.life.cannotSurviveAnywhere', 'Life cannot survive anywhere');
   }
 
   // Returns an array of zone names where the lifeform can actively grow (meets temp & moisture reqs)
@@ -702,7 +711,7 @@ class LifeDesign {
   moistureCheckZone(zoneName) {
       if (!terraforming || !terraforming.zonalSurface) {
           console.error("Terraforming or resource data not available for moisture check in zone:", zoneName);
-          return { pass: false, reason: "Data unavailable" };
+          return { pass: false, reason: getLifeText('ui.life.checks.dataUnavailable', 'Data unavailable') };
       }
       const requirements = getActiveLifeDesignRequirements();
       if (requirements.requiresLiquidWaterForGrowth === false) {
@@ -718,7 +727,7 @@ class LifeDesign {
           return { pass: true, reason: null };
       }
 
-      return { pass: false, reason: "Need liquid water" };
+      return { pass: false, reason: getLifeText('ui.life.checks.needLiquidWater', 'Need liquid water') };
   }
 
   // Returns an object indicating moisture status for all zones
@@ -731,7 +740,7 @@ class LifeDesign {
           results[zoneName] = this.moistureCheckZone(zoneName);
           if (results[zoneName].pass) globalPass = true; // If any zone passes, global passes
       }
-      results.global = { pass: globalPass, reason: globalPass ? null : "Fails in all zones" };
+      results.global = { pass: globalPass, reason: globalPass ? null : getLifeText('ui.life.checks.failsAllZones', 'Fails in all zones') };
       return results;
   }
 
@@ -779,7 +788,7 @@ class LifeDesign {
 
 class LifeDesigner extends EffectableEntity {
   constructor() {
-    super({ description: 'Life Designer' });
+    super({ description: getLifeText('ui.life.designer.title', 'Life Designer') });
     this.baseApplyDuration = 30000;
     this.currentDesign = new LifeDesign(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
     this.tentativeDesign = null;
@@ -1159,7 +1168,7 @@ function initializeLifeUI() {
 
 class LifeManager extends EffectableEntity {
   constructor() {
-    super({description : 'Life Manager'})
+    super({ description: getLifeText('ui.life.manager', 'Life Manager') });
     this.biomassGrowthLimiters = {};
     lifeDesignerConfig.quantumBiology = false;
   }
@@ -1251,9 +1260,9 @@ class LifeManager extends EffectableEntity {
     const sterileDecayWithoutOxygen = process.decay.allowSterileDecayWithoutOxygen === true
       && (decayPerBiomass.atmospheric?.oxygen || 0) < 0
       && getAtmosphericAvailable('oxygen') <= 0;
-    const processName = process.displayName || 'Photosynthesis';
+    const processName = process.displayName || getLifeText('ui.life.photosynthesis', 'Photosynthesis');
     const growthReason = processName;
-    const decayReason = `${processName} Decay`;
+    const decayReason = getLifeText('ui.life.rateLabels.processDecay', '{name} Decay', { name: processName });
     const naturalDecayReason = getLifeText('ui.life.rateLabels.naturalDecay', 'Natural Biomass Decay');
     const usesLuminosity = process.growth.usesLuminosity === true;
     const secondsMultiplier = deltaTime / 1000;
@@ -1900,7 +1909,7 @@ class LifeManager extends EffectableEntity {
       terraforming.zonalSurface[zoneName].biomass -= overflowDecay;
       biomassDyingChangeByZone[zoneName] -= overflowDecay;
       if (secondsMultiplier > 0 && overflowDecay > 1e-9) {
-        resources.surface.biomass.modifyRate(-overflowDecay / secondsMultiplier, 'Life Density Decay', 'life');
+        resources.surface.biomass.modifyRate(-overflowDecay / secondsMultiplier, t('ui.resourceRates.sources.lifeDensityDecay', {}, 'Life Density Decay'), 'life');
       }
     });
 
@@ -2057,11 +2066,11 @@ class LifeManager extends EffectableEntity {
           if (burialAmount > 1e-9) { // Only apply if significant
             terraforming.zonalSurface[zoneName].biomass -= burialAmount;
             if (resources.surface.biomass) {
-              resources.surface.biomass.modifyRate(-burialAmount / secondsMultiplier, 'Geological Burial', 'life');
+              resources.surface.biomass.modifyRate(-burialAmount / secondsMultiplier, t('ui.resourceRates.sources.geologicalBurial', {}, 'Geological Burial'), 'life');
             }
             accumulateSpecialPlanetaryMassImport(
               accumulatedSpecialChanges,
-              'Geological Burial',
+              t('ui.resourceRates.sources.geologicalBurial', {}, 'Geological Burial'),
               'organic',
               burialAmount,
               true,
@@ -2079,7 +2088,7 @@ class LifeManager extends EffectableEntity {
 
       if (foodResource && biomassAmount > 0) {
         const foodPerSecond = biomassAmount * 0.01;
-        foodResource.modifyRate(foodPerSecond, 'Surface Biomass', 'life');
+        foodResource.modifyRate(foodPerSecond, t('ui.resourceRates.sources.surfaceBiomass', {}, 'Surface Biomass'), 'life');
 
         if (secondsMultiplier > 0) {
           foodResource.increase(foodPerSecond * secondsMultiplier);

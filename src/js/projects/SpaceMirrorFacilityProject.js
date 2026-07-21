@@ -159,6 +159,7 @@ function isMirrorAssignmentReversed(settings, zone) {
 
 function syncMirrorAssignmentMode(settings) {
   const mirrors = settings.assignments.mirrors || (settings.assignments.mirrors = {});
+  const lanterns = settings.assignments.lanterns || (settings.assignments.lanterns = {});
   const reverse = settings.assignments.reversalMode || (
     settings.assignments.reversalMode = { tropical: false, temperate: false, polar: false, focus: false, any: false }
   );
@@ -181,7 +182,8 @@ function syncMirrorAssignmentMode(settings) {
 
     const zoneReverse = signedValue < 0 || !!reverse[zone];
     reverse[zone] = zoneReverse;
-    mirrors[zone] = Math.abs(signedValue);
+    mirrors[zone] = Math.floor(Math.abs(signedValue));
+    lanterns[zone] = Math.floor(Math.max(0, Number(lanterns[zone]) || 0));
   });
 
   if (settings.advancedOversight) {
@@ -240,8 +242,14 @@ function applyMirrorOversightSettings(settings, saved = {}, options = {}) {
   });
 
   const savedAvailableHeating = saved.availableHeating || {};
-  settings.availableHeating.mirrors = Math.max(0, Math.floor(Number(savedAvailableHeating.mirrors) || 0));
-  settings.availableHeating.lanterns = Math.max(0, Math.floor(Number(savedAvailableHeating.lanterns) || 0));
+  const availableMirrorCount = Math.max(0, Number(savedAvailableHeating.mirrors) || 0);
+  const availableLanternCount = Math.max(0, Number(savedAvailableHeating.lanterns) || 0);
+  settings.availableHeating.mirrors = settings.advancedOversight
+    ? availableMirrorCount
+    : Math.floor(availableMirrorCount);
+  settings.availableHeating.lanterns = settings.advancedOversight
+    ? availableLanternCount
+    : Math.floor(availableLanternCount);
 
   const savedAuto = saved.autoAssign || {};
   mergeSettingKeys(settings.autoAssign, savedAuto).forEach(zone => {
@@ -359,6 +367,24 @@ function canControlLanternDayNightCycle() {
     || projectManager?.projects?.artificialSky?.isCompleted === true;
 }
 
+function syncLanternDayNightPeriod(project) {
+  const celestial = terraforming.celestialParameters;
+  const period = project.lanternDayNightPeriod === null
+    ? (celestial.rogue
+      ? (project.lanternDayNightFallbackPeriod || celestial.dayNightPeriod || celestial.rotationPeriod || 24)
+      : (celestial.rotationPeriod || celestial.spinPeriod || 24))
+    : project.lanternDayNightPeriod;
+  if (celestial.dayNightPeriod === period) return;
+
+  celestial.dayNightPeriod = period;
+  const durationData = rotationPeriodToDuration(period);
+  const progress = dayNightCycle.getDayProgress();
+  dayNightCycle.dayDuration = durationData.duration;
+  dayNightCycle.nightDuration = durationData.duration;
+  dayNightCycle.rotationDirection = durationData.direction;
+  dayNightCycle.setDayProgress(progress);
+}
+
 function isLanternMirrorFacilityAvailable() {
   const lantern = buildings.hyperionLantern;
   return !!(lantern
@@ -377,11 +403,6 @@ function canShowLanternMirrorFacilityStatus(project) {
 
 var mirrorOversightSettings = null;
 
-function formatResourceLabel(resource) {
-  if (!resource) return '';
-  return resource.charAt(0).toUpperCase() + resource.slice(1);
-}
-
 function attachProjectInfoTooltips(rootElement) {
   if (!rootElement) return;
   rootElement.querySelectorAll('.info-tooltip-icon[data-tooltip-text]').forEach(icon => {
@@ -391,6 +412,7 @@ function attachProjectInfoTooltips(rootElement) {
 
 function clearQuickBuildCost(element) {
   if (!element) return;
+  cleanupDynamicTooltipsIn(element);
   element.textContent = '';
   element.dataset.keys = '';
   element._list = null;
@@ -416,7 +438,7 @@ function updateQuickBuildCostDisplay(element, building, buildCount) {
     for (const resource in categoryCost) {
       items.push({
         key: `${category}.${resource}`,
-        label: formatResourceLabel(resource),
+        label: resources[category][resource].displayName,
         required: categoryCost[resource],
         available: resources?.[category]?.[resource]?.value ?? 0,
       });
@@ -445,6 +467,8 @@ function updateQuickBuildCostDisplay(element, building, buildCount) {
     element.appendChild(list);
     items.forEach((item, idx) => {
       const span = document.createElement('span');
+      span._costTextNode = document.createElement('span');
+      span.appendChild(span._costTextNode);
       element._spans.set(item.key, span);
       list.appendChild(span);
       if (idx < items.length - 1) {
@@ -457,10 +481,19 @@ function updateQuickBuildCostDisplay(element, building, buildCount) {
     const span = element._spans.get(item.key);
     if (!span) return;
     const text = `${item.label}: ${formatNumber(item.required, true)}`;
-    if (span.textContent !== text) {
-      span.textContent = text;
+    if (span._costTextNode.textContent !== text) {
+      span._costTextNode.textContent = text;
     }
+    const tooltipLines = [
+      getSpaceMirrorText('ui.projects.costTooltip.required', 'Required: {value}', {
+        value: formatNumber(item.required, true)
+      }),
+      getSpaceMirrorText('ui.projects.costTooltip.colonyAvailable', 'Colony available: {value}', {
+        value: formatNumber(item.available, true)
+      })
+    ];
     const hasEnough = item.available >= item.required;
+    syncCostExplanationTooltip(span, tooltipLines.join('\n'), !hasEnough);
     const color = hasEnough ? '' : 'red';
     if (span.style.color !== color) {
       span.style.color = color;
@@ -1962,24 +1995,27 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
   return Math.max(totalFluxForZone, 2.4e-5);
 }
 
-// Priority-aware batched solver with warm start and tiny number of physics calls.
-// Strategy:
-//  - Warm start from last tick's assignments (or current ones if present), then adjust.
-//  - For each priority pass, build a small set of candidate batched moves:
-//      (+Δ mirrors to zone with/without reversal, +Δ lanterns to zone, +Δ focus)
-//    where Δ is computed from a probe to estimate per-unit impact.
-//  - Evaluate candidates by calling terraforming.updateSurfaceTemperature() only a handful of times,
-//    pick the best improving candidate(s), commit, repeat a small, capped number of times per pass.
-//  - Save the resulting assignment as lastSolution for next tick.
+// The solver starts from the current assignment fluxes, then tunes the distribution
+// for the climate state that will enter the next fixed physics step.
 function runAdvancedOversightAssignments(project, deltaTime) {
-  if (!SpaceMirrorAdvancedOversightModule) return;
-  SpaceMirrorAdvancedOversightModule.runAssignments(project, mirrorOversightSettings, deltaTime);
+  if (
+    isEquilibrating ||
+    !mirrorOversightSettings.advancedOversight ||
+    !isSpaceMirrorFacilityFlagActive('advancedOversight')
+  ) {
+    return;
+  }
+  sanitizeMirrorDistribution();
+  SpaceMirrorAdvancedOversight.runAssignments(project, mirrorOversightSettings, deltaTime);
 }
 
 class SpaceMirrorFacilityProject extends Project {
   constructor(config, name) {
     super(config, name);
     this.reversalAvailable = false;
+    this.lanternDayNightPeriod = null;
+    this.lanternDayNightFallbackPeriod = null;
+    this.needsLanternDayNightPeriodMigration = false;
     this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
     mirrorOversightSettings = this.mirrorOversightSettings;
   }
@@ -2040,11 +2076,6 @@ class SpaceMirrorFacilityProject extends Project {
   update(deltaTime) {
     this.enforceMirrorLockout();
     sanitizeMirrorDistribution();
-    try {
-      if (mirrorOversightSettings.advancedOversight && isSpaceMirrorFacilityFlagActive('advancedOversight')) {
-        runAdvancedOversightAssignments(this, deltaTime);
-      }
-    } catch (e) { /* swallow to avoid breaking tick */ }
     super.update(deltaTime);
   }
 
@@ -2152,10 +2183,10 @@ class SpaceMirrorFacilityProject extends Project {
             <span id="total-lantern-area" class="stat-value">0 W/m²</span>
           </div>
         </div>
-        <div id="rogue-day-night-control" class="control-group" style="display:none; margin-top:12px; gap:8px; flex-wrap:nowrap; align-items:center;">
-          <label for="rogue-day-night-period" style="white-space:nowrap;">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.dayNight.periodHours', 'Day-Night Period (hours):')}</label>
-          <input type="number" id="rogue-day-night-period" min="1" max="1000" step="1" value="24" style="width:80px; flex-shrink:0;">
-          <span class="info-tooltip-icon" style="flex-shrink:0;" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.dayNight.tooltip', 'Control the day-night cycle duration for this world (1-1000 hours). Lanterns can provide artificial sunlight on a custom schedule.')}">&#9432;</span>
+        <div id="rogue-day-night-control" class="lantern-day-night-control" style="display:none;">
+          <label class="quick-build-label" for="rogue-day-night-period">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.dayNight.periodHours', 'Day-Night Period (hours):')}</label>
+          <input type="number" id="rogue-day-night-period" class="lantern-day-night-period-input" min="1" max="1000" step="1">
+          <span class="info-tooltip-icon" style="flex-shrink:0;" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.dayNight.tooltip', 'Set a 1-1000 hour day-night period for Lanterns. Leave this blank to follow the world\'s current natural day-night cycle, including changes made by Planetary Thrusters. Delete the number to return to the natural cycle.')}">&#9432;</span>
         </div>
       </div>
       <div class="mirror-facility-overlay">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.status.incompleteLanternOverlay', 'Complete facility to enable lanterns')}</div>
@@ -2314,16 +2345,19 @@ class SpaceMirrorFacilityProject extends Project {
     
     if (rogueDayNightInput) {
       const applyRogueDayNightPeriod = () => {
-        const newPeriod = Math.max(1, Math.min(1000, Number(rogueDayNightInput.value) || 24));
+        if (rogueDayNightInput.value === '') {
+          this.lanternDayNightPeriod = null;
+          syncLanternDayNightPeriod(this);
+          return;
+        }
+        const newPeriod = Math.max(1, Math.min(1000, Number(rogueDayNightInput.value)));
+        if (this.lanternDayNightPeriod === null) {
+          this.lanternDayNightFallbackPeriod = terraforming.celestialParameters.dayNightPeriod || 24;
+        }
+        this.lanternDayNightPeriod = newPeriod;
         rogueDayNightInput.value = newPeriod;
         if (canControlLanternDayNightCycle()) {
-          terraforming.celestialParameters.rotationPeriod = newPeriod;
-          const durationData = rotationPeriodToDuration(newPeriod);
-          const progress = dayNightCycle.getDayProgress();
-          dayNightCycle.dayDuration = durationData.duration;
-          dayNightCycle.nightDuration = durationData.duration;
-          dayNightCycle.rotationDirection = durationData.direction;
-          dayNightCycle.setDayProgress(progress);
+          syncLanternDayNightPeriod(this);
         }
       };
 
@@ -2413,18 +2447,16 @@ class SpaceMirrorFacilityProject extends Project {
         elements.lanternDetails.rogueDayNightControl.style.display = (showLantern && canControlDayNight) ? 'flex' : 'none';
       }
       if (elements.lanternDetails.rogueDayNightInput && canControlDayNight && typeof terraforming !== 'undefined') {
-        const rawPeriod = terraforming.celestialParameters.rotationPeriod || 24;
-        const clampedPeriod = Math.max(1, Math.min(1000, rawPeriod));
-        if (clampedPeriod !== rawPeriod) {
-          terraforming.celestialParameters.rotationPeriod = clampedPeriod;
-          const durationData = rotationPeriodToDuration(clampedPeriod);
-          dayNightCycle.dayDuration = durationData.duration;
-          dayNightCycle.nightDuration = durationData.duration;
-          dayNightCycle.rotationDirection = durationData.direction;
+        if (this.needsLanternDayNightPeriodMigration) {
+          const storedPeriod = terraforming.celestialParameters.dayNightPeriod || 24;
+          this.lanternDayNightPeriod = Math.max(1, Math.min(1000, storedPeriod));
+          this.lanternDayNightFallbackPeriod = storedPeriod;
+          this.needsLanternDayNightPeriodMigration = false;
         }
         const dayNightInput = elements.lanternDetails.rogueDayNightInput;
         if (document.activeElement !== dayNightInput && dayNightInput.dataset.editing !== 'true') {
-          dayNightInput.value = clampedPeriod;
+          const inputValue = this.lanternDayNightPeriod === null ? '' : this.lanternDayNightPeriod;
+          if (dayNightInput.value !== String(inputValue)) dayNightInput.value = inputValue;
         }
       }
       
@@ -2533,12 +2565,26 @@ class SpaceMirrorFacilityProject extends Project {
   saveState() {
     return {
       ...super.saveState(),
+      lanternDayNightPeriod: this.lanternDayNightPeriod,
+      lanternDayNightFallbackPeriod: this.lanternDayNightFallbackPeriod,
       mirrorOversightSettings: JSON.parse(JSON.stringify(this.mirrorOversightSettings)),
     };
   }
 
   loadState(state) {
     super.loadState(state);
+    if (Object.prototype.hasOwnProperty.call(state || {}, 'lanternDayNightPeriod')) {
+      const savedPeriod = Number(state.lanternDayNightPeriod);
+      this.lanternDayNightPeriod = state.lanternDayNightPeriod === null
+        ? null
+        : Math.max(1, Math.min(1000, savedPeriod));
+      this.lanternDayNightFallbackPeriod = state.lanternDayNightFallbackPeriod || null;
+      this.needsLanternDayNightPeriodMigration = false;
+    } else {
+      this.lanternDayNightPeriod = null;
+      this.lanternDayNightFallbackPeriod = null;
+      this.needsLanternDayNightPeriodMigration = true;
+    }
     this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
     mirrorOversightSettings = this.mirrorOversightSettings;
     applyMirrorOversightSettings(

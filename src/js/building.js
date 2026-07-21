@@ -2058,56 +2058,21 @@ class Building extends EffectableEntity {
 
 const buildingConstructorRegistry = {};
 
-function registerBuildingConstructor(name, ctor) {
-  buildingConstructorRegistry[name] = ctor;
+function registerBuildingConstructor(ctor) {
+  buildingConstructorRegistry[ctor.name] = ctor;
 }
 
-const constructors = {
-  oreMine: 'OreMine',
-  sandQuarry: 'SandQuarry',
-  glassSmelter: 'MultiRecipesBuilding',
-  electronicsFactory: 'MultiRecipesBuilding',
-  sandSeeder: 'SandSeeder',
-  vanadiumHazeSeeder: 'VanadiumHazeSeeder',
-  androidFactory: 'AndroidFactory',
-  cloningFacility: 'CloningFacility',
-  dustFactory: 'DustFactory',
-  ghgFactory: 'GhgFactory',
-  oxygenFactory: 'OxygenFactory',
-  grapheneFactory: 'GrapheneFactory',
-  massDriver: 'MassDriver',
-  biodome: 'Biodome',
-  dysonReceiver: 'dysonReceiver',
-  solarPanel: 'solarPanel',
-  windTurbine: 'windTurbine',
-  boschReactor: 'ChemicalReactor',
-  pyrolyzer: 'Pyrolyzer',
-  waterTank: 'WaterTank',
-  hydrogenReservoir: 'HydrogenReservoir',
-  antimatterBattery: 'AntimatterBattery',
-  spaceMirror: 'SpaceMirror',
-  androidHousing: 'AndroidHousing',
-  hyperionLantern: 'HyperionLantern',
-  trashIncinerator: 'MultiRecipesBuilding',
-  junkRecycler: 'MultiRecipesBuilding',
-  storageDepot: 'MultiRecipesBuilding',
-  antimatterFarm: 'MultiRecipesBuilding',
-  fusionPowerPlant: 'FusionPowerPlant',
-  superalloyFusionReactor: 'SuperalloyFusionReactor',
-  laserCannon: 'LaserCannon'
-};
-
-function loadConstructor(name) {
-  const registered = buildingConstructorRegistry[name];
+function loadConstructor(type, constructorFile) {
+  if (type === 'Building') return Building;
+  const registered = buildingConstructorRegistry[type];
   if (registered) return registered;
-  const ctorName = constructors[name];
-  if (!ctorName) return Building;
-  if (typeof globalThis !== 'undefined' && globalThis[ctorName]) {
-    return globalThis[ctorName];
+  if (!type) return Building;
+  if (typeof window !== 'undefined' && window[type]) {
+    return window[type];
   }
   if (typeof require !== 'undefined') {
-    const mod = require(`./buildings/${ctorName}.js`);
-    return mod[ctorName] || Building;
+    const mod = require(`./buildings/${constructorFile || type}.js`);
+    return mod[type] || Building;
   }
   return Building;
 }
@@ -2121,7 +2086,7 @@ function initializeBuildings(buildingsParameters) {
     const buildingConfig = {
       ...buildingData
     };
-    const Ctor = loadConstructor(buildingName);
+    const Ctor = loadConstructor(buildingData.type, buildingData.constructorFile);
     buildings[buildingName] = new Ctor(buildingConfig, buildingName);
   }
   initializeBuildingTabs();

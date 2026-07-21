@@ -2307,7 +2307,10 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
             ppsColor = '';
           }
         }
-        ppsElement.style.color = swapResourceRateColor(resource, ppsColor);
+        const displayRateColor = swapResourceRateColor(resource, ppsColor);
+        if (ppsElement.style.color !== displayRateColor) {
+          ppsElement.style.color = displayRateColor;
+        }
       }
     }
   }

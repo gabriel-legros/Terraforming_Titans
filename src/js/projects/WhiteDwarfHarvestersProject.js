@@ -20,11 +20,11 @@ class WhiteDwarfHarvestersProject extends WhiteDwarfHarvestersBase {
   }
 
   getExpansionRateSourceLabel() {
-    return 'White Dwarf Harvester expansion';
+    return this.getProjectText('rateSources.expansion', null, 'White Dwarf Harvester expansion');
   }
 
   getOperationRateSourceLabel() {
-    return 'White Dwarf Harvesting';
+    return this.getProjectText('rateSources.operation', null, 'White Dwarf Harvesting');
   }
 
   shouldKeepRunningOnTravel() {

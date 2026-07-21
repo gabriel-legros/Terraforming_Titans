@@ -382,29 +382,56 @@ function setMachinerySummaryLines(container, lines) {
     return;
   }
 
-  while (container.firstChild) {
-    container.removeChild(container.firstChild);
-  }
-
   const doc = getHazardousMachineryDocument();
-  if (!doc || !lines.length) {
+  if (!doc) {
     return;
   }
 
-  lines.forEach((line) => {
-    const row = doc.createElement('div');
-    row.className = 'hazard-summary__line';
-
-    const text = typeof line === 'string' ? line : line.text;
-    row.textContent = text || '';
-
-    if (line && line.tooltip) {
-      row.appendChild(doc.createTextNode(' '));
-      row.appendChild(createMachineryInfoIcon(line.tooltip));
+  const rows = container._machinerySummaryRows || (container._machinerySummaryRows = []);
+  lines.forEach((line, index) => {
+    let record = rows[index];
+    if (!record) {
+      const row = doc.createElement('div');
+      row.className = 'hazard-summary__line';
+      const textElement = doc.createElement('span');
+      const spacer = doc.createElement('span');
+      spacer.textContent = ' ';
+      spacer.hidden = true;
+      row.appendChild(textElement);
+      row.appendChild(spacer);
+      container.appendChild(row);
+      record = { row, textElement, spacer, icon: null, tooltip: null };
+      rows[index] = record;
     }
 
-    container.appendChild(row);
+    const text = typeof line === 'string' ? line : line.text;
+    const textValue = text || '';
+    if (record.textElement.textContent !== textValue) {
+      record.textElement.textContent = textValue;
+    }
+    if (record.row.style.display !== '') {
+      record.row.style.display = '';
+    }
+
+    if (line && line.tooltip) {
+      if (!record.icon) {
+        record.icon = createMachineryInfoIcon(line.tooltip);
+        record.row.appendChild(record.icon);
+      }
+      record.tooltip = ensureMachineryAttachedInfoTooltip(record.icon, record.tooltip, line.tooltip);
+      record.spacer.hidden = false;
+      record.icon.hidden = false;
+    } else if (record.icon) {
+      record.spacer.hidden = true;
+      record.icon.hidden = true;
+    }
   });
+
+  for (let index = lines.length; index < rows.length; index += 1) {
+    if (rows[index].row.style.display !== 'none') {
+      rows[index].row.style.display = 'none';
+    }
+  }
 }
 
 function ensureMachineryHeaderRow() {
@@ -538,6 +565,7 @@ function renderMachineryFactorRows(factors) {
       }
       record.labelTooltip = ensureMachineryAttachedInfoTooltip(record.labelIcon, record.labelTooltip, desiredTooltip);
     } else if (record.labelIcon) {
+      cleanupDynamicTooltipsIn(record.labelIcon);
       record.labelIcon.remove();
       record.labelIcon = null;
       record.labelTooltip = null;

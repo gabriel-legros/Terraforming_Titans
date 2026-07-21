@@ -366,7 +366,6 @@ class GoldenAsteroid {
   
     update(delta, realDelta = delta) {
         this.updateChaosWarning();
-        updateResortVacationGoldButton();
         if (this.celebrationActive) {
           this.celebrationRemainingTime -= realDelta;
           if (this.celebrationRemainingTime > 0) {

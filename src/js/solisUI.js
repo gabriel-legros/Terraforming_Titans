@@ -21,6 +21,7 @@ const solisUIElements = {
   questContainer: null,
   questMessage: null,
   questDetail: null,
+  questText: null,
   cooldownContainer: null,
   cooldownText: null,
   cooldownBar: null,
@@ -113,12 +114,17 @@ function setSolisShopMultiplier(nextValue) {
 }
 
 function updateSolisShopMultiplierControls() {
-  if (solisShopControls.divideButton) {
+  if (solisShopControls.divideButton && solisShopControls.divideButton.textContent !== '/10') {
     solisShopControls.divideButton.textContent = '/10';
   }
   if (solisShopControls.multiplyButton) {
-    solisShopControls.multiplyButton.textContent = 'x10';
-    solisShopControls.multiplyButton.disabled = getSolisShopPurchaseMultiplier() >= SOLIS_SHOP_MAX_PURCHASE_MULTIPLIER;
+    if (solisShopControls.multiplyButton.textContent !== 'x10') {
+      solisShopControls.multiplyButton.textContent = 'x10';
+    }
+    const disabled = getSolisShopPurchaseMultiplier() >= SOLIS_SHOP_MAX_PURCHASE_MULTIPLIER;
+    if (solisShopControls.multiplyButton.disabled !== disabled) {
+      solisShopControls.multiplyButton.disabled = disabled;
+    }
   }
 }
 
@@ -227,6 +233,15 @@ function ensureSolisQuestElements() {
     refs.questDetail.textContent = '';
 
     questContainer.append(refs.questMessage, refs.questDetail);
+  }
+
+  if (
+    !refs.questText
+    || refs.questText.parentElement !== refs.questDetail
+  ) {
+    refs.questDetail.textContent = '';
+    refs.questText = document.createElement('span');
+    refs.questDetail.append(refs.questText);
   }
 
   return refs;
@@ -359,14 +374,14 @@ function createShopItem(key) {
 
   const purchased = document.createElement('span');
   purchased.classList.add('solis-shop-item-count');
-  purchased.textContent = getSolisUIText('purchasedLabel', {}, 'Purchased: ');
+  const purchasedLabel = document.createTextNode(getSolisUIText('purchasedLabel', {}, 'Purchased: '));
   const countSpan = document.createElement('span');
   countSpan.id = `solis-shop-${key}-count`;
-  purchased.appendChild(countSpan);
+  purchased.append(purchasedLabel, countSpan);
   actions.appendChild(purchased);
 
   item.appendChild(actions);
-  const elementRecord = { button, cost: costSpan, costWrapper, count: countSpan, purchased, item, repeatable };
+  const elementRecord = { button, cost: costSpan, costWrapper, count: countSpan, purchased, purchasedLabel, item, repeatable };
 
   if (key === 'researchUpgrade') {
     const list = document.createElement('ul');
@@ -399,7 +414,9 @@ function ensureSolisShopHeader() {
   if (!shopSection) {
     return refs;
   }
-  shopSection.classList.add('solis-shop-container');
+  if (!shopSection.classList.contains('solis-shop-container')) {
+    shopSection.classList.add('solis-shop-container');
+  }
 
   if (!refs.shopHeader || refs.shopHeader.parentElement !== shopSection || !refs.shopHeader.isConnected) {
     refs.shopHeader = shopSection.querySelector('.solis-shop-header');
@@ -417,7 +434,10 @@ function ensureSolisShopHeader() {
     refs.shopTitle = document.createElement('h3');
     refs.shopHeader.appendChild(refs.shopTitle);
   }
-  refs.shopTitle.textContent = getSolisUIText('shopTitle', {}, 'Solis Shop');
+  const shopTitle = getSolisUIText('shopTitle', {}, 'Solis Shop');
+  if (refs.shopTitle.textContent !== shopTitle) {
+    refs.shopTitle.textContent = shopTitle;
+  }
 
   if (!refs.shopHeaderControls || refs.shopHeaderControls.parentElement !== refs.shopHeader || !refs.shopHeaderControls.isConnected) {
     refs.shopHeaderControls = refs.shopHeader.querySelector('.solis-shop-header-controls');
@@ -468,7 +488,9 @@ function ensureDonationSection() {
   }
   const donationSection = refs.donationSection || donationItems.parentElement;
   refs.donationSection = donationSection;
-  donationSection.classList.add('solis-shop-container', 'hidden');
+  if (!donationSection.classList.contains('solis-shop-container')) {
+    donationSection.classList.add('solis-shop-container');
+  }
 
   if (!refs.donationTitle || refs.donationTitle.parentElement !== donationSection || !refs.donationTitle.isConnected) {
     refs.donationTitle = donationSection.querySelector('h3');
@@ -477,7 +499,10 @@ function ensureDonationSection() {
     refs.donationTitle = document.createElement('h3');
     donationSection.insertBefore(refs.donationTitle, donationItems);
   }
-  refs.donationTitle.textContent = getSolisUIText('donationTitle', {}, 'Alien Artifact Donation');
+  const donationTitle = getSolisUIText('donationTitle', {}, 'Alien Artifact Donation');
+  if (refs.donationTitle.textContent !== donationTitle) {
+    refs.donationTitle.textContent = donationTitle;
+  }
 
   if (!refs.donationLabel || !refs.donationLabel.isConnected) {
     refs.donationLabel = document.getElementById('solis-donation-label');
@@ -554,7 +579,9 @@ function ensureResearchShopSection() {
   }
   const researchShop = refs.researchShop || researchShopItems.parentElement;
   refs.researchShop = researchShop;
-  researchShop.classList.add('solis-shop-container', 'hidden');
+  if (!researchShop.classList.contains('solis-shop-container')) {
+    researchShop.classList.add('solis-shop-container');
+  }
 
   if (!refs.researchTitle || refs.researchTitle.parentElement !== researchShop || !refs.researchTitle.isConnected) {
     refs.researchTitle = researchShop.querySelector('h3');
@@ -563,7 +590,10 @@ function ensureResearchShopSection() {
     refs.researchTitle = document.createElement('h3');
     researchShop.insertBefore(refs.researchTitle, researchShopItems);
   }
-  refs.researchTitle.textContent = getSolisUIText('researchUpgradesTitle', {}, 'Research Upgrades');
+  const researchTitle = getSolisUIText('researchUpgradesTitle', {}, 'Research Upgrades');
+  if (refs.researchTitle.textContent !== researchTitle) {
+    refs.researchTitle.textContent = researchTitle;
+  }
   return refs;
 }
 
@@ -575,7 +605,9 @@ function ensureAutomationShopSection() {
   }
   const automationShop = refs.automationShop || automationShopItems.parentElement;
   refs.automationShop = automationShop;
-  automationShop.classList.add('solis-shop-container', 'hidden');
+  if (!automationShop.classList.contains('solis-shop-container')) {
+    automationShop.classList.add('solis-shop-container');
+  }
 
   if (!refs.automationTitle || refs.automationTitle.parentElement !== automationShop || !refs.automationTitle.isConnected) {
     refs.automationTitle = automationShop.querySelector('h3');
@@ -584,7 +616,10 @@ function ensureAutomationShopSection() {
     refs.automationTitle = document.createElement('h3');
     automationShop.insertBefore(refs.automationTitle, automationShopItems);
   }
-  refs.automationTitle.textContent = getSolisUIText('automationUpgradesTitle', {}, 'Automation Upgrades');
+  const automationTitle = getSolisUIText('automationUpgradesTitle', {}, 'Automation Upgrades');
+  if (refs.automationTitle.textContent !== automationTitle) {
+    refs.automationTitle.textContent = automationTitle;
+  }
   return refs;
 }
 
@@ -750,19 +785,28 @@ function updateSolisDynamicShopItems(refs) {
     syncConditionalShopItem(key, enabled, refs.automationShopItems);
   });
   if (refs.automationShop) {
-    refs.automationShop.classList.toggle('hidden', automationVisible === 0);
+    const hidden = automationVisible === 0;
+    if (refs.automationShop.classList.contains('hidden') !== hidden) {
+      refs.automationShop.classList.toggle('hidden', hidden);
+    }
   }
 }
 
 function updateSolisHeader(refs) {
   if (refs.pointsValue) {
-    refs.pointsValue.textContent = formatSolisValue(solisManager.solisPoints, false, 2);
+    const pointsText = formatSolisValue(solisManager.solisPoints, false, 2);
+    if (refs.pointsValue.textContent !== pointsText) {
+      refs.pointsValue.textContent = pointsText;
+    }
   }
   if (refs.pointsSidebarToggle) {
     setToggleButtonState(refs.pointsSidebarToggle, solisManager.showPointsInSidebar);
   }
   if (refs.rewardValue) {
-    refs.rewardValue.textContent = formatSolisValue(solisManager.getCurrentReward(), false, 2);
+    const rewardText = formatSolisValue(solisManager.getCurrentReward(), false, 2);
+    if (refs.rewardValue.textContent !== rewardText) {
+      refs.rewardValue.textContent = rewardText;
+    }
   }
 }
 
@@ -771,57 +815,82 @@ function updateSolisQuestArea(refs) {
   if (refs.questMessage && refs.questDetail) {
     if (quest) {
       const quantity = formatSolisValue(quest.quantity, true, 2);
-      refs.questDetail.textContent = '';
-      refs.questDetail.append(document.createTextNode(`${getSolisUIText('deliverPrefix', {}, 'Deliver')} `));
-
-      const quantitySpan = document.createElement('span');
-      quantitySpan.classList.add('solis-quest-quantity');
-      quantitySpan.textContent = quantity;
-      refs.questDetail.appendChild(quantitySpan);
-
-      refs.questDetail.append(document.createTextNode(` ${getSolisUIText('deliverUnitsOf', {}, 'units of')} `));
-
-      const resourceSpan = document.createElement('span');
-      resourceSpan.classList.add('solis-quest-resource');
-      resourceSpan.textContent = quest.resource;
-      refs.questDetail.appendChild(resourceSpan);
-
-      refs.questMessage.classList.add('hidden');
-      refs.questDetail.classList.remove('hidden');
+      const resourceName = resources.colony[quest.resource].displayName;
+      const questText = getSolisUIText(
+        'deliverQuest',
+        { quantity, resource: resourceName },
+        `Deliver ${quantity} units of ${resourceName}`
+      );
+      if (refs.questText.textContent !== questText) {
+        refs.questText.textContent = questText;
+      }
+      if (!refs.questMessage.classList.contains('hidden')) {
+        refs.questMessage.classList.add('hidden');
+      }
+      if (refs.questDetail.classList.contains('hidden')) {
+        refs.questDetail.classList.remove('hidden');
+      }
     } else {
-      refs.questMessage.textContent = getSolisUIText('noQuestAvailableNow', {}, 'No new quest available at this time.');
-      refs.questMessage.classList.remove('hidden');
-      refs.questDetail.classList.add('hidden');
+      const messageText = getSolisUIText('noQuestAvailableNow', {}, 'No new quest available at this time.');
+      if (refs.questMessage.textContent !== messageText) {
+        refs.questMessage.textContent = messageText;
+      }
+      if (refs.questMessage.classList.contains('hidden')) {
+        refs.questMessage.classList.remove('hidden');
+      }
+      if (!refs.questDetail.classList.contains('hidden')) {
+        refs.questDetail.classList.add('hidden');
+      }
     }
   }
 
   if (refs.completeButton) {
-    refs.completeButton.disabled = !quest || resources.colony[quest.resource].value < quest.quantity;
+    const disabled = !quest || resources.colony[quest.resource].value < quest.quantity;
+    if (refs.completeButton.disabled !== disabled) {
+      refs.completeButton.disabled = disabled;
+    }
   }
 
   const remainingRefresh = solisManager.refreshCooldownRemaining;
   const remainingQuest = solisManager.questCooldownRemaining;
   const remaining = Math.max(remainingRefresh, remainingQuest);
   if (refs.refreshButton) {
-    if (remaining > 0) {
-      refs.refreshButton.disabled = true;
-      refs.refreshButton.textContent = getSolisUIText('refreshWithSeconds', { value: Math.ceil(remaining / 1000) }, `Refresh (${Math.ceil(remaining / 1000)}s)`);
-    } else {
-      refs.refreshButton.disabled = false;
-      refs.refreshButton.textContent = t('ui.common.refresh', {}, 'Refresh');
+    const disabled = remaining > 0;
+    const refreshText = disabled
+      ? getSolisUIText('refreshWithSeconds', { value: Math.ceil(remaining / 1000) }, `Refresh (${Math.ceil(remaining / 1000)}s)`)
+      : t('ui.common.refresh', {}, 'Refresh');
+    if (refs.refreshButton.disabled !== disabled) {
+      refs.refreshButton.disabled = disabled;
+    }
+    if (refs.refreshButton.textContent !== refreshText) {
+      refs.refreshButton.textContent = refreshText;
     }
   }
 
   if (refs.cooldownContainer && refs.cooldownText && refs.cooldownBar) {
     if (!quest && remainingQuest > 0) {
-      refs.cooldownContainer.classList.remove('hidden');
+      if (refs.cooldownContainer.classList.contains('hidden')) {
+        refs.cooldownContainer.classList.remove('hidden');
+      }
       const progress = Math.max(0, 1 - remainingQuest / solisManager.questInterval);
-      refs.cooldownText.textContent = getSolisUIText('nextQuestIn', { value: Math.ceil(remainingQuest / 1000) }, `Next quest in ${Math.ceil(remainingQuest / 1000)}s`);
-      refs.cooldownBar.style.width = `${progress * 100}%`;
+      const cooldownText = getSolisUIText('nextQuestIn', { value: Math.ceil(remainingQuest / 1000) }, `Next quest in ${Math.ceil(remainingQuest / 1000)}s`);
+      const width = `${progress * 100}%`;
+      if (refs.cooldownText.textContent !== cooldownText) {
+        refs.cooldownText.textContent = cooldownText;
+      }
+      if (refs.cooldownBar.style.width !== width) {
+        refs.cooldownBar.style.width = width;
+      }
     } else {
-      refs.cooldownContainer.classList.add('hidden');
-      refs.cooldownText.textContent = '';
-      refs.cooldownBar.style.width = '0%';
+      if (!refs.cooldownContainer.classList.contains('hidden')) {
+        refs.cooldownContainer.classList.add('hidden');
+      }
+      if (refs.cooldownText.textContent !== '') {
+        refs.cooldownText.textContent = '';
+      }
+      if (refs.cooldownBar.style.width !== '0%') {
+        refs.cooldownBar.style.width = '0%';
+      }
     }
   }
 }
@@ -829,36 +898,57 @@ function updateSolisQuestArea(refs) {
 function updateSolisDonationSection(refs) {
   const donationUnlocked = solisManager.isBooleanFlagSet('solisAlienArtifactUpgrade');
   if (refs.donationSection) {
-    refs.donationSection.classList.toggle('hidden', !donationUnlocked);
+    const hidden = !donationUnlocked;
+    if (refs.donationSection.classList.contains('hidden') !== hidden) {
+      refs.donationSection.classList.toggle('hidden', hidden);
+    }
   }
   if (refs.researchShop) {
-    refs.researchShop.classList.toggle('hidden', !donationUnlocked);
+    const hidden = !donationUnlocked;
+    if (refs.researchShop.classList.contains('hidden') !== hidden) {
+      refs.researchShop.classList.toggle('hidden', hidden);
+    }
   }
 
   if (refs.donationCount) {
-    refs.donationCount.textContent = formatSolisValue(resources.special.alienArtifact.value, false, 2);
+    const countText = formatSolisValue(resources.special.alienArtifact.value, false, 2);
+    if (refs.donationCount.textContent !== countText) {
+      refs.donationCount.textContent = countText;
+    }
   }
 
   if (refs.donationLabel) {
     const pointsPerArtifact = 25;
-    refs.donationLabel.textContent = getSolisUIText(
+    const labelText = getSolisUIText(
       'donationLabel',
       { value: formatSolisValue(pointsPerArtifact, false, 2) },
       `Donate artifacts for ${formatSolisValue(pointsPerArtifact, false, 2)} Solis points each`
     );
+    if (refs.donationLabel.textContent !== labelText) {
+      refs.donationLabel.textContent = labelText;
+    }
   }
 
   if (refs.donationInput) {
     if (document.activeElement !== refs.donationInput) {
-      refs.donationInput.value = solisShopControls.donationAmount >= 1e6
+      const inputValue = solisShopControls.donationAmount >= 1e6
         ? formatSolisValue(solisShopControls.donationAmount, true, 3)
         : String(solisShopControls.donationAmount);
+      if (refs.donationInput.value !== inputValue) {
+        refs.donationInput.value = inputValue;
+      }
     }
-    refs.donationInput.dataset.donationAmount = String(solisShopControls.donationAmount);
+    const donationAmount = String(solisShopControls.donationAmount);
+    if (refs.donationInput.dataset.donationAmount !== donationAmount) {
+      refs.donationInput.dataset.donationAmount = donationAmount;
+    }
   }
   if (refs.donationButton) {
-    refs.donationButton.disabled = solisShopControls.donationAmount <= 0
+    const disabled = solisShopControls.donationAmount <= 0
       || solisShopControls.donationAmount > resources.special.alienArtifact.value;
+    if (refs.donationButton.disabled !== disabled) {
+      refs.donationButton.disabled = disabled;
+    }
   }
 }
 
@@ -876,45 +966,62 @@ function updateSolisShopItems() {
       ? solisManager.getUpgradeTotalCost(key, multiplier)
       : solisManager.getUpgradeCost(key);
 
-    if (record.purchased && record.count) {
-      if (atMax) {
-        record.purchased.textContent = getSolisUIText('purchasedMaxed', {}, 'Purchased');
-      } else {
-        record.purchased.textContent = getSolisUIText('purchasedLabel', {}, 'Purchased: ');
-        record.purchased.appendChild(record.count);
-        record.count.textContent = upgrade.purchases;
+    if (record.purchased && record.purchasedLabel && record.count) {
+      const purchasedLabel = atMax
+        ? getSolisUIText('purchasedMaxed', {}, 'Purchased')
+        : getSolisUIText('purchasedLabel', {}, 'Purchased: ');
+      const countText = atMax ? '' : String(upgrade.purchases);
+      if (record.purchasedLabel.nodeValue !== purchasedLabel) {
+        record.purchasedLabel.nodeValue = purchasedLabel;
+      }
+      if (record.count.textContent !== countText) {
+        record.count.textContent = countText;
       }
     }
 
     if (atMax) {
-      if (record.button) {
+      if (record.button && !record.button.classList.contains('hidden')) {
         record.button.classList.add('hidden');
       }
-      if (record.costWrapper) {
+      if (record.costWrapper && !record.costWrapper.classList.contains('hidden')) {
         record.costWrapper.classList.add('hidden');
       }
     } else {
       if (record.cost) {
-        record.cost.textContent = record.repeatable
+        const costText = record.repeatable
           ? formatSolisValue(totalCost, false, 0)
-          : totalCost;
+          : String(totalCost);
+        if (record.cost.textContent !== costText) {
+          record.cost.textContent = costText;
+        }
       }
-      if (record.costWrapper) {
+      if (record.costWrapper && record.costWrapper.classList.contains('hidden')) {
         record.costWrapper.classList.remove('hidden');
       }
       if (record.button) {
-        record.button.classList.remove('hidden');
-        record.button.textContent = record.repeatable
+        if (record.button.classList.contains('hidden')) {
+          record.button.classList.remove('hidden');
+        }
+        const buttonText = record.repeatable
           ? getSolisUIText('buyWithMultiplier', { value: multiplier }, `Buy x${multiplier}`)
           : getSolisUIText('buyButton', {}, 'Buy');
-        record.button.disabled = solisManager.solisPoints < totalCost;
+        if (record.button.textContent !== buttonText) {
+          record.button.textContent = buttonText;
+        }
+        const disabled = solisManager.solisPoints < totalCost;
+        if (record.button.disabled !== disabled) {
+          record.button.disabled = disabled;
+        }
       }
     }
 
     if (key === 'researchUpgrade' && record.listItems) {
       const purchases = solisManager.shopUpgrades.researchUpgrade.purchases;
       record.listItems.forEach((item, index) => {
-        item.classList.toggle('solis-research-completed', index < purchases);
+        const completed = index < purchases;
+        if (item.classList.contains('solis-research-completed') !== completed) {
+          item.classList.toggle('solis-research-completed', completed);
+        }
       });
     }
   }

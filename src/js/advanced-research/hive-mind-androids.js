@@ -38,7 +38,7 @@ function updateAndroidResearch(deltaTime, resources, globalEffects, accumulatedC
   } else {
     researchResource.value += increase;
   }
-  researchResource.modifyRate(rate, 'Android Hive Mind', 'global');
+  researchResource.modifyRate(rate, t('ui.resourceRates.sources.androidHiveMind', {}, 'Android Hive Mind'), 'global');
 }
 
 if (typeof module !== 'undefined' && module.exports) {

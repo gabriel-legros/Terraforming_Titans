@@ -313,39 +313,88 @@ function updateLiftersUI(project) {
   const totalBigInt = available + assigned;
   const step = project.getAssignmentStep();
 
-  elements.totalValue.textContent = formatNumber(totalBigInt, true, 2);
-  elements.assignedValue.textContent = formatNumber(assigned, true, 2);
-  elements.unassignedValue.textContent = formatNumber(available, true, 2);
-  elements.statusValue.textContent = project.statusText || 'Idle';
+  const totalText = formatNumber(totalBigInt, true, 2);
+  const assignedText = formatNumber(assigned, true, 2);
+  const availableText = formatNumber(available, true, 2);
+  const statusText = project.statusText || 'Idle';
+  if (elements.totalValue.textContent !== totalText) {
+    elements.totalValue.textContent = totalText;
+  }
+  if (elements.assignedValue.textContent !== assignedText) {
+    elements.assignedValue.textContent = assignedText;
+  }
+  if (elements.unassignedValue.textContent !== availableText) {
+    elements.unassignedValue.textContent = availableText;
+  }
+  if (elements.statusValue.textContent !== statusText) {
+    elements.statusValue.textContent = statusText;
+  }
   const energyPerLifterDisplay = project.getEnergyPerLifterDisplayValue
     ? project.getEnergyPerLifterDisplayValue()
     : project.getEffectiveEnergyPerUnit();
   const energyRateDisplay = project.getEnergyRateDisplayValue
     ? project.getEnergyRateDisplayValue()
     : project.lastEnergyPerSecond;
-  elements.energyPerLifterValue.textContent = formatPerSecond(energyPerLifterDisplay);
-  elements.energyRateValue.textContent = formatPerSecond(energyRateDisplay);
+  const energyPerLifterText = formatPerSecond(energyPerLifterDisplay);
+  const energyRateText = formatPerSecond(energyRateDisplay);
+  if (elements.energyPerLifterValue.textContent !== energyPerLifterText) {
+    elements.energyPerLifterValue.textContent = energyPerLifterText;
+  }
+  if (elements.energyRateValue.textContent !== energyRateText) {
+    elements.energyRateValue.textContent = energyRateText;
+  }
   const expansionRate = project.isActive ? (1000 / project.getEffectiveDuration()) : 0;
-  elements.expansionRateValue.textContent = getProjectLiftersUIText(project, 'expansionRate', '{value} lifters/s', {
+  const expansionText = getProjectLiftersUIText(project, 'expansionRate', '{value} lifters/s', {
     value: formatNumber(expansionRate, true, 3)
   });
+  if (elements.expansionRateValue.textContent !== expansionText) {
+    elements.expansionRateValue.textContent = expansionText;
+  }
   const supercharge = project.getEffectiveSuperchargeMultiplier();
   const energyMultiplier = Math.pow(supercharge, project.getEffectiveSuperchargeExponent());
-  elements.superchargeSlider.max = String(project.getEffectiveSuperchargeMaxMultiplier());
-  elements.superchargeContainer.style.display = project.hasSuperchargeUnlocked() ? 'grid' : 'none';
-  elements.superchargeValue.textContent = `x${formatNumber(project.getEffectiveSuperchargeMultiplier(), true, 0)}`;
-  elements.superchargeSlider.value = String(project.getEffectiveSuperchargeMultiplier());
-  elements.superchargeSlider.disabled = !project.hasSuperchargeUnlocked();
-  elements.superchargeEnergyValue.textContent = getLiftersProjectText(
+  const superchargeMax = String(project.getEffectiveSuperchargeMaxMultiplier());
+  const superchargeUnlocked = project.hasSuperchargeUnlocked();
+  const superchargeDisabled = !superchargeUnlocked;
+  const superchargeDisplay = superchargeUnlocked ? 'grid' : 'none';
+  const superchargeText = `x${formatNumber(supercharge, true, 0)}`;
+  const superchargeValue = String(supercharge);
+  const superchargeEnergyText = getLiftersProjectText(
     'superchargeEnergy',
     { value: formatNumber(energyMultiplier, false, 2) },
     'Energy x{value}'
   );
+  if (elements.superchargeSlider.max !== superchargeMax) {
+    elements.superchargeSlider.max = superchargeMax;
+  }
+  if (elements.superchargeContainer.style.display !== superchargeDisplay) {
+    elements.superchargeContainer.style.display = superchargeDisplay;
+  }
+  if (elements.superchargeValue.textContent !== superchargeText) {
+    elements.superchargeValue.textContent = superchargeText;
+  }
+  if (elements.superchargeSlider.value !== superchargeValue) {
+    elements.superchargeSlider.value = superchargeValue;
+  }
+  if (elements.superchargeSlider.disabled !== superchargeDisabled) {
+    elements.superchargeSlider.disabled = superchargeDisabled;
+  }
+  if (elements.superchargeEnergyValue.textContent !== superchargeEnergyText) {
+    elements.superchargeEnergyValue.textContent = superchargeEnergyText;
+  }
 
-  elements.runCheckbox.checked = project.isRunning;
-  elements.runCheckbox.disabled = totalBigInt <= 0n;
-  elements.stepDownButton.disabled = totalBigInt <= 0n;
-  elements.stepUpButton.disabled = totalBigInt <= 0n;
+  const controlsDisabled = totalBigInt <= 0n;
+  if (elements.runCheckbox.checked !== project.isRunning) {
+    elements.runCheckbox.checked = project.isRunning;
+  }
+  if (elements.runCheckbox.disabled !== controlsDisabled) {
+    elements.runCheckbox.disabled = controlsDisabled;
+  }
+  if (elements.stepDownButton.disabled !== controlsDisabled) {
+    elements.stepDownButton.disabled = controlsDisabled;
+  }
+  if (elements.stepUpButton.disabled !== controlsDisabled) {
+    elements.stepUpButton.disabled = controlsDisabled;
+  }
   const displayKeys = [project.getUnassignedAssignmentKey()].concat(project.getRecipeKeys());
   displayKeys.forEach((key) => {
     const isUnassigned = project.isUnassignedAssignmentKey(key);
@@ -356,7 +405,10 @@ function updateLiftersUI(project) {
     }
 
     const isAvailable = isUnassigned || project.isRecipeAvailable(key, recipe);
-    row.wrapper.style.display = isAvailable ? '' : 'none';
+    const rowDisplay = isAvailable ? '' : 'none';
+    if (row.wrapper.style.display !== rowDisplay) {
+      row.wrapper.style.display = rowDisplay;
+    }
     if (!isAvailable) {
       return;
     }
@@ -367,31 +419,56 @@ function updateLiftersUI(project) {
     const displayedCap = isUnassigned ? null : project.getMaxAssignmentForRecipe(key, recipe);
     const showMaxTooltip = displayedCap !== null && displayedCap > 0n;
 
-    row.complexity.textContent = isUnassigned ? '' : formatNumber(project.getRecipeComplexity(recipe), true);
-    row.value.textContent = formatNumber(displayedCurrent, true, 2);
-    row.maxValue.textContent = displayedCap === null ? '' : formatNumber(displayedCap, true, 2);
-    row.maxInfo.style.display = showMaxTooltip ? '' : 'none';
+    const complexityText = isUnassigned ? '' : formatNumber(project.getRecipeComplexity(recipe), true);
+    const valueText = formatNumber(displayedCurrent, true, 2);
+    const maxText = displayedCap === null ? '' : formatNumber(displayedCap, true, 2);
+    const maxInfoDisplay = showMaxTooltip ? '' : 'none';
+    if (row.complexity.textContent !== complexityText) {
+      row.complexity.textContent = complexityText;
+    }
+    if (row.value.textContent !== valueText) {
+      row.value.textContent = valueText;
+    }
+    if (row.maxValue.textContent !== maxText) {
+      row.maxValue.textContent = maxText;
+    }
+    if (row.maxInfo.style.display !== maxInfoDisplay) {
+      row.maxInfo.style.display = maxInfoDisplay;
+    }
     if (showMaxTooltip) {
-      row.maxTooltip.textContent = project.getMaxAssignmentTooltipText(key, recipe);
-      row.maxTooltip.style.whiteSpace = 'pre-line';
+      const tooltipText = project.getMaxAssignmentTooltipText(key, recipe);
+      if (row.maxTooltip.textContent !== tooltipText) {
+        row.maxTooltip.textContent = tooltipText;
+      }
+      if (row.maxTooltip.style.whiteSpace !== 'pre-line') {
+        row.maxTooltip.style.whiteSpace = 'pre-line';
+      }
     }
     project.updateAssignmentControls(row, key, totalBigInt, step);
 
     const rate = isUnassigned ? 0 : (project.lastDisplayedRatesByRecipe?.[key] || 0);
-    row.rate.textContent = isUnassigned ? '' : formatPerSecond(rate);
+    const rateText = isUnassigned ? '' : formatPerSecond(rate);
+    if (row.rate.textContent !== rateText) {
+      row.rate.textContent = rateText;
+    }
     const productivity = isUnassigned ? 1 : project.getDisplayedRecipeProductivity(key);
     const productivityLimited = !isUnassigned && project.isRunning && storedCurrent > 0n && productivity < 1;
-    row.rate.classList.toggle('project-rate-productivity-limited', productivityLimited);
+    if (row.rate.classList.contains('project-rate-productivity-limited') !== productivityLimited) {
+      row.rate.classList.toggle('project-rate-productivity-limited', productivityLimited);
+    }
   });
 
   if (elements.note) {
     const unitRate = formatNumber(project.getEffectiveUnitRatePerLifter(), true);
-    elements.note.textContent = getProjectLiftersUIText(
+    const noteText = getProjectLiftersUIText(
       project,
       'operationNote',
       `Per recipe rate uses (Assigned / Complexity) x ${unitRate} units/s. Max is the current assignment cap after Warp Gate Network access, lifter stripping cap, complexity, throughput, and supercharge.`,
       { value: unitRate }
     );
+    if (elements.note.textContent !== noteText) {
+      elements.note.textContent = noteText;
+    }
   }
 }
 

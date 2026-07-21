@@ -282,12 +282,14 @@
       terraforming.flowHydrogenShiftRate = flowShiftRate;
 
       if (evaporationRate > 0) {
-        resources.atmospheric.hydrogen?.modifyRate(evaporationRate, 'Evaporation', 'terraforming');
-        resources.surface.liquidHydrogen?.modifyRate(-evaporationRate, 'Evaporation', 'terraforming');
+        const evaporationSource = t('ui.resourceRates.sources.evaporation', {}, 'Evaporation');
+        resources.atmospheric.hydrogen?.modifyRate(evaporationRate, evaporationSource, 'terraforming');
+        resources.surface.liquidHydrogen?.modifyRate(-evaporationRate, evaporationSource, 'terraforming');
       }
       if (condensationRate > 0) {
-        resources.atmospheric.hydrogen?.modifyRate(-condensationRate, 'Condensation', 'terraforming');
-        resources.surface.liquidHydrogen?.modifyRate(condensationRate, 'Condensation', 'terraforming');
+        const condensationSource = t('ui.resourceRates.sources.condensation', {}, 'Condensation');
+        resources.atmospheric.hydrogen?.modifyRate(-condensationRate, condensationSource, 'terraforming');
+        resources.surface.liquidHydrogen?.modifyRate(condensationRate, condensationSource, 'terraforming');
       }
     }
   }

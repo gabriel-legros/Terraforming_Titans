@@ -862,6 +862,86 @@
       this.animate();
     }
 
+    dispose() {
+      window.removeEventListener('resize', this.onResize);
+
+      if (this.debug.container && this.debug.container.parentNode) {
+        this.debug.container.parentNode.removeChild(this.debug.container);
+      }
+      this.debug.container = null;
+      this.debug.rows = {};
+
+      const disposedTextures = new Set();
+      const disposedMaterials = new Set();
+      const disposedGeometries = new Set();
+      const disposeTexture = (texture) => {
+        if (!texture || !texture.isTexture || disposedTextures.has(texture)) return;
+        disposedTextures.add(texture);
+        texture.dispose();
+      };
+      const disposeMaterial = (material) => {
+        if (Array.isArray(material)) {
+          material.forEach(disposeMaterial);
+          return;
+        }
+        if (!material || disposedMaterials.has(material)) return;
+        disposedMaterials.add(material);
+        Object.values(material).forEach(disposeTexture);
+        if (material.uniforms) {
+          Object.values(material.uniforms).forEach(uniform => {
+            const value = uniform.value;
+            if (Array.isArray(value)) {
+              value.forEach(disposeTexture);
+            } else {
+              disposeTexture(value);
+            }
+          });
+        }
+        material.dispose();
+      };
+
+      if (this.scene) {
+        disposeTexture(this.scene.background);
+        disposeTexture(this.scene.environment);
+        this.scene.traverse(object => {
+          if (object.geometry && !disposedGeometries.has(object.geometry)) {
+            disposedGeometries.add(object.geometry);
+            object.geometry.dispose();
+          }
+          disposeMaterial(object.material);
+        });
+        this.scene.clear();
+      }
+
+      [
+        this.lavaOverlayTexture,
+        this.gasOverlayTexture,
+        this.earthLunaTexture,
+        this._birchWorldTexture,
+        this._surfaceCanvasTexture,
+        this._ecumenopolisEmissionTexture,
+        this._nanoworldEmissionTexture,
+      ].forEach(disposeTexture);
+      if (this.gasOverlayTextures) {
+        Object.values(this.gasOverlayTextures).forEach(disposeTexture);
+      }
+
+      if (this.renderer) {
+        const canvas = this.renderer.domElement;
+        this.renderer.dispose();
+        this.renderer.forceContextLoss();
+        if (canvas.parentNode) {
+          canvas.parentNode.removeChild(canvas);
+        }
+      }
+
+      this.renderer = null;
+      this.scene = null;
+      this.camera = null;
+      this.elements.container = null;
+      this.elements.overlay = null;
+    }
+
     onResize() {
       if (!this.elements.container) return;
       const w = this.elements.container.clientWidth;
@@ -1088,22 +1168,8 @@
 
   window.destroyPlanetVisualizerUI = function destroyPlanetVisualizerUI() {
     const viz = window.planetVisualizer;
-    if (!viz) {
-      return;
-    }
-    try {
-      window.removeEventListener('resize', viz.onResize);
-    } catch (e) {}
-    try {
-      if (viz.renderer && viz.renderer.domElement && viz.renderer.domElement.parentNode) {
-        viz.renderer.domElement.parentNode.removeChild(viz.renderer.domElement);
-      }
-    } catch (e) {}
-    try {
-      if (viz.renderer && typeof viz.renderer.dispose === 'function') {
-        viz.renderer.dispose();
-      }
-    } catch (e) {}
+    if (!viz) return;
+    viz.dispose();
     window.planetVisualizer = null;
   };
 
@@ -1120,7 +1186,7 @@
         updateWorldVisualizerFailurePrompt();
       }
     } catch (e) {
-      window.planetVisualizer = null;
+      window.destroyPlanetVisualizerUI();
       reportPlanetVisualizerFailure(e);
     }
   };

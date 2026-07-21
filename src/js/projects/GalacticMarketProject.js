@@ -1049,8 +1049,9 @@ class GalacticMarketProject extends Project {
       if (!totals.gain[category]) totals.gain[category] = {};
       totals.gain[category][resource] = (totals.gain[category][resource] || 0) + scaledQuantity * seconds;
       if (applyRates) {
-        resources[category][resource].modifyRate(scaledQuantity * rateMultiplier, 'Galactic Market', 'project');
-        resources.colony.funding.modifyRate(-costPerSecond * rateMultiplier, 'Galactic Market', 'project');
+        const rateSource = t('ui.resourceRates.sources.galacticMarket', {}, 'Galactic Market');
+        resources[category][resource].modifyRate(scaledQuantity * rateMultiplier, rateSource, 'project');
+        resources.colony.funding.modifyRate(-costPerSecond * rateMultiplier, rateSource, 'project');
       }
     });
 
@@ -1066,8 +1067,9 @@ class GalacticMarketProject extends Project {
       if (!totals.gain.colony) totals.gain.colony = {};
       totals.gain.colony.funding = (totals.gain.colony.funding || 0) + revenuePerSecond * seconds;
       if (applyRates) {
-        resources[category][resource].modifyRate(-scaledQuantity * rateMultiplier, 'Galactic Market', 'project');
-        resources.colony.funding.modifyRate(revenuePerSecond * rateMultiplier, 'Galactic Market', 'project');
+        const rateSource = t('ui.resourceRates.sources.galacticMarket', {}, 'Galactic Market');
+        resources[category][resource].modifyRate(-scaledQuantity * rateMultiplier, rateSource, 'project');
+        resources.colony.funding.modifyRate(revenuePerSecond * rateMultiplier, rateSource, 'project');
       }
     });
 

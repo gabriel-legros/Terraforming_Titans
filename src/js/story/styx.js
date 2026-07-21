@@ -234,7 +234,7 @@ progressStyx.chapters.push(
     type: 'journal',
     chapter: 40,
     activePlanet: 'styx',
-    narrative: "Feroza : 'I have got enough warpships and antimatter to drop these probes all over Ma'am... but I need the probes.'  \n Evelyn : 'HOPE can build them.  I stayed up all night to get the probe design.  I made them as small as possible... you know... so they can be warped easily.  HOPE please... we need 100 million of them.'  \n Mary : 'Good.  Feroza.  HOPE will give you the probes.'  \n Feroza : 'Yes Ma'am.  ",
+    narrative: "Feroza : 'I have got enough warpships and antimatter to drop these probes all over Ma'am... but I need the probes.'  \n Evelyn : 'HOPE can build them.  I stayed up all night to get the probe design.  I made them as small as possible... you know... so they can be warped easily.  HOPE please... we need 100 million of them.'  \n Mary : 'Good.  Feroza.  HOPE will give you the probes.'  \n Feroza : 'Yes Ma'am.'  ",
     prerequisites: ['styx.40.3'],
     objectives: [
       { type: 'project', projectId: 'styx_probe_manufacturing', repeatCount: 1 }

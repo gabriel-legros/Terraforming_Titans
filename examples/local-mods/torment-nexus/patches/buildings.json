@@ -1,0 +1,38 @@
+{
+  "entries": {
+    "tormentNexus": {
+      "type": "Building",
+      "name": "",
+      "category": "resource",
+      "description": "",
+      "cost": {
+        "colony": {
+          "metal": 100,
+	  "components" : 10
+        }
+      },
+      "consumption": {
+        "colony": {
+          "colonists": 1
+        }
+      },
+      "production": {
+        "colony": {
+          "funding": 10
+        },
+        "special": {
+          "tears": 1
+        }
+      },
+      "storage": {},
+      "factoryHeatCoefficient": 0,
+      "dayNightActivity": false,
+      "canBeToggled": true,
+      "requiresMaintenance": false,
+      "requiresWorker": 0,
+      "maintenanceFactor": 0,
+      "unlocked": false,
+      "autoBuildMaxOption": true
+    }
+  }
+}

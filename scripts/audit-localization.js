@@ -32,6 +32,7 @@ const ignoredDirectories = new Set([
 
 const ignoredFiles = new Set([
   'src/js/lang/current-language.js',
+  'src/js/lang/story-language.js',
   'src/js/lang/localization.js',
 ]);
 

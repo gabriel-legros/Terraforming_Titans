@@ -57,6 +57,10 @@ const tabParameters = {
       this.tabs = {}; // Object to store tab elements by their ID
       this.activeTabId = null;
       this.loadTabs(tabParams); // Initialize tabs from parameters
+      const activeTab = Object.values(this.tabs).find(tab => tab.classList.contains('active'));
+      if (activeTab) {
+        this.activeTabId = activeTab.dataset.tab;
+      }
     }
 
     // Reset visibility of all managed tabs according to provided parameters
@@ -66,6 +70,7 @@ const tabParameters = {
         t.classList.remove('active');
         t.classList.remove('hidden');
       });
+      this.activeTabId = null;
 
       // Apply default hidden state from parameters
       tabParams.tabs.forEach(tabConfig => {
@@ -115,7 +120,7 @@ const tabParameters = {
           console.log(`Tab ${tabId} is hidden, cannot activate.`);
           return;
         }
-        this.activateTab(tabId);
+        tabManager.activateTab(tabId);
       });
     }
   

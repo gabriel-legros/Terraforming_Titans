@@ -1,5 +1,6 @@
 const buildingsParameters = {
   oreMine: {
+    type: 'OreMine',
     name: '',
     category: 'resource',
     description: '',
@@ -20,6 +21,7 @@ const buildingsParameters = {
     autoBuildMaxOption: true
   },
   foundry: {
+    type: 'Foundry',
     name: '',
     category: 'resource',
     description: '',
@@ -39,6 +41,7 @@ const buildingsParameters = {
     autoBuildMaxOption: true
   },
   sandQuarry: {
+    type: 'SandQuarry',
     name: '',
     category: 'resource',
     description: '',
@@ -58,6 +61,7 @@ const buildingsParameters = {
     unlocked: false
   },
   iceHarvester: {
+    type: 'Building',
     name: '',
     category: 'resource',
     description: '',
@@ -75,6 +79,7 @@ const buildingsParameters = {
     unlocked: false
   },
   waterPump: {
+    type: 'Building',
     name: '',
     category: 'resource',
     description: '',
@@ -92,6 +97,7 @@ const buildingsParameters = {
     unlocked: false
   },
   atmosphericWaterCollector: {
+    type: 'Building',
     name: '',
     category: 'resource',
     description: '',
@@ -108,6 +114,7 @@ const buildingsParameters = {
     unlocked: false
   },
   glassSmelter: {
+    type: 'MultiRecipesBuilding',
     name: '',
     category: 'production',
     description: '',
@@ -143,6 +150,7 @@ const buildingsParameters = {
     unlocked: false
   },
   hydroponicFarm: {
+    type: 'Building',
     name: '',
     category: 'production',
     description: '',
@@ -160,6 +168,7 @@ const buildingsParameters = {
     unlocked: false
   },
   componentFactory: {
+    type: 'Building',
     name: '',
     category: 'production',
     description: '',
@@ -177,6 +186,7 @@ const buildingsParameters = {
     unlocked: false
   },
   electronicsFactory: {
+    type: 'MultiRecipesBuilding',
     name: '',
     category: 'production',
     description: '',
@@ -210,6 +220,7 @@ const buildingsParameters = {
     unlocked: false
   },
   grapheneFactory: {
+    type: 'GrapheneFactory',
     name: '',
     category: 'production',
     description: '',
@@ -227,6 +238,7 @@ const buildingsParameters = {
     unlocked: false
   },
   superconductorFactory: {
+    type: 'Building',
     name: '',
     category: 'production',
     description: '',
@@ -245,6 +257,7 @@ const buildingsParameters = {
     unlocked: false
   },
   superalloyFoundry: {
+    type: 'Building',
     name: '',
     category: 'production',
     description: '',
@@ -262,6 +275,7 @@ const buildingsParameters = {
     unlocked: false
   },
   warpCircuitsFactory: {
+    type: 'Building',
     name: '',
     category: 'production',
     description: '',
@@ -277,6 +291,7 @@ const buildingsParameters = {
     unlocked: false
   },
   androidFactory: {
+    type: 'AndroidFactory',
     name: '',
     category: 'production',
     description: '',
@@ -294,6 +309,7 @@ const buildingsParameters = {
     unlocked: false
   },
   shipyard: {
+    type: 'Building',
     name: '',
     category: 'production',
     description: '',
@@ -311,6 +327,7 @@ const buildingsParameters = {
     unlocked: false,
   },
   cloningFacility: {
+    type: 'CloningFacility',
     name: '',
     category: 'production',
     description: '',
@@ -345,6 +362,8 @@ const buildingsParameters = {
     unlocked: false,
   },
   solarPanel: {
+    type: 'SolarPanel',
+    constructorFile: 'solarPanel',
     name: '',
     category: 'energy',
     description: '',
@@ -362,6 +381,8 @@ const buildingsParameters = {
     autoBuildMaxOption: true
   },
   windTurbine: {
+    type: 'WindTurbine',
+    constructorFile: 'windTurbine',
     name: '',
     category: 'energy',
     description: '',
@@ -378,6 +399,7 @@ const buildingsParameters = {
     autoBuildMaxOption: true
   },
   geothermalGenerator: {
+    type: 'Building',
     name: '',
     category: 'energy',
     description: '',
@@ -395,6 +417,7 @@ const buildingsParameters = {
     autoBuildMaxOption: true
   },
   hydrocarbonGenerator: {
+    type: 'Building',
     name: '',
     category: 'energy',
     description: '',
@@ -413,6 +436,7 @@ const buildingsParameters = {
     unlocked: false
   },
   nuclearPowerPlant: {
+    type: 'Building',
     name: '',
     category: 'energy',
     description: '',
@@ -429,6 +453,8 @@ const buildingsParameters = {
     unlocked: false
   },
   dysonReceiver: {
+    type: 'DysonReceiver',
+    constructorFile: 'dysonReceiver',
     name: '',
     category: 'energy',
     description: '',
@@ -451,6 +477,7 @@ const buildingsParameters = {
     disableWhenHazard: ['debrisDisk']
   },
   fusionPowerPlant: {
+    type: 'FusionPowerPlant',
     name: '',
     category: 'energy',
     description: '',
@@ -482,6 +509,7 @@ const buildingsParameters = {
     }
   },
   superalloyFusionReactor: {
+    type: 'SuperalloyFusionReactor',
     name: '',
     category: 'energy',
     description: '',
@@ -513,6 +541,7 @@ const buildingsParameters = {
     }
   },
   antimatterFarm: {
+    type: 'MultiRecipesBuilding',
     name: '',
     category: 'energy',
     description: '',
@@ -540,6 +569,7 @@ const buildingsParameters = {
     }
   },
   battery: {
+    type: 'Building',
     name: '',
     category: 'storage',
     description: '',
@@ -559,6 +589,7 @@ const buildingsParameters = {
     autoBuildFillPercent: 95
   },
   storageDepot: {
+    type: 'MultiRecipesBuilding',
     name: '',
     category: 'storage',
     description: '',
@@ -647,6 +678,7 @@ const buildingsParameters = {
     }
   },
   waterTank: {
+    type: 'WaterTank',
     name: '',
     category: 'storage',
     description: '',
@@ -666,6 +698,7 @@ const buildingsParameters = {
     autoBuildFillPercent: 95
   },
   hydrogenReservoir: {
+    type: 'HydrogenReservoir',
     name: '',
     category: 'storage',
     description: '',
@@ -700,6 +733,7 @@ const buildingsParameters = {
     }
   },
   hydrogenBattery: {
+    type: 'Building',
     name: '',
     category: 'storage',
     description: '',
@@ -719,6 +753,7 @@ const buildingsParameters = {
     autoBuildFillPercent: 95
   },
   antimatterBattery: {
+    type: 'AntimatterBattery',
     name: '',
     category: 'storage',
     description: '',
@@ -738,6 +773,7 @@ const buildingsParameters = {
     autoBuildFillPercent: 95
   },
   androidHousing: {
+    type: 'AndroidHousing',
     name: '',
     category: 'storage',
     description: '',
@@ -756,6 +792,7 @@ const buildingsParameters = {
     requiresLand: 10
   },  
   sandSeeder: {
+    type: 'SandSeeder',
     name: '',
     category: 'terraforming',
     description: '',
@@ -773,6 +810,7 @@ const buildingsParameters = {
     unlocked: false
   },
   vanadiumHazeSeeder: {
+    type: 'VanadiumHazeSeeder',
     name: '',
     category: 'terraforming',
     description: '',
@@ -790,6 +828,7 @@ const buildingsParameters = {
     unlocked: false
   },
   yggieLand: {
+    type: 'Building',
     name: '',
     category: 'terraforming',
     description: '',
@@ -808,6 +847,7 @@ const buildingsParameters = {
     autoBuildMaxOption: true
   },
   rareYggieNutrients: {
+    type: 'Building',
     name: '',
     category: 'terraforming',
     description: '',
@@ -824,6 +864,7 @@ const buildingsParameters = {
     unlocked: false
   },
   dustFactory: {
+    type: 'DustFactory',
     name: '',
     category: 'terraforming',
     description: '',
@@ -851,6 +892,7 @@ const buildingsParameters = {
     }
   },
   spaceMirror: {
+    type: 'SpaceMirror',
     name: '',
     category: 'terraforming',
     description: '',
@@ -869,6 +911,7 @@ const buildingsParameters = {
     kesslerDebrisSize: 'small'
   },
   hyperionLantern: {
+    type: 'HyperionLantern',
     name: '',
     category: 'terraforming',
     description: '',
@@ -889,6 +932,7 @@ const buildingsParameters = {
     kesslerDebrisSize: 'large'
   },
   ghgFactory: {
+    type: 'GhgFactory',
     name: '',
     category: 'terraforming',
     description: '',
@@ -921,6 +965,7 @@ const buildingsParameters = {
     }
   },
   oxygenFactory: {
+    type: 'OxygenFactory',
     name: '',
     category: 'terraforming',
     description: '',
@@ -962,6 +1007,7 @@ const buildingsParameters = {
     }
   },
   boschReactor: {
+    type: 'ChemicalReactor',
     name: '',
     category: 'terraforming',
     description: '',
@@ -1047,6 +1093,7 @@ const buildingsParameters = {
     }
   },
   pyrolyzer: {
+    type: 'Pyrolyzer',
     name: '',
     category: 'terraforming',
     description: '',
@@ -1080,6 +1127,7 @@ const buildingsParameters = {
     }
   },
   massDriver: {
+    type: 'MassDriver',
     name: '',
     category: 'terraforming',
     description: '',
@@ -1096,6 +1144,7 @@ const buildingsParameters = {
     unlocked: false
   },
   biodome:{
+    type: 'Biodome',
     name: '',
     category: 'terraforming',
     description: '',
@@ -1114,6 +1163,7 @@ const buildingsParameters = {
     requiresLand: 100
   },
   scrapRecycler: {
+    type: 'Building',
     name: '',
     category: 'waste',
     description: '',
@@ -1136,6 +1186,7 @@ const buildingsParameters = {
     unlocked: false
   },
   garbageSorter: {
+    type: 'Building',
     name: '',
     category: 'waste',
     description: '',
@@ -1158,6 +1209,7 @@ const buildingsParameters = {
     unlocked: false
   },
   trashIncinerator: {
+    type: 'MultiRecipesBuilding',
     name: '',
     category: 'waste',
     description: '',
@@ -1197,6 +1249,7 @@ const buildingsParameters = {
     unlocked: false
   },
   junkRecycler: {
+    type: 'MultiRecipesBuilding',
     name: '',
     category: 'waste',
     description: '',
@@ -1234,6 +1287,7 @@ const buildingsParameters = {
     unlocked: false
   },
   radioactiveRecycler: {
+    type: 'Building',
     name: '',
     category: 'waste',
     description: '',
@@ -1256,6 +1310,7 @@ const buildingsParameters = {
     unlocked: false
   },
   laserCannon: {
+    type: 'LaserCannon',
     name: '',
     category: 'waste',
     description: '',

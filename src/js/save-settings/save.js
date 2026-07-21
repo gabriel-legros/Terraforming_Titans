@@ -332,6 +332,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
   }
 
   if(recreate){
+    storyManager.destroy();
     initializeDefaultGlobals();
   }
 
@@ -398,6 +399,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
                 // For non-rogue worlds, both should match
                 celestialParams.spinPeriod = celestialParams.rotationPeriod;
               }
+            }
+            if (celestialParams && celestialParams.dayNightPeriod === undefined) {
+              celestialParams.dayNightPeriod = celestialParams.rotationPeriod || 24;
             }
 
             // Ensure procedural worlds carry a star definition on load.
@@ -760,6 +764,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       skillManager.loadState(gameState.skills);
     }
 
+    resetDifficultySettings();
     if(gameState.settings){
       Object.assign(gameSettings, gameState.settings);
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'autosaveIntervalSeconds')) {
@@ -785,6 +790,18 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'resourceDepletionWarningSeconds')) {
         gameSettings.resourceDepletionWarningSeconds = 120;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'autoPauseEnergyEnabled')) {
+        gameSettings.autoPauseEnergyEnabled = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'autoPauseEnergyThreshold')) {
+        gameSettings.autoPauseEnergyThreshold = 0;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'autoPauseColonistsEnabled')) {
+        gameSettings.autoPauseColonistsEnabled = false;
+      }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'autoPauseColonistsThreshold')) {
+        gameSettings.autoPauseColonistsThreshold = 0;
       }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'immigrationPool')) {
         gameSettings.immigrationPool = false;
@@ -856,11 +873,12 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
         gameSettings.difficultySettingsLockedWorldName = '';
       }
       normalizeDifficultySettings();
-      applyDifficultySettingEffects();
+      reapplySharedManagerEffects({ includeConditionalReconcile: true });
       setPauseKeybindCode(gameSettings.pauseKeybind);
       setDialogueSkipKeybindCode(gameSettings.dialogueSkipKeybind);
       setFullscreenKeybindCode(gameSettings.fullscreenKeybind);
       applySpeedControlsSetting();
+      resetAutoPauseRateTracking();
       applyColorblindPaletteSettings();
       if (gameSettings.showSpaceStorageInDefaultPanel) {
         gameSettings.showSpaceStorageResources = false;
@@ -891,6 +909,12 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       cachedSettings.highlightFullResourceCapsToggle.checked = gameSettings.highlightFullResourceCaps;
       cachedSettings.resourceDepletionWarningSecondsInput.value = String(gameSettings.resourceDepletionWarningSeconds);
       cachedSettings.resourceDepletionWarningSecondsInput.dataset.resourceDepletionWarningSeconds = String(gameSettings.resourceDepletionWarningSeconds);
+      cachedSettings.autoPauseEnergyToggle.checked = gameSettings.autoPauseEnergyEnabled;
+      cachedSettings.autoPauseEnergyThresholdInput.value = String(formatNumber(gameSettings.autoPauseEnergyThreshold, false, 3, true));
+      cachedSettings.autoPauseEnergyThresholdInput.dataset.autoPauseEnergyThreshold = String(gameSettings.autoPauseEnergyThreshold);
+      cachedSettings.autoPauseColonistsToggle.checked = gameSettings.autoPauseColonistsEnabled;
+      cachedSettings.autoPauseColonistsThresholdInput.value = String(formatNumber(gameSettings.autoPauseColonistsThreshold, false, 3, true));
+      cachedSettings.autoPauseColonistsThresholdInput.dataset.autoPauseColonistsThreshold = String(gameSettings.autoPauseColonistsThreshold);
       cachedSettings.immigrationPoolToggle.checked = gameSettings.immigrationPool;
       cachedSettings.unlockToggle.checked = gameSettings.silenceUnlockAlert;
       cachedSettings.dayNightToggle.checked = gameSettings.disableDayNightCycle;
@@ -1022,6 +1046,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
     if (typeof applyRWGEffects === 'function') {
       applyRWGEffects();
     }
+    populationModule.updateWorkerRequirements();
+    populationModule.updateWorkerCap();
+    populationModule.workerResource.value = populationModule.workerResource.cap - populationModule.totalWorkersRequired;
     galaxyManager?.finalizeLoadedDefenseAssignments?.();
     globalGameIsLoadingFromSave = false;
     if (!options.skipRender && typeof updateRender === 'function') {
@@ -1591,12 +1618,17 @@ function updateAutosaveText(overrideText) {
   const autosaveText = autosaveTextElement;
   if (!autosaveText) return;
   if (overrideText) {
-    autosaveText.textContent = overrideText;
+    if (autosaveText.textContent !== overrideText) {
+      autosaveText.textContent = overrideText;
+    }
     return;
   }
   const intervalSeconds = getAutosaveIntervalSeconds();
   if (intervalSeconds <= 0) {
-    autosaveText.textContent = t('ui.settings.autosaveDisabled', null, 'Autosave disabled');
+    const disabledText = t('ui.settings.autosaveDisabled', null, 'Autosave disabled');
+    if (autosaveText.textContent !== disabledText) {
+      autosaveText.textContent = disabledText;
+    }
     return;
   }
   autosaveTimer = Math.min(autosaveTimer, intervalSeconds);
@@ -1605,8 +1637,14 @@ function updateAutosaveText(overrideText) {
   const minutes = Math.floor((clampedTimer % 3600) / 60);
   const seconds = Math.floor(clampedTimer % 60);
   if (hours > 0) {
-    autosaveText.textContent = t('ui.settings.nextAutosaveLong', { hours, minutes, seconds }, `Next autosave in ${hours}h ${minutes}m ${seconds}s`);
+    const autosaveLongText = t('ui.settings.nextAutosaveLong', { hours, minutes, seconds }, `Next autosave in ${hours}h ${minutes}m ${seconds}s`);
+    if (autosaveText.textContent !== autosaveLongText) {
+      autosaveText.textContent = autosaveLongText;
+    }
     return;
   }
-  autosaveText.textContent = t('ui.settings.nextAutosaveShort', { minutes, seconds }, `Next autosave in ${minutes}m ${seconds}s`);
+  const autosaveShortText = t('ui.settings.nextAutosaveShort', { minutes, seconds }, `Next autosave in ${minutes}m ${seconds}s`);
+  if (autosaveText.textContent !== autosaveShortText) {
+    autosaveText.textContent = autosaveShortText;
+  }
 }

@@ -412,15 +412,21 @@ class ImportResourcesProjectUI {
 
     if (this.availableDisplay) {
       const availableShips = formatNumber(Math.floor(resources?.special?.spaceships?.value || 0), true);
-      this.availableDisplay.textContent = getImportResourcesText(
+      const availableText = getImportResourcesText(
         'ui.projects.importResources.availableValue',
         `Available: ${availableShips}`,
         { value: availableShips }
       );
+      if (this.availableDisplay.textContent !== availableText) {
+        this.availableDisplay.textContent = availableText;
+      }
     }
 
     if (this.costPerShipmentDisplay && project && typeof project.calculateSpaceshipCost === 'function') {
-      this.costPerShipmentDisplay.textContent = this.formatCostPerShipment(project);
+      const costText = this.formatCostPerShipment(project);
+      if (this.costPerShipmentDisplay.textContent !== costText) {
+        this.costPerShipmentDisplay.textContent = costText;
+      }
     }
   }
 
@@ -434,21 +440,30 @@ class ImportResourcesProjectUI {
       }
       const isCollapsed = this.card?.classList?.contains('collapsed');
       if (!hazardActive || isCollapsed) {
-        this.kesslerWarning.style.display = 'none';
+        if (this.kesslerWarning.style.display !== 'none') {
+          this.kesslerWarning.style.display = 'none';
+        }
         return;
       }
       const failureChance = project.getKesslerFailureChance();
       const percent = Math.max(0, Math.min(1, failureChance)) * 100;
       if (percent <= 0) {
-        this.kesslerWarning.style.display = 'none';
+        if (this.kesslerWarning.style.display !== 'none') {
+          this.kesslerWarning.style.display = 'none';
+        }
         return;
       }
-      this.kesslerWarningText.textContent = getImportResourcesText(
+      const warningText = getImportResourcesText(
         'ui.projects.importResources.kesslerWarning',
         `Kessler Skies: ${formatNumber(percent, false, 2)}% chance of project failure.`,
         { value: formatNumber(percent, false, 2) }
       );
-      this.kesslerWarning.style.display = 'flex';
+      if (this.kesslerWarningText.textContent !== warningText) {
+        this.kesslerWarningText.textContent = warningText;
+      }
+      if (this.kesslerWarning.style.display !== 'flex') {
+        this.kesslerWarning.style.display = 'flex';
+      }
     } catch (error) {
       // no-op
     }
@@ -541,13 +556,30 @@ class ImportResourcesProjectUI {
 
   updateCapSummary(data) {
     const elements = this.capElements;
-    elements.intro.textContent = data.intro;
-    elements.baseCap.textContent = data.baseCapLine;
-    elements.baseCap.style.display = data.baseCapLine ? 'block' : 'none';
-    elements.ratios.textContent = data.ratiosLine;
-    elements.ratios.style.display = data.ratiosLine ? 'block' : 'none';
-    elements.fullControl.textContent = data.fullControlLine;
-    elements.fullControl.style.display = data.fullControlLine ? 'block' : 'none';
+    if (elements.intro.textContent !== data.intro) {
+      elements.intro.textContent = data.intro;
+    }
+    if (elements.baseCap.textContent !== data.baseCapLine) {
+      elements.baseCap.textContent = data.baseCapLine;
+    }
+    const baseCapDisplay = data.baseCapLine ? 'block' : 'none';
+    if (elements.baseCap.style.display !== baseCapDisplay) {
+      elements.baseCap.style.display = baseCapDisplay;
+    }
+    if (elements.ratios.textContent !== data.ratiosLine) {
+      elements.ratios.textContent = data.ratiosLine;
+    }
+    const ratiosDisplay = data.ratiosLine ? 'block' : 'none';
+    if (elements.ratios.style.display !== ratiosDisplay) {
+      elements.ratios.style.display = ratiosDisplay;
+    }
+    if (elements.fullControl.textContent !== data.fullControlLine) {
+      elements.fullControl.textContent = data.fullControlLine;
+    }
+    const fullControlDisplay = data.fullControlLine ? 'block' : 'none';
+    if (elements.fullControl.style.display !== fullControlDisplay) {
+      elements.fullControl.style.display = fullControlDisplay;
+    }
 
     const nextRulesSignature = data.ruleLines.join('\n');
     if (this.capRulesSignature !== nextRulesSignature) {
@@ -562,34 +594,53 @@ class ImportResourcesProjectUI {
         if (item.textContent !== line) {
           item.textContent = line;
         }
-        item.style.display = '';
+        if (item.style.display !== '') {
+          item.style.display = '';
+        }
       });
       for (let index = data.ruleLines.length; index < elements.ruleItems.length; index += 1) {
         const item = elements.ruleItems[index];
         if (item.textContent !== '') {
           item.textContent = '';
         }
-        item.style.display = 'none';
+        if (item.style.display !== 'none') {
+          item.style.display = 'none';
+        }
       }
       this.capRulesSignature = nextRulesSignature;
     }
-    elements.rulesList.style.display = data.ruleLines.length ? 'block' : 'none';
+    const rulesDisplay = data.ruleLines.length ? 'block' : 'none';
+    if (elements.rulesList.style.display !== rulesDisplay) {
+      elements.rulesList.style.display = rulesDisplay;
+    }
 
     const rowOrder = [];
     data.caps.forEach((entry) => {
       rowOrder.push(entry.label);
       const row = elements.rows[entry.label] || this.createCapRow(entry.label);
-      row.ratio.textContent = entry.ratio;
-      row.cap.textContent = entry.cap;
-      row.detail.textContent = entry.detail;
+      if (row.ratio.textContent !== entry.ratio) {
+        row.ratio.textContent = entry.ratio;
+      }
+      if (row.cap.textContent !== entry.cap) {
+        row.cap.textContent = entry.cap;
+      }
+      if (row.detail.textContent !== entry.detail) {
+        row.detail.textContent = entry.detail;
+      }
     });
 
     if (data.hydrogen) {
       rowOrder.push(data.hydrogen.label);
       const row = elements.rows[data.hydrogen.label] || this.createCapRow(data.hydrogen.label);
-      row.ratio.textContent = data.hydrogen.ratio;
-      row.cap.textContent = data.hydrogen.cap;
-      row.detail.textContent = data.hydrogen.detail;
+      if (row.ratio.textContent !== data.hydrogen.ratio) {
+        row.ratio.textContent = data.hydrogen.ratio;
+      }
+      if (row.cap.textContent !== data.hydrogen.cap) {
+        row.cap.textContent = data.hydrogen.cap;
+      }
+      if (row.detail.textContent !== data.hydrogen.detail) {
+        row.detail.textContent = data.hydrogen.detail;
+      }
     }
 
     const nextRowOrderSignature = rowOrder.join('|');
@@ -820,8 +871,14 @@ class ImportResourcesProjectUI {
 
     const rowEntry = this.rows[project.name];
     if (rowEntry) {
-      rowEntry.mainRow.style.display = rowVisible ? 'grid' : 'none';
-      rowEntry.detailRow.style.display = rowVisible ? 'flex' : 'none';
+      const mainDisplay = rowVisible ? 'grid' : 'none';
+      if (rowEntry.mainRow.style.display !== mainDisplay) {
+        rowEntry.mainRow.style.display = mainDisplay;
+      }
+      const detailDisplay = rowVisible ? 'flex' : 'none';
+      if (rowEntry.detailRow.style.display !== detailDisplay) {
+        rowEntry.detailRow.style.display = detailDisplay;
+      }
     }
 
     const anyVisibleRow = Object.keys(this.rows).some((key) => {
@@ -831,7 +888,10 @@ class ImportResourcesProjectUI {
 
     const projectItem = elements?.projectItem || this.card;
     if (projectItem) {
-      projectItem.style.display = anyVisibleRow ? 'block' : 'none';
+      const cardDisplay = anyVisibleRow ? 'block' : 'none';
+      if (projectItem.style.display !== cardDisplay) {
+        projectItem.style.display = cardDisplay;
+      }
     }
 
     return rowVisible;
@@ -843,10 +903,9 @@ class ImportResourcesProjectUI {
     }
 
     const formattedCap = maxShips === Infinity ? '∞' : formatNumber(maxShips, true);
-    if (maxShips != null) {
-      elements.assignedSpaceshipsDisplay.textContent = `${assignedText}/${formattedCap}`;
-    } else {
-      elements.assignedSpaceshipsDisplay.textContent = assignedText;
+    const displayText = maxShips != null ? `${assignedText}/${formattedCap}` : assignedText;
+    if (elements.assignedSpaceshipsDisplay.textContent !== displayText) {
+      elements.assignedSpaceshipsDisplay.textContent = displayText;
     }
   }
 
@@ -854,12 +913,19 @@ class ImportResourcesProjectUI {
     if (!elements || !elements.progressButton) return;
     const projectLabel = project.displayName || project.name;
     if (elements.importProgressName) {
-      elements.importProgressName.textContent = projectLabel;
+      if (elements.importProgressName.textContent !== projectLabel) {
+        elements.importProgressName.textContent = projectLabel;
+      }
     }
     if (elements.importProgressStatus) {
-      elements.importProgressStatus.textContent = statusText;
+      if (elements.importProgressStatus.textContent !== statusText) {
+        elements.importProgressStatus.textContent = statusText;
+      }
     } else {
-      elements.progressButton.textContent = `${projectLabel}\n${statusText}`;
+      const buttonText = `${projectLabel}\n${statusText}`;
+      if (elements.progressButton.textContent !== buttonText) {
+        elements.progressButton.textContent = buttonText;
+      }
     }
   }
 }

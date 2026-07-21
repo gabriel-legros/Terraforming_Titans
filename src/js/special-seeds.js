@@ -786,7 +786,7 @@ const teeBeePeeOverrides = {
     crossSectionArea: 29959488399904.387
   },
   star: {
-    name: 'Tee Bee and Pee',
+    name: t('catalogs.specialSeeds.teebeepee.starName', {}, 'Tee Bee and Pee'),
     spectralType: 'M',
     luminositySolar: 0.002013612234820151,
     massSolar: 0.16970998037606477,
@@ -857,7 +857,7 @@ const teeBeePeeOverrides = {
 };
 
 const shadesNightmareOverrides = {
-  name: 'ShadesNightmare',
+  name: t('catalogs.specialSeeds.shadesnightmare.name', {}, 'ShadesNightmare'),
   gravityPenaltyEnabled: true,
   specialAttributes: {
     hasSand: false,
@@ -902,7 +902,7 @@ const shadesNightmareOverrides = {
     }
   ],
   star: {
-    name: 'Nyx',
+    name: t('catalogs.specialSeeds.shadesnightmare.starName', {}, 'Nyx'),
     spectralType: 'K1V',
     luminositySolar: 0.46,
     massSolar: 0.84,
@@ -2230,6 +2230,11 @@ const specialSeedDefinitions = {
         id: 'teleporters-disabled',
         descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.teleportersDisabled',
         description: 'The 100Q advanced research is disabled.'
+      },
+      {
+        id: 'starting-research-warning',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.startingResearchWarning',
+        description: 'You may need at least 1M starting research from Solis to acquire some critical researches.'
       }
     ],
     completionRewards: [
@@ -2256,6 +2261,19 @@ const specialSeedDefinitions = {
             targetId: 'pyrolyzer',
             type: 'booleanFlag',
             flagId: 'pyrolyzer',
+            value: true
+          }
+        ]
+      },
+      {
+        id: 'unlock-debris-disk-hazard',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.rewards.unlockDebrisDiskHazard',
+        description: 'Unlocks Debris Disk as a hazard in the Random World Generator.',
+        effects: [
+          {
+            target: 'rwgManager',
+            targetId: 'debrisDisk',
+            type: 'unlockHazard',
             value: true
           }
         ]

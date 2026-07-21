@@ -23,7 +23,10 @@
     const popText = formatNumber(colonists);
     const kPaText = (Math.abs(kPa) < 1000) ? kPa.toFixed(2) : kPa.toExponential(2);
 
-    overlay.textContent = t('ui.planetVisualizer.environmentOverlay', { population: popText, co2: kPaText }, 'Pop: {population}\nCO2: {co2} kPa');
+    const overlayText = t('ui.planetVisualizer.environmentOverlay', { population: popText, co2: kPaText }, 'Pop: {population}\nCO2: {co2} kPa');
+    if (overlay.textContent !== overlayText) {
+      overlay.textContent = overlayText;
+    }
   };
 
   PlanetVisualizer.prototype.createStarField = function createStarField() {

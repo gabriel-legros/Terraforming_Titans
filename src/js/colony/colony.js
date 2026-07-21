@@ -11,29 +11,23 @@ const colonyOutputNeedResources = {
   food: true
 };
 
-const colonyConstructors = {
-  aerostat_colony: { className: 'Aerostat', file: 'aerostat.js' },
-  t7_colony: { className: 'Ecumenopolis', file: 'Ecumenopolis.js' }
-};
-
 const colonyConstructorRegistry = {};
 
-function registerColonyConstructor(name, ctor) {
-  colonyConstructorRegistry[name] = ctor;
+function registerColonyConstructor(ctor) {
+  colonyConstructorRegistry[ctor.name] = ctor;
 }
 
-function loadColonyConstructor(name) {
-  const registered = colonyConstructorRegistry[name];
+function loadColonyConstructor(type, constructorFile) {
+  if (type === 'Colony') return Colony;
+  const registered = colonyConstructorRegistry[type];
   if (registered) return registered;
-  const entry = colonyConstructors[name];
-  if (!entry) return Colony;
-  const { className, file } = entry;
-  if (typeof globalThis !== 'undefined' && globalThis[className]) {
-    return globalThis[className];
+  if (!type) return Colony;
+  if (typeof window !== 'undefined' && window[type]) {
+    return window[type];
   }
   if (typeof require !== 'undefined') {
-    const mod = require('./buildings/' + file);
-    return mod[className] || Colony;
+    const mod = require('../buildings/' + (constructorFile || type) + '.js');
+    return mod[type] || Colony;
   }
   return Colony;
 }
@@ -707,7 +701,7 @@ function initializeColonies(coloniesParameters) {
       ...colonyData
     };
 
-    const Ctor = loadColonyConstructor(colonyName);
+    const Ctor = loadColonyConstructor(colonyData.type, colonyData.constructorFile);
     colonies[colonyName] = new Ctor(colonyConfig, colonyName);
   }
   return colonies;

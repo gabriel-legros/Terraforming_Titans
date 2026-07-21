@@ -18,7 +18,7 @@ function updateShipReplication(deltaTime, resources, globalEffects, accumulatedC
   const increase = rate * (deltaTime / 1000);
 
   accumulatedChanges.special.spaceships += increase;
-  shipsResource.modifyRate(rate, 'Replication', 'global');
+  shipsResource.modifyRate(rate, t('ui.resourceRates.sources.replication', {}, 'Replication'), 'global');
 }
 
 try {

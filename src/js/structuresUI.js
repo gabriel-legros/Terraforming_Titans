@@ -329,22 +329,28 @@ function refreshAutoBuildTarget(structure) {
           : autoBuildUsesAndroidCapacityShare
             ? structure.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
           : roundedPercentTarget;
+  const aerostatCapacity = colonies.aerostat_colony
+    ? getAerostatSupportedBuildingLimit(structure)
+    : Infinity;
+  const aerostatCapacitySuffix = aerostatCapacity === Infinity
+    ? ''
+    : ` (${formatNumber(aerostatCapacity, true)})`;
 
   if (els.autoBuildTarget) {
     const targetText = autoBuildUsesFill
-      ? getStructuresUIText('ui.structures.autoBuild.maxFill', 'Max fill : {value}%', {
+      ? `${getStructuresUIText('ui.structures.autoBuild.maxFill', 'Max fill : {value}%', {
           value: formatNumber(structure.autoBuildFillPercent || 0, true)
-        })
+        })}${aerostatCapacitySuffix}`
       : autoBuildUsesMax
         ? autoBuildUsesAdjustableMax
           ? getStructuresUIText('ui.structures.autoBuild.targetText', 'Target : {value}', {
-              value: formatNumber(targetCount, true)
+              value: `${formatNumber(targetCount, true)}${aerostatCapacitySuffix}`
             })
           : getStructuresUIText('ui.structures.autoBuild.targetText', 'Target : {value}', {
-              value: getAutoBuildMaxBasisLabel(structure)
+              value: `${getAutoBuildMaxBasisLabel(structure)}${aerostatCapacitySuffix}`
             })
         : getStructuresUIText('ui.structures.autoBuild.targetText', 'Target : {value}', {
-            value: formatNumber(targetCount, true)
+            value: `${formatNumber(targetCount, true)}${aerostatCapacitySuffix}`
           });
     if (els.autoBuildTarget.textContent !== targetText) {
       els.autoBuildTarget.textContent = targetText;
@@ -811,7 +817,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   button.classList.add('building-button', 'building-header-button');
   // Initial button text with a dedicated span for the build count to keep width stable
   button.textContent = '';
-  button.append('Build ');
+  button.append(getStructuresUIText('ui.structures.controls.buildPrefix', 'Build '));
   const countSpan = document.createElement('span');
   countSpan.classList.add('build-button-count');
   countSpan.textContent = '1';
@@ -2005,7 +2011,9 @@ function updateDecreaseButtonText(button, buildCount) {
         }
         items.push({
           key: `${category}.${resource}`,
-          text: `${capitalizeFirstLetter(resource)}: ${formatNumber(cost[category][resource], true)}`,
+          text: `${resources[category][resource].displayName}: ${formatNumber(cost[category][resource], true)}`,
+          required: cost[category][resource],
+          available,
           hasEnough: available >= cost[category][resource]
         });
       }
@@ -2037,6 +2045,8 @@ function updateDecreaseButtonText(button, buildCount) {
       button._spans = new Map();
       items.forEach((item, idx) => {
         const span = document.createElement('span');
+        span._costTextNode = document.createElement('span');
+        span.appendChild(span._costTextNode);
         list.appendChild(span);
         button._spans.set(item.key, span);
         if (idx < items.length - 1) {
@@ -2048,9 +2058,18 @@ function updateDecreaseButtonText(button, buildCount) {
     items.forEach(item => {
       const span = button._spans.get(item.key);
       if (!span) return;
-      if (span.textContent !== item.text) {
-        span.textContent = item.text;
+      if (span._costTextNode.textContent !== item.text) {
+        span._costTextNode.textContent = item.text;
       }
+      const tooltipLines = [
+        getStructuresUIText('ui.structures.tooltips.required', 'Required: {value}', {
+          value: formatNumber(item.required, true)
+        }),
+        getStructuresUIText('ui.structures.tooltips.available', 'Available: {value}', {
+          value: formatNumber(item.available, true)
+        })
+      ];
+      syncCostExplanationTooltip(span, tooltipLines.join('\n'), !item.hasEnough);
       const color = item.hasEnough ? '' : 'red';
       if (span.style.color !== color) {
         span.style.color = color;
@@ -2121,6 +2140,9 @@ function updateDecreaseButtonText(button, buildCount) {
   }
 
   function buildStructureCostTooltip(structure, category, resource, buildCount) {
+    const selectedCost = structure.getEffectiveCost(buildCount)?.[category]?.[resource] ?? 0;
+    const resourceState = resources[category][resource];
+    const available = resourceState.value;
     const isAerostatResearchCost =
       structure?.name === 'aerostat_colony'
       && category === 'colony'
@@ -2138,6 +2160,9 @@ function updateDecreaseButtonText(button, buildCount) {
           value: formatNumber(selectedTotalCost, true)
         })
       ];
+      aerostatLines.push(getStructuresUIText('ui.structures.tooltips.available', 'Available: {value}', {
+        value: formatNumber(available, true)
+      }));
       const aerostatMultipliers = [];
       const aerostatKesslerMultiplier = structure.getKesslerCostMultiplier();
 
@@ -2185,6 +2210,12 @@ function updateDecreaseButtonText(button, buildCount) {
     const lines = [getStructuresUIText('ui.structures.tooltips.baseCost', 'Base cost: {value}', {
       value: formatNumber(totalBaseCost, true)
     })];
+    lines.push(getStructuresUIText('ui.structures.tooltips.selectedCost', 'Selected cost: {value}', {
+      value: formatNumber(selectedCost, true)
+    }));
+    lines.push(getStructuresUIText('ui.structures.tooltips.available', 'Available: {value}', {
+      value: formatNumber(available, true)
+    }));
     const multipliers = [];
 
     if (kesslerMultiplier !== 1) {
@@ -2476,12 +2507,14 @@ function updateDecreaseButtonText(button, buildCount) {
     const effectiveCost = structure.getEffectiveCost(buildCount);
     for (const category in effectiveCost) {
       for (const resource in effectiveCost[category]) {
+        const resourceState = resources[category][resource];
         items.push({
           key: `${category}.${resource}`,
-          label: capitalizeFirstLetter(resource),
+          label: resourceState.displayName,
           required: effectiveCost[category][resource],
-          available: resources[category][resource]?.value || 0,
-          insufficientColor: 'red',
+          available: resourceState.value,
+          capacity: resourceState.cap,
+          insufficientColor: getStatusColor('failure'),
           category,
           resource,
           isCostResource: true
@@ -2502,12 +2535,18 @@ function updateDecreaseButtonText(button, buildCount) {
 
     if (structure.requiresLand) {
       const requiredLand = structure.requiresLand * buildCount;
+      const landResource = resources.surface.land;
+      const availableLand = landResource.getAvailableAmount
+        ? landResource.getAvailableAmount()
+        : landResource.value - landResource.reserved;
       items.push({
         key: 'colony.land',
         label: getStructuresUIText('ui.structures.costLabels.land', 'Land'),
         required: structure.requiresLand,
         available: structure.canAffordLand(buildCount) ? requiredLand : 0,
-        insufficientColor: 'red'
+        actualAvailable: availableLand,
+        insufficientColor: getStatusColor('failure'),
+        isLandRequirement: true
       });
     }
 
@@ -2518,7 +2557,8 @@ function updateDecreaseButtonText(button, buildCount) {
         label: getStructuresUIText('ui.structures.costLabels.deposit', 'Deposit'),
         required: 1,
         available: structure.canAffordDeposit(buildCount) ? requiredDeposit : 0,
-        insufficientColor: 'red'
+        insufficientColor: getStatusColor('failure'),
+        isDepositRequirement: true
       });
     }
 
@@ -2548,7 +2588,7 @@ function updateDecreaseButtonText(button, buildCount) {
           span.appendChild(textSpan);
           span._textSpan = textSpan;
 
-          const tooltip = attachDynamicInfoTooltip(span, '');
+          const tooltip = syncCostExplanationTooltip(span, '', false);
           span._costTooltip = tooltip;
           span._costTooltipCache = {};
           span._updateCostTooltip = () => {
@@ -2561,13 +2601,14 @@ function updateDecreaseButtonText(button, buildCount) {
             );
             setTooltipText(tooltip, text, span._costTooltipCache, 'text');
           };
-            addTrackedUIListener(costElement, span, 'mouseenter', span._updateCostTooltip);
-            addTrackedUIListener(costElement, span, 'focusin', span._updateCostTooltip);
-            addTrackedUIListener(costElement, span, 'pointerdown', span._updateCostTooltip);
+            span.addEventListener('mouseenter', span._updateCostTooltip);
+            span.addEventListener('focusin', span._updateCostTooltip);
+            span.addEventListener('pointerdown', span._updateCostTooltip);
         } else if (!item.isWorkerRequirement) {
           const textSpan = document.createElement('span');
           span.appendChild(textSpan);
           span._textSpan = textSpan;
+          syncCostExplanationTooltip(span, '', false);
         }
         costElement._spans.set(item.key, span);
       }
@@ -2713,7 +2754,41 @@ function updateDecreaseButtonText(button, buildCount) {
         };
       }
       const hasEnough = item.available >= requiredAmount;
-      const color = hasEnough ? '' : item.insufficientColor;
+      const isStorageBlocked = item.isCostResource
+        && !hasEnough
+        && requiredAmount > item.capacity;
+      const color = hasEnough
+        ? ''
+        : (isStorageBlocked ? getStatusColor('storageBlocked') : item.insufficientColor);
+      if (item.isCostResource) {
+        syncCostExplanationTooltip(span, span._costTooltip.textContent, !hasEnough && !isStorageBlocked);
+      }
+      if (item.isLandRequirement) {
+        const tooltipLines = [
+          getStructuresUIText('ui.structures.tooltips.required', 'Required: {value}', {
+            value: formatNumber(requiredAmount, true)
+          }),
+          getStructuresUIText('ui.structures.tooltips.availableLand', 'Available unreserved land: {value}', {
+            value: formatNumber(item.actualAvailable, true)
+          })
+        ];
+        syncCostExplanationTooltip(span, tooltipLines.join('\n'), !hasEnough);
+      } else if (item.isDepositRequirement) {
+        const tooltipLines = [];
+        for (const category in structure.requiresDeposit) {
+          for (const resource in structure.requiresDeposit[category]) {
+            const required = structure.requiresDeposit[category][resource] * buildCount;
+            const resourceState = resources[category][resource];
+            const available = Math.max(0, resourceState.value - resourceState.reserved);
+            tooltipLines.push(getStructuresUIText('ui.structures.tooltips.depositRequirement', '{resource}: {available} available / {required} required', {
+              resource: resourceState.displayName || capitalizeFirstLetter(resource),
+              available: formatNumber(available, true),
+              required: formatNumber(required, true)
+            }));
+          }
+        }
+        syncCostExplanationTooltip(span, tooltipLines.join('\n'), !hasEnough);
+      }
       if (item.key === 'colony.workers') {
         if (span.style.color) {
           span.style.color = '';
@@ -3106,11 +3181,19 @@ function updateDecreaseButtonText(button, buildCount) {
       buildProdConsElement(productionConsumptionElement, sections);
     }
     const combinedCosts = {};
+    const combinedProduction = {};
     sections.forEach(sec => {
       if (isPlainProdConsSection(sec.key)) {
         return;
       }
-      if (sec.key === 'consumption') {
+      if (sec.key === 'production') {
+        for (const category in sec.data) {
+          for (const resource in sec.data[category]) {
+            const k = `${category}.${resource}`;
+            combinedProduction[k] = (combinedProduction[k] || 0) + sec.data[category][resource];
+          }
+        }
+      } else if (sec.key === 'consumption') {
         for (const category in sec.data) {
           for (const resource in sec.data[category]) {
             const k = `${category}.${resource}`;
@@ -3183,9 +3266,12 @@ function updateDecreaseButtonText(button, buildCount) {
             if (sec.key === 'production') {
               color = swapResourceRateColor(resObj, netRate < 0 ? 'green' : '');
             } else if (sec.key === 'consumption' || sec.key === 'maintenance') {
-              const totalCost = combinedCosts[`${category}.${resource}`] || amount;
-              const projectedNet = netRate - totalCost;
-              color = projectedNet < 0 ? 'orange' : '';
+              const resourceKey = `${category}.${resource}`;
+              const totalCost = combinedCosts[resourceKey] || amount;
+              const addedProduction = combinedProduction[resourceKey] || 0;
+              const projectedNet = netRate + addedProduction - totalCost;
+              const coversOwnDemand = addedProduction >= totalCost;
+              color = projectedNet < 0 && !coversOwnDemand ? 'orange' : '';
             }
             if (textSpan.style.color !== color) {
               textSpan.style.color = color;
@@ -3490,10 +3576,9 @@ function updateDecreaseButtonText(button, buildCount) {
       info.container.style.display = '';
       expectedChildren.push(info.container);
       if (idx < sections.length - 1) {
-        const currentSec = sections[idx];
         const nextSec = sections[idx + 1];
         let separator = separators[idx];
-        const shouldUseLineBreak = currentSec.key === 'consumption' && nextSec.key === 'maintenance';
+        const shouldUseLineBreak = ['production', 'consumption', 'maintenance'].includes(nextSec.key);
         if (shouldUseLineBreak) {
           if (!separator || separator.nodeName !== 'BR') {
             if (separator) {
