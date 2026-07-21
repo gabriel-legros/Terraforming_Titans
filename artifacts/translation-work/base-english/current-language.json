@@ -5321,7 +5321,7 @@
       },
       "glassSmelter": {
         "name": "Glass Smelter",
-        "description": "Uses high heat to turn silicon into glass.",
+        "description": "Uses high heat to turn silica into glass.",
         "recipes": {
           "silica": {
             "shortName": "Silica"
