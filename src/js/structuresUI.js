@@ -2761,7 +2761,7 @@ function updateDecreaseButtonText(button, buildCount) {
         ? ''
         : (isStorageBlocked ? getStatusColor('storageBlocked') : item.insufficientColor);
       if (item.isCostResource) {
-        syncCostExplanationTooltip(span, span._costTooltip.textContent, !hasEnough && !isStorageBlocked);
+        syncCostExplanationTooltip(span, span._costTooltip.textContent, true);
       }
       if (item.isLandRequirement) {
         const tooltipLines = [
