@@ -1,0 +1,21 @@
+{
+  "entries": {
+    "colonization": {
+      "torment_nexus": {
+        "name": "",
+        "description": "",
+        "cost": {
+          "research": 5000000000
+        },
+        "prerequisites": [],
+        "effects": [
+          {
+            "target": "building",
+            "targetId": "tormentNexus",
+            "type": "enable"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "local.torment-nexus",
+  "name": "The Torment Nexus",
+  "version": "1.0.0",
+  "loadOrder": 100,
+  "content": {
+    "patches": [
+      {
+        "target": "language.current",
+        "file": "patches/language-en.json"
+      },
+      {
+        "target": "parameters.buildings",
+        "file": "patches/buildings.json"
+      },
+      {
+        "target": "parameters.research",
+        "file": "patches/research.json"
+      }
+    ],
+    "replacements": []
+  }
+}
