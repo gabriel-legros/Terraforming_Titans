@@ -36,6 +36,7 @@ let launcherWorkshopResult = {
   status: { enabled: false, initialized: false, error: '', items: [] }
 };
 let launcherRefreshing = false;
+let launcherStartupError = '';
 let launcherSelectedSave = '';
 let startupSelection = { mode: 'latest', slot: '' };
 let gameLaunchStarted = false;
@@ -494,7 +495,7 @@ function getLauncherState() {
     workshop: launcherWorkshopResult.status,
     refreshing: launcherRefreshing,
     creatorBusy: workshopPublisher ? workshopPublisher.isBusy() : false,
-    error: launcherLoadout.error || ''
+    error: launcherStartupError || launcherLoadout.error || ''
   };
 }
 
@@ -515,11 +516,11 @@ function rebuildLauncherCatalog() {
 
 function refreshLauncherCatalog() {
   if (launcherRefreshing) {
-    return;
+    return Promise.resolve(false);
   }
   launcherRefreshing = true;
   sendLauncherState();
-  resolveSubscribedWorkshopMods(steamIntegration, {
+  return resolveSubscribedWorkshopMods(steamIntegration, {
     onUpdate(workshopStatus) {
       launcherWorkshopResult.status = workshopStatus;
       if (launcherWindow && !launcherWindow.isDestroyed()) {
@@ -545,10 +546,12 @@ function refreshLauncherCatalog() {
     }
     launcherRefreshing = false;
     sendLauncherState();
+    return true;
   }).catch(error => {
     launcherWorkshopResult.status.error = error.message;
     launcherRefreshing = false;
     sendLauncherState();
+    return false;
   });
 }
 
@@ -780,65 +783,87 @@ function registerModLauncherHandlers() {
       return { success: false, error: 'The launcher is not ready.' };
     }
     try {
-      const availableIds = launcherCatalog.entries.map(entry => entry.instanceId);
-      const requestedOrder = options.order.map(value => String(value));
-      const requestedDisabled = options.disabled.map(value => String(value));
-      const saveSelection = String(options.saveSelection);
-      const entriesById = new Map(launcherCatalog.entries.map(entry => [entry.instanceId, entry]));
-      if (requestedOrder.length !== availableIds.length
-          || new Set(requestedOrder).size !== availableIds.length
-          || requestedOrder.some(instanceId => !entriesById.has(instanceId))) {
-        throw new Error('The mod catalog changed. Refresh the launcher and try again.');
-      }
-      const disabled = new Set(requestedDisabled);
-      if (requestedDisabled.some(instanceId => !entriesById.has(instanceId))) {
-        throw new Error('The disabled mod list contains an unknown mod.');
-      }
-      const orderedEntries = requestedOrder.map(instanceId => entriesById.get(instanceId));
-      const activeEntries = orderedEntries.filter(entry => entry.valid && !disabled.has(entry.instanceId));
-      const activeManifestIds = new Set();
-      activeEntries.forEach(entry => {
-        if (activeManifestIds.has(entry.id)) {
-          throw new Error(`Disable one copy of duplicate mod id ${entry.id}.`);
-        }
-        activeManifestIds.add(entry.id);
-      });
-
-      if (saveSelection === 'new') {
-        startupSelection = { mode: 'new', slot: '' };
-      } else {
-        const selectedSave = launcherSaveCatalog.saves.find(save => save.selectionId === saveSelection && save.valid);
-        if (!selectedSave) {
-          throw new Error('The selected save is no longer available. Refresh the launcher.');
-        }
-        startupSelection = { mode: 'slot', slot: selectedSave.slot };
-      }
-
-      launcherLoadout = writeModLoadout(
-        app.getPath('userData'),
-        launcherLoadout,
-        availableIds,
-        requestedOrder,
-        requestedDisabled
-      );
-      modService = createModService({
-        appRoot: path.join(__dirname, '..'),
-        mods: activeEntries,
-        workshopStatus: launcherWorkshopResult.status
-      });
-      if (modService.publicSession.mods.length) {
-        const modIds = modService.publicSession.mods.map(mod => mod.id).join(', ');
-        console.log(`Mods active: ${modIds}.`);
-      }
-      gameLaunchStarted = true;
-      if (launcherWindow && !launcherWindow.isDestroyed()) {
-        launcherWindow.hide();
-      }
-      createWindow();
+      launchGame(options);
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
     }
+  });
+}
+
+function launchGame(options) {
+  const availableIds = launcherCatalog.entries.map(entry => entry.instanceId);
+  const requestedOrder = options.order.map(value => String(value));
+  const requestedDisabled = options.disabled.map(value => String(value));
+  const saveSelection = String(options.saveSelection);
+  const entriesById = new Map(launcherCatalog.entries.map(entry => [entry.instanceId, entry]));
+  if (requestedOrder.length !== availableIds.length
+      || new Set(requestedOrder).size !== availableIds.length
+      || requestedOrder.some(instanceId => !entriesById.has(instanceId))) {
+    throw new Error('The mod catalog changed. Refresh the launcher and try again.');
+  }
+  const disabled = new Set(requestedDisabled);
+  if (requestedDisabled.some(instanceId => !entriesById.has(instanceId))) {
+    throw new Error('The disabled mod list contains an unknown mod.');
+  }
+  const orderedEntries = requestedOrder.map(instanceId => entriesById.get(instanceId));
+  const activeEntries = orderedEntries.filter(entry => entry.valid && !disabled.has(entry.instanceId));
+  const activeManifestIds = new Set();
+  activeEntries.forEach(entry => {
+    if (activeManifestIds.has(entry.id)) {
+      throw new Error(`Disable one copy of duplicate mod id ${entry.id}.`);
+    }
+    activeManifestIds.add(entry.id);
+  });
+
+  if (saveSelection === 'new') {
+    startupSelection = { mode: 'new', slot: '' };
+  } else {
+    const selectedSave = launcherSaveCatalog.saves.find(save => save.selectionId === saveSelection && save.valid);
+    if (!selectedSave) {
+      throw new Error('The selected save is no longer available. Refresh the launcher.');
+    }
+    startupSelection = { mode: 'slot', slot: selectedSave.slot };
+  }
+
+  launcherLoadout = writeModLoadout(
+    app.getPath('userData'),
+    launcherLoadout,
+    availableIds,
+    requestedOrder,
+    requestedDisabled
+  );
+  modService = createModService({
+    appRoot: path.join(__dirname, '..'),
+    mods: activeEntries,
+    workshopStatus: launcherWorkshopResult.status
+  });
+  if (modService.publicSession.mods.length) {
+    const modIds = modService.publicSession.mods.map(mod => mod.id).join(', ');
+    console.log(`Mods active: ${modIds}.`);
+  }
+  gameLaunchStarted = true;
+  if (launcherWindow && !launcherWindow.isDestroyed()) {
+    launcherWindow.hide();
+  }
+  createWindow();
+}
+
+function launchLatestSaveFromCommandLine() {
+  if (launcherSaveCatalog.defaultSelection === 'new') {
+    throw new Error('No valid save is available to load.');
+  }
+  const reconciled = reconcileModLoadout(launcherCatalog.entries, launcherLoadout);
+  const invalidEnabledMod = reconciled.ordered.find(entry => !entry.valid && !reconciled.disabled.has(entry.instanceId));
+  if (invalidEnabledMod) {
+    throw new Error(`Enabled mod ${invalidEnabledMod.id} is invalid.`);
+  }
+  launchGame({
+    order: reconciled.ordered.map(entry => entry.instanceId),
+    disabled: reconciled.ordered
+      .filter(entry => reconciled.disabled.has(entry.instanceId))
+      .map(entry => entry.instanceId),
+    saveSelection: launcherSaveCatalog.defaultSelection
   });
 }
 
@@ -985,8 +1010,24 @@ app.whenReady().then(() => {
   registerModLauncherHandlers();
   registerModCreatorHandlers();
   powerSaveBlocker.start('prevent-app-suspension');
-  createLauncherWindow();
-  refreshLauncherCatalog();
+  if (process.argv.includes('--skip-launcher')) {
+    refreshLauncherCatalog().then(refreshed => {
+      if (!refreshed) {
+        launcherStartupError = launcherWorkshopResult.status.error || 'The mod catalog could not be refreshed.';
+        createLauncherWindow();
+        return;
+      }
+      try {
+        launchLatestSaveFromCommandLine();
+      } catch (error) {
+        launcherStartupError = `Automatic launch failed: ${error.message}`;
+        createLauncherWindow();
+      }
+    });
+  } else {
+    createLauncherWindow();
+    refreshLauncherCatalog();
+  }
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
