@@ -70,7 +70,8 @@ const SPACE_STORAGE_FLUID_TRANSFER_TARGETS = {
         category: 'colony',
         resource: 'water',
         labelKey: 'colony',
-        fallbackLabel: 'Colony'
+        fallbackLabel: 'Colony',
+        allowsOverflow: true
       },
       colonyOnly: {
         category: 'colony',
@@ -102,7 +103,8 @@ const SPACE_STORAGE_FLUID_TRANSFER_TARGETS = {
         category: 'colony',
         resource: 'colonyHydrogen',
         labelKey: 'colony',
-        fallbackLabel: 'Colony'
+        fallbackLabel: 'Colony',
+        allowsOverflow: true
       },
       colonyOnly: {
         category: 'colony',
@@ -986,8 +988,13 @@ class SpaceStorageProject extends SpaceshipProject {
     return { category: entry.category, resource: entry.resource };
   }
 
-  getTransferDestinationFreeForTick(category, resourceKey, accumulatedChanges = null) {
-    const resource = resources?.[category]?.[resourceKey];
+  getTransferDestinationFreeForTick(entry, accumulatedChanges = null) {
+    const target = this.getTransferEndpoint(entry);
+    const fluidConfig = SPACE_STORAGE_FLUID_TRANSFER_TARGETS[entry.resource];
+    if (fluidConfig && this.getFluidTransferTarget(entry.resource).allowsOverflow) {
+      return Infinity;
+    }
+    const resource = resources?.[target.category]?.[target.resource];
     if (!resource) {
       return 0;
     }
@@ -997,7 +1004,7 @@ class SpaceStorageProject extends SpaceshipProject {
     if (!Number.isFinite(resource.cap)) {
       return Infinity;
     }
-    return Math.max(0, resource.cap - this.getResourceValueForTick(category, resourceKey, accumulatedChanges));
+    return Math.max(0, resource.cap - this.getResourceValueForTick(target.category, target.resource, accumulatedChanges));
   }
 
   getProductivityConsumerDemandForTick(category, resourceKey, deltaTime) {
@@ -1035,7 +1042,7 @@ class SpaceStorageProject extends SpaceshipProject {
       if (!(stored > 0)) {
         return;
       }
-      const storageDemand = this.getTransferDestinationFreeForTick(target.category, target.resource, accumulatedChanges);
+      const storageDemand = this.getTransferDestinationFreeForTick(entry, accumulatedChanges);
       const consumerDemand = this.getProductivityConsumerDemandForTick(target.category, target.resource, deltaTime);
       const importLimitRemaining = this.getImportLimitRemainingForWithdrawal(entry.resource, target, accumulatedChanges);
       const amountLimitRemaining = this.getAmountWithdrawLimitRemaining(entry.resource, target, accumulatedChanges);
@@ -1707,8 +1714,7 @@ class SpaceStorageProject extends SpaceshipProject {
       const stored = this.getAvailableStoredResource(entry.resource, 'transfers');
       if (stored <= 0) return;
       const target = this.getTransferEndpoint(entry);
-      const targetRes = resources[target.category][target.resource];
-      const destFree = targetRes && Number.isFinite(targetRes.cap) ? Math.max(0, targetRes.cap - targetRes.value) : Infinity;
+      const destFree = this.getTransferDestinationFreeForTick(entry);
       const importLimitRemaining = this.getImportLimitRemainingForWithdrawal(entry.resource, target);
       const amountLimitRemaining = this.getAmountWithdrawLimitRemaining(entry.resource, target);
       const biomassDensityRemaining = this.getBiomassWithdrawalDensityRemaining(null);
@@ -1831,7 +1837,7 @@ class SpaceStorageProject extends SpaceshipProject {
       const stored = this.getAvailableStoredResourceForTick(entry.resource, 'transfers', accumulatedChanges);
       if (stored <= 0) return;
       const target = this.getTransferEndpoint(entry);
-      const destFree = this.getTransferDestinationFreeForTick(target.category, target.resource, accumulatedChanges);
+      const destFree = this.getTransferDestinationFreeForTick(entry, accumulatedChanges);
       const importLimitRemaining = this.getImportLimitRemainingForWithdrawal(entry.resource, target, accumulatedChanges);
       const amountLimitRemaining = this.getAmountWithdrawLimitRemaining(entry.resource, target, accumulatedChanges);
       const biomassDensityRemaining = entry.resource === 'biomass'
