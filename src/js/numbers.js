@@ -22,7 +22,7 @@ function formatScientificWithRounding(value, precision, roundDown) {
   if (!roundDown) {
     return value.toExponential(precision).replace('e+', 'e');
   }
-  const exponent = Math.floor(Math.log10(value));
+  const exponent = Number(value.toExponential().split('e')[1]);
   const power = Math.pow(10, exponent);
   const mantissa = value / power;
   return `${formatWithRounding(mantissa, precision, true)}e${exponent}`;
@@ -168,67 +168,67 @@ function formatNumber(value, integer = false, precision = 1, allowSmall = false,
       return value < 0 ? '-' + formatted : formatted;
     }
 
-    if (absValue >= 1e39 - 1e36) {
+    if (absValue >= 1e39) {
       const scaled = absValue / 1e39;
       formatted = integer && isNearlyWhole(scaled)
         ? formatIntegerWithRounding(scaled, roundDown) + 'Dd'
         : formatWithRounding(scaled, precision, roundDown) + 'Dd';
-    } else if (absValue >= 1e36 - 1e33) {
+    } else if (absValue >= 1e36) {
       const scaled = absValue / 1e36;
       formatted = integer && isNearlyWhole(scaled)
         ? formatIntegerWithRounding(scaled, roundDown) + 'Ud'
         : formatWithRounding(scaled, precision, roundDown) + 'Ud';
-    } else if (absValue >= 1e33 - 1e30) {
+    } else if (absValue >= 1e33) {
       const scaled = absValue / 1e33;
       formatted = integer && isNearlyWhole(scaled)
         ? formatIntegerWithRounding(scaled, roundDown) + 'De'
         : formatWithRounding(scaled, precision, roundDown) + 'Dc';
-    } else if (absValue >= 1e30 - 1e27) {
+    } else if (absValue >= 1e30) {
       const scaled = absValue / 1e30;
       formatted = integer && isNearlyWhole(scaled)
         ? formatIntegerWithRounding(scaled, roundDown) + 'No'
         : formatWithRounding(scaled, precision, roundDown) + 'No';
-    } else if (absValue >= 1e27 - 1e24) {
+    } else if (absValue >= 1e27) {
       const scaled = absValue / 1e27;
       formatted = integer && isNearlyWhole(scaled)
         ? formatIntegerWithRounding(scaled, roundDown) + 'Oc'
         : formatWithRounding(scaled, precision, roundDown) + 'Oc';
-    } else if (absValue >= 1e24 - 1e21) {
+    } else if (absValue >= 1e24) {
       const scaled = absValue / 1e24;
       formatted = integer && isNearlyWhole(scaled)
         ? formatIntegerWithRounding(scaled, roundDown) + 'Sp'
         : formatWithRounding(scaled, precision, roundDown) + 'Sp';
-    } else if (absValue >= 1e21 - 1e18) {
+    } else if (absValue >= 1e21) {
       const scaled = absValue / 1e21;
       formatted = integer && isNearlyWhole(scaled)
         ? formatIntegerWithRounding(scaled, roundDown) + 'Sx'
         : formatWithRounding(scaled, precision, roundDown) + 'Sx';
-    } else if (absValue >= 1e18 - 1e15) {
+    } else if (absValue >= 1e18) {
       const scaled = absValue / 1e18;
       formatted = integer && isNearlyWhole(scaled)
         ? formatIntegerWithRounding(scaled, roundDown) + 'Qi'
         : formatWithRounding(scaled, precision, roundDown) + 'Qi';
-    } else if (absValue >= 1e15 - 1e12) {
+    } else if (absValue >= 1e15) {
       const scaled = absValue / 1e15;
       formatted = integer && isNearlyWhole(scaled)
         ? formatIntegerWithRounding(scaled, roundDown) + 'Q'
         : formatWithRounding(scaled, precision, roundDown) + 'Q';
-    } else if (absValue >= 1e12 - 1e9) {
+    } else if (absValue >= 1e12) {
       const scaled = absValue / 1e12;
       formatted = integer && isNearlyWhole(scaled)
         ? formatIntegerWithRounding(scaled, roundDown) + 'T'
         : formatWithRounding(scaled, precision, roundDown) + 'T';
-    } else if (absValue >= 1e9 - 1e6) {
+    } else if (absValue >= 1e9) {
       const scaled = absValue / 1e9;
       formatted = integer && isNearlyWhole(scaled)
         ? formatIntegerWithRounding(scaled, roundDown) + 'B'
         : formatWithRounding(scaled, precision, roundDown) + 'B';
-    } else if (absValue >= 1e6 - 1e3) {
+    } else if (absValue >= 1e6) {
       const scaled = absValue / 1e6;
       formatted = integer && isNearlyWhole(scaled)
         ? formatIntegerWithRounding(scaled, roundDown) + 'M'
         : formatWithRounding(scaled, precision, roundDown) + 'M';
-    } else if (absValue >= 1e3 - 1) {
+    } else if (absValue >= 1e3) {
       const scaled = absValue / 1e3;
       formatted = integer && isNearlyWhole(scaled)
         ? formatIntegerWithRounding(scaled, roundDown) + 'k'
