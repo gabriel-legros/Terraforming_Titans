@@ -30,7 +30,7 @@ class AndroidFactory extends Building {
 }
 
 try {
-  registerBuildingConstructor('androidFactory', AndroidFactory);
+  registerBuildingConstructor(AndroidFactory);
 } catch (error) {}
 
 try {

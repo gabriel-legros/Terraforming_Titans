@@ -286,7 +286,6 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
 
     if (!accumulatedChanges) {
       storage.reconcileUsedStorage();
-      updateSpaceStorageUI(storage);
     }
 
     const outputRate = plan.finalOutput / seconds;

@@ -82,7 +82,7 @@ class DysonManager {
     }
     resourcesRef.space.energy.modifyRate(
       projectedPerSecond,
-      'Dyson Collectors',
+      t('ui.resourceRates.sources.dysonCollectors', {}, 'Dyson Collectors'),
       'project'
     );
     return projectedPerSecond;

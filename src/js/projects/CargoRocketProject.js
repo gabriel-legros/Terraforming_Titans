@@ -625,7 +625,7 @@ class CargoRocketProject extends Project {
           if (applyRates) {
             resources[category][resource].modifyRate(
               adjustedQuantity * (applyRates ? productivity : 1),
-              'Cargo Rockets',
+              this.displayName,
               'project'
             );
           }
@@ -637,7 +637,7 @@ class CargoRocketProject extends Project {
           if (applyRates) {
             resources.colony.funding.modifyRate(
               -costPerSecond * (applyRates ? productivity : 1),
-              'Cargo Rockets',
+              this.displayName,
               'project'
             );
           }
@@ -658,7 +658,7 @@ class CargoRocketProject extends Project {
           if (applyRates) {
             resources[gain.category][gain.resource].modifyRate(
               rateValue,
-              'Cargo Rockets',
+              this.displayName,
               'project'
             );
           }
@@ -674,7 +674,7 @@ class CargoRocketProject extends Project {
         if (applyRates) {
           resources.colony.funding.modifyRate(
             -rateValue,
-            'Cargo Rockets',
+            this.displayName,
             'project'
           );
         }

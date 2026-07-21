@@ -1128,6 +1128,9 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'fillPercent' && ref.category === 'spaceStorage') {
       return this.resolveSpaceStorageResourceFillPercent(resourceId, resource);
     }
+    if (ref.attribute === 'fillPercent' && ref.category === 'surface' && resourceId === 'land') {
+      return resource.value > 0 ? (this.toNumber(resource.reserved) / this.toNumber(resource.value)) * 100 : 0;
+    }
     if (ref.attribute === 'fillPercent') return resource.cap > 0 ? (this.toNumber(resource.value) / this.toNumber(resource.cap)) * 100 : 0;
     if (ref.attribute === 'productionRate') return this.toNumber(resource.productionRate);
     if (ref.attribute === 'consumptionRate') return this.toNumber(resource.consumptionRate);

@@ -406,9 +406,6 @@ class WorkerCapacityBatchProject extends Project {
       const limit = this.getWorkerCapLimit();
       if (this.buildCount !== limit) {
         this.setBuildCount(limit);
-        if (typeof updateProjectUI === 'function') {
-          updateProjectUI(this.name);
-        }
       }
     }
     super.update(deltaTime);

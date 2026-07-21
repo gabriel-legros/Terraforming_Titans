@@ -61,20 +61,39 @@ function createAchievementRow() {
 
 function updateAchievementRow(row, achievement) {
   const refs = row._refs;
-  row.classList.toggle('settings-achievement-row--complete', achievement.achieved);
-  refs.status.textContent = achievement.achieved
+  const achieved = !!achievement.achieved;
+  const completeClass = 'settings-achievement-row--complete';
+  if (row.classList.contains(completeClass) !== achieved) {
+    row.classList.toggle(completeClass, achieved);
+  }
+
+  const statusText = achieved
     ? t('ui.settings.achievements.achieved', null, 'Achieved')
     : t('ui.settings.achievements.locked', null, 'Not achieved');
-  refs.title.textContent = achievement.title;
-  refs.requirement.textContent = achievement.displayRequirement || achievement.requirement;
-  refs.requirement.classList.toggle('settings-achievement-requirement--hidden', achievement.hidden && !achievementsShowHiddenText);
+  if (refs.status.textContent !== statusText) {
+    refs.status.textContent = statusText;
+  }
+  if (refs.title.textContent !== achievement.title) {
+    refs.title.textContent = achievement.title;
+  }
+
+  const requirementText = achievement.displayRequirement || achievement.requirement;
+  if (refs.requirement.textContent !== requirementText) {
+    refs.requirement.textContent = requirementText;
+  }
+
+  const hideRequirement = !!achievement.hidden && !achievementsShowHiddenText;
+  const hiddenClass = 'settings-achievement-requirement--hidden';
+  if (refs.requirement.classList.contains(hiddenClass) !== hideRequirement) {
+    refs.requirement.classList.toggle(hiddenClass, hideRequirement);
+  }
 }
 
 function syncAchievementRows(container, achievements) {
   container._achievementRows ||= new Map();
   const activeIds = new Set();
 
-  achievements.forEach((achievement) => {
+  achievements.forEach((achievement, index) => {
     activeIds.add(achievement.id);
     let row = container._achievementRows.get(achievement.id);
     if (!row) {
@@ -82,8 +101,12 @@ function syncAchievementRows(container, achievements) {
       container._achievementRows.set(achievement.id, row);
     }
     updateAchievementRow(row, achievement);
-    row.style.display = '';
-    container.appendChild(row);
+    if (row.style.display) {
+      row.style.display = '';
+    }
+    if (container.children[index] !== row) {
+      container.insertBefore(row, container.children[index] || null);
+    }
   });
 
   container._achievementRows.forEach((row, id) => {
@@ -102,18 +125,25 @@ function updateAchievementsDisplay() {
   ensureAchievementsHiddenToggle(cached);
   if (cached.hiddenToggle) {
     const label = t('ui.settings.achievements.showHiddenText', null, 'Show hidden achievement text');
-    cached.hiddenToggle.dataset.onLabel = label;
-    cached.hiddenToggle.dataset.offLabel = label;
+    if (cached.hiddenToggle.dataset.onLabel !== label) {
+      cached.hiddenToggle.dataset.onLabel = label;
+    }
+    if (cached.hiddenToggle.dataset.offLabel !== label) {
+      cached.hiddenToggle.dataset.offLabel = label;
+    }
     setToggleButtonState(cached.hiddenToggle, achievementsShowHiddenText);
   }
 
   const summary = achievementManager.getSummary(achievementsShowHiddenText);
   if (cached.summary) {
-    cached.summary.textContent = t(
+    const summaryText = t(
       'ui.settings.achievements.summary',
       { achieved: summary.achieved, total: summary.total },
       '{achieved}/{total} achieved'
     );
+    if (cached.summary.textContent !== summaryText) {
+      cached.summary.textContent = summaryText;
+    }
   }
   syncAchievementRows(cached.list, summary.achievements);
 }

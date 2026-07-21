@@ -619,9 +619,21 @@ function clearSelectedGalaxySector() {
         return;
     }
     const message = panel.dataset.emptyMessage || 'No sector selected.';
-    panel.classList.remove('is-populated');
-   panel.replaceChildren();
-   panel.textContent = message;
+    const emptySignature = `empty|${message}`;
+    const hasExactMessage = panel.childNodes.length === 1
+        && panel.firstChild.nodeType === 3
+        && panel.firstChild.nodeValue === message;
+    if (galaxyUICache.sectorContentSignature !== emptySignature
+        || panel.classList.contains('is-populated')
+        || !hasExactMessage) {
+        if (panel.classList.contains('is-populated')) {
+            panel.classList.remove('is-populated');
+        }
+        if (!hasExactMessage) {
+            panel.textContent = message;
+        }
+        galaxyUICache.sectorContentSignature = emptySignature;
+    }
 
     updateSectorDefenseSection();
     galaxyOperationUI?.updateOperationsPanel?.();
@@ -635,8 +647,13 @@ function updateGalaxyMapControlStates() {
     const visibility = cache.popupVisibility;
     Object.entries(cache.popupToggleButtons).forEach(([key, button]) => {
         const active = visibility[key] !== false;
-        button.classList.toggle('is-active', active);
-        button.setAttribute('aria-pressed', active ? 'true' : 'false');
+        if (button.classList.contains('is-active') !== active) {
+            button.classList.toggle('is-active', active);
+        }
+        const pressed = active ? 'true' : 'false';
+        if (button.getAttribute('aria-pressed') !== pressed) {
+            button.setAttribute('aria-pressed', pressed);
+        }
     });
 }
 
@@ -666,12 +683,18 @@ function setGalaxySectorPopupsVisible(visible) {
     }
     const visibility = cache.popupVisibility || { sector: true, operations: true, defense: true };
     const closed = cache.popupClosed || { sector: false, operations: false, defense: false };
-    const selectedVisible = visible && cache.selectedSector;
+    const selectedVisible = !!(visible && cache.selectedSector);
     if (cache.sectorPopup) {
-        cache.sectorPopup.classList.toggle('is-hidden', !(selectedVisible && visibility.sector !== false && closed.sector !== true));
+        const hidden = !(selectedVisible && visibility.sector !== false && closed.sector !== true);
+        if (cache.sectorPopup.classList.contains('is-hidden') !== hidden) {
+            cache.sectorPopup.classList.toggle('is-hidden', hidden);
+        }
     }
     if (cache.operationsPopup) {
-        cache.operationsPopup.classList.toggle('is-hidden', !(selectedVisible && visibility.operations !== false && closed.operations !== true));
+        const hidden = !(selectedVisible && visibility.operations !== false && closed.operations !== true);
+        if (cache.operationsPopup.classList.contains('is-hidden') !== hidden) {
+            cache.operationsPopup.classList.toggle('is-hidden', hidden);
+        }
     }
     if (cache.defensePopup) {
         let defenseAvailable = false;
@@ -679,7 +702,10 @@ function setGalaxySectorPopupsVisible(visible) {
             const sector = galaxyManager?.getSector?.(cache.selectedSector.q, cache.selectedSector.r);
             defenseAvailable = (Number(sector?.getControlValue?.(UHF_FACTION_KEY)) || 0) > 0;
         }
-        cache.defensePopup.classList.toggle('is-hidden', !(selectedVisible && defenseAvailable && visibility.defense !== false && closed.defense !== true));
+        const hidden = !(selectedVisible && defenseAvailable && visibility.defense !== false && closed.defense !== true);
+        if (cache.defensePopup.classList.contains('is-hidden') !== hidden) {
+            cache.defensePopup.classList.toggle('is-hidden', hidden);
+        }
     }
     updateIncomingAttacksPopupVisibility(cache);
     updateGalaxyMapControlStates();
@@ -1493,13 +1519,25 @@ function setDefenseControlsVisibility(visible) {
     }
     const form = galaxyUICache.defenseForm;
     if (form) {
-        form.hidden = !visible;
-        form.style.display = visible ? '' : 'none';
+        const hidden = !visible;
+        const display = visible ? '' : 'none';
+        if (form.hidden !== hidden) {
+            form.hidden = hidden;
+        }
+        if (form.style.display !== display) {
+            form.style.display = display;
+        }
     }
     const clearButton = galaxyUICache.defenseClearButton;
     if (clearButton) {
-        clearButton.hidden = !visible;
-        clearButton.style.display = visible ? '' : 'none';
+        const hidden = !visible;
+        const display = visible ? '' : 'none';
+        if (clearButton.hidden !== hidden) {
+            clearButton.hidden = hidden;
+        }
+        if (clearButton.style.display !== display) {
+            clearButton.style.display = display;
+        }
     }
 }
 
@@ -1511,23 +1549,27 @@ function updateSectorDefenseSection() {
     const section = cache.defenseSection;
     const manager = galaxyManager;
     const enabled = !!(manager && manager.enabled);
-    if (!enabled) {
-        section.classList.add('is-hidden');
+    const selection = cache.selectedSector;
+    if (!enabled || !selection) {
+        if (!section.classList.contains('is-hidden')) {
+            section.classList.add('is-hidden');
+        }
         setDefenseControlsVisibility(false);
         return;
     }
-    section.classList.remove('is-hidden');
-    const selection = cache.selectedSector;
-    if (!selection) {
-        section.classList.add('is-hidden');
-        setDefenseControlsVisibility(false);
-        return;
+    if (section.classList.contains('is-hidden')) {
+        section.classList.remove('is-hidden');
     }
     const sector = manager?.getSector?.(selection.q, selection.r);
     if (!sector) {
         if (cache.defenseWarning) {
-            cache.defenseWarning.textContent = getGalaxyText('defense.sectorDataUnavailable', 'Sector data unavailable.');
-            cache.defenseWarning.classList.remove('is-hidden');
+            const warningText = getGalaxyText('defense.sectorDataUnavailable', 'Sector data unavailable.');
+            if (cache.defenseWarning.textContent !== warningText) {
+                cache.defenseWarning.textContent = warningText;
+            }
+            if (cache.defenseWarning.classList.contains('is-hidden')) {
+                cache.defenseWarning.classList.remove('is-hidden');
+            }
         }
         setDefenseControlsVisibility(false);
         return;
@@ -1536,8 +1578,12 @@ function updateSectorDefenseSection() {
     const faction = manager.getFaction ? manager.getFaction(UHF_FACTION_KEY) : null;
     const uhfControl = Number(sector.getControlValue ? sector.getControlValue(UHF_FACTION_KEY) : 0);
     if (!(uhfControl > 0)) {
-        section.classList.add('is-hidden');
-        cache.defensePopup?.classList.add('is-hidden');
+        if (!section.classList.contains('is-hidden')) {
+            section.classList.add('is-hidden');
+        }
+        if (cache.defensePopup && !cache.defensePopup.classList.contains('is-hidden')) {
+            cache.defensePopup.classList.add('is-hidden');
+        }
         setDefenseControlsVisibility(false);
         return;
     }
@@ -1545,14 +1591,19 @@ function updateSectorDefenseSection() {
     const capacity = manager.getDefenseCapacity ? manager.getDefenseCapacity(UHF_FACTION_KEY) : 0;
     if (!(capacity > 0)) {
         if (cache.defenseWarning) {
-            cache.defenseWarning.textContent = getGalaxyText('defense.expandFleetLogistics', 'Expand fleet logistics to unlock defensive deployments.');
-            cache.defenseWarning.classList.remove('is-hidden');
+            const warningText = getGalaxyText('defense.expandFleetLogistics', 'Expand fleet logistics to unlock defensive deployments.');
+            if (cache.defenseWarning.textContent !== warningText) {
+                cache.defenseWarning.textContent = warningText;
+            }
+            if (cache.defenseWarning.classList.contains('is-hidden')) {
+                cache.defenseWarning.classList.remove('is-hidden');
+            }
         }
         setDefenseControlsVisibility(false);
         return;
     }
 
-    if (cache.defenseWarning) {
+    if (cache.defenseWarning && !cache.defenseWarning.classList.contains('is-hidden')) {
         cache.defenseWarning.classList.add('is-hidden');
     }
     setDefenseControlsVisibility(true);
@@ -2476,7 +2527,10 @@ function updateFleetCapacityTooltip(manager, cache) {
         tooltipCache.header = header;
         tooltip.appendChild(header);
     }
-    header.textContent = getGalaxyText('logistics.fleetCapacitySources', 'Fleet capacity sources');
+    const headerText = getGalaxyText('logistics.fleetCapacitySources', 'Fleet capacity sources');
+    if (header.textContent !== headerText) {
+        header.textContent = headerText;
+    }
 
     let summary = tooltipCache.summary;
     if (!summary) {
@@ -2485,7 +2539,10 @@ function updateFleetCapacityTooltip(manager, cache) {
         tooltipCache.summary = summary;
         tooltip.appendChild(summary);
     }
-    summary.textContent = getGalaxyText('logistics.baseCapacity', 'Base capacity = 100 per world.');
+    const summaryText = getGalaxyText('logistics.baseCapacity', 'Base capacity = 100 per world.');
+    if (summary.textContent !== summaryText) {
+        summary.textContent = summaryText;
+    }
 
     tooltipCache.rows ||= [];
     let rowIndex = 0;
@@ -2505,9 +2562,16 @@ function updateFleetCapacityTooltip(manager, cache) {
             tooltipCache.rows[rowIndex] = row;
             tooltip.insertBefore(row, tooltipCache.totalRow || null);
         }
-        row.style.display = '';
-        row.children[0].textContent = label;
-        row.children[1].textContent = ` ${format(value)}`;
+        if (row.style.display !== '') {
+            row.style.display = '';
+        }
+        if (row.children[0].textContent !== label) {
+            row.children[0].textContent = label;
+        }
+        const valueText = ` ${format(value)}`;
+        if (row.children[1].textContent !== valueText) {
+            row.children[1].textContent = valueText;
+        }
         rowIndex += 1;
     };
 
@@ -2518,7 +2582,9 @@ function updateFleetCapacityTooltip(manager, cache) {
     addRow(getGalaxyText('logistics.otherBonuses', 'Other bonuses'), bonusWorlds);
 
     for (let index = rowIndex; index < tooltipCache.rows.length; index += 1) {
-        tooltipCache.rows[index].style.display = 'none';
+        if (tooltipCache.rows[index].style.display !== 'none') {
+            tooltipCache.rows[index].style.display = 'none';
+        }
     }
 
     let totalRow = tooltipCache.totalRow;
@@ -2533,9 +2599,15 @@ function updateFleetCapacityTooltip(manager, cache) {
         tooltip.appendChild(totalRow);
     }
     const totalLabel = totalRow.children[0];
-    totalLabel.textContent = getGalaxyText('logistics.totalWorldsForFleetCapacity', 'Total worlds for fleet capacity');
+    const totalLabelText = getGalaxyText('logistics.totalWorldsForFleetCapacity', 'Total worlds for fleet capacity');
+    if (totalLabel.textContent !== totalLabelText) {
+        totalLabel.textContent = totalLabelText;
+    }
     const totalValue = totalRow.children[1];
-    totalValue.textContent = ` ${format(totalWorlds)}`;
+    const totalValueText = ` ${format(totalWorlds)}`;
+    if (totalValue.textContent !== totalValueText) {
+        totalValue.textContent = totalValueText;
+    }
 
     if (typeof addTooltipHover === 'function' && !anchor._fleetCapacityTooltipBound) {
         addTooltipHover(anchor, tooltip);
@@ -2611,7 +2683,10 @@ function updateIncomingAttacksPopupVisibility(cache) {
     }
     const visible = cache.popupVisibility?.incoming !== false
         && cache.popupClosed?.incoming !== true;
-    cache.incomingAttacksPopup.classList.toggle('is-hidden', !visible);
+    const hidden = !visible;
+    if (cache.incomingAttacksPopup.classList.contains('is-hidden') !== hidden) {
+        cache.incomingAttacksPopup.classList.toggle('is-hidden', hidden);
+    }
 }
 
 function cacheGalaxyElements() {
@@ -3381,6 +3456,7 @@ function cacheGalaxyElements() {
         operationsPopup: operations.section,
         defensePopup: incomingAttacks.section,
         sectorContent,
+        sectorContentSignature: '',
         sectorDetails: null,
         hexElements,
         hexLookup,
@@ -3417,10 +3493,15 @@ function refreshEmptyStates() {
         const placeholderPresent = list.contains(placeholder);
         const effectiveLength = placeholderPresent ? totalChildren - 1 : totalChildren;
         const hasEntries = effectiveLength > 0;
-        placeholder.textContent = hasEntries
+        const placeholderText = hasEntries
             ? ''
             : list.dataset.emptyMessage || getGalaxyText('sections.nothingToDisplay', 'Nothing to display.');
-        placeholder.classList.toggle('is-hidden', hasEntries);
+        if (placeholder.textContent !== placeholderText) {
+            placeholder.textContent = placeholderText;
+        }
+        if (placeholder.classList.contains('is-hidden') !== hasEntries) {
+            placeholder.classList.toggle('is-hidden', hasEntries);
+        }
     });
 
     const sectorPanel = galaxyUICache.sectorContent;
@@ -3436,7 +3517,10 @@ function updateFleetShopDisplay(manager, cache) {
     }
     const totalMultiplier = manager?.getFleetUpgradeTotalMultiplier?.() ?? 1;
     if (shop.totalValue) {
-        shop.totalValue.textContent = `${formatFleetMultiplier(totalMultiplier)}x`;
+        const totalText = `${formatFleetMultiplier(totalMultiplier)}x`;
+        if (shop.totalValue.textContent !== totalText) {
+            shop.totalValue.textContent = totalText;
+        }
     }
     const summaries = manager?.getFleetUpgradeSummaries?.();
     const entries = Array.isArray(summaries) ? summaries : [];
@@ -3458,43 +3542,66 @@ function updateFleetShopDisplay(manager, cache) {
             setFleetUpgradeBulkStep(key, effectiveStep);
         }
         if (nodes.multiplier) {
-            nodes.multiplier.textContent = `${formatFleetMultiplier(multiplierValue)}x`;
+            const multiplierText = `${formatFleetMultiplier(multiplierValue)}x`;
+            if (nodes.multiplier.textContent !== multiplierText) {
+                nodes.multiplier.textContent = multiplierText;
+            }
         }
         if (nodes.purchases) {
             const suffix = purchaseCount === 1 ? getGalaxyText('shop.purchase', 'purchase') : getGalaxyText('shop.purchases', 'purchases');
-            nodes.purchases.textContent = `${purchaseCount} ${suffix}`;
+            const purchasesText = `${purchaseCount} ${suffix}`;
+            if (nodes.purchases.textContent !== purchasesText) {
+                nodes.purchases.textContent = purchasesText;
+            }
         }
         if (nodes.button) {
             const buttonIncrement = Number.isFinite(increment) && increment > 0 ? increment : 0.1;
+            let buttonText;
             if (hasMaxPurchases && purchaseCount >= maxPurchases) {
-                nodes.button.textContent = getGalaxyText('shop.maxed', 'Maxed');
+                buttonText = getGalaxyText('shop.maxed', 'Maxed');
             } else {
                 const totalIncrement = buttonIncrement * effectiveStep;
-                nodes.button.textContent = getGalaxyText('shop.capacityButton', '+{value}x Capacity', { value: totalIncrement.toFixed(2) });
+                buttonText = getGalaxyText('shop.capacityButton', '+{value}x Capacity', { value: totalIncrement.toFixed(2) });
+            }
+            if (nodes.button.textContent !== buttonText) {
+                nodes.button.textContent = buttonText;
             }
         }
         if (nodes.costValue) {
             const displayedCost = manager?.getFleetUpgradeBulkCost
                 ? manager.getFleetUpgradeBulkCost(key, effectiveStep)
                 : entry?.cost;
-            nodes.costValue.textContent = formatFleetUpgradeCost(displayedCost);
+            const costText = formatFleetUpgradeCost(displayedCost);
+            if (nodes.costValue.textContent !== costText) {
+                nodes.costValue.textContent = costText;
+            }
         }
         if (nodes.button) {
-            nodes.button.disabled = !(entry?.affordable);
+            const disabled = !(entry?.affordable);
+            if (nodes.button.disabled !== disabled) {
+                nodes.button.disabled = disabled;
+            }
         }
         if (nodes.bulkDivideButton) {
-            nodes.bulkDivideButton.disabled = effectiveStep <= 1;
+            const disabled = effectiveStep <= 1;
+            if (nodes.bulkDivideButton.disabled !== disabled) {
+                nodes.bulkDivideButton.disabled = disabled;
+            }
         }
         if (nodes.bulkMultiplyButton) {
             const isCappedUpgrade = hasMaxPurchases;
             const maxStep = FLEET_UPGRADE_BULK_STEP_MAX[key];
             const hitsStepCap = Number.isFinite(maxStep) && maxStep > 0 && effectiveStep >= maxStep;
+            let disabled;
             if (isCappedUpgrade && effectiveStep >= 10) {
-                nodes.bulkMultiplyButton.disabled = true;
+                disabled = true;
             } else if (hitsStepCap) {
-                nodes.bulkMultiplyButton.disabled = true;
+                disabled = true;
             } else {
-                nodes.bulkMultiplyButton.disabled = purchasesRemaining <= effectiveStep;
+                disabled = purchasesRemaining <= effectiveStep;
+            }
+            if (nodes.bulkMultiplyButton.disabled !== disabled) {
+                nodes.bulkMultiplyButton.disabled = disabled;
             }
         }
     });
@@ -3628,20 +3735,37 @@ function updateRecentAttackHistory(manager, cache) {
     const history = manager.getRecentAttackHistory(5);
     const hasHistory = history.length > 0;
     if (cache.defenseHistoryEmpty) {
-        cache.defenseHistoryEmpty.classList.toggle('is-hidden', hasHistory);
+        if (cache.defenseHistoryEmpty.classList.contains('is-hidden') !== hasHistory) {
+            cache.defenseHistoryEmpty.classList.toggle('is-hidden', hasHistory);
+        }
     }
     rows.forEach((rowEntry, index) => {
         const entry = history[index];
-        rowEntry.row.classList.toggle('is-hidden', !entry);
+        const hidden = !entry;
+        if (rowEntry.row.classList.contains('is-hidden') !== hidden) {
+            rowEntry.row.classList.toggle('is-hidden', hidden);
+        }
         if (!entry) {
             return;
         }
-        rowEntry.enemyCell.textContent = `${entry.attackerName} @ ${entry.sectorName}`;
-        rowEntry.powerCell.textContent = formatFleetValue(entry.enemyPower);
-        rowEntry.resultCell.textContent = entry.successfulDefense
+        const enemyText = `${entry.attackerName} @ ${entry.sectorName}`;
+        if (rowEntry.enemyCell.textContent !== enemyText) {
+            rowEntry.enemyCell.textContent = enemyText;
+        }
+        const powerText = formatFleetValue(entry.enemyPower);
+        if (rowEntry.powerCell.textContent !== powerText) {
+            rowEntry.powerCell.textContent = powerText;
+        }
+        const resultText = entry.successfulDefense
             ? getGalaxyText('defense.successfulDefense', 'Successful Defense')
             : getGalaxyText('defense.defenseFailed', 'Defense Failed');
-        rowEntry.lossCell.textContent = formatFleetValue(entry.uhfLosses);
+        if (rowEntry.resultCell.textContent !== resultText) {
+            rowEntry.resultCell.textContent = resultText;
+        }
+        const lossText = formatFleetValue(entry.uhfLosses);
+        if (rowEntry.lossCell.textContent !== lossText) {
+            rowEntry.lossCell.textContent = lossText;
+        }
     });
 }
 
@@ -3811,20 +3935,35 @@ function updateLogisticsDisplay(manager, cache) {
     const faction = manager?.getFaction?.(GALAXY_UHF_FACTION_ID) || null;
     const power = Number.isFinite(faction?.fleetPower) ? faction.fleetPower : 0;
     const capacity = Number.isFinite(faction?.fleetCapacity) ? faction.fleetCapacity : 0;
-    powerNode.textContent = formatNumber(power, true, 2);
-    capacityNode.textContent = formatNumber(capacity, false, 2);
+    const powerText = formatNumber(power, true, 2);
+    if (powerNode.textContent !== powerText) {
+        powerNode.textContent = powerText;
+    }
+    const capacityText = formatNumber(capacity, false, 2);
+    if (capacityNode.textContent !== capacityText) {
+        capacityNode.textContent = capacityText;
+    }
     updateFleetCapacityTooltip(manager, cache);
     if (storyNode) {
         const storyMultiplier = manager?.getEffectFleetCapacityMultiplier?.() ?? 1;
-        storyNode.textContent = `${formatFleetMultiplier(storyMultiplier)}x`;
+        const storyText = `${formatFleetMultiplier(storyMultiplier)}x`;
+        if (storyNode.textContent !== storyText) {
+            storyNode.textContent = storyText;
+        }
     }
     if (threatNode) {
         const ratio = manager?.getUhfControlRatio?.() ?? 0;
-        threatNode.textContent = formatPercentDisplay(ratio);
+        const threatText = formatPercentDisplay(ratio);
+        if (threatNode.textContent !== threatText) {
+            threatNode.textContent = threatText;
+        }
     }
     if (operationsNode) {
         const successes = manager?.getSuccessfulOperations?.() ?? 0;
-        operationsNode.textContent = formatFleetValue(successes);
+        const operationsText = formatFleetValue(successes);
+        if (operationsNode.textContent !== operationsText) {
+            operationsNode.textContent = operationsText;
+        }
     }
 }
 
@@ -3841,6 +3980,7 @@ function updateGalaxyUI(options = {}) {
     if (!cache) {
         return;
     }
+    galaxyOperationUI.setContext({ manager: galaxyManager, cache });
 
     const { force = false } = options;
     const subtabActive = isGalaxySubtabActive();

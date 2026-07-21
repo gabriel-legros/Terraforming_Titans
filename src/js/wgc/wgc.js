@@ -16,30 +16,46 @@ if (typeof globalThis.formatNumber === 'undefined') {
   }
 }
 
+function getWGCLogText(path, fallback, vars) {
+  return t(`ui.hope.wgcUi.logs.${path}`, vars, fallback);
+}
+
 const baseOperationEvents = [
-  { name: 'Individual Team Power Challenge', type: 'individual', skill: 'power', weight: 1, aliases: ['Team Power Challenge'] },
-  { name: 'Team Athletics Challenge', type: 'team', skill: 'athletics', weight: 1 },
-  { name: 'Team Wits Challenge', type: 'team', skill: 'wit', weight: 1 },
-  { name: 'Individual Athletics Challenge', type: 'individual', skill: 'athletics', weight: 1 },
-  { name: 'Natural Science challenge', type: 'science', specialty: 'Natural Scientist', escalate: true, weight: 1, artifactMultiplier: 2 },
-  { name: 'Social Science challenge', type: 'science', specialty: 'Social Scientist', escalate: true, weight: 1 },
-  { name: 'Combat challenge', type: 'combat', weight: 1 }
+  { name: 'Individual Team Power Challenge', displayKey: 'events.individualPower', type: 'individual', skill: 'power', weight: 1, aliases: ['Team Power Challenge'] },
+  { name: 'Team Athletics Challenge', displayKey: 'events.teamAthletics', type: 'team', skill: 'athletics', weight: 1 },
+  { name: 'Team Wits Challenge', displayKey: 'events.teamWits', type: 'team', skill: 'wit', weight: 1 },
+  { name: 'Individual Athletics Challenge', displayKey: 'events.individualAthletics', type: 'individual', skill: 'athletics', weight: 1 },
+  { name: 'Natural Science challenge', displayKey: 'events.naturalScience', type: 'science', specialty: 'Natural Scientist', escalate: true, weight: 1, artifactMultiplier: 2 },
+  { name: 'Social Science challenge', displayKey: 'events.socialScience', type: 'science', specialty: 'Social Scientist', escalate: true, weight: 1 },
+  { name: 'Combat challenge', displayKey: 'events.combat', type: 'combat', weight: 1 }
 ];
 
-const operationStartText = 'Setting out through Warp Gate';
+const operationStartText = getWGCLogText('operationStart', 'Setting out through Warp Gate');
 
-const defaultTeamNames = ['Alpha', 'Beta', 'Gamma', 'Delta'];
+const defaultTeamNames = [
+  t('ui.hope.wgcUi.teamNames.alpha', {}, 'Alpha'),
+  t('ui.hope.wgcUi.teamNames.beta', {}, 'Beta'),
+  t('ui.hope.wgcUi.teamNames.gamma', {}, 'Gamma'),
+  t('ui.hope.wgcUi.teamNames.delta', {}, 'Delta')
+];
 const WGC_TEAM_UNLOCKS = [0, 100, 500, 1000];
 const facilityLabels = {
-  shootingRange: 'Shooting Range',
-  obstacleCourse: 'Obstacle Course',
-  library: 'Library'
+  shootingRange: t('ui.hope.wgcUi.facilityItems.shootingRange', {}, 'Shooting Range'),
+  obstacleCourse: t('ui.hope.wgcUi.facilityItems.obstacleCourse', {}, 'Obstacle Course'),
+  library: t('ui.hope.wgcUi.facilityItems.library', {}, 'Library')
 };
 
 function formatOperationLogHeader(op) {
   const number = op && op.number ? op.number : 0;
   const difficulty = op ? (op.activeDifficulty ?? op.difficulty ?? 0) : 0;
-  return `=== Operation #${number} (DC ${formatNumber(difficulty, false, 0)}) ===`;
+  return getWGCLogText('operationHeader', '=== Operation #{number} (DC {difficulty}) ===', {
+    number,
+    difficulty: formatNumber(difficulty, false, 0)
+  });
+}
+
+function getWGCOperationEventName(event) {
+  return event.displayKey ? getWGCLogText(event.displayKey, event.name) : event.name;
 }
 
 function sanitizeOperationEvent(event) {
@@ -248,8 +264,8 @@ class WarpGateCommand extends EffectableEntity {
       }
     });
     newlyUnlockedTeams.forEach(teamIndex => {
-      const name = this.teamNames[teamIndex] || `Team ${teamIndex + 1}`;
-      this.addLog(teamIndex, `${name} unlocked`);
+      const name = this.teamNames[teamIndex] || getWGCLogText('teamName', 'Team {team}', { team: teamIndex + 1 });
+      this.addLog(teamIndex, getWGCLogText('teamUnlocked', '{name} unlocked', { name }));
     });
     if (newlyUnlockedTeams.length > 0) {
       this.uiDirty = true;
@@ -506,7 +522,7 @@ class WarpGateCommand extends EffectableEntity {
         let damage = 2 * scaledDifficulty;
         if (event.skill === 'wit') damage *= 0.5;
         damage = Math.max(0, damage);
-        failureDamageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
+        failureDamageDetail = getWGCLogText('damageEach', 'Damage: -{damage} HP each', { damage: formatNumber(damage, false, 2) });
         if (damage > 0) {
           failureActions.push(() => {
             team.forEach(m => { if (m) m.health = Math.max(m.health - damage, 0); });
@@ -547,7 +563,10 @@ class WarpGateCommand extends EffectableEntity {
         if (event.skill === 'wit') damage *= 0.5;
         damage = Math.max(0, damage);
         const name = member && member.firstName ? ` (${member.firstName})` : '';
-        failureDamageDetail = `Damage: -${formatNumber(damage, false, 2)} HP${name}`;
+        failureDamageDetail = getWGCLogText('damageMember', 'Damage: -{damage} HP{name}', {
+          damage: formatNumber(damage, false, 2),
+          name
+        });
         if (damage > 0) {
           failureActions.push(() => {
             member.health = Math.max(member.health - damage, 0);
@@ -581,7 +600,7 @@ class WarpGateCommand extends EffectableEntity {
         const combatMult = event && event.difficultyMultiplier ? event.difficultyMultiplier : 1;
         dc = Math.max(0, (40 * combatMult + 4*difficulty) * stanceDifficultyModifier);
         const damage = Math.max(0, 5 * scaledDifficulty);
-        failureDamageDetail = `Damage: -${formatNumber(damage, false, 2)} HP each`;
+        failureDamageDetail = getWGCLogText('damageEach', 'Damage: -{damage} HP each', { damage: formatNumber(damage, false, 2) });
         if (damage > 0) {
           failureActions.push(() => {
             team.forEach(m => { if (m) m.health = Math.max(m.health - damage, 0); });
@@ -612,11 +631,23 @@ class WarpGateCommand extends EffectableEntity {
           failConverted = true;
         }
         if (failConverted) {
-          rerollNote = ` | ${rerollInfo.label} reroll ${initialStr}->${rerollStr} (fail-safe success)`;
+          rerollNote = getWGCLogText('rerollFailSafe', ' | {facility} reroll {initial}->{reroll} (fail-safe success)', {
+            facility: rerollInfo.label,
+            initial: initialStr,
+            reroll: rerollStr
+          });
         } else if (success) {
-          rerollNote = ` | ${rerollInfo.label} reroll ${initialStr}->${rerollStr}`;
+          rerollNote = getWGCLogText('rerollSuccess', ' | {facility} reroll {initial}->{reroll}', {
+            facility: rerollInfo.label,
+            initial: initialStr,
+            reroll: rerollStr
+          });
         } else {
-          rerollNote = ` | ${rerollInfo.label} reroll ${initialStr}->${rerollStr} (still failed)`;
+          rerollNote = getWGCLogText('rerollFailed', ' | {facility} reroll {initial}->{reroll} (still failed)', {
+            facility: rerollInfo.label,
+            initial: initialStr,
+            reroll: rerollStr
+          });
         }
       }
     }
@@ -624,11 +655,11 @@ class WarpGateCommand extends EffectableEntity {
     if (!success && !failConverted && facilityLevel >= 100 && this.consumeFacilityFailSafe(op, facilityKey)) {
       success = true;
       failConverted = true;
-      const label = facilityLabel || (facilityKey || 'Facility');
+      const label = facilityLabel || (facilityKey || getWGCLogText('facility', 'Facility'));
       if (rerollNote) {
-        rerollNote += ` | ${label} fail-safe success`;
+        rerollNote += getWGCLogText('failSafeSuccess', ' | {facility} fail-safe success', { facility: label });
       } else {
-        rerollNote = ` | ${label} fail-safe success`;
+        rerollNote = getWGCLogText('failSafeSuccess', ' | {facility} fail-safe success', { facility: label });
       }
     }
 
@@ -658,7 +689,7 @@ class WarpGateCommand extends EffectableEntity {
       artifact = true;
       const bonus = this.applyBarracksCriticalBonus(op);
       if (bonus > 1) {
-        criticalNote = ` | Barracks XP x${formatNumber(bonus, false, 2)}`;
+        criticalNote = getWGCLogText('barracksXp', ' | Barracks XP x{value}', { value: formatNumber(bonus, false, 2) });
       }
     }
     if (success) op.successes += 1;
@@ -671,19 +702,48 @@ class WarpGateCommand extends EffectableEntity {
       op.artifacts += artifactReward;
     }
     const rollsStr = rollResult.rolls.join(',');
-    const outcome = success ? (critical ? 'Critical Success' : 'Success') : 'Fail';
+    const outcome = success
+      ? (critical ? getWGCLogText('criticalSuccess', 'Critical Success') : getWGCLogText('success', 'Success'))
+      : getWGCLogText('fail', 'Fail');
     const rollerName = roller ? ` (${roller.firstName})` : '';
-    const artText = artifact ? ` +${formatNumber(artifactReward, false, 2)} Artifact${artifactReward === 1 ? '' : 's'}` : '';
+    const artText = artifact
+      ? getWGCLogText(
+          artifactReward === 1 ? 'artifactReward' : 'artifactsReward',
+          artifactReward === 1 ? ' +{count} Artifact' : ' +{count} Artifacts',
+          { count: formatNumber(artifactReward, false, 2) }
+        )
+      : '';
     let skillDetail = formatNumber(skillTotal, false, 2);
     if (event.type === 'individual' || event.type === 'science') {
       skillDetail = `${formatNumber(baseSkill, false, 2)}`;
-      if (leaderBonus) skillDetail += ` + leader ${formatNumber(leaderBonus, false, 2)}`;
+      if (leaderBonus) {
+        skillDetail = getWGCLogText('leaderBonus', '{skill} + leader {leader}', {
+          skill: skillDetail,
+          leader: formatNumber(leaderBonus, false, 2)
+        });
+      }
     }
     const total = rollResult.sum + skillTotal;
     const damageText = damageDetail ? ` | ${damageDetail}` : '';
-    const summary = `${event.name}${rollerName}: roll [${rollsStr}] + skill ${skillDetail} (total ${formatNumber(total, false, 2)}) vs DC ${formatNumber(dc, false, 2)} => ${outcome}${artText}${damageText}${rerollNote}${criticalNote}`;
+    const summary = getWGCLogText('eventSummary', '{event}{roller}: roll [{rolls}] + skill {skill} (total {total}) vs DC {dc} => {outcome}{artifact}{damage}{reroll}{critical}', {
+      event: getWGCOperationEventName(event),
+      roller: rollerName,
+      rolls: rollsStr,
+      skill: skillDetail,
+      total: formatNumber(total, false, 2),
+      dc: formatNumber(dc, false, 2),
+      outcome,
+      artifact: artText,
+      damage: damageText,
+      reroll: rerollNote,
+      critical: criticalNote
+    });
     op.summary = summary;
-    this.addLog(teamIndex, `Team ${teamIndex + 1} - Op ${op.number} - ${summary}`);
+    this.addLog(teamIndex, getWGCLogText('teamOperation', 'Team {team} - Op {operation} - {summary}', {
+      team: teamIndex + 1,
+      operation: op.number,
+      summary
+    }));
 
     if (!success && event.escalate) {
       if (event.specialty !== 'Social Scientist') {
@@ -704,7 +764,10 @@ class WarpGateCommand extends EffectableEntity {
       injured.health = 1;
       this.recallTeam(teamIndex, true);
       if (typeof addJournalEntry === 'function') {
-        addJournalEntry(`Team ${teamIndex + 1} recalled after ${injured.firstName} was injured.`);
+        addJournalEntry(getWGCLogText('injuryRecallJournal', 'Team {team} recalled after {name} was injured.', {
+          team: teamIndex + 1,
+          name: injured.firstName
+        }));
       }
     }
     if (event.specialty === 'Natural Scientist' && stanceObj.artifact === 'Careful') {
@@ -1007,9 +1070,16 @@ class WarpGateCommand extends EffectableEntity {
         }
       });
     }
-    const summary = `Operation ${op.number} Complete: ${successes} success(es), ${formatNumber(artifactGain, false, 2)} artifact(s)`;
+    const summary = getWGCLogText('operationComplete', 'Operation {operation} Complete: {successes} success(es), {artifacts} artifact(s)', {
+      operation: op.number,
+      successes,
+      artifacts: formatNumber(artifactGain, false, 2)
+    });
     op.summary = summary;
-    this.addLog(teamIndex, `Team ${teamIndex + 1} - ${summary}`);
+    this.addLog(teamIndex, getWGCLogText('teamSummary', 'Team {team} - {summary}', {
+      team: teamIndex + 1,
+      summary
+    }));
 
     const opDifficulty = op.activeDifficulty ?? op.difficulty ?? 0;
     if (opDifficulty > this.highestDifficulty) {
@@ -1023,7 +1093,17 @@ class WarpGateCommand extends EffectableEntity {
         resources.special.alienArtifact.increase(bonusGain);
       }
       this.totalArtifacts += bonusGain;
-      this.addLog(teamIndex, `Team ${teamIndex + 1} - Highest difficulty ${opDifficulty} reached +${formatNumber(bonusGain, false, 2)} Artifact${bonusGain === 1 ? '' : 's'}`);
+      this.addLog(teamIndex, getWGCLogText(
+        bonusGain === 1 ? 'highestDifficultyArtifact' : 'highestDifficultyArtifacts',
+        bonusGain === 1
+          ? 'Team {team} - Highest difficulty {difficulty} reached +{count} Artifact'
+          : 'Team {team} - Highest difficulty {difficulty} reached +{count} Artifacts',
+        {
+          team: teamIndex + 1,
+          difficulty: opDifficulty,
+          count: formatNumber(bonusGain, false, 2)
+        }
+      ));
     }
 
     this.teamOperationCounts[teamIndex] += 1;
@@ -1202,7 +1282,7 @@ class WarpGateCommand extends EffectableEntity {
   recallTeam(teamIndex, clearAutoStart = false) {
     const op = this.operations[teamIndex];
     if (op) {
-      this.addLog(teamIndex, `Team ${teamIndex + 1} - Recalled`);
+      this.addLog(teamIndex, getWGCLogText('teamRecalled', 'Team {team} - Recalled', { team: teamIndex + 1 }));
       if (clearAutoStart) {
         op.autoStart = false;
       }

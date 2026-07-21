@@ -76,7 +76,7 @@ class FusionPowerPlant extends MultiRecipesBuilding {
 }
 
 try {
-  registerBuildingConstructor('fusionPowerPlant', FusionPowerPlant);
+  registerBuildingConstructor(FusionPowerPlant);
 } catch (error) {}
 
 try {

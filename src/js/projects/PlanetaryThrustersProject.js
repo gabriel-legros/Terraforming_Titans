@@ -15,16 +15,6 @@ const THRUSTER_MOTION_TARGET_AU = 'au';
 const THRUSTER_MOTION_TARGET_FLUX = 'flux';
 const THRUSTER_SOLAR_CONSTANT_WM2 = 1361;
 
-// rotationPeriodToDuration is defined globally in the browser but must be
-// required explicitly when running under Node.js for tests
-let rotationPeriodToDurationFunc = (typeof globalThis !== 'undefined' &&
-  globalThis.rotationPeriodToDuration) ? globalThis.rotationPeriodToDuration : null;
-try {
-  if (typeof require === 'function') {
-    ({ rotationPeriodToDuration: rotationPeriodToDurationFunc } = require('../day-night-cycle.js'));
-  }
-} catch (e) {}
-
 if (typeof makeCollapsibleCard === 'undefined') {
   var makeCollapsibleCard = (typeof globalThis !== 'undefined' && globalThis.makeCollapsibleCard)
     ? globalThis.makeCollapsibleCard
@@ -656,6 +646,9 @@ class PlanetaryThrustersProject extends Project{
       if (cel.rotationPeriod === undefined || cel.rotationPeriod === 0) {
         cel.rotationPeriod = 24; // Default to 24h day-night cycle
       }
+      if (cel.dayNightPeriod === undefined || cel.dayNightPeriod === 0) {
+        cel.dayNightPeriod = cel.rotationPeriod;
+      }
     });
     [currentPlanetParameters, spaceManager?.currentPlanetParameters]
       .filter(Boolean)
@@ -886,7 +879,7 @@ class PlanetaryThrustersProject extends Project{
     this.syncPowerFromMode();
     if(!this.isCompleted || this.power<=0 || (!this.spinInvest && !this.motionInvest)) return totals;
     if (applyRates && resources?.colony?.energy?.modifyRate) {
-      resources.colony.energy.modifyRate(-this.power * productivity, 'Planetary Thrusters', 'project');
+      resources.colony.energy.modifyRate(-this.power * productivity, this.displayName, 'project');
     }
     totals.cost.colony = { energy: this.power * (deltaTime / 1000) };
     return totals;
@@ -900,7 +893,7 @@ class PlanetaryThrustersProject extends Project{
     const p = terraforming.celestialParameters;
     if(!p){ this.lastActiveTime = 0; return; }
     if(this.autoStart === false && resources?.colony?.energy?.modifyRate){
-      resources.colony.energy.modifyRate(-this.power * productivity, 'Planetary Thrusters', 'project');
+      resources.colony.energy.modifyRate(-this.power * productivity, this.displayName, 'project');
     }
     const dt = deltaTime / 1000;
     const colonyEnergy = resources?.colony?.energy;
@@ -968,33 +961,14 @@ class PlanetaryThrustersProject extends Project{
       const periodHours = magnitude ? (2 * Math.PI) / (magnitude * 3600) : Math.max(Math.abs(targetHours), 1e-6);
       const newPeriod = nextOmega < 0 ? -periodHours : periodHours;
       
-      // Update spinPeriod and rotationPeriod
-      // For rogue worlds: only update spinPeriod, rotationPeriod stays at 24h for day-night cycle
-      // For non-rogue worlds: update both to the same value
+      // Thrusters control physical spin. The Space Mirror Facility independently
+      // controls the effective day-night period when a Lantern override is active.
       const isRogue = p.rogue;
       p.spinPeriod = newPeriod;
       if (!isRogue) {
         p.rotationPeriod = newPeriod;
       }
-      
-      // Only update day-night cycle for non-rogue worlds
-      if (!isRogue && typeof dayNightCycle !== 'undefined' && rotationPeriodToDurationFunc) {
-        const oldDur = dayNightCycle.dayDuration;
-        const progress = typeof dayNightCycle.getDayProgress === 'function'
-          ? dayNightCycle.getDayProgress()
-          : 0;
-        const daysElapsed = oldDur > 0 ? dayNightCycle.elapsedTime / oldDur : 0;
-        const durationData = rotationPeriodToDurationFunc(newPeriod);
-        dayNightCycle.dayDuration = durationData.duration;
-        dayNightCycle.rotationDirection = durationData.direction;
-        dayNightCycle.elapsedTime = daysElapsed * dayNightCycle.dayDuration;
-        if (typeof dayNightCycle.setDayProgress === 'function') {
-          dayNightCycle.setDayProgress(progress);
-        } else {
-          dayNightCycle.dayProgress = progress;
-          dayNightCycle.rotationTime = progress * dayNightCycle.dayDuration;
-        }
-      }
+      syncLanternDayNightPeriod(projectManager.projects.spaceMirrorFacility);
       this.lastActiveTime = 0;
       return;
     }
@@ -1022,7 +996,6 @@ class PlanetaryThrustersProject extends Project{
           this.energySpentMotion = 0;
           const starM2 = getStarMassKgFromCurrent();
           this.dVreq = spiralDeltaV(this.startAU, this.tgtAU, G*starM2);
-          this.calcMotionCost();
           this.lastActiveTime = 0;
           return;
         }
@@ -1055,7 +1028,7 @@ class PlanetaryThrustersProject extends Project{
   }
 
   saveAutomationSettings() {
-    return {
+    const settings = {
       ...super.saveAutomationSettings(),
       power: this.power,
       powerMode: this.powerMode,
@@ -1066,9 +1039,14 @@ class PlanetaryThrustersProject extends Project{
       motionInvest: this.motionInvest === true,
       autoGoRogue: this.autoGoRogue === true,
       tgtDays: this.tgtDays,
-      tgtAU: this.tgtAU,
       motionTargetMode: this.motionTargetMode
     };
+    if (this.motionTargetMode === THRUSTER_MOTION_TARGET_FLUX) {
+      settings.tgtFlux = stellarFluxFromOrbitAU(this.tgtAU);
+    } else {
+      settings.tgtAU = this.tgtAU;
+    }
+    return settings;
   }
 
   loadAutomationSettings(settings = {}) {
@@ -1108,13 +1086,16 @@ class PlanetaryThrustersProject extends Project{
     if (Object.prototype.hasOwnProperty.call(settings, 'tgtDays')) {
       this.tgtDays = Math.max(0.1, settings.tgtDays || 1);
     }
-    if (Object.prototype.hasOwnProperty.call(settings, 'tgtAU')) {
-      this.tgtAU = Math.max(0.1, settings.tgtAU || 0.1);
-    }
     if (Object.prototype.hasOwnProperty.call(settings, 'motionTargetMode')) {
       this.motionTargetMode = settings.motionTargetMode === THRUSTER_MOTION_TARGET_FLUX
         ? THRUSTER_MOTION_TARGET_FLUX
         : THRUSTER_MOTION_TARGET_AU;
+    }
+    if (this.motionTargetMode === THRUSTER_MOTION_TARGET_FLUX
+      && Object.prototype.hasOwnProperty.call(settings, 'tgtFlux')) {
+      this.tgtAU = Math.max(0.1, orbitAUFromStellarFlux(settings.tgtFlux));
+    } else if (Object.prototype.hasOwnProperty.call(settings, 'tgtAU')) {
+      this.tgtAU = Math.max(0.1, settings.tgtAU || 0.1);
     }
     const spinTargetChanged = this.tgtDays !== previousTargetDays;
     const motionTargetChanged = this.tgtAU !== previousTargetAU;

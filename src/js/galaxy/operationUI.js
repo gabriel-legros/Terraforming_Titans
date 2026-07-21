@@ -297,8 +297,24 @@ const GalaxyOperationUI = (() => {
             return;
         }
         const activeInput = input.ownerDocument?.activeElement;
-        if (activeInput !== input || input.value.trim() === '') {
+        if (activeInput !== input && input.value !== formattedThreshold) {
             input.value = formattedThreshold;
+        }
+    }
+
+    function syncTextContent(node, value) {
+        if (!node) {
+            return;
+        }
+        const text = String(value);
+        if (node.textContent !== text) {
+            node.textContent = text;
+        }
+    }
+
+    function syncClassState(node, className, enabled) {
+        if (node && node.classList.contains(className) !== enabled) {
+            node.classList.toggle(className, enabled);
         }
     }
 
@@ -335,16 +351,16 @@ const GalaxyOperationUI = (() => {
             : step;
         const display = typeof formatted === 'string' ? formatted : String(formatted);
         if (buttons.increment) {
-            buttons.increment.textContent = `+${display}`;
+            syncTextContent(buttons.increment, `+${display}`);
         }
         if (buttons.decrement) {
-            buttons.decrement.textContent = `-${display}`;
+            syncTextContent(buttons.decrement, `-${display}`);
         }
         if (buttons.multiply) {
-            buttons.multiply.textContent = t('ui.galaxy.common.timesTen', {}, 'x10');
+            syncTextContent(buttons.multiply, t('ui.galaxy.common.timesTen', {}, 'x10'));
         }
         if (buttons.divide) {
-            buttons.divide.textContent = '/10';
+            syncTextContent(buttons.divide, '/10');
         }
     }
 
@@ -1013,7 +1029,6 @@ const GalaxyOperationUI = (() => {
             operationsInput,
             operationsButtons,
             operationsLaunchButton,
-            operationsAutoModeHeader,
             operationsAutoModeSelect,
             operationsAutoModeThresholdInput,
             operationsAutoCheckbox,
@@ -1044,28 +1059,42 @@ const GalaxyOperationUI = (() => {
         const selection = cache.selectedSector;
         const enabled = !!(manager && manager.enabled);
         updateOperationArrows(manager, cache);
+
+        let sector = null;
+        let emptyMessage = '';
+        if (!enabled) {
+            emptyMessage = getOperationsText('offline', {}, 'Galaxy operations are offline.');
+        } else if (!selection) {
+            emptyMessage = getOperationsText('emptySelectSector', {}, 'Select a contested sector to assign fleet power.');
+        } else {
+            sector = manager.getSector(selection.q, selection.r);
+            if (!sector) {
+                emptyMessage = getOperationsText('sectorDataUnavailable', {}, 'Sector data unavailable.');
+            }
+        }
+
+        if (emptyMessage) {
+            syncClassState(operationsEmpty, 'is-hidden', false);
+            syncTextContent(operationsEmpty, emptyMessage);
+            syncClassState(operationsForm, 'is-hidden', true);
+            return;
+        }
+
+        syncClassState(operationsEmpty, 'is-hidden', true);
+        syncClassState(operationsForm, 'is-hidden', false);
+
         const antimatterResource = resources && resources.special ? resources.special.antimatter : null;
         const antimatterValue = antimatterResource ? Number(getAntimatterEquivalentValue(resources)) : 0;
-        const selectedKey = enabled && selection ? selection.key : null;
+        const selectedKey = selection.key;
         const defaultFactionId = UHF_FACTION_ID || 'uhf';
-        const selectedTargetFactionId = selectedKey
-            ? manager?.getOperationTargetFaction?.(selectedKey, defaultFactionId) || null
-            : null;
+        const selectedTargetFactionId = manager?.getOperationTargetFaction?.(selectedKey, defaultFactionId) || null;
         const stepSize = getStoredStep(selectedKey);
         const defaultDurationMs = getDefaultOperationDurationMs(manager, selectedKey, defaultFactionId, selectedTargetFactionId);
 
-        operationsStatusMessage.textContent = '';
-
         updateOperationsStepDisplay(stepSize, formatNumber);
 
-        if (operationsDurationLabel) {
-            operationsDurationLabel.textContent = getOperationsText('durationLabel', {}, 'Duration');
-        }
         if (operationsDurationRow) {
-            operationsDurationRow.classList.remove('is-hidden');
-        }
-        if (operationsDurationValue) {
-            operationsDurationValue.textContent = formatOperationDurationDisplay(defaultDurationMs);
+            syncClassState(operationsDurationRow, 'is-hidden', false);
         }
         const thresholdValue = getAutoLaunchThreshold();
         const formattedThreshold = formatAutoThresholdDisplay(thresholdValue || DEFAULT_OPERATION_AUTO_THRESHOLD);
@@ -1081,110 +1110,14 @@ const GalaxyOperationUI = (() => {
             ? true
             : (autoMode === 'pauseAll' ? false : storedAutoEnabled);
         if (operationsAutoModeSelect) {
-            operationsAutoModeSelect.value = autoMode;
+            if (operationsAutoModeSelect.ownerDocument.activeElement !== operationsAutoModeSelect
+                && operationsAutoModeSelect.value !== autoMode) {
+                operationsAutoModeSelect.value = autoMode;
+            }
             operationsAutoModeSelect.disabled = false;
         }
         if (operationsAutoCheckbox) {
             operationsAutoCheckbox.checked = effectiveAutoEnabled;
-        }
-
-        const disableAllControls = () => {
-            operationsInput.disabled = true;
-            Object.values(operationsButtons).forEach((button) => {
-                button.disabled = true;
-            });
-            operationsLaunchButton.disabled = true;
-            operationsLaunchButton.classList.remove('is-hidden');
-            operationsProgress.classList.add('is-hidden');
-            operationsProgressFill.style.width = '0%';
-            operationsProgressLabel.textContent = '';
-            if (operationsProgressCancelButton) {
-                operationsProgressCancelButton.classList.add('is-hidden');
-                operationsProgressCancelButton.disabled = true;
-            }
-            if (operationsAutoCheckbox) {
-                operationsAutoCheckbox.disabled = true;
-                operationsAutoCheckbox.checked = false;
-            }
-            if (operationsAutoModeSelect) {
-                operationsAutoModeSelect.disabled = true;
-            }
-            if (operationsAutoModeHeader) {
-                operationsAutoModeHeader.classList.remove('is-hidden');
-            }
-            if (operationsAutoThresholdInput) {
-                operationsAutoThresholdInput.disabled = true;
-            }
-            if (operationsAutoModeThresholdInput) {
-                operationsAutoModeThresholdInput.disabled = true;
-            }
-        };
-
-        if (!enabled) {
-            operationsEmpty.classList.remove('is-hidden');
-            operationsEmpty.textContent = getOperationsText('offline', {}, 'Galaxy operations are offline.');
-            operationsForm.classList.add('is-hidden');
-            operationsCostValue.textContent = '0';
-            operationsStatusMessage.textContent = '';
-            if (operationsDurationValue) {
-                operationsDurationValue.textContent = '—';
-            }
-            if (operationsTargetRow) {
-                operationsTargetRow.classList.add('is-hidden');
-            }
-            if (operationsTargetFaction) {
-                operationsTargetFaction.textContent = '—';
-            }
-            if (operationsTargetDefense) {
-                operationsTargetDefense.textContent = '0';
-            }
-            disableAllControls();
-            return;
-        }
-
-        if (!selection) {
-            operationsEmpty.classList.remove('is-hidden');
-            operationsEmpty.textContent = getOperationsText('emptySelectSector', {}, 'Select a contested sector to assign fleet power.');
-            operationsForm.classList.add('is-hidden');
-            operationsCostValue.textContent = '0';
-            operationsStatusMessage.textContent = '';
-            if (operationsDurationValue) {
-                operationsDurationValue.textContent = '—';
-            }
-            if (operationsTargetRow) {
-                operationsTargetRow.classList.add('is-hidden');
-            }
-            if (operationsTargetFaction) {
-                operationsTargetFaction.textContent = '—';
-            }
-            if (operationsTargetDefense) {
-                operationsTargetDefense.textContent = '0';
-            }
-            disableAllControls();
-            return;
-        }
-
-        const sector = manager.getSector(selection.q, selection.r);
-        if (!sector) {
-            operationsEmpty.classList.remove('is-hidden');
-            operationsEmpty.textContent = getOperationsText('sectorDataUnavailable', {}, 'Sector data unavailable.');
-            operationsForm.classList.add('is-hidden');
-            operationsCostValue.textContent = '0';
-            operationsStatusMessage.textContent = '';
-            if (operationsDurationValue) {
-                operationsDurationValue.textContent = '—';
-            }
-            if (operationsTargetRow) {
-                operationsTargetRow.classList.add('is-hidden');
-            }
-            if (operationsTargetFaction) {
-                operationsTargetFaction.textContent = '—';
-            }
-            if (operationsTargetDefense) {
-                operationsTargetDefense.textContent = '0';
-            }
-            disableAllControls();
-            return;
         }
 
         const fallbackFactionId = (typeof globalThis !== 'undefined' && typeof globalThis.UHF_FACTION_ID === 'string')
@@ -1196,11 +1129,8 @@ const GalaxyOperationUI = (() => {
         const availablePower = resolveOperationsAvailablePower(manager, faction);
         const stored = getStoredAllocation(selection.key);
         let assignment = clampAssignment(stored, availablePower);
-        const step = getStoredStep(selection.key);
 
-        operationsEmpty.classList.add('is-hidden');
-        operationsForm.classList.remove('is-hidden');
-        operationsAvailable.textContent = getOperationsText('availablePower', { value: formatNumber(availablePower, false, 2) }, `Available: ${formatNumber(availablePower, false, 2)}`);
+        syncTextContent(operationsAvailable, getOperationsText('availablePower', { value: formatNumber(availablePower, false, 2) }, `Available: ${formatNumber(availablePower, false, 2)}`));
 
         const operation = manager.getOperationForSector(selection.key, uhfFactionId);
         const hasOperation = !!operation;
@@ -1230,13 +1160,13 @@ const GalaxyOperationUI = (() => {
         const autoThresholdValue = getAutoLaunchThreshold();
         const requiredThreshold = Math.max(100, sectorPower * autoThresholdValue);
         if (operationsTargetRow) {
-            operationsTargetRow.classList.remove('is-hidden');
+            syncClassState(operationsTargetRow, 'is-hidden', false);
         }
         if (operationsTargetFaction) {
-            operationsTargetFaction.textContent = targetLabel;
+            syncTextContent(operationsTargetFaction, targetLabel);
         }
         if (operationsTargetDefense) {
-            operationsTargetDefense.textContent = formatNumber(sectorPower, false, 2);
+            syncTextContent(operationsTargetDefense, formatNumber(sectorPower, false, 2));
         }
         const hasValidOperationTarget = !!targetFactionId && canLaunchOnSelection;
         if (!operationRunning && hasValidOperationTarget && effectiveAutoEnabled && requiredThreshold > 0 && assignment < requiredThreshold && availablePower >= requiredThreshold) {
@@ -1247,12 +1177,13 @@ const GalaxyOperationUI = (() => {
                 setStoredAllocation(selection.key, normalizedAdjustment);
             }
         }
-        if (operationsInput.ownerDocument.activeElement !== operationsInput) {
-            operationsInput.value = formatOperationsInputValue(assignment);
+        const assignmentText = formatOperationsInputValue(assignment);
+        if (operationsInput.ownerDocument.activeElement !== operationsInput && operationsInput.value !== assignmentText) {
+            operationsInput.value = assignmentText;
         }
 
         const antimatterCost = assignment * 1000;
-        operationsCostValue.textContent = formatNumber(antimatterCost, true);
+        syncTextContent(operationsCostValue, formatNumber(antimatterCost, true));
 
         const lossEstimate = manager?.getOperationLossEstimate?.({
             sectorKey: selection.key,
@@ -1274,9 +1205,8 @@ const GalaxyOperationUI = (() => {
         }
 
         if (operationsSummaryItems.success) {
-            operationsSummaryItems.success.textContent = (typeof formatPercentDisplay === 'function')
-                ? formatPercentDisplay(successChance)
-                : `${Math.round(successChance * 100)}%`;
+            const successText = formatPercentDisplay(successChance);
+            syncTextContent(operationsSummaryItems.success, successText);
         }
         if (operationsSummaryItems.gain) {
             const gainFraction = sectorFullyControlled
@@ -1291,7 +1221,7 @@ const GalaxyOperationUI = (() => {
                     defensePower: sectorPower,
                     status: operationRunning ? 'running' : 'pending'
                 });
-            operationsSummaryItems.gain.textContent = `+${Math.round(gainFraction * 100)}%`;
+            syncTextContent(operationsSummaryItems.gain, `+${Math.round(gainFraction * 100)}%`);
         }
         if (operationsSummaryItems.loss) {
             const successLoss = lossEstimate?.successLoss;
@@ -1301,7 +1231,7 @@ const GalaxyOperationUI = (() => {
                 : (successChance > 0
                     ? (Number.isFinite(successLoss) ? successLoss : assignment)
                     : (Number.isFinite(failureLoss) ? failureLoss : assignment));
-            operationsSummaryItems.loss.textContent = getOperationsText('projectedLossesValue', { value: formatNumber(lossDisplay, false, 2) }, `-${formatNumber(lossDisplay, false, 2)} power`);
+            syncTextContent(operationsSummaryItems.loss, getOperationsText('projectedLossesValue', { value: formatNumber(lossDisplay, false, 2) }, `-${formatNumber(lossDisplay, false, 2)} power`));
         }
 
         const hasFleetPower = availablePower > 0;
@@ -1318,10 +1248,10 @@ const GalaxyOperationUI = (() => {
                 button.disabled = true;
             });
             operationsLaunchButton.disabled = true;
-            operationsLaunchButton.classList.add('is-hidden');
-            operationsProgress.classList.remove('is-hidden');
+            syncClassState(operationsLaunchButton, 'is-hidden', true);
+            syncClassState(operationsProgress, 'is-hidden', false);
             if (operationsProgressCancelButton) {
-                operationsProgressCancelButton.classList.remove('is-hidden');
+                syncClassState(operationsProgressCancelButton, 'is-hidden', false);
                 operationsProgressCancelButton.disabled = false;
             }
             const duration = Number.isFinite(operation.durationMs) && operation.durationMs > 0
@@ -1330,29 +1260,40 @@ const GalaxyOperationUI = (() => {
             const elapsed = Math.max(0, Math.min(duration, Number(operation.elapsedMs) || 0));
             const progress = duration > 0 ? elapsed / duration : 1;
             const percent = Math.max(0, Math.min(100, Math.round(progress * 100)));
-            operationsProgressFill.style.width = `${percent}%`;
+            const progressWidth = `${percent}%`;
+            if (operationsProgressFill.style.width !== progressWidth) {
+                operationsProgressFill.style.width = progressWidth;
+            }
             const remainingMs = Math.max(0, duration - elapsed);
             const remainingLabel = formatOperationDurationDisplay(remainingMs);
             if (operationsDurationLabel) {
-                operationsDurationLabel.textContent = getOperationsText('timeRemainingLabel', {}, 'Time Remaining');
+                syncTextContent(operationsDurationLabel, getOperationsText('timeRemainingLabel', {}, 'Time Remaining'));
             }
             if (operationsDurationRow) {
-                operationsDurationRow.classList.remove('is-hidden');
+                syncClassState(operationsDurationRow, 'is-hidden', false);
             }
             if (operationsDurationValue) {
-                operationsDurationValue.textContent = remainingLabel;
+                syncTextContent(operationsDurationValue, remainingLabel);
             }
-            operationsProgressLabel.textContent = getOperationsText('deploymentProgress', { percent, remaining: remainingLabel }, `Launch in progress - ${percent}% (${remainingLabel} remaining)`);
+            syncTextContent(operationsProgressLabel, getOperationsText('deploymentProgress', { percent, remaining: remainingLabel }, `Launch in progress - ${percent}% (${remainingLabel} remaining)`));
             launchBlocked = true;
             statusMessage = '';
         } else {
-            operationsLaunchButton.classList.remove('is-hidden');
-            operationsProgress.classList.add('is-hidden');
-            operationsProgressFill.style.width = '0%';
-            operationsProgressLabel.textContent = '';
+            syncClassState(operationsLaunchButton, 'is-hidden', false);
+            syncClassState(operationsProgress, 'is-hidden', true);
+            if (operationsProgressFill.style.width !== '0%') {
+                operationsProgressFill.style.width = '0%';
+            }
+            syncTextContent(operationsProgressLabel, '');
             if (operationsProgressCancelButton) {
-                operationsProgressCancelButton.classList.add('is-hidden');
+                syncClassState(operationsProgressCancelButton, 'is-hidden', true);
                 operationsProgressCancelButton.disabled = true;
+            }
+            if (operationsDurationLabel) {
+                syncTextContent(operationsDurationLabel, getOperationsText('durationLabel', {}, 'Duration'));
+            }
+            if (operationsDurationValue) {
+                syncTextContent(operationsDurationValue, formatOperationDurationDisplay(defaultDurationMs));
             }
 
             operationsInput.disabled = !hasFleetPower;
@@ -1376,10 +1317,10 @@ const GalaxyOperationUI = (() => {
                 statusMessage = getOperationsText('autoLaunchRequires', { value: formatNumber(requiredAutoPower, false, 2) }, `Auto launch requires ${formatNumber(requiredAutoPower, false, 2)} power.`);
             }
         }
-        operationsStatusMessage.textContent = statusMessage;
-        operationsLaunchButton.classList.toggle('is-insufficient-antimatter', insufficientAntimatter && !operationRunning);
-        operationsCostValue.classList.toggle('is-insufficient-antimatter', insufficientAntimatter);
-        operationsStatusMessage.classList.toggle('is-insufficient-antimatter', insufficientAntimatter && !operationRunning);
+        syncTextContent(operationsStatusMessage, statusMessage);
+        syncClassState(operationsLaunchButton, 'is-insufficient-antimatter', insufficientAntimatter && !operationRunning);
+        syncClassState(operationsCostValue, 'is-insufficient-antimatter', insufficientAntimatter);
+        syncClassState(operationsStatusMessage, 'is-insufficient-antimatter', insufficientAntimatter && !operationRunning);
 
         operationsLaunchButton.disabled = launchBlocked;
         if (operationsAutoCheckbox) {

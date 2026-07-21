@@ -113,6 +113,10 @@ function addTooltipHover(anchor, tooltip, options = {}) {
   };
 
   const showTooltip = () => {
+    if (tooltipEl._dynamicTooltipEnabled === false) {
+      tooltipEl.style.display = 'none';
+      return;
+    }
     tooltipEl._isActive = true;
     const isResourceTooltip = !!tooltipEl.closest('.resource-item');
     const isResource = dynamicPlacement || !!tooltipEl._columnsInfo || isResourceTooltip;
@@ -354,10 +358,29 @@ function attachDynamicInfoTooltip(iconElement, text, clickToPin = true) {
   return tooltip;
 }
 
+function syncCostExplanationTooltip(anchor, text, enabled) {
+  if (!anchor._costExplanationTooltip) {
+    anchor._costExplanationTooltip = attachDynamicInfoTooltip(anchor, text, false);
+    anchor._costExplanationTooltipCache = {};
+  }
+  anchor._costExplanationTooltip._dynamicTooltipEnabled = enabled;
+  if (!enabled) {
+    anchor._costExplanationTooltip.style.display = 'none';
+    anchor.classList.remove('tooltip-active');
+  }
+  setTooltipText(
+    anchor._costExplanationTooltip,
+    text,
+    anchor._costExplanationTooltipCache,
+    'text'
+  );
+  return anchor._costExplanationTooltip;
+}
+
 function cleanupDynamicTooltipsIn(root) {
   if (!root || !root.querySelectorAll) return;
   dynamicTooltipAnchors.forEach(anchor => {
-    if (!anchor.isConnected && anchor._cleanupTooltipHover) {
+    if ((anchor === root || root.contains(anchor)) && anchor._cleanupTooltipHover) {
       anchor._cleanupTooltipHover();
     }
   });
@@ -579,6 +602,7 @@ if (typeof module !== 'undefined' && module.exports) {
     addTooltipHover,
     setTooltipText,
     attachDynamicInfoTooltip,
+    syncCostExplanationTooltip,
     subtabScrollPositions,
     makeCollapsibleCard,
     wireStringNumberInput,

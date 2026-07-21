@@ -1098,9 +1098,6 @@
       const anyStorageMutation = anyInputSpent || totalOutput > 0;
       if (anyStorageMutation && !accumulatedChanges) {
         storage.reconcileUsedStorage();
-        try {
-          updateSpaceStorageUI(storage);
-        } catch (error) {}
       }
 
       const inputRates = this.createEmptyInputRates();
@@ -1470,15 +1467,24 @@
       if (this.shopElements) {
         const collapsed = this.shopCollapsed === true;
         if (this.shopElements.itemsContainer) {
-          this.shopElements.itemsContainer.style.display = collapsed ? 'none' : '';
+          const display = collapsed ? 'none' : '';
+          if (this.shopElements.itemsContainer.style.display !== display) {
+            this.shopElements.itemsContainer.style.display = display;
+          }
         }
         if (this.shopElements.collapseButton) {
-          this.shopElements.collapseButton.textContent = collapsed
+          const collapseText = collapsed
             ? getManufacturingText('catalogs.specializations.manufacturing.ui.showShop')
             : getManufacturingText('catalogs.specializations.manufacturing.ui.hideShop');
+          if (this.shopElements.collapseButton.textContent !== collapseText) {
+            this.shopElements.collapseButton.textContent = collapseText;
+          }
         }
         if (this.shopElements.adaptationValue) {
-          this.shopElements.adaptationValue.textContent = formatNumber(this.getAdaptationPoints(), true);
+          const adaptationText = formatNumber(this.getAdaptationPoints(), true);
+          if (this.shopElements.adaptationValue.textContent !== adaptationText) {
+            this.shopElements.adaptationValue.textContent = adaptationText;
+          }
         }
       }
 
@@ -1497,22 +1503,44 @@
       const step = this.assignmentStep;
       const bonus = this.getCylindersHopePopulationBonus();
 
-      if (bonus > 0) {
-        elements.cumulativeValue.textContent = `${formatNumber(total, true, 2)} (${formatNumber(this.cumulativePopulation, true, 2)} + ${formatNumber(bonus, true, 2)})`;
-      } else {
-        elements.cumulativeValue.textContent = formatNumber(this.cumulativePopulation, true, 2);
-      }
-      elements.assignedValue.textContent = formatNumber(assigned, true, 2);
-      elements.freeValue.textContent = formatNumber(available, true);
-      elements.statusValue.textContent = this.statusText || getManufacturingText('catalogs.specializations.manufacturing.status.idle');
-      elements.inputValue.textContent = MANUFACTURING_INPUT_KEYS.map((inputKey) => {
+      const cumulativeText = bonus > 0
+        ? `${formatNumber(total, true, 2)} (${formatNumber(this.cumulativePopulation, true, 2)} + ${formatNumber(bonus, true, 2)})`
+        : formatNumber(this.cumulativePopulation, true, 2);
+      const assignedText = formatNumber(assigned, true, 2);
+      const availableText = formatNumber(available, true);
+      const statusText = this.statusText || getManufacturingText('catalogs.specializations.manufacturing.status.idle');
+      const inputText = MANUFACTURING_INPUT_KEYS.map((inputKey) => {
         const label = MANUFACTURING_INPUT_LABELS[inputKey] || inputKey;
         return `${formatNumber(this.lastInputRates[inputKey] || 0, true, 3)} ${label}/s`;
       }).join(', ');
-      elements.runCheckbox.checked = this.isRunning;
-      elements.runCheckbox.disabled = totalBigInt <= 0n;
-      elements.stepDownButton.disabled = totalBigInt <= 0n;
-      elements.stepUpButton.disabled = totalBigInt <= 0n;
+      if (elements.cumulativeValue.textContent !== cumulativeText) {
+        elements.cumulativeValue.textContent = cumulativeText;
+      }
+      if (elements.assignedValue.textContent !== assignedText) {
+        elements.assignedValue.textContent = assignedText;
+      }
+      if (elements.freeValue.textContent !== availableText) {
+        elements.freeValue.textContent = availableText;
+      }
+      if (elements.statusValue.textContent !== statusText) {
+        elements.statusValue.textContent = statusText;
+      }
+      if (elements.inputValue.textContent !== inputText) {
+        elements.inputValue.textContent = inputText;
+      }
+      if (elements.runCheckbox.checked !== this.isRunning) {
+        elements.runCheckbox.checked = this.isRunning;
+      }
+      const controlsDisabled = totalBigInt <= 0n;
+      if (elements.runCheckbox.disabled !== controlsDisabled) {
+        elements.runCheckbox.disabled = controlsDisabled;
+      }
+      if (elements.stepDownButton.disabled !== controlsDisabled) {
+        elements.stepDownButton.disabled = controlsDisabled;
+      }
+      if (elements.stepUpButton.disabled !== controlsDisabled) {
+        elements.stepUpButton.disabled = controlsDisabled;
+      }
       const productivityByRecipe = this.getOperationProductivityForTick(true);
 
       this.getManagedAssignmentKeys().forEach((key) => {
@@ -1524,17 +1552,28 @@
         const displayedCurrent = this.isUnassignedAssignmentKey(key) ? available : storedCurrent;
         const maxForKey = this.getAssignmentMaxTarget(key);
 
-        row.value.textContent = formatNumber(displayedCurrent, true, 2);
+        const valueText = formatNumber(displayedCurrent, true, 2);
+        if (row.value.textContent !== valueText) {
+          row.value.textContent = valueText;
+        }
         const recipe = this.isUnassignedAssignmentKey(key) ? null : this.getRecipe(key);
         const unitProduction = recipe
           ? (recipe.baseOutput * this.getRecipeOutputMultiplier(key)) / recipe.complexity
           : 0;
-        row.unitProduction.textContent = recipe ? `${formatNumber(unitProduction, true, 3)}/s` : '';
+        const unitProductionText = recipe ? `${formatNumber(unitProduction, true, 3)}/s` : '';
+        if (row.unitProduction.textContent !== unitProductionText) {
+          row.unitProduction.textContent = unitProductionText;
+        }
         this.updateAssignmentControls(row, key, totalBigInt, step);
-        row.rate.textContent = recipe ? `${formatNumber(this.lastOutputRatesByRecipe[key] || 0, true, 3)}/s` : '';
+        const rateText = recipe ? `${formatNumber(this.lastOutputRatesByRecipe[key] || 0, true, 3)}/s` : '';
+        if (row.rate.textContent !== rateText) {
+          row.rate.textContent = rateText;
+        }
         const recipeProductivity = recipe ? (productivityByRecipe[key] ?? 1) : 1;
         const productivityLimited = !!recipe && this.isRunning && storedCurrent > 0n && recipeProductivity < 1;
-        row.rate.classList.toggle('project-rate-productivity-limited', productivityLimited);
+        if (row.rate.classList.contains('project-rate-productivity-limited') !== productivityLimited) {
+          row.rate.classList.toggle('project-rate-productivity-limited', productivityLimited);
+        }
         if (row.recipeTooltip) {
           setTooltipText(
             row.recipeTooltip,

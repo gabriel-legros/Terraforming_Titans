@@ -632,10 +632,6 @@
           }
         }
       }
-      if (storageProj && typeof updateSpaceStorageUI === 'function') {
-        updateSpaceStorageUI(storageProj.storageProject || storageProj);
-      }
-
       this.repeatCount += paidProgress;
       if (this.isCapReached()) {
         this.isActive = false;

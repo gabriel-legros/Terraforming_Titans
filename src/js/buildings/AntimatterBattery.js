@@ -1,5 +1,6 @@
 const ENERGY_PER_ANTIMATTER = 2_000_000_000_000_000;
 const FILL_COOLDOWN_SECONDS = 60;
+const AUTO_FILL_CAPACITIES_PER_SECOND = 10;
 
 function getAntimatterBatteryText(path, fallback, vars) {
   try {
@@ -242,7 +243,39 @@ class AntimatterBattery extends Building {
     return { energyGain, spaceEnergySpent };
   }
 
-  updateAutoFillAfterProductionTick(deltaTime) {
+  getAutoFillEnergyGain(energyValue, deltaTime) {
+    const antimatter = resources.special.antimatter;
+    const energy = resources.colony.energy;
+    const missingEnergy = Math.max(0, energy.cap - energyValue);
+    const availableAntimatter = isAntimatterSpaceEnergySyncActive()
+      ? getAntimatterEquivalentValue(resources)
+      : antimatter.value;
+    const fillThroughput = energy.cap * AUTO_FILL_CAPACITIES_PER_SECOND * (deltaTime / 1000);
+    return Math.min(missingEnergy, availableAntimatter * this.getEnergyPerAntimatter(), fillThroughput);
+  }
+
+  getAutoFillEnergyRate(deltaTime) {
+    if (
+      this.isBooleanFlagSet('antimatterBatteryFillDisabled') ||
+      !this.isBooleanFlagSet('antimatterWarpLogistics') ||
+      !this.autoFillingEnabled
+    ) {
+      return 0;
+    }
+    if (deltaTime <= 0) {
+      return 0;
+    }
+    const availableAntimatter = isAntimatterSpaceEnergySyncActive()
+      ? getAntimatterEquivalentValue(resources)
+      : resources.special.antimatter.value;
+    const availableEnergyRate = availableAntimatter * this.getEnergyPerAntimatter() * (1000 / deltaTime);
+    return Math.min(
+      resources.colony.energy.cap * AUTO_FILL_CAPACITIES_PER_SECOND,
+      availableEnergyRate
+    );
+  }
+
+  applyAutoFillProduction(deltaTime, accumulatedChanges) {
     if (
       this.isBooleanFlagSet('antimatterBatteryFillDisabled') ||
       !this.isBooleanFlagSet('antimatterWarpLogistics') ||
@@ -250,16 +283,27 @@ class AntimatterBattery extends Building {
     ) {
       return;
     }
-    const fillResult = this.fillFromAntimatter({ updateDisplay: false });
-    if (!fillResult || deltaTime <= 0) {
+    const energyRate = this.getAutoFillEnergyRate(deltaTime);
+    if (energyRate <= 0) {
       return;
     }
-    const perSecondMultiplier = 1000 / deltaTime;
-    const energyPerSecond = fillResult.energyGain * perSecondMultiplier;
-    const spaceEnergyPerSecond = fillResult.spaceEnergySpent * perSecondMultiplier;
-    resources.colony.energy.modifyRate(energyPerSecond, 'Antimatter Battery Auto Fill', 'building');
+    resources.colony.energy.modifyRate(energyRate, t('ui.resourceRates.sources.antimatterBatteryAutoFill', {}, 'Antimatter Battery Auto Fill'), 'building');
+
+    const pendingEnergy = accumulatedChanges.colony.energy || 0;
+    const energyGain = this.getAutoFillEnergyGain(resources.colony.energy.value + pendingEnergy, deltaTime);
+    if (energyGain <= 0 || deltaTime <= 0) {
+      return;
+    }
+    const antimatterConsumed = energyGain / this.getEnergyPerAntimatter();
+    if (!spendAntimatterEquivalent(antimatterConsumed, resources)) {
+      return;
+    }
+    accumulatedChanges.colony.energy = pendingEnergy + energyGain;
+    const spaceEnergyPerSecond = isAntimatterSpaceEnergySyncActive()
+      ? antimatterToSpaceEnergy(antimatterConsumed) * (1000 / deltaTime)
+      : 0;
     if (spaceEnergyPerSecond > 0) {
-      resources.space.energy.modifyRate(-spaceEnergyPerSecond, 'Antimatter Battery Auto Fill', 'building');
+      resources.space.energy.modifyRate(-spaceEnergyPerSecond, t('ui.resourceRates.sources.antimatterBatteryAutoFill', {}, 'Antimatter Battery Auto Fill'), 'building');
     }
   }
 

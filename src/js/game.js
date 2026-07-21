@@ -97,7 +97,17 @@ function create() {
   // Initialize the Planet Visualizer (Terraforming -> World subtab)
   window.initializePlanetVisualizerUI();
   
-  if(!loadMostRecentSave()){  // Handle initial game state (building counts, etc.)
+  const startupSelection = window.electronStartup
+    ? window.electronStartup.getSelection()
+    : { mode: 'latest', slot: '' };
+  let startupSaveLoaded = false;
+  if (startupSelection.mode === 'slot') {
+    startupSaveLoaded = loadGame(`gameState_${startupSelection.slot}`, false);
+  } else if (startupSelection.mode === 'latest') {
+    startupSaveLoaded = loadMostRecentSave();
+  }
+
+  if (!startupSaveLoaded) {  // Handle initial game state (building counts, etc.)
       initializeGameState();
       if (typeof openTerraformingWorldTab === 'function') {
         openTerraformingWorldTab();
@@ -137,7 +147,7 @@ function initializeDefaultGlobals(){
   }
 
   // Set up the game scene, objects, and initial state
-  const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;
+  const rotation = currentPlanetParameters.celestialParameters.dayNightPeriod || currentPlanetParameters.celestialParameters.rotationPeriod || 24;
   const { duration: dayDuration, direction: rotationDirection } = rotationPeriodToDuration(rotation);
   dayNightCycle = new DayNightCycle(dayDuration, rotationDirection);
   updateDayNightDisplay();
@@ -270,8 +280,12 @@ function registerDefaultTabActivationHandlers() {
     updateGalacticInvasionUI({ force: true });
   });
   registerTabActivationHandler('settings', () => {
-    updateStatisticsDisplay();
-    updateAchievementsDisplay();
+    const activeSettingsSubtab = settingsSubtabManager.getActiveId();
+    if (activeSettingsSubtab === 'statistics-settings-subtab') {
+      updateStatisticsDisplay();
+    } else if (activeSettingsSubtab === 'achievements-settings-subtab') {
+      updateAchievementsDisplay();
+    }
   });
 }
 
@@ -292,12 +306,19 @@ function showAutoTravelLoadingPopup() {
     autoTravelLoadingPopupElement.className = 'auto-travel-loading-popup auto-travel-loading-popup--hidden';
     document.body.appendChild(autoTravelLoadingPopupElement);
   }
-  autoTravelLoadingPopupElement.textContent = t('ui.autoTravelLoading', {}, 'Auto travel in progress...');
+  const loadingText = t('ui.autoTravelLoading', {}, 'Auto travel in progress...');
+  if (autoTravelLoadingPopupElement.textContent !== loadingText) {
+    autoTravelLoadingPopupElement.textContent = loadingText;
+  }
   if (!autoTravelLoadingPopupElement.parentNode) {
     document.body.appendChild(autoTravelLoadingPopupElement);
   }
-  autoTravelLoadingPopupElement.classList.remove('auto-travel-loading-popup--hidden');
-  autoTravelLoadingPopupElement.setAttribute('aria-hidden', 'false');
+  if (autoTravelLoadingPopupElement.classList.contains('auto-travel-loading-popup--hidden')) {
+    autoTravelLoadingPopupElement.classList.remove('auto-travel-loading-popup--hidden');
+  }
+  if (autoTravelLoadingPopupElement.getAttribute('aria-hidden') !== 'false') {
+    autoTravelLoadingPopupElement.setAttribute('aria-hidden', 'false');
+  }
 }
 
 function hideAutoTravelLoadingPopup() {
@@ -307,8 +328,12 @@ function hideAutoTravelLoadingPopup() {
   if (!autoTravelLoadingPopupElement) {
     return;
   }
-  autoTravelLoadingPopupElement.classList.add('auto-travel-loading-popup--hidden');
-  autoTravelLoadingPopupElement.setAttribute('aria-hidden', 'true');
+  if (!autoTravelLoadingPopupElement.classList.contains('auto-travel-loading-popup--hidden')) {
+    autoTravelLoadingPopupElement.classList.add('auto-travel-loading-popup--hidden');
+  }
+  if (autoTravelLoadingPopupElement.getAttribute('aria-hidden') !== 'true') {
+    autoTravelLoadingPopupElement.setAttribute('aria-hidden', 'true');
+  }
 }
 
 function updateAutoTravelLoadingPopupVisibility() {
@@ -454,7 +479,7 @@ function initializeGameState(options = {}) {
   realPlayTimeSeconds = 0;
   patienceManager.resetWorldPatience();
 
-  const rotation = currentPlanetParameters.celestialParameters.rotationPeriod || 24;
+  const rotation = currentPlanetParameters.celestialParameters.dayNightPeriod || currentPlanetParameters.celestialParameters.rotationPeriod || 24;
   const dayDurationData = rotationPeriodToDuration(rotation);
   dayNightCycle = new DayNightCycle(dayDurationData.duration, dayDurationData.direction);
   const existingResources = resources;
@@ -563,49 +588,11 @@ function initializeGameState(options = {}) {
   if (skipVisualizerInitialization) {
     suppressPlanetVisualizerRuntime = true;
     if (typeof window !== 'undefined') {
-      try {
-        const pv = window.planetVisualizer;
-        if (pv) {
-          if (typeof pv.onResize === 'function') {
-            window.removeEventListener('resize', pv.onResize);
-          }
-          const canvas = pv.renderer && pv.renderer.domElement;
-          if (canvas && canvas.parentNode) {
-            canvas.parentNode.removeChild(canvas);
-          }
-          if (pv.debug && pv.debug.container && pv.debug.container.parentNode) {
-            pv.debug.container.parentNode.removeChild(pv.debug.container);
-          }
-          window.planetVisualizer = null;
-        }
-      } catch (e) {}
+      window.destroyPlanetVisualizerUI();
     }
   } else if (typeof window !== 'undefined') {
     suppressPlanetVisualizerRuntime = false;
-    try {
-      const pv = window.planetVisualizer;
-      if (pv) {
-        // Detach resize listener
-        if (typeof pv.onResize === 'function') {
-          window.removeEventListener('resize', pv.onResize);
-        }
-        // Remove canvas
-        const canvas = pv.renderer && pv.renderer.domElement;
-        if (canvas && canvas.parentNode) {
-          canvas.parentNode.removeChild(canvas);
-        }
-        // Remove debug panel if present
-        if (pv.debug && pv.debug.container && pv.debug.container.parentNode) {
-          pv.debug.container.parentNode.removeChild(pv.debug.container);
-        }
-        window.planetVisualizer = null;
-      }
-      if (typeof window.initializePlanetVisualizerUI === 'function') {
-        window.initializePlanetVisualizerUI();
-      }
-    } catch (e) {
-      // Non-fatal if visualizer not yet available
-    }
+    window.initializePlanetVisualizerUI();
   }
 
   goldenAsteroid = new GoldenAsteroid();
@@ -658,6 +645,7 @@ function initializeGameState(options = {}) {
   }
   warpGateNetworkManager.syncUnlocks();
   if (!preserveManagers) {
+    storyManager.destroy();
     storyManager = new StoryManager(progressData);  // Pass the progressData object
     if (!skipStoryInitialization) {
       storyManager.initializeStory();
@@ -811,7 +799,6 @@ function updateLogic(delta, realDelta = delta) {
   const allStructures = {...buildings, ...colonies};
 
   produceResources(delta, allStructures);
-  buildings.antimatterBattery.updateAutoFillAfterProductionTick(delta);
 
   // Update happiness for each colony
   for (const colonyName in colonies) {
@@ -896,6 +883,8 @@ function updateRender(force = false, options = {}) {
 
   // Gate heavy per-tab UI updates behind tab visibility
   if (typeof document !== 'undefined') {
+    updateResortVacationGoldButton();
+    terraformingGraphsManager.render();
     const tabContentCache = updateRender.tabContentCache || (updateRender.tabContentCache = {});
     const isActive = (id) => {
       if (force) return true;
@@ -937,6 +926,7 @@ function updateRender(force = false, options = {}) {
 
     if (isActive('special-projects')) {
       renderProjects();
+      automationManager.spaceshipAutomation.updateManualControlsUI();
       if (projectManager) projectManager.uiDirty = false;
     }
 
@@ -1036,8 +1026,13 @@ function updateRender(force = false, options = {}) {
     }
 
     if (isActive('settings')) {
-      updateStatisticsDisplay();
-      updateAchievementsDisplay();
+      const activeSettingsSubtab = settingsSubtabManager.getActiveId();
+      if (force || forceAllSubtabs || activeSettingsSubtab === 'statistics-settings-subtab') {
+        updateStatisticsDisplay();
+      }
+      if (force || forceAllSubtabs || activeSettingsSubtab === 'achievements-settings-subtab') {
+        updateAchievementsDisplay();
+      }
     }
   } else {
     // Non-DOM environment fallback (tests or headless): keep previous behavior
@@ -1083,7 +1078,11 @@ function update(time, delta) {
     return;
   }
   updateLogic(quantizedDelta, deltaMs);   // Update game state
+  const autoPaused = checkAutoPauseRates();
   updateRender.lastDelta = quantizedDelta;
+  if (autoPaused) {
+    updatePauseControls();
+  }
   updateRender();             // Render updated game state
 
   autosave(quantizedDelta);      // Call the autosave function

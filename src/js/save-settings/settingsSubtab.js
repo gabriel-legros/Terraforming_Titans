@@ -28,6 +28,10 @@ function cacheSettingsElements() {
     netResourceRateDisplayToggle: document.getElementById('net-resource-rate-display-toggle'),
     highlightFullResourceCapsToggle: document.getElementById('highlight-full-resource-caps-toggle'),
     resourceDepletionWarningSecondsInput: document.getElementById('resource-depletion-warning-seconds-input'),
+    autoPauseEnergyToggle: document.getElementById('auto-pause-energy-toggle'),
+    autoPauseEnergyThresholdInput: document.getElementById('auto-pause-energy-threshold-input'),
+    autoPauseColonistsToggle: document.getElementById('auto-pause-colonists-toggle'),
+    autoPauseColonistsThresholdInput: document.getElementById('auto-pause-colonists-threshold-input'),
     immigrationPoolToggle: document.getElementById('immigration-pool-toggle'),
     immigrationPoolTooltip: document.getElementById('immigration-pool-tooltip'),
     unlockToggle: document.getElementById('unlock-alert-toggle'),
@@ -192,7 +196,7 @@ function applyThemeModeSetting() {
 
 function normalizeUIScale(value) {
   const scale = Number(value);
-  const options = [0.75, 0.9, 1, 1.1, 1.25, 1.5];
+  const options = [0.75, 0.8, 0.9, 1, 1.1, 1.25, 1.5];
   for (let i = 0; i < options.length; i += 1) {
     if (Math.abs(scale - options[i]) < 0.001) {
       return options[i];
@@ -663,6 +667,50 @@ function addSettingsListeners() {
       datasetKey: 'resourceDepletionWarningSeconds',
     });
     resourceDepletionWarningWire.syncParsedValue();
+  }
+
+  if (cached.autoPauseEnergyToggle) {
+    cached.autoPauseEnergyToggle.checked = gameSettings.autoPauseEnergyEnabled;
+    cached.autoPauseEnergyToggle.addEventListener('change', () => {
+      gameSettings.autoPauseEnergyEnabled = cached.autoPauseEnergyToggle.checked;
+      resetAutoPauseRateTracking();
+    });
+  }
+
+  if (cached.autoPauseEnergyThresholdInput) {
+    cached.autoPauseEnergyThresholdInput.value = String(formatNumber(gameSettings.autoPauseEnergyThreshold, false, 3, true));
+    const autoPauseEnergyWire = wireStringNumberInput(cached.autoPauseEnergyThresholdInput, {
+      parseValue: value => parseFlexibleNumber(value) || 0,
+      formatValue: value => String(formatNumber(value, false, 3, true)),
+      onValue: parsed => {
+        gameSettings.autoPauseEnergyThreshold = parsed;
+        resetAutoPauseRateTracking();
+      },
+      datasetKey: 'autoPauseEnergyThreshold',
+    });
+    autoPauseEnergyWire.syncParsedValue();
+  }
+
+  if (cached.autoPauseColonistsToggle) {
+    cached.autoPauseColonistsToggle.checked = gameSettings.autoPauseColonistsEnabled;
+    cached.autoPauseColonistsToggle.addEventListener('change', () => {
+      gameSettings.autoPauseColonistsEnabled = cached.autoPauseColonistsToggle.checked;
+      resetAutoPauseRateTracking();
+    });
+  }
+
+  if (cached.autoPauseColonistsThresholdInput) {
+    cached.autoPauseColonistsThresholdInput.value = String(formatNumber(gameSettings.autoPauseColonistsThreshold, false, 3, true));
+    const autoPauseColonistsWire = wireStringNumberInput(cached.autoPauseColonistsThresholdInput, {
+      parseValue: value => parseFlexibleNumber(value) || 0,
+      formatValue: value => String(formatNumber(value, false, 3, true)),
+      onValue: parsed => {
+        gameSettings.autoPauseColonistsThreshold = parsed;
+        resetAutoPauseRateTracking();
+      },
+      datasetKey: 'autoPauseColonistsThreshold',
+    });
+    autoPauseColonistsWire.syncParsedValue();
   }
 
   if (cached.immigrationPoolToggle) {

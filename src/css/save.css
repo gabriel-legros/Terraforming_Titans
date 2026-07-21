@@ -38,7 +38,9 @@
   }
 
   #resource-depletion-warning-seconds-input,
-  #scientific-notation-threshold-input {
+  #scientific-notation-threshold-input,
+  #auto-pause-energy-threshold-input,
+  #auto-pause-colonists-threshold-input {
     width: 64px;
     box-sizing: border-box;
   }
@@ -72,10 +74,6 @@
     margin: 0 0 8px;
     text-align: center;
     width: min(100%, 1200px);
-  }
-
-  .settings-grid-keybinds {
-    margin-bottom: 0;
   }
 
   .settings-grid-difficulty {

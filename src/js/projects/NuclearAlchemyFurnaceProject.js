@@ -507,7 +507,6 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyAssignmentTools.createP
 
     if (!accumulatedChanges) {
       storage.reconcileUsedStorage();
-      updateSpaceStorageUI(storage);
     }
 
     if (!(hydrogenDisplaySpent > 0)) {
@@ -998,19 +997,45 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyAssignmentTools.createP
     const available = total > assigned ? (total - assigned) : 0n;
     const step = this.assignmentStep;
 
-    elements.totalValue.textContent = formatNumber(total, true, 2);
-    elements.freeValue.textContent = formatNumber(available, true, 2);
-    elements.hydrogenRateValue.textContent = this.getPrimaryRateText();
+    const totalText = formatNumber(total, true, 2);
+    const availableText = formatNumber(available, true, 2);
+    const primaryRateText = this.getPrimaryRateText();
+    if (elements.totalValue.textContent !== totalText) {
+      elements.totalValue.textContent = totalText;
+    }
+    if (elements.freeValue.textContent !== availableText) {
+      elements.freeValue.textContent = availableText;
+    }
+    if (elements.hydrogenRateValue.textContent !== primaryRateText) {
+      elements.hydrogenRateValue.textContent = primaryRateText;
+    }
     const expansionRate = this.isActive ? (1000 / this.getEffectiveDuration()) : 0;
     const limitedExpansion = this.expansionRateLimitedLastTick && this.lastExpansionRatePerSecond >= 0;
     const displayedExpansionRate = limitedExpansion ? this.lastExpansionRatePerSecond : expansionRate;
-    elements.expansionRateValue.style.color = limitedExpansion ? 'orange' : '';
-    elements.expansionRateValue.textContent = this.getExpansionRateText(displayedExpansionRate);
-    elements.statusValue.textContent = this.statusText || getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle');
-    elements.runCheckbox.checked = this.isRunning;
-    elements.runCheckbox.disabled = total <= 0;
+    const expansionColor = limitedExpansion ? 'orange' : '';
+    const expansionText = this.getExpansionRateText(displayedExpansionRate);
+    const statusText = this.statusText || getNuclearAlchemyText('ui.projects.nuclearAlchemy.status.idle', 'Idle');
+    const runDisabled = total <= 0;
+    if (elements.expansionRateValue.style.color !== expansionColor) {
+      elements.expansionRateValue.style.color = expansionColor;
+    }
+    if (elements.expansionRateValue.textContent !== expansionText) {
+      elements.expansionRateValue.textContent = expansionText;
+    }
+    if (elements.statusValue.textContent !== statusText) {
+      elements.statusValue.textContent = statusText;
+    }
+    if (elements.runCheckbox.checked !== this.isRunning) {
+      elements.runCheckbox.checked = this.isRunning;
+    }
+    if (elements.runCheckbox.disabled !== runDisabled) {
+      elements.runCheckbox.disabled = runDisabled;
+    }
     if (elements.note) {
-      elements.note.textContent = this.getOperationNoteText();
+      const noteText = this.getOperationNoteText();
+      if (elements.note.textContent !== noteText) {
+        elements.note.textContent = noteText;
+      }
     }
 
     this.getManagedAssignmentKeys().forEach((key) => {
@@ -1022,11 +1047,17 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyAssignmentTools.createP
       const displayedCurrent = this.getDisplayedAssignmentAmount(key);
       const maxForKey = this.getAssignmentMaxTarget(key);
 
-      row.value.textContent = formatNumber(displayedCurrent, true, 2);
+      const valueText = formatNumber(displayedCurrent, true, 2);
+      if (row.value.textContent !== valueText) {
+        row.value.textContent = valueText;
+      }
       this.updateAssignmentControls(row, key, total, step);
-      row.rate.textContent = this.isUnassignedAssignmentKey(key)
+      const rateText = this.isUnassignedAssignmentKey(key)
         ? ''
         : `${formatNumber(this.lastOutputRatesByResource[key] || 0, true, 3)}/s`;
+      if (row.rate.textContent !== rateText) {
+        row.rate.textContent = rateText;
+      }
     });
   }
 

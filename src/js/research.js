@@ -202,7 +202,7 @@ class Research {
       const multiplier = this.calculateAdvancedResearchMultiplier();
       const rate = count * multiplier; // 1 per second per terraformed planet scaled by effects
       resources.colony.advancedResearch.increase((rate * deltaTime) / 1000);
-      resources.colony.advancedResearch.modifyRate(rate, 'Research Manager', 'research');
+      resources.colony.advancedResearch.modifyRate(rate, t('ui.resourceRates.sources.researchManager', {}, 'Research Manager'), 'research');
     }
 
     calculateAdvancedResearchMultiplier() {

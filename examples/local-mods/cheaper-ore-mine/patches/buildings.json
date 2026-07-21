@@ -1,0 +1,11 @@
+{
+  "entries": {
+    "oreMine": {
+      "cost": {
+        "colony": {
+          "metal": 5
+        }
+      }
+    }
+  }
+}

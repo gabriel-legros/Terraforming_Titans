@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "ai-spanish-translation",
+  "name": "AI-Spanish-translation",
+  "version": "1.0.0",
+  "loadOrder": 1000,
+  "generatedFrom": "src/js/lang/current-language.js + src/js/lang/story-language.js",
+  "generatedStringCount": 5214,
+  "content": {
+    "patches": [
+      {
+        "target": "language.current",
+        "file": "patches/current-language.json"
+      },
+      {
+        "target": "language.current",
+        "file": "patches/story-language.json"
+      }
+    ],
+    "replacements": []
+  }
+}

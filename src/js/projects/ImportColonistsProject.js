@@ -76,8 +76,7 @@ class ImportColonistsProject extends Project {
       return;
     }
 
-    const available = Math.max(0, spaceManager.galacticPopulation || 0);
-    spaceManager.galacticPopulation = Math.max(0, available - Math.min(amount, available));
+    spaceManager.withdrawGalacticPopulation(amount);
   }
 
   updateDurationFromEffects() {

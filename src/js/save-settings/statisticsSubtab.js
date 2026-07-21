@@ -135,31 +135,50 @@ function updateStatisticsDisplay() {
 
   const gameTime = formatPlayTime(totalPlayTimeSeconds);
   const realTime = formatDurationDetailed(totalRealPlayTimeSeconds);
-  playtimeElement.textContent = t('ui.settings.realTimeLine', { game: gameTime, real: realTime }, '{game} ({real} real time)');
+  const playtimeText = t('ui.settings.realTimeLine', { game: gameTime, real: realTime }, '{game} ({real} real time)');
+  if (playtimeElement.textContent !== playtimeText) {
+    playtimeElement.textContent = playtimeText;
+  }
 
   if (cached.fastestTerraformRow && cached.fastestTerraform) {
     if (fastestTerraformDays === null) {
-      cached.fastestTerraformRow.style.display = 'none';
+      if (cached.fastestTerraformRow.style.display !== 'none') {
+        cached.fastestTerraformRow.style.display = 'none';
+      }
     } else {
-      cached.fastestTerraformRow.style.display = '';
+      if (cached.fastestTerraformRow.style.display !== '') {
+        cached.fastestTerraformRow.style.display = '';
+      }
+      let fastestTerraformText;
       if (fastestTerraformRealSeconds === null) {
-        cached.fastestTerraform.textContent = t('ui.settings.realTimeUnavailableLine', { game: formatPlayTime(fastestTerraformDays) }, '{game} (real time unavailable)');
+        fastestTerraformText = t('ui.settings.realTimeUnavailableLine', { game: formatPlayTime(fastestTerraformDays) }, '{game} (real time unavailable)');
       } else {
         const fastestRealTime = formatDurationDetailed(fastestTerraformRealSeconds);
-        cached.fastestTerraform.textContent = t('ui.settings.realTimeLine', { game: formatPlayTime(fastestTerraformDays), real: fastestRealTime }, '{game} ({real} real time)');
+        fastestTerraformText = t('ui.settings.realTimeLine', { game: formatPlayTime(fastestTerraformDays), real: fastestRealTime }, '{game} ({real} real time)');
+      }
+      if (cached.fastestTerraform.textContent !== fastestTerraformText) {
+        cached.fastestTerraform.textContent = fastestTerraformText;
       }
     }
   }
   if (cached.birchWorldTerraformRow && cached.birchWorldTerraform) {
     if (birchWorldTerraformTimeSeconds === null) {
-      cached.birchWorldTerraformRow.style.display = 'none';
+      if (cached.birchWorldTerraformRow.style.display !== 'none') {
+        cached.birchWorldTerraformRow.style.display = 'none';
+      }
     } else {
-      cached.birchWorldTerraformRow.style.display = '';
+      if (cached.birchWorldTerraformRow.style.display !== '') {
+        cached.birchWorldTerraformRow.style.display = '';
+      }
+      let birchTerraformText;
       if (birchWorldTerraformRealTimeSeconds === null) {
-        cached.birchWorldTerraform.textContent = t('ui.settings.realTimeUnavailableLine', { game: formatPlayTime(birchWorldTerraformTimeSeconds) }, '{game} (real time unavailable)');
+        birchTerraformText = t('ui.settings.realTimeUnavailableLine', { game: formatPlayTime(birchWorldTerraformTimeSeconds) }, '{game} (real time unavailable)');
       } else {
         const birchRealTime = formatDurationDetailed(birchWorldTerraformRealTimeSeconds);
-        cached.birchWorldTerraform.textContent = t('ui.settings.realTimeLine', { game: formatPlayTime(birchWorldTerraformTimeSeconds), real: birchRealTime }, '{game} ({real} real time)');
+        birchTerraformText = t('ui.settings.realTimeLine', { game: formatPlayTime(birchWorldTerraformTimeSeconds), real: birchRealTime }, '{game} ({real} real time)');
+      }
+      if (cached.birchWorldTerraform.textContent !== birchTerraformText) {
+        cached.birchWorldTerraform.textContent = birchTerraformText;
       }
     }
   }
@@ -169,23 +188,38 @@ function updateStatisticsDisplay() {
   if (cached.patienceSpentRow && cached.patienceSpent) {
     const patienceSpent = patienceManager.totalSpentHours;
     if (patienceSpent > 0) {
-      cached.patienceSpentRow.style.display = '';
-      cached.patienceSpent.textContent = t('ui.settings.patienceSpentValue', { value: patienceSpent.toFixed(1) }, '{value}h');
+      if (cached.patienceSpentRow.style.display !== '') {
+        cached.patienceSpentRow.style.display = '';
+      }
+      const patienceSpentText = t('ui.settings.patienceSpentValue', { value: patienceSpent.toFixed(1) }, '{value}h');
+      if (cached.patienceSpent.textContent !== patienceSpentText) {
+        cached.patienceSpent.textContent = patienceSpentText;
+      }
     } else {
-      cached.patienceSpentRow.style.display = 'none';
+      if (cached.patienceSpentRow.style.display !== 'none') {
+        cached.patienceSpentRow.style.display = 'none';
+      }
     }
   }
 
   if (cached.fastestTerraformByTypeTitle && cached.fastestTerraformByTypeList) {
     const byType = spaceManager.getFastestTerraformByWorldType();
     const worldTypes = Object.keys(byType).sort();
-    cached.fastestTerraformByTypeTitle.textContent = t(
+    const fastestByTypeTitle = t(
       'ui.settings.fastestTerraformByTypeTitle',
       null,
       'Fastest Terraform by World Type'
     );
-    cached.fastestTerraformByTypeTitle.style.display = worldTypes.length ? '' : 'none';
-    cached.fastestTerraformByTypeList.style.display = worldTypes.length ? '' : 'none';
+    if (cached.fastestTerraformByTypeTitle.textContent !== fastestByTypeTitle) {
+      cached.fastestTerraformByTypeTitle.textContent = fastestByTypeTitle;
+    }
+    const fastestByTypeDisplay = worldTypes.length ? '' : 'none';
+    if (cached.fastestTerraformByTypeTitle.style.display !== fastestByTypeDisplay) {
+      cached.fastestTerraformByTypeTitle.style.display = fastestByTypeDisplay;
+    }
+    if (cached.fastestTerraformByTypeList.style.display !== fastestByTypeDisplay) {
+      cached.fastestTerraformByTypeList.style.display = fastestByTypeDisplay;
+    }
     syncStatisticsLines(
       cached.fastestTerraformByTypeList,
       worldTypes.map((worldType) => buildFastestTerraformByTypeText(worldType, byType[worldType]))
@@ -193,12 +227,15 @@ function updateStatisticsDisplay() {
   }
 
   const history = spaceManager.getRecentTerraformHistory().slice().reverse();
-  cached.recentTerraformHistoryTitle.textContent = t(
+  const recentTerraformTitle = t(
     'ui.settings.recentTerraformHistoryTitle',
     { count: 10 },
     'Last {count} Terraformed Worlds'
   );
-  if (cached.recentTerraformAverageDisplay) {
+  if (cached.recentTerraformHistoryTitle.textContent !== recentTerraformTitle) {
+    cached.recentTerraformHistoryTitle.textContent = recentTerraformTitle;
+  }
+  if (cached.recentTerraformAverageDisplay && cached.recentTerraformAverageDisplay.textContent !== '') {
     cached.recentTerraformAverageDisplay.textContent = '';
   }
 
@@ -212,7 +249,10 @@ function updateStatisticsDisplay() {
   }
 
   if (cached.recentTerraformAverageDisplay) {
-    cached.recentTerraformAverageDisplay.textContent = buildRecentTerraformAverageText(history);
+    const recentTerraformAverageText = buildRecentTerraformAverageText(history);
+    if (cached.recentTerraformAverageDisplay.textContent !== recentTerraformAverageText) {
+      cached.recentTerraformAverageDisplay.textContent = recentTerraformAverageText;
+    }
   }
 
   syncStatisticsLines(

@@ -549,6 +549,11 @@ function updateSpaceRandomVisibility() {
 }
 
 function handleSpaceSubtabActivated(id) {
+    if (id === 'space-artificial') {
+        updateArtificialUI({ force: true });
+        artificialManager.uiDirty = false;
+        artificialManager.forceUIRefresh = false;
+    }
     if (id === 'space-atlas' && typeof updateAtlasUI === 'function') {
         updateAtlasUI({ force: true });
     }
@@ -566,7 +571,11 @@ function handleSpaceSubtabActivated(id) {
 
 function initializeSpaceTabs() {
     if (typeof SubtabManager !== 'function') return;
-    spaceSubtabManager = new SubtabManager('.space-subtab', '.space-subtab-content', true);
+    if (spaceSubtabManager) {
+        spaceSubtabManager.reset();
+    } else {
+        spaceSubtabManager = new SubtabManager('.space-subtab', '.space-subtab-content', true);
+    }
     if (!spaceSubtabActivationHandlerRegistered) {
         registerSubtabActivationHandler('space-subtab', handleSpaceSubtabActivated);
         spaceSubtabActivationHandlerRegistered = true;
@@ -753,7 +762,8 @@ function initializeSpaceUI(spaceManager) {
 
 function updateSpaceUI() {
     if (!_spaceManagerInstance) return; // Guard clause
-    if (typeof updateArtificialUI === 'function') {
+    const artificialActive = spaceSubtabManager.getActiveId() === 'space-artificial';
+    if (artificialActive || artificialManager.uiDirty || artificialManager.forceUIRefresh) {
         updateArtificialUI({ force: artificialManager?.forceUIRefresh === true });
         artificialManager.uiDirty = false;
         artificialManager.forceUIRefresh = false;
@@ -785,11 +795,14 @@ function updateSpaceUI() {
 
     if (statusContainer) {
         const showWarning = !isTerraformed;
-        statusContainer.style.display = showWarning ? 'flex' : 'none';
-        statusContainer.classList.toggle('hidden', !showWarning);
-        statusContainer.textContent = showWarning
+        const display = showWarning ? 'flex' : 'none';
+        const hidden = !showWarning;
+        const text = showWarning
             ? getSpaceUIText('storyUi.terraformBeforeTravel', 'Terraform this world before charting a new course.')
             : '';
+        if (statusContainer.style.display !== display) statusContainer.style.display = display;
+        if (statusContainer.classList.contains('hidden') !== hidden) statusContainer.classList.toggle('hidden', hidden);
+        if (statusContainer.textContent !== text) statusContainer.textContent = text;
     }
 
     Object.entries(allPlanetData).forEach(([key, data]) => {
@@ -797,34 +810,42 @@ function updateSpaceUI() {
         if (!ui) return;
 
         const isEnabled = _spaceManagerInstance.isPlanetEnabled(key);
-        ui.container.style.display = isEnabled ? 'flex' : 'none';
+        const display = isEnabled ? 'flex' : 'none';
+        if (ui.container.style.display !== display) ui.container.style.display = display;
 
         const cardIsCurrent = key === currentKey;
         const cardTerraformed = _spaceManagerInstance.isPlanetTerraformed(key);
         const cardLocked = false;
 
-        ui.container.classList.toggle('current', cardIsCurrent);
-        ui.container.classList.toggle('terraformed', cardTerraformed);
-        ui.container.classList.toggle('disabled', cardLocked);
+        if (ui.container.classList.contains('current') !== cardIsCurrent) ui.container.classList.toggle('current', cardIsCurrent);
+        if (ui.container.classList.contains('terraformed') !== cardTerraformed) ui.container.classList.toggle('terraformed', cardTerraformed);
+        if (ui.container.classList.contains('disabled') !== cardLocked) ui.container.classList.toggle('disabled', cardLocked);
 
-        ui.nameHeading.textContent = data.name;
-        ui.statusSpan.textContent = cardTerraformed
+        const statusText = cardTerraformed
             ? getSpaceUIText('storyUi.terraformingComplete', 'Terraforming Complete')
             : getSpaceUIText('storyUi.terraformingPending', 'Terraforming pending');
+        if (ui.nameHeading.textContent !== data.name) ui.nameHeading.textContent = data.name;
+        if (ui.statusSpan.textContent !== statusText) ui.statusSpan.textContent = statusText;
 
+        let buttonText;
+        let buttonTitle;
+        let buttonDisabled;
         if (cardIsCurrent) {
-            ui.button.textContent = getSpaceUIText('storyUi.currentLocation', 'Current Location');
-            ui.button.disabled = true;
-            ui.button.title = getSpaceUIText('storyUi.currentLocationTitle', 'You are currently at {name}.', { name: data.name });
+            buttonText = getSpaceUIText('storyUi.currentLocation', 'Current Location');
+            buttonDisabled = true;
+            buttonTitle = getSpaceUIText('storyUi.currentLocationTitle', 'You are currently at {name}.', { name: data.name });
         } else if (cardTerraformed) {
-            ui.button.textContent = getSpaceUIText('storyUi.alreadyTerraformed', 'Already Terraformed');
-            ui.button.disabled = true;
-            ui.button.title = getSpaceUIText('storyUi.alreadyTerraformedTitle', '{name} has already been terraformed.', { name: data.name });
+            buttonText = getSpaceUIText('storyUi.alreadyTerraformed', 'Already Terraformed');
+            buttonDisabled = true;
+            buttonTitle = getSpaceUIText('storyUi.alreadyTerraformedTitle', '{name} has already been terraformed.', { name: data.name });
         } else {
-            ui.button.textContent = getSpaceUIText('storyUi.selectPlanet', 'Select {name}', { name: data.name });
-            ui.button.disabled = false;
-            ui.button.title = getSpaceUIText('storyUi.travelTo', 'Travel to {name}', { name: data.name });
+            buttonText = getSpaceUIText('storyUi.selectPlanet', 'Select {name}', { name: data.name });
+            buttonDisabled = false;
+            buttonTitle = getSpaceUIText('storyUi.travelTo', 'Travel to {name}', { name: data.name });
         }
+        if (ui.button.textContent !== buttonText) ui.button.textContent = buttonText;
+        if (ui.button.disabled !== buttonDisabled) ui.button.disabled = buttonDisabled;
+        if (ui.button.title !== buttonTitle) ui.button.title = buttonTitle;
     });
 }
 
@@ -835,8 +856,12 @@ function updateSpaceStatsUI() {
     const uniqueCount = _spaceManagerInstance.getUnmodifiedTerraformedWorldCount();
     const effectiveCount = _spaceManagerInstance.getTerraformedPlanetCount();
     const populationStats = _spaceManagerInstance.getTotalPopulationStats();
-    spaceStatUniqueValueEl.textContent = formatGroupedNumber(uniqueCount, 2, 0);
-    spaceStatEffectiveValueEl.textContent = formatGroupedNumber(effectiveCount, 2, 0);
+    const uniqueText = formatGroupedNumber(uniqueCount, 2, 0);
+    const effectiveText = effectiveCount >= 1e6
+        ? formatNumber(effectiveCount, false, 3)
+        : formatGroupedNumber(effectiveCount, 2, 0);
+    if (spaceStatUniqueValueEl.textContent !== uniqueText) spaceStatUniqueValueEl.textContent = uniqueText;
+    if (spaceStatEffectiveValueEl.textContent !== effectiveText) spaceStatEffectiveValueEl.textContent = effectiveText;
     if (spaceStatGalacticPopulationValueEl) {
         spaceStatGalacticPopulationValueEl.textContent = formatNumber(populationStats.population, true, 2);
     }

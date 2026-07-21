@@ -275,11 +275,6 @@ class SpaceshipProject extends Project {
       this.assignedSpaceships = 0;
     }
     this.finalizeAssignmentChange(wasContinuous);
-    try {
-      updateProjectUI(this.name);
-    } catch (error) {
-      // no-op
-    }
     return loss;
   }
 
@@ -347,7 +342,8 @@ class SpaceshipProject extends Project {
   }
 
   getExportRateLabel(baseLabel) {
-    return baseLabel;
+    const key = baseLabel === 'Spaceship Mining' ? 'mining' : 'export';
+    return getSpaceshipProjectText(`ui.projects.spaceship.rateSources.${key}`, baseLabel);
   }
 
   getCostRateLabel() {
@@ -523,33 +519,7 @@ class SpaceshipProject extends Project {
     if (elements.totalCostElement && this.assignedSpaceships != null) {
       const perSecond = this.isContinuous();
       const totalCost = this.calculateSpaceshipTotalCost(perSecond);
-      if (elements.isImportProject) {
-        const suffix = perSecond ? '/s' : '';
-        const costParts = [];
-        let hasShortfall = false;
-        for (const category in totalCost) {
-          for (const resource in totalCost[category]) {
-            const requiredAmount = totalCost[category][resource];
-            const availableAmount = getAvailableProjectCostAmount(this, category, resource);
-            const resourceDisplayName = resources[category][resource].displayName ||
-              resource.charAt(0).toUpperCase() + resource.slice(1);
-            costParts.push(`${resourceDisplayName}: ${formatNumber(requiredAmount, true)}${suffix}`);
-            if (!hasShortfall && shouldHighlightProjectCost(this, category, resource, availableAmount, requiredAmount)) {
-              hasShortfall = true;
-            }
-          }
-        }
-        const totalCostText = getProjectsUIText('ui.projects.totalCost', 'Total Cost: {items}', {
-          items: costParts.join(', ')
-        });
-        if (elements._cachedTotalCostText !== totalCostText) {
-          elements.totalCostElement.textContent = totalCostText;
-          elements._cachedTotalCostText = totalCostText;
-        }
-        elements.totalCostElement.style.color = hasShortfall ? 'red' : '';
-      } else {
-        updateTotalCostDisplayElement(elements.totalCostElement, totalCost, this, perSecond);
-      }
+      updateTotalCostDisplayElement(elements.totalCostElement, totalCost, this, perSecond);
     }
 
     if (elements.resourceGainPerShipElement && this.attributes.resourceGainPerShip) {
@@ -577,10 +547,17 @@ class SpaceshipProject extends Project {
       const perSecond = this.isContinuous();
       const totalGain = this.calculateSpaceshipTotalResourceGain(perSecond);
       if (Object.keys(totalGain).length > 0) {
-        elements.totalGainElement.textContent = formatTotalResourceGainDisplay(totalGain, perSecond);
-        elements.totalGainElement.style.display = 'block';
+        const totalGainText = formatTotalResourceGainDisplay(totalGain, perSecond);
+        if (elements.totalGainElement.textContent !== totalGainText) {
+          elements.totalGainElement.textContent = totalGainText;
+        }
+        if (elements.totalGainElement.style.display !== 'block') {
+          elements.totalGainElement.style.display = 'block';
+        }
       } else {
-        elements.totalGainElement.style.display = 'none';
+        if (elements.totalGainElement.style.display !== 'none') {
+          elements.totalGainElement.style.display = 'none';
+        }
       }
     }
   }

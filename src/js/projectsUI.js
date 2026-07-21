@@ -18,13 +18,27 @@ function getProjectsUIText(path, fallback, vars) {
 function createProjectCostItem(leadingComma) {
   const span = document.createElement('span');
   const separator = document.createElement('span');
+  const tooltipAnchor = document.createElement('span');
   const text = document.createElement('span');
   if (leadingComma) {
     span.dataset.leadingComma = 'true';
   }
-  span.append(separator, text);
-  span._refs = { separator, text };
+  tooltipAnchor.appendChild(text);
+  span.append(separator, tooltipAnchor);
+  span._refs = { separator, tooltipAnchor, text };
   return span;
+}
+
+function syncCostExplanationContent(anchor, text, tooltipText, enabled) {
+  if (!anchor._costTextNode) {
+    anchor.textContent = '';
+    anchor._costTextNode = document.createElement('span');
+    anchor.appendChild(anchor._costTextNode);
+  }
+  if (anchor._costTextNode.textContent !== text) {
+    anchor._costTextNode.textContent = text;
+  }
+  syncCostExplanationTooltip(anchor, tooltipText, enabled);
 }
 
 // Centralized, browser-friendly caches for Projects UI
@@ -532,6 +546,11 @@ function initializeProjectsUI() {
         container.removeChild(container.firstChild);
       }
     });
+    const spaceStorageOverlay = projectElements.spaceStorage?.capOverlay;
+    if (spaceStorageOverlay) {
+      cleanupDynamicTooltipsIn(spaceStorageOverlay);
+      spaceStorageOverlay.remove();
+    }
     projectElements = {};
   }
   if (!globalGameIsTraveling) {
@@ -1180,10 +1199,16 @@ function updateCategoryReorderButtons(category, entries) {
     }
     const position = indexMap.has(entry) ? indexMap.get(entry) : -1;
     if (elements.upButton) {
-      elements.upButton.classList.toggle('disabled', position <= 0);
+      const disabled = position <= 0;
+      if (elements.upButton.classList.contains('disabled') !== disabled) {
+        elements.upButton.classList.toggle('disabled', disabled);
+      }
     }
     if (elements.downButton) {
-      elements.downButton.classList.toggle('disabled', position === -1 || position >= lastVisible);
+      const disabled = position === -1 || position >= lastVisible;
+      if (elements.downButton.classList.contains('disabled') !== disabled) {
+        elements.downButton.classList.toggle('disabled', disabled);
+      }
     }
   });
 }
@@ -1243,6 +1268,96 @@ function getAvailableProjectCostAmount(project, category, resource, storageAcces
   return colonyAvailable;
 }
 
+function getProjectCostModeLabel(mode) {
+  const labels = {
+    [MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST]: getProjectsUIText('ui.projects.costTooltip.spaceFirst', 'Space first'),
+    [MEGA_PROJECT_RESOURCE_MODES.COLONY_FIRST]: getProjectsUIText('ui.projects.costTooltip.colonyFirst', 'Colony first'),
+    [MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY]: getProjectsUIText('ui.projects.costTooltip.spaceOnly', 'Space only'),
+    [MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY]: getProjectsUIText('ui.projects.costTooltip.colonyOnly', 'Colony only')
+  };
+  return labels[mode] || labels[MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY];
+}
+
+function buildProjectCostTooltip(project, category, resource, requiredAmount, storageAccess = null) {
+  const colonyAvailable = resources[category][resource].value;
+  const lines = [getProjectsUIText('ui.projects.costTooltip.required', 'Required: {value}', {
+    value: formatNumber(requiredAmount, true)
+  })];
+
+  if (!project?.attributes?.canUseSpaceStorage) {
+    lines.push(getProjectsUIText('ui.projects.costTooltip.colonyAvailable', 'Colony available: {value}', {
+      value: formatNumber(colonyAvailable, true)
+    }));
+    return lines.join('\n');
+  }
+
+  const access = storageAccess || project.createSpaceStorageAccess('expansions');
+  if (!access) {
+    lines.push(getProjectsUIText('ui.projects.costTooltip.spaceStorageUnavailable', 'Space Storage unavailable'));
+    lines.push(getProjectsUIText('ui.projects.costTooltip.colonyAvailable', 'Colony available: {value}', {
+      value: formatNumber(colonyAvailable, true)
+    }));
+    return lines.join('\n');
+  }
+
+  const storageKey = resource === 'water' ? 'liquidWater' : resource;
+  const storageProject = access.storageProject;
+  const mode = access.megaProjectResourceMode;
+  const modeSource = MEGA_PROJECT_RESOURCE_MODE_MAP[project.spaceStorageResourceMode]
+    ? getProjectsUIText('ui.projects.costTooltip.projectOverride', 'project override')
+    : getProjectsUIText('ui.projects.costTooltip.spaceStorageSetting', 'Space Storage setting');
+  const stored = storageProject.getStoredResourceValue(storageKey);
+  const reserveIgnored = project.getSpaceStorageReserveScope('expansions') === 'ignoreReserve';
+  const reserveSetting = storageProject.getResourceStrategicReserveSetting(storageKey);
+  const reserveApplies = !reserveIgnored && reserveSetting.scope.expansions;
+  const reserve = reserveApplies
+    ? storageProject.getResourceStrategicReserveAmount(storageKey, 'expansions')
+    : 0;
+  const afterReserve = access.getAvailableStoredResource(storageKey);
+  const usable = getMegaProjectResourceAvailability(access, storageKey, colonyAvailable);
+  const usesColony = mode !== MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY;
+  const usesSpaceStorage = mode !== MEGA_PROJECT_RESOURCE_MODES.COLONY_ONLY;
+  const reserveIsRelevant = usesSpaceStorage
+    && reserveApplies
+    && reserveSetting.mode !== 'none'
+    && reserve > 0;
+
+  lines.push(getProjectsUIText('ui.projects.costTooltip.resourceMode', 'Resource mode: {mode} ({source})', {
+    mode: getProjectCostModeLabel(mode),
+    source: modeSource
+  }));
+  if (usesColony) {
+    lines.push(getProjectsUIText('ui.projects.costTooltip.colonyAvailable', 'Colony available: {value}', {
+      value: formatNumber(colonyAvailable, true)
+    }));
+  }
+  if (usesSpaceStorage) {
+    lines.push(getProjectsUIText('ui.projects.costTooltip.spaceStored', 'Space Storage stored: {value}', {
+      value: formatNumber(stored, true)
+    }));
+  }
+  if (reserveIsRelevant) {
+    lines.push(getProjectsUIText('ui.projects.costTooltip.reserve', 'Strategic reserve: {value}', {
+      value: formatNumber(reserve, true)
+    }));
+    lines.push(getProjectsUIText('ui.projects.costTooltip.spaceAfterReserve', 'Space Storage after reserve: {value}', {
+      value: formatNumber(afterReserve, true)
+    }));
+    if (usesColony) {
+      lines.push(getProjectsUIText('ui.projects.costTooltip.usable', 'Usable in this mode: {value}', {
+        value: formatNumber(usable, true)
+      }));
+    }
+    const shortfall = Math.max(0, requiredAmount - usable);
+    if (shortfall > 0) {
+      lines.push(getProjectsUIText('ui.projects.costTooltip.shortfallAfterRules', 'Shortfall after mode and reserve: {value}', {
+        value: formatNumber(shortfall, true)
+      }));
+    }
+  }
+  return lines.join('\n');
+}
+
 function shouldHighlightProjectCost(project, category, resource, availableAmount, requiredAmount) {
   if (project.ignoreCostForResource && project.ignoreCostForResource(category, resource)) {
     return false;
@@ -1252,7 +1367,7 @@ function shouldHighlightProjectCost(project, category, resource, availableAmount
 
 function updateCostDisplay(project) {
   const elements = projectElements[project.name];
-  if (elements && elements.costItems) {
+  if (elements && elements.costElement && elements.costItems && elements.costList) {
     const cost = project.getScaledCost();
     let costItemCount = Object.keys(elements.costItems).length;
     for (const category in cost) {
@@ -1283,17 +1398,37 @@ function updateCostDisplay(project) {
         const resourceDisplayName = resources[category]?.[resource]?.displayName ||
           resource.charAt(0).toUpperCase() + resource.slice(1);
         const prefix = item.dataset.leadingComma === 'true' && hasPreviousItem ? ', ' : '';
-        item._refs.separator.textContent = prefix;
-        item._refs.text.textContent = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
+        if (item._refs.separator.textContent !== prefix) {
+          item._refs.separator.textContent = prefix;
+        }
+        const costText = `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}`;
+        if (item._refs.text.textContent !== costText) {
+          item._refs.text.textContent = costText;
+        }
         const highlight = shouldHighlightProjectCost(project, category, resource, availableAmount, requiredAmount);
-        item._refs.text.style.color = highlight ? 'red' : '';
-        item.style.display = '';
+        syncCostExplanationTooltip(
+          item._refs.tooltipAnchor,
+          buildProjectCostTooltip(project, category, resource, requiredAmount, storageAccess),
+          highlight
+        );
+        const color = highlight ? 'red' : '';
+        if (item._refs.text.style.color !== color) {
+          item._refs.text.style.color = color;
+        }
+        if (item.style.display !== '') {
+          item.style.display = '';
+        }
       } else {
-        item.style.display = 'none';
+        if (item.style.display !== 'none') {
+          item.style.display = 'none';
+        }
       }
     }
     elements.hasVisibleCostItems = hasItem;
-    elements.costElement.style.display = hasItem ? 'block' : 'none';
+    const display = hasItem ? 'block' : 'none';
+    if (elements.costElement.style.display !== display) {
+      elements.costElement.style.display = display;
+    }
   }
 }
 
@@ -1454,16 +1589,27 @@ function updateTotalCostDisplay(project) {
     const totalCostLabel = elements.totalCostLabel;
     if (totalCostValue && totalCostLabel) {
       const available = resources.colony?.funding?.value || 0;
-      if (totalCost < 0) {
-        totalCostLabel.textContent = `${getProjectsUIText('ui.projects.totalGainLabel', 'Total Gain')}: `;
-        totalCostValue.textContent = formatNumber(-totalCost, true);
-      } else {
-        totalCostLabel.textContent = `${getProjectsUIText('ui.projects.totalCostLabel', 'Total Cost')}: `;
-        totalCostValue.textContent = formatNumber(totalCost, true);
-      }
       const highlight = project.isContinuous()
         ? project.shortfallLastTick
         : totalCost > 0 && available < totalCost;
+      if (totalCost < 0) {
+        totalCostLabel.textContent = `${getProjectsUIText('ui.projects.totalGainLabel', 'Total Gain')}: `;
+        syncCostExplanationContent(
+          totalCostValue,
+          formatNumber(-totalCost, true),
+          getProjectsUIText('ui.projects.costTooltip.totalGain', 'Total gain: {value}', {
+            value: formatNumber(-totalCost, true)
+          }),
+          false
+        );
+      } else {
+        totalCostLabel.textContent = `${getProjectsUIText('ui.projects.totalCostLabel', 'Total Cost')}: `;
+        let tooltipText = buildProjectCostTooltip(project, 'colony', 'funding', totalCost);
+        if (project.isContinuous() && project.shortfallLastTick && available >= totalCost) {
+          tooltipText += `\n${getProjectsUIText('ui.projects.costTooltip.lastTickShortfall', 'The full cost could not be paid in the last tick.')}`;
+        }
+        syncCostExplanationContent(totalCostValue, formatNumber(totalCost, true), tooltipText, highlight);
+      }
       totalCostValue.style.color = highlight ? 'red' : '';
     }
     return;
@@ -1517,7 +1663,11 @@ function updateTotalCostDisplay(project) {
       const missing = formatNumber(totalCost - available, true);
       totalCostText += ` (${getProjectsUIText('ui.projects.cargoRocket.fundingMissing', 'Need {value} more', { value: missing })})`;
     }
-    totalCostValue.textContent = totalCostText;
+    let tooltipText = buildProjectCostTooltip(project, 'colony', 'funding', totalCost);
+    if (project.isContinuous() && project.shortfallLastTick && available >= totalCost) {
+      tooltipText += `\n${getProjectsUIText('ui.projects.costTooltip.lastTickShortfall', 'The full cost could not be paid in the last tick.')}`;
+    }
+    syncCostExplanationContent(totalCostValue, totalCostText, tooltipText, highlight);
     totalCostValue.style.color = highlight ? 'red' : '';
   }
 }
@@ -2069,17 +2219,36 @@ function formatTotalCostDisplay(totalCost, project, perSecond = false) {
   return getProjectsUIText('ui.projects.totalCost', 'Total Cost: {items}', { items: costArray.join(', ') });
 }
 
-function updateTotalCostDisplayElement(element, totalCost, project, perSecond = false, labelText = null) {
+function updateTotalCostDisplayElement(element, totalCost, project, perSecond = false, labelText = null, options = {}) {
   const suffix = perSecond ? '/s' : '';
   const entries = [];
+  const storageAccess = project?.attributes?.canUseSpaceStorage
+    ? project.createSpaceStorageAccess('expansions')
+    : null;
   for (const category in totalCost) {
     for (const resource in totalCost[category]) {
       const requiredAmount = totalCost[category][resource];
-      const availableAmount = getAvailableProjectCostAmount(project, category, resource);
+      const forceColonyOnly = options.colonyOnlyResources?.includes(`${category}.${resource}`);
+      const availableAmount = getAvailableProjectCostAmount(
+        forceColonyOnly ? null : project,
+        category,
+        resource,
+        storageAccess
+      );
       const resourceDisplayName = resources[category][resource].displayName ||
         resource.charAt(0).toUpperCase() + resource.slice(1);
       entries.push({
+        category,
+        resource,
+        requiredAmount,
         text: `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}${suffix}`,
+        tooltip: buildProjectCostTooltip(
+          forceColonyOnly ? null : project,
+          category,
+          resource,
+          requiredAmount,
+          storageAccess
+        ),
         highlight: project
           ? shouldHighlightProjectCost(project, category, resource, availableAmount, requiredAmount)
           : availableAmount < requiredAmount
@@ -2095,7 +2264,7 @@ function updateTotalCostDisplayElement(element, totalCost, project, perSecond = 
   const signature = JSON.stringify({
     prefix,
     postfix,
-    entries: entries.map(entry => [entry.text, entry.highlight])
+    entries: entries.map(entry => [entry.text, entry.highlight, entry.tooltip])
   });
   if (element._cachedTotalCostDomSignature === signature) {
     return;
@@ -2142,9 +2311,15 @@ function updateTotalCostDisplayElement(element, totalCost, project, perSecond = 
     if (separatorNode.nodeValue !== separatorText) {
       separatorNode.nodeValue = separatorText;
     }
-    if (entryNode.textContent !== entry.text) {
-      entryNode.textContent = entry.text;
+    if (!entryNode._costTextNode) {
+      entryNode.textContent = '';
+      entryNode._costTextNode = document.createElement('span');
+      entryNode.appendChild(entryNode._costTextNode);
     }
+    if (entryNode._costTextNode.textContent !== entry.text) {
+      entryNode._costTextNode.textContent = entry.text;
+    }
+    syncCostExplanationTooltip(entryNode, entry.tooltip, entry.highlight);
     const color = entry.highlight ? 'red' : '';
     if (entryNode.style.color !== color) {
       entryNode.style.color = color;

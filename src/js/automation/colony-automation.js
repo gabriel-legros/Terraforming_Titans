@@ -54,11 +54,11 @@ const COLONY_AUTOMATION_SLIDER_TARGETS = {
 };
 let ColonyAutomationPresetManagerBaseRef;
 try {
-  ColonyAutomationPresetManagerBaseRef = AutomationPresetManagerBase;
+  ColonyAutomationPresetManagerBaseRef = AutomationTwoBucketPresetManagerBase;
 } catch (error) {}
 try {
   ColonyAutomationPresetManagerBaseRef = ColonyAutomationPresetManagerBaseRef
-    || require('./automation-preset-manager-base.js').AutomationPresetManagerBase;
+    || require('./automation-preset-manager-base.js').AutomationTwoBucketPresetManagerBase;
 } catch (error) {}
 const ColonyAutomationPresetManagerBaseClass = ColonyAutomationPresetManagerBaseRef || class ColonyAutomationPresetManagerBaseFallback {};
 
@@ -72,242 +72,58 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       useAssignments: true,
       useCombinations: true,
       nextTravelKind: 'combination',
-      presetCollectionKey: 'targets'
+      presetCollectionKey: 'targets',
+      bucketKeys: ['control', 'automation'],
+      includeKeys: ['includeControl', 'includeAutomation'],
+      allowLegacyApplyOnNextTravel: false
     });
     this.encounteredTargets = encounteredTargets;
     this.elapsed = 0;
   }
 
-  setCollapsed(collapsed) {
-    super.setCollapsed(collapsed);
+  capturePresetEntry(targetId, includeControl, includeAutomation) {
+    return this.captureTargetSettings(targetId, includeControl, includeAutomation);
   }
 
-  setMasterEnabled(enabled) {
-    super.setMasterEnabled(enabled);
-  }
-
-  isActive() {
-    return super.isActive();
-  }
-
-  getPresetById(id) {
-    return super.getPresetById(id);
-  }
-
-  getSelectedPresetId() {
-    return super.getSelectedPresetId();
-  }
-
-  getSelectedPreset() {
-    return super.getSelectedPreset();
-  }
-
-  setSelectedPresetId(id) {
-    return super.setSelectedPresetId(id);
-  }
-
-  getAssignments() {
-    return super.getAssignments();
-  }
-
-  getCombinations() {
-    return super.getCombinations();
-  }
-
-  getCombinationById(id) {
-    return super.getCombinationById(id);
-  }
-
-  getSelectedCombinationId() {
-    return super.getSelectedCombinationId();
-  }
-
-  getSelectedCombination() {
-    return super.getSelectedCombination();
-  }
-
-  setSelectedCombinationId(id) {
-    return super.setSelectedCombinationId(id);
-  }
-
-  addAssignment(presetId) {
-    return super.addAssignment(presetId);
-  }
-
-  setAssignments(assignments) {
-    super.setAssignments(assignments);
-  }
-
-  removeAssignment(assignmentId) {
-    super.removeAssignment(assignmentId);
-  }
-
-  moveAssignment(assignmentId, direction) {
-    super.moveAssignment(assignmentId, direction);
-  }
-
-  setAssignmentPreset(assignmentId, presetId) {
-    super.setAssignmentPreset(assignmentId, presetId);
-  }
-
-  setAssignmentEnabled(assignmentId, enabled) {
-    super.setAssignmentEnabled(assignmentId, enabled);
-  }
-
-  moveCombination(id, direction) {
-    return super.moveCombination(id, direction);
-  }
-
-  addCombination(name, assignments) {
-    return super.addCombination(name, assignments);
-  }
-
-  updateCombination(id, name, assignments) {
-    return super.updateCombination(id, name, assignments);
-  }
-
-  deleteCombination(id) {
-    super.deleteCombination(id);
-  }
-
-  setCombinationShowInSidebar(id, showInSidebar) {
-    return super.setCombinationShowInSidebar(id, showInSidebar);
-  }
-
-  applyCombination(id) {
-    super.applyCombination(id);
-  }
-
-  addPreset(name, targetIds, options = {}) {
-    const shouldCreateEmpty = options.createEmpty === true;
-    const preset = this.buildPreset(
-      name,
-      shouldCreateEmpty ? [] : targetIds,
-      shouldCreateEmpty ? { ...options, scopeAll: false } : options
-    );
-    this.presets.push(preset);
-    this.selectedPresetId = preset.id;
-    return preset.id;
-  }
-
-  movePreset(id, direction) {
-    return super.movePreset(id, direction);
-  }
-
-  updatePreset(id, name, targetIds, options = {}) {
-    const index = this.presets.findIndex(preset => preset.id === id);
-    if (index < 0) {
-      return false;
-    }
-    const preset = this.buildPreset(name, targetIds, options, id);
-    this.presets.splice(index, 1, preset);
-    return true;
-  }
-
-  deletePreset(id) {
-    super.deletePreset(id);
-  }
-
-  renamePreset(id, name) {
-    super.renamePreset(id, name);
-  }
-
-  setPresetShowInSidebar(id, showInSidebar) {
-    return super.setPresetShowInSidebar(id, showInSidebar);
-  }
-
-  exportPreset(presetId) {
-    const preset = this.getPresetById(Number(presetId));
-    if (!preset) {
-      return null;
-    }
-    return {
-      name: preset.name,
-      showInSidebar: preset.showInSidebar !== false,
-      presetMode: this.getPresetModeValue(preset.presetMode),
-      includeControl: preset.includeControl !== false,
-      includeAutomation: preset.includeAutomation !== false,
-      scopeAll: preset.scopeAll === true,
-      targets: Object.fromEntries(
-        Object.entries(preset.targets || {}).map(([targetId, entry]) => [
-          targetId,
-          {
-            categoryId: entry.categoryId,
-            control: entry.control ? this.deepClone(entry.control) : null,
-            automation: entry.automation ? {
-              ...this.deepClone(entry.automation),
-              autoBuildBasis: entry.automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : entry.automation.autoBuildBasis
-            } : null
-          }
-        ])
-      )
-    };
-  }
-
-  importPreset(presetData = {}) {
-    const id = this.nextPresetId++;
-    const importedPreset = {
-      id,
-      name: presetData.name || `Preset ${id}`,
-      showInSidebar: presetData.showInSidebar !== false,
-      presetMode: this.getPresetModeValue(presetData.presetMode),
-      includeControl: presetData.includeControl !== false,
-      includeAutomation: presetData.includeAutomation !== false,
-      scopeAll: presetData.scopeAll === true,
-      targets: {}
-    };
-    const importedTargets = presetData.targets || {};
-    for (const targetId in importedTargets) {
-      const entry = importedTargets[targetId] || {};
-      const control = entry.control && Object.keys(entry.control).length > 0
+  normalizePresetCollection(collection = {}) {
+    const normalized = {};
+    for (const targetId in collection) {
+      const entry = collection[targetId] || {};
+      let control = entry.control && entry.control.constructor === Object
         ? this.deepClone(entry.control)
         : null;
-      const automation = entry.automation && Object.keys(entry.automation).length > 0
+      let automation = entry.automation && entry.automation.constructor === Object
         ? this.deepClone(entry.automation)
         : null;
+      if (control && Object.prototype.hasOwnProperty.call(control, 'autoUpgradeEnabled')) {
+        automation ||= {};
+        if (!Object.prototype.hasOwnProperty.call(automation, 'autoUpgradeEnabled')) {
+          automation.autoUpgradeEnabled = control.autoUpgradeEnabled === true;
+        }
+        delete control.autoUpgradeEnabled;
+      }
       if (automation && automation.autoBuildBasis === 'initialLand') {
         automation.autoBuildBasis = 'geometricLand';
       }
-      if (!control && !automation) {
-        continue;
+      if (control && Object.keys(control).length === 0) {
+        control = null;
       }
-      importedPreset.targets[targetId] = {
-        categoryId: entry.categoryId || this.getTargetCategoryId(targetId),
-        control,
-        automation
-      };
+      if (automation && Object.keys(automation).length === 0) {
+        automation = null;
+      }
+      if (control || automation) {
+        normalized[targetId] = {
+          categoryId: entry.categoryId || this.getTargetCategoryId(targetId),
+          control,
+          automation
+        };
+      }
     }
-    this.recordPresetTargets(importedPreset);
-    this.presets.push(importedPreset);
-    this.selectedPresetId = importedPreset.id;
-    return importedPreset.id;
+    return normalized;
   }
 
-  buildPreset(name, targetIds, options = {}, idOverride) {
-    const includeControl = options.includeControl !== false;
-    const includeAutomation = options.includeAutomation !== false;
-    const scopeAll = options.scopeAll === true;
-    const id = idOverride || this.nextPresetId++;
-    const preset = {
-      id,
-      name: name || `Preset ${id}`,
-      showInSidebar: options.showInSidebar !== false,
-      presetMode: this.getPresetModeValue(options.presetMode),
-      includeControl,
-      includeAutomation,
-      scopeAll,
-      targets: {}
-    };
-    const ids = Array.isArray(targetIds) ? targetIds : [];
-    for (let index = 0; index < ids.length; index += 1) {
-      const targetId = ids[index];
-      const entry = this.captureTargetSettings(targetId, includeControl, includeAutomation);
-      if (entry.control || entry.automation) {
-        preset.targets[targetId] = entry;
-      }
-    }
-    this.recordPresetTargets(preset);
-    return preset;
+  serializePresetCollection(preset) {
+    return this.normalizePresetCollection(preset.targets);
   }
 
   recordPresetTargets(preset) {
@@ -315,52 +131,6 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       return;
     }
     this.encounteredTargets.recordAll('colony', Object.keys(preset.targets || {}));
-  }
-
-  mergeMissingTargetsIntoPreset(presetId, targetIds = []) {
-    const preset = this.getPresetById(Number(presetId));
-    if (!preset) {
-      return false;
-    }
-    const ids = Array.isArray(targetIds) ? targetIds : [];
-    let changed = false;
-    for (let index = 0; index < ids.length; index += 1) {
-      const targetId = ids[index];
-      if (preset.targets[targetId]) {
-        continue;
-      }
-      const entry = this.captureTargetSettings(
-        targetId,
-        preset.includeControl !== false,
-        preset.includeAutomation !== false
-      );
-      if (!entry.control && !entry.automation) {
-        continue;
-      }
-      preset.targets[targetId] = entry;
-      changed = true;
-    }
-    if (changed) {
-      this.recordPresetTargets(preset);
-    }
-    return changed;
-  }
-
-  snapshotTargetIntoPreset(presetId, targetId) {
-    const preset = this.getPresetById(Number(presetId));
-    if (!preset) {
-      return false;
-    }
-    const entry = this.captureTargetSettings(
-      targetId,
-      preset.includeControl !== false,
-      preset.includeAutomation !== false
-    );
-    if (!entry.control && !entry.automation) {
-      return false;
-    }
-    preset.targets[targetId] = entry;
-    return true;
   }
 
   isPresetParameterPathEligible(preset, path) {
@@ -413,7 +183,8 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       return this.captureColonyControlSettings(this.getColonyTarget(targetId));
     }
     if (this.isSliderTarget(targetId)) {
-      return { value: this.getSliderTargetConfig(targetId).capture() };
+      const config = this.getSliderTargetConfig(targetId);
+      return config ? { value: config.capture() } : null;
     }
     if (targetId === 'constructionOffice') {
       return captureConstructionOfficeSettings();
@@ -438,11 +209,8 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     if (!colony) {
       return null;
     }
-    const control = {
-      workerPriority: colony.workerPriority,
-      hidden: colony.isHidden === true,
-      luxuryResourcesEnabled: this.deepClone(colony.luxuryResourcesEnabled)
-    };
+    const control = this.captureStructureControlSettings(colony);
+    control.luxuryResourcesEnabled = this.deepClone(colony.luxuryResourcesEnabled);
     if (colony.name === 'aerostat_colony') {
       control.landAsResearchOutpost = colony.landAsResearchOutpost === true;
       control.capWorkersToAerostatCapacity =
@@ -458,18 +226,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     if (!colony) {
       return null;
     }
-    return {
-      autoBuildEnabled: colony.autoBuildEnabled,
-      autoBuildPriority: colony.autoBuildPriority,
-      autoBuildBasis: colony.autoBuildBasis === 'initialLand' ? 'geometricLand' : colony.autoBuildBasis,
-      autoBuildPercent: colony.autoBuildPercent,
-      autoBuildFixed: colony.autoBuildFixed,
-      autoBuildFillPercent: colony.autoBuildFillPercent,
-      autoBuildFillResourcePrimary: colony.autoBuildFillResourcePrimary,
-      autoBuildFillResourceSecondary: colony.autoBuildFillResourceSecondary,
-      autoActiveEnabled: colony.autoActiveEnabled,
-      autoUpgradeEnabled: colony.autoUpgradeEnabled === true
-    };
+    return this.captureStructureAutomationSettings(colony);
   }
 
   captureNanocolonyControlSettings() {
@@ -517,69 +274,6 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     };
   }
 
-  resolveAssignments() {
-    const resolved = {
-      control: {},
-      automation: {}
-    };
-    for (let index = 0; index < this.assignments.length; index += 1) {
-      const assignment = this.assignments[index];
-      if (!assignment.enabled) {
-        continue;
-      }
-      const preset = this.getPresetById(assignment.presetId);
-      if (!preset) {
-        continue;
-      }
-      if (this.isParameterizedPreset(preset) && !this.getPresetParameterInfo(preset).valid) {
-        continue;
-      }
-      const entries = preset.targets;
-      for (const targetId in entries) {
-        const entry = entries[targetId];
-        if (preset.includeControl && entry.control) {
-          resolved.control[targetId] = entry.control;
-        }
-        if (preset.includeAutomation && entry.automation) {
-          resolved.automation[targetId] = entry.automation;
-        }
-      }
-    }
-    return resolved;
-  }
-
-  applyPresets() {
-    const resolved = this.resolveAssignments();
-    this.applyResolvedMaps(resolved.control, resolved.automation);
-  }
-
-  applyCombinationPresets(id) {
-    if (id) {
-      this.applyCombination(id);
-    }
-    this.applyPresets();
-  }
-
-  applyPresetOnce(presetId, parameterValue = null) {
-    const preset = this.buildPresetForApplication(this.getPresetById(presetId), parameterValue);
-    if (!preset) {
-      return;
-    }
-    const controlMap = {};
-    const automationMap = {};
-    const entries = preset.targets;
-    for (const targetId in entries) {
-      const entry = entries[targetId];
-      if (preset.includeControl && entry.control) {
-        controlMap[targetId] = entry.control;
-      }
-      if (preset.includeAutomation && entry.automation) {
-        automationMap[targetId] = entry.automation;
-      }
-    }
-    this.applyResolvedMaps(controlMap, automationMap);
-  }
-
   applyResolvedMaps(controlMap, automationMap) {
     for (const targetId in controlMap) {
       if (this.applyControlSettings(targetId, controlMap[targetId])) {
@@ -599,36 +293,31 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       return this.applyColonyControlSettings(this.getColonyTarget(targetId), control);
     }
     if (this.isSliderTarget(targetId)) {
+      const config = this.getSliderTargetConfig(targetId);
+      if (!config) {
+        return false;
+      }
       const current = this.captureControlSettings(targetId);
       if (this.areSettingsEqual(current, control)) {
         return false;
       }
-      this.getSliderTargetConfig(targetId).apply(control.value);
+      config.apply(control.value);
       return true;
     }
     if (targetId === 'constructionOffice') {
       const current = captureConstructionOfficeSettings();
-      if (this.areSettingsEqual(current, control)) {
+      const merged = this.mergeSettings(current, control);
+      if (this.areSettingsEqual(current, merged)) {
         return false;
       }
-      restoreConstructionOfficeSettings(control);
+      restoreConstructionOfficeSettings(merged);
       return true;
     }
     if (targetId === 'nanocolony') {
-      const current = this.captureNanocolonyControlSettings();
-      if (this.areSettingsEqual(current, control)) {
-        return false;
-      }
-      this.applyNanocolonyControlSettings(control);
-      return true;
+      return this.applyNanocolonyControlSettings(control);
     }
     if (targetId === 'orbitals') {
-      const current = this.captureOrbitalsControlSettings();
-      if (this.areSettingsEqual(current, control)) {
-        return false;
-      }
-      this.applyOrbitalsControlSettings(control);
-      return true;
+      return this.applyOrbitalsControlSettings(control);
     }
     return false;
   }
@@ -644,19 +333,7 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     if (!colony) {
       return false;
     }
-    let changed = false;
-    if ('workerPriority' in control && colony.workerPriority !== control.workerPriority) {
-      colony.workerPriority = control.workerPriority;
-      changed = true;
-    }
-    if ('hidden' in control) {
-      const shouldHide = control.hidden === true && colony.active <= 0n;
-      if (colony.isHidden !== shouldHide) {
-        colony.isHidden = shouldHide;
-        updateStructureHiddenPreference(colony.name, shouldHide);
-        changed = true;
-      }
-    }
+    let changed = this.applyStructureControlSettings(colony, control);
     if (control.luxuryResourcesEnabled) {
       const nextLuxury = this.deepClone(control.luxuryResourcesEnabled);
       if (!this.areSettingsEqual(colony.luxuryResourcesEnabled, nextLuxury)) {
@@ -700,134 +377,101 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     if (!colony) {
       return false;
     }
-    let changed = false;
-    if ('autoBuildEnabled' in automation && colony.autoBuildEnabled !== automation.autoBuildEnabled) {
-      colony.autoBuildEnabled = automation.autoBuildEnabled;
-      changed = true;
-    }
-    if ('autoBuildPriority' in automation && colony.autoBuildPriority !== automation.autoBuildPriority) {
-      colony.autoBuildPriority = automation.autoBuildPriority;
-      changed = true;
-    }
-    if ('autoBuildBasis' in automation) {
-      const automationBasis = automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : automation.autoBuildBasis;
-      if (colony.autoBuildBasis !== automationBasis) {
-        colony.autoBuildBasis = automationBasis;
-        changed = true;
-      }
-    }
-    if ('autoBuildPercent' in automation && colony.autoBuildPercent !== automation.autoBuildPercent) {
-      colony.autoBuildPercent = automation.autoBuildPercent;
-      changed = true;
-    }
-    if ('autoBuildFixed' in automation && colony.autoBuildFixed !== automation.autoBuildFixed) {
-      colony.autoBuildFixed = automation.autoBuildFixed;
-      changed = true;
-    }
-    if ('autoBuildFillPercent' in automation && colony.autoBuildFillPercent !== automation.autoBuildFillPercent) {
-      colony.autoBuildFillPercent = automation.autoBuildFillPercent;
-      changed = true;
-    }
-    if ('autoBuildFillResourcePrimary' in automation && colony.autoBuildFillResourcePrimary !== automation.autoBuildFillResourcePrimary) {
-      colony.autoBuildFillResourcePrimary = automation.autoBuildFillResourcePrimary;
-      changed = true;
-    }
-    if ('autoBuildFillResourceSecondary' in automation && colony.autoBuildFillResourceSecondary !== automation.autoBuildFillResourceSecondary) {
-      colony.autoBuildFillResourceSecondary = automation.autoBuildFillResourceSecondary;
-      changed = true;
-    }
-    if ('autoActiveEnabled' in automation && colony.autoActiveEnabled !== automation.autoActiveEnabled) {
-      colony.autoActiveEnabled = automation.autoActiveEnabled;
-      changed = true;
-    }
-    if ('autoUpgradeEnabled' in automation && colony.autoUpgradeEnabled !== automation.autoUpgradeEnabled) {
-      colony.autoUpgradeEnabled = automation.autoUpgradeEnabled === true;
-      changed = true;
-    }
-    return changed;
+    return this.applyStructureAutomationSettings(colony, automation);
   }
 
   applyNanocolonyControlSettings(control) {
-    nanotechManager.maintenanceSlider = control.maintenanceSlider || 0;
-    nanotechManager.glassSlider = control.glassSlider || 0;
-    nanotechManager.maintenance2Slider = control.maintenance2Slider || 0;
-    nanotechManager.componentsSlider = control.componentsSlider || 0;
-    nanotechManager.maintenance3Slider = control.maintenance3Slider || 0;
-    nanotechManager.electronicsSlider = control.electronicsSlider || 0;
-    const alternateRecipeUnlocked = projectManager.projects.nanoworld.getShopPurchaseCount('alternateElectronicsRecipe') > 0;
-    nanotechManager.stage3Resource = control.stage3Resource === 'graphite' && alternateRecipeUnlocked
-      ? 'graphite'
-      : 'biomass';
-    nanotechManager.maintenance4Slider = control.maintenance4Slider || 0;
-    nanotechManager.grapheneSlider = control.grapheneSlider || 0;
-    nanotechManager.maxEnergyPercent = control.maxEnergyPercent ?? 10;
-    nanotechManager.maxEnergyAbsolute = control.maxEnergyAbsolute ?? 1e6;
-    nanotechManager.energyLimitMode = control.energyLimitMode || 'percent';
-    nanotechManager.maxSiliconPercent = control.maxSiliconPercent ?? 10;
-    nanotechManager.maxSiliconAbsolute = control.maxSiliconAbsolute ?? 1e6;
-    nanotechManager.siliconLimitMode = control.siliconLimitMode || 'percent';
-    nanotechManager.maxMetalPercent = control.maxMetalPercent ?? 10;
-    nanotechManager.maxMetalAbsolute = control.maxMetalAbsolute ?? 1e6;
-    nanotechManager.metalLimitMode = control.metalLimitMode || 'percent';
-    nanotechManager.maxBiomassPercent = control.maxBiomassPercent ?? 10;
-    nanotechManager.maxBiomassAbsolute = control.maxBiomassAbsolute ?? 1e6;
-    nanotechManager.biomassLimitMode = control.biomassLimitMode || 'percent';
-    nanotechManager.maxGraphitePercent = control.maxGraphitePercent ?? 10;
-    nanotechManager.maxGraphiteAbsolute = control.maxGraphiteAbsolute ?? 1e6;
-    nanotechManager.graphiteLimitMode = control.graphiteLimitMode || 'percent';
-    nanotechManager.onlyScrap = control.onlyScrap === true;
-    nanotechManager.onlyTrash = control.onlyTrash === true;
-    nanotechManager.onlyJunk = control.onlyJunk === true;
-    nanotechManager.uncappedScrap = control.uncappedScrap === true;
-    nanotechManager.uncappedTrash = control.uncappedTrash === true;
-    nanotechManager.uncappedJunk = control.uncappedJunk === true;
+    const before = this.captureNanocolonyControlSettings();
+    const zeroDefaultKeys = [
+      'maintenanceSlider',
+      'glassSlider',
+      'maintenance2Slider',
+      'componentsSlider',
+      'maintenance3Slider',
+      'electronicsSlider',
+      'maintenance4Slider',
+      'grapheneSlider'
+    ];
+    const numericDefaultKeys = {
+      maxEnergyPercent: 10,
+      maxEnergyAbsolute: 1e6,
+      maxSiliconPercent: 10,
+      maxSiliconAbsolute: 1e6,
+      maxMetalPercent: 10,
+      maxMetalAbsolute: 1e6,
+      maxBiomassPercent: 10,
+      maxBiomassAbsolute: 1e6,
+      maxGraphitePercent: 10,
+      maxGraphiteAbsolute: 1e6
+    };
+    const modeKeys = [
+      'energyLimitMode',
+      'siliconLimitMode',
+      'metalLimitMode',
+      'biomassLimitMode',
+      'graphiteLimitMode'
+    ];
+    const booleanKeys = [
+      'onlyScrap',
+      'onlyTrash',
+      'onlyJunk',
+      'uncappedScrap',
+      'uncappedTrash',
+      'uncappedJunk'
+    ];
+    for (let index = 0; index < zeroDefaultKeys.length; index += 1) {
+      const key = zeroDefaultKeys[index];
+      if (Object.prototype.hasOwnProperty.call(control, key)) {
+        nanotechManager[key] = control[key] || 0;
+      }
+    }
+    for (const key in numericDefaultKeys) {
+      if (Object.prototype.hasOwnProperty.call(control, key)) {
+        nanotechManager[key] = control[key] ?? numericDefaultKeys[key];
+      }
+    }
+    for (let index = 0; index < modeKeys.length; index += 1) {
+      const key = modeKeys[index];
+      if (Object.prototype.hasOwnProperty.call(control, key)) {
+        nanotechManager[key] = control[key] || 'percent';
+      }
+    }
+    for (let index = 0; index < booleanKeys.length; index += 1) {
+      const key = booleanKeys[index];
+      if (Object.prototype.hasOwnProperty.call(control, key)) {
+        nanotechManager[key] = control[key] === true;
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(control, 'stage3Resource')) {
+      const alternateRecipeUnlocked = projectManager.projects.nanoworld.getShopPurchaseCount('alternateElectronicsRecipe') > 0;
+      nanotechManager.stage3Resource = control.stage3Resource === 'graphite' && alternateRecipeUnlocked
+        ? 'graphite'
+        : 'biomass';
+    }
+    return !this.areSettingsEqual(before, this.captureNanocolonyControlSettings());
   }
 
   applyOrbitalsControlSettings(control) {
-    followersManager.assignmentMode = control.assignmentMode === 'weight' ? 'weight' : 'manual';
-    followersManager.assignmentStep = Number.isFinite(control.assignmentStep)
-      ? Math.max(1, Math.floor(control.assignmentStep))
-      : 1;
-    followersManager.autoAssignId = control.autoAssignId || null;
-    followersManager.manualAssignments = this.deepClone(control.manualAssignments || {});
-    followersManager.weights = this.deepClone(control.weights || {});
+    const before = this.captureOrbitalsControlSettings();
+    if (Object.prototype.hasOwnProperty.call(control, 'assignmentMode')) {
+      followersManager.assignmentMode = control.assignmentMode === 'weight' ? 'weight' : 'manual';
+    }
+    if (Object.prototype.hasOwnProperty.call(control, 'assignmentStep')) {
+      followersManager.assignmentStep = Number.isFinite(control.assignmentStep)
+        ? Math.max(1, Math.floor(control.assignmentStep))
+        : 1;
+    }
+    if (Object.prototype.hasOwnProperty.call(control, 'autoAssignId')) {
+      followersManager.autoAssignId = control.autoAssignId || null;
+    }
+    if (Object.prototype.hasOwnProperty.call(control, 'manualAssignments')) {
+      followersManager.manualAssignments = this.deepClone(control.manualAssignments || {});
+    }
+    if (Object.prototype.hasOwnProperty.call(control, 'weights')) {
+      followersManager.weights = this.deepClone(control.weights || {});
+    }
     followersManager.ensureTrackedOrbitals();
-  }
-
-  deepClone(value) {
-    return super.deepClone(value);
-  }
-
-  areSettingsEqual(left, right) {
-    if (left === right) {
-      return true;
-    }
-    if (Array.isArray(left) || Array.isArray(right)) {
-      if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) {
-        return false;
-      }
-      for (let index = 0; index < left.length; index += 1) {
-        if (!this.areSettingsEqual(left[index], right[index])) {
-          return false;
-        }
-      }
-      return true;
-    }
-    if (!left || !right || typeof left !== 'object' || typeof right !== 'object') {
-      return false;
-    }
-    const leftKeys = Object.keys(left);
-    const rightKeys = Object.keys(right);
-    if (leftKeys.length !== rightKeys.length) {
-      return false;
-    }
-    for (let index = 0; index < leftKeys.length; index += 1) {
-      const key = leftKeys[index];
-      if (!this.areSettingsEqual(left[key], right[key])) {
-        return false;
-      }
-    }
-    return true;
+    return !this.areSettingsEqual(before, this.captureOrbitalsControlSettings());
   }
 
   recordCurrentlyAvailableTargets() {
@@ -859,7 +503,6 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
   }
 
   getAvailableTargets() {
-    this.recordCurrentlyAvailableTargets();
     const targets = [];
     const colonyList = Object.values(colonies || {});
     for (let index = 0; index < colonyList.length; index += 1) {
@@ -921,7 +564,6 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     }
 
     if (this.encounteredTargets) {
-      this.presets.forEach(preset => this.recordPresetTargets(preset));
       const currentTargetIds = new Set(targets.map(target => target.id));
       const encounteredTargetIds = this.encounteredTargets.getIds('colony');
       for (let index = 0; index < encounteredTargetIds.length; index += 1) {
@@ -984,7 +626,8 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
       return colony ? (colony.displayName || colony.name) : this.getColonyTargetId(targetId);
     }
     if (this.isSliderTarget(targetId)) {
-      return this.getSliderTargetConfig(targetId).label;
+      const config = this.getSliderTargetConfig(targetId);
+      return config ? config.label : this.getSliderTargetId(targetId);
     }
     if (targetId === 'constructionOffice') {
       return 'Construction Office';
@@ -1024,90 +667,6 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
 
   targetSupportsAutomation(targetId) {
     return this.isColonyTarget(targetId);
-  }
-
-  saveState() {
-    return {
-      presets: this.presets.map(preset => ({
-        id: preset.id,
-        name: preset.name,
-        showInSidebar: preset.showInSidebar !== false,
-        presetMode: this.getPresetModeValue(preset.presetMode),
-        includeControl: !!preset.includeControl,
-        includeAutomation: !!preset.includeAutomation,
-        scopeAll: !!preset.scopeAll,
-        targets: Object.fromEntries(
-          Object.entries(preset.targets).map(([key, entry]) => [
-            key,
-            {
-              categoryId: entry.categoryId,
-              control: entry.control ? this.deepClone(entry.control) : null,
-              automation: entry.automation ? {
-                ...this.deepClone(entry.automation),
-                autoBuildBasis: entry.automation.autoBuildBasis === 'initialLand' ? 'geometricLand' : entry.automation.autoBuildBasis
-              } : null
-            }
-          ])
-        )
-      })),
-      assignments: this.serializeAssignments(),
-      combinations: this.serializeCombinations(),
-      collapsed: this.collapsed,
-      masterEnabled: this.masterEnabled,
-      nextTravelCombinationId: this.nextTravelCombinationId,
-      nextTravelCombinationPersistent: this.nextTravelCombinationPersistent,
-      selectedPresetId: this.selectedPresetId,
-      selectedCombinationId: this.selectedCombinationId,
-      nextPresetId: this.nextPresetId,
-      nextAssignmentId: this.nextAssignmentId,
-      nextCombinationId: this.nextCombinationId
-    };
-  }
-
-  loadState(data = {}) {
-    this.presets = Array.isArray(data.presets) ? data.presets.map(preset => ({
-      id: preset.id,
-      name: preset.name || 'Preset',
-      showInSidebar: preset.showInSidebar !== false,
-      presetMode: this.getPresetModeValue(preset.presetMode),
-      includeControl: preset.includeControl !== false,
-      includeAutomation: preset.includeAutomation !== false,
-      scopeAll: preset.scopeAll === true,
-      targets: Object.fromEntries(
-        Object.entries(preset.targets || {}).map(([targetId, entry]) => {
-          let control = entry?.control ? { ...entry.control } : null;
-          let automation = entry?.automation ? { ...entry.automation } : null;
-          if (control && 'autoUpgradeEnabled' in control && !automation) {
-            automation = {
-              autoUpgradeEnabled: control.autoUpgradeEnabled === true
-            };
-            delete control.autoUpgradeEnabled;
-          }
-          if (control && 'autoUpgradeEnabled' in control && automation && !('autoUpgradeEnabled' in automation)) {
-            automation.autoUpgradeEnabled = control.autoUpgradeEnabled === true;
-            delete control.autoUpgradeEnabled;
-          }
-          if (automation && automation.autoBuildBasis === 'initialLand') {
-            automation.autoBuildBasis = 'geometricLand';
-          }
-          if (control && Object.keys(control).length === 0) {
-            control = null;
-          }
-          if (automation && Object.keys(automation).length === 0) {
-            automation = null;
-          }
-          return [targetId, {
-            categoryId: entry?.categoryId || this.getTargetCategoryId(targetId),
-            control,
-            automation
-          }];
-        })
-      )
-    })) : [];
-    this.loadAssignmentsFromState(data.assignments);
-    this.loadCombinationsFromState(data.combinations);
-    this.loadCommonListState(data, { allowLegacyApplyOnNextTravel: false });
-    this.presets.forEach(preset => this.recordPresetTargets(preset));
   }
 
   update(delta) {

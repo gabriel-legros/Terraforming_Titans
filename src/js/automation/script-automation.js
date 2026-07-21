@@ -19,6 +19,9 @@ class ScriptAutomation {
     this.manualStepDisplayLineId = null;
     this.manualStepPendingLineId = null;
     this.lastConditionResult = null;
+    this.consoleOutputHistory = [];
+    this.nextConsoleOutputId = 1;
+    this.lastConsoleOutput = '';
     this.haltedReason = 'inactive';
     this.autoRestartOnCompletion = true;
     this.goToRowOneOnTravel = false;
@@ -1186,6 +1189,35 @@ class ScriptAutomation {
     return `#${index}${line.name ? ` ${line.name}` : ''}`;
   }
 
+  getConsoleOutputText() {
+    const script = this.getSelectedScript();
+    const displayLineId = this.getDisplayLineId();
+    const currentLine = script?.lines.find(line => line.id === displayLineId);
+    const parts = [this.lastStatus || 'Idle'];
+    if (currentLine) parts.push(`Line: ${this.getLineLabel(script, currentLine)}`);
+    if (this.lastActionSummary) parts.push(`Last action: ${this.lastActionSummary}`);
+    if (this.lastError) parts.push(`Error: ${this.lastError}`);
+    else if (this.lastLineOutcomeSummary && this.lastLineOutcomeLineId === displayLineId) {
+      parts.push(this.lastLineOutcomeSummary);
+    }
+    return parts.join(' | ');
+  }
+
+  captureConsoleOutput(text) {
+    if (!text || text === this.lastConsoleOutput) return false;
+    this.consoleOutputHistory.push({
+      id: this.nextConsoleOutputId++,
+      text
+    });
+    if (this.consoleOutputHistory.length > 50) this.consoleOutputHistory.shift();
+    this.lastConsoleOutput = text;
+    return true;
+  }
+
+  captureCurrentConsoleOutput() {
+    return this.captureConsoleOutput(this.getConsoleOutputText());
+  }
+
   saveState() {
     return {
       enabled: this.enabled,
@@ -1240,6 +1272,9 @@ class ScriptAutomation {
     this.nextScriptId = data.nextScriptId || this.getNextScriptIdFromScripts();
     this.nextLineId = data.nextLineId || this.getNextLineIdFromScripts();
     this.lastStatus = data.lastStatus || 'Loaded';
+    this.consoleOutputHistory = [];
+    this.nextConsoleOutputId = 1;
+    this.lastConsoleOutput = '';
     this.haltedReason = data.haltedReason || 'loaded';
     this.manualStepPendingLineId = data.manualStepPendingLineId ? Number(data.manualStepPendingLineId) : null;
     this.ensureDefaultScript();

@@ -1110,7 +1110,6 @@ class FollowersManager extends EffectableEntity {
     }
 
     const weighted = [];
-    let totalWeight = 0;
     for (let i = 0; i < configs.length; i += 1) {
       const config = configs[i];
       const weight = this.getWeight(config.id);
@@ -1124,38 +1123,61 @@ class FollowersManager extends EffectableEntity {
         continue;
       }
       weighted.push({ config, weight, index: i });
-      totalWeight += weight;
     }
 
-    if (totalWeight <= 0) {
+    if (weighted.length === 0) {
       return assignments;
     }
 
-    let assigned = 0;
+    const capacityInteger = BigInt(capacity);
+    let totalWeightInteger = 0n;
+    for (let i = 0; i < weighted.length; i += 1) {
+      weighted[i].weightInteger = BigInt(weighted[i].weight);
+      totalWeightInteger += weighted[i].weightInteger;
+    }
+
+    let assignedInteger = 0n;
     const remainders = [];
     for (let i = 0; i < weighted.length; i += 1) {
       const item = weighted[i];
-      const raw = (capacity * item.weight) / totalWeight;
-      const base = Math.floor(raw);
+      const weightedCapacity = capacityInteger * item.weightInteger;
+      const base = weightedCapacity / totalWeightInteger;
       assignments[item.config.id] = base;
-      assigned += base;
-      remainders.push({ id: item.config.id, frac: raw - base, weight: item.weight, index: item.index });
+      assignedInteger += base;
+      remainders.push({
+        id: item.config.id,
+        remainder: weightedCapacity % totalWeightInteger,
+        weight: item.weight,
+        index: item.index
+      });
     }
 
-    let remaining = capacity - assigned;
+    let remaining = capacityInteger - assignedInteger;
     remainders.sort((a, b) => {
-      if (b.frac !== a.frac) return b.frac - a.frac;
+      if (a.remainder !== b.remainder) return a.remainder > b.remainder ? -1 : 1;
       if (b.weight !== a.weight) return b.weight - a.weight;
       return a.index - b.index;
     });
 
     let cursor = 0;
-    while (remaining > 0 && remainders.length > 0) {
+    while (remaining > 0n && remainders.length > 0) {
       const target = remainders[cursor % remainders.length];
-      assignments[target.id] += 1;
-      remaining -= 1;
+      assignments[target.id] += 1n;
+      remaining -= 1n;
       cursor += 1;
     }
+
+    for (let i = 0; i < weighted.length; i += 1) {
+      assignments[weighted[i].config.id] = Number(assignments[weighted[i].config.id]);
+    }
+
+    // Numeric assignments above the safe-integer range can still round during summation.
+    const finalItem = weighted[weighted.length - 1];
+    let assignedBeforeFinal = 0;
+    for (let i = 0; i < finalItem.index; i += 1) {
+      assignedBeforeFinal += assignments[configs[i].id];
+    }
+    assignments[finalItem.config.id] = Math.max(0, capacity - assignedBeforeFinal);
 
     return assignments;
   }
@@ -1399,7 +1421,11 @@ class FollowersManager extends EffectableEntity {
       if (!targetResource) {
         continue;
       }
-      targetResource.modifyRate(rate, 'Orbital', 'followers');
+      targetResource.modifyRate(
+        rate,
+        t('ui.colony.followers.orbitals.rateSource', {}, 'Orbital'),
+        'followers'
+      );
     }
   }
 

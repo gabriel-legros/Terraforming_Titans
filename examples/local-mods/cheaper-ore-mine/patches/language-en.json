@@ -1,0 +1,9 @@
+{
+  "catalogs": {
+    "buildings": {
+      "oreMine": {
+        "name": "Ore Mine (Local Mod)"
+      }
+    }
+  }
+}

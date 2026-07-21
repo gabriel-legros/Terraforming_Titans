@@ -455,7 +455,14 @@ class AutomationPresetManagerBase {
       return;
     }
     this.selectedCombinationId = combo.id;
-    this.setAssignments(combo.assignments);
+    const assignmentsMatch = this.assignments.length === combo.assignments.length
+      && this.assignments.every((assignment, index) => (
+        assignment.presetId === combo.assignments[index].presetId
+        && (assignment.enabled !== false) === (combo.assignments[index].enabled !== false)
+      ));
+    if (!assignmentsMatch) {
+      this.setAssignments(combo.assignments);
+    }
   }
 
   serializeAssignments() {
@@ -518,6 +525,14 @@ class AutomationPresetManagerBase {
       this.masterEnabled = data.masterEnabled !== false;
     }
 
+    this.nextPresetId = this.getNextListId(this.presets, data.nextPresetId);
+    if (this.useAssignments) {
+      this.nextAssignmentId = this.getNextListId(this.assignments, data.nextAssignmentId);
+    }
+    if (this.useCombinations) {
+      this.nextCombinationId = this.getNextListId(this.combinations, data.nextCombinationId);
+    }
+
     if (this.nextTravelKind === 'combination') {
       this.nextTravelCombinationId = data.nextTravelCombinationId ? Number(data.nextTravelCombinationId) : null;
       this.nextTravelCombinationPersistent = data.nextTravelCombinationPersistent === true && !!this.nextTravelCombinationId;
@@ -538,18 +553,69 @@ class AutomationPresetManagerBase {
         ? (data.selectedCombinationId ? Number(data.selectedCombinationId) : null)
         : (this.combinations[0] ? this.combinations[0].id : null);
     }
-
-    this.nextPresetId = data.nextPresetId || this.presets.length + 1;
-    if (this.useAssignments) {
-      this.nextAssignmentId = data.nextAssignmentId || this.assignments.length + 1;
-    }
-    if (this.useCombinations) {
-      this.nextCombinationId = data.nextCombinationId || this.combinations.length + 1;
-    }
     this.getSelectedPreset();
     if (this.useCombinations) {
       this.getSelectedCombination();
     }
+  }
+
+  getNextListId(items, savedNextId) {
+    const list = Array.isArray(items) ? items : [];
+    let highestId = 0;
+    for (let index = 0; index < list.length; index += 1) {
+      const id = Number(list[index].id);
+      if (Number.isInteger(id) && id > highestId) {
+        highestId = id;
+      }
+    }
+    const saved = Number(savedNextId);
+    return Number.isInteger(saved) && saved > highestId ? saved : highestId + 1;
+  }
+
+  mergeSettings(baseValue, overridingValue) {
+    if (!overridingValue || overridingValue.constructor !== Object) {
+      return this.deepClone(overridingValue);
+    }
+    const merged = baseValue && baseValue.constructor === Object
+      ? this.deepClone(baseValue)
+      : {};
+    for (const key in overridingValue) {
+      merged[key] = this.deepClone(overridingValue[key]);
+    }
+    return merged;
+  }
+
+  areSettingsEqual(left, right) {
+    if (left === right) {
+      return true;
+    }
+    if (Array.isArray(left) || Array.isArray(right)) {
+      if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) {
+        return false;
+      }
+      for (let index = 0; index < left.length; index += 1) {
+        if (!this.areSettingsEqual(left[index], right[index])) {
+          return false;
+        }
+      }
+      return true;
+    }
+    if (!left || !right || left.constructor !== Object || right.constructor !== Object) {
+      return false;
+    }
+    const leftKeys = Object.keys(left);
+    const rightKeys = Object.keys(right);
+    if (leftKeys.length !== rightKeys.length) {
+      return false;
+    }
+    for (let index = 0; index < leftKeys.length; index += 1) {
+      const key = leftKeys[index];
+      if (!Object.prototype.hasOwnProperty.call(right, key)
+        || !this.areSettingsEqual(left[key], right[key])) {
+        return false;
+      }
+    }
+    return true;
   }
 
   deepClone(value) {
@@ -567,6 +633,410 @@ class AutomationPresetManagerBase {
   }
 }
 
+class AutomationTwoBucketPresetManagerBase extends AutomationPresetManagerBase {
+  constructor(config = {}) {
+    super(config);
+    this.bucketKeys = config.bucketKeys.slice();
+    this.includeKeys = config.includeKeys.slice();
+    this.allowLegacyApplyOnNextTravel = config.allowLegacyApplyOnNextTravel === true;
+  }
+
+  createPresetRecord(id, name, source = {}) {
+    return {
+      id,
+      name: name || `${this.presetLabel} ${id}`,
+      showInSidebar: source.showInSidebar !== false,
+      presetMode: this.getPresetModeValue(source.presetMode),
+      [this.includeKeys[0]]: source[this.includeKeys[0]] !== false,
+      [this.includeKeys[1]]: source[this.includeKeys[1]] !== false,
+      scopeAll: source.scopeAll === true,
+      [this.presetCollectionKey]: {}
+    };
+  }
+
+  normalizePresetTargetId(targetId) {
+    return targetId;
+  }
+
+  capturePresetEntry() {
+    return null;
+  }
+
+  normalizePresetCollection(collection = {}) {
+    return this.deepClone(collection || {});
+  }
+
+  serializePresetCollection(preset) {
+    return this.deepClone(preset[this.presetCollectionKey] || {});
+  }
+
+  recordPresetTargets() {}
+
+  getAdditionalSaveState() {
+    return {};
+  }
+
+  loadAdditionalState() {}
+
+  afterLoadState() {}
+
+  mergePresetEntry(collection, targetId, entry) {
+    if (!entry || entry.constructor !== Object) {
+      return false;
+    }
+    const normalizedTargetId = this.normalizePresetTargetId(targetId);
+    if (!normalizedTargetId) {
+      return false;
+    }
+    const hasExistingEntry = Object.prototype.hasOwnProperty.call(collection, normalizedTargetId);
+    const hasBucketSettings = this.bucketKeys.some((bucketKey) => {
+      const settings = entry[bucketKey];
+      return settings && settings.constructor === Object && Object.keys(settings).length > 0;
+    });
+    if (!hasExistingEntry && !hasBucketSettings) {
+      return false;
+    }
+
+    const current = hasExistingEntry ? collection[normalizedTargetId] : {};
+    let changed = false;
+    for (const key in entry) {
+      if (this.bucketKeys.indexOf(key) >= 0) {
+        continue;
+      }
+      if (!this.areSettingsEqual(current[key], entry[key])) {
+        current[key] = this.deepClone(entry[key]);
+        changed = true;
+      }
+    }
+    for (let index = 0; index < this.bucketKeys.length; index += 1) {
+      const bucketKey = this.bucketKeys[index];
+      const settings = entry[bucketKey];
+      if (!settings || settings.constructor !== Object || Object.keys(settings).length === 0) {
+        continue;
+      }
+      const mergedSettings = this.mergeSettings(current[bucketKey], settings);
+      if (!this.areSettingsEqual(current[bucketKey], mergedSettings)) {
+        current[bucketKey] = mergedSettings;
+        changed = true;
+      }
+    }
+    if (changed) {
+      collection[normalizedTargetId] = current;
+    }
+    return changed;
+  }
+
+  addPreset(name, targetIds, options = {}) {
+    const shouldCreateEmpty = options.createEmpty === true;
+    const preset = this.buildPreset(
+      name,
+      shouldCreateEmpty ? [] : targetIds,
+      shouldCreateEmpty ? { ...options, scopeAll: false } : options
+    );
+    this.presets.push(preset);
+    this.selectedPresetId = preset.id;
+    return preset.id;
+  }
+
+  updatePreset(id, name, targetIds, options = {}) {
+    const numericId = Number(id);
+    const index = this.presets.findIndex((preset) => preset.id === numericId);
+    if (index < 0) {
+      return false;
+    }
+    this.presets[index] = this.buildPreset(name, targetIds, options, numericId);
+    return true;
+  }
+
+  exportPreset(presetId) {
+    const preset = this.getPresetById(presetId);
+    if (!preset) {
+      return null;
+    }
+    const exported = this.createPresetRecord(null, preset.name, preset);
+    delete exported.id;
+    exported[this.presetCollectionKey] = this.serializePresetCollection(preset);
+    return exported;
+  }
+
+  importPreset(presetData = {}) {
+    const id = this.nextPresetId++;
+    const preset = this.createPresetRecord(id, presetData.name, presetData);
+    preset[this.presetCollectionKey] = this.normalizePresetCollection(
+      presetData[this.presetCollectionKey] || {}
+    );
+    this.recordPresetTargets(preset);
+    this.presets.push(preset);
+    this.selectedPresetId = preset.id;
+    return preset.id;
+  }
+
+  buildPreset(name, targetIds, options = {}, idOverride) {
+    const id = idOverride || this.nextPresetId++;
+    const preset = this.createPresetRecord(id, name, options);
+    const ids = Array.isArray(targetIds) ? targetIds : [];
+    for (let index = 0; index < ids.length; index += 1) {
+      const targetId = this.normalizePresetTargetId(ids[index]);
+      const entry = this.capturePresetEntry(
+        targetId,
+        preset[this.includeKeys[0]],
+        preset[this.includeKeys[1]]
+      );
+      this.mergePresetEntry(preset[this.presetCollectionKey], targetId, entry);
+    }
+    this.recordPresetTargets(preset);
+    return preset;
+  }
+
+  mergeMissingPresetTargets(presetId, targetIds = []) {
+    const preset = this.getPresetById(presetId);
+    if (!preset) {
+      return false;
+    }
+    const collection = preset[this.presetCollectionKey];
+    const ids = Array.isArray(targetIds) ? targetIds : [];
+    let changed = false;
+    for (let index = 0; index < ids.length; index += 1) {
+      const targetId = this.normalizePresetTargetId(ids[index]);
+      if (!targetId || collection[targetId]) {
+        continue;
+      }
+      const entry = this.capturePresetEntry(
+        targetId,
+        preset[this.includeKeys[0]] !== false,
+        preset[this.includeKeys[1]] !== false
+      );
+      if (this.mergePresetEntry(collection, targetId, entry)) {
+        changed = true;
+      }
+    }
+    if (changed) {
+      this.recordPresetTargets(preset);
+    }
+    return changed;
+  }
+
+  snapshotPresetTarget(presetId, targetId) {
+    const preset = this.getPresetById(presetId);
+    if (!preset) {
+      return false;
+    }
+    const normalizedTargetId = this.normalizePresetTargetId(targetId);
+    const entry = this.capturePresetEntry(
+      normalizedTargetId,
+      preset[this.includeKeys[0]] !== false,
+      preset[this.includeKeys[1]] !== false
+    );
+    if (!entry) {
+      return false;
+    }
+    const replacement = {};
+    if (!this.mergePresetEntry(replacement, normalizedTargetId, entry)) {
+      return false;
+    }
+    preset[this.presetCollectionKey][normalizedTargetId] = replacement[normalizedTargetId];
+    this.recordPresetTargets(preset);
+    return true;
+  }
+
+  collectPresetBuckets(preset) {
+    const resolved = {
+      [this.bucketKeys[0]]: {},
+      [this.bucketKeys[1]]: {}
+    };
+    const entries = preset[this.presetCollectionKey] || {};
+    for (const targetId in entries) {
+      const entry = entries[targetId] || {};
+      for (let index = 0; index < this.bucketKeys.length; index += 1) {
+        if (preset[this.includeKeys[index]] === false) {
+          continue;
+        }
+        const bucketKey = this.bucketKeys[index];
+        const settings = entry[bucketKey];
+        if (!settings || settings.constructor !== Object || Object.keys(settings).length === 0) {
+          continue;
+        }
+        resolved[bucketKey][targetId] = this.mergeSettings(
+          resolved[bucketKey][targetId],
+          settings
+        );
+      }
+    }
+    return resolved;
+  }
+
+  resolveAssignments() {
+    const resolved = {
+      [this.bucketKeys[0]]: {},
+      [this.bucketKeys[1]]: {}
+    };
+    for (let index = 0; index < this.assignments.length; index += 1) {
+      const assignment = this.assignments[index];
+      if (!assignment.enabled) {
+        continue;
+      }
+      const preset = this.getPresetById(assignment.presetId);
+      if (!preset || (this.isParameterizedPreset(preset) && !this.getPresetParameterInfo(preset).valid)) {
+        continue;
+      }
+      const presetBuckets = this.collectPresetBuckets(preset);
+      for (let bucketIndex = 0; bucketIndex < this.bucketKeys.length; bucketIndex += 1) {
+        const bucketKey = this.bucketKeys[bucketIndex];
+        for (const targetId in presetBuckets[bucketKey]) {
+          resolved[bucketKey][targetId] = this.mergeSettings(
+            resolved[bucketKey][targetId],
+            presetBuckets[bucketKey][targetId]
+          );
+        }
+      }
+    }
+    return resolved;
+  }
+
+  applyPresets() {
+    const resolved = this.resolveAssignments();
+    this.applyResolvedMaps(resolved[this.bucketKeys[0]], resolved[this.bucketKeys[1]]);
+  }
+
+  applyCombinationPresets(id) {
+    if (id) {
+      this.applyCombination(id);
+    }
+    this.applyPresets();
+  }
+
+  applyPresetOnce(presetId, parameterValue = null) {
+    const preset = this.buildPresetForApplication(this.getPresetById(presetId), parameterValue);
+    if (!preset) {
+      return;
+    }
+    const resolved = this.collectPresetBuckets(preset);
+    this.applyResolvedMaps(resolved[this.bucketKeys[0]], resolved[this.bucketKeys[1]]);
+  }
+
+  captureStructureControlSettings(structure) {
+    return {
+      workerPriority: structure.workerPriority,
+      hidden: structure.isHidden === true
+    };
+  }
+
+  applyStructureControlSettings(structure, control) {
+    let changed = false;
+    if (Object.prototype.hasOwnProperty.call(control, 'workerPriority')
+      && structure.workerPriority !== control.workerPriority) {
+      structure.workerPriority = control.workerPriority;
+      changed = true;
+    }
+    if (Object.prototype.hasOwnProperty.call(control, 'hidden')) {
+      const shouldHide = control.hidden === true && structure.active <= 0n;
+      if (structure.isHidden !== shouldHide) {
+        structure.isHidden = shouldHide;
+        updateStructureHiddenPreference(structure.name, shouldHide);
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
+  captureStructureAutomationSettings(structure) {
+    return {
+      autoBuildEnabled: structure.autoBuildEnabled,
+      autoBuildPriority: structure.autoBuildPriority,
+      autoBuildBasis: structure.autoBuildBasis === 'initialLand' ? 'geometricLand' : structure.autoBuildBasis,
+      autoBuildPercent: structure.autoBuildPercent,
+      autoBuildFixed: structure.autoBuildFixed,
+      autoBuildFillPercent: structure.autoBuildFillPercent,
+      autoBuildFillResourcePrimary: structure.autoBuildFillResourcePrimary,
+      autoBuildFillResourceSecondary: structure.autoBuildFillResourceSecondary,
+      autoActiveEnabled: structure.autoActiveEnabled,
+      autoUpgradeEnabled: structure.autoUpgradeEnabled === true
+    };
+  }
+
+  applyStructureAutomationSettings(structure, automation) {
+    const directKeys = [
+      'autoBuildEnabled',
+      'autoBuildPriority',
+      'autoBuildPercent',
+      'autoBuildFixed',
+      'autoBuildFillPercent',
+      'autoBuildFillResourcePrimary',
+      'autoBuildFillResourceSecondary',
+      'autoActiveEnabled'
+    ];
+    let changed = false;
+    for (let index = 0; index < directKeys.length; index += 1) {
+      const key = directKeys[index];
+      if (Object.prototype.hasOwnProperty.call(automation, key)
+        && structure[key] !== automation[key]) {
+        structure[key] = automation[key];
+        changed = true;
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(automation, 'autoBuildBasis')) {
+      const basis = automation.autoBuildBasis === 'initialLand'
+        ? 'geometricLand'
+        : automation.autoBuildBasis;
+      if (structure.autoBuildBasis !== basis) {
+        structure.autoBuildBasis = basis;
+        if (structure.normalizeAutoBuildBasis) {
+          structure.normalizeAutoBuildBasis();
+        }
+        changed = true;
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(automation, 'autoUpgradeEnabled')) {
+      const autoUpgradeEnabled = automation.autoUpgradeEnabled === true;
+      if (structure.autoUpgradeEnabled !== autoUpgradeEnabled) {
+        structure.autoUpgradeEnabled = autoUpgradeEnabled;
+        changed = true;
+      }
+    }
+    return changed;
+  }
+
+  saveState() {
+    return {
+      presets: this.presets.map((preset) => {
+        const saved = this.createPresetRecord(preset.id, preset.name, preset);
+        saved[this.presetCollectionKey] = this.serializePresetCollection(preset);
+        return saved;
+      }),
+      assignments: this.serializeAssignments(),
+      combinations: this.serializeCombinations(),
+      ...this.getAdditionalSaveState(),
+      collapsed: this.collapsed,
+      masterEnabled: this.masterEnabled,
+      nextTravelCombinationId: this.nextTravelCombinationId,
+      nextTravelCombinationPersistent: this.nextTravelCombinationPersistent,
+      selectedPresetId: this.selectedPresetId,
+      selectedCombinationId: this.selectedCombinationId,
+      nextPresetId: this.nextPresetId,
+      nextAssignmentId: this.nextAssignmentId,
+      nextCombinationId: this.nextCombinationId
+    };
+  }
+
+  loadState(data = {}) {
+    this.presets = Array.isArray(data.presets) ? data.presets.map((savedPreset) => {
+      const preset = this.createPresetRecord(savedPreset.id, savedPreset.name || 'Preset', savedPreset);
+      preset[this.presetCollectionKey] = this.normalizePresetCollection(
+        savedPreset[this.presetCollectionKey] || {}
+      );
+      return preset;
+    }) : [];
+    this.loadAssignmentsFromState(data.assignments);
+    this.loadCombinationsFromState(data.combinations);
+    this.loadAdditionalState(data);
+    this.presets.forEach((preset) => this.recordPresetTargets(preset));
+    this.loadCommonListState(data, {
+      allowLegacyApplyOnNextTravel: this.allowLegacyApplyOnNextTravel
+    });
+    this.afterLoadState();
+  }
+}
+
 try {
-  module.exports = { AutomationPresetManagerBase };
+  module.exports = { AutomationPresetManagerBase, AutomationTwoBucketPresetManagerBase };
 } catch (error) {}

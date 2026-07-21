@@ -212,7 +212,6 @@ class ArtificialStarsProject extends NuclearAlchemyFurnaceProject {
 
     if (!accumulatedChanges) {
       storage.reconcileUsedStorage();
-      updateSpaceStorageUI(storage);
     }
 
     const hydrogenRate = plan.finalHydrogen / seconds;

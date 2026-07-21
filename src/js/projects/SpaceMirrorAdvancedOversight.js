@@ -18,7 +18,6 @@ class SpaceMirrorAdvancedOversight {
       const MAX_BRACKET_STEPS = 24;
       const MAX_BISECTION_STEPS = 32;
       const POWER_EPSILON = 1e-9;
-      const COUNT_EPSILON = 1e-9;
 
       const ZONES = getZones();
       const ZONES_WITH_FOCUS_ANY = ZONES.concat(['focus', 'any']);
@@ -589,7 +588,10 @@ class SpaceMirrorAdvancedOversight {
       const solveIdealFluxesNewton = () => {
         const startingError = simulation.error;
         simulation = refineFluxesWithNewton(idealFluxes, simulation, solveOrder);
-        if (!(simulation.error < startingError * 0.95)) {
+        if (
+          !withinIdealTolerance(simulation.metrics) &&
+          !(simulation.error < startingError * 0.95)
+        ) {
           solveIdealFluxesCurrent();
         }
       };
@@ -653,7 +655,8 @@ class SpaceMirrorAdvancedOversight {
         });
       }
 
-      const allocateUnits = (availableUnits, buckets, perUnitPower, applyUnits, useAllAvailableWhenScarce, useBucketUnitPower = false) => {
+      // Advanced oversight may use a fraction of a building's capacity to match exact power demand.
+      const allocateUnits = (availableUnits, buckets, perUnitPower, applyUnits, useBucketUnitPower = false) => {
         if (!(availableUnits > 0) || !(perUnitPower > 0)) return 0;
 
         const entries = buckets
@@ -665,7 +668,7 @@ class SpaceMirrorAdvancedOversight {
               demand: unitPower > 0 ? Math.max(0, bucket.remainingPower / unitPower) : 0,
             };
           })
-          .filter((entry) => entry.demand > COUNT_EPSILON);
+          .filter((entry) => entry.demand > 0);
 
         if (!entries.length) return 0;
 
@@ -674,40 +677,20 @@ class SpaceMirrorAdvancedOversight {
           totalDemand += entry.demand;
         }
 
-        const scarce = totalDemand > availableUnits + COUNT_EPSILON;
+        const scarce = totalDemand > availableUnits;
         const scale = scarce ? (availableUnits / totalDemand) : 1;
-        let used = 0;
-
-        for (const entry of entries) {
-          const scaledDemand = entry.demand * scale;
-          entry.units = Math.floor(scaledDemand);
-          entry.remainder = scaledDemand - entry.units;
-          used += entry.units;
-        }
-
-        entries.sort((a, b) => b.remainder - a.remainder);
-        let unitsLeft = Math.max(0, availableUnits - used);
-
-        if (scarce && useAllAvailableWhenScarce) {
-          for (const entry of entries) {
-            if (!(unitsLeft > 0)) break;
-            entry.units += 1;
-            unitsLeft -= 1;
-          }
-        } else {
-          for (const entry of entries) {
-            if (!(unitsLeft > 0)) break;
-            if (!(entry.remainder > 0.5)) break;
-            entry.units += 1;
-            unitsLeft -= 1;
-          }
-        }
-
         let applied = 0;
-        for (const entry of entries) {
-          if (!(entry.units > 0)) continue;
-          applyUnits(entry.bucket, entry.units);
-          applied += entry.units;
+        let unitsLeft = availableUnits;
+        for (let index = 0; index < entries.length; index++) {
+          const entry = entries[index];
+          const scaledDemand = scarce && index === entries.length - 1
+            ? unitsLeft
+            : entry.demand * scale;
+          const units = Math.min(unitsLeft, scaledDemand);
+          if (!(units > 0)) continue;
+          applyUnits(entry.bucket, units);
+          applied += units;
+          unitsLeft = Math.max(0, availableUnits - applied);
         }
 
         return applied;
@@ -750,7 +733,6 @@ class SpaceMirrorAdvancedOversight {
               assignM[bucket.zone] = -(Number(assignM[bucket.zone]) || 0) - units;
               bucket.remainingPower = Math.max(0, bucket.remainingPower - (units * (bucket.mirrorPowerPer || mirrorPowerPer)));
             },
-            true,
             true
           );
           mirrorsLeft -= usedMirrors;
@@ -772,8 +754,7 @@ class SpaceMirrorAdvancedOversight {
                 assignL[bucket.zone] = (Number(assignL[bucket.zone]) || 0) + units;
               }
               bucket.remainingPower = Math.max(0, bucket.remainingPower - (units * lanternPowerPer));
-            },
-            false
+            }
           );
           lanternsLeft -= usedLanterns;
         }
@@ -791,7 +772,6 @@ class SpaceMirrorAdvancedOversight {
               }
               bucket.remainingPower = Math.max(0, bucket.remainingPower - (units * (bucket.mirrorPowerPer || mirrorPowerPer)));
             },
-            false,
             true
           );
           mirrorsLeft -= usedMirrors;

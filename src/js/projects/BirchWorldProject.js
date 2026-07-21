@@ -320,14 +320,21 @@ class BirchWorldProject extends Project {
           if (!item) {
             item = document.createElement('span');
             item.className = 'birch-world-cost-item';
+            item._costTextNode = document.createElement('span');
+            item.appendChild(item._costTextNode);
             this.ui.costItems[key] = item;
             this.ui.cost.appendChild(item);
           }
           const prefix = visibleCount > 0 ? ', ' : '';
           const resourceName = resources[category][resource].displayName;
-          item.textContent = `${prefix}${resourceName}: ${formatNumber(requiredAmount, true, 2)}`;
+          item._costTextNode.textContent = `${prefix}${resourceName}: ${formatNumber(requiredAmount, true, 2)}`;
           const availableAmount = getAvailableProjectCostAmount(this, category, resource, storageAccess);
           const highlight = shouldHighlightProjectCost(this, category, resource, availableAmount, requiredAmount);
+          syncCostExplanationTooltip(
+            item,
+            buildProjectCostTooltip(this, category, resource, requiredAmount, storageAccess),
+            highlight
+          );
           item.style.color = highlight ? 'red' : '';
           item.style.display = '';
           visibleCount += 1;

@@ -333,15 +333,16 @@ function ensureJournalWorldData() {
     });
     standardWorlds.push({
       id: world.id,
-      label: world.label,
+      label: t(`catalogs.planets.${world.id}.name`, null, world.label),
       chapters
     });
   });
-  const directiveChapter = { id: PRIMARY_DIRECTIVE_CHAPTER_ID, chapter: PRIMARY_DIRECTIVE_CHAPTER_NUMBER, title: PRIMARY_DIRECTIVE_TITLE };
+  const directiveTitle = t('story.journalIndex.primaryDirectiveTitle', null, PRIMARY_DIRECTIVE_TITLE);
+  const directiveChapter = { id: PRIMARY_DIRECTIVE_CHAPTER_ID, chapter: PRIMARY_DIRECTIVE_CHAPTER_NUMBER, title: directiveTitle };
   journalChapterMetaById.set(PRIMARY_DIRECTIVE_CHAPTER_ID, { worldId: PRIMARY_DIRECTIVE_WORLD_ID, chapter: PRIMARY_DIRECTIVE_CHAPTER_NUMBER });
   cachedJournalWorlds = [{
     id: PRIMARY_DIRECTIVE_WORLD_ID,
-    label: PRIMARY_DIRECTIVE_LABEL,
+    label: t('story.journalIndex.primaryDirectiveLabel', null, PRIMARY_DIRECTIVE_LABEL),
     chapters: [directiveChapter]
   }].concat(standardWorlds);
   return cachedJournalWorlds;
@@ -394,10 +395,10 @@ function buildJournalIndex() {
     if (world.id === PRIMARY_DIRECTIVE_WORLD_ID) {
       const directivesList = document.createElement('ul');
       directivesList.className = 'journal-index-chapters';
-      PRIMARY_DIRECTIVE_LINES.forEach(line => {
+      PRIMARY_DIRECTIVE_LINES.forEach((line, index) => {
         const item = document.createElement('li');
         item.className = 'journal-index-directive';
-        item.textContent = line;
+        item.textContent = t(`story.journalIndex.directives.directive${index + 1}`, null, line);
         directivesList.appendChild(item);
       });
       block.appendChild(directivesList);
@@ -428,7 +429,7 @@ function buildJournalIndex() {
       }
       const item = document.createElement('li');
       item.className = 'journal-index-chapter';
-      item.textContent = world.id === PRIMARY_DIRECTIVE_WORLD_ID ? PRIMARY_DIRECTIVE_TITLE : `Chapter ${chapterNumber}`;
+      item.textContent = t('ui.journal.chapter', { number: chapterNumber }, `Chapter ${chapterNumber}`);
       item.addEventListener('click', () => {
         jumpJournalToWorldChapter(world.id, chapterNumber);
       });

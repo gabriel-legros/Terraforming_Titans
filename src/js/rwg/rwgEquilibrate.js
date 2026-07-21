@@ -372,7 +372,6 @@
           if (!specialSeedKey) {
             applyPostEquilibrationHazardTuning(outOverride, terra);
           }
-          console.log('Equilibration finished. Final terraforming object:', terra);
           resolve({ override: outOverride, steps: stepIdx });
         }
 

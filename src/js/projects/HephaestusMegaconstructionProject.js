@@ -461,12 +461,7 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
         applyRates: tick.seconds > 0 && this.showsInResourcesRate(),
         seconds: tick.seconds,
         rateSourceLabel: this.getExpansionRateSourceLabel(),
-        applyProgress: (progress) => this.applyContinuousProgress(progress),
-        onApplied: ({ storageState }) => {
-          if (!accumulatedChanges && storageState?.storageProject) {
-            updateSpaceStorageUI(storageState.storageProject);
-          }
-        }
+        applyProgress: (progress) => this.applyContinuousProgress(progress)
       }
     );
     this.shortfallLastTick = result.shortfall;
@@ -713,14 +708,23 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     const total = this.getTotalYards();
     const assigned = this.getAssignedTotal();
     const available = total > assigned ? (total - assigned) : 0n;
-    elements.totalValue.textContent = formatNumber(total, true, 2);
-    elements.freeValue.textContent = formatNumber(available, true, 2);
+    const totalText = formatNumber(total, true, 2);
+    const availableText = formatNumber(available, true, 2);
+    if (elements.totalValue.textContent !== totalText) {
+      elements.totalValue.textContent = totalText;
+    }
+    if (elements.freeValue.textContent !== availableText) {
+      elements.freeValue.textContent = availableText;
+    }
     const step = this.assignmentStep;
     if (elements.expansionRateValue) {
       const rate = this.isActive ? (1000 / this.getEffectiveDuration()) : 0;
-      elements.expansionRateValue.textContent = getHephaestusText('ui.projects.hephaestus.yardsPerSecond', '{value} yards/s', {
+      const rateText = getHephaestusText('ui.projects.hephaestus.yardsPerSecond', '{value} yards/s', {
         value: formatNumber(rate, true, 3)
       });
+      if (elements.expansionRateValue.textContent !== rateText) {
+        elements.expansionRateValue.textContent = rateText;
+      }
     }
 
     const activeDyson = this.getActiveDysonKey();
@@ -731,29 +735,39 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
       const displayedCurrent = this.getDisplayedAssignmentAmount(key);
       const maxForKey = this.getAssignmentMaxTarget(key);
 
-      row.value.textContent = formatNumber(displayedCurrent, true, 2);
+      const valueText = formatNumber(displayedCurrent, true, 2);
+      if (row.value.textContent !== valueText) {
+        row.value.textContent = valueText;
+      }
       this.updateAssignmentControls(row, key, total, step);
-      row.releaseIfDisabled.checked = this.releaseIfDisabledFlags[key] === true;
-      row.releaseIfDisabled.disabled = this.isUnassignedAssignmentKey(key);
-      if (this.isUnassignedAssignmentKey(key)) {
-        row.wrapper.style.display = '';
-      } else if (key === 'dysonSwarmReceiver' || key === 'dysonSphere') {
-        const display = key === activeDyson ? '' : 'none';
-        row.wrapper.style.display = display;
+      const releaseChecked = this.releaseIfDisabledFlags[key] === true;
+      const isUnassigned = this.isUnassignedAssignmentKey(key);
+      if (row.releaseIfDisabled.checked !== releaseChecked) {
+        row.releaseIfDisabled.checked = releaseChecked;
+      }
+      if (row.releaseIfDisabled.disabled !== isUnassigned) {
+        row.releaseIfDisabled.disabled = isUnassigned;
+      }
+      let display = '';
+      if (key === 'dysonSwarmReceiver' || key === 'dysonSphere') {
+        display = key === activeDyson ? '' : 'none';
       } else if (key === 'spaceChemistry') {
-        row.wrapper.style.display = this.shouldShowSpaceChemistryTarget() ? '' : 'none';
+        display = this.shouldShowSpaceChemistryTarget() ? '' : 'none';
       } else if (key === 'nuclearAlchemyFurnace') {
-        row.wrapper.style.display = this.shouldShowNuclearAlchemyTarget() ? '' : 'none';
+        display = this.shouldShowNuclearAlchemyTarget() ? '' : 'none';
       } else if (key === 'superalloyGigafoundry') {
-        row.wrapper.style.display = this.shouldShowSuperalloyGigafoundryTarget() ? '' : 'none';
+        display = this.shouldShowSuperalloyGigafoundryTarget() ? '' : 'none';
       } else if (key === 'artificialStars') {
-        row.wrapper.style.display = this.shouldShowArtificialStarsTarget() ? '' : 'none';
+        display = this.shouldShowArtificialStarsTarget() ? '' : 'none';
       } else if (key === 'planetCrackers') {
-        row.wrapper.style.display = this.shouldShowPlanetCrackersTarget() ? '' : 'none';
+        display = this.shouldShowPlanetCrackersTarget() ? '' : 'none';
       } else if (key === 'whiteDwarfHarvesters') {
-        row.wrapper.style.display = this.shouldShowWhiteDwarfHarvestersTarget() ? '' : 'none';
+        display = this.shouldShowWhiteDwarfHarvestersTarget() ? '' : 'none';
       } else if (key === 'artificialQuasars') {
-        row.wrapper.style.display = this.shouldShowArtificialQuasarsTarget() ? '' : 'none';
+        display = this.shouldShowArtificialQuasarsTarget() ? '' : 'none';
+      }
+      if (row.wrapper.style.display !== display) {
+        row.wrapper.style.display = display;
       }
     });
   }
