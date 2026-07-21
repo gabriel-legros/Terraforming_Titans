@@ -165,19 +165,30 @@ function seedEnglish(slug, language, sourceLanguage) {
   console.log(`Seeded ${language.name} with English text.`);
 }
 
-const [command, slug] = process.argv.slice(2);
-const language = languages[slug];
-if (!['prepare', 'assemble', 'seed-english'].includes(command) || (!language && slug !== 'all')) {
-  throw new Error('Usage: node scripts/translation-workflow.js <prepare|assemble|seed-english> <french|italian|german|spanish|chinese|korean|japanese|all>');
+function writeEnglishBase(sourceLanguage) {
+  const baseRoot = path.join(workRoot, 'base-english');
+  fs.mkdirSync(baseRoot, { recursive: true });
+  fs.writeFileSync(path.join(baseRoot, 'language.json'), `${JSON.stringify(sourceLanguage, null, 2)}\n`, 'utf8');
+  console.log(`Wrote English base language file to ${path.relative(repositoryRoot, baseRoot)}.`);
 }
+
+const [command, slug] = process.argv.slice(2);
 const sourceLanguage = readSourceLanguage();
-const selectedLanguages = slug === 'all' ? Object.entries(languages) : [[slug, language]];
-selectedLanguages.forEach(([selectedSlug, selectedLanguage]) => {
-  if (command === 'prepare') {
-    prepare(selectedSlug, selectedLanguage, sourceLanguage);
-  } else if (command === 'assemble') {
-    assemble(selectedSlug, selectedLanguage, sourceLanguage);
-  } else {
-    seedEnglish(selectedSlug, selectedLanguage, sourceLanguage);
+if (command === 'seed-english-base' && !slug) {
+  writeEnglishBase(sourceLanguage);
+} else {
+  const language = languages[slug];
+  if (!['prepare', 'assemble', 'seed-english'].includes(command) || (!language && slug !== 'all')) {
+    throw new Error('Usage: node scripts/translation-workflow.js <prepare|assemble|seed-english> <french|italian|german|spanish|chinese|korean|japanese|all>\n       node scripts/translation-workflow.js seed-english-base');
   }
-});
+  const selectedLanguages = slug === 'all' ? Object.entries(languages) : [[slug, language]];
+  selectedLanguages.forEach(([selectedSlug, selectedLanguage]) => {
+    if (command === 'prepare') {
+      prepare(selectedSlug, selectedLanguage, sourceLanguage);
+    } else if (command === 'assemble') {
+      assemble(selectedSlug, selectedLanguage, sourceLanguage);
+    } else {
+      seedEnglish(selectedSlug, selectedLanguage, sourceLanguage);
+    }
+  });
+}

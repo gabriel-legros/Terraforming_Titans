@@ -7,6 +7,7 @@
   "scripts": {
     "audit:memory": "node scripts/manual-tests/run-chrome-memory-repro.js --audit",
     "audit:localization": "node scripts/audit-localization.js",
+    "mod:generate-english-base": "bash scripts/generate-base-english-language.sh",
     "mod:seed-english-translations": "node scripts/translation-workflow.js seed-english all",
     "mod:validate-translations": "node scripts/validate-language-mods.js",
     "screenshot:ui": "node scripts/capture-game-ui.js",

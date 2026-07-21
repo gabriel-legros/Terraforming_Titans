@@ -129,7 +129,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Mod patch stages are ordered explicitly in `index.html` through `src/js/modding/mod-runtime.js` and `apply-stage.js`. Patch live parameter objects after their defining script and before downstream consumers; do not parse or splice JavaScript source to merge parameter keys. Patch objects merge recursively, arrays/scalars replace, and `$delete`, `$replace`, and `$number` are reserved operations.
 - Research parameter patches use category maps keyed by stable research id; they merge existing entries or append new entries to the category array without requiring a file replacement.
 - Active local and Workshop mods do not change Steam achievement publication. The active read-only diagnostic summary is `activeModSession`; log only compact mod ids/error counts rather than full session or patch graphs.
-- AI language example mods live under `examples/local-mods/ai-*-translation`. Run `npm run mod:seed-english-translations` to regenerate their complete English placeholder patches (retaining only each locale's `meta.code`), then run `npm run mod:validate-translations`.
+- AI language example mods live under `examples/local-mods/ai-*-translation`. Run `bash scripts/generate-base-english-language.sh` to generate the canonical English source at `artifacts/translation-work/base-english/language.json`; run `npm run mod:seed-english-translations` to regenerate the placeholder mods (retaining only each locale's `meta.code`), then run `npm run mod:validate-translations`.
 - Gold asteroid event: `gold-asteroid.js`
 - ResearchManager persists across travel; regular research is reset while advanced is retained.
 
