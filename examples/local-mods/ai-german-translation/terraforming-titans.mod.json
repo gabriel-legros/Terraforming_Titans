@@ -10,7 +10,11 @@
     "patches": [
       {
         "target": "language.current",
-        "file": "patches/language.json"
+        "file": "patches/current-language.json"
+      },
+      {
+        "target": "language.current",
+        "file": "patches/story-language.json"
       }
     ],
     "replacements": []

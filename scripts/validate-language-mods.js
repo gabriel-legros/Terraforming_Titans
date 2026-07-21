@@ -6,9 +6,15 @@ const vm = require('vm');
 
 const repositoryRoot = path.resolve(__dirname, '..');
 const localizationPath = path.join(repositoryRoot, 'src', 'js', 'lang', 'localization.js');
-const sourcePaths = [
-  path.join(repositoryRoot, 'src', 'js', 'lang', 'current-language.js'),
-  path.join(repositoryRoot, 'src', 'js', 'lang', 'story-language.js'),
+const sourceDefinitions = [
+  {
+    sourcePath: path.join(repositoryRoot, 'src', 'js', 'lang', 'current-language.js'),
+    patchFile: 'patches/current-language.json',
+  },
+  {
+    sourcePath: path.join(repositoryRoot, 'src', 'js', 'lang', 'story-language.js'),
+    patchFile: 'patches/story-language.json',
+  },
 ];
 const languageDefinitions = [
   { slug: 'french', code: 'fr', name: 'AI-French-translation' },
@@ -21,20 +27,23 @@ const languageDefinitions = [
 ];
 const protectedPattern = /\{[A-Za-z0-9_.-]+\}|\$[A-Z][A-Z0-9_]*\$|<\/?span(?:\s[^>]*)?>|\b[A-Za-z][A-Za-z0-9]*\.btb\b|https?:\/\/[^\s]+/g;
 
-function readSourceLanguage() {
-  const context = {};
-  vm.createContext(context);
-  vm.runInContext(fs.readFileSync(localizationPath, 'utf8'), context, {
-    filename: localizationPath,
-    timeout: 5000,
-  });
-  sourcePaths.forEach(sourcePath => {
-    vm.runInContext(fs.readFileSync(sourcePath, 'utf8'), context, {
-      filename: sourcePath,
+function readSourceLanguageParts() {
+  return sourceDefinitions.map(definition => {
+    const context = {};
+    vm.createContext(context);
+    vm.runInContext(fs.readFileSync(localizationPath, 'utf8'), context, {
+      filename: localizationPath,
       timeout: 5000,
     });
+    vm.runInContext(fs.readFileSync(definition.sourcePath, 'utf8'), context, {
+      filename: definition.sourcePath,
+      timeout: 5000,
+    });
+    return {
+      ...definition,
+      data: context.activeLanguageData,
+    };
   });
-  return context.activeLanguageData;
 }
 
 function protectedTokens(value) {
@@ -96,23 +105,24 @@ function verifyPreview(previewPath, definition) {
 }
 
 function main() {
-  const sourceLanguage = readSourceLanguage();
+  const sourceParts = readSourceLanguageParts();
   languageDefinitions.forEach(definition => {
     const modRoot = path.join(repositoryRoot, 'examples', 'local-mods', `ai-${definition.slug}-translation`);
     const manifestPath = path.join(modRoot, 'terraforming-titans.mod.json');
-    const patchPath = path.join(modRoot, 'patches', 'language.json');
     const previewPath = path.join(modRoot, 'preview.png');
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
     if (manifest.id !== `ai-${definition.slug}-translation` || manifest.name !== definition.name) {
       throw new Error(`${definition.slug}: manifest id or name is incorrect.`);
     }
-    if (manifest.content.patches.length !== 1
-      || manifest.content.patches[0].target !== 'language.current'
-      || manifest.content.patches[0].file !== 'patches/language.json') {
+    const expectedPatches = sourceParts.map(part => ({ target: 'language.current', file: part.patchFile }));
+    if (JSON.stringify(manifest.content.patches) !== JSON.stringify(expectedPatches)) {
       throw new Error(`${definition.slug}: language patch declaration is incorrect.`);
     }
-    const translated = JSON.parse(fs.readFileSync(patchPath, 'utf8'));
-    const stats = verifyLanguage(sourceLanguage, translated, definition);
+    const stats = { strings: 0, unchanged: 0 };
+    sourceParts.forEach(part => {
+      const translated = JSON.parse(fs.readFileSync(path.join(modRoot, part.patchFile), 'utf8'));
+      verifyLanguage(part.data, translated, definition, [], stats);
+    });
     const previewBytes = verifyPreview(previewPath, definition);
     console.log(`${definition.name}: ${stats.strings} strings, ${stats.unchanged} intentionally unchanged, ${previewBytes} byte preview`);
   });

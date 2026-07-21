@@ -7,9 +7,15 @@ const vm = require('vm');
 const repositoryRoot = path.resolve(__dirname, '..');
 const workRoot = path.join(repositoryRoot, 'artifacts', 'translation-work');
 const localizationPath = path.join(repositoryRoot, 'src', 'js', 'lang', 'localization.js');
-const sourcePaths = [
-  path.join(repositoryRoot, 'src', 'js', 'lang', 'current-language.js'),
-  path.join(repositoryRoot, 'src', 'js', 'lang', 'story-language.js'),
+const sourceDefinitions = [
+  {
+    sourcePath: path.join(repositoryRoot, 'src', 'js', 'lang', 'current-language.js'),
+    patchFile: 'patches/current-language.json',
+  },
+  {
+    sourcePath: path.join(repositoryRoot, 'src', 'js', 'lang', 'story-language.js'),
+    patchFile: 'patches/story-language.json',
+  },
 ];
 const languages = {
   french: { code: 'fr', name: 'AI-French-translation', nativeName: 'Français' },
@@ -27,10 +33,37 @@ function readSourceLanguage() {
   const context = {};
   vm.createContext(context);
   vm.runInContext(fs.readFileSync(localizationPath, 'utf8'), context, { filename: localizationPath });
-  sourcePaths.forEach(sourcePath => {
-    vm.runInContext(fs.readFileSync(sourcePath, 'utf8'), context, { filename: sourcePath });
+  sourceDefinitions.forEach(definition => {
+    vm.runInContext(fs.readFileSync(definition.sourcePath, 'utf8'), context, { filename: definition.sourcePath });
   });
   return context.activeLanguageData;
+}
+
+function readSourceLanguageParts() {
+  return sourceDefinitions.map(definition => {
+    const context = {};
+    vm.createContext(context);
+    vm.runInContext(fs.readFileSync(localizationPath, 'utf8'), context, { filename: localizationPath });
+    vm.runInContext(fs.readFileSync(definition.sourcePath, 'utf8'), context, { filename: definition.sourcePath });
+    return {
+      ...definition,
+      data: context.activeLanguageData,
+    };
+  });
+}
+
+function selectLanguageShape(source, translated) {
+  if (Array.isArray(source)) {
+    return source.map((entry, index) => selectLanguageShape(entry, translated[index]));
+  }
+  if (source && typeof source === 'object') {
+    const output = {};
+    Object.keys(source).forEach(key => {
+      output[key] = selectLanguageShape(source[key], translated[key]);
+    });
+    return output;
+  }
+  return translated;
 }
 
 function collectUniqueStrings(value, entries, seen, pathParts = []) {
@@ -70,13 +103,20 @@ function transformLanguage(value, translations, language, pathParts = []) {
   return output;
 }
 
-function writeLanguageMod(slug, language, languageData) {
+function writeLanguageMod(slug, language, languageData, sourceParts) {
   const modRoot = path.join(repositoryRoot, 'examples', 'local-mods', `ai-${slug}-translation`);
   const patchRoot = path.join(modRoot, 'patches');
   const entries = [];
   collectUniqueStrings(languageData, entries, new Set());
   fs.mkdirSync(patchRoot, { recursive: true });
-  fs.writeFileSync(path.join(patchRoot, 'language.json'), `${JSON.stringify(languageData, null, 2)}\n`, 'utf8');
+  const legacyPatchPath = path.join(patchRoot, 'language.json');
+  if (fs.existsSync(legacyPatchPath)) {
+    fs.unlinkSync(legacyPatchPath);
+  }
+  sourceParts.forEach(part => {
+    const patchData = selectLanguageShape(part.data, languageData);
+    fs.writeFileSync(path.join(modRoot, part.patchFile), `${JSON.stringify(patchData, null, 2)}\n`, 'utf8');
+  });
   const manifest = {
     schemaVersion: 1,
     id: `ai-${slug}-translation`,
@@ -86,7 +126,7 @@ function writeLanguageMod(slug, language, languageData) {
     generatedFrom: 'src/js/lang/current-language.js + src/js/lang/story-language.js',
     generatedStringCount: entries.length,
     content: {
-      patches: [{ target: 'language.current', file: 'patches/language.json' }],
+      patches: sourceParts.map(part => ({ target: 'language.current', file: part.patchFile })),
       replacements: [],
     },
   };
@@ -134,7 +174,7 @@ function prepare(slug, language, sourceLanguage) {
   console.log(`Prepared ${entries.length} unique strings in ${batches.length} ${language.nativeName} batches.`);
 }
 
-function assemble(slug, language, sourceLanguage) {
+function assemble(slug, language, sourceLanguage, sourceParts) {
   const languageRoot = path.join(workRoot, slug);
   const filenames = fs.readdirSync(languageRoot).filter(filename => /^batch-\d+\.json$/.test(filename)).sort();
   if (!filenames.length) {
@@ -154,28 +194,36 @@ function assemble(slug, language, sourceLanguage) {
     });
   });
   const translatedLanguage = transformLanguage(sourceLanguage, translations, language);
-  writeLanguageMod(slug, language, translatedLanguage);
+  writeLanguageMod(slug, language, translatedLanguage, sourceParts);
   console.log(`Assembled ${language.name} from ${translations.size} unique translations.`);
 }
 
-function seedEnglish(slug, language, sourceLanguage) {
+function seedEnglish(slug, language, sourceLanguage, sourceParts) {
   const englishLanguage = JSON.parse(JSON.stringify(sourceLanguage));
   englishLanguage.meta.code = language.code;
-  writeLanguageMod(slug, language, englishLanguage);
+  writeLanguageMod(slug, language, englishLanguage, sourceParts);
   console.log(`Seeded ${language.name} with English text.`);
 }
 
-function writeEnglishBase(sourceLanguage) {
+function writeEnglishBase(sourceParts) {
   const baseRoot = path.join(workRoot, 'base-english');
   fs.mkdirSync(baseRoot, { recursive: true });
-  fs.writeFileSync(path.join(baseRoot, 'language.json'), `${JSON.stringify(sourceLanguage, null, 2)}\n`, 'utf8');
-  console.log(`Wrote English base language file to ${path.relative(repositoryRoot, baseRoot)}.`);
+  const legacyBasePath = path.join(baseRoot, 'language.json');
+  if (fs.existsSync(legacyBasePath)) {
+    fs.unlinkSync(legacyBasePath);
+  }
+  sourceParts.forEach(part => {
+    const filename = path.basename(part.patchFile);
+    fs.writeFileSync(path.join(baseRoot, filename), `${JSON.stringify(part.data, null, 2)}\n`, 'utf8');
+  });
+  console.log(`Wrote English base language files to ${path.relative(repositoryRoot, baseRoot)}.`);
 }
 
 const [command, slug] = process.argv.slice(2);
 const sourceLanguage = readSourceLanguage();
+const sourceParts = readSourceLanguageParts();
 if (command === 'seed-english-base' && !slug) {
-  writeEnglishBase(sourceLanguage);
+  writeEnglishBase(sourceParts);
 } else {
   const language = languages[slug];
   if (!['prepare', 'assemble', 'seed-english'].includes(command) || (!language && slug !== 'all')) {
@@ -186,9 +234,9 @@ if (command === 'seed-english-base' && !slug) {
     if (command === 'prepare') {
       prepare(selectedSlug, selectedLanguage, sourceLanguage);
     } else if (command === 'assemble') {
-      assemble(selectedSlug, selectedLanguage, sourceLanguage);
+      assemble(selectedSlug, selectedLanguage, sourceLanguage, sourceParts);
     } else {
-      seedEnglish(selectedSlug, selectedLanguage, sourceLanguage);
+      seedEnglish(selectedSlug, selectedLanguage, sourceLanguage, sourceParts);
     }
   });
 }
