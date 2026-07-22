@@ -19,7 +19,7 @@ if (typeof module !== 'undefined' && module.exports) {
     hasDynamicMassEnabled: hasDynamicMassEnabledHelper,
     disposeDynamicWorldPlanetaryMass: disposeDynamicWorldPlanetaryMassHelper,
     addDynamicWorldPlanetaryMaterial: addDynamicWorldPlanetaryMaterialHelper
-  } = require('./world-geometry.js'));
+  } = require('./terraforming/world-geometry.js'));
   ({ DEBUG_MODE: resourceDebugRateTracking } = require('./debug_constants.js'));
 }
 

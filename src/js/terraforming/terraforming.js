@@ -25,7 +25,7 @@ const KPA_PER_ATM = 101.325;
 var resourcePhaseGroups;
 let syncDynamicWorldGeometryHelper = null;
 if (typeof module !== 'undefined' && module.exports) {
-  ({ syncDynamicWorldGeometry: syncDynamicWorldGeometryHelper } = require('../world-geometry.js'));
+  ({ syncDynamicWorldGeometry: syncDynamicWorldGeometryHelper } = require('./world-geometry.js'));
 }
 
 function getSyncDynamicWorldGeometryHelper() {
