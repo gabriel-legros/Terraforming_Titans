@@ -84,6 +84,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ## Key Systems
 - Auto Pause settings independently watch colony energy and colonist net rates. Each enabled rule pauses only on a downward crossing below its formatted numeric threshold and re-arms after the rate returns to or above that threshold.
 - Antimatter Battery Auto Fill is a resource-production-loop operation capped at 10 times colony energy capacity per second and scaled by delta time. Colony Energy displays that constant available rate even when storage is full, reducing it only when the antimatter-equivalent supply cannot sustain the rate; Space Energy displays only the amount actually consumed. Its projected rate participates in project availability and percentage-power calculations, and its actual transfer is added through `accumulatedChanges` before projects consume colony energy. Manual filling remains instant.
+- Resource production keeps the existing three-step productivity fixed point. Its two interim projections accumulate numeric totals plus non-project production for strategic reserves without rebuilding source/type maps; the initial and final projections still materialize full rate details. Reuse the tick's full-demand project estimates during those interim passes, skip inactive structures, and keep assignment-cap dependency signatures complete when caching normalization.
 - Skills: `skills.js`, `skillsUI.js`
 - Life Designer: `life.js`, `lifeUI.js`
 - Space travel/systems: `space.js`, `spaceUI.js`

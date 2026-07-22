@@ -1642,7 +1642,39 @@ class Building extends EffectableEntity {
   }
 
   calculateBaseMinRatio(resources, deltaTime, ignoreMap) {
-    return this.getBaseProductivityFactors(resources, deltaTime, ignoreMap).minRatio;
+    let minRatio = Infinity;
+    const ignore = ignoreMap || {};
+    const consumption = this.getConsumption();
+    const consumptionMultiplier = this.getEffectiveConsumptionMultiplier();
+
+    for (const category in consumption) {
+      const ignoreCategory = ignore[category] || {};
+      for (const resource in consumption[category]) {
+        if (ignoreCategory[resource]) {
+          continue;
+        }
+        const { amount } = this.getConsumptionResource(category, resource);
+        const resourceMultiplier = this.getEffectiveResourceConsumptionMultiplier(category, resource);
+        const effectiveAmount =
+          amount *
+          consumptionMultiplier *
+          resourceMultiplier *
+          this.getEffectiveThroughputMultiplier();
+        if (effectiveAmount <= 0) {
+          continue;
+        }
+        minRatio = Math.min(minRatio, resources[category][resource].availabilityRatio);
+      }
+    }
+
+    if (this.getTotalWorkerNeed() > 0) {
+      minRatio = Math.min(
+        minRatio,
+        populationModule.getWorkerAvailabilityRatio(this.workerPriority)
+      );
+    }
+
+    return minRatio;
   }
 
   updateProductivityLimitInfo(resources, deltaTime, target, displayTarget, maintenanceCap, ignoreMap) {

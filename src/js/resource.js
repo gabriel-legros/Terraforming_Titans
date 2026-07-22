@@ -554,6 +554,8 @@ class Resource extends EffectableEntity {
     this.projectedConsumptionRateByType = {};
     this.projectedProductionRateBySource = {};
     this.projectedConsumptionRateBySource = {};
+    this.rateTotalsOnly = false;
+    this.nonProjectProductionRate = 0;
     this.availabilityRatio = 0;
     this.availabilityDetails = {
       availableAmount: 0,
@@ -1194,6 +1196,12 @@ class Resource extends EffectableEntity {
 
     if (value > 0) {
       this.productionRate += value;
+      if (this.rateTotalsOnly) {
+        if (rateType !== 'project') {
+          this.nonProjectProductionRate += value;
+        }
+        return;
+      }
       // Initialize type if not present
       if (!this.productionRateByType[rateType]) {
         this.productionRateByType[rateType] = {};
@@ -1205,6 +1213,9 @@ class Resource extends EffectableEntity {
       this.productionRateByType[rateType][source] += value;
     } else if (value < 0) { // Only process negative values for consumption
       this.consumptionRate += -value;
+      if (this.rateTotalsOnly) {
+        return;
+      }
       // Initialize type if not present
       if (!this.consumptionRateByType[rateType]) {
         this.consumptionRateByType[rateType] = {};
@@ -1248,13 +1259,17 @@ class Resource extends EffectableEntity {
   }
 
   // Resets all rate trackers
-  resetRates({ keepProjected = false } = {}) {
+  resetRates({ keepProjected = false, totalsOnly = false } = {}) {
     this.productionRate = 0;
     this.consumptionRate = 0;
-    clearRateTypeMap(this.productionRateByType);
-    clearRateTypeMap(this.consumptionRateByType);
-    resetObjectValues(this.productionRateBySource); // Also reset the aggregated source map
-    resetObjectValues(this.consumptionRateBySource); // Also reset the aggregated source map
+    this.rateTotalsOnly = totalsOnly;
+    this.nonProjectProductionRate = 0;
+    if (!totalsOnly) {
+      clearRateTypeMap(this.productionRateByType);
+      clearRateTypeMap(this.consumptionRateByType);
+      resetObjectValues(this.productionRateBySource); // Also reset the aggregated source map
+      resetObjectValues(this.consumptionRateBySource); // Also reset the aggregated source map
+    }
     this.overflowRate = 0;
     this.automationLimited = false;
 
@@ -1684,8 +1699,10 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
   const {
     useProductivity = false,
     keepProjected = false,
+    totalsOnly = false,
     productivityMap = {},
     projectProductivityMap = {},
+    projectData = null,
     projectRateMode = 'scaled'
   } = options;
   //Here we calculate production and consumption rates at 100% productivity ignoring maintenance
@@ -1696,12 +1713,15 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
 
   for (const category in resources) {
     for (const resourceName in resources[category]) {
-      resources[category][resourceName].resetRates({ keepProjected });
+      resources[category][resourceName].resetRates({ keepProjected, totalsOnly });
     }
   }
 
   for (const buildingName in buildings) {
     const building = buildings[buildingName];
+    if (building.activeNumber <= 0) {
+      continue;
+    }
     const automationMultiplier = building.getAutomationActivityMultiplier?.() ?? 1;
     const workerRatio = building.getTotalWorkerNeed() > 0
       ? populationModule.getWorkerAvailabilityRatio(building.workerPriority)
@@ -1788,11 +1808,13 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
         const projectProductivity = projectProductivityMap[name] ?? 1;
         const projectDeltaTime = project.getResourceExecutionDeltaTime(deltaTime);
         if (projectRateMode === 'availability') {
-          const fullCostTotals = project.estimateProductivityCostAndGain
-            ? project.estimateProductivityCostAndGain(
-                project.attributes?.spaceBuilding ? deltaTime : projectDeltaTime
-              )
-            : project.estimateCostAndGain(projectDeltaTime, false, 1);
+          const fullCostTotals = projectData?.[name] || (
+            project.estimateProductivityCostAndGain
+              ? project.estimateProductivityCostAndGain(
+                  project.attributes?.spaceBuilding ? deltaTime : projectDeltaTime
+                )
+              : project.estimateCostAndGain(projectDeltaTime, false, 1)
+          );
           const scaledTotals = project.estimateProductionRateCostAndGain?.(projectDeltaTime, false, projectProductivity)
             || project.estimateCostAndGain(projectDeltaTime, false, projectProductivity)
             || {};
@@ -2035,8 +2057,10 @@ function produceResources(deltaTime, buildings) {
       calculateProductionRates(deltaTime, buildings, {
         useProductivity: true,
         keepProjected: true,
+        totalsOnly: true,
         productivityMap,
         projectProductivityMap: projectOperationProductivityMap,
+        projectData,
         projectRateMode: 'availability'
       });
       applyProjectedExternalRates(deltaTime, externalProductivityOperations);
@@ -2583,6 +2607,9 @@ function reduceSpaceStorageEntriesByAmount(entries, amount) {
 function getAvailabilityProductionRate(resource, extraReserve) {
   if (!(extraReserve > 0)) {
     return resource.productionRate;
+  }
+  if (resource.rateTotalsOnly) {
+    return resource.nonProjectProductionRate;
   }
   let productionRate = 0;
   for (const rateType in resource.productionRateByType) {

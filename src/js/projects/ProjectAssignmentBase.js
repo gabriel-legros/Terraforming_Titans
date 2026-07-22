@@ -63,11 +63,11 @@ function normalizeProjectAssignmentInteger(value) {
   if (value === undefined || value === null || value === '') {
     return 0n;
   }
-  const valueType = Object.prototype.toString.call(value);
-  if (valueType === '[object BigInt]') {
+  const valueConstructor = value.constructor;
+  if (valueConstructor === BigInt) {
     return value < 0n ? 0n : value;
   }
-  if (valueType === '[object String]') {
+  if (valueConstructor === String) {
     const trimmed = value.trim();
     if (/^\d+$/.test(trimmed)) {
       return BigInt(trimmed);
@@ -124,6 +124,7 @@ function createProjectAssignmentBase(BaseClass) {
       this.assignmentStep = this.assignmentStep || 1n;
       this.autoAssignFlags = this.autoAssignFlags || {};
       this.autoAssignWeights = this.autoAssignWeights || {};
+      this.dynamicAssignmentCaps = options.dynamicAssignmentCaps === true;
       this.assignmentsDirty = true;
       this.assignmentsLastSignature = '';
       this.cachedAssignedTotal = 0n;
@@ -202,7 +203,8 @@ function createProjectAssignmentBase(BaseClass) {
 
     normalizeAssignments() {
       const preserveAssignments = this.shouldPreserveAssignmentsDuringNormalization();
-      const signature = `${this.getAssignmentNormalizationSignature()}|caps:${this.getAssignmentCapSignature()}|preserve:${preserveAssignments}`;
+      const capSignature = this.dynamicAssignmentCaps ? this.getAssignmentCapSignature() : '';
+      const signature = `${this.getAssignmentNormalizationSignature()}|caps:${capSignature}|preserve:${preserveAssignments}`;
       if (!this.assignmentsDirty && this.assignmentsLastSignature === signature) {
         return;
       }
