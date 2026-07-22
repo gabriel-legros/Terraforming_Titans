@@ -815,7 +815,7 @@
       "warnings": {
         "autobuildShortage": "Consequat duis aute irure in reprehenderit voluptate velit esse.",
         "androidCapReached": "Veniam quis nostrud exercitation ullamco laboris nisi.",
-        "biomassLimited": "Est laborum lorem ipsum dolor {resource} Irure{scope}Est.",
+        "biomassLimited": "Est laborum lorem ipsum dolor {resource} Irure{scope}Est. Adipiscing {amount}{unit}/s.",
         "scopeZones": " Deserunt mollit {zones} Dolore{s}",
         "scopeAtmosphere": " Qui officia deserunt",
         "hydrogenIntro": "Pariatur excepteur sint occaecat cupidatat non proident sunt culpa qui officia.",

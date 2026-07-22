@@ -102,6 +102,7 @@ class TreeOfLifeProject extends Project {
   getLifeGrowthControl(totalPotentialGrowth) {
     const densityMultiplier = this.getDensityGrowthMultiplier();
     const baseNutrientRequirement = totalPotentialGrowth * TREE_OF_LIFE_NUTRIENT_PER_BIOMASS;
+    const maximumNutrientRequirement = baseNutrientRequirement * TREE_OF_LIFE_MAX_NUTRIENT_MULTIPLIER;
     const nutrientMultiplier = baseNutrientRequirement > 0
       ? Math.max(
           0,
@@ -120,6 +121,7 @@ class TreeOfLifeProject extends Project {
       adjustedPotentialGrowth,
       nutrientMultiplier,
       densityMultiplier,
+      nutrientShortfall: Math.max(0, maximumNutrientRequirement - resources.special.yggieNutrients.value),
       nutrientLimited: totalPotentialGrowth > 0
         && nutrientMultiplier < TREE_OF_LIFE_MAX_NUTRIENT_MULTIPLIER,
     };

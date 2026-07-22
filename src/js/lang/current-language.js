@@ -819,7 +819,7 @@ setLanguageData({
       warnings: {
         autobuildShortage: 'Autobuild is short on required inputs for queued construction.',
         androidCapReached: 'Android production has reached its current cap.',
-        biomassLimited: 'Biomass growth is limited by {resource} availability{scope}.',
+        biomassLimited: 'Biomass growth is limited by {resource} availability{scope}. Additional needed: {amount}{unit}/s.',
         scopeZones: ' in the {zones} zone{s}',
         scopeAtmosphere: ' across the atmosphere',
         hydrogenIntro: 'Hydrogen slowly escapes to space depending on solar flux and gravity.',

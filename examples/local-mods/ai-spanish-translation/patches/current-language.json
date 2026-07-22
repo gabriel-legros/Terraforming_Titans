@@ -815,7 +815,7 @@
       "warnings": {
         "autobuildShortage": "La construcción automática carece de los insumos necesarios para la construcción en cola.",
         "androidCapReached": "La producción de androides ha alcanzado su límite actual.",
-        "biomassLimited": "El crecimiento de la biomasa está limitado por la disponibilidad de {resource}{scope}.",
+        "biomassLimited": "El crecimiento de la biomasa está limitado por la disponibilidad de {resource}{scope}. Cantidad adicional necesaria: {amount}{unit}/s.",
         "scopeZones": " en zona{s}: {zones}",
         "scopeAtmosphere": " en toda la atmósfera",
         "hydrogenIntro": "El hidrógeno escapa lentamente al espacio según el flujo solar y la gravedad.",

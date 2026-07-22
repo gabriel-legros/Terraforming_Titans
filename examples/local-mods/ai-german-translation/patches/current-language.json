@@ -815,7 +815,7 @@
       "warnings": {
         "autobuildShortage": "Autobau ist kurz auf die erforderlichen Eingänge für queued-Konstruktion.",
         "androidCapReached": "Die Androidenproduktion hat ihre aktuelle Obergrenze erreicht.",
-        "biomassLimited": "Das Wachstum von Biomasse wird durch die Verfügbarkeit von {resource}{scope} begrenzt.",
+        "biomassLimited": "Das Wachstum von Biomasse wird durch die Verfügbarkeit von {resource}{scope} begrenzt. Zusätzlich benötigt: {amount}{unit}/s.",
         "scopeZones": " in der {zones} Zone{s}",
         "scopeAtmosphere": " über die Atmosphäre",
         "hydrogenIntro": "Wasserstoff entweicht langsam in den Raum, je nach Sonnenfluss und Schwerkraft.",

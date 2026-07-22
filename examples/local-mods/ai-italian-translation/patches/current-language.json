@@ -815,7 +815,7 @@
       "warnings": {
         "autobuildShortage": "L'autocostruzione non dispone di tutti gli ingressi necessari per le costruzioni in coda.",
         "androidCapReached": "La produzione di Android ha raggiunto il suo attuale tappo.",
-        "biomassLimited": "La crescita della biomassa è limitata dalla disponibilità {resource}Z{scope}.",
+        "biomassLimited": "La crescita della biomassa è limitata dalla disponibilità di {resource}{scope}. Quantità aggiuntiva necessaria: {amount}{unit}/s.",
         "scopeZones": " nella zona {zones}ZZ{s}",
         "scopeAtmosphere": " in tutta l'atmosfera",
         "hydrogenIntro": "L'idrogeno lentamente sfugge allo spazio a seconda del flusso solare e della gravità.",
