@@ -238,6 +238,7 @@ function updateDebrisDiskHazardUI(debrisDiskParameters) {
   const clearanceRatio = 1 - remainingRatio;
   const attritionRate = hazard ? hazard.getCurrentAttritionRate(terraforming, debrisDiskParameters) : 0;
   const growthMultiplier = hazard ? hazard.getCurrentGrowthMultiplier(terraforming, debrisDiskParameters) : 1;
+  const conversionRates = hazard ? hazard.lastConversionRatesPerSecond : {};
   const current = resource.value || 0;
   const initial = Math.max(resource.initialValue || 0, current);
   const clearedPercent = clearanceRatio * 100;
@@ -267,8 +268,8 @@ function updateDebrisDiskHazardUI(debrisDiskParameters) {
     {
       attrition: formatNumber(attritionRate * 100, false, 3),
       resources: formatDebrisDiskNumber(hazard ? hazard.lastColonyResourceLossPerSecond : 0, 2, true),
-      scrap: formatDebrisDiskNumber(hazard ? hazard.lastScrapMetalPerSecond : 0, 2, true),
-      junk: formatDebrisDiskNumber(hazard ? hazard.lastJunkPerSecond : 0, 2, true),
+      scrap: formatDebrisDiskNumber(conversionRates.surface?.scrapMetal || 0, 2, true),
+      junk: formatDebrisDiskNumber(conversionRates.surface?.junk || 0, 2, true),
     }
   );
 
