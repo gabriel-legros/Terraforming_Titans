@@ -2457,6 +2457,7 @@ const earthOverrides = {
   ],
   specialAttributes: {
     hasSand: true,
+    countsAsStandardTerraformingRun: false,
     skipCurrentWorldTravelWarnings: true,
     savePretravel: false,
     disabledFeatures: {

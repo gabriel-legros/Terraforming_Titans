@@ -556,6 +556,9 @@ class SpaceManager extends EffectableEntity {
     }
 
     recordCurrentTerraformCompletion(playTime, realTime) {
+        if (currentPlanetParameters.specialAttributes.countsAsStandardTerraformingRun === false) {
+            return;
+        }
         this._updateFastestTerraformByWorldType(this._getCurrentWorldArchetype(), playTime, realTime);
         this.terraformHistory.push(this._buildCurrentTerraformHistoryEntry(playTime, realTime));
         this._trimTerraformHistory();
