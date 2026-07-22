@@ -187,6 +187,13 @@ function createProjectAssignmentBase(BaseClass) {
       return `${total.toString()}|${this.getManagedAssignmentKeys().join('|')}`;
     }
 
+    getAssignmentCapSignature() {
+      const total = this.getAssignmentTotalCapacity();
+      return this.getManagedAssignmentKeys()
+        .map((key) => `${key}:${this.getAssignmentCapForKey(key, total).toString()}`)
+        .join('|');
+    }
+
     prepareAssignmentsForNormalization() {}
 
     shouldPreserveAssignmentsDuringNormalization() {
@@ -195,7 +202,7 @@ function createProjectAssignmentBase(BaseClass) {
 
     normalizeAssignments() {
       const preserveAssignments = this.shouldPreserveAssignmentsDuringNormalization();
-      const signature = `${this.getAssignmentNormalizationSignature()}|preserve:${preserveAssignments}`;
+      const signature = `${this.getAssignmentNormalizationSignature()}|caps:${this.getAssignmentCapSignature()}|preserve:${preserveAssignments}`;
       if (!this.assignmentsDirty && this.assignmentsLastSignature === signature) {
         return;
       }
