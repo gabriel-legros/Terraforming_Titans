@@ -1331,6 +1331,9 @@ function removeAutomationPresetValueAtPath(target, path) {
   if (!target || !Array.isArray(path) || path.length === 0) {
     return false;
   }
+  if (!hasAutomationPresetValueAtPath(target, path)) {
+    return false;
+  }
   let parent = target;
   for (let index = 0; index < path.length - 1; index += 1) {
     parent = parent[path[index]];
