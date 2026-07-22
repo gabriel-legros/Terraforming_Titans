@@ -324,6 +324,7 @@ function updateColonyDetailsDisplay(structureRow, structure) {
 
   const colonyConsumption = structure.getConsumption().colony || {};
   let needsMissing = false;
+  let staleNeeds = false;
   if (structure.needBoxCache) {
     for (const need in colonyConsumption) {
       if (!shouldDisplayNeedBox(need, structure)) continue;
@@ -332,9 +333,20 @@ function updateColonyDetailsDisplay(structureRow, structure) {
         break;
       }
     }
+    for (const need in structure.needBoxCache) {
+      if (
+        need !== '__invalidated' &&
+        need !== 'happiness' &&
+        need !== 'comfort' &&
+        !(need in structure.filledNeeds)
+      ) {
+        staleNeeds = true;
+        break;
+      }
+    }
   }
 
-  if (!structure.needBoxCache || needsMissing) {
+  if (!structure.needBoxCache || structure.needBoxCache.__invalidated || needsMissing || staleNeeds) {
     rebuildColonyNeedCache(structureRow, structure);
   }
 
