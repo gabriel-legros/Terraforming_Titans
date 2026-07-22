@@ -949,6 +949,7 @@ function setupHarness(initialStorage = {}) {
   setGlobal('globalGameIsLoadingFromSave', false, originalGlobals);
   setGlobal('autoActivateStructures', () => {}, originalGlobals);
   setGlobal('hazardManager', { applyPostClampResourceProduction: () => {} }, originalGlobals);
+  setGlobal('isCurrentWorldProjectCategoryDisabled', () => false, originalGlobals);
 
   const projectManager = {
     projects: {},

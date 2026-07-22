@@ -501,6 +501,42 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
   }
 }
 
+const CONTINUOUS_EXPANSION_CAPABILITY_METHODS = [
+  'isExpansionContinuous',
+  'isContinuous',
+  'startContinuousExpansion',
+  'getExpansionProgressField',
+  'getExpansionCompletedField',
+  'getExpansionLimit',
+  'getExpansionProgressValue',
+  'setExpansionProgressValue',
+  'getExpansionCompletedValue',
+  'setExpansionCompletedValue',
+  'getExpansionCompletedTotal',
+  'getRemainingExpansionCapacity',
+  'createExpansionStorageState',
+  'getAffordableExpansionProgress',
+  'getContinuousExpansionTickState',
+  'applyExpansionColonyChange',
+  'applyExpansionCostForProgress',
+  'applyExpansionSpentRates',
+  'applyRequestedExpansionProgress',
+  'estimateExpansionCostForProgress',
+  'mergeResourceTotals',
+  'applyFractionalProgress',
+  'applyExpansionProgress',
+  'carryDiscreteExpansionProgress',
+];
+
+ContinuousExpansionProject.applyCapabilityTo = function (ProjectClass) {
+  CONTINUOUS_EXPANSION_CAPABILITY_METHODS.forEach((methodName) => {
+    if (Object.prototype.hasOwnProperty.call(ProjectClass.prototype, methodName)) {
+      return;
+    }
+    ProjectClass.prototype[methodName] = ContinuousExpansionProject.prototype[methodName];
+  });
+};
+
 try {
   window.ContinuousExpansionProject = ContinuousExpansionProject;
 } catch (error) {}
