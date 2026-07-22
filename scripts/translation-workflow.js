@@ -18,13 +18,15 @@ const sourceDefinitions = [
   },
 ];
 const languages = {
-  french: { code: 'fr', name: 'AI-French-translation', nativeName: 'Français' },
-  italian: { code: 'it', name: 'AI-Italian-translation', nativeName: 'Italiano' },
-  german: { code: 'de', name: 'AI-German-translation', nativeName: 'Deutsch' },
-  spanish: { code: 'es', name: 'AI-Spanish-translation', nativeName: 'Español' },
-  chinese: { code: 'zh-Hans', name: 'AI-Chinese-translation', nativeName: '简体中文' },
-  korean: { code: 'ko', name: 'AI-Korean-translation', nativeName: '한국어' },
-  japanese: { code: 'ja', name: 'AI-Japanese-translation', nativeName: '日本語' },
+  english: { code: 'en', id: 'english-translation', name: 'English-translation', nativeName: 'English' },
+  french: { code: 'fr', id: 'ai-french-translation', name: 'AI-French-translation', nativeName: 'Français' },
+  italian: { code: 'it', id: 'ai-italian-translation', name: 'AI-Italian-translation', nativeName: 'Italiano' },
+  german: { code: 'de', id: 'ai-german-translation', name: 'AI-German-translation', nativeName: 'Deutsch' },
+  spanish: { code: 'es', id: 'ai-spanish-translation', name: 'AI-Spanish-translation', nativeName: 'Español' },
+  chinese: { code: 'zh-Hans', id: 'ai-chinese-translation', name: 'AI-Chinese-translation', nativeName: '简体中文' },
+  korean: { code: 'ko', id: 'ai-korean-translation', name: 'AI-Korean-translation', nativeName: '한국어' },
+  japanese: { code: 'ja', id: 'ai-japanese-translation', name: 'AI-Japanese-translation', nativeName: '日本語' },
+  russian: { code: 'ru', id: 'ai-russian-translation', name: 'AI-Russian-translation', nativeName: 'Русский' },
 };
 const maxBatchCharacters = 100000;
 const protectedPattern = /\{[A-Za-z0-9_.-]+\}|\$[A-Z][A-Z0-9_]*\$|<\/?span(?:\s[^>]*)?>|\b[A-Za-z][A-Za-z0-9]*\.btb\b|https?:\/\/[^\s]+/g;
@@ -103,8 +105,8 @@ function transformLanguage(value, translations, language, pathParts = []) {
   return output;
 }
 
-function writeLanguageMod(slug, language, languageData, sourceParts) {
-  const modRoot = path.join(repositoryRoot, 'examples', 'local-mods', `ai-${slug}-translation`);
+function writeLanguageMod(language, languageData, sourceParts) {
+  const modRoot = path.join(repositoryRoot, 'examples', 'local-mods', language.id);
   const patchRoot = path.join(modRoot, 'patches');
   const entries = [];
   collectUniqueStrings(languageData, entries, new Set());
@@ -119,7 +121,7 @@ function writeLanguageMod(slug, language, languageData, sourceParts) {
   });
   const manifest = {
     schemaVersion: 1,
-    id: `ai-${slug}-translation`,
+    id: language.id,
     name: language.name,
     version: '1.0.0',
     loadOrder: 1000,
@@ -194,14 +196,14 @@ function assemble(slug, language, sourceLanguage, sourceParts) {
     });
   });
   const translatedLanguage = transformLanguage(sourceLanguage, translations, language);
-  writeLanguageMod(slug, language, translatedLanguage, sourceParts);
+  writeLanguageMod(language, translatedLanguage, sourceParts);
   console.log(`Assembled ${language.name} from ${translations.size} unique translations.`);
 }
 
-function seedEnglish(slug, language, sourceLanguage, sourceParts) {
+function seedEnglish(language, sourceLanguage, sourceParts) {
   const englishLanguage = JSON.parse(JSON.stringify(sourceLanguage));
   englishLanguage.meta.code = language.code;
-  writeLanguageMod(slug, language, englishLanguage, sourceParts);
+  writeLanguageMod(language, englishLanguage, sourceParts);
   console.log(`Seeded ${language.name} with English text.`);
 }
 
@@ -227,7 +229,7 @@ if (command === 'seed-english-base' && !slug) {
 } else {
   const language = languages[slug];
   if (!['prepare', 'assemble', 'seed-english'].includes(command) || (!language && slug !== 'all')) {
-    throw new Error('Usage: node scripts/translation-workflow.js <prepare|assemble|seed-english> <french|italian|german|spanish|chinese|korean|japanese|all>\n       node scripts/translation-workflow.js seed-english-base');
+    throw new Error('Usage: node scripts/translation-workflow.js <prepare|assemble|seed-english> <english|french|italian|german|spanish|chinese|korean|japanese|russian|all>\n       node scripts/translation-workflow.js seed-english-base');
   }
   const selectedLanguages = slug === 'all' ? Object.entries(languages) : [[slug, language]];
   selectedLanguages.forEach(([selectedSlug, selectedLanguage]) => {
@@ -236,7 +238,7 @@ if (command === 'seed-english-base' && !slug) {
     } else if (command === 'assemble') {
       assemble(selectedSlug, selectedLanguage, sourceLanguage, sourceParts);
     } else {
-      seedEnglish(selectedSlug, selectedLanguage, sourceLanguage, sourceParts);
+      seedEnglish(selectedLanguage, sourceLanguage, sourceParts);
     }
   });
 }

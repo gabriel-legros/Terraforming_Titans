@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "english-translation",
+  "name": "English-translation",
+  "version": "1.0.0",
+  "loadOrder": 1000,
+  "generatedFrom": "src/js/lang/current-language.js + src/js/lang/story-language.js",
+  "generatedStringCount": 5230,
+  "content": {
+    "patches": [
+      {
+        "target": "language.current",
+        "file": "patches/current-language.json"
+      },
+      {
+        "target": "language.current",
+        "file": "patches/story-language.json"
+      }
+    ],
+    "replacements": []
+  }
+}

@@ -17,13 +17,15 @@ const sourceDefinitions = [
   },
 ];
 const languageDefinitions = [
-  { slug: 'french', code: 'fr', name: 'AI-French-translation' },
-  { slug: 'italian', code: 'it', name: 'AI-Italian-translation' },
-  { slug: 'german', code: 'de', name: 'AI-German-translation' },
-  { slug: 'spanish', code: 'es', name: 'AI-Spanish-translation' },
-  { slug: 'chinese', code: 'zh-Hans', name: 'AI-Chinese-translation' },
-  { slug: 'korean', code: 'ko', name: 'AI-Korean-translation' },
-  { slug: 'japanese', code: 'ja', name: 'AI-Japanese-translation' },
+  { slug: 'english', code: 'en', id: 'english-translation', name: 'English-translation' },
+  { slug: 'french', code: 'fr', id: 'ai-french-translation', name: 'AI-French-translation' },
+  { slug: 'italian', code: 'it', id: 'ai-italian-translation', name: 'AI-Italian-translation' },
+  { slug: 'german', code: 'de', id: 'ai-german-translation', name: 'AI-German-translation' },
+  { slug: 'spanish', code: 'es', id: 'ai-spanish-translation', name: 'AI-Spanish-translation' },
+  { slug: 'chinese', code: 'zh-Hans', id: 'ai-chinese-translation', name: 'AI-Chinese-translation' },
+  { slug: 'korean', code: 'ko', id: 'ai-korean-translation', name: 'AI-Korean-translation' },
+  { slug: 'japanese', code: 'ja', id: 'ai-japanese-translation', name: 'AI-Japanese-translation' },
+  { slug: 'russian', code: 'ru', id: 'ai-russian-translation', name: 'AI-Russian-translation' },
 ];
 const protectedPattern = /\{[A-Za-z0-9_.-]+\}|\$[A-Z][A-Z0-9_]*\$|<\/?span(?:\s[^>]*)?>|\b[A-Za-z][A-Za-z0-9]*\.btb\b|https?:\/\/[^\s]+/g;
 
@@ -107,11 +109,11 @@ function verifyPreview(previewPath, definition) {
 function main() {
   const sourceParts = readSourceLanguageParts();
   languageDefinitions.forEach(definition => {
-    const modRoot = path.join(repositoryRoot, 'examples', 'local-mods', `ai-${definition.slug}-translation`);
+    const modRoot = path.join(repositoryRoot, 'examples', 'local-mods', definition.id);
     const manifestPath = path.join(modRoot, 'terraforming-titans.mod.json');
     const previewPath = path.join(modRoot, 'preview.png');
     const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-    if (manifest.id !== `ai-${definition.slug}-translation` || manifest.name !== definition.name) {
+    if (manifest.id !== definition.id || manifest.name !== definition.name) {
       throw new Error(`${definition.slug}: manifest id or name is incorrect.`);
     }
     const expectedPatches = sourceParts.map(part => ({ target: 'language.current', file: part.patchFile }));
