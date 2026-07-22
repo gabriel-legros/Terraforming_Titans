@@ -221,7 +221,11 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
         }
 
         const remainingAfterStorage = Math.max(0, amount - spentFromStorage);
-        const spendFromColony = Math.min(colonyAvailable, remainingAfterStorage);
+        const spendFromColony = Math.min(
+          colonyAvailable,
+          remainingAfterStorage,
+          allocation.fromColony
+        );
         if (spendFromColony > 0) {
           this.applyExpansionColonyChange(category, resource, spendFromColony, accumulatedChanges);
           spentColonyByCategory[category] ||= {};
