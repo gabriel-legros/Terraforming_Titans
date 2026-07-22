@@ -1147,6 +1147,41 @@ class ArtificialManager extends EffectableEntity {
         return Math.min(Math.max(Number(snapped.toFixed(3)), bounds.min), bounds.max);
     }
 
+    getAutoDiskSelection(bounds, innerRadiusAU, coreValue) {
+        const targetMs = MAX_SHELL_DURATION_MS;
+        const diskRadiusAU = this.getAutoDiskRadius(bounds, innerRadiusAU);
+        const innerBounds = getDiskInnerRadiusBoundsAU(coreValue, diskRadiusAU);
+        const getDuration = (nextInnerRadiusAU) => {
+            return this.getDiskConstructionDurationMs(diskRadiusAU, nextInnerRadiusAU);
+        };
+        let low = innerBounds.min;
+        let high = innerBounds.max;
+        let candidate = low;
+        if (getDuration(low) > targetMs) {
+            if (getDuration(high) > targetMs) {
+                candidate = high;
+            } else {
+                for (let i = 0; i < AUTO_RADIUS_ITERATIONS; i += 1) {
+                    const mid = (low + high) / 2;
+                    if (getDuration(mid) > targetMs) {
+                        low = mid;
+                    } else {
+                        high = mid;
+                    }
+                }
+                candidate = high;
+            }
+        }
+        let snapped = Math.round(candidate / AUTO_RING_ORBIT_STEP) * AUTO_RING_ORBIT_STEP;
+        let durationMs = getDuration(snapped);
+        while (durationMs > targetMs && snapped < innerBounds.max) {
+            snapped = Math.round((snapped + AUTO_RING_ORBIT_STEP) / AUTO_RING_ORBIT_STEP) * AUTO_RING_ORBIT_STEP;
+            durationMs = getDuration(snapped);
+        }
+        const diskInnerRadiusAU = Math.min(Math.max(Number(snapped.toFixed(3)), innerBounds.min), innerBounds.max);
+        return { diskRadiusAU, diskInnerRadiusAU };
+    }
+
     exceedsDurationLimit(durationMs) {
         return Math.max(durationMs || 0, 0) > MAX_SHELL_DURATION_MS;
     }

@@ -461,7 +461,7 @@ setLanguageData({
         orbitalRadius: 'Orbital radius (AU)',
         orbitTooltip: 'Ring orbital distance from the system star.',
         orbitAutoTitle: 'Set a just-under-5h ringworld build by maximizing width at minimum orbit, then solving orbit radius.',
-        diskOuterAutoTitle: 'Set the outer radius for a just-under-5h disk build using the current inner radius.',
+        diskOuterAutoTitle: 'Set the largest just-under-5h disk by maximizing outer radius, then minimizing inner radius if time remains.',
         diskOuterRadius: 'Outer radius (AU)',
         diskOuterRadiusTooltip: 'Outer edge of the usable disk annulus.',
         diskInnerRadius: 'Inner radius (AU)',

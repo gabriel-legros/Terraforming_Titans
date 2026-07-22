@@ -745,12 +745,6 @@ function getAutoRingOrbitValue(widthKm) {
   return manager.getAutoRingOrbit(bounds, widthKm);
 }
 
-function getAutoDiskRadiusValue() {
-  const bounds = getRingOrbitBoundsAU();
-  const manager = artificialManager;
-  return manager.getAutoDiskRadius(bounds, getDiskInnerRadiusAUValue());
-}
-
 function applyRadiusBounds() {
   if (getSelectedArtificialType(null) !== 'shell') return;
   const bounds = getRadiusBounds();
@@ -1827,9 +1821,14 @@ function ensureArtificialLayout() {
     artificialRingOrbitEditing = false;
     artificialRingWidthEditing = false;
     if (getSelectedArtificialType(null) === 'disk') {
-      const value = getAutoDiskRadiusValue();
-      setRingOrbitFields(value, true);
-      setDiskInnerFields(getDiskInnerRadiusAUValue(), true);
+      const coreValue = artificialUICache.ringStarCore.value;
+      const selection = artificialManager.getAutoDiskSelection(
+        getRingOrbitBoundsAU(),
+        getDiskInnerRadiusAUValue(),
+        coreValue
+      );
+      setRingOrbitFields(selection.diskRadiusAU, true);
+      setDiskInnerFields(selection.diskInnerRadiusAU, true);
       updateArtificialUI();
       return;
     }
@@ -3102,7 +3101,7 @@ function updateArtificialUI(options = {}) {
     setTooltipText(
       artificialUICache.ringAutoTooltipContent,
       isDisk
-        ? getArtificialText('blueprint.diskOuterAutoTitle', 'Set the outer radius for a just-under-5h disk build using the current inner radius.')
+        ? getArtificialText('blueprint.diskOuterAutoTitle', 'Set the largest just-under-5h disk by maximizing outer radius, then minimizing inner radius if time remains.')
         : getArtificialText('blueprint.orbitAutoTitle', 'Set a just-under-5h ringworld build by maximizing width at minimum orbit, then solving orbit radius.')
     );
   }
