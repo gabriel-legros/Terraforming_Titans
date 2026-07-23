@@ -362,9 +362,6 @@ function createProjectAssignmentBase(BaseClass) {
     }
 
     getDisplayedAssignmentAmount(key) {
-      if (this.isUnassignedAssignmentKey(key)) {
-        return this.getAvailableAssignments();
-      }
       return this.getStoredAssignmentAmount(key);
     }
 
