@@ -427,6 +427,7 @@ class ArtificialManager extends EffectableEntity {
         this.constructionHoursPer50B = CONSTRUCTION_HOURS_PER_50B;
         this.allowSpaceStoragePayments = true;
         this.prioritizeSpaceStorage = true;
+        this.ignoreStrategicReserve = false;
         this.autoStart = false;
         this.autoStore = false;
         this.autoStoreWithMaxStockpile = true;
@@ -1202,6 +1203,14 @@ class ArtificialManager extends EffectableEntity {
         return this.prioritizeSpaceStorage;
     }
 
+    setIgnoreStrategicReserve(value) {
+        this.ignoreStrategicReserve = !!value;
+    }
+
+    getIgnoreStrategicReserve() {
+        return this.ignoreStrategicReserve;
+    }
+
     setAutoStart(value) {
         this.autoStart = !!value;
         this.runAutomation();
@@ -1328,8 +1337,9 @@ class ArtificialManager extends EffectableEntity {
         const colonyRes = resources.colony[resourceKey];
         const colonyAvailable = colonyRes ? colonyRes.value : 0;
         const storageKey = resourceKey === 'water' ? 'liquidWater' : resourceKey;
+        const reserveScope = this.ignoreStrategicReserve ? 'ignoreReserve' : null;
         const storageAvailable = allowStorage && storageProj && storageProj.getAvailableStoredResource
-            ? storageProj.getAvailableStoredResource(storageKey)
+            ? storageProj.getAvailableStoredResource(storageKey, reserveScope)
             : 0;
         return colonyAvailable + storageAvailable;
     }
@@ -1465,6 +1475,7 @@ class ArtificialManager extends EffectableEntity {
     pullResources(cost, allowStorage = this.getAllowSpaceStoragePayments(), prioritizeStorage = this.getPrioritizeSpaceStorage()) {
         const storageProj = projectManager && projectManager.projects && projectManager.projects.spaceStorage;
         const useStorage = allowStorage && !!storageProj;
+        const reserveScope = this.ignoreStrategicReserve ? 'ignoreReserve' : null;
         const plan = {};
 
         for (const key of Object.keys(cost)) {
@@ -1474,7 +1485,7 @@ class ArtificialManager extends EffectableEntity {
             const colonyAvailable = colonyRes ? colonyRes.value : 0;
             const storageKey = key === 'water' ? 'liquidWater' : key;
             const storageAvailable = useStorage && storageProj.getAvailableStoredResource
-                ? storageProj.getAvailableStoredResource(storageKey)
+                ? storageProj.getAvailableStoredResource(storageKey, reserveScope)
                 : 0;
             const total = colonyAvailable + storageAvailable;
             if (total < required) {
@@ -1500,7 +1511,7 @@ class ArtificialManager extends EffectableEntity {
             }
             if (useStorage && step.storage > 0) {
                 const storageKey = step.storageKey || key;
-                storageProj.spendStoredResource(storageKey, step.storage);
+                storageProj.spendStoredResource(storageKey, step.storage, reserveScope);
                 storageProj.reconcileUsedStorage();
             }
         });
@@ -2565,6 +2576,7 @@ class ArtificialManager extends EffectableEntity {
             enabled: this.enabled,
             allowSpaceStoragePayments: this.allowSpaceStoragePayments,
             prioritizeSpaceStorage: this.prioritizeSpaceStorage,
+            ignoreStrategicReserve: this.ignoreStrategicReserve,
             autoStart: this.autoStart,
             autoStore: this.autoStore,
             autoStoreWithMaxStockpile: this.autoStoreWithMaxStockpile,
@@ -2589,6 +2601,7 @@ class ArtificialManager extends EffectableEntity {
             ? state.allowSpaceStoragePayments !== false
             : state.prioritizeSpaceStorage !== false;
         this.prioritizeSpaceStorage = state.prioritizeSpaceStorage !== false;
+        this.ignoreStrategicReserve = state.ignoreStrategicReserve === true;
         this.autoStart = state.autoStart === true;
         this.autoStore = state.autoStore === true;
         this.autoStoreWithMaxStockpile = state.autoStoreWithMaxStockpile !== false;

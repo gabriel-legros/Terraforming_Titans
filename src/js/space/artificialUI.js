@@ -66,6 +66,9 @@ const artificialUICache = {
   sector: null,
   sectorFilter: null,
   priority: null,
+  advancedSettingsButton: null,
+  advancedSettingsOverlay: null,
+  ignoreStrategicReserve: null,
   autoStart: null,
   autoStore: null,
   autoStoreWithMaxStockpile: null,
@@ -872,8 +875,9 @@ function getMaxStashAmount(resource, project, manager) {
   const colonyAvailable = colonyRes ? colonyRes.value : 0;
   const storageProj = projectManager && projectManager.projects ? projectManager.projects.spaceStorage : null;
   const allowStorage = manager.getAllowSpaceStoragePayments();
+  const reserveScope = manager.getIgnoreStrategicReserve() ? 'ignoreReserve' : null;
   const storageAvailable = allowStorage && storageProj && storageProj.getAvailableStoredResource
-    ? storageProj.getAvailableStoredResource(resource)
+    ? storageProj.getAvailableStoredResource(resource, reserveScope)
     : 0;
   const total = colonyAvailable + storageAvailable;
   return Math.min(remaining, total);
@@ -1338,7 +1342,49 @@ function ensureArtificialLayout() {
   const prioritySuffix = document.createElement('span');
   prioritySuffix.textContent = getArtificialText('costs.spaceStoragePayments', 'space storage payments');
   priorityLabel.appendChild(prioritySuffix);
+  const advancedSettingsButton = document.createElement('button');
+  advancedSettingsButton.type = 'button';
+  advancedSettingsButton.classList.add('project-advanced-settings-button', 'artificial-advanced-settings-button');
+  advancedSettingsButton.textContent = '\u2699\uFE0E';
+  advancedSettingsButton.setAttribute('aria-label', getArtificialText('costs.advancedSettings', 'Advanced Settings'));
+  advancedSettingsButton.title = getArtificialText('costs.advancedSettings', 'Advanced Settings');
+  priorityLabel.appendChild(advancedSettingsButton);
+  artificialUICache.advancedSettingsButton = advancedSettingsButton;
   costs.appendChild(priorityLabel);
+
+  const advancedSettingsOverlay = document.createElement('div');
+  advancedSettingsOverlay.classList.add('space-storage-settings-overlay');
+  const advancedSettingsWindow = document.createElement('div');
+  advancedSettingsWindow.classList.add('space-storage-settings-window', 'project-advanced-settings-window');
+  const advancedSettingsHeader = document.createElement('div');
+  advancedSettingsHeader.classList.add('space-storage-settings-header');
+  const advancedSettingsTitle = document.createElement('div');
+  advancedSettingsTitle.classList.add('space-storage-settings-title');
+  advancedSettingsTitle.textContent = getArtificialText('costs.advancedSettings', 'Advanced Settings');
+  const advancedSettingsClose = document.createElement('button');
+  advancedSettingsClose.type = 'button';
+  advancedSettingsClose.classList.add('space-storage-settings-close');
+  advancedSettingsClose.textContent = getArtificialText('costs.close', 'X');
+  advancedSettingsHeader.append(advancedSettingsTitle, advancedSettingsClose);
+  const reserveRow = document.createElement('div');
+  reserveRow.classList.add('space-storage-settings-row');
+  const reserveLabel = document.createElement('label');
+  reserveLabel.classList.add('space-storage-settings-label');
+  reserveLabel.htmlFor = 'artificial-ignore-strategic-reserve';
+  reserveLabel.textContent = getArtificialText('costs.ignoreStrategicReserve', 'Ignore strategic reserve');
+  const reserveCheckbox = document.createElement('input');
+  reserveCheckbox.type = 'checkbox';
+  reserveCheckbox.id = 'artificial-ignore-strategic-reserve';
+  reserveRow.append(reserveLabel, reserveCheckbox);
+  const advancedSettingsConfirm = document.createElement('button');
+  advancedSettingsConfirm.type = 'button';
+  advancedSettingsConfirm.classList.add('space-storage-settings-confirm');
+  advancedSettingsConfirm.textContent = getArtificialText('costs.confirm', 'Confirm');
+  advancedSettingsWindow.append(advancedSettingsHeader, reserveRow, advancedSettingsConfirm);
+  advancedSettingsOverlay.appendChild(advancedSettingsWindow);
+  document.body.appendChild(advancedSettingsOverlay);
+  artificialUICache.advancedSettingsOverlay = advancedSettingsOverlay;
+  artificialUICache.ignoreStrategicReserve = reserveCheckbox;
 
   const automationRow = document.createElement('div');
   automationRow.className = 'artificial-automation-options';
@@ -1928,6 +1974,26 @@ function ensureArtificialLayout() {
   priorityCheckbox.addEventListener('change', () => {
     if (artificialManager) {
       artificialManager.setPrioritizeSpaceStorage(priorityCheckbox.checked);
+    }
+    updateArtificialUI();
+  });
+  advancedSettingsButton.addEventListener('click', () => {
+    if (artificialManager) {
+      reserveCheckbox.checked = artificialManager.getIgnoreStrategicReserve();
+    }
+    advancedSettingsOverlay.classList.add('is-visible');
+  });
+  const closeAdvancedSettings = () => advancedSettingsOverlay.classList.remove('is-visible');
+  advancedSettingsClose.addEventListener('click', closeAdvancedSettings);
+  advancedSettingsConfirm.addEventListener('click', closeAdvancedSettings);
+  advancedSettingsOverlay.addEventListener('click', (event) => {
+    if (event.target === advancedSettingsOverlay) {
+      closeAdvancedSettings();
+    }
+  });
+  reserveCheckbox.addEventListener('change', () => {
+    if (artificialManager) {
+      artificialManager.setIgnoreStrategicReserve(reserveCheckbox.checked);
     }
     updateArtificialUI();
   });
@@ -3166,6 +3232,12 @@ function updateArtificialUI(options = {}) {
   if (artificialUICache.priority) {
     artificialUICache.priority.checked = manager.getPrioritizeSpaceStorage();
     artificialUICache.priority.disabled = !manager.getAllowSpaceStoragePayments();
+  }
+  if (
+    artificialUICache.ignoreStrategicReserve
+    && artificialUICache.ignoreStrategicReserve.checked !== manager.getIgnoreStrategicReserve()
+  ) {
+    artificialUICache.ignoreStrategicReserve.checked = manager.getIgnoreStrategicReserve();
   }
   if (artificialUICache.autoStart) {
     artificialUICache.autoStart.checked = manager.getAutoStart();
