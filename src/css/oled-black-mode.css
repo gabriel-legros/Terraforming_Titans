@@ -143,6 +143,10 @@ body.oled-black-mode {
     color: var(--oled-text);
 }
 
+.oled-black-mode .construction-office-reserve-input-wrap .space-storage-settings-input.is-inherited {
+    color: var(--oled-text-muted);
+}
+
 .oled-black-mode button:hover:not(:disabled),
 .oled-black-mode select:hover:not(:disabled) {
     background-color: var(--oled-surface-active);

@@ -648,10 +648,17 @@ function updateConstructionOfficeUI() {
     for (const key in constructionOfficeReserveSettingsElements.inputs) {
         if (!Object.prototype.hasOwnProperty.call(constructionOfficeReserveSettingsElements.inputs, key)) continue;
         const input = constructionOfficeReserveSettingsElements.inputs[key];
-        if (input && input !== document.activeElement) {
+        if (!input) continue;
+        const hasOverride = key === 'default'
+            || Object.prototype.hasOwnProperty.call(constructionOfficeState.strategicReserveResources, key);
+        const inherited = !hasOverride;
+        if (input.classList.contains('is-inherited') !== inherited) {
+            input.classList.toggle('is-inherited', inherited);
+        }
+        if (input !== document.activeElement) {
             const value = key === 'default'
                 ? constructionOfficeState.strategicReserve
-                : (Object.prototype.hasOwnProperty.call(constructionOfficeState.strategicReserveResources, key)
+                : (hasOverride
                     ? constructionOfficeState.strategicReserveResources[key]
                     : constructionOfficeState.strategicReserve);
             input.dataset.constructionOfficeReserve = String(value);
@@ -724,9 +731,8 @@ function createConstructionOfficeReserveSettingsWindow() {
         const row = document.createElement('div');
         row.classList.add('space-storage-settings-row');
 
-        const label = document.createElement('label');
+        const label = document.createElement('div');
         label.classList.add('space-storage-settings-label');
-        label.htmlFor = inputId;
         label.textContent = labelText;
 
         const inputWrap = document.createElement('div');
@@ -735,6 +741,7 @@ function createConstructionOfficeReserveSettingsWindow() {
         input.type = 'text';
         input.id = inputId;
         input.classList.add('space-storage-settings-input');
+        input.setAttribute('aria-label', labelText);
         input.dataset.constructionOfficeReserve = String(value);
         input.value = input.dataset.constructionOfficeReserve;
         wireStringNumberInput(input, {
@@ -778,6 +785,7 @@ function createConstructionOfficeReserveSettingsWindow() {
                 } else {
                     setStrategicReserveForResource(option.key, value);
                 }
+                updateConstructionOfficeUI();
             },
             () => constructionOfficeState.strategicReserve
         );
