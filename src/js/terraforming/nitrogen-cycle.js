@@ -1,20 +1,21 @@
 // nitrogen-cycle.js — N₂ (nitrogen, tracked as inertGas) phase-change cycle
 (function () {
-  const L_V_NITROGEN = 1.99e5; // J/kg latent heat of vaporization
-  const L_S_NITROGEN = 2.60e5; // J/kg latent heat of sublimation
-  const EVAP_ALBEDO_NITROGEN = 0.12;
-  const SUBLIMATION_ALBEDO_NITROGEN_ICE = 0.80;
+  const NITROGEN_PHASE_CHANGE_PARAMETERS = terraformingParameters.phaseChange.nitrogen;
+  const L_V_NITROGEN = NITROGEN_PHASE_CHANGE_PARAMETERS.latentHeatVaporizationJPerKg;
+  const L_S_NITROGEN = NITROGEN_PHASE_CHANGE_PARAMETERS.latentHeatSublimationJPerKg;
+  const EVAP_ALBEDO_NITROGEN = NITROGEN_PHASE_CHANGE_PARAMETERS.liquidAlbedo;
+  const SUBLIMATION_ALBEDO_NITROGEN_ICE = NITROGEN_PHASE_CHANGE_PARAMETERS.solidAlbedo;
 
-  const NITROGEN_T_TRIPLE = 63.151;  // K
-  const NITROGEN_P_TRIPLE = 1.253e4; // Pa
-  const NITROGEN_T_CRIT = 126.192;   // K
-  const NITROGEN_P_CRIT = 3.396e6;   // Pa
-  const NITROGEN_BOILING_T = 77.355; // K (1 atm)
-  const NITROGEN_BOILING_P = 101325; // Pa
+  const NITROGEN_T_TRIPLE = NITROGEN_PHASE_CHANGE_PARAMETERS.triplePointTemperatureK;
+  const NITROGEN_P_TRIPLE = NITROGEN_PHASE_CHANGE_PARAMETERS.triplePointPressurePa;
+  const NITROGEN_T_CRIT = NITROGEN_PHASE_CHANGE_PARAMETERS.criticalPointTemperatureK;
+  const NITROGEN_P_CRIT = NITROGEN_PHASE_CHANGE_PARAMETERS.criticalPointPressurePa;
+  const NITROGEN_BOILING_T = NITROGEN_PHASE_CHANGE_PARAMETERS.boilingPointTemperatureK;
+  const NITROGEN_BOILING_P = NITROGEN_PHASE_CHANGE_PARAMETERS.boilingPointPressurePa;
 
-  const NITROGEN_MOLAR_MASS = 0.0280134; // kg/mol
-  const NITROGEN_GAS_CONSTANT = 8.314462618; // J/mol/K
-  var DEFAULT_EQUILIBRIUM_NITROGEN_CONDENSATION_PARAMETER = 0.002;
+  const NITROGEN_MOLAR_MASS = NITROGEN_PHASE_CHANGE_PARAMETERS.molarMassKgPerMol;
+  const NITROGEN_GAS_CONSTANT = terraformingParameters.physical.universalGasConstant;
+  var DEFAULT_EQUILIBRIUM_NITROGEN_CONDENSATION_PARAMETER = NITROGEN_PHASE_CHANGE_PARAMETERS.equilibriumCondensationParameter;
 
   var resourcePhaseGroups;
   var psychrometricConstant;

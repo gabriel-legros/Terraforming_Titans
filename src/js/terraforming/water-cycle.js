@@ -1,11 +1,12 @@
-const L_S_WATER = 2.83e6; // Latent heat of sublimation for water (J/kg)
-const L_V_WATER = 2.45e6; // Latent heat of vaporization for water (J/kg)
-const EVAP_ALBEDO_WATER = 0.06; // Representative albedo for liquid water
-const SUBLIMATION_ALBEDO_ICE = 0.6; // Representative albedo for ice// --- Triple point (water) ---
-const WATER_TRIPLE_T = 273.16;      // K
-const WATER_TRIPLE_P = 611.657;     // Pa  (NIST) 
-const WATER_CRITICAL_T = 647.096;   // K  (approximate critical temperature)
-var DEFAULT_EQUILIBRIUM_WATER_CONDENSATION_PARAMETER = 0.451833045526663;
+const WATER_PHASE_CHANGE_PARAMETERS = terraformingParameters.phaseChange.water;
+const L_S_WATER = WATER_PHASE_CHANGE_PARAMETERS.latentHeatSublimationJPerKg;
+const L_V_WATER = WATER_PHASE_CHANGE_PARAMETERS.latentHeatVaporizationJPerKg;
+const EVAP_ALBEDO_WATER = WATER_PHASE_CHANGE_PARAMETERS.liquidAlbedo;
+const SUBLIMATION_ALBEDO_ICE = WATER_PHASE_CHANGE_PARAMETERS.solidAlbedo;
+const WATER_TRIPLE_T = WATER_PHASE_CHANGE_PARAMETERS.triplePointTemperatureK;
+const WATER_TRIPLE_P = WATER_PHASE_CHANGE_PARAMETERS.triplePointPressurePa;
+const WATER_CRITICAL_T = WATER_PHASE_CHANGE_PARAMETERS.criticalPointTemperatureK;
+var DEFAULT_EQUILIBRIUM_WATER_CONDENSATION_PARAMETER = WATER_PHASE_CHANGE_PARAMETERS.equilibriumCondensationParameter;
 
 const isNodeWaterCycle = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;

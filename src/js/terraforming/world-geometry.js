@@ -5,41 +5,22 @@ function calculateSurfaceAreaHectaresFromRadius(radiusKm) {
   return 4 * Math.PI * radiusKm * radiusKm * 100;
 }
 
-const WORLD_GEOMETRY_G = 6.6743e-11;
-const WORLD_GEOMETRY_MIN_GRAVITY = 1e-12;
-const WORLD_GEOMETRY_MIN_VOLUME_FRACTION = 0.01;
-const WORLD_GEOMETRY_FALLBACK_DENSITY = 1000;
-const WORLD_GEOMETRY_MIN_DENSITY = 1;
-const LIQUID_HYDROGEN_BASE_DENSITY = 71;
-const LIQUID_HYDROGEN_MAX_EFFECTIVE_DENSITY = 1140;
-const LIQUID_HYDROGEN_COMPRESSION_REFERENCE_MASS_KG = 1.2e27;
-const LIQUID_HYDROGEN_COMPRESSION_START_LOG10_KG = 20;
-const LIQUID_HYDROGEN_COMPRESSION_EXPONENT = 1.6;
+const WORLD_GEOMETRY_PARAMETERS = terraformingParameters.geometry;
+const LIQUID_HYDROGEN_COMPRESSION_PARAMETERS = WORLD_GEOMETRY_PARAMETERS.liquidHydrogenCompression;
+const WORLD_GEOMETRY_G = terraformingParameters.physical.gravitationalConstant;
+const WORLD_GEOMETRY_MIN_GRAVITY = WORLD_GEOMETRY_PARAMETERS.minimumGravityMS2;
+const WORLD_GEOMETRY_MIN_VOLUME_FRACTION = WORLD_GEOMETRY_PARAMETERS.minimumVolumeFraction;
+const WORLD_GEOMETRY_FALLBACK_DENSITY = WORLD_GEOMETRY_PARAMETERS.fallbackDensityKgM3;
+const WORLD_GEOMETRY_MIN_DENSITY = WORLD_GEOMETRY_PARAMETERS.minimumDensityKgM3;
+const LIQUID_HYDROGEN_BASE_DENSITY = LIQUID_HYDROGEN_COMPRESSION_PARAMETERS.baseDensityKgM3;
+const LIQUID_HYDROGEN_MAX_EFFECTIVE_DENSITY = LIQUID_HYDROGEN_COMPRESSION_PARAMETERS.maximumDensityKgM3;
+const LIQUID_HYDROGEN_COMPRESSION_REFERENCE_MASS_KG = LIQUID_HYDROGEN_COMPRESSION_PARAMETERS.referenceMassKg;
+const LIQUID_HYDROGEN_COMPRESSION_START_LOG10_KG = LIQUID_HYDROGEN_COMPRESSION_PARAMETERS.startLog10MassKg;
+const LIQUID_HYDROGEN_COMPRESSION_EXPONENT = LIQUID_HYDROGEN_COMPRESSION_PARAMETERS.exponent;
 
 const DYNAMIC_WORLD_SURFACE_DENSITIES = {
-  liquidWater: 1000,
-  ice: 917,
-  dryIce: 1560,
-  liquidCO2: 1100,
+  ...WORLD_GEOMETRY_PARAMETERS.surfaceDensityKgM3,
   liquidHydrogen: LIQUID_HYDROGEN_BASE_DENSITY,
-  liquidMethane: 450,
-  hydrocarbonIce: 500,
-  fineSand: 1600,
-  liquidAmmonia: 680,
-  ammoniaIce: 817,
-  liquidOxygen: 1140,
-  oxygenIce: 1426,
-  liquidNitrogen: 810,
-  nitrogenIce: 1030,
-  biomass: 1100,
-  hazardousBiomass: 1100,
-  hazardousMachinery: 3000,
-  graphite: 2260,
-  scrapMetal: 7800,
-  garbage: 300,
-  trash: 300,
-  junk: 500,
-  radioactiveWaste: 10000
 };
 
 const DYNAMIC_WORLD_SURFACE_MASS_KEYS = [
@@ -80,10 +61,7 @@ const DYNAMIC_WORLD_ATMOSPHERIC_MASS_KEYS = [
   'vanadiumAerosol'
 ];
 
-const DYNAMIC_WORLD_PLANETARY_IMPORT_DENSITIES = {
-  metal: 7800,
-  silicon: 2650,
-};
+const DYNAMIC_WORLD_PLANETARY_IMPORT_DENSITIES = WORLD_GEOMETRY_PARAMETERS.planetaryImportDensityKgM3;
 
 function calculateSurfaceAreaM2FromRadius(radiusKm) {
   if (!Number.isFinite(radiusKm) || radiusKm <= 0) {

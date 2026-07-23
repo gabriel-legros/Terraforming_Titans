@@ -8,8 +8,9 @@
    airDensityFn = globalThis.airDensity;
  }
  
- function psychrometricConstant(atmPressure, latentHeat) {
-   return (C_P_AIR * atmPressure) / (EPSILON * latentHeat);
+function psychrometricConstant(atmPressure, latentHeat) {
+   return (terraformingParameters.physical.dryAirSpecificHeatJPerKgK * atmPressure)
+    / (terraformingParameters.physical.waterToDryAirMolecularWeightRatio * latentHeat);
  }
  
 function penmanRate({
@@ -18,8 +19,8 @@ function penmanRate({
   atmPressure,
   e_a,
   latentHeat,
-  albedo = 0.6,
-  r_a = 100,
+  albedo = terraformingParameters.phaseChange.penman.defaultAlbedo,
+  r_a = terraformingParameters.phaseChange.penman.aerodynamicResistanceSecondsPerMeter,
   Delta_s,
   e_s,
   criticalTemperature = Infinity,
@@ -41,7 +42,8 @@ function penmanRate({
   }
 
   const numerator =
-    Delta_s * R_n + (rho_a_val * C_P_AIR * humidityDeficit) / r_a;
+    Delta_s * R_n
+    + (rho_a_val * terraformingParameters.physical.dryAirSpecificHeatJPerKgK * humidityDeficit) / r_a;
   const denominator = (Delta_s + gamma_s) * latentHeat;
   const rate = numerator / denominator;
   return Math.max(0, rate);
@@ -58,8 +60,9 @@ function penmanRate({
   iceCoverage = 1,
   liquidCoverage = 1
 }) {
-   const meltingRateMultiplier = 0.0000001; // per K per second
-   const freezingRateMultiplier = 0.0000001; // per K per second
+   const phaseRateParameters = terraformingParameters.phaseChange.meltingAndFreezing;
+   const meltingRateMultiplier = phaseRateParameters.meltingRatePerKSecond;
+   const freezingRateMultiplier = phaseRateParameters.freezingRatePerKSecond;
  
    let meltingRate = 0;
    let freezingRate = 0;
@@ -73,9 +76,12 @@ function penmanRate({
      const surfaceMeltRate = cappedSurfaceIce * meltingRateMultiplier * diff;
  
      const buriedIceCoverage = 1;
-     const buriedMeltCap = zoneArea * buriedIceCoverage * 0.1;
+     const buriedMeltCap = zoneArea * buriedIceCoverage * phaseRateParameters.buriedMeltCoverage;
      const cappedBuriedIce = buriedMeltCap;
-     const potentialBuriedMeltRate = cappedBuriedIce * meltingRateMultiplier * diff * 0.5;
+     const potentialBuriedMeltRate = cappedBuriedIce
+      * meltingRateMultiplier
+      * diff
+      * phaseRateParameters.buriedMeltRateFraction;
  
      let actualBuriedMeltRate = 0;
      if (potentialBuriedMeltRate > surfaceMeltRate) {
@@ -100,9 +106,10 @@ function penmanRate({
 
 function redistributePrecipitation(terraforming, substance, zonalChanges, zonalTemperatures) {
     const zones = getZones();
-    const WIND_WEIGHT = 0.05;
-    const LIQUID_BIAS_WEIGHT = 0.60;
-    const REMAIN_WEIGHT = 0.35; // 1.0 - WIND_WEIGHT - LIQUID_BIAS_WEIGHT
+    const precipitationParameters = terraformingParameters.phaseChange.precipitationRedistribution;
+    const WIND_WEIGHT = precipitationParameters.windWeight;
+    const LIQUID_BIAS_WEIGHT = precipitationParameters.liquidBiasWeight;
+    const REMAIN_WEIGHT = precipitationParameters.remainWeight;
 
     let liquidKey, iceKey, resourceKey, liquidCoverageType, liquidResourceKey, iceResourceKey;
 
@@ -185,7 +192,7 @@ function redistributePrecipitation(terraforming, substance, zonalChanges, zonalT
         if (diff > 0) { // Deficit zone
             const scaledDiff = diff * scalingFactor;
             const zoneTemp = zonalTemperatures[z].value;
-            const METHANE_FREEZING_POINT = 90.7; // K
+            const METHANE_FREEZING_POINT = precipitationParameters.methaneFreezingPointK;
             const isLiquid = (substance === 'water' && zoneTemp > 273.15) || (substance === 'methane' && zoneTemp > METHANE_FREEZING_POINT);
             liquidAdj = isLiquid ? scaledDiff : 0;
             iceAdj = isLiquid ? 0 : scaledDiff;

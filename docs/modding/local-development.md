@@ -137,9 +137,31 @@ Supported targets are:
 - `parameters.projects`
 - `parameters.research`
 - `parameters.skills`
+- `parameters.terraforming`
 - `parameters.terraformingRequirements`
 
 Language patches contain the language object directly rather than an `entries` wrapper.
+
+Terraforming patches provide global simulation defaults shared by all worlds. The stable sections are `physical`, `atmosphere`, `geometry`, `phaseChange`, `climate`, `gameplay`, and `hazards`. Keys with units include the unit in their name. World-specific celestial, resource, and hazard overrides remain under `parameters.planets` and `parameters.specialSeeds`.
+
+For example, this changes the global gravity penalty and water condensation defaults:
+
+```json
+{
+  "entries": {
+    "gameplay": {
+      "gravityPenalty": {
+        "linearThresholdMS2": 12
+      }
+    },
+    "phaseChange": {
+      "water": {
+        "equilibriumCondensationParameter": 0.2
+      }
+    }
+  }
+}
+```
 
 ## File replacements
 

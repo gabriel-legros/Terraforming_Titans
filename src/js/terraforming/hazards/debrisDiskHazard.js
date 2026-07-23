@@ -1,24 +1,25 @@
 const DEBRIS_DISK_EFFECT_SOURCE_ID = 'debris-disk-hazard';
 const DEBRIS_DISK_ATTRITION_LABEL = t('ui.terraforming.hazardEffects.debrisDiskAttrition', {}, 'Debris Disk Attrition');
-const DEBRIS_DISK_STRUCTURE_MINIMUM = 10n;
-const DEBRIS_DISK_AEROSTAT_MINIMUM = 500n;
-const DEBRIS_DISK_COLONY_RESOURCE_MINIMUM = 10000;
+const DEBRIS_DISK_PARAMETERS = terraformingParameters.hazards.debrisDisk;
+const DEBRIS_DISK_STRUCTURE_MINIMUM = BigInt(DEBRIS_DISK_PARAMETERS.structureMinimum);
+const DEBRIS_DISK_AEROSTAT_MINIMUM = BigInt(DEBRIS_DISK_PARAMETERS.aerostatMinimum);
+const DEBRIS_DISK_COLONY_RESOURCE_MINIMUM = DEBRIS_DISK_PARAMETERS.colonyResourceMinimum;
 const DEBRIS_DISK_SPACESHIP_MINING_SOURCE = 'Spaceship Mining';
-const DEBRIS_DISK_DEFAULT_KESSLER_REGENERATION_RATE_PER_BIN_PER_SECOND = 0.001;
+const DEBRIS_DISK_DEFAULT_KESSLER_REGENERATION_RATE_PER_BIN_PER_SECOND = DEBRIS_DISK_PARAMETERS.defaultKesslerRegenerationRatePerBinPerSecond;
 
 function normalizeDebrisDiskParameters(parameters = {}) {
   const attritionRate = Number.isFinite(parameters.attritionRatePerSecond)
     ? Math.max(0, parameters.attritionRatePerSecond)
-    : 0.01;
+    : DEBRIS_DISK_PARAMETERS.attritionRatePerSecond;
   const colonistGrowthPenalty = Number.isFinite(parameters.colonistGrowthPenalty)
     ? Math.max(0, Math.min(1, parameters.colonistGrowthPenalty))
-    : 0.9;
+    : DEBRIS_DISK_PARAMETERS.colonistGrowthPenalty;
   const debrisPerLand = Number.isFinite(parameters.debrisPerLand)
     ? Math.max(0, parameters.debrisPerLand)
-    : 1e10;
+    : DEBRIS_DISK_PARAMETERS.debrisPerLand;
   const initialDebrisTons = Number.isFinite(parameters.initialDebrisTons)
     ? Math.max(0, parameters.initialDebrisTons)
-    : 0;
+    : DEBRIS_DISK_PARAMETERS.initialDebrisTons;
   const kesslerRegenerationRatePerBinPerSecond = Number.isFinite(parameters.kesslerRegenerationRatePerBinPerSecond)
     ? Math.max(0, parameters.kesslerRegenerationRatePerBinPerSecond)
     : DEBRIS_DISK_DEFAULT_KESSLER_REGENERATION_RATE_PER_BIN_PER_SECOND;

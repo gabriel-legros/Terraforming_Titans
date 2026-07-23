@@ -15,6 +15,7 @@ const SUPPORTED_PATCH_TARGETS = new Set([
   'parameters.projects',
   'parameters.research',
   'parameters.skills',
+  'parameters.terraforming',
   'parameters.terraformingRequirements'
 ]);
 const ALLOWED_REPLACEMENT_ROOTS = ['src/js/', 'src/css/', 'assets/'];

@@ -75,10 +75,14 @@ function normalizeInvasivenessPreference(source) {
     return normalizeHazardRangeEntry(source.invasivenessPreference);
   }
 
-  const legacy = withHazardSeverity(source.invasivenessDecay ?? { value: 30, severity: 0 }, 0);
+  const defaults = terraformingParameters.hazards.hazardousMachinery;
+  const legacy = withHazardSeverity(
+    source.invasivenessDecay ?? { value: defaults.legacyInvasivenessMaximum, severity: 0 },
+    0
+  );
   return normalizeHazardRangeEntry({
     min: 0,
-    max: Number.isFinite(legacy.value) ? legacy.value : 30,
+    max: Number.isFinite(legacy.value) ? legacy.value : defaults.legacyInvasivenessMaximum,
     severityHigh: Number.isFinite(legacy.severity) ? legacy.severity : 0
   });
 }
@@ -88,8 +92,11 @@ function normalizeTemperaturePreference(source) {
     return normalizeHazardRangeEntry(source.temperaturePreference, 'C');
   }
 
+  const defaults = terraformingParameters.hazards.hazardousMachinery;
   return normalizeHazardRangeEntry({
-    max: Number.isFinite(source.temperatureDecayThresholdC) ? source.temperatureDecayThresholdC : 500,
+    max: Number.isFinite(source.temperatureDecayThresholdC)
+      ? source.temperatureDecayThresholdC
+      : defaults.legacyTemperatureMaximumC,
     unit: 'C',
     severityHigh: Math.max(0, source.temperatureDecayCoefficient ?? 0)
   }, 'C');
@@ -134,7 +141,11 @@ function normalizeOxygenPreference(source) {
   }
 
   const pressurePerTonKPa = getCurrentPlanetPressurePerTonKPa();
-  const legacySeverity = Math.max(0, source.oxygenDecayCoefficient ?? 1e-24);
+  const legacySeverity = Math.max(
+    0,
+    source.oxygenDecayCoefficient
+      ?? terraformingParameters.hazards.hazardousMachinery.legacyOxygenDecayCoefficient
+  );
   return normalizeHazardRangeEntry({
     max: 0,
     unit: 'kPa',
@@ -176,24 +187,26 @@ function interpolateDivisorMultiplier(minMultiplier, hazardStrength) {
 function normalizeHazardousMachineryParameters(parameters = {}) {
   const source = isPlainObject(parameters) ? parameters : {};
   const penalties = isPlainObject(source.penalties) ? source.penalties : {};
+  const defaults = terraformingParameters.hazards.hazardousMachinery;
+  const penaltyDefaults = defaults.penalties;
   return {
-    initialCoverage: clampRatio(source.initialCoverage ?? 1),
-    maxCoverageBase: clampRatio(source.maxCoverageBase ?? 1),
+    initialCoverage: clampRatio(source.initialCoverage ?? defaults.initialCoverage),
+    maxCoverageBase: clampRatio(source.maxCoverageBase ?? defaults.maximumCoverageBase),
     targetCoverage: Number.isFinite(source.targetCoverage) ? clampRatio(source.targetCoverage) : null,
-    waterCoveragePenalty: Math.max(0, source.waterCoveragePenalty ?? 0.5),
+    waterCoveragePenalty: Math.max(0, source.waterCoveragePenalty ?? defaults.waterCoveragePenalty),
     baseGrowth: normalizeBaseGrowthEntry(source.baseGrowth),
     invasivenessPreference: normalizeInvasivenessPreference(source),
     oxygenPreference: normalizeOxygenPreference(source),
     temperaturePreference: normalizeTemperaturePreference(source),
-    crusaderRemovalPerSecond: Math.max(0, source.crusaderRemovalPerSecond ?? 0.5),
-    researchToDisableCost: Math.max(1, source.researchToDisableCost ?? 10000),
+    crusaderRemovalPerSecond: Math.max(0, source.crusaderRemovalPerSecond ?? defaults.crusaderRemovalPerSecond),
+    researchToDisableCost: Math.max(1, source.researchToDisableCost ?? defaults.researchToDisableCost),
     penalties: {
-      availableAndroidDecayRate: Math.max(0, penalties.availableAndroidDecayRate ?? 0.05),
-      nanoColonyGrowthMultiplier: Math.max(0, penalties.nanoColonyGrowthMultiplier ?? 0),
-      researchMultiplier: Math.max(0, penalties.researchMultiplier ?? 0.1),
-      buildCostMultiplier: Math.max(1, penalties.buildCostMultiplier ?? 1),
-      electronicsMaintenanceMultiplier: Math.max(1, penalties.electronicsMaintenanceMultiplier ?? 100),
-      shipWorkersPerAssignedShip: Math.max(0, penalties.shipWorkersPerAssignedShip ?? 5)
+      availableAndroidDecayRate: Math.max(0, penalties.availableAndroidDecayRate ?? penaltyDefaults.availableAndroidDecayRate),
+      nanoColonyGrowthMultiplier: Math.max(0, penalties.nanoColonyGrowthMultiplier ?? penaltyDefaults.nanoColonyGrowthMultiplier),
+      researchMultiplier: Math.max(0, penalties.researchMultiplier ?? penaltyDefaults.researchMultiplier),
+      buildCostMultiplier: Math.max(1, penalties.buildCostMultiplier ?? penaltyDefaults.buildCostMultiplier),
+      electronicsMaintenanceMultiplier: Math.max(1, penalties.electronicsMaintenanceMultiplier ?? penaltyDefaults.electronicsMaintenanceMultiplier),
+      shipWorkersPerAssignedShip: Math.max(0, penalties.shipWorkersPerAssignedShip ?? penaltyDefaults.shipWorkersPerAssignedShip)
     }
   };
 }

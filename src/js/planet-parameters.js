@@ -124,14 +124,7 @@ const defaultPlanetParameters = {
     starLuminosity: 1, // Multiplier relative to Sol
     coreHeatFlux: 0, // W/m^2, added directly to the surface energy budget
     greenhouseModel: {
-      attenuationStartK: 360,
-      attenuationScaleK: 100,
-      attenuationExponent: 5,
-      minTauFraction: 0.01,
-      coldTauCap: 5000,
-      hotTauCap: 20,
-      tauCapTransitionK: 300,
-      tauCapExponent: 4
+      ...terraformingParameters.climate.defaultPlanetGreenhouseTemperatureModel
     },
     sector: 'R5-07',
   },

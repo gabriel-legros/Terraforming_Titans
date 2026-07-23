@@ -59,11 +59,12 @@
   const isNode = (typeof module !== 'undefined' && module.exports);
 
   // ---------- Constants ----------
-  const R_UNIVERSAL = 8.314462618;          // J/(mol*K)
-  const AVOGADRO = 6.02214076e23;           // 1/mol
-  const BOLTZMANN = 1.380649e-23;           // J/K
-  const SOLAR_FLUX_EARTH = 1361;            // W/m^2
-  const DEFAULT_COLLISION_SIGMA_M2 = 2e-19; // m^2 (order-of-magnitude molecular collision cross-section)
+  const ATMOSPHERIC_DENSITY_PARAMETERS = terraformingParameters.atmosphere.densityModel;
+  const R_UNIVERSAL = terraformingParameters.physical.universalGasConstant;
+  const AVOGADRO = terraformingParameters.physical.avogadroConstant;
+  const BOLTZMANN = terraformingParameters.physical.boltzmannConstant;
+  const SOLAR_FLUX_EARTH = terraformingParameters.physical.solarFluxAtEarthWm2;
+  const DEFAULT_COLLISION_SIGMA_M2 = ATMOSPHERIC_DENSITY_PARAMETERS.collisionCrossSectionM2;
 
   // ---------- Small helpers ----------
   function clamp(x, min, max) {
@@ -95,22 +96,10 @@
   }
 
   // ---------- Atmospheric composition / molar mass ----------
-  const MOLECULAR_WEIGHT_G_PER_MOL = {
-    carbonDioxide: 44.0095,
-    oxygen: 31.998,
-    inertGas: 28.014,            // treated as N2
-    atmosphericWater: 18.01528,
-    atmosphericMethane: 16.043,
-    atmosphericAmmonia: 17.031,
-    hydrogen: 2.016,
-    greenhouseGas: 146.06,       // SF6 (your “safe GHG”)
-    sulfuricAcid: 98.079,
-    calciteAerosol: 100.0869,
-    vanadiumAerosol: 181.88
-  };
+  const MOLECULAR_WEIGHT_G_PER_MOL = terraformingParameters.atmosphere.densityMolecularWeightGPerMol;
 
   // Heavy / aerosol / trace species that should not control upper-atmosphere scale height.
-  const HEAVY_TRACE_KEYS = ['greenhouseGas', 'sulfuricAcid', 'calciteAerosol', 'vanadiumAerosol'];
+  const HEAVY_TRACE_KEYS = ATMOSPHERIC_DENSITY_PARAMETERS.heavyTraceKeys;
 
   function getAtmosphericMassBreakdownTons(atmosphericResources) {
     const byKey = {};
@@ -348,8 +337,15 @@
   }
 
   function applyWaterCondensationPenalty(surfacePressurePa, surfaceTemperatureK, atmosphericResources, surfacePressureSource, options = {}) {
-    const enableWaterCondensation = (options.enableWaterCondensation !== false);
-    const relativeHumidity = clamp(isFiniteNumber(options.relativeHumidity) ? options.relativeHumidity : 0.7, 0, 1);
+    const enableWaterCondensation = options.enableWaterCondensation
+      ?? ATMOSPHERIC_DENSITY_PARAMETERS.enableWaterCondensation;
+    const relativeHumidity = clamp(
+      isFiniteNumber(options.relativeHumidity)
+        ? options.relativeHumidity
+        : ATMOSPHERIC_DENSITY_PARAMETERS.relativeHumidity,
+      0,
+      1
+    );
 
     if (!(enableWaterCondensation && surfacePressurePa > 0 && surfaceTemperatureK > 0)) {
       return {
@@ -387,7 +383,8 @@
     const excess = Math.max(0, pH2O_raw0 - pH2O0);
 
     const adjustOpt = options.adjustSurfacePressureForWaterCondensation;
-    const shouldAdjust = (adjustOpt !== false);
+    const shouldAdjust = adjustOpt
+      ?? ATMOSPHERIC_DENSITY_PARAMETERS.adjustSurfacePressureForWaterCondensation;
     const adjustedSurfacePressurePa = shouldAdjust ? Math.max(0, surfacePressurePa - excess) : surfacePressurePa;
 
     return {
@@ -407,7 +404,9 @@
   function estimateColdPointTemperatureK(surfaceTemperatureK, co2MassFraction, surfacePressurePa) {
     const pBar = surfacePressurePa / 1e5;
 
-    let T = 160 + 0.18 * (surfaceTemperatureK - 200);
+    let T = ATMOSPHERIC_DENSITY_PARAMETERS.thermosphereBaseTemperatureK
+      + ATMOSPHERIC_DENSITY_PARAMETERS.thermosphereSurfaceTemperatureCoefficient
+      * (surfaceTemperatureK - ATMOSPHERIC_DENSITY_PARAMETERS.thermosphereReferenceSurfaceTemperatureK);
     const co2 = clamp(co2MassFraction, 0, 1);
     const cool = 1 + 0.35 * co2 * safeLog10(1 + pBar);
     T = T / cool;
@@ -504,7 +503,7 @@
 
       this._altitudeCacheStepMeters = isFiniteNumber(options.altitudeCacheStepMeters)
         ? Math.max(1, options.altitudeCacheStepMeters)
-        : 1000;
+        : ATMOSPHERIC_DENSITY_PARAMETERS.altitudeCacheStepMeters;
 
       this._altitudeCache = new Map();
 
@@ -533,13 +532,21 @@
         atmosphericWaterMassKg
       } = this._inputs;
 
-      const enableEscapeTail = (this._options.enableEscapeTail !== false);
-      const jeansLambdaTarget = isFiniteNumber(this._options.jeansLambdaTarget) ? this._options.jeansLambdaTarget : 30;
-      const minEscapeScaleFactor = isFiniteNumber(this._options.minEscapeScaleFactor) ? this._options.minEscapeScaleFactor : 0.02;
+      const enableEscapeTail = this._options.enableEscapeTail
+        ?? ATMOSPHERIC_DENSITY_PARAMETERS.enableEscapeTail;
+      const jeansLambdaTarget = isFiniteNumber(this._options.jeansLambdaTarget)
+        ? this._options.jeansLambdaTarget
+        : ATMOSPHERIC_DENSITY_PARAMETERS.jeansLambdaTarget;
+      const minEscapeScaleFactor = isFiniteNumber(this._options.minEscapeScaleFactor)
+        ? this._options.minEscapeScaleFactor
+        : ATMOSPHERIC_DENSITY_PARAMETERS.minimumEscapeScaleFactor;
 
-      const enableWaterCondensation = (this._options.enableWaterCondensation !== false);
+      const enableWaterCondensation = this._options.enableWaterCondensation
+        ?? ATMOSPHERIC_DENSITY_PARAMETERS.enableWaterCondensation;
       const coldTrapRelativeHumidity = clamp(
-        isFiniteNumber(this._options.coldTrapRelativeHumidity) ? this._options.coldTrapRelativeHumidity : 0.1,
+        isFiniteNumber(this._options.coldTrapRelativeHumidity)
+          ? this._options.coldTrapRelativeHumidity
+          : ATMOSPHERIC_DENSITY_PARAMETERS.coldTrapRelativeHumidity,
         0,
         1
       );
@@ -896,15 +903,17 @@
     const ch4Key = Math.round((inputs.massFractions?.ch4 || 0) * 1000) / 1000;
     const sf6Key = Math.round(((inputs.massFractionsBulk?.sf6 ?? inputs.massFractions?.sf6) || 0) * 1000) / 1000;
 
-    const escapeKey = (options.enableEscapeTail !== false) ? 1 : 0;
-    const jlKey = Math.round((options.jeansLambdaTarget ?? 30) * 100) / 100;
-    const mefKey = Math.round((options.minEscapeScaleFactor ?? 0.02) * 1000) / 1000;
-    const waterKey = (options.enableWaterCondensation === false) ? 0 : 1;
-    const rhKey = Math.round((isFiniteNumber(options.relativeHumidity) ? options.relativeHumidity : 0.7) * 100) / 100;
-    const rhColdKey = Math.round((isFiniteNumber(options.coldTrapRelativeHumidity) ? options.coldTrapRelativeHumidity : 0.1) * 100) / 100;
+    const escapeKey = (options.enableEscapeTail ?? ATMOSPHERIC_DENSITY_PARAMETERS.enableEscapeTail) ? 1 : 0;
+    const jlKey = Math.round((options.jeansLambdaTarget ?? ATMOSPHERIC_DENSITY_PARAMETERS.jeansLambdaTarget) * 100) / 100;
+    const mefKey = Math.round((options.minEscapeScaleFactor ?? ATMOSPHERIC_DENSITY_PARAMETERS.minimumEscapeScaleFactor) * 1000) / 1000;
+    const waterKey = (options.enableWaterCondensation ?? ATMOSPHERIC_DENSITY_PARAMETERS.enableWaterCondensation) ? 1 : 0;
+    const rhKey = Math.round((isFiniteNumber(options.relativeHumidity) ? options.relativeHumidity : ATMOSPHERIC_DENSITY_PARAMETERS.relativeHumidity) * 100) / 100;
+    const rhColdKey = Math.round((isFiniteNumber(options.coldTrapRelativeHumidity) ? options.coldTrapRelativeHumidity : ATMOSPHERIC_DENSITY_PARAMETERS.coldTrapRelativeHumidity) * 100) / 100;
     const adjustKey = (options.adjustSurfacePressureForWaterCondensation === true)
       ? 2
-      : (options.adjustSurfacePressureForWaterCondensation === false) ? 0 : 1;
+      : (options.adjustSurfacePressureForWaterCondensation === false)
+        ? 0
+        : (ATMOSPHERIC_DENSITY_PARAMETERS.adjustSurfacePressureForWaterCondensation ? 1 : 0);
     const h2oPKey = Math.round((inputs.waterCondensation?.pH2O_capped0Pa || 0));
 
     return `${pKey}|${tKey}|${mwKey}|${mwHydKey}|${sKey}|${gKey}|${rKey}|${mKey}|${co2Key}|${ch4Key}|${sf6Key}|${escapeKey}|${jlKey}|${mefKey}|${waterKey}|${rhKey}|${rhColdKey}|${adjustKey}|${h2oPKey}`;

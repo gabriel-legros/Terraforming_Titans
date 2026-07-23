@@ -1,8 +1,9 @@
-const GRAVITY_LINEAR_THRESHOLD = 10;
-const GRAVITY_EXPONENTIAL_THRESHOLD = 20;
-const GRAVITY_LINEAR_RATE = 0.1;
-const GRAVITY_EXPONENTIAL_INTERVAL = 10;
-const GRAVITY_COST_MULTIPLIER_CAP = 1e12;
+const GRAVITY_PENALTY_PARAMETERS = terraformingParameters.gameplay.gravityPenalty;
+const GRAVITY_LINEAR_THRESHOLD = GRAVITY_PENALTY_PARAMETERS.linearThresholdMS2;
+const GRAVITY_EXPONENTIAL_THRESHOLD = GRAVITY_PENALTY_PARAMETERS.exponentialThresholdMS2;
+const GRAVITY_LINEAR_RATE = GRAVITY_PENALTY_PARAMETERS.linearRatePerMS2;
+const GRAVITY_EXPONENTIAL_INTERVAL = GRAVITY_PENALTY_PARAMETERS.exponentialDoublingIntervalMS2;
+const GRAVITY_COST_MULTIPLIER_CAP = GRAVITY_PENALTY_PARAMETERS.maximumCostMultiplier;
 
 function createNoGravityPenalty() {
   return { multiplier: 1, linearIncrease: 0, exponentialIncrease: 0 };
@@ -51,8 +52,8 @@ function calculateGravityCostPenalty(input) {
     : calculatePenaltyComponents(equatorialGravity);
 
   // Assume full land development: 25% equatorial + 75% full surface.
-  const equatorialWeight = 0.25;
-  const surfaceWeight = 0.75;
+  const equatorialWeight = GRAVITY_PENALTY_PARAMETERS.equatorialWeight;
+  const surfaceWeight = GRAVITY_PENALTY_PARAMETERS.surfaceWeight;
 
   const linearIncrease =
     equatorialPenalty.linearIncrease * equatorialWeight +

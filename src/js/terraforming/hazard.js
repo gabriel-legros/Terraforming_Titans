@@ -173,10 +173,12 @@ function migrateSavedHazardParameters(baseParameters, savedParameters) {
     savedDebrisDisk.kesslerRegenerationRatePerBinPerSecond === 0.01 &&
     (
       !Number.isFinite(baseDebrisDisk.kesslerRegenerationRatePerBinPerSecond) ||
-      baseDebrisDisk.kesslerRegenerationRatePerBinPerSecond === 0.001
+      baseDebrisDisk.kesslerRegenerationRatePerBinPerSecond
+        === terraformingParameters.hazards.debrisDisk.defaultKesslerRegenerationRatePerBinPerSecond
     )
   ) {
-    savedDebrisDisk.kesslerRegenerationRatePerBinPerSecond = 0.001;
+    savedDebrisDisk.kesslerRegenerationRatePerBinPerSecond
+      = terraformingParameters.hazards.debrisDisk.defaultKesslerRegenerationRatePerBinPerSecond;
   }
 
   return migrated;

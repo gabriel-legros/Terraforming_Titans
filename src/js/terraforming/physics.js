@@ -5,52 +5,60 @@
    - Removes cloudAndHazeProps() and replaces with cloudPropsOnly()
 */
 
-const R_AIR = 287;
-const KG_PER_TON = 1000;
-const WATER_DENSITY = 1000; // kg/m³
-const WATER_VOLUMETRIC_HEAT_CAPACITY = 4.2e6; // J/m³/K
+const PHYSICS_PARAMETERS = terraformingParameters;
+const PHYSICS_CLIMATE_PARAMETERS = PHYSICS_PARAMETERS.climate;
+const PHYSICS_ALBEDO_PARAMETERS = PHYSICS_CLIMATE_PARAMETERS.albedo;
+const PHYSICS_GREENHOUSE_PARAMETERS = PHYSICS_CLIMATE_PARAMETERS.greenhouse;
+const PHYSICS_HYDROGEN_COMPRESSION_PARAMETERS = PHYSICS_PARAMETERS.geometry.liquidHydrogenCompression;
+const R_AIR = PHYSICS_PARAMETERS.physical.dryAirSpecificGasConstant;
+const KG_PER_TON = PHYSICS_PARAMETERS.physical.kgPerTon;
+const WATER_DENSITY = PHYSICS_CLIMATE_PARAMETERS.ocean.waterDensityKgM3;
+const WATER_VOLUMETRIC_HEAT_CAPACITY = PHYSICS_CLIMATE_PARAMETERS.ocean.waterVolumetricHeatCapacityJPerM3K;
 const EMPTY_LIQUID_CONFIGS = [];
-const DEFAULT_OCEAN_MIX_DEPTH = 50.0; // m
-const PHYSICS_LIQUID_HYDROGEN_BASE_DENSITY = 71;
-const PHYSICS_LIQUID_HYDROGEN_MAX_EFFECTIVE_DENSITY = 1200;
-const PHYSICS_LIQUID_HYDROGEN_COMPRESSION_REFERENCE_MASS_KG = 1.2e27;
-const PHYSICS_LIQUID_HYDROGEN_COMPRESSION_START_LOG10_KG = 20;
-const PHYSICS_LIQUID_HYDROGEN_COMPRESSION_EXPONENT = 1.6;
+const DEFAULT_OCEAN_MIX_DEPTH = PHYSICS_CLIMATE_PARAMETERS.ocean.defaultMixDepthMeters;
+const PHYSICS_LIQUID_HYDROGEN_BASE_DENSITY = PHYSICS_HYDROGEN_COMPRESSION_PARAMETERS.baseDensityKgM3;
+const PHYSICS_LIQUID_HYDROGEN_MAX_EFFECTIVE_DENSITY = PHYSICS_HYDROGEN_COMPRESSION_PARAMETERS.maximumDensityKgM3;
+const PHYSICS_LIQUID_HYDROGEN_COMPRESSION_REFERENCE_MASS_KG = PHYSICS_HYDROGEN_COMPRESSION_PARAMETERS.referenceMassKg;
+const PHYSICS_LIQUID_HYDROGEN_COMPRESSION_START_LOG10_KG = PHYSICS_HYDROGEN_COMPRESSION_PARAMETERS.startLog10MassKg;
+const PHYSICS_LIQUID_HYDROGEN_COMPRESSION_EXPONENT = PHYSICS_HYDROGEN_COMPRESSION_PARAMETERS.exponent;
 const GREENHOUSE_TEMPERATURE_MODEL_DEFAULTS = {
-  attenuationStartK: 360,
-  attenuationScaleK: 100,
-  attenuationExponent: 2,
-  minTauFraction: 0.01,
-  coldTauCap: 5000,
-  hotTauCap: 20,
-  tauCapTransitionK: 300,
-  tauCapExponent: 4
+  attenuationStartK: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.attenuationStartK,
+  attenuationScaleK: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.attenuationScaleK,
+  attenuationExponent: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.attenuationExponent,
+  minTauFraction: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.minimumTauFraction,
+  coldTauCap: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.coldTauCap,
+  hotTauCap: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.hotTauCap,
+  tauCapTransitionK: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.tauCapTransitionK,
+  tauCapExponent: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.tauCapExponent
 };
 
 // ===== Tunables (safe defaults) ======================================
 // Cap Bond albedo at a realistic maximum (prevents A -> 1)
-const MAX_BOND_ALBEDO = 0.9;
+const MAX_BOND_ALBEDO = PHYSICS_ALBEDO_PARAMETERS.maximumBondAlbedo;
 // Above this threshold, additional brightening has diminishing returns
-const ALBEDO_SOFTCAP_THRESHOLD = 0.8;
+const ALBEDO_SOFTCAP_THRESHOLD = PHYSICS_ALBEDO_PARAMETERS.softcapThreshold;
 // Higher K => stronger diminishing returns near the cap
-const ALBEDO_SOFTCAP_K = 2.0;
-const A_HAZE_CH4_MAX  = 0.25; // calibrated so τ_CH4≈0.907 lifts A_surf=0.19 → ≈0.250 with small clouds
-const K_CH4_ALB       = 0.2;     // how quickly CH4 haze brightening saturates
+const ALBEDO_SOFTCAP_K = PHYSICS_ALBEDO_PARAMETERS.softcapStrength;
+const A_HAZE_CH4_MAX = PHYSICS_ALBEDO_PARAMETERS.methaneHazeMaximum;
+const K_CH4_ALB = PHYSICS_ALBEDO_PARAMETERS.methaneHazeSaturation;
 
-const A_CALCITE_HEADROOM_MAX = 0.2; // calcite is a bright aerosol veil, not a full cloud deck
-const K_CALCITE_ALB  = 0.0001;          // saturates near τ_eff ≈ 1
-const CO2_HIGH_COLUMN_FACTOR = 1; // trims Venus-class CO2 slightly without materially changing Mars
+const A_CALCITE_HEADROOM_MAX = PHYSICS_ALBEDO_PARAMETERS.calciteHeadroomMaximum;
+const K_CALCITE_ALB = PHYSICS_ALBEDO_PARAMETERS.calciteSaturation;
+const CO2_HIGH_COLUMN_FACTOR = PHYSICS_ALBEDO_PARAMETERS.carbonDioxideHighColumnFactor;
 const OPTICS = {
-  calcite: { omega0: 0.90, g: 0.70 } // bright & moderately forward-scattering
+  calcite: {
+    omega0: PHYSICS_ALBEDO_PARAMETERS.calciteOptics.singleScatteringAlbedo,
+    g: PHYSICS_ALBEDO_PARAMETERS.calciteOptics.asymmetry
+  }
 };
 
 // ---------- Shortwave (visible) optical depth ----------
-const K_CH4_SW        = 2.0;     // haze build-up rate vs methane column
-const MU_CH4_SAT      = 4.0;     // kg/m²: methane column where haze nearly saturates
-const EPS_EXT_CALCITE = 1500;    // m²/kg: calcite mass-extinction (tunable)
+const K_CH4_SW = PHYSICS_ALBEDO_PARAMETERS.methaneShortwaveRate;
+const MU_CH4_SAT = PHYSICS_ALBEDO_PARAMETERS.methaneSaturationColumnKgM2;
+const EPS_EXT_CALCITE = PHYSICS_ALBEDO_PARAMETERS.calciteMassExtinctionM2Kg;
 
 // Haze coverage saturator (diagnostic only)
-const K_HAZE_COVERAGE = 5.5; // larger → coverage approaches 1 faster vs τ
+const K_HAZE_COVERAGE = PHYSICS_ALBEDO_PARAMETERS.hazeCoverageRate;
 
 // Effective τ to reflect scattering usefulness (optional but helpful)
 function tauEff(tau, {omega0, g}) {
@@ -217,33 +225,33 @@ function airDensity(atmPressure, T) {
 }
 
 function calculateDayNightTemperatureVariation(temperature, columnMass){
-  if(columnMass < 1){
-    return temperature/0.75;
+  const variationParameters = PHYSICS_CLIMATE_PARAMETERS.dayNightVariation;
+  if(columnMass < variationParameters.minimumColumnMassKgM2){
+    return temperature / variationParameters.baseDivisor;
   } else {
-    return temperature/(0.75 + 0.255*Math.pow(Math.log10(columnMass), 2.91));
+    return temperature / (
+      variationParameters.baseDivisor
+      + variationParameters.columnMassCoefficient
+      * Math.pow(Math.log10(columnMass), variationParameters.columnMassExponent)
+    );
   }
 }
 
 // ───────────────────────────────────────────────────────────
 // Improved weather model derived from planet_temp_model.py
 // ───────────────────────────────────────────────────────────
-const SIGMA = 5.670374419e-8;
+const SIGMA = PHYSICS_PARAMETERS.physical.stefanBoltzmannConstant;
 
 // ─── Existing IR greenhouse parameters ─────────────────────────────
-const COLUMN_MASS_REF = 5.0e4;   // μ0 in kg/m² (reference column for scaling)
-const BETA  = 0.55;              // was 0.6 in old pressure law
+const COLUMN_MASS_REF = PHYSICS_GREENHOUSE_PARAMETERS.referenceColumnMassKgM2;
+const BETA = PHYSICS_GREENHOUSE_PARAMETERS.pressureExponent;
 
 // Keep original strengths EXCEPT water (we tune only H2O)
-const GAMMA = {
-  h2o           : 28,
-  co2           : 10.0,
-  ch4           : 22.0,
-  greenhousegas : 2500.0
-};
+const GAMMA = PHYSICS_GREENHOUSE_PARAMETERS.strength;
 
 // Saturation only for CH4 (and H2SO4 if you like)
-const MU_SAT = { ch4: 3}; // kg/m²
-const SAT_EXP = { ch4: 1.0};    // exponent n_i
+const MU_SAT = PHYSICS_GREENHOUSE_PARAMETERS.saturationColumnKgM2;
+const SAT_EXP = PHYSICS_GREENHOUSE_PARAMETERS.saturationExponent;
 
 /*  Cloud spec kept for cloud appearance only (no haze here)
     refMix  – mixing ratio (mass fraction) that saturates availability (=1)
@@ -254,29 +262,9 @@ const SAT_EXP = { ch4: 1.0};    // exponent n_i
     fractionExponent – lets thin clouds spread in coverage before they become a bright global deck
     layerMax – max effective planetary reflectivity from this cloud species
     coverageExponent – curve for approaching layerMax as coverage saturates */
-const CLOUD_SPEC = {
-  h2o  : { refMix: 0.007, cfMax: 0.99, pScale: 0.6, aBase: 0.69, aVar: 0.03, fractionExponent: 0.5, layerMax: 0.76, coverageExponent: 1.6 },
-  ch4  : { refMix: 0.02, cfMax: 0.14, pScale: 2.5, aBase: 0.58, aVar: 0.08, layerMax: 0.10, coverageExponent: 1.2 },
-  h2so4: { refMix: 1e-4, cfMax: 0.99, pScale: 11.0, aBase: 0.71, aVar: 0.03, fractionExponent: 0.5, layerMax: 0.76, coverageExponent: 1.6 }
-};
+const CLOUD_SPEC = PHYSICS_CLIMATE_PARAMETERS.cloudSpecies;
 
-const DEFAULT_SURFACE_ALBEDO = {
-  ocean: 0.06,
-  ice: 0.65,
-  snow: 0.85,
-  co2_ice: 0.50,
-  hydrocarbon: 0.10,
-  hydrocarbonIce :0.50,
-  hydrogen: 0.08,
-  ammonia: 0.12,
-  ammoniaIce: 0.70,
-  oxygen: 0.15,
-  oxygenIce: 0.80,
-  nitrogen: 0.12,
-  nitrogenIce: 0.80,
-  fineSand: 0.45,
-  biomass: 0.20
-};
+const DEFAULT_SURFACE_ALBEDO = PHYSICS_CLIMATE_PARAMETERS.surfaceAlbedo;
 
 function getEffectiveLiquidDensity(config, liquidTon) {
   if (config?.key === 'liquidHydrogen') {

@@ -16,7 +16,7 @@ function sphericalSegmentArea(phi1, phi2) {
     const y2 = Math.sin(phi2);
   
     // Using numerical integration for the disk area
-    function integrateDiskSegment(y1, y2, numSteps = 1000) {
+    function integrateDiskSegment(y1, y2, numSteps = terraformingParameters.gameplay.zones.diskIntegrationSteps) {
         const stepSize = (y2 - y1) / numSteps;
         let area = 0;
         for (let i = 0; i < numSteps; i++) {
@@ -35,8 +35,8 @@ function sphericalSegmentArea(phi1, phi2) {
   }
   
   // Latitudes in degrees for different regions
-  const tropicalLatitude = 23.5;
-  const polarLatitude = 66.5;
+  const tropicalLatitude = terraformingParameters.gameplay.zones.tropicalBoundaryLatitudeDegrees;
+  const polarLatitude = terraformingParameters.gameplay.zones.polarBoundaryLatitudeDegrees;
   
   // Convert latitudes to radians
   const phiTropic = degreesToRadians(tropicalLatitude);
@@ -175,15 +175,14 @@ function sphericalSegmentArea(phi1, phi2) {
  *   with A = 50 · R0 and R0 ≈ 0.00292658,
  * giving a C¹-smooth curve that passes through (0,0) and (1,1).
  */
-function estimateCoverage(amount, zoneArea, scale = 0.0001) {
+function estimateCoverage(amount, zoneArea, scale = terraformingParameters.gameplay.coverage.defaultScale) {
   const resourceRatio = (scale * amount) / zoneArea;
 
-  // ---- curve parameters for slope 50 ----
-  const R0           = 0.002926577381;    // breakpoint (solves 50·R0·(1-ln R0)=1)
-  const LINEAR_SLOPE = 50;                // m
+  const coverageParameters = terraformingParameters.gameplay.coverage;
+  const R0 = coverageParameters.curveBreakpoint;
+  const LINEAR_SLOPE = coverageParameters.linearSlope;
   const LOG_A        = LINEAR_SLOPE * R0; // ≈ 0.146328864
-  const LOG_B        = 1;                 // forces point (1,1)
-  // ---------------------------------------
+  const LOG_B = coverageParameters.logarithmicIntercept;
 
   let coverage;
   if (resourceRatio <= 0) {
@@ -201,12 +200,13 @@ function estimateCoverage(amount, zoneArea, scale = 0.0001) {
   return Math.max(0, Math.min(coverage, 1));
 }
 
-function estimateAmountForCoverage(coverage, zoneArea, scale = 0.0001) {
+function estimateAmountForCoverage(coverage, zoneArea, scale = terraformingParameters.gameplay.coverage.defaultScale) {
   const clampedCoverage = Math.max(0, Math.min(coverage, 1));
-  const R0           = 0.002926577381;
-  const LINEAR_SLOPE = 50;
+  const coverageParameters = terraformingParameters.gameplay.coverage;
+  const R0 = coverageParameters.curveBreakpoint;
+  const LINEAR_SLOPE = coverageParameters.linearSlope;
   const LOG_A        = LINEAR_SLOPE * R0;
-  const LOG_B        = 1;
+  const LOG_B = coverageParameters.logarithmicIntercept;
   const linearMax = LINEAR_SLOPE * R0;
 
   let resourceRatio;

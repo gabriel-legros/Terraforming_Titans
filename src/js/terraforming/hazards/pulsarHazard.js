@@ -1,24 +1,29 @@
-const PULSAR_STORM_PERIOD_SECONDS = 100;
-const PULSAR_STORM_DEFAULT_DURATION_SECONDS = 5;
-const PULSAR_STORM_ANDROID_ATTRITION_RATE = 0.03;
-const PULSAR_STORM_ELECTRONICS_ATTRITION_RATE = 0.03;
-const PULSAR_STORM_NANOBOT_ATTRITION_RATE = 0.03;
+const PULSAR_PARAMETERS = terraformingParameters.hazards.pulsar;
+const PULSAR_STORM_PERIOD_SECONDS = PULSAR_PARAMETERS.stormPeriodSeconds;
+const PULSAR_STORM_DEFAULT_DURATION_SECONDS = PULSAR_PARAMETERS.stormDefaultDurationSeconds;
+const PULSAR_STORM_ANDROID_ATTRITION_RATE = PULSAR_PARAMETERS.androidAttritionRate;
+const PULSAR_STORM_ELECTRONICS_ATTRITION_RATE = PULSAR_PARAMETERS.electronicsAttritionRate;
+const PULSAR_STORM_NANOBOT_ATTRITION_RATE = PULSAR_PARAMETERS.nanobotAttritionRate;
 const PULSAR_STORM_EFFECT_LABEL = t('ui.terraforming.hazardEffects.electromagneticStorm', {}, 'Electromagnetic Storm');
 const PULSAR_RADIATION_EFFECT_ID = 'pulsar-hazard-radiation-dose';
 const PULSAR_RADIATION_EFFECT_SOURCE_ID = 'pulsar-hazard-radiation-dose';
 const PULSAR_MIRROR_LOCKOUT_SOURCE_ID = 'pulsar-hazard-mirror-lockout';
 const PULSAR_TRACTOR_BEAMS_SOURCE_ID = 'pulsar-hazard-tractor-beams';
-const PULSAR_STORM_SALVAGE_RESOURCES = { scrapMetal: true, junk: true };
+const PULSAR_STORM_SALVAGE_RESOURCES = PULSAR_PARAMETERS.stormSalvageResources;
 
 function normalizePulsarParameters(parameters = {}) {
-  const severity = Number.isFinite(parameters.severity) ? Math.max(0, parameters.severity) : 1;
+  const severity = Number.isFinite(parameters.severity)
+    ? Math.max(0, parameters.severity)
+    : PULSAR_PARAMETERS.defaultSeverity;
   const orbitalDoseBoost = Number.isFinite(parameters.orbitalDoseBoost_mSvPerDay)
     ? Math.max(0, parameters.orbitalDoseBoost_mSvPerDay)
     : (Number.isFinite(parameters.surfaceDoseBoost_mSvPerDay)
       ? Math.max(0, parameters.surfaceDoseBoost_mSvPerDay)
-      : 4900 * severity);
+      : PULSAR_PARAMETERS.orbitalDoseBoostMsvPerDay * severity);
   return {
-    pulsePeriodSeconds: Number.isFinite(parameters.pulsePeriodSeconds) ? Math.max(1, parameters.pulsePeriodSeconds) : 1.337,
+    pulsePeriodSeconds: Number.isFinite(parameters.pulsePeriodSeconds)
+      ? Math.max(1, parameters.pulsePeriodSeconds)
+      : PULSAR_PARAMETERS.pulsePeriodSeconds,
     stormIntervalSeconds: Number.isFinite(parameters.stormIntervalSeconds) && parameters.stormIntervalSeconds > 0
       ? parameters.stormIntervalSeconds
       : PULSAR_STORM_PERIOD_SECONDS,
@@ -29,7 +34,7 @@ function normalizePulsarParameters(parameters = {}) {
     orbitalDoseBoost_mSvPerDay: orbitalDoseBoost,
     clearAtDistanceAU: Number.isFinite(parameters.clearAtDistanceAU) && parameters.clearAtDistanceAU > 0
       ? parameters.clearAtDistanceAU
-      : 0,
+      : PULSAR_PARAMETERS.clearAtDistanceAu,
     description: parameters.description || t('ui.terraforming.hazardEffects.pulsarDefaultDescription', {}, 'Pulsar hazard detected. Extreme radiation floods the planet.')
   };
 }

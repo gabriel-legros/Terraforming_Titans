@@ -1,14 +1,15 @@
 // Constants for Methane
-const L_V_METHANE = 5.1e5; // Latent heat of vaporization for methane (J/kg)
-const L_S_METHANE = 5.87e5; // Latent heat of sublimation for methane (J/kg)
-const EVAP_ALBEDO_METHANE = 0.1; // Albedo of liquid methane for evaporation calculations
-const SUBLIMATION_ALBEDO_HC_ICE = 0.6; // Albedo of hydrocarbon ice for sublimation calculations
+const METHANE_PHASE_CHANGE_PARAMETERS = terraformingParameters.phaseChange.methane;
+const L_V_METHANE = METHANE_PHASE_CHANGE_PARAMETERS.latentHeatVaporizationJPerKg;
+const L_S_METHANE = METHANE_PHASE_CHANGE_PARAMETERS.latentHeatSublimationJPerKg;
+const EVAP_ALBEDO_METHANE = METHANE_PHASE_CHANGE_PARAMETERS.liquidAlbedo;
+const SUBLIMATION_ALBEDO_HC_ICE = METHANE_PHASE_CHANGE_PARAMETERS.solidAlbedo;
 
-const METHANE_T_TRIPLE = 90.694;          // K  (≈ 90.67 ± 0.03 K)
-const METHANE_P_TRIPLE = 0.11696e6;       // Pa (≈ 0.1169 ± 0.0006 bar)
-const METHANE_T_CRIT   = 190.564;         // K  (≈ 190.6 ± 0.3 K)
-const METHANE_P_CRIT   = 4.5992e6;        // Pa (≈ 46.1 ± 0.3 bar)
-var DEFAULT_EQUILIBRIUM_METHANE_CONDENSATION_PARAMETER = 0.0000541;
+const METHANE_T_TRIPLE = METHANE_PHASE_CHANGE_PARAMETERS.triplePointTemperatureK;
+const METHANE_P_TRIPLE = METHANE_PHASE_CHANGE_PARAMETERS.triplePointPressurePa;
+const METHANE_T_CRIT = METHANE_PHASE_CHANGE_PARAMETERS.criticalPointTemperatureK;
+const METHANE_P_CRIT = METHANE_PHASE_CHANGE_PARAMETERS.criticalPointPressurePa;
+var DEFAULT_EQUILIBRIUM_METHANE_CONDENSATION_PARAMETER = METHANE_PHASE_CHANGE_PARAMETERS.equilibriumCondensationParameter;
 
 const isNodeHydrocarbon = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
@@ -63,7 +64,7 @@ function psatMethaneSolid(T) {
 // Clausius-Clapeyron style ln(P) ~ A - B/T extrapolation matched to the Dykyj value
 // and slope at 48 K. This keeps Psat monotone decreasing and rapidly approaches 0
 // for very cold worlds.
-const METHANE_SOLID_CORR_TMIN = 48.0; // K
+const METHANE_SOLID_CORR_TMIN = METHANE_PHASE_CHANGE_PARAMETERS.solidCorrelationMinimumTemperatureK;
 function psatMethaneSolidLowT(T) {
   if (T >= METHANE_SOLID_CORR_TMIN) return psatMethaneSolid(T);
 

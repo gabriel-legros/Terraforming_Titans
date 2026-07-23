@@ -133,6 +133,8 @@ function getModPatchTarget(targetId) {
       return researchParameters;
     case 'parameters.skills':
       return skillParameters;
+    case 'parameters.terraforming':
+      return terraformingParameters;
     case 'parameters.terraformingRequirements':
       return terraformingRequirements;
   }

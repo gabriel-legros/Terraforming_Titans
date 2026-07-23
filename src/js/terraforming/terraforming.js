@@ -1,4 +1,9 @@
-const SOLAR_LUMINOSITY_W = 3.828e26; // Base solar luminosity (W)
+const TERRAFORMING_GAMEPLAY_PARAMETERS = terraformingParameters.gameplay;
+const TERRAFORMING_SOLAR_PARAMETERS = TERRAFORMING_GAMEPLAY_PARAMETERS.solar;
+const TERRAFORMING_TEMPERATURE_PARAMETERS = TERRAFORMING_GAMEPLAY_PARAMETERS.temperature;
+const TERRAFORMING_SURFACE_HEAT_PARAMETERS = TERRAFORMING_GAMEPLAY_PARAMETERS.surfaceHeat;
+const TERRAFORMING_SIMULATION_PARAMETERS = TERRAFORMING_GAMEPLAY_PARAMETERS.simulation;
+const SOLAR_LUMINOSITY_W = terraformingParameters.physical.solarLuminosityW;
 let starLuminosityMultiplier = 1; // Multiplier relative to Sol
 function setStarLuminosity(multiplier) {
   starLuminosityMultiplier = Number.isFinite(multiplier) ? multiplier : 1;
@@ -6,22 +11,20 @@ function setStarLuminosity(multiplier) {
 function getStarLuminosity() {
   return starLuminosityMultiplier;
 }
-const C_P_AIR = 1004; // J/kg·K
-const EPSILON = 0.622; // Molecular weight ratio
-const AU_METER = 149597870700;
-const SOLAR_RADIUS_AU = 0.00465047;
-const DISK_GRAZING_FLUX_FACTOR = 2 / (3 * Math.PI);
+const AU_METER = terraformingParameters.physical.astronomicalUnitMeters;
+const SOLAR_RADIUS_AU = terraformingParameters.physical.solarRadiusAu;
+const DISK_GRAZING_FLUX_FACTOR = TERRAFORMING_SOLAR_PARAMETERS.diskGrazingFluxFactor;
 
-const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
-const BACKGROUND_SOLAR_FLUX = 6e-6;
-const COMFORTABLE_TEMPERATURE_MIN = 288.15; // 15°C
-const COMFORTABLE_TEMPERATURE_MAX = 293.15; // 20°C
-const MAINTENANCE_PENALTY_THRESHOLD = 373.15; // 100°C
-const MAINTENANCE_PENALTY_EXPONENTIAL_THRESHOLD = 973.15; // 700°C
-const MAINTENANCE_PENALTY_LINEAR_RATE = 0.01;
-const MAINTENANCE_PENALTY_EXPONENTIAL_DOUBLING_INTERVAL = 100; // K
-const MAINTENANCE_PENALTY_MAX_MULTIPLIER = 1e9;
-const KPA_PER_ATM = 101.325;
+const SOLAR_PANEL_BASE_LUMINOSITY = TERRAFORMING_SOLAR_PARAMETERS.solarPanelBaseLuminosity;
+const BACKGROUND_SOLAR_FLUX = TERRAFORMING_SOLAR_PARAMETERS.backgroundSolarFluxWm2;
+const COMFORTABLE_TEMPERATURE_MIN = TERRAFORMING_TEMPERATURE_PARAMETERS.comfortableMinimumK;
+const COMFORTABLE_TEMPERATURE_MAX = TERRAFORMING_TEMPERATURE_PARAMETERS.comfortableMaximumK;
+const MAINTENANCE_PENALTY_THRESHOLD = TERRAFORMING_TEMPERATURE_PARAMETERS.maintenancePenaltyThresholdK;
+const MAINTENANCE_PENALTY_EXPONENTIAL_THRESHOLD = TERRAFORMING_TEMPERATURE_PARAMETERS.maintenancePenaltyExponentialThresholdK;
+const MAINTENANCE_PENALTY_LINEAR_RATE = TERRAFORMING_TEMPERATURE_PARAMETERS.maintenancePenaltyLinearRatePerK;
+const MAINTENANCE_PENALTY_EXPONENTIAL_DOUBLING_INTERVAL = TERRAFORMING_TEMPERATURE_PARAMETERS.maintenancePenaltyDoublingIntervalK;
+const MAINTENANCE_PENALTY_MAX_MULTIPLIER = TERRAFORMING_TEMPERATURE_PARAMETERS.maintenancePenaltyMaximumMultiplier;
+const KPA_PER_ATM = terraformingParameters.physical.paPerAtmosphere / 1000;
 var resourcePhaseGroups;
 let syncDynamicWorldGeometryHelper = null;
 if (typeof module !== 'undefined' && module.exports) {
@@ -265,12 +268,11 @@ function mergeExtraTerraformingRequirements(baseRequirements, extraRequirements)
   return merged;
 }
 
-const STEFAN_BOLTZMANN = 5.670374419e-8;
-const MIN_SURFACE_HEAT_CAPACITY = 100;
-const AUTO_SLAB_ATMOS_CP = 850;
-const MEGA_HEAT_SINK_POWER_W = 1_000_000_000_000_000;
-const TERRAFORMING_RESOURCE_SUBSTEP_MS = 10;
-const TERRAFORMING_RESOURCE_MAX_SUBSTEPS = 24;
+const STEFAN_BOLTZMANN = terraformingParameters.physical.stefanBoltzmannConstant;
+const MIN_SURFACE_HEAT_CAPACITY = TERRAFORMING_SURFACE_HEAT_PARAMETERS.minimumHeatCapacityJPerM2K;
+const MEGA_HEAT_SINK_POWER_W = TERRAFORMING_SURFACE_HEAT_PARAMETERS.megaHeatSinkPowerW;
+const TERRAFORMING_RESOURCE_SUBSTEP_MS = TERRAFORMING_SIMULATION_PARAMETERS.resourceSubstepMs;
+const TERRAFORMING_RESOURCE_MAX_SUBSTEPS = TERRAFORMING_SIMULATION_PARAMETERS.maximumResourceSubsteps;
 let surfaceLiquidHeatCapacityConfigs = [];
 
 // Load utility functions when running under Node for tests
@@ -1847,16 +1849,22 @@ class Terraforming extends EffectableEntity{
     // Column mass (kg/m²) — higher => stronger mixing
     const columnMass = effectiveSurfacePressurePa / Math.max(gSurface, 1e-6);
 
-    // Tunables (picked to match Earth/Mars/Titan/Venus qualitatively)
-    const MASS_REF = 1.03e4;  // ≈ Earth column mass at 1 bar
-    const K_MASS   = 0.115;   // sets how fast massBoost rises
-    const A_MASS   = 0.50;    // sqrt scaling: slows Titan saturation vs Venus
+    const mixingParameters = terraformingParameters.climate.meridionalMixing;
+    const MASS_REF = mixingParameters.referenceColumnMassKgM2;
+    const K_MASS = mixingParameters.columnMassRate;
+    const A_MASS = mixingParameters.columnMassExponent;
 
     // 0..~1: 1-e^{-K (M/Mref)^a}
     const massBoost = 1 - Math.exp(-K_MASS * Math.pow(columnMass / MASS_REF, A_MASS));
 
     // Rotation boost: slower rotation ⇒ larger Hadley cells (cap at 3×)
-    const rotFactor = Math.min(3, Math.sqrt(Math.max(0.5, rotationPeriodH / 24)));
+    const rotFactor = Math.min(
+      mixingParameters.maximumRotationFactor,
+      Math.sqrt(Math.max(
+        mixingParameters.minimumRotationPeriodRatio,
+        rotationPeriodH / mixingParameters.referenceRotationPeriodHours
+      ))
+    );
 
     // Planet-wide liquid coverage (water + hydrocarbons), 0..1
     let liquidCoverageWeighted = 0, areaSum = 0;
@@ -1877,7 +1885,7 @@ class Terraforming extends EffectableEntity{
 
     // Combine independent channels so either can reach 1 alone
     let mixFrac = 1 - (1 - gasMix) * (1 - liqMix);
-    mixFrac = Math.max(0, Math.min(0.999, mixFrac));
+    mixFrac = Math.max(0, Math.min(mixingParameters.maximumMixFraction, mixFrac));
 
     // Weights are energy capacities (J/K) so updates conserve energy
     const W = {};

@@ -79,8 +79,8 @@ if (typeof module !== 'undefined' && module.exports) {
  */
 function radiationPenalty(dose_mSvDay) {
   // Hill-function parameters
-  const D0 = 1.07;  // “half-inhibition” dose, mSv·day⁻¹
-  const a  = 1.12;  // curvature exponent
+  const D0 = terraformingParameters.gameplay.radiationPenalty.halfInhibitionDoseMsvPerDay;
+  const a = terraformingParameters.gameplay.radiationPenalty.curvatureExponent;
 
   const D = Math.max(dose_mSvDay, 1e-12);        // protect against zero / negatives
   return 1 / (1 + Math.pow(D0 / D, a));
