@@ -2776,6 +2776,7 @@ function createAutomationPresetRow(body) {
 
   return {
     presetRow,
+    presetButtons,
     presetSelect,
     presetUsage,
     presetMoveUp,
