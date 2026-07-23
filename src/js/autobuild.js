@@ -720,7 +720,7 @@ function createConstructionOfficeReserveSettingsWindow() {
     grid.classList.add('construction-office-reserve-grid');
     constructionOfficeReserveSettingsElements.inputs = {};
 
-    const createReserveRow = (labelText, inputId, value, onValue) => {
+    const createReserveRow = (labelText, inputId, value, onValue, getEmptyValue = () => 0) => {
         const row = document.createElement('div');
         row.classList.add('space-storage-settings-row');
 
@@ -739,7 +739,9 @@ function createConstructionOfficeReserveSettingsWindow() {
         input.value = input.dataset.constructionOfficeReserve;
         wireStringNumberInput(input, {
             datasetKey: 'constructionOfficeReserve',
-            parseValue: (inputValue) => normalizeConstructionOfficeReservePercent(parseFlexibleNumber(inputValue)),
+            parseValue: (inputValue) => inputValue.trim() === ''
+                ? getEmptyValue()
+                : normalizeConstructionOfficeReservePercent(parseFlexibleNumber(inputValue)),
             formatValue: (inputValue) => String(inputValue),
             onValue,
         });
@@ -770,9 +772,14 @@ function createConstructionOfficeReserveSettingsWindow() {
             Object.prototype.hasOwnProperty.call(constructionOfficeState.strategicReserveResources, option.key)
                 ? constructionOfficeState.strategicReserveResources[option.key]
                 : constructionOfficeState.strategicReserve,
-            (value) => {
-                setStrategicReserveForResource(option.key, value);
-            }
+            (value, inputValue) => {
+                if (inputValue.trim() === '') {
+                    delete constructionOfficeState.strategicReserveResources[option.key];
+                } else {
+                    setStrategicReserveForResource(option.key, value);
+                }
+            },
+            () => constructionOfficeState.strategicReserve
         );
         grid.appendChild(reserveRow.row);
         constructionOfficeReserveSettingsElements.inputs[option.key] = reserveRow.input;
