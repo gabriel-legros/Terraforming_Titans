@@ -2,6 +2,8 @@
 
 The Terraforming Titans mod loader supports additive constructor scripts, styles, media assets, complete renderer-file replacements, and declarative JSON patches from both local development folders and subscribed Steam Workshop items. A pre-game launcher controls the active mod loadout and starting save, and opens Creator Tools for Workshop publishing. Cross-mod dependencies and save isolation are not implemented yet.
 
+For a beginner-to-advanced authoring walkthrough with complete examples, see the [Technical Modding Guide](technical-modding-guide.md).
+
 ## Launch control
 
 Electron starts in the Launch Control window before creating the game renderer. The launcher:
