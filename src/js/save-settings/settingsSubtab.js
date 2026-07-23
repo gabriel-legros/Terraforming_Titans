@@ -34,6 +34,8 @@ function cacheSettingsElements() {
     autoPauseColonistsThresholdInput: document.getElementById('auto-pause-colonists-threshold-input'),
     immigrationPoolToggle: document.getElementById('immigration-pool-toggle'),
     immigrationPoolTooltip: document.getElementById('immigration-pool-tooltip'),
+    disableColonistDecayToggle: document.getElementById('disable-colonist-decay-toggle'),
+    disableColonistDecayTooltip: document.getElementById('disable-colonist-decay-tooltip'),
     unlockToggle: document.getElementById('unlock-alert-toggle'),
     dayNightToggle: document.getElementById('day-night-toggle'),
     dayNightTooltip: document.getElementById('day-night-tooltip'),
@@ -292,6 +294,7 @@ function updateDifficultyLockUI() {
     cached.disableFusionConsumptionScalingToggle,
     cached.disableSpeedControlsToggle,
     cached.immigrationPoolToggle,
+    cached.disableColonistDecayToggle,
     cached.unfulfilledMaintenancePenaltiesToggle,
     cached.factoryHeatingToggle,
     cached.realisticFactoryEnergyConsumptionToggle,
@@ -442,6 +445,7 @@ function updateDifficultySettingInputs() {
     disableFusionConsumptionScaling: cached.disableFusionConsumptionScalingToggle,
     disableSpeedControls: cached.disableSpeedControlsToggle,
     immigrationPool: cached.immigrationPoolToggle,
+    disableColonistDecay: cached.disableColonistDecayToggle,
     unfulfilledMaintenancePenalties: cached.unfulfilledMaintenancePenaltiesToggle,
     factoryHeating: cached.factoryHeatingToggle,
     realisticFactoryEnergyConsumption: cached.realisticFactoryEnergyConsumptionToggle,
@@ -731,6 +735,28 @@ function addSettingsListeners() {
         'ui.settings.immigrationPoolTooltip',
         {},
         'When enabled, strong colony growth above the galactic baseline on non-Mars worlds draws from the off-world galactic population pool instead of creating all growth locally. Immigration only happens while this world is less full than the galactic population pool, and colonist imports also draw from that pool when available.'
+      )
+    );
+  }
+
+  if (cached.disableColonistDecayToggle) {
+    cached.disableColonistDecayToggle.checked = gameSettings.disableColonistDecay;
+    cached.disableColonistDecayToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.disableColonistDecayToggle.checked = gameSettings.disableColonistDecay;
+        return;
+      }
+      gameSettings.disableColonistDecay = cached.disableColonistDecayToggle.checked;
+    });
+  }
+
+  if (cached.disableColonistDecayTooltip) {
+    attachDynamicInfoTooltip(
+      cached.disableColonistDecayTooltip,
+      t(
+        'ui.settings.disableColonistDecayTooltip',
+        {},
+        'Prevents colonist losses from food shortages, energy shortages, high gravity, and overpopulation.'
       )
     );
   }

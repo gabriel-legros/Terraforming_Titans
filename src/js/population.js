@@ -300,8 +300,9 @@ class PopulationModule extends EffectableEntity {
       this.energyShortage = 1 - energyCoverage;
       this.componentsCoverage = componentsCoverage;
 
-      this.starvationDecayRate = this.starvationShortage / 360;
-      this.energyDecayRate = this.energyShortage / 90;
+      const colonistDecayDisabled = gameSettings.disableColonistDecay;
+      this.starvationDecayRate = colonistDecayDisabled ? 0 : this.starvationShortage / 360;
+      this.energyDecayRate = colonistDecayDisabled ? 0 : this.energyShortage / 90;
 
       const starvationDecayPerSecond = this.starvationDecayRate * currentPopulation;
       const energyDecayPerSecond = this.energyDecayRate * currentPopulation;
@@ -314,11 +315,11 @@ class PopulationModule extends EffectableEntity {
       const sliderMitigation = Math.min(0.5, mechanicalAssistance * componentsCoverage * 0.25);
       const totalMitigation = Math.min(1, adaptationMitigation + sliderMitigation);
       this.gravityMitigation = totalMitigation;
-      this.gravityDecayRate = gravityRatePerSecond * (1 - totalMitigation);
+      this.gravityDecayRate = colonistDecayDisabled ? 0 : gravityRatePerSecond * (1 - totalMitigation);
       const gravityDecayPerSecond = this.gravityDecayRate * currentPopulation;
 
       let overpopulationDecayPerSecond = 0;
-      if (currentPopulation > populationCap) {
+      if (!colonistDecayDisabled && currentPopulation > populationCap) {
         const populationExcess = currentPopulation - populationCap;
         overpopulationDecayPerSecond = populationExcess * 0.01;
       }

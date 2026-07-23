@@ -806,6 +806,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'immigrationPool')) {
         gameSettings.immigrationPool = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'disableColonistDecay')) {
+        gameSettings.disableColonistDecay = false;
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'pauseKeybind')) {
         gameSettings.pauseKeybind = 'Space';
       }
@@ -916,6 +919,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       cachedSettings.autoPauseColonistsThresholdInput.value = String(formatNumber(gameSettings.autoPauseColonistsThreshold, false, 3, true));
       cachedSettings.autoPauseColonistsThresholdInput.dataset.autoPauseColonistsThreshold = String(gameSettings.autoPauseColonistsThreshold);
       cachedSettings.immigrationPoolToggle.checked = gameSettings.immigrationPool;
+      cachedSettings.disableColonistDecayToggle.checked = gameSettings.disableColonistDecay;
       cachedSettings.unlockToggle.checked = gameSettings.silenceUnlockAlert;
       cachedSettings.dayNightToggle.checked = gameSettings.disableDayNightCycle;
       applyThemeModeSetting();
