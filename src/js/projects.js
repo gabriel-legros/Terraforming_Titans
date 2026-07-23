@@ -1186,6 +1186,27 @@ class Project extends EffectableEntity {
 
 }
 
+const projectConstructorRegistry = {};
+
+function registerProjectConstructor(type, constructor) {
+  if (!type || !constructor) {
+    throw new Error('Project constructor registration requires a type and constructor.');
+  }
+  const registered = projectConstructorRegistry[type];
+  if (registered && registered !== constructor) {
+    throw new Error(`Project constructor type ${type} is already registered.`);
+  }
+  projectConstructorRegistry[type] = constructor;
+}
+
+function loadProjectConstructor(type) {
+  if (!type || type === 'Project') return Project;
+  const registered = projectConstructorRegistry[type];
+  if (registered) return registered;
+  if (typeof window !== 'undefined' && window[type]) return window[type];
+  throw new Error(`Unknown project constructor type ${type}.`);
+}
+
 class ProjectManager extends EffectableEntity {
   constructor() {
     super({description: getProjectsText('ui.projects.managerDescription', 'Manages all special projects')});
@@ -1376,8 +1397,7 @@ class ProjectManager extends EffectableEntity {
     for (const projectName in projectParameters) {
       const projectData = projectParameters[projectName];
       const type = projectData.type || 'Project';
-      const globalObj = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : {});
-      const Ctor = globalObj && globalObj[type] ? globalObj[type] : Project;
+      const Ctor = loadProjectConstructor(type);
       const proj = new Ctor(projectData, projectName);
       this.projects[projectName] = proj;
 
@@ -1929,6 +1949,10 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     Project,
     ProjectManager,
+    registerProjectConstructor,
   };
+} else {
+  window.Project = Project;
+  window.registerProjectConstructor = registerProjectConstructor;
 }
 

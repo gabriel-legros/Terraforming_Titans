@@ -2090,8 +2090,17 @@ class Building extends EffectableEntity {
 
 const buildingConstructorRegistry = {};
 
-function registerBuildingConstructor(ctor) {
-  buildingConstructorRegistry[ctor.name] = ctor;
+function registerBuildingConstructor(typeOrConstructor, constructor) {
+  const resolvedConstructor = constructor || typeOrConstructor;
+  const type = constructor ? typeOrConstructor : resolvedConstructor.name;
+  if (!type || !resolvedConstructor) {
+    throw new Error('Building constructor registration requires a type and constructor.');
+  }
+  const registered = buildingConstructorRegistry[type];
+  if (registered && registered !== resolvedConstructor) {
+    throw new Error(`Building constructor type ${type} is already registered.`);
+  }
+  buildingConstructorRegistry[type] = resolvedConstructor;
 }
 
 function loadConstructor(type, constructorFile) {
@@ -2104,9 +2113,10 @@ function loadConstructor(type, constructorFile) {
   }
   if (typeof require !== 'undefined') {
     const mod = require(`./buildings/${constructorFile || type}.js`);
-    return mod[type] || Building;
+    const required = mod[type] || (mod.name === type ? mod : null);
+    if (required) return required;
   }
-  return Building;
+  throw new Error(`Unknown building constructor type ${type}.`);
 }
 
 function initializeBuildings(buildingsParameters) {
@@ -2127,7 +2137,8 @@ function initializeBuildings(buildingsParameters) {
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = { Building, initializeBuildings, registerBuildingConstructor };
-} else if (typeof globalThis !== 'undefined') {
-  globalThis.Building = Building;
-  globalThis.initializeBuildings = initializeBuildings;
+} else {
+  window.Building = Building;
+  window.initializeBuildings = initializeBuildings;
+  window.registerBuildingConstructor = registerBuildingConstructor;
 }

@@ -1,0 +1,8 @@
+[data-project-name="customClassExample_fluxCalibration"] .card-header,
+[data-structure-name="customClassExample_fluxRefinery"] .card-header {
+  background-image: url("../assets/custom-class-badge.svg");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5rem 1.5rem;
+  padding-right: 2.5rem;
+}

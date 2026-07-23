@@ -452,6 +452,12 @@ function registerModProtocol() {
     if (!filePath) {
       return new Response('Game content not found.', { status: 404 });
     }
+    if (gamePath === 'index.html') {
+      const indexHtml = fs.readFileSync(filePath, 'utf8');
+      return new Response(modService.injectModContent(indexHtml), {
+        headers: { 'content-type': 'text/html; charset=utf-8' }
+      });
+    }
     return net.fetch(pathToFileURL(filePath).toString());
   });
 }

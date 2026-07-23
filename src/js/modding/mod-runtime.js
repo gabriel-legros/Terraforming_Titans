@@ -75,6 +75,18 @@ function applyModPatchObject(target, patchData) {
   applyModPatchValue(target, patchBody);
 }
 
+function getModAssetUrl(modId, file) {
+  const mod = activeModSession.mods.find(entry => entry.id === modId);
+  if (!mod) {
+    throw new Error(`Active mod ${modId} was not found.`);
+  }
+  const asset = mod.assets.find(entry => entry.file === file);
+  if (!asset) {
+    throw new Error(`Mod asset ${modId}:${file} was not declared.`);
+  }
+  return asset.url;
+}
+
 function applyResearchModPatch(target, patchData) {
   const patchBody = isModPatchObject(patchData.entries) ? patchData.entries : patchData;
   for (const category in patchBody) {
