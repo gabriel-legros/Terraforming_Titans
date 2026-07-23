@@ -26,7 +26,7 @@ describe.skip('RWG dynamic mass travel', () => {
       await new Promise(resolve => setTimeout(resolve, 50));
       advanceTicks(window, 2, 10);
 
-      const currentCelestial = window.currentPlanetParameters.celestialParameters;
+      const currentCelestial = window.eval('terraforming.celestialParameters');
       const planetaryMassTons = window.resources.underground.planetaryMass.value;
 
       expect(currentCelestial.baseMass).toBe(generatedMassKg);

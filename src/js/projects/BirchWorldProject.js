@@ -194,15 +194,12 @@ class BirchWorldProject extends Project {
     const radiusEarth = this.getCurrentRadiusEarth();
     const radiusKm = radiusEarth * EARTH_RADIUS_KM;
     const atmosphericSurfaceArea = totalLandHa * 10_000;
-    terraforming.baseLand = totalLandHa;
-    terraforming.initialLand = totalLandHa;
     terraforming.celestialParameters.radius = radiusKm;
     terraforming.celestialParameters.baseLand = totalLandHa;
     terraforming.celestialParameters.layeredSurfaceArea = true;
     terraforming.celestialParameters.surfaceArea = atmosphericSurfaceArea;
     terraforming.celestialParameters.crossSectionArea = calculateCrossSectionAreaM2FromRadius(radiusKm);
     if (terraforming.initialCelestialParameters) {
-      terraforming.initialCelestialParameters.baseLand = totalLandHa;
       terraforming.initialCelestialParameters.radius = radiusKm;
       terraforming.initialCelestialParameters.layeredSurfaceArea = true;
       terraforming.initialCelestialParameters.surfaceArea = atmosphericSurfaceArea;

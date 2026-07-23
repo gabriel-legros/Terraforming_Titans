@@ -1451,7 +1451,7 @@ function reconcileLandResourceValue() {
 
   const geometricLand = Math.max(
     0,
-    resolveWorldGeometricLandFn(tf, landResource, params?.celestialParameters) || 0
+    resolveWorldGeometricLandFn(tf, landResource) || 0
   );
   let baseLand = Math.max(
     0,
@@ -1479,22 +1479,8 @@ function reconcileLandResourceValue() {
   }
 
   landResource.baseLand = baseLand;
-  if (tf) {
-    tf.baseLand = baseLand;
-    tf.initialLand = baseLand;
-    if (tf.celestialParameters) {
-      tf.celestialParameters.baseLand = baseLand;
-    }
-    if (tf.initialCelestialParameters) {
-      tf.initialCelestialParameters.baseLand = baseLand;
-    }
-  }
-  if (params?.celestialParameters) {
-    params.celestialParameters.baseLand = baseLand;
-  }
-  if (params?.resources?.surface?.land) {
-    params.resources.surface.land.baseLand = baseLand;
-    params.resources.surface.land.baseCap = baseLand;
+  if (tf?.celestialParameters) {
+    tf.celestialParameters.baseLand = baseLand;
   }
 
   const undergroundProject = activeProjectManager?.projects?.undergroundExpansion;

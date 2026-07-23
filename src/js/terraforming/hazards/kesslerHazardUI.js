@@ -237,7 +237,6 @@ function calculateKesslerUIRadiusContext(terraformingState, entries) {
     ? entries[0].referenceRadiusKm
     : terraformingState?.initialCelestialParameters?.radius
     || terraformingState?.celestialParameters?.radius
-    || terraformingState?.baseRadius
     || terraformingState?.initialCelestialParameters?.baseRadius
     || terraformingState?.celestialParameters?.baseRadius
     || 0;

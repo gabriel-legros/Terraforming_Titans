@@ -202,9 +202,6 @@ class EarthManager extends EffectableEntity {
     terraforming.initialCelestialParameters.radius = radius;
     terraforming.initialCelestialParameters.mass = mass;
     terraforming.initialCelestialParameters.gravity = gravity;
-    terraforming.initialCelestialParameters.baseRadius = radius;
-    terraforming.initialCelestialParameters.baseMass = mass;
-    terraforming.initialCelestialParameters.baseGravity = gravity;
     terraforming.initialCelestialParameters.surfaceArea = surfaceArea;
     terraforming.initialCelestialParameters.crossSectionArea = crossSectionArea;
     terraforming.apparentEquatorialGravity = getApparentEquatorialGravity(terraforming.celestialParameters);
@@ -221,10 +218,7 @@ class EarthManager extends EffectableEntity {
     const landHectares = surfaceArea / 10000;
     resources.surface.land.setExactLandValue(landHectares);
     resources.surface.land.initialValue = landHectares;
-    terraforming.baseLand = landHectares;
-    terraforming.initialLand = landHectares;
     terraforming.celestialParameters.baseLand = landHectares;
-    terraforming.initialCelestialParameters.baseLand = landHectares;
 
     terraforming._updateAtmosphericPressureCache();
     terraforming._updateZonalCoverageCache();

@@ -31,10 +31,6 @@ if (typeof module !== 'undefined' && module.exports) {
   ({ syncDynamicWorldGeometry: syncDynamicWorldGeometryHelper } = require('./world-geometry.js'));
 }
 
-function getSyncDynamicWorldGeometryHelper() {
-  return syncDynamicWorldGeometryHelper || syncDynamicWorldGeometry;
-}
-
 function calculateMaintenancePenaltyForTemperature(temp) {
   if (!Number.isFinite(temp) || temp <= MAINTENANCE_PENALTY_THRESHOLD) {
     return 1;
@@ -494,14 +490,6 @@ class Terraforming extends EffectableEntity{
     this.initialCelestialParameters = structuredClone(celestialParameters);
     this.celestialParameters.dayNightPeriod = this.celestialParameters.dayNightPeriod || this.celestialParameters.rotationPeriod || 24;
     this.initialCelestialParameters.dayNightPeriod = this.initialCelestialParameters.dayNightPeriod || this.initialCelestialParameters.rotationPeriod || 24;
-    this.baseLand = resolveWorldBaseLand(this, this.resources.surface?.land);
-    this.initialLand = this.baseLand;
-
-    if (this.resources.surface?.land) {
-      this.resources.surface.land.baseLand = this.baseLand;
-    }
-    this.celestialParameters.baseLand = this.baseLand;
-    this.initialCelestialParameters.baseLand = this.baseLand;
     this.refreshDynamicWorldGeometry();
 
     const isRogueWorld = this.celestialParameters.rogue === true;
@@ -1081,112 +1069,26 @@ class Terraforming extends EffectableEntity{
       this.synchronizeGlobalResources();
       if (planetParameters.specialAttributes?.dynamicMass === true) {
           const baseCelestialParameters = structuredClone(planetParameters.celestialParameters);
-          const baseRadius = baseCelestialParameters.baseRadius ?? baseCelestialParameters.radius ?? 0;
-          const baseMass = baseCelestialParameters.baseMass ?? baseCelestialParameters.mass ?? 0;
-          const radiusMeters = baseRadius * 1000;
-          const baseGravity = baseCelestialParameters.baseGravity
-            ?? (
-              baseMass > 0 && radiusMeters > 0
-                ? (6.6743e-11 * baseMass) / (radiusMeters * radiusMeters)
-                : (baseCelestialParameters.gravity ?? 0)
-            );
-          const surfaceMassKeys = [
-            'liquidWater', 'ice', 'dryIce', 'liquidCO2', 'liquidHydrogen',
-            'liquidMethane', 'hydrocarbonIce', 'fineSand', 'liquidAmmonia',
-            'ammoniaIce', 'liquidOxygen', 'oxygenIce', 'liquidNitrogen',
-            'nitrogenIce', 'biomass', 'graphite', 'scrapMetal', 'garbage',
-            'trash', 'junk', 'radioactiveWaste', 'hazardousBiomass', 'hazardousMachinery'
-          ];
-          const atmosphericMassKeys = [
-            'carbonDioxide', 'inertGas', 'oxygen', 'atmosphericWater',
-            'greenhouseGas', 'atmosphericMethane', 'atmosphericAmmonia',
-            'hydrogen', 'sulfuricAcid', 'calciteAerosol', 'vanadiumAerosol'
-          ];
-          let derivedBaseSurfaceMassKg = 0;
-          let derivedBaseAtmosphericMassKg = 0;
-          for (let index = 0; index < surfaceMassKeys.length; index += 1) {
-              const key = surfaceMassKeys[index];
-              const amount = planetParameters.resources.surface[key]?.initialValue || 0;
-              derivedBaseSurfaceMassKg += amount * 1000;
-          }
-          for (let index = 0; index < atmosphericMassKeys.length; index += 1) {
-              const key = atmosphericMassKeys[index];
-              const amount = planetParameters.resources.atmospheric[key]?.initialValue || 0;
-              derivedBaseAtmosphericMassKg += amount * 1000;
-          }
-          const baseSurfaceMassKg = Number.isFinite(baseCelestialParameters.baseSurfaceMassKg)
-            ? baseCelestialParameters.baseSurfaceMassKg
-            : derivedBaseSurfaceMassKg;
-          const baseAtmosphericMassKg = Number.isFinite(baseCelestialParameters.baseAtmosphericMassKg)
-            ? baseCelestialParameters.baseAtmosphericMassKg
-            : derivedBaseAtmosphericMassKg;
-          const basePlanetaryMass = Number.isFinite(baseCelestialParameters.basePlanetaryMass)
-            ? Math.max(0, baseCelestialParameters.basePlanetaryMass)
-            : Math.max(0, baseMass - baseSurfaceMassKg - baseAtmosphericMassKg);
-          const basePlanetaryVolumeM3 = Number.isFinite(baseCelestialParameters.basePlanetaryVolumeM3)
-            ? Math.max(0, baseCelestialParameters.basePlanetaryVolumeM3)
-            : null;
-          const dynamicDirectMassDeltaKg = Number.isFinite(baseCelestialParameters.dynamicDirectMassDeltaKg)
-            ? baseCelestialParameters.dynamicDirectMassDeltaKg
-            : 0;
-          const dynamicDirectVolumeDeltaM3 = Number.isFinite(baseCelestialParameters.dynamicDirectVolumeDeltaM3)
-            ? baseCelestialParameters.dynamicDirectVolumeDeltaM3
-            : 0;
-
           Object.assign(this.initialCelestialParameters, baseCelestialParameters);
-          Object.assign(this.celestialParameters, baseCelestialParameters);
-          this.baseMass = baseMass;
-          this.baseRadius = baseRadius;
-          this.baseGravity = baseGravity;
-          this.basePlanetaryMass = basePlanetaryMass;
-          this.baseSurfaceMassKg = baseSurfaceMassKg;
-          this.baseAtmosphericMassKg = baseAtmosphericMassKg;
-          this.basePlanetaryVolumeM3 = basePlanetaryVolumeM3;
-          this.baseLand = resolveWorldBaseLand(this, this.resources.surface?.land);
-          this.initialLand = this.baseLand;
-          if (this.resources.surface?.land) {
-              this.resources.surface.land.baseLand = this.baseLand;
-          }
-          this.celestialParameters.baseLand = this.baseLand;
-          this.celestialParameters.baseRadius = baseRadius;
-          this.celestialParameters.baseMass = baseMass;
-          this.celestialParameters.baseGravity = baseGravity;
-          this.celestialParameters.basePlanetaryMass = basePlanetaryMass;
-          this.celestialParameters.basePlanetaryVolumeM3 = basePlanetaryVolumeM3;
-          this.celestialParameters.baseSurfaceMassKg = baseSurfaceMassKg;
-          this.celestialParameters.baseAtmosphericMassKg = baseAtmosphericMassKg;
-          this.initialCelestialParameters.baseLand = this.baseLand;
-          this.initialCelestialParameters.baseRadius = baseRadius;
-          this.initialCelestialParameters.baseMass = baseMass;
-          this.initialCelestialParameters.baseGravity = baseGravity;
-          this.initialCelestialParameters.basePlanetaryMass = basePlanetaryMass;
-          this.initialCelestialParameters.basePlanetaryVolumeM3 = basePlanetaryVolumeM3;
-          this.initialCelestialParameters.baseSurfaceMassKg = baseSurfaceMassKg;
-          this.initialCelestialParameters.baseAtmosphericMassKg = baseAtmosphericMassKg;
-          this.currentPlanetaryMassKg = null;
-          this.currentSurfaceMassKg = null;
-          this.currentAtmosphericMassKg = null;
-          this.currentPlanetaryVolumeM3 = null;
-          this.currentSurfaceVolumeM3 = null;
-          this.dynamicDirectMassDeltaKg = dynamicDirectMassDeltaKg;
-          this.dynamicDirectVolumeDeltaM3 = dynamicDirectVolumeDeltaM3;
-          this.dynamicMassDeltaKg = 0;
-          this.dynamicSurfaceVolumeDeltaM3 = 0;
-          this.celestialParameters.currentPlanetaryMassKg = null;
-          this.celestialParameters.currentSurfaceMassKg = null;
-          this.celestialParameters.currentAtmosphericMassKg = null;
-          this.celestialParameters.currentPlanetaryVolumeM3 = null;
-          this.celestialParameters.currentSurfaceVolumeM3 = null;
-          this.celestialParameters.dynamicDirectMassDeltaKg = dynamicDirectMassDeltaKg;
-          this.celestialParameters.dynamicDirectVolumeDeltaM3 = dynamicDirectVolumeDeltaM3;
-          this.celestialParameters.dynamicMassDeltaKg = 0;
-          this.celestialParameters.dynamicSurfaceVolumeDeltaM3 = 0;
+          Object.assign(this.celestialParameters, baseCelestialParameters, {
+              dynamicDirectMassDeltaKg: baseCelestialParameters.dynamicDirectMassDeltaKg || 0,
+              dynamicDirectVolumeDeltaM3: baseCelestialParameters.dynamicDirectVolumeDeltaM3 || 0,
+              dynamicMassDeltaKg: 0,
+              dynamicSurfaceVolumeDeltaM3: 0,
+              currentPlanetaryMassKg: null,
+              currentSurfaceMassKg: null,
+              currentAtmosphericMassKg: null,
+              currentPlanetaryVolumeM3: null,
+              currentSurfaceVolumeM3: null
+          });
           this.refreshDynamicWorldGeometry(planetParameters);
-          this.initialCelestialParameters.mass = this.celestialParameters.mass;
-          this.initialCelestialParameters.radius = this.celestialParameters.radius;
-          this.initialCelestialParameters.gravity = this.celestialParameters.gravity;
-          this.initialCelestialParameters.surfaceArea = this.celestialParameters.surfaceArea;
-          this.initialCelestialParameters.crossSectionArea = this.celestialParameters.crossSectionArea;
+          Object.assign(this.initialCelestialParameters, {
+              mass: this.celestialParameters.mass,
+              radius: this.celestialParameters.radius,
+              gravity: this.celestialParameters.gravity,
+              surfaceArea: this.celestialParameters.surfaceArea,
+              crossSectionArea: this.celestialParameters.crossSectionArea
+          });
           reconcileLandResourceValue();
       }
       this._updateZonalCoverageCache();
@@ -1265,7 +1167,7 @@ class Terraforming extends EffectableEntity{
     }
 
     refreshDynamicWorldGeometry(planetParameters = currentPlanetParameters) {
-      return getSyncDynamicWorldGeometryHelper()(this, planetParameters);
+      return (syncDynamicWorldGeometryHelper || syncDynamicWorldGeometry)(this, planetParameters);
     }
 
     runUpdateStep(deltaTime = 0, options = {}) {
@@ -3270,11 +3172,6 @@ synchronizeGlobalResources() {
                 }
             }
           }
-      }
-      this.baseLand = resolveWorldBaseLand(this, this.resources.surface?.land);
-      this.initialLand = this.baseLand;
-      if (this.resources.surface?.land) {
-          this.resources.surface.land.baseLand = this.baseLand;
       }
       this.refreshDynamicWorldGeometry();
 

@@ -53,7 +53,6 @@ function calculateKesslerRadiusContext(terraforming, entry) {
   const referenceRadiusKm = entry?.referenceRadiusKm
     || terraforming?.initialCelestialParameters?.radius
     || terraforming?.celestialParameters?.radius
-    || terraforming?.baseRadius
     || terraforming?.initialCelestialParameters?.baseRadius
     || terraforming?.celestialParameters?.baseRadius
     || 0;
@@ -72,9 +71,8 @@ function getEffectivePeriapsisAltitudeMeters(entry, terraforming) {
 
 function shouldRebaseKesslerRadiusReference(terraforming, referenceRadiusKm) {
   const initialRadiusKm = terraforming?.initialCelestialParameters?.radius || 0;
-  const baseRadiusKm = terraforming?.baseRadius
+  const baseRadiusKm = terraforming?.celestialParameters?.baseRadius
     || terraforming?.initialCelestialParameters?.baseRadius
-    || terraforming?.celestialParameters?.baseRadius
     || 0;
   return Boolean(
     initialRadiusKm

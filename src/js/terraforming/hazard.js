@@ -694,8 +694,7 @@ class HazardManager {
       return resolveLandReservationInitialLandHelper(terraformingState, landResource);
     }
     const candidates = [
-      terraformingState?.baseLand,
-      terraformingState?.initialLand,
+      terraformingState?.celestialParameters?.baseLand,
       landResource?.baseLand,
       landResource?.initialValue
     ];
