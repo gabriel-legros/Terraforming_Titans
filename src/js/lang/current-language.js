@@ -5126,7 +5126,7 @@ setLanguageData({
       immigrationPool: 'Immigration pool',
       immigrationPoolTooltip: 'When enabled, on any world other than Mars, a large portion of colony growth becomes directly dependent on galactic population via immigration.  Immigration will attempt to equalize the world colonist fill ratio with the galactic fill ratio, and all immigration is taken from the galactic population pool.  This may lead to very slow growth in some cases.',
       disableColonistDecay: 'Disable colonist decay',
-      disableColonistDecayTooltip: 'Prevents colonist losses from food shortages, energy shortages, high gravity, and overpopulation.',
+      disableColonistDecayTooltip: 'Prevents colonist losses from food shortages, energy shortages, high gravity, and overpopulation.  Recommended for idle play.',
       disableUnlockAlerts: 'Disable unlock alerts',
       disableDayNightCycle: 'Disable day-night cycle',
       dayNightTooltip: 'Stops time of day changes. Solar Panels and Ice Harvesters run at half efficiency and half maintenance. Leads to a more realistic, slightly easier and more relaxed experience.',
