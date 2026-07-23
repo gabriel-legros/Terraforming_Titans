@@ -6575,6 +6575,10 @@ setLanguageData({
           name: 'Galactic Market Concordat',
           description: 'Establishes permanent trade ties with the wider galaxy, replacing crude exports with a managed market.  This permanently replaces Cargo Rockets and Metal Exportation.',
         },
+        automatic_surplus_trading: {
+          name: 'Automatic Surplus Trading',
+          description: 'Very quickly, our resources are becoming commodity that no longer even require business partners to sell to.  We should be able to sell our surplus resources quickly and easily.  (Overflowing colony resources will be automatically sold on the market below saturation.  Happens on the next tick.)',
+        },
         mechanical_assistance: {
           name: 'Mechanical Assistance',
           description: 'Enables a new colony slider to provide mechanical assistance to partially counter the effects of high gravity.  The slider will only appear on high gravity worlds.',

@@ -2231,6 +2231,22 @@ const researchParameters = {
         ]
       },
       {
+        id: 'automatic_surplus_trading',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 60_000_000 },
+        prerequisites: ['galactic_market'],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'galactic_market',
+            type: 'booleanFlag',
+            flagId: 'automaticSurplusTrading',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'mechanical_assistance',
         name: '',
         description: '',

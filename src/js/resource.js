@@ -2348,6 +2348,9 @@ function produceResources(deltaTime, buildings) {
 
       const overflowLost = Math.max(newValue - finalValue, 0);
       updateOverflowLostWindowForResource(resource, overflowLost, deltaTime);
+      if (overflowLost > 0) {
+        galacticMarketProject.queueOverflowSale(category, resourceName, overflowLost);
+      }
       resource.value = Math.max(finalValue, 0); // Ensure non-negative
 
       const cleanupSlackForResource = wasteCleanupSlack[category]?.[resourceName] || 0;

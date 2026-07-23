@@ -987,6 +987,18 @@ function setupHarness(initialStorage = {}) {
 
   const spaceStorage = createSpaceStorageProject(resourcesObj);
   projectManager.projects.spaceStorage = spaceStorage;
+  const galacticMarket = new Project({
+    name: 'Galactic Market',
+    category: 'resources',
+    cost: {},
+    duration: 0,
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: { continuousAsBuilding: true },
+  }, 'galactic_market');
+  galacticMarket.queueOverflowSale = () => {};
+  projectManager.projects.galactic_market = galacticMarket;
 
   return {
     produceResources: resourceModule.produceResources,

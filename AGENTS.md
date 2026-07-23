@@ -571,6 +571,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Galactic Market runtime trades now execute in the post-project end-of-tick pass (after regular project cost/gain application, alongside other post-project ship operations), so sell proceeds can use same-tick late resource changes before buy scaling.
 - Galactic Market resource tooltips keep ideal consumption from selected trades, but replace market production with actual post-trade output after resource and funding limits are applied.
 - Galactic Market includes superconductors at 10x components price and 1/10 components sell saturation.
+- Advanced research `Automatic Surplus Trading` costs `60M`, requires Galactic Market Concordat, and queues sellable unrouted colony overflow for automatic sale on the following tick. Automatic sales use normal market proceeds, price impact, and trade caps, but add no quantity beyond the resource's saturation sell rate; excess overflow is discarded.
 - Cargo Rocket quantity and step controls resolve the current project instance after load/travel, and the selected step persists across planet travel.
 - Shared Android assignment controls resolve the current project instance after load/travel, including assignment, step, auto-assignment, and release controls.
 - Projects can set `attributes.ignoreDurationModifiers: true` to lock runtime to base duration and ignore all project duration modifiers.
