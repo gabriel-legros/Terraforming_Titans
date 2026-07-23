@@ -384,7 +384,27 @@ class ImportColonistsProject extends Project {
 
   estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
     if (!this.isContinuous() || !this.isActive) {
-      return super.estimateProjectCostAndGain(deltaTime, applyRates, productivity);
+      const totals = super.estimateProjectCostAndGain(deltaTime, applyRates, productivity);
+      const colonistGain = totals.gain.colony?.colonists ?? 0;
+      const seconds = deltaTime / 1000;
+      if (
+        applyRates &&
+        gameSettings.immigrationPool &&
+        colonistGain > 0 &&
+        seconds > 0 &&
+        this.showsInResourcesRate()
+      ) {
+        const galacticWithdrawal = Math.min(
+          colonistGain,
+          resources.special.galacticPopulation.value
+        );
+        resources.special.galacticPopulation.modifyRate(
+          -(galacticWithdrawal / seconds),
+          this.displayName,
+          'project'
+        );
+      }
+      return totals;
     }
 
     const totals = { cost: {}, gain: {} };
@@ -405,6 +425,17 @@ class ImportColonistsProject extends Project {
     totals.colony = { colonists: amount };
     if (applyRates && this.showsInResourcesRate()) {
       resources.colony.colonists.modifyRate(amount / (deltaTime / 1000), this.displayName, 'project');
+      if (gameSettings.immigrationPool) {
+        const galacticWithdrawal = Math.min(
+          amount,
+          resources.special.galacticPopulation.value
+        );
+        resources.special.galacticPopulation.modifyRate(
+          -(galacticWithdrawal / (deltaTime / 1000)),
+          this.displayName,
+          'project'
+        );
+      }
     }
     return totals;
   }

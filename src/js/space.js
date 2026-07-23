@@ -212,6 +212,7 @@ class SpaceManager extends EffectableEntity {
         this.nonBirchGalacticPopulationCapacity = 0;
         this.galacticPopulation = 0;
         this.galacticPopulationCapacity = 0;
+        this.showGalacticPopulationInSidebar = false;
         this.birchWorldPopulation = 0;
         this.birchWorldPopulationCapacity = 0;
         this.galacticPopulationGrowthRate = 0.005 / 365;
@@ -255,6 +256,11 @@ class SpaceManager extends EffectableEntity {
         }
         const capacityFactor = 1 - (this.galacticPopulation / this.galacticPopulationCapacity);
         const growth = this.galacticPopulation * this.galacticPopulationGrowthRate * capacityFactor * seconds;
+        resources.special.galacticPopulation.modifyRate(
+            growth / seconds,
+            t('ui.resourceRates.sources.galacticNaturalGrowth', {}, 'Natural growth'),
+            'population'
+        );
         this.nonBirchGalacticPopulation = Math.max(
             0,
             Math.min(
@@ -1672,10 +1678,25 @@ class SpaceManager extends EffectableEntity {
             this.galacticPopulation = nonBirchPopulation + birchPopulation;
             this.galacticPopulationCapacity = nonBirchCapacity + birchCapacity;
         }
+        this.syncGalacticPopulationResource();
         return {
             population: this.galacticPopulation,
             populationCapacity: this.galacticPopulationCapacity
         };
+    }
+
+    syncGalacticPopulationResource() {
+        const resource = resources.special.galacticPopulation;
+        resource.value = this.galacticPopulation;
+        resource.baseCap = this.galacticPopulationCapacity;
+        resource.cap = this.galacticPopulationCapacity;
+        resource.unlocked = this.galacticPopulationCapacity > 0;
+        resource.showInSidebar = this.showGalacticPopulationInSidebar;
+    }
+
+    setGalacticPopulationSidebarVisibility(show) {
+        this.showGalacticPopulationInSidebar = show === true;
+        this.syncGalacticPopulationResource();
     }
 
     _hasGalacticPopulationTotals() {
@@ -3407,6 +3428,7 @@ class SpaceManager extends EffectableEntity {
             rwgSummary: this._sanitizeRwgSummary(this.rwgSummary),
             galacticPopulation: this.galacticPopulation,
             galacticPopulationCapacity: this.galacticPopulationCapacity,
+            showGalacticPopulationInSidebar: this.showGalacticPopulationInSidebar,
             nonBirchGalacticPopulation: this.nonBirchGalacticPopulation,
             nonBirchGalacticPopulationCapacity: this.nonBirchGalacticPopulationCapacity,
             birchWorldPopulation: this.birchWorldPopulation,
@@ -3442,6 +3464,7 @@ class SpaceManager extends EffectableEntity {
         this.oneillCylinders = 0;
         this.nonBirchGalacticPopulation = 0;
         this.nonBirchGalacticPopulationCapacity = 0;
+        this.showGalacticPopulationInSidebar = false;
         this.birchWorldPopulation = 0;
         this.birchWorldPopulationCapacity = 0;
         this.spaceSliders = { cylindersHope: 0, megaprojectsCoordination: 50 };
@@ -3769,6 +3792,7 @@ class SpaceManager extends EffectableEntity {
         this.galacticPopulationCapacity = Number.isFinite(savedGalacticPopulationCapacity) && savedGalacticPopulationCapacity > 0
             ? savedGalacticPopulationCapacity
             : 0;
+        this.showGalacticPopulationInSidebar = savedData.showGalacticPopulationInSidebar === true;
         this._syncGalacticPopulationTotals();
 
         Object.keys(this.planetStatuses).forEach((planetKey) => {

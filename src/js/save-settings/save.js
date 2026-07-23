@@ -1053,6 +1053,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
     populationModule.updateWorkerRequirements();
     populationModule.updateWorkerCap();
     populationModule.workerResource.value = populationModule.workerResource.cap - populationModule.totalWorkersRequired;
+    spaceManager.syncGalacticPopulationResource();
     galaxyManager?.finalizeLoadedDefenseAssignments?.();
     globalGameIsLoadingFromSave = false;
     if (!options.skipRender && typeof updateRender === 'function') {

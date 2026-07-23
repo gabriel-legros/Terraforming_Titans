@@ -27,6 +27,7 @@ let spaceStatUniqueValueEl = null;
 let spaceStatEffectiveValueEl = null;
 let spaceStatGalacticPopulationValueEl = null;
 let spaceStatGalacticCapacityValueEl = null;
+let spaceStatGalacticPopulationSidebarToggleEl = null;
 let spaceStatUniqueTooltipEl = null;
 let spaceStatEffectiveTooltipEl = null;
 let spaceStatGalacticPopulationTooltipEl = null;
@@ -656,6 +657,7 @@ function initializeSpaceUI(spaceManager) {
     spaceStatEffectiveValueEl = document.getElementById('space-stat-effective-value');
     spaceStatGalacticPopulationValueEl = document.getElementById('space-stat-galactic-population-value');
     spaceStatGalacticCapacityValueEl = document.getElementById('space-stat-galactic-capacity-value');
+    const galacticPopulationSidebarToggleContainer = document.getElementById('space-stat-galactic-population-sidebar-toggle-container');
     spaceStatUniqueTooltipEl = document.getElementById('space-stat-unique-tooltip');
     spaceStatEffectiveTooltipEl = document.getElementById('space-stat-effective-tooltip');
     spaceStatGalacticPopulationTooltipEl = document.getElementById('space-stat-galactic-population-tooltip');
@@ -667,6 +669,23 @@ function initializeSpaceUI(spaceManager) {
     spaceStatEffectiveTooltipContentEl = attachDynamicInfoTooltip(spaceStatEffectiveTooltipEl, '');
     spaceStatGalacticPopulationTooltipContentEl = attachDynamicInfoTooltip(spaceStatGalacticPopulationTooltipEl, '');
     spaceStatOneillTooltipContentEl = attachDynamicInfoTooltip(spaceStatOneillTooltipEl, '');
+    spaceStatGalacticPopulationSidebarToggleEl = createToggleButton({
+        onLabel: getSpaceUIText('stats.showGalacticPopulationInSidebar', 'Show in sidebar'),
+        offLabel: getSpaceUIText('stats.showGalacticPopulationInSidebar', 'Show in sidebar'),
+        isOn: _spaceManagerInstance.showGalacticPopulationInSidebar
+    });
+    spaceStatGalacticPopulationSidebarToggleEl.classList.add('space-galactic-population-sidebar-toggle');
+    spaceStatGalacticPopulationSidebarToggleEl.addEventListener('click', () => {
+        _spaceManagerInstance.setGalacticPopulationSidebarVisibility(
+            !_spaceManagerInstance.showGalacticPopulationInSidebar
+        );
+        setToggleButtonState(
+            spaceStatGalacticPopulationSidebarToggleEl,
+            _spaceManagerInstance.showGalacticPopulationInSidebar
+        );
+        updateResourceDisplay(resources, 0);
+    });
+    galacticPopulationSidebarToggleContainer.appendChild(spaceStatGalacticPopulationSidebarToggleEl);
     if (typeof setOneillStatsElements === 'function') {
         setOneillStatsElements({
             card: spaceStatOneillCardEl,
@@ -867,6 +886,12 @@ function updateSpaceStatsUI() {
     }
     if (spaceStatGalacticCapacityValueEl) {
         spaceStatGalacticCapacityValueEl.textContent = formatNumber(populationStats.populationCapacity, true, 2);
+    }
+    if (spaceStatGalacticPopulationSidebarToggleEl) {
+        setToggleButtonState(
+            spaceStatGalacticPopulationSidebarToggleEl,
+            _spaceManagerInstance.showGalacticPopulationInSidebar
+        );
     }
     if (spaceStatGalacticPopulationTooltipEl) {
         const populationTooltip = getSpaceUIText(

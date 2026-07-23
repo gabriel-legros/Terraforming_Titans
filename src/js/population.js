@@ -369,6 +369,11 @@ class PopulationModule extends EffectableEntity {
         this.populationResource.decrease(-populationChange);
       }
       if (immigration > 0) {
+        resources.special.galacticPopulation.modifyRate(
+          -immigrationPerSecond,
+          t('ui.resourceRates.sources.galacticImmigration', {}, 'Immigration'),
+          'population'
+        );
         spaceManager.withdrawGalacticPopulation(immigration);
       }
 

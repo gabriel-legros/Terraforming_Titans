@@ -1079,6 +1079,19 @@
   color: var(--space-fg-muted);
 }
 
+.space-galactic-population-sidebar-toggle {
+  align-self: flex-start;
+  gap: 6px;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.space-galactic-population-sidebar-toggle .ui-toggle__label {
+  min-width: 0;
+  white-space: nowrap;
+}
+
 .space-sliders-section {
   margin-top: 12px;
   padding-top: 12px;

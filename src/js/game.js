@@ -650,6 +650,7 @@ function initializeGameState(options = {}) {
       globalThis.spaceManager = spaceManager;
     }
   }
+  spaceManager.syncGalacticPopulationResource();
   if (!preserveManagers || !achievementManager) {
     achievementManager = new AchievementManager();
   }

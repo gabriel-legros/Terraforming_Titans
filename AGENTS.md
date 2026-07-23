@@ -451,6 +451,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Immigration Pool
 - The Immigration pool setting makes non-Mars colony growth above the galactic baseline (`0.5% / 365` per second before capacity easing) draw from off-world galactic population when the current world is less full than the galactic pool. Immigration is capped so the transfer cannot push galactic fill below world fill, and colonist imports subtract from the same pool when available.
+- `SpaceManager` owns Galactic Population and its saved, default-off sidebar preference. It mirrors the live population and capacity to `resources.special.galacticPopulation`; natural growth, colony immigration, and colonist-import projects publish their localized rates through that resource.
 
 ### Atmosphere, Physics, and Terraforming
 - Earth is an end-road world that disables the normal late-game UI surface: Buildings, Special Projects, Research, Space, H.O.P.E., Colony, all resources, non-World Terraforming subtabs, managers tied to those systems, advanced research, special project categories including Story, and Space -> Story. Terraforming -> World and Save and Settings remain available.
