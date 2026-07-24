@@ -178,6 +178,9 @@
     super({
       latentHeatVaporization: L_V_NITROGEN,
       latentHeatSublimation: L_S_NITROGEN,
+      latentHeatFusion: NITROGEN_PHASE_CHANGE_PARAMETERS.latentHeatFusionJPerKg,
+      solidSpecificHeat: NITROGEN_PHASE_CHANGE_PARAMETERS.solidSpecificHeatJPerKgK,
+      liquidSpecificHeat: NITROGEN_PHASE_CHANGE_PARAMETERS.liquidSpecificHeatJPerKgK,
       saturationVaporPressureFn: calculateSaturationPressureNitrogen,
       slopeSaturationVaporPressureFn: slopeSVPNitrogen,
       freezePoint: NITROGEN_T_TRIPLE,

@@ -151,6 +151,9 @@ var terraformingParameters = {
     water: {
       latentHeatVaporizationJPerKg: 2.45e6,
       latentHeatSublimationJPerKg: 2.83e6,
+      latentHeatFusionJPerKg: 3.34e5,
+      solidSpecificHeatJPerKgK: 2100,
+      liquidSpecificHeatJPerKgK: 4200,
       liquidAlbedo: 0.06,
       solidAlbedo: 0.6,
       triplePointTemperatureK: 273.16,
@@ -162,6 +165,9 @@ var terraformingParameters = {
     carbonDioxide: {
       latentHeatVaporizationJPerKg: 3.75e5,
       latentHeatSublimationJPerKg: 5.90e5,
+      latentHeatFusionJPerKg: 2.15e5,
+      solidSpecificHeatJPerKgK: 850,
+      liquidSpecificHeatJPerKgK: 2100,
       liquidAlbedo: 0.10,
       solidAlbedo: 0.50,
       triplePointTemperatureK: 216.58,
@@ -174,6 +180,9 @@ var terraformingParameters = {
     methane: {
       latentHeatVaporizationJPerKg: 5.1e5,
       latentHeatSublimationJPerKg: 5.87e5,
+      latentHeatFusionJPerKg: 7.7e4,
+      solidSpecificHeatJPerKgK: 2200,
+      liquidSpecificHeatJPerKgK: 3500,
       liquidAlbedo: 0.1,
       solidAlbedo: 0.6,
       triplePointTemperatureK: 90.694,
@@ -187,6 +196,9 @@ var terraformingParameters = {
     ammonia: {
       latentHeatVaporizationJPerKg: 1.37e6,
       latentHeatSublimationJPerKg: 1.65e6,
+      latentHeatFusionJPerKg: 2.8e5,
+      solidSpecificHeatJPerKgK: 2100,
+      liquidSpecificHeatJPerKgK: 4700,
       liquidAlbedo: 0.12,
       solidAlbedo: 0.70,
       triplePointTemperatureK: 195.40,
@@ -200,6 +212,11 @@ var terraformingParameters = {
       equilibriumCondensationParameter: 0.002
     },
     hydrogen: {
+      latentHeatVaporizationJPerKg: 4.45e5,
+      latentHeatSublimationJPerKg: 5.04e5,
+      latentHeatFusionJPerKg: 5.9e4,
+      solidSpecificHeatJPerKgK: 9600,
+      liquidSpecificHeatJPerKgK: 14300,
       triplePointTemperatureK: 13.957,
       triplePointPressurePa: 7.04e3,
       criticalPointTemperatureK: 33.19,
@@ -216,6 +233,9 @@ var terraformingParameters = {
     oxygen: {
       latentHeatVaporizationJPerKg: 2.13e5,
       latentHeatSublimationJPerKg: 2.70e5,
+      latentHeatFusionJPerKg: 5.7e4,
+      solidSpecificHeatJPerKgK: 920,
+      liquidSpecificHeatJPerKgK: 1700,
       liquidAlbedo: 0.15,
       solidAlbedo: 0.75,
       triplePointTemperatureK: 54.361,
@@ -230,6 +250,9 @@ var terraformingParameters = {
     nitrogen: {
       latentHeatVaporizationJPerKg: 1.99e5,
       latentHeatSublimationJPerKg: 2.60e5,
+      latentHeatFusionJPerKg: 6.1e4,
+      solidSpecificHeatJPerKgK: 1040,
+      liquidSpecificHeatJPerKgK: 2000,
       liquidAlbedo: 0.12,
       solidAlbedo: 0.80,
       triplePointTemperatureK: 63.151,

@@ -216,6 +216,7 @@ class AmmoniaCycle extends ResourceCycleClass {
       terraforming.flowAmmoniaFreezeOutRate = freezeOut * rateScale;
       return {
         changes: flow.changes || {},
+        phaseTransitions: flow.phaseTransitions || [],
         totals: {
           flowMelt: totalMelt,
           freezeOut,
@@ -228,6 +229,9 @@ class AmmoniaCycle extends ResourceCycleClass {
     super({
       latentHeatVaporization: L_V_AMMONIA,
       latentHeatSublimation: L_S_AMMONIA,
+      latentHeatFusion: AMMONIA_PHASE_CHANGE_PARAMETERS.latentHeatFusionJPerKg,
+      solidSpecificHeat: AMMONIA_PHASE_CHANGE_PARAMETERS.solidSpecificHeatJPerKgK,
+      liquidSpecificHeat: AMMONIA_PHASE_CHANGE_PARAMETERS.liquidSpecificHeatJPerKgK,
       saturationVaporPressureFn: calculateSaturationPressureAmmonia,
       slopeSaturationVaporPressureFn: slopeSVPAmmonia,
       freezePoint: AMMONIA_T_TRIPLE,

@@ -137,12 +137,14 @@ function redistributePrecipitation(terraforming, substance, zonalChanges, zonalT
         return; // No precipitation to redistribute
     }
 
-    // Calculate liquid coverage weights
-    const liquidCoverage = {};
-    const totalLiquidCoverage = zones.reduce((sum, z) => {
+    // Weight redistributed precipitation by actual liquid surface area.
+    const liquidArea = {};
+    const totalLiquidArea = zones.reduce((sum, z) => {
         const coverage = terraforming.zonalCoverageCache[z]?.[liquidCoverageType] ?? 0;
-        liquidCoverage[z] = coverage;
-        return sum + coverage;
+        const zoneArea = terraforming.zonalCoverageCache[z]?.zoneArea
+            ?? terraforming.celestialParameters.surfaceArea * getZonePercentage(z);
+        liquidArea[z] = coverage * zoneArea;
+        return sum + liquidArea[z];
     }, 0);
 
     const adjustments = {};
@@ -160,8 +162,8 @@ function redistributePrecipitation(terraforming, substance, zonalChanges, zonalT
 
         // 3. The portion biased by liquid coverage
         let liquidBiasAmount = 0;
-        if (totalLiquidCoverage > 1e-9) {
-            const zoneLiquidFraction = liquidCoverage[z] / totalLiquidCoverage;
+        if (totalLiquidArea > 1e-9) {
+            const zoneLiquidFraction = liquidArea[z] / totalLiquidArea;
             liquidBiasAmount = totalPrecip * LIQUID_BIAS_WEIGHT * zoneLiquidFraction;
         } else {
             // If no liquid, this portion also remains in the zone
@@ -214,9 +216,115 @@ function redistributePrecipitation(terraforming, substance, zonalChanges, zonalT
     });
 }
 
- 
+function calculatePhaseTransitionEnergyPerKg(fromPhase, toPhase, temperatureK, thermodynamics) {
+  if (fromPhase === toPhase) {
+    return 0;
+  }
+
+  const meltingPointK = thermodynamics.meltingPointK;
+  const latentHeatFusion = thermodynamics.latentHeatFusionJPerKg;
+  const latentHeatVaporization = thermodynamics.latentHeatVaporizationJPerKg;
+  const latentHeatSublimation = thermodynamics.latentHeatSublimationJPerKg;
+  const solidSpecificHeat = thermodynamics.solidSpecificHeatJPerKgK;
+  const liquidSpecificHeat = thermodynamics.liquidSpecificHeatJPerKgK;
+  const solidToLiquid =
+    latentHeatFusion +
+    solidSpecificHeat * Math.max(0, meltingPointK - temperatureK) +
+    liquidSpecificHeat * Math.max(0, temperatureK - meltingPointK);
+
+  if (fromPhase === 'solid' && toPhase === 'liquid') {
+    return solidToLiquid;
+  }
+  if (fromPhase === 'liquid' && toPhase === 'solid') {
+    return -solidToLiquid;
+  }
+  if (fromPhase === 'liquid' && toPhase === 'gas') {
+    return latentHeatVaporization;
+  }
+  if (fromPhase === 'gas' && toPhase === 'liquid') {
+    return -latentHeatVaporization;
+  }
+  if (fromPhase === 'solid' && toPhase === 'gas') {
+    return latentHeatSublimation;
+  }
+  if (fromPhase === 'gas' && toPhase === 'solid') {
+    return -latentHeatSublimation;
+  }
+  return 0;
+}
+
+function resolvePhaseTransitionEnergy(temperatureK, capacityJPerK, transitions) {
+  const energy = [];
+  let endothermicEnergy = 0;
+  let exothermicEnergy = 0;
+  let endothermicFloorK = 0;
+  let exothermicCeilingK = Infinity;
+
+  for (let index = 0; index < transitions.length; index += 1) {
+    const transition = transitions[index];
+    const energyPerKg = calculatePhaseTransitionEnergyPerKg(
+      transition.fromPhase,
+      transition.toPhase,
+      temperatureK,
+      transition.thermodynamics
+    );
+    const transitionEnergy = energyPerKg * transition.amount * terraformingParameters.physical.kgPerTon;
+    energy.push(transitionEnergy);
+    if (transitionEnergy > 0) {
+      endothermicEnergy += transitionEnergy;
+      endothermicFloorK = Math.max(endothermicFloorK, transition.floorTemperatureK || 0);
+    } else if (transitionEnergy < 0) {
+      exothermicEnergy += -transitionEnergy;
+      exothermicCeilingK = Math.min(
+        exothermicCeilingK,
+        transition.ceilingTemperatureK || Infinity
+      );
+    }
+  }
+
+  const availableEndothermicEnergy =
+    exothermicEnergy +
+    capacityJPerK * Math.max(0, temperatureK - endothermicFloorK);
+  const endothermicScale = endothermicEnergy > availableEndothermicEnergy
+    ? availableEndothermicEnergy / endothermicEnergy
+    : 1;
+  const acceptedEndothermicEnergy = endothermicEnergy * endothermicScale;
+
+  const maximumExothermicEnergy = exothermicCeilingK < Infinity
+    ? acceptedEndothermicEnergy + capacityJPerK * Math.max(0, exothermicCeilingK - temperatureK)
+    : exothermicEnergy;
+  const exothermicScale = exothermicEnergy > maximumExothermicEnergy
+    ? maximumExothermicEnergy / exothermicEnergy
+    : 1;
+  const acceptedExothermicEnergy = exothermicEnergy * exothermicScale;
+
+  const acceptedAmounts = [];
+  for (let index = 0; index < transitions.length; index += 1) {
+    const scale = energy[index] > 0
+      ? endothermicScale
+      : (energy[index] < 0 ? exothermicScale : 1);
+    acceptedAmounts.push(transitions[index].amount * scale);
+  }
+
+  const netAbsorbedEnergy = acceptedEndothermicEnergy - acceptedExothermicEnergy;
+  return {
+    acceptedAmounts,
+    netHeatEnergyJ: -netAbsorbedEnergy,
+    finalTemperatureK: capacityJPerK > 0
+      ? Math.max(0, temperatureK - netAbsorbedEnergy / capacityJPerK)
+      : temperatureK,
+  };
+}
+
  if (isNodePCU) {
-   module.exports = { psychrometricConstant, penmanRate, meltingFreezingRates, redistributePrecipitation };
+   module.exports = {
+     psychrometricConstant,
+     penmanRate,
+     meltingFreezingRates,
+     redistributePrecipitation,
+     calculatePhaseTransitionEnergyPerKg,
+     resolvePhaseTransitionEnergy,
+   };
  } else {
    globalThis.psychrometricConstant = psychrometricConstant;
    globalThis.penmanRate = penmanRate;

@@ -383,7 +383,8 @@
     for (const zone of zones) {
       const dayTemp = this.temperature.zones[zone].day;
       const nightTemp = this.temperature.zones[zone].night;
-      const zonalSolarFlux = this.calculateZoneSolarFlux(zone, true);
+      const zonalFluxDivisor = isAldersonDiskWorld() || isRingWorld() ? 1 : 4;
+      const zonalSolarFlux = this.calculateZoneSolarFlux(zone) / zonalFluxDivisor;
       const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
 
       const zoneData = this.zonalSurface[zone] || {};

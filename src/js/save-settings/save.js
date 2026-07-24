@@ -836,6 +836,9 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'earlyAdvancedOversight')) {
         gameSettings.earlyAdvancedOversight = false;
       }
+      if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'phaseChangeHeat')) {
+        gameSettings.phaseChangeHeat = false;
+      }
       if (!Object.prototype.hasOwnProperty.call(gameState.settings, 'factoryHeating')) {
         gameSettings.factoryHeating = false;
       }
@@ -941,6 +944,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
       cachedSettings.disableSpeedControlsToggle.checked = gameSettings.disableSpeedControls;
       cachedSettings.unfulfilledMaintenancePenaltiesToggle.checked = gameSettings.unfulfilledMaintenancePenalties;
       cachedSettings.earlyAdvancedOversightToggle.checked = gameSettings.earlyAdvancedOversight;
+      cachedSettings.phaseChangeHeatToggle.checked = gameSettings.phaseChangeHeat;
       cachedSettings.factoryHeatingToggle.checked = gameSettings.factoryHeating;
       cachedSettings.realisticFactoryEnergyConsumptionToggle.checked = gameSettings.realisticFactoryEnergyConsumption;
       cachedSettings.infinitePatienceToggle.checked = gameSettings.infinitePatience;

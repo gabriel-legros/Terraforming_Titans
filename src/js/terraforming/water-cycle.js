@@ -167,6 +167,9 @@ class WaterCycle extends ResourceCycleClass {
     super({
       latentHeatVaporization: L_V_WATER,
       latentHeatSublimation: L_S_WATER,
+      latentHeatFusion: WATER_PHASE_CHANGE_PARAMETERS.latentHeatFusionJPerKg,
+      solidSpecificHeat: WATER_PHASE_CHANGE_PARAMETERS.solidSpecificHeatJPerKgK,
+      liquidSpecificHeat: WATER_PHASE_CHANGE_PARAMETERS.liquidSpecificHeatJPerKgK,
       saturationVaporPressureFn: saturationVaporPressureMK,
       slopeSaturationVaporPressureFn: derivativeSaturationVaporPressureMK,
       freezePoint: 273.15,
@@ -196,6 +199,7 @@ class WaterCycle extends ResourceCycleClass {
           terraforming.flowFreezeOutRate = durationSeconds > 0 ? freezeOut / durationSeconds * 86400 : 0;
           return {
             changes: flow.changes || {},
+            phaseTransitions: flow.phaseTransitions || [],
             totals: {
               flowMelt: totalMelt,
               freezeOut,
@@ -264,9 +268,9 @@ class WaterCycle extends ResourceCycleClass {
     // Focused melt adds extra melt on top of phase-change and flow
     const resources = terraforming.resources;
     const rateType = 'terraforming';
-    const focusMeltAmount = typeof globalThis.applyFocusedMelt === 'function'
-      ? globalThis.applyFocusedMelt(terraforming, resources, durationSeconds)
-      : 0;
+    const focusMeltAmount = gameSettings.phaseChangeHeat
+      ? (totals.focusedMelt || 0)
+      : applyFocusedMelt(terraforming, resources, durationSeconds);
     terraforming.focusMeltAmount = focusMeltAmount;
     const focusRate = durationSeconds > 0 ? focusMeltAmount / durationSeconds * 86400 : 0;
     terraforming.focusMeltRate = focusRate;

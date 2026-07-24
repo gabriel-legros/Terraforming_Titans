@@ -230,6 +230,7 @@ class MethaneCycle extends ResourceCycleClass {
         terraforming.flowMethaneFreezeOutRate = durationSeconds > 0 ? freezeOut / durationSeconds * 86400 : 0;
         return {
           changes: flow.changes || {},
+          phaseTransitions: flow.phaseTransitions || [],
           // Only report flowMelt as a separate total; phase-change melt remains in 'melt'
           totals: {
             flowMelt: totalMelt,
@@ -245,6 +246,9 @@ class MethaneCycle extends ResourceCycleClass {
     super({
       latentHeatVaporization: L_V_METHANE,
       latentHeatSublimation: L_S_METHANE,
+      latentHeatFusion: METHANE_PHASE_CHANGE_PARAMETERS.latentHeatFusionJPerKg,
+      solidSpecificHeat: METHANE_PHASE_CHANGE_PARAMETERS.solidSpecificHeatJPerKgK,
+      liquidSpecificHeat: METHANE_PHASE_CHANGE_PARAMETERS.liquidSpecificHeatJPerKgK,
       saturationVaporPressureFn: calculateSaturationPressureMethane,
       slopeSaturationVaporPressureFn: slopeSVPMethane,
       freezePoint: METHANE_T_TRIPLE,     // liquid cannot exist below T_triple

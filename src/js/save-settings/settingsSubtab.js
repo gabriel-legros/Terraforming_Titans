@@ -67,6 +67,8 @@ function cacheSettingsElements() {
     unfulfilledMaintenancePenaltiesTooltip: document.getElementById('unfulfilled-maintenance-penalties-tooltip'),
     earlyAdvancedOversightToggle: document.getElementById('early-advanced-oversight-toggle'),
     earlyAdvancedOversightTooltip: document.getElementById('early-advanced-oversight-tooltip'),
+    phaseChangeHeatToggle: document.getElementById('phase-change-heat-toggle'),
+    phaseChangeHeatTooltip: document.getElementById('phase-change-heat-tooltip'),
     factoryHeatingToggle: document.getElementById('factory-heating-toggle'),
     factoryHeatingTooltip: document.getElementById('factory-heating-tooltip'),
     realisticFactoryEnergyConsumptionToggle: document.getElementById('realistic-factory-energy-consumption-toggle'),
@@ -296,6 +298,7 @@ function updateDifficultyLockUI() {
     cached.immigrationPoolToggle,
     cached.disableColonistDecayToggle,
     cached.unfulfilledMaintenancePenaltiesToggle,
+    cached.phaseChangeHeatToggle,
     cached.factoryHeatingToggle,
     cached.realisticFactoryEnergyConsumptionToggle,
     cached.infinitePatienceToggle,
@@ -447,6 +450,7 @@ function updateDifficultySettingInputs() {
     immigrationPool: cached.immigrationPoolToggle,
     disableColonistDecay: cached.disableColonistDecayToggle,
     unfulfilledMaintenancePenalties: cached.unfulfilledMaintenancePenaltiesToggle,
+    phaseChangeHeat: cached.phaseChangeHeatToggle,
     factoryHeating: cached.factoryHeatingToggle,
     realisticFactoryEnergyConsumption: cached.realisticFactoryEnergyConsumptionToggle,
     infinitePatience: cached.infinitePatienceToggle,
@@ -1090,6 +1094,32 @@ function addSettingsListeners() {
         'ui.settings.earlyAdvancedOversightTooltip',
         {},
         'The game has a powerful solver for space mirrors that can automatically target specified temperature values.  It is intended to be something that must be earned, and is usually available on Story World 5.  If you find the fiddling too frustrating however feel free to have it early.  You still need the Space Mirror Facility Oversight research.'
+      )
+    );
+  }
+
+  if (cached.phaseChangeHeatToggle) {
+    cached.phaseChangeHeatToggle.checked = gameSettings.phaseChangeHeat;
+    cached.phaseChangeHeatToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.phaseChangeHeatToggle.checked = gameSettings.phaseChangeHeat;
+        return;
+      }
+      gameSettings.phaseChangeHeat = cached.phaseChangeHeatToggle.checked;
+      if (!gameSettings.phaseChangeHeat) {
+        terraforming.resetPhaseChangeHeat();
+      }
+      updateTerraformingUI();
+    });
+  }
+
+  if (cached.phaseChangeHeatTooltip) {
+    attachDynamicInfoTooltip(
+      cached.phaseChangeHeatTooltip,
+      t(
+        'ui.settings.phaseChangeHeatTooltip',
+        {},
+        'When enabled, melting, evaporation, boiling, and sublimation absorb planetary heat, while freezing, condensation, and deposition release it. Phase changes are limited by available zonal energy and may hold a zone near a transition temperature. Advanced Oversight accounts for this zonal heat load.'
       )
     );
   }

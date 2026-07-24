@@ -220,6 +220,7 @@ class CO2Cycle extends ResourceCycleClass {
         terraforming.flowCO2FreezeOutRate = durationSeconds > 0 ? freezeOut / durationSeconds * 86400 : 0;
         return {
           changes: flow.changes || {},
+          phaseTransitions: flow.phaseTransitions || [],
           totals: {
             flowMelt: totalMelt,
             freezeOut,
@@ -234,6 +235,9 @@ class CO2Cycle extends ResourceCycleClass {
     super({
       latentHeatVaporization: L_V_CO2,
       latentHeatSublimation: L_S_CO2,
+      latentHeatFusion: CO2_PHASE_CHANGE_PARAMETERS.latentHeatFusionJPerKg,
+      solidSpecificHeat: CO2_PHASE_CHANGE_PARAMETERS.solidSpecificHeatJPerKgK,
+      liquidSpecificHeat: CO2_PHASE_CHANGE_PARAMETERS.liquidSpecificHeatJPerKgK,
       saturationVaporPressureFn: calculateSaturationPressureCO2,
       slopeSaturationVaporPressureFn: slopeSVPCO2,
       freezePoint: CO2_T_TRIPLE,     // liquid cannot exist below the triple point if P < P_triple

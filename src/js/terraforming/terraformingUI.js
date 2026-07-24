@@ -90,6 +90,21 @@ function getFactoryHeatTooltipText() {
   );
 }
 
+function getPhaseChangeHeatTooltipText() {
+  const lines = [
+    getTerraformingSummaryText(
+      'temperature.phaseChangeHeatTooltip',
+      'Signed planetary heat exchanged by phase changes during the latest climate slice. Positive values mean freezing, condensation, or deposition released heat; negative values mean melting, evaporation, boiling, or sublimation absorbed heat. The effect is calculated separately in each climate zone.'
+    ),
+  ];
+  for (const zone of getZones()) {
+    const flux = terraforming.phaseChangeHeatFluxByZone[zone] || 0;
+    const signedFlux = `${flux > 0 ? '+' : ''}${formatNumber(flux, false, 2)}`;
+    lines.push(`${getTerraformingZoneLabel(zone)}: ${signedFlux} W/m²`);
+  }
+  return lines.join('\n');
+}
+
 const ATMOSPHERE_TOOLTIP_MOLAR_WEIGHTS = {
   carbonDioxide: 44.01,
   atmosphericWater: 18.01528,
@@ -1326,6 +1341,7 @@ function createTemperatureBox(row) {
       <p>${getTerraformingSummaryText('temperature.labels.globalMeanTemp', 'Global Mean Temp')}: <span id="temperature-current"></span><span class="temp-unit"></span></p>
       <p>${getTerraformingSummaryText('temperature.labels.equilibriumTemp', 'Equilibrium Temp')}: <span id="equilibrium-temp"></span> <span class="temp-unit"></span> <span id="equilibrium-temp-info" class="info-tooltip-icon">&#9432;</span></p>
       <p id="temperature-core-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netCoreHeatFlux', 'Net Core Heat Flux')}: <span id="temperature-core-heat"></span> W/m^2</p>
+      <p id="temperature-phase-change-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netPhaseChangeHeatFlux', 'Net Phase Change Heat Flux')}: <span id="temperature-phase-change-heat"></span> W/m^2 <span id="temperature-phase-change-heat-info" class="info-tooltip-icon">&#9432;</span></p>
       <p id="temperature-factory-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netFactoryHeatFlux', 'Net Factory Heat Flux')}: <span id="temperature-factory-heat"></span> W/m^2</p>
       <table>
         <colgroup>
@@ -1398,6 +1414,12 @@ function createTemperatureBox(row) {
         getCoreHeatTooltipText()
       );
     }
+    const phaseChangeHeatLine = temperatureBox.querySelector('#temperature-phase-change-heat-line');
+    const phaseChangeHeatInfo = temperatureBox.querySelector('#temperature-phase-change-heat-info');
+    const phaseChangeHeatTooltip = attachDynamicInfoTooltip(
+      phaseChangeHeatInfo,
+      getPhaseChangeHeatTooltipText()
+    );
     const factoryHeatLine = temperatureBox.querySelector('#temperature-factory-heat-line');
     const factoryHeatInfo = document.createElement('span');
     factoryHeatInfo.classList.add('info-tooltip-icon');
@@ -1488,6 +1510,9 @@ function createTemperatureBox(row) {
       coreHeatLine,
       coreHeatTooltip: coreHeatInfo.querySelector('.resource-tooltip'),
       coreHeat: temperatureBox.querySelector('#temperature-core-heat'),
+      phaseChangeHeatLine,
+      phaseChangeHeatTooltip,
+      phaseChangeHeat: temperatureBox.querySelector('#temperature-phase-change-heat'),
       factoryHeatLine,
       factoryHeatTooltip: factoryHeatInfo.querySelector('.resource-tooltip'),
       factoryHeat: temperatureBox.querySelector('#temperature-factory-heat'),
@@ -1617,6 +1642,25 @@ function createTemperatureBox(row) {
       const coreHeatText = formatNumber(netCoreHeatFlux, false, 2);
       if (els.coreHeat.textContent !== coreHeatText) {
         els.coreHeat.textContent = coreHeatText;
+      }
+    }
+    if (els.phaseChangeHeatLine) {
+      const display = gameSettings.phaseChangeHeat ? '' : 'none';
+      if (els.phaseChangeHeatLine.style.display !== display) {
+        els.phaseChangeHeatLine.style.display = display;
+      }
+    }
+    if (els.phaseChangeHeatTooltip) {
+      const tooltipText = getPhaseChangeHeatTooltipText();
+      if (els.phaseChangeHeatTooltip.textContent !== tooltipText) {
+        setTooltipText(els.phaseChangeHeatTooltip, tooltipText);
+      }
+    }
+    if (els.phaseChangeHeat) {
+      const flux = terraforming.phaseChangeHeatFlux || 0;
+      const phaseChangeHeatText = `${flux > 0 ? '+' : ''}${formatNumber(flux, false, 2)}`;
+      if (els.phaseChangeHeat.textContent !== phaseChangeHeatText) {
+        els.phaseChangeHeat.textContent = phaseChangeHeatText;
       }
     }
     const factoryHeatFlux = terraforming.getFactoryHeatFlux ? terraforming.getFactoryHeatFlux() : 0;

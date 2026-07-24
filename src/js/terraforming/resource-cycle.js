@@ -3,15 +3,19 @@ const isNodeResourceCycle = (typeof module !== 'undefined' && module.exports);
 let penmanRateFn = globalThis.penmanRate;
 let condensationRateFactorFn = globalThis.condensationRateFactor;
 let meltingFreezingRatesFn = globalThis.meltingFreezingRates;
+let resolvePhaseTransitionEnergyFn;
 if (isNodeResourceCycle) {
   try {
     const phaseUtils = require('./phase-change-utils.js');
     penmanRateFn = phaseUtils.penmanRate;
     meltingFreezingRatesFn = phaseUtils.meltingFreezingRates;
+    resolvePhaseTransitionEnergyFn = phaseUtils.resolvePhaseTransitionEnergy;
     condensationRateFactorFn = require('./condensation-utils.js').condensationRateFactor;
   } catch (e) {
     // fall back to globals if require fails
   }
+} else {
+  resolvePhaseTransitionEnergyFn = resolvePhaseTransitionEnergy;
 }
 
 function getCycleLabelKey(label) {
@@ -75,6 +79,9 @@ class ResourceCycle {
   constructor({
     latentHeatVaporization,
     latentHeatSublimation,
+    latentHeatFusion,
+    solidSpecificHeat,
+    liquidSpecificHeat,
     saturationVaporPressureFn,
     slopeSaturationVaporPressureFn,
     freezePoint,
@@ -96,6 +103,14 @@ class ResourceCycle {
   } = {}) {
     this.latentHeatVaporization = latentHeatVaporization;
     this.latentHeatSublimation = latentHeatSublimation;
+    this.thermodynamics = {
+      latentHeatVaporizationJPerKg: latentHeatVaporization,
+      latentHeatSublimationJPerKg: latentHeatSublimation,
+      latentHeatFusionJPerKg: latentHeatFusion,
+      solidSpecificHeatJPerKgK: solidSpecificHeat,
+      liquidSpecificHeatJPerKgK: liquidSpecificHeat,
+      meltingPointK: freezePoint,
+    };
     this.saturationVaporPressureFn = saturationVaporPressureFn;
     this.slopeSaturationVaporPressureFn = slopeSaturationVaporPressureFn;
     this.freezePoint = freezePoint;
@@ -221,6 +236,7 @@ class ResourceCycle {
       availableLiquid = 0,
       availableIce = 0,
       availableBuriedIce = 0,
+      phaseChangeHeatEnabled = false,
     } = params;
     const liquidForbidden =
     !!this.disallowLiquidBelowTriple &&
@@ -244,6 +260,22 @@ class ResourceCycle {
       atmosphere: { [atmosphereKey]: 0 },
       [surfaceBucket]: {},
       precipitation: {},
+      phaseTransitions: [],
+    };
+    const addTransition = (fromPhase, toPhase, amount, totalKey, adjustments, floorTemperatureK, ceilingTemperatureK) => {
+      if (!phaseChangeHeatEnabled || !(amount > 0)) {
+        return;
+      }
+      changes.phaseTransitions.push({
+        fromPhase,
+        toPhase,
+        amount,
+        totalKey,
+        adjustments,
+        floorTemperatureK,
+        ceilingTemperatureK,
+        thermodynamics: this.thermodynamics,
+      });
     };
 
     const daySolarFlux = terraformingParameters.phaseChange.resourceCycle.daytimeSolarFluxMultiplier * zonalSolarFlux;
@@ -278,6 +310,18 @@ class ResourceCycle {
       evaporationAmount = Math.min(evapRate * durationSeconds, availableLiquid);
       changes.atmosphere[atmosphereKey] += evaporationAmount;
       changes[surfaceBucket][liquidKey] = (changes[surfaceBucket][liquidKey] || 0) - evaporationAmount;
+      addTransition(
+        'liquid',
+        'gas',
+        evaporationAmount,
+        'evaporation',
+        [
+          { bucket: surfaceBucket, key: liquidKey, perTon: -1 },
+          { bucket: 'atmosphere', key: atmosphereKey, perTon: 1 },
+        ],
+        this.freezePoint,
+        Infinity
+      );
     }
 
     let potentialLiquid = 0;
@@ -326,6 +370,8 @@ class ResourceCycle {
     let sublimationAmount = 0;
     let rapidSublimationAmount = 0;
     let boilingAmount = 0;
+    let meltFromIce = 0;
+    let meltFromBuried = 0;
     if (typeof this.meltingFreezingRates === 'function') {
       const rates = this.meltingFreezingRates({
         temperature: zoneTemperature,
@@ -346,8 +392,8 @@ class ResourceCycle {
       meltAmount  = Math.min(meltingRate  * durationSeconds, availableForMelt);
       freezeAmount= Math.min(freezingRate * durationSeconds, currentLiquid);
 
-      let meltFromIce = Math.min(meltAmount, currentIce);
-      let meltFromBuried = Math.min(meltAmount - meltFromIce, currentBuried);
+      meltFromIce = Math.min(meltAmount, currentIce);
+      meltFromBuried = Math.min(meltAmount - meltFromIce, currentBuried);
 
       if (liquidForbidden) {
         const rapidBlend = meltAmount > 0
@@ -375,6 +421,48 @@ class ResourceCycle {
           changes[surfaceBucket][buriedIceKey] = (changes[surfaceBucket][buriedIceKey] || 0) - meltFromBuried;
         }
       }
+
+      const totalMeltSource = meltFromIce + meltFromBuried;
+      const iceFraction = totalMeltSource > 0 ? meltFromIce / totalMeltSource : 0;
+      const buriedFraction = totalMeltSource > 0 ? meltFromBuried / totalMeltSource : 0;
+      addTransition(
+        'solid',
+        'liquid',
+        meltAmount,
+        'melt',
+        [
+          { bucket: surfaceBucket, key: iceKey, perTon: -iceFraction },
+          { bucket: surfaceBucket, key: buriedIceKey, perTon: -buriedFraction },
+          { bucket: surfaceBucket, key: liquidKey, perTon: 1 },
+        ],
+        this.freezePoint,
+        Infinity
+      );
+      addTransition(
+        'solid',
+        'gas',
+        rapidSublimationAmount,
+        'rapidSublimation',
+        [
+          { bucket: surfaceBucket, key: iceKey, perTon: -iceFraction },
+          { bucket: surfaceBucket, key: buriedIceKey, perTon: -buriedFraction },
+          { bucket: 'atmosphere', key: atmosphereKey, perTon: 1 },
+        ],
+        0,
+        Infinity
+      );
+      addTransition(
+        'liquid',
+        'solid',
+        freezeAmount,
+        'freeze',
+        [
+          { bucket: surfaceBucket, key: liquidKey, perTon: -1 },
+          { bucket: surfaceBucket, key: iceKey, perTon: 1 },
+        ],
+        0,
+        this.freezePoint
+      );
     }
 
     if (iceArea > 0 && (availableIce + (changes[surfaceBucket][iceKey] || 0)) > 0
@@ -405,6 +493,18 @@ class ResourceCycle {
       sublimationAmount += subAmount;
       changes.atmosphere[atmosphereKey] += subAmount;
       changes[surfaceBucket][iceKey] = (changes[surfaceBucket][iceKey] || 0) - subAmount;
+      addTransition(
+        'solid',
+        'gas',
+        subAmount,
+        'sublimation',
+        [
+          { bucket: surfaceBucket, key: iceKey, perTon: -1 },
+          { bucket: 'atmosphere', key: atmosphereKey, perTon: 1 },
+        ],
+        0,
+        Infinity
+      );
     }
 
     const currentLiquid = availableLiquid + (changes[surfaceBucket][liquidKey] || 0);
@@ -425,6 +525,18 @@ class ResourceCycle {
       boilingAmount = Math.min(boilingRate * durationSeconds, currentLiquid);
       changes.atmosphere[atmosphereKey] += boilingAmount;
       changes[surfaceBucket][liquidKey] = (changes[surfaceBucket][liquidKey] || 0) - boilingAmount;
+      addTransition(
+        'liquid',
+        'gas',
+        boilingAmount,
+        'boiling',
+        [
+          { bucket: surfaceBucket, key: liquidKey, perTon: -1 },
+          { bucket: 'atmosphere', key: atmosphereKey, perTon: 1 },
+        ],
+        boilingPoint,
+        Infinity
+      );
     }
 
     return {
@@ -519,11 +631,13 @@ class ResourceCycle {
     atmPressure = 0,
     durationSeconds = 1,
     availableKeys = this.availableKeys || [],
+    phaseChangeHeatEnabled = false,
     extraParams = {},
   } = {}) {
     const zonalChanges = {};
     const cycleTotals = { evaporation: 0, sublimation: 0, rapidSublimation: 0, boiling: 0, melt: 0, freeze: 0 };
     const mergedExtra = { ...(this.defaultExtraParams || {}), ...extraParams };
+    const zonalFluxDivisor = isAldersonDiskWorld() || isRingWorld() ? 1 : 4;
 
     for (const zone of zones) {
       const temps = terraforming.temperature.zones[zone] || {};
@@ -540,8 +654,9 @@ class ResourceCycle {
         zoneTemperature: temps.value,
         atmPressure,
         vaporPressure,
-        zonalSolarFlux: terraforming.calculateZoneSolarFlux(zone, true),
+        zonalSolarFlux: terraforming.calculateZoneSolarFlux(zone) / zonalFluxDivisor,
         durationSeconds,
+        phaseChangeHeatEnabled,
         ...coverage,
         ...mergedExtra,
       };
@@ -567,6 +682,7 @@ class ResourceCycle {
           change.precipitation[k] = (change.precipitation[k] || 0) + v;
         }
       }
+      change.phaseTransitions = result.phaseTransitions || [];
       if (result.evaporationAmount) cycleTotals.evaporation += result.evaporationAmount;
       if (result.sublimationAmount) cycleTotals.sublimation += result.sublimationAmount;
       if (result.rapidSublimationAmount) cycleTotals.rapidSublimation += result.rapidSublimationAmount;
@@ -584,6 +700,39 @@ class ResourceCycle {
 
     if (typeof this.redistributePrecipitation === 'function') {
       this.redistributePrecipitation(terraforming, zonalChanges, terraforming.temperature.zones);
+    }
+
+    if (phaseChangeHeatEnabled) {
+      for (const zone of zones) {
+        const change = zonalChanges[zone];
+        for (const process of this.finalizeProcesses) {
+          const amount = change.precipitation?.[process.precipitationKey] || 0;
+          if (!(amount > 0)) continue;
+          const toPhase = process.surfaceKey === 'liquid' ? 'liquid' : 'solid';
+          change.phaseTransitions.push({
+            fromPhase: 'gas',
+            toPhase,
+            amount,
+            totalKey: process.precipitationKey,
+            adjustments: [
+              { bucket: 'atmosphere', key: atmosphereKey, perTon: -1 },
+              {
+                bucket: process.surfaceBucket,
+                key: this.resolveSurfaceKey(process.surfaceKey),
+                perTon: 1,
+              },
+              {
+                bucket: 'precipitation',
+                key: process.precipitationKey,
+                perTon: 1,
+              },
+            ],
+            floorTemperatureK: 0,
+            ceilingTemperatureK: toPhase === 'solid' ? this.freezePoint : this.criticalTemperature,
+            thermodynamics: this.thermodynamics,
+          });
+        }
+      }
     }
 
     const processTotals = {};
@@ -608,6 +757,67 @@ class ResourceCycle {
     };
   }
 
+  resolveZonalPhaseChanges(
+    terraforming,
+    data,
+    zones,
+    atmosphereKey = this.atmosphereKey,
+    startingTemperatures = null
+  ) {
+    const phaseHeat = { netHeatEnergyJ: 0, byZone: {} };
+    const heatCapacity = terraforming.getHeatCapacity();
+
+    for (const zone of zones) {
+      const change = data.zonalChanges[zone];
+      const transitions = change.phaseTransitions || [];
+      if (transitions.length === 0) continue;
+
+      const zoneCapacity = heatCapacity.zones[zone];
+      const capacityJPerK = zoneCapacity.capacityPerArea * zoneCapacity.zoneArea;
+      const startingTemperature = startingTemperatures?.[zone]
+        ?? terraforming.temperature.zones[zone].value;
+      const result = resolvePhaseTransitionEnergyFn(
+        startingTemperature,
+        capacityJPerK,
+        transitions
+      );
+
+      for (let index = 0; index < transitions.length; index += 1) {
+        const transition = transitions[index];
+        const acceptedAmount = result.acceptedAmounts[index];
+        const rejectedAmount = acceptedAmount - transition.amount;
+        if (rejectedAmount) {
+          for (const adjustment of transition.adjustments) {
+            const adjustmentChange = adjustment.zone
+              ? data.zonalChanges[adjustment.zone]
+              : change;
+            const bucket = adjustmentChange[adjustment.bucket]
+              || (adjustmentChange[adjustment.bucket] = {});
+            bucket[adjustment.key] =
+              (bucket[adjustment.key] || 0) + rejectedAmount * adjustment.perTon;
+          }
+          data.totals[transition.totalKey] =
+            (data.totals[transition.totalKey] || 0) + rejectedAmount;
+        }
+        transition.amount = acceptedAmount;
+      }
+
+      phaseHeat.netHeatEnergyJ += result.netHeatEnergyJ;
+      phaseHeat.byZone[zone] = {
+        netHeatEnergyJ: result.netHeatEnergyJ,
+        finalTemperatureK: result.finalTemperatureK,
+        transitions,
+      };
+    }
+
+    data.totals.totalAtmosphericChange = 0;
+    for (const zone of zones) {
+      data.totals.totalAtmosphericChange +=
+        data.zonalChanges[zone].atmosphere?.[atmosphereKey] || 0;
+    }
+    return phaseHeat;
+  }
+
   applyZonalChanges(terraforming, zonalChanges, zonalKey = this.zonalKey, surfaceBucket = this.surfaceBucket) {
     const totals = {};
     const container = terraforming[zonalKey] || {};
@@ -629,6 +839,20 @@ class ResourceCycle {
   runCycle(terraforming, zones, options = {}) {
     const duration = options.durationSeconds || 1;
     const data = this.calculateZonalChanges(terraforming, zones, options);
+    let phaseHeat = options.phaseChangeHeatEnabled
+      ? this.resolveZonalPhaseChanges(
+          terraforming,
+          data,
+          zones,
+          options.atmosphereKey,
+          options.phaseStartingTemperatures
+        )
+      : null;
+    if (phaseHeat) {
+      for (const zone of zones) {
+        data.zonalChanges[zone].phaseTransitions = [];
+      }
+    }
 
     if (typeof this.surfaceFlowFn === 'function') {
       const zonalKey = options.zonalKey || this.zonalKey;
@@ -665,6 +889,51 @@ class ResourceCycle {
         data.totals[k] = (data.totals[k] || 0) + v;
       }
 
+      if (options.phaseChangeHeatEnabled) {
+        const atmosphereKey = options.atmosphereKey || this.atmosphereKey;
+        for (const transition of flow.phaseTransitions || []) {
+          const sourceKey = transition.fromPhase === 'liquid'
+            ? this.resolveSurfaceKey('liquid')
+            : this.resolveSurfaceKey('ice');
+          const targetKey = transition.toPhase === 'liquid'
+            ? this.resolveSurfaceKey('liquid')
+            : this.resolveSurfaceKey('ice');
+          const adjustments = [
+            {
+              zone: transition.source,
+              bucket,
+              key: sourceKey,
+              perTon: -1,
+            },
+          ];
+          if (transition.toPhase === 'gas') {
+            const targetChange = data.zonalChanges[transition.target];
+            targetChange.atmosphere[atmosphereKey] =
+              (targetChange.atmosphere[atmosphereKey] || 0) + transition.amount;
+            adjustments.push({
+              zone: transition.target,
+              bucket: 'atmosphere',
+              key: atmosphereKey,
+              perTon: 1,
+            });
+          } else {
+            adjustments.push({
+              zone: transition.target,
+              bucket,
+              key: targetKey,
+              perTon: 1,
+            });
+          }
+          data.zonalChanges[transition.zone].phaseTransitions.push({
+            ...transition,
+            adjustments,
+            floorTemperatureK: transition.toPhase === 'solid' ? 0 : this.freezePoint,
+            ceilingTemperatureK: transition.toPhase === 'solid' ? this.freezePoint : Infinity,
+            thermodynamics: this.thermodynamics,
+          });
+        }
+      }
+
       let freezeOut = flowTotals.freezeOut || flow.totalFreezeOut || 0;
       if (!freezeOut) {
         for (const change of Object.values(flowChanges)) {
@@ -676,7 +945,37 @@ class ResourceCycle {
       }
     }
 
+    if (options.phaseChangeHeatEnabled && this.surfaceFlowFn) {
+      const startingTemperatures = {};
+      for (const zone of zones) {
+        startingTemperatures[zone] =
+          phaseHeat.byZone[zone]?.finalTemperatureK
+          ?? terraforming.temperature.zones[zone].value;
+      }
+      const flowPhaseHeat = this.resolveZonalPhaseChanges(
+        terraforming,
+        data,
+        zones,
+        options.atmosphereKey,
+        startingTemperatures
+      );
+      phaseHeat.netHeatEnergyJ += flowPhaseHeat.netHeatEnergyJ;
+      for (const zone of zones) {
+        const baseZone = phaseHeat.byZone[zone];
+        const flowZone = flowPhaseHeat.byZone[zone];
+        if (!flowZone) continue;
+        phaseHeat.byZone[zone] = {
+          netHeatEnergyJ: (baseZone?.netHeatEnergyJ || 0) + flowZone.netHeatEnergyJ,
+          finalTemperatureK: flowZone.finalTemperatureK,
+          transitions: (baseZone?.transitions || []).concat(flowZone.transitions),
+        };
+      }
+    }
     this.applyZonalChanges(terraforming, data.zonalChanges, options.zonalKey, options.surfaceBucket);
+    Object.defineProperty(data.totals, 'phaseHeat', {
+      value: phaseHeat,
+      enumerable: false,
+    });
     return data.totals;
   }
 

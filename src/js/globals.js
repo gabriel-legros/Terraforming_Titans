@@ -67,6 +67,7 @@ const DIFFICULTY_SETTING_DEFAULTS = {
   immigrationPool: false,
   disableColonistDecay: false,
   unfulfilledMaintenancePenalties: false,
+  phaseChangeHeat: false,
   factoryHeating: false,
   realisticFactoryEnergyConsumption: false,
   infinitePatience: false,

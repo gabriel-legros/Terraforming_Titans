@@ -686,6 +686,7 @@ function surfaceAlbedoMix(rockAlb, fractions, customAlb) {
 }
 
 function diurnalAmplitude(albedo, flux, T, heatCap, rotH) {
+  if (!(T > 0)) return 0;
   const omega = 2.0 * Math.PI / (Math.abs(rotH) * 3600.0);
   const num = (1 - albedo) * flux / 2.0;
   const den = Math.sqrt(heatCap * omega * 4.0 * SIGMA * Math.pow(T, 3));
