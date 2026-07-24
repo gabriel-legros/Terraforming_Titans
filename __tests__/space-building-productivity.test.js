@@ -193,6 +193,53 @@ function addProjectedRateMethods(building) {
   return building;
 }
 
+function createProductivityChainBuilding(Building, displayName, inputResource, outputResource = null, rate = 100) {
+  const building = new Building();
+  building.active = 1;
+  building.activeNumber = 1;
+  building.productivity = 1;
+  building.displayProductivity = 1;
+  building.dayNightActivity = false;
+  building.displayName = displayName;
+  building.production = outputResource
+    ? { colony: { [outputResource]: rate } }
+    : {};
+  building.consumption = { colony: { [inputResource]: rate } };
+  building.getAutomationActivityMultiplier = () => 1;
+  building.getTotalWorkerNeed = () => 0;
+  building.getProductionRatio = () => 1;
+  building.getEffectiveProductionMultiplier = () => 1;
+  building.getEffectiveResourceProductionMultiplier = () => 1;
+  building.getEffectiveThroughputMultiplier = () => 1;
+  building.getConsumption = function() {
+    return this.consumption;
+  };
+  building.getConsumptionResource = function(category, resource) {
+    return { amount: this.consumption[category][resource] };
+  };
+  building.getConsumptionRatio = () => 1;
+  building.getEffectiveConsumptionMultiplier = () => 1;
+  building.getEffectiveResourceConsumptionMultiplier = () => 1;
+  building.calculateMaintenanceCost = () => ({});
+  building.getTargetProductivity = (resources) =>
+    resources.colony[inputResource].availabilityRatio;
+  building.updateProductivity = function(resources) {
+    this.productivity = this.getTargetProductivity(resources);
+    this.displayProductivity = this.productivity;
+  };
+  building.produce = function(accumulatedChanges, deltaTime) {
+    if (!outputResource) return;
+    accumulatedChanges.colony[outputResource] +=
+      rate * this.activeNumber * this.productivity * (deltaTime / 1000);
+  };
+  building.consume = function(accumulatedChanges, deltaTime) {
+    accumulatedChanges.colony[inputResource] -=
+      rate * this.activeNumber * this.productivity * (deltaTime / 1000);
+  };
+  building.applyMaintenance = () => {};
+  return building;
+}
+
 function createDysonReceiverBuilding(energyPerSecond = 0) {
   return addProjectedRateMethods({
     active: energyPerSecond > 0 ? 1 : 0,
@@ -962,6 +1009,9 @@ function setupHarness(initialStorage = {}) {
     getMegaProjectDurationMultiplier: () => 1,
   };
   setGlobal('projectManager', projectManager, originalGlobals);
+  class Building {}
+  addProjectedRateMethods(Building.prototype);
+  setGlobal('Building', Building, originalGlobals);
 
   const { Project } = require(path.resolve(__dirname, '../src/js/projects.js'));
   setGlobal('Project', Project, originalGlobals);
@@ -1001,6 +1051,7 @@ function setupHarness(initialStorage = {}) {
   projectManager.projects.galactic_market = galacticMarket;
 
   return {
+    Building,
     produceResources: resourceModule.produceResources,
     projectManager,
     resources: resourcesObj,
@@ -1023,6 +1074,68 @@ function expectApprox(received, expected, tolerance = 1e-6) {
 }
 
 describe('Space building productivity via produceResources', () => {
+  test('optimized replay propagates a shortage through a three-building chain', () => {
+    const harness = setupHarness({ colonyMetal: 25 });
+    const {
+      Building,
+      produceResources,
+      resources,
+      cleanup,
+    } = harness;
+    const buildingA = createProductivityChainBuilding(
+      Building,
+      'Building A',
+      'metal',
+      'components'
+    );
+    const buildingB = createProductivityChainBuilding(
+      Building,
+      'Building B',
+      'components',
+      'electronics'
+    );
+    const buildingC = createProductivityChainBuilding(
+      Building,
+      'Building C',
+      'electronics'
+    );
+    const projectedProductionSpy = jest.spyOn(
+      Building.prototype,
+      'getProjectedProductionRate'
+    );
+    const projectedConsumptionSpy = jest.spyOn(
+      Building.prototype,
+      'getProjectedConsumptionRate'
+    );
+
+    produceResources(1000, {
+      buildingA,
+      buildingB,
+      buildingC,
+    });
+
+    const projectedProductionCalls = projectedProductionSpy.mock.calls.length;
+    const projectedConsumptionCalls = projectedConsumptionSpy.mock.calls.length;
+    projectedProductionSpy.mockRestore();
+    projectedConsumptionSpy.mockRestore();
+
+    expect(projectedProductionCalls).toBe(4);
+    expect(projectedConsumptionCalls).toBe(6);
+    expectApprox(buildingA.productivity, 0.25);
+    expectApprox(buildingB.productivity, 0.25);
+    expectApprox(buildingC.productivity, 0.25);
+    expectApprox(resources.colony.components.availabilityRatio, 0.25);
+    expectApprox(resources.colony.electronics.availabilityRatio, 0.25);
+    expectApprox(resources.colony.components.projectedProductionRate, 25);
+    expectApprox(resources.colony.components.projectedConsumptionRate, 100);
+    expectApprox(resources.colony.electronics.projectedProductionRate, 25);
+    expectApprox(resources.colony.electronics.projectedConsumptionRate, 100);
+    expectApprox(resources.colony.metal.value, 0);
+    expectApprox(resources.colony.components.value, 0);
+    expectApprox(resources.colony.electronics.value, 0);
+    cleanup();
+  });
+
   test('Mega Heat Sink continuous expansion respects expansion reserve scope', () => {
     const harness = setupHarness({ superalloys: 20 });
     const {

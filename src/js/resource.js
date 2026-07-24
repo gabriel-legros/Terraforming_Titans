@@ -1681,11 +1681,56 @@ function applyProjectResourceRatesForAvailability(project, cost = {}, gain = {},
   }
 }
 
+function replayBuildingProductivityRates(ratePlan, productivityMap) {
+  for (let entryIndex = 0; entryIndex < ratePlan.entries.length; entryIndex += 1) {
+    const entry = ratePlan.entries[entryIndex];
+    const productivity = productivityMap[entry.name] ?? entry.building.productivity;
+    const productivityScale = productivity / (entry.workerRatio || 1);
+
+    for (let edgeIndex = 0; edgeIndex < entry.production.length; edgeIndex += 1) {
+      const edge = entry.production[edgeIndex];
+      const productionRate = edge.rate * productivityScale;
+      const target = routeAntimatterProductionTarget(
+        edge.category,
+        edge.resource,
+        productionRate
+      );
+      resources[target.category][target.resource].modifyRate(
+        target.amount,
+        entry.source,
+        'building'
+      );
+    }
+
+    for (let edgeIndex = 0; edgeIndex < entry.consumption.length; edgeIndex += 1) {
+      const edge = entry.consumption[edgeIndex];
+      edge.target.modifyRate(-edge.rate, entry.source, 'building');
+    }
+
+    for (let edgeIndex = 0; edgeIndex < entry.maintenance.length; edgeIndex += 1) {
+      const edge = entry.maintenance[edgeIndex];
+      const conversionRate = edge.base * productivity * edge.conversion.value;
+      const target = routeAntimatterProductionTarget(
+        edge.conversion.category,
+        edge.conversion.resource,
+        conversionRate
+      );
+      resources[target.category][target.resource].modifyRate(
+        target.amount,
+        entry.source,
+        'building'
+      );
+    }
+  }
+}
+
 function calculateProductionRates(deltaTime, buildings, options = {}) {
   const {
     useProductivity = false,
     keepProjected = false,
     totalsOnly = false,
+    captureBuildingProductivityRatePlan = null,
+    buildingProductivityRatePlan = null,
     productivityMap = {},
     projectProductivityMap = {},
     projectData = null,
@@ -1703,72 +1748,114 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
     }
   }
 
-  for (const buildingName in buildings) {
-    const building = buildings[buildingName];
-    if (building.activeNumber <= 0) {
-      continue;
-    }
-    const automationMultiplier = building.getAutomationActivityMultiplier?.() ?? 1;
-    const workerRatio = building.getTotalWorkerNeed() > 0
-      ? populationModule.getWorkerAvailabilityRatio(building.workerPriority)
-      : 1;
-    const productivityValue = useProductivity
-      ? (productivityMap[buildingName] ?? building.productivity)
-      : 1;
+  if (buildingProductivityRatePlan?.replayable) {
+    replayBuildingProductivityRates(buildingProductivityRatePlan, productivityMap);
+  } else {
+    for (const buildingName in buildings) {
+      const building = buildings[buildingName];
+      if (building.activeNumber <= 0) {
+        continue;
+      }
+      const automationMultiplier = building.getAutomationActivityMultiplier?.() ?? 1;
+      const workerRatio = building.getTotalWorkerNeed() > 0
+        ? populationModule.getWorkerAvailabilityRatio(building.workerPriority)
+        : 1;
+      const productivityValue = useProductivity
+        ? (productivityMap[buildingName] ?? building.productivity)
+        : 1;
+      const planEntry = captureBuildingProductivityRatePlan
+        ? {
+            name: buildingName,
+            building,
+            source: building.displayName,
+            workerRatio,
+            production: [],
+            consumption: [],
+            maintenance: []
+          }
+        : null;
+      if (
+        captureBuildingProductivityRatePlan
+        && (
+          resourceDebugRateTracking
+          || building.getProjectedProductionRate !== Building.prototype.getProjectedProductionRate
+          || building.getProjectedConsumptionRate !== Building.prototype.getProjectedConsumptionRate
+        )
+      ) {
+        captureBuildingProductivityRatePlan.replayable = false;
+      }
 
-    // Calculate scaled production rates
-    for (const category in building.production) {
-      for (const resource in building.production[category]) {
-        const actualProduction = building.getProjectedProductionRate(category, resource, {
-          useProductivity,
-          productivity: productivityValue,
-          automationMultiplier,
-          workerRatio
-        });
-        const target = routeAntimatterProductionTarget(category, resource, actualProduction);
-        // Specify 'building' as the rateType
-        resources[target.category][target.resource].modifyRate(target.amount, building.displayName, 'building');
-        if (resourceDebugRateTracking && actualProduction) {
-          trackResourceDebugRate(localProduction, target.category, target.resource, building.displayName, target.amount);
+      // Calculate scaled production rates
+      for (const category in building.production) {
+        for (const resource in building.production[category]) {
+          const actualProduction = building.getProjectedProductionRate(category, resource, {
+            useProductivity,
+            productivity: productivityValue,
+            automationMultiplier,
+            workerRatio
+          });
+          if (planEntry) {
+            planEntry.production.push({ category, resource, rate: actualProduction });
+          }
+          const target = routeAntimatterProductionTarget(category, resource, actualProduction);
+          // Specify 'building' as the rateType
+          resources[target.category][target.resource].modifyRate(target.amount, building.displayName, 'building');
+          if (resourceDebugRateTracking && actualProduction) {
+            trackResourceDebugRate(localProduction, target.category, target.resource, building.displayName, target.amount);
+          }
         }
       }
-    }
 
-    // Calculate scaled consumption rates
-    const consumption = building.getConsumption();
-    for (const category in consumption) {
-      for (const resource in consumption[category]) {
-        const actualConsumption = building.getProjectedConsumptionRate(category, resource, {
-          automationMultiplier,
-          workerRatio
-        });
-        // Specify 'building' as the rateType
-        resources[category][resource].modifyRate(-actualConsumption, building.displayName, 'building');
-        if (resourceDebugRateTracking && actualConsumption) {
-          trackResourceDebugRate(localConsumption, category, resource, building.displayName, actualConsumption);
+      // Calculate scaled consumption rates
+      const consumption = building.getConsumption();
+      for (const category in consumption) {
+        for (const resource in consumption[category]) {
+          const actualConsumption = building.getProjectedConsumptionRate(category, resource, {
+            automationMultiplier,
+            workerRatio
+          });
+          if (planEntry) {
+            planEntry.consumption.push({
+              target: resources[category][resource],
+              rate: actualConsumption
+            });
+          }
+          // Specify 'building' as the rateType
+          resources[category][resource].modifyRate(-actualConsumption, building.displayName, 'building');
+          if (resourceDebugRateTracking && actualConsumption) {
+            trackResourceDebugRate(localConsumption, category, resource, building.displayName, actualConsumption);
+          }
         }
       }
-    }
 
-    // Include production from maintenance conversions but ignore maintenance costs
-    const maintenanceCost = typeof building.calculateMaintenanceCost === 'function' ? building.calculateMaintenanceCost() : {};
-    for (const resource in maintenanceCost) {
-      const sourceData = resources.colony[resource];
-      if (!sourceData || !sourceData.maintenanceConversion) continue;
-      const base = maintenanceCost[resource] * building.activeNumber * automationMultiplier * (useProductivity ? productivityValue : 1);
-      const conversionEntries = getMaintenanceConversionEntries(sourceData);
-      for (let i = 0; i < conversionEntries.length; i += 1) {
-        const conversion = conversionEntries[i];
-        const conversionRate = base * conversion.value;
-        const target = routeAntimatterProductionTarget(conversion.category, conversion.resource, conversionRate);
-        resources[target.category][target.resource].modifyRate(
-          target.amount,
-          building.displayName,
-          'building'
-        );
-        if (resourceDebugRateTracking && conversionRate) {
-          trackResourceDebugRate(localProduction, target.category, target.resource, `${building.displayName} maintenance`, target.amount);
+      // Include production from maintenance conversions but ignore maintenance costs
+      const maintenanceCost = typeof building.calculateMaintenanceCost === 'function' ? building.calculateMaintenanceCost() : {};
+      for (const resource in maintenanceCost) {
+        const sourceData = resources.colony[resource];
+        if (!sourceData || !sourceData.maintenanceConversion) continue;
+        const unscaledBase = maintenanceCost[resource] * building.activeNumber * automationMultiplier;
+        const base = unscaledBase * (useProductivity ? productivityValue : 1);
+        const conversionEntries = getMaintenanceConversionEntries(sourceData);
+        for (let i = 0; i < conversionEntries.length; i += 1) {
+          const conversion = conversionEntries[i];
+          if (planEntry) {
+            planEntry.maintenance.push({ base: unscaledBase, conversion });
+          }
+          const conversionRate = base * conversion.value;
+          const target = routeAntimatterProductionTarget(conversion.category, conversion.resource, conversionRate);
+          resources[target.category][target.resource].modifyRate(
+            target.amount,
+            building.displayName,
+            'building'
+          );
+          if (resourceDebugRateTracking && conversionRate) {
+            trackResourceDebugRate(localProduction, target.category, target.resource, `${building.displayName} maintenance`, target.amount);
+          }
         }
+      }
+
+      if (planEntry) {
+        captureBuildingProductivityRatePlan.entries.push(planEntry);
       }
     }
   }
@@ -1854,6 +1941,28 @@ function buildProjectOperationProductivityMap(projectEntries, projectProductivit
       : productivity;
   }
   return operationMap;
+}
+
+function beginProjectAssignmentNormalizationBatch() {
+  const projects = [];
+  if (!projectManager) {
+    return projects;
+  }
+  for (const name in projectManager.projects) {
+    const project = projectManager.projects[name];
+    if (!project.beginAssignmentNormalizationBatch) {
+      continue;
+    }
+    project.beginAssignmentNormalizationBatch();
+    projects.push(project);
+  }
+  return projects;
+}
+
+function endProjectAssignmentNormalizationBatch(projects) {
+  for (let index = 0; index < projects.length; index += 1) {
+    projects[index].endAssignmentNormalizationBatch();
+  }
 }
 
 function saveCurrentRatesAsProjected(resources) {
@@ -1978,7 +2087,11 @@ function produceResources(deltaTime, buildings) {
     }
   }
 
-  calculateProductionRates(deltaTime, buildings);
+  const assignmentNormalizationBatch = beginProjectAssignmentNormalizationBatch();
+  const buildingProductivityRatePlan = { replayable: true, entries: [] };
+  calculateProductionRates(deltaTime, buildings, {
+    captureBuildingProductivityRatePlan: buildingProductivityRatePlan
+  });
   applyProjectedExternalRates(deltaTime, externalProductivityOperations);
   updateResourceAvailabilityRatios(resources, deltaTime);
   updateExternalOperationProductivities(externalProductivityOperations);
@@ -2044,6 +2157,7 @@ function produceResources(deltaTime, buildings) {
         useProductivity: true,
         keepProjected: true,
         totalsOnly: true,
+        buildingProductivityRatePlan,
         productivityMap,
         projectProductivityMap: projectOperationProductivityMap,
         projectData,
@@ -2099,6 +2213,7 @@ function produceResources(deltaTime, buildings) {
     }
   }
 
+  endProjectAssignmentNormalizationBatch(assignmentNormalizationBatch);
   const galacticMarketProject = projectManager?.projects?.galactic_market;
   const spaceStorageProject = projectManager?.projects?.spaceStorage;
 

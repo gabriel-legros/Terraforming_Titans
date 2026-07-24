@@ -128,6 +128,9 @@ function createProjectAssignmentBase(BaseClass) {
       this.assignmentsDirty = true;
       this.assignmentsLastSignature = '';
       this.cachedAssignedTotal = 0n;
+      this.assignmentNormalizationBatchActive = false;
+      this.assignmentNormalizationBatchValidated = false;
+      this.assignmentNormalizationBatchTotalCapacity = null;
     }
 
     getAssignmentMap() {
@@ -153,10 +156,34 @@ function createProjectAssignmentBase(BaseClass) {
 
     markAssignmentsDirty() {
       this.assignmentsDirty = true;
+      this.assignmentNormalizationBatchValidated = false;
+      this.assignmentNormalizationBatchTotalCapacity = null;
+    }
+
+    beginAssignmentNormalizationBatch() {
+      this.assignmentNormalizationBatchActive = true;
+      this.assignmentNormalizationBatchValidated = false;
+      this.assignmentNormalizationBatchTotalCapacity = null;
+    }
+
+    endAssignmentNormalizationBatch() {
+      this.assignmentNormalizationBatchActive = false;
+      this.assignmentNormalizationBatchValidated = false;
+      this.assignmentNormalizationBatchTotalCapacity = null;
     }
 
     getAssignmentTotalCapacity() {
       return this.normalizeAssignmentInteger(this.repeatCount);
+    }
+
+    getAssignmentTotalCapacityForBatch() {
+      if (!this.assignmentNormalizationBatchActive) {
+        return this.getAssignmentTotalCapacity();
+      }
+      if (this.assignmentNormalizationBatchTotalCapacity === null) {
+        this.assignmentNormalizationBatchTotalCapacity = this.getAssignmentTotalCapacity();
+      }
+      return this.assignmentNormalizationBatchTotalCapacity;
     }
 
     getAssignmentStepMax() {
@@ -179,17 +206,17 @@ function createProjectAssignmentBase(BaseClass) {
       return this.getManagedAssignmentKeys();
     }
 
-    getAssignmentCapForKey(key, total = this.getAssignmentTotalCapacity()) {
+    getAssignmentCapForKey(key, total = this.getAssignmentTotalCapacityForBatch()) {
       return total;
     }
 
     getAssignmentNormalizationSignature() {
-      const total = this.getAssignmentTotalCapacity();
+      const total = this.getAssignmentTotalCapacityForBatch();
       return `${total.toString()}|${this.getManagedAssignmentKeys().join('|')}`;
     }
 
     getAssignmentCapSignature() {
-      const total = this.getAssignmentTotalCapacity();
+      const total = this.getAssignmentTotalCapacityForBatch();
       return this.getManagedAssignmentKeys()
         .map((key) => `${key}:${this.getAssignmentCapForKey(key, total).toString()}`)
         .join('|');
@@ -202,10 +229,18 @@ function createProjectAssignmentBase(BaseClass) {
     }
 
     normalizeAssignments() {
+      if (
+        this.assignmentNormalizationBatchActive
+        && this.assignmentNormalizationBatchValidated
+        && !this.assignmentsDirty
+      ) {
+        return;
+      }
       const preserveAssignments = this.shouldPreserveAssignmentsDuringNormalization();
       const capSignature = this.dynamicAssignmentCaps ? this.getAssignmentCapSignature() : '';
       const signature = `${this.getAssignmentNormalizationSignature()}|caps:${capSignature}|preserve:${preserveAssignments}`;
       if (!this.assignmentsDirty && this.assignmentsLastSignature === signature) {
+        this.assignmentNormalizationBatchValidated = true;
         return;
       }
 
@@ -215,7 +250,7 @@ function createProjectAssignmentBase(BaseClass) {
       const keys = this.getManagedAssignmentKeys();
       const keySet = new Set(keys);
       const persistentKeys = new Set(this.getPersistentAssignmentKeys());
-      const total = this.getAssignmentTotalCapacity();
+      const total = this.getAssignmentTotalCapacityForBatch();
 
       keys.forEach((key) => {
         assignments[key] = this.normalizeAssignmentInteger(assignments[key]);
@@ -236,6 +271,7 @@ function createProjectAssignmentBase(BaseClass) {
         this.cachedAssignedTotal = keys.reduce((sum, key) => sum + (assignments[key] || 0n), 0n);
         this.assignmentsLastSignature = signature;
         this.assignmentsDirty = false;
+        this.assignmentNormalizationBatchValidated = true;
         return;
       }
 
@@ -272,6 +308,7 @@ function createProjectAssignmentBase(BaseClass) {
       this.cachedAssignedTotal = assignedTotal;
       this.assignmentsLastSignature = signature;
       this.assignmentsDirty = false;
+      this.assignmentNormalizationBatchValidated = true;
     }
 
     distributeAutoAssignments(autoKeys, remaining, total) {
@@ -352,7 +389,7 @@ function createProjectAssignmentBase(BaseClass) {
     }
 
     getAvailableAssignments(skipNormalization = false, assignedTotal = null) {
-      const total = this.getAssignmentTotalCapacity();
+      const total = this.getAssignmentTotalCapacityForBatch();
       const assigned = assignedTotal === null ? this.getAssignedTotal(skipNormalization) : assignedTotal;
       return total > assigned ? (total - assigned) : 0n;
     }
@@ -367,7 +404,7 @@ function createProjectAssignmentBase(BaseClass) {
 
     getAssignmentMaxTarget(key) {
       const keys = this.getManagedAssignmentKeys();
-      const total = this.getAssignmentTotalCapacity();
+      const total = this.getAssignmentTotalCapacityForBatch();
       const usedOther = keys.reduce((sum, otherKey) => {
         if (otherKey === key || this.autoAssignFlags[otherKey]) {
           return sum;

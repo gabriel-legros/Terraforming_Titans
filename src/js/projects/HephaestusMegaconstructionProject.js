@@ -284,7 +284,7 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     }
   }
 
-  getAssignmentCapForKey(key, total = this.getAssignmentTotalCapacity()) {
+  getAssignmentCapForKey(key, total = this.getAssignmentTotalCapacityForBatch()) {
     if (!this.isUnassignedAssignmentKey(key) && this.releaseIfDisabledFlags[key] && !this.isAssignmentExpansionEnabled(key)) {
       return 0n;
     }
