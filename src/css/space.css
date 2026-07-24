@@ -1079,8 +1079,14 @@
   color: var(--space-fg-muted);
 }
 
+.space-stat-value-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
 .space-galactic-population-sidebar-toggle {
-  align-self: flex-start;
   gap: 6px;
   padding: 0;
   background: transparent;
