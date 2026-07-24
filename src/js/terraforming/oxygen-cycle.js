@@ -1,21 +1,22 @@
 // oxygen-cycle.js — O₂ (oxygen) phase-change cycle (gas ↔ liquid ↔ ice)
 (function () {
   // Thermodynamic constants (approximate, used for gameplay-phase transitions)
-  const L_V_OXYGEN = 2.13e5; // J/kg latent heat of vaporization
-  const L_S_OXYGEN = 2.70e5; // J/kg latent heat of sublimation
-  const EVAP_ALBEDO_OXYGEN = 0.15;
-  const SUBLIMATION_ALBEDO_OXYGEN_ICE = 0.75;
+  const OXYGEN_PHASE_CHANGE_PARAMETERS = terraformingParameters.phaseChange.oxygen;
+  const L_V_OXYGEN = OXYGEN_PHASE_CHANGE_PARAMETERS.latentHeatVaporizationJPerKg;
+  const L_S_OXYGEN = OXYGEN_PHASE_CHANGE_PARAMETERS.latentHeatSublimationJPerKg;
+  const EVAP_ALBEDO_OXYGEN = OXYGEN_PHASE_CHANGE_PARAMETERS.liquidAlbedo;
+  const SUBLIMATION_ALBEDO_OXYGEN_ICE = OXYGEN_PHASE_CHANGE_PARAMETERS.solidAlbedo;
 
-  const OXYGEN_T_TRIPLE = 54.361;  // K
-  const OXYGEN_P_TRIPLE = 1.146e3; // Pa
-  const OXYGEN_T_CRIT = 154.581;   // K
-  const OXYGEN_P_CRIT = 5.043e6;   // Pa
-  const OXYGEN_BOILING_T = 90.188; // K (1 atm)
-  const OXYGEN_BOILING_P = 101325; // Pa
+  const OXYGEN_T_TRIPLE = OXYGEN_PHASE_CHANGE_PARAMETERS.triplePointTemperatureK;
+  const OXYGEN_P_TRIPLE = OXYGEN_PHASE_CHANGE_PARAMETERS.triplePointPressurePa;
+  const OXYGEN_T_CRIT = OXYGEN_PHASE_CHANGE_PARAMETERS.criticalPointTemperatureK;
+  const OXYGEN_P_CRIT = OXYGEN_PHASE_CHANGE_PARAMETERS.criticalPointPressurePa;
+  const OXYGEN_BOILING_T = OXYGEN_PHASE_CHANGE_PARAMETERS.boilingPointTemperatureK;
+  const OXYGEN_BOILING_P = OXYGEN_PHASE_CHANGE_PARAMETERS.boilingPointPressurePa;
 
-  const OXYGEN_MOLAR_MASS = 0.031998; // kg/mol
-  const OXYGEN_GAS_CONSTANT = 8.314462618; // J/mol/K
-  var DEFAULT_EQUILIBRIUM_OXYGEN_CONDENSATION_PARAMETER = 0.002;
+  const OXYGEN_MOLAR_MASS = OXYGEN_PHASE_CHANGE_PARAMETERS.molarMassKgPerMol;
+  const OXYGEN_GAS_CONSTANT = terraformingParameters.physical.universalGasConstant;
+  var DEFAULT_EQUILIBRIUM_OXYGEN_CONDENSATION_PARAMETER = OXYGEN_PHASE_CHANGE_PARAMETERS.equilibriumCondensationParameter;
 
   var resourcePhaseGroups;
   var psychrometricConstant;

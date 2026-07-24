@@ -221,7 +221,11 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
         }
 
         const remainingAfterStorage = Math.max(0, amount - spentFromStorage);
-        const spendFromColony = Math.min(colonyAvailable, remainingAfterStorage);
+        const spendFromColony = Math.min(
+          colonyAvailable,
+          remainingAfterStorage,
+          allocation.fromColony
+        );
         if (spendFromColony > 0) {
           this.applyExpansionColonyChange(category, resource, spendFromColony, accumulatedChanges);
           spentColonyByCategory[category] ||= {};
@@ -496,6 +500,42 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
     return result;
   }
 }
+
+const CONTINUOUS_EXPANSION_CAPABILITY_METHODS = [
+  'isExpansionContinuous',
+  'isContinuous',
+  'startContinuousExpansion',
+  'getExpansionProgressField',
+  'getExpansionCompletedField',
+  'getExpansionLimit',
+  'getExpansionProgressValue',
+  'setExpansionProgressValue',
+  'getExpansionCompletedValue',
+  'setExpansionCompletedValue',
+  'getExpansionCompletedTotal',
+  'getRemainingExpansionCapacity',
+  'createExpansionStorageState',
+  'getAffordableExpansionProgress',
+  'getContinuousExpansionTickState',
+  'applyExpansionColonyChange',
+  'applyExpansionCostForProgress',
+  'applyExpansionSpentRates',
+  'applyRequestedExpansionProgress',
+  'estimateExpansionCostForProgress',
+  'mergeResourceTotals',
+  'applyFractionalProgress',
+  'applyExpansionProgress',
+  'carryDiscreteExpansionProgress',
+];
+
+ContinuousExpansionProject.applyCapabilityTo = function (ProjectClass) {
+  CONTINUOUS_EXPANSION_CAPABILITY_METHODS.forEach((methodName) => {
+    if (Object.prototype.hasOwnProperty.call(ProjectClass.prototype, methodName)) {
+      return;
+    }
+    ProjectClass.prototype[methodName] = ContinuousExpansionProject.prototype[methodName];
+  });
+};
 
 try {
   window.ContinuousExpansionProject = ContinuousExpansionProject;

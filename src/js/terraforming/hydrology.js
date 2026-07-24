@@ -19,6 +19,7 @@ try {
 }
 
 function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zoneElevationsInput, config) {
+    const surfaceFlowParameters = terraformingParameters.phaseChange.surfaceFlow;
     const {
         liquidProp,
         iceProp,
@@ -35,7 +36,7 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
     const zonalData = zonalInput[zonalDataKey] ? zonalInput[zonalDataKey] : zonalInput;
     const terraforming = zonalInput[zonalDataKey] ? zonalInput : null;
 
-    const marsRadiusKm = 3389.5;
+    const marsRadiusKm = surfaceFlowParameters.referencePlanetRadiusKm;
     const planetRadiusKm = (terraforming && terraforming.celestialParameters && typeof terraforming.celestialParameters.radius === 'number')
         ? terraforming.celestialParameters.radius
         : marsRadiusKm;
@@ -44,7 +45,7 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
 
     // Flow melt (glacier contact) is thermal-limited and should not depend on viscosity.
     // Units: m/s/K. Amounts are treated as m³-equivalent (1 ton ~ 1 m³).
-    const glacierFlowMeltSpeedPerK = 5e-8;
+    const glacierFlowMeltSpeedPerK = surfaceFlowParameters.glacierFlowMeltMetersPerSecondK;
     const secondsMultiplier = durationSeconds;
     let totalMelt = 0;
     let totalGasMelt = 0;
@@ -56,15 +57,15 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
     const getZonePercentageFn = (typeof getZonePercentage !== 'undefined') ? getZonePercentage : (zonesModHydro && zonesModHydro.getZonePercentage);
 
     // Concentric-circle boundary lengths (both hemispheres combined).
-    const phiTropic = 23.5 * Math.PI / 180;
-    const phiPolar = 66.5 * Math.PI / 180;
+    const phiTropic = surfaceFlowParameters.tropicalBoundaryLatitudeDegrees * Math.PI / 180;
+    const phiPolar = surfaceFlowParameters.polarBoundaryLatitudeDegrees * Math.PI / 180;
     const boundaryLengthTropicalTemperate = 4 * Math.PI * planetRadiusMeters * Math.cos(phiTropic);
     const boundaryLengthTemperatePolar = 4 * Math.PI * planetRadiusMeters * Math.cos(phiPolar);
     const referenceBoundaryLength = boundaryLengthTropicalTemperate || 1;
-    const boundaryInteractionDepth = 200_000;
+    const boundaryInteractionDepth = surfaceFlowParameters.boundaryInteractionDepthMeters;
     const getBoundaryScale = (minZoneIndex) => (minZoneIndex === 0 ? boundaryLengthTropicalTemperate : boundaryLengthTemperatePolar) / referenceBoundaryLength;
 
-    const baseFlowRate = 0.001 / 86400;
+    const baseFlowRate = surfaceFlowParameters.baseFlowFractionPerDay / surfaceFlowParameters.secondsPerDay;
     const flowRateCoefficient = (baseFlowRate * radiusScale) / (viscosity || 1.0);
 
     const changes = {};
@@ -253,9 +254,9 @@ function simulateSurfaceWaterFlow(zonalWaterInput, durationSeconds, zonalTempera
         liquidProp: 'liquidWater',
         iceProp: 'ice',
         buriedIceProp: 'buriedIce',
-        meltingPoint: 273.15,
+        meltingPoint: terraformingParameters.phaseChange.water.meltingPointK,
         zonalDataKey: 'zonalSurface',
-        viscosity: 0.89, // Baseline viscosity for water
+        viscosity: terraformingParameters.phaseChange.surfaceFlow.viscosity.water,
         iceCoverageType: 'ice',
         liquidCoverageType: 'liquidWater',
         ...flowOptions,
@@ -267,9 +268,9 @@ function simulateSurfaceHydrocarbonFlow(zonalHydrocarbonInput, durationSeconds, 
         liquidProp: 'liquidMethane',
         iceProp: 'hydrocarbonIce',
         buriedIceProp: null,
-        meltingPoint: 90.7,
+        meltingPoint: terraformingParameters.phaseChange.methane.meltingPointK,
         zonalDataKey: 'zonalSurface',
-        viscosity: 0.12, // Methane is less viscous than water
+        viscosity: terraformingParameters.phaseChange.surfaceFlow.viscosity.methane,
         iceCoverageType: 'hydrocarbonIce',
         liquidCoverageType: 'liquidMethane',
         ...flowOptions,
@@ -281,9 +282,9 @@ function simulateSurfaceAmmoniaFlow(zonalAmmoniaInput, durationSeconds, zonalTem
         liquidProp: 'liquidAmmonia',
         iceProp: 'ammoniaIce',
         buriedIceProp: 'buriedAmmoniaIce',
-        meltingPoint: 195.4,
+        meltingPoint: terraformingParameters.phaseChange.ammonia.meltingPointK,
         zonalDataKey: 'zonalSurface',
-        viscosity: 0.25,
+        viscosity: terraformingParameters.phaseChange.surfaceFlow.viscosity.ammonia,
         iceCoverageType: 'ammoniaIce',
         liquidCoverageType: 'liquidAmmonia',
         ...flowOptions,
@@ -295,9 +296,9 @@ function simulateSurfaceCO2Flow(zonalCO2Input, durationSeconds, zonalTemperature
         liquidProp: 'liquidCO2',
         iceProp: 'dryIce',
         buriedIceProp: 'buriedDryIce',
-        meltingPoint: 216.58,
+        meltingPoint: terraformingParameters.phaseChange.carbonDioxide.meltingPointK,
         zonalDataKey: 'zonalSurface',
-        viscosity: 0.07, // Liquid CO2 is lower-viscosity than water
+        viscosity: terraformingParameters.phaseChange.surfaceFlow.viscosity.carbonDioxide,
         iceCoverageType: 'dryIce',
         liquidCoverageType: 'liquidCO2',
         ...flowOptions,
@@ -308,9 +309,10 @@ function simulateSurfaceHydrogenFlow(zonalHydrogenInput, durationSeconds, zonalT
     const terraforming = zonalHydrogenInput?.zonalSurface ? zonalHydrogenInput : null;
     const zonalData = terraforming ? terraforming.zonalSurface : zonalHydrogenInput;
     const liquidProp = 'liquidHydrogen';
-    const viscosity = flowOptions.viscosity || 0.02;
+    const viscosity = flowOptions.viscosity || terraformingParameters.phaseChange.surfaceFlow.viscosity.hydrogen;
 
-    const marsRadiusKm = 3389.5;
+    const surfaceFlowParameters = terraformingParameters.phaseChange.surfaceFlow;
+    const marsRadiusKm = surfaceFlowParameters.referencePlanetRadiusKm;
     const planetRadiusKm = (terraforming && terraforming.celestialParameters && typeof terraforming.celestialParameters.radius === 'number')
         ? terraforming.celestialParameters.radius
         : marsRadiusKm;
@@ -322,14 +324,14 @@ function simulateSurfaceHydrogenFlow(zonalHydrogenInput, durationSeconds, zonalT
     const zoneElevations = zoneElevationsInput || (typeof ZONE_ELEVATIONS !== 'undefined' ? ZONE_ELEVATIONS : defaultElevations);
     const getZonePercentageFn = (typeof getZonePercentage !== 'undefined') ? getZonePercentage : (zonesModHydro && zonesModHydro.getZonePercentage);
 
-    const phiTropic = 23.5 * Math.PI / 180;
-    const phiPolar = 66.5 * Math.PI / 180;
+    const phiTropic = surfaceFlowParameters.tropicalBoundaryLatitudeDegrees * Math.PI / 180;
+    const phiPolar = surfaceFlowParameters.polarBoundaryLatitudeDegrees * Math.PI / 180;
     const boundaryLengthTropicalTemperate = 4 * Math.PI * planetRadiusMeters * Math.cos(phiTropic);
     const boundaryLengthTemperatePolar = 4 * Math.PI * planetRadiusMeters * Math.cos(phiPolar);
     const referenceBoundaryLength = boundaryLengthTropicalTemperate || 1;
     const getBoundaryScale = (minZoneIndex) => (minZoneIndex === 0 ? boundaryLengthTropicalTemperate : boundaryLengthTemperatePolar) / referenceBoundaryLength;
 
-    const baseFlowRate = 0.005 / 86400;
+    const baseFlowRate = surfaceFlowParameters.hydrogenBaseFlowFractionPerDay / surfaceFlowParameters.secondsPerDay;
     const flowRateCoefficient = (baseFlowRate * radiusScale) / viscosity;
     const secondsMultiplier = durationSeconds;
     const changes = {};
@@ -418,7 +420,7 @@ function simulateSurfaceHydrogenFlow(zonalHydrogenInput, durationSeconds, zonalT
 function calculateMeltingFreezingRates(temperature, availableIce, availableLiquid, availableBuriedIce = 0, zoneArea = 1, iceCoverage = 1, liquidCoverage = 1) {
     return meltingFreezingRatesUtil({
         temperature,
-        freezingPoint: 273.15,
+        freezingPoint: terraformingParameters.phaseChange.water.meltingPointK,
         availableIce,
         availableLiquid,
         availableBuriedIce,
@@ -431,7 +433,7 @@ function calculateMeltingFreezingRates(temperature, availableIce, availableLiqui
 function calculateMethaneMeltingFreezingRates(temperature, availableIce, availableLiquid, availableBuriedIce = 0, zoneArea = 1, iceCoverage = 1, liquidCoverage = 1) {
     return meltingFreezingRatesUtil({
         temperature,
-        freezingPoint: 90.7,
+        freezingPoint: terraformingParameters.phaseChange.methane.meltingPointK,
         availableIce,
         availableLiquid,
         availableBuriedIce,

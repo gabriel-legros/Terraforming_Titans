@@ -86,7 +86,8 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     };
     this.initializeAssignmentState({
       assignmentStateKey: 'yardAssignments',
-      assignmentStepMax: HEPHAESTUS_ASSIGNMENT_STEP_MAX
+      assignmentStepMax: HEPHAESTUS_ASSIGNMENT_STEP_MAX,
+      dynamicAssignmentCaps: true
     });
   }
 

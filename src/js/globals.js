@@ -65,6 +65,7 @@ const DIFFICULTY_SETTING_DEFAULTS = {
   disableFusionConsumptionScaling: false,
   disableSpeedControls: false,
   immigrationPool: false,
+  disableColonistDecay: false,
   unfulfilledMaintenancePenalties: false,
   factoryHeating: false,
   realisticFactoryEnergyConsumption: false,

@@ -1,1 +1,2 @@
 src/js/debug_constants.js merge=ours
+*.sh text eol=lf

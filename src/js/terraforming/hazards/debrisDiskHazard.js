@@ -1,24 +1,25 @@
 const DEBRIS_DISK_EFFECT_SOURCE_ID = 'debris-disk-hazard';
 const DEBRIS_DISK_ATTRITION_LABEL = t('ui.terraforming.hazardEffects.debrisDiskAttrition', {}, 'Debris Disk Attrition');
-const DEBRIS_DISK_STRUCTURE_MINIMUM = 10n;
-const DEBRIS_DISK_AEROSTAT_MINIMUM = 500n;
-const DEBRIS_DISK_COLONY_RESOURCE_MINIMUM = 10000;
+const DEBRIS_DISK_PARAMETERS = terraformingParameters.hazards.debrisDisk;
+const DEBRIS_DISK_STRUCTURE_MINIMUM = BigInt(DEBRIS_DISK_PARAMETERS.structureMinimum);
+const DEBRIS_DISK_AEROSTAT_MINIMUM = BigInt(DEBRIS_DISK_PARAMETERS.aerostatMinimum);
+const DEBRIS_DISK_COLONY_RESOURCE_MINIMUM = DEBRIS_DISK_PARAMETERS.colonyResourceMinimum;
 const DEBRIS_DISK_SPACESHIP_MINING_SOURCE = 'Spaceship Mining';
-const DEBRIS_DISK_DEFAULT_KESSLER_REGENERATION_RATE_PER_BIN_PER_SECOND = 0.001;
+const DEBRIS_DISK_DEFAULT_KESSLER_REGENERATION_RATE_PER_BIN_PER_SECOND = DEBRIS_DISK_PARAMETERS.defaultKesslerRegenerationRatePerBinPerSecond;
 
 function normalizeDebrisDiskParameters(parameters = {}) {
   const attritionRate = Number.isFinite(parameters.attritionRatePerSecond)
     ? Math.max(0, parameters.attritionRatePerSecond)
-    : 0.01;
+    : DEBRIS_DISK_PARAMETERS.attritionRatePerSecond;
   const colonistGrowthPenalty = Number.isFinite(parameters.colonistGrowthPenalty)
     ? Math.max(0, Math.min(1, parameters.colonistGrowthPenalty))
-    : 0.9;
+    : DEBRIS_DISK_PARAMETERS.colonistGrowthPenalty;
   const debrisPerLand = Number.isFinite(parameters.debrisPerLand)
     ? Math.max(0, parameters.debrisPerLand)
-    : 1e10;
+    : DEBRIS_DISK_PARAMETERS.debrisPerLand;
   const initialDebrisTons = Number.isFinite(parameters.initialDebrisTons)
     ? Math.max(0, parameters.initialDebrisTons)
-    : 0;
+    : DEBRIS_DISK_PARAMETERS.initialDebrisTons;
   const kesslerRegenerationRatePerBinPerSecond = Number.isFinite(parameters.kesslerRegenerationRatePerBinPerSecond)
     ? Math.max(0, parameters.kesslerRegenerationRatePerBinPerSecond)
     : DEBRIS_DISK_DEFAULT_KESSLER_REGENERATION_RATE_PER_BIN_PER_SECOND;
@@ -57,21 +58,17 @@ function clampDebrisDiskRatio(value) {
   return value;
 }
 
-function addDebrisDiskSurfaceResource(resourceKey, amount, seconds) {
+function addDebrisDiskConvertedResource(category, resourceKey, amount, seconds) {
   if (!(amount > 0)) {
     return;
   }
-  const resource = resources.surface[resourceKey];
+  const resource = resources[category][resourceKey];
   resource.unlocked = true;
   resource.increase(amount, true);
   if (seconds > 0) {
     resource.modifyRate(amount / seconds, DEBRIS_DISK_ATTRITION_LABEL, 'hazard');
   }
-  try {
-    unlockResource(resource);
-  } catch (error) {
-    // Missing UI helpers are acceptable in isolated tests.
-  }
+  unlockResource(resource);
 }
 
 function getDebrisDiskSpaceshipMiningRate(category, resourceKey) {
@@ -101,21 +98,27 @@ function getDebrisDiskPlanetaryMassImportAmount(accumulatedSpecialChanges, mater
   return Math.max(0, amount);
 }
 
-function addDebrisDiskConversionSalvage(salvage, category, resource, amount) {
+function addDebrisDiskConversionSalvage(conversions, category, resource, amount) {
   const resourceData = resources[category] ? resources[category][resource] : null;
   const conversionEntries = getMaintenanceConversionEntries(resourceData);
   let added = false;
   for (let i = 0; i < conversionEntries.length; i += 1) {
     const conversion = conversionEntries[i];
-    if (conversion.category === 'surface' && (conversion.resource === 'scrapMetal' || conversion.resource === 'junk')) {
-      salvage[conversion.resource] += amount * conversion.value;
-      added = true;
+    if (!resources[conversion.category] || !resources[conversion.category][conversion.resource]) {
+      continue;
     }
+    if (!conversions[conversion.category]) {
+      conversions[conversion.category] = {};
+    }
+    conversions[conversion.category][conversion.resource] =
+      (conversions[conversion.category][conversion.resource] || 0) + amount * conversion.value;
+    added = true;
   }
   if (added) {
     return;
   }
 
+  let fallbackResource = null;
   if (
     resource === 'metal' ||
     resource === 'components' ||
@@ -123,12 +126,27 @@ function addDebrisDiskConversionSalvage(salvage, category, resource, amount) {
     resource === 'superconductors' ||
     resource === 'superalloys'
   ) {
-    salvage.scrapMetal += amount;
-    return;
+    fallbackResource = 'scrapMetal';
+  } else if (resource === 'glass' || resource === 'silicon' || resource === 'androids') {
+    fallbackResource = 'junk';
   }
-  if (resource === 'glass' || resource === 'silicon' || resource === 'androids') {
-    salvage.junk += amount;
+  if (fallbackResource) {
+    if (!conversions.surface) {
+      conversions.surface = {};
+    }
+    conversions.surface[fallbackResource] = (conversions.surface[fallbackResource] || 0) + amount;
   }
+}
+
+function mergeDebrisDiskConversions(target, source) {
+  Object.keys(source).forEach((category) => {
+    if (!target[category]) {
+      target[category] = {};
+    }
+    Object.keys(source[category]).forEach((resource) => {
+      target[category][resource] = (target[category][resource] || 0) + source[category][resource];
+    });
+  });
 }
 
 function getDebrisDiskColonyResourceMinimum(resourceKey, resource) {
@@ -160,12 +178,11 @@ class DebrisDiskHazard {
     this.partialAttritionByStructure = {};
     this.lastAttritionLosses = 0;
     this.lastColonyResourceLossPerSecond = 0;
-    this.lastScrapMetalPerSecond = 0;
-    this.lastJunkPerSecond = 0;
+    this.lastConversionRatesPerSecond = {};
     this.effectsActive = false;
     this.lastGrowthMultiplier = 1;
     this.companionMirrorReleased = false;
-    this.pendingSurfaceSalvage = { scrapMetal: 0, junk: 0, seconds: 0 };
+    this.pendingResourceConversions = { amounts: {}, seconds: 0 };
   }
 
   normalize(parameters = {}) {
@@ -361,13 +378,13 @@ class DebrisDiskHazard {
 
   applyAttritionToStructure(structure, structureKey, seconds, attritionRate) {
     if (!structure || !(attritionRate > 0) || !(seconds > 0)) {
-      return { losses: 0, scrapMetal: 0, junk: 0 };
+      return { losses: 0, conversions: {} };
     }
 
     const minimumCount = getDebrisDiskStructureMinimum(structureKey);
     if (structure.count <= minimumCount) {
       this.partialAttritionByStructure[structureKey] = 0;
-      return { losses: 0, scrapMetal: 0, junk: 0 };
+      return { losses: 0, conversions: {} };
     }
 
     const countNumber = structure.countNumber;
@@ -376,7 +393,7 @@ class DebrisDiskHazard {
     const accumulated = rawLoss + partial;
     if (accumulated < 1) {
       this.partialAttritionByStructure[structureKey] = accumulated;
-      return { losses: 0, scrapMetal: 0, junk: 0 };
+      return { losses: 0, conversions: {} };
     }
 
     const maxLoss = structure.count - minimumCount;
@@ -388,7 +405,7 @@ class DebrisDiskHazard {
     }
     if (lossBigInt <= 0n) {
       this.partialAttritionByStructure[structureKey] = accumulated;
-      return { losses: 0, scrapMetal: 0, junk: 0 };
+      return { losses: 0, conversions: {} };
     }
 
     const inactiveAvailable = structure.count > structure.active ? structure.count - structure.active : 0n;
@@ -411,17 +428,17 @@ class DebrisDiskHazard {
 
     const lossCount = Number(lossBigInt);
     const cost = structure.getBaseEffectiveCost ? structure.getBaseEffectiveCost(1) : structure.cost;
-    const salvage = { losses: Number.isFinite(lossCount) ? lossCount : 0, scrapMetal: 0, junk: 0 };
+    const salvage = { losses: Number.isFinite(lossCount) ? lossCount : 0, conversions: {} };
     Object.keys(cost || {}).forEach((category) => {
       Object.keys(cost[category] || {}).forEach((resource) => {
-        addDebrisDiskConversionSalvage(salvage, category, resource, (cost[category][resource] || 0) * salvage.losses);
+        addDebrisDiskConversionSalvage(salvage.conversions, category, resource, (cost[category][resource] || 0) * salvage.losses);
       });
     });
     return salvage;
   }
 
   applyAttritionToColonyResources(seconds, attritionRate) {
-    const salvage = { resourceLoss: 0, scrapMetal: 0, junk: 0 };
+    const salvage = { resourceLoss: 0, conversions: {} };
     if (!(attritionRate > 0) || !(seconds > 0)) {
       return salvage;
     }
@@ -441,38 +458,37 @@ class DebrisDiskHazard {
 
       resource.decrease(loss);
       resource.modifyRate(-loss / seconds, DEBRIS_DISK_ATTRITION_LABEL, 'hazard');
-      addDebrisDiskConversionSalvage(salvage, 'colony', resourceKey, loss);
+      addDebrisDiskConversionSalvage(salvage.conversions, 'colony', resourceKey, loss);
       salvage.resourceLoss += loss;
     });
     return salvage;
   }
 
-  queueSurfaceSalvage(scrapMetal, junk, seconds) {
-    this.pendingSurfaceSalvage.scrapMetal += scrapMetal;
-    this.pendingSurfaceSalvage.junk += junk;
-    this.pendingSurfaceSalvage.seconds += seconds > 0 ? seconds : 0;
+  queueResourceConversions(conversions, seconds) {
+    mergeDebrisDiskConversions(this.pendingResourceConversions.amounts, conversions);
+    this.pendingResourceConversions.seconds += seconds > 0 ? seconds : 0;
   }
 
-  applyPendingSurfaceSalvage() {
-    const salvage = this.pendingSurfaceSalvage;
-    addDebrisDiskSurfaceResource('scrapMetal', salvage.scrapMetal, salvage.seconds);
-    addDebrisDiskSurfaceResource('junk', salvage.junk, salvage.seconds);
-    salvage.scrapMetal = 0;
-    salvage.junk = 0;
-    salvage.seconds = 0;
+  applyPendingResourceConversions() {
+    const pending = this.pendingResourceConversions;
+    Object.keys(pending.amounts).forEach((category) => {
+      Object.keys(pending.amounts[category]).forEach((resource) => {
+        addDebrisDiskConvertedResource(category, resource, pending.amounts[category][resource], pending.seconds);
+      });
+    });
+    pending.amounts = {};
+    pending.seconds = 0;
   }
 
   applyAttrition(seconds, attritionRate) {
     let losses = 0;
     let colonyResourceLoss = 0;
-    let scrapMetal = 0;
-    let junk = 0;
+    const conversions = {};
     const applyGroup = (group, prefix) => {
       Object.keys(group).forEach((id) => {
         const result = this.applyAttritionToStructure(group[id], `${prefix}:${id}`, seconds, attritionRate);
         losses += result.losses;
-        scrapMetal += result.scrapMetal;
-        junk += result.junk;
+        mergeDebrisDiskConversions(conversions, result.conversions);
       });
     };
 
@@ -480,13 +496,19 @@ class DebrisDiskHazard {
     applyGroup(colonies, 'colony');
     const colonyResourceResult = this.applyAttritionToColonyResources(seconds, attritionRate);
     colonyResourceLoss += colonyResourceResult.resourceLoss;
-    scrapMetal += colonyResourceResult.scrapMetal;
-    junk += colonyResourceResult.junk;
-    this.queueSurfaceSalvage(scrapMetal, junk, seconds);
+    mergeDebrisDiskConversions(conversions, colonyResourceResult.conversions);
+    this.queueResourceConversions(conversions, seconds);
     this.lastAttritionLosses = losses;
     this.lastColonyResourceLossPerSecond = seconds > 0 ? colonyResourceLoss / seconds : 0;
-    this.lastScrapMetalPerSecond = seconds > 0 ? scrapMetal / seconds : 0;
-    this.lastJunkPerSecond = seconds > 0 ? junk / seconds : 0;
+    this.lastConversionRatesPerSecond = {};
+    if (seconds > 0) {
+      Object.keys(conversions).forEach((category) => {
+        this.lastConversionRatesPerSecond[category] = {};
+        Object.keys(conversions[category]).forEach((resource) => {
+          this.lastConversionRatesPerSecond[category][resource] = conversions[category][resource] / seconds;
+        });
+      });
+    }
   }
 
   regenerateKesslerIfPresent(terraformingState, seconds, debrisDiskParameters) {
@@ -514,8 +536,7 @@ class DebrisDiskHazard {
     if (this.isCleared(terraformingState)) {
       this.lastAttritionLosses = 0;
       this.lastColonyResourceLossPerSecond = 0;
-      this.lastScrapMetalPerSecond = 0;
-      this.lastJunkPerSecond = 0;
+      this.lastConversionRatesPerSecond = {};
       this.releaseCompanionMirrorIfReady();
       return;
     }

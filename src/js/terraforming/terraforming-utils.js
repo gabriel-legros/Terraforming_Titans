@@ -85,7 +85,7 @@ function getCoverageTargetAmount(terraforming, coverageKey, targetCoverage) {
     return 0;
   }
 
-  let coverageScale = 0.0001;
+  let coverageScale = terraformingParameters.gameplay.coverage.defaultScale;
   const configs = terraforming.zonalSurfaceResourceConfigs || [];
   for (const config of configs) {
     const coverageKeys = config.coverageKeys || [];

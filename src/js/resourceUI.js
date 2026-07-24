@@ -39,6 +39,29 @@ function getResourceUIWarningText(path, fallback, vars) {
   return getResourceUIText(`warnings.${path}`, fallback, vars);
 }
 
+function getBiomassGrowthLimiterWarning(resource, limiter) {
+  const limiterZones = limiter.zones || [];
+  const zoneText = limiterZones.length
+    ? getResourceUIWarningText('scopeZones', ' in the {zones} zone{s}', {
+      zones: limiterZones.map(capitalizeFirstLetter).join(', '),
+      s: limiterZones.length > 1 ? 's' : '',
+    })
+    : '';
+  const scopeSuffix = limiter.scope === 'atmospheric'
+    ? getResourceUIWarningText('scopeAtmosphere', ' across the atmosphere')
+    : zoneText;
+  return getResourceUIWarningText(
+    'biomassLimited',
+    'Biomass growth is limited by {resource} availability{scope}. Additional needed: {amount}{unit}/s.',
+    {
+      resource: resource.displayName,
+      scope: scopeSuffix,
+      amount: formatNumber(limiter.missingPerSecond, false, 2, true),
+      unit: resource.unit ? ` ${resource.unit}` : '',
+    }
+  );
+}
+
 function getWasteTooltipNoteText() {
   return getResourceUICommonText(
     'wasteTooltipNote',
@@ -1980,21 +2003,8 @@ function updateResourceDisplay(resources, deltaSeconds) {
 
       if (allowRegularWarnings && entry.warningEl && resourceName !== 'biomass' && resourceName !== 'androids' && resourceName !== 'colonists') {
         const limiter = lifeManager.biomassGrowthLimiters[resourceName];
-        const limiterZones = limiter?.zones || [];
-        const zoneText = limiterZones.length
-          ? getResourceUIWarningText('scopeZones', ' in the {zones} zone{s}', {
-            zones: limiterZones.map(capitalizeFirstLetter).join(', '),
-            s: limiterZones.length > 1 ? 's' : '',
-          })
-          : '';
-        const scopeSuffix = limiter?.scope === 'atmospheric'
-          ? getResourceUIWarningText('scopeAtmosphere', ' across the atmosphere')
-          : zoneText;
         const warningMessage = limiter
-          ? getResourceUIWarningText('biomassLimited', 'Biomass growth is limited by {resource} availability{scope}.', {
-            resource: resourceObj.displayName,
-            scope: scopeSuffix,
-          })
+          ? getBiomassGrowthLimiterWarning(resourceObj, limiter)
           : '';
         const icon = warningMessage ? '⚠' : '';
         if (entry.warningEl.textContent !== icon) entry.warningEl.textContent = icon;
@@ -2574,20 +2584,7 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
 
     const limiter = allowRegularWarnings ? lifeManager?.biomassGrowthLimiters?.[resource.name] : null;
     if (limiter) {
-      const limiterZones = limiter.zones || [];
-      const zoneText = limiterZones.length
-        ? getResourceUIWarningText('scopeZones', ' in the {zones} zone{s}', {
-          zones: limiterZones.map(capitalizeFirstLetter).join(', '),
-          s: limiterZones.length > 1 ? 's' : '',
-        })
-        : '';
-      const scopeSuffix = limiter.scope === 'atmospheric'
-        ? getResourceUIWarningText('scopeAtmosphere', ' across the atmosphere')
-        : zoneText;
-      warningMessages.push(getResourceUIWarningText('biomassLimited', 'Biomass growth is limited by {resource} availability{scope}.', {
-        resource: resource.displayName,
-        scope: scopeSuffix,
-      }));
+      warningMessages.push(getBiomassGrowthLimiterWarning(resource, limiter));
     }
 
     if (allowRegularWarnings && resource.category === 'atmospheric' && resource.name === 'hydrogen') {

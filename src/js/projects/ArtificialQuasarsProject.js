@@ -146,7 +146,10 @@ Accessible black hole assignment cap: ${formatNumber(cap, true, 2)}`
       return;
     }
 
-    const plan = this.planOperation(seconds, productivity, accumulatedChanges, { skipEnergyLimit: true });
+    const plan = this.planOperation(seconds, productivity, accumulatedChanges, {
+      skipEnergyLimit: true,
+      skipAssignmentNormalization: true
+    });
     const productivityByRecipe = {};
     const outputRatesByRecipe = {};
     const outputBreakdownByRecipe = {};
@@ -226,7 +229,10 @@ Accessible black hole assignment cap: ${formatNumber(cap, true, 2)}`
       return totals;
     }
 
-    const plan = this.planOperation(seconds, productivity, accumulatedChanges, { skipEnergyLimit: true });
+    const plan = this.planOperation(seconds, productivity, accumulatedChanges, {
+      skipEnergyLimit: true,
+      skipAssignmentNormalization: true
+    });
     if (!(plan.plannedTotalUnits > 0)) {
       return totals;
     }

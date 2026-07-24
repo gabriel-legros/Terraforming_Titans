@@ -1021,6 +1021,10 @@ body.dark-mode {
     border-bottom-color: #374151;
 }
 
+.dark-mode .construction-office-reserve-input-wrap .space-storage-settings-input.is-inherited {
+    color: #9ca3af;
+}
+
 .dark-mode .save-slots table {
     border-color: #2d3a50;
 }

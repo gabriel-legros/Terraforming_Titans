@@ -2,19 +2,20 @@
 
 // ---- Thermophysical constants for CO₂ ----
 // Latent heats (approximate, near the triple-point; J/kg)
-const L_V_CO2 = 3.75e5;   // latent heat of vaporization (≈ 16.7 kJ/mol / 44 g/mol)
-const L_S_CO2 = 5.90e5;   // latent heat of sublimation (≈ 26.0 kJ/mol / 44 g/mol)
+const CO2_PHASE_CHANGE_PARAMETERS = terraformingParameters.phaseChange.carbonDioxide;
+const L_V_CO2 = CO2_PHASE_CHANGE_PARAMETERS.latentHeatVaporizationJPerKg;
+const L_S_CO2 = CO2_PHASE_CHANGE_PARAMETERS.latentHeatSublimationJPerKg;
 
 // Simple albedo choices for Penman-style surface energy (tweak in your parameters module if needed)
-const EVAP_ALBEDO_CO2_LIQ = 0.10; // albedo of liquid CO2 (assumed)
-const SUBLIMATION_ALBEDO_CO2_ICE = 0.50; // albedo of dry ice (assumed)
+const EVAP_ALBEDO_CO2_LIQ = CO2_PHASE_CHANGE_PARAMETERS.liquidAlbedo;
+const SUBLIMATION_ALBEDO_CO2_ICE = CO2_PHASE_CHANGE_PARAMETERS.solidAlbedo;
 
 // Triple & critical points (NIST / literature)
-const CO2_T_TRIPLE = 216.58;      // K
-const CO2_P_TRIPLE = 5.185e5;     // Pa (5.185 bar)
-const CO2_T_CRIT   = 304.1282;    // K
-const CO2_P_CRIT   = 7.3773e6;    // Pa (73.773 bar)
-var DEFAULT_EQUILIBRIUM_CO2_CONDENSATION_PARAMETER = 1.40e-3;
+const CO2_T_TRIPLE = CO2_PHASE_CHANGE_PARAMETERS.triplePointTemperatureK;
+const CO2_P_TRIPLE = CO2_PHASE_CHANGE_PARAMETERS.triplePointPressurePa;
+const CO2_T_CRIT = CO2_PHASE_CHANGE_PARAMETERS.criticalPointTemperatureK;
+const CO2_P_CRIT = CO2_PHASE_CHANGE_PARAMETERS.criticalPointPressurePa;
+var DEFAULT_EQUILIBRIUM_CO2_CONDENSATION_PARAMETER = CO2_PHASE_CHANGE_PARAMETERS.equilibriumCondensationParameter;
 
 const isNodeCO2 = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;

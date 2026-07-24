@@ -48,7 +48,7 @@ const hazardUICache = {
 };
 
 const HAZARD_FALLBACK_ZONES = ['tropical', 'temperate', 'polar'];
-const CRUSADER_REMOVAL_FALLBACK = 1; // Keep in sync with HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER in hazard.js
+const CRUSADER_REMOVAL_FALLBACK = terraformingParameters.hazards.hazardousBiomass.crusaderRemovalPerSecond;
 
 function getHazardousBiomassText(path, fallback, vars) {
   return t(`ui.terraforming.hazardsUi.hazardousBiomass.${path}`, vars, fallback);

@@ -1,0 +1,16 @@
+{
+  "catalogs": {
+    "buildings": {
+      "customClassExample_fluxRefinery": {
+        "name": "Flux Refinery",
+        "description": "An example custom building class that multiplies its configured production by 1.5."
+      }
+    },
+    "projects": {
+      "customClassExample_fluxCalibration": {
+        "name": "Flux Calibration",
+        "description": "An example custom project class that grants an increasing metal reward and persists its custom completion counter."
+      }
+    }
+  }
+}

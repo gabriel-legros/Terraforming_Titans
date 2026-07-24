@@ -1,18 +1,19 @@
 // Constants for Ammonia
-const L_V_AMMONIA = 1.37e6; // Latent heat of vaporization for ammonia (J/kg)
-const L_S_AMMONIA = 1.65e6; // Latent heat of sublimation for ammonia (J/kg)
-const EVAP_ALBEDO_AMMONIA = 0.12; // Albedo of liquid ammonia for evaporation calculations
-const SUBLIMATION_ALBEDO_AMMONIA_ICE = 0.70; // Albedo of ammonia ice for sublimation calculations
+const AMMONIA_PHASE_CHANGE_PARAMETERS = terraformingParameters.phaseChange.ammonia;
+const L_V_AMMONIA = AMMONIA_PHASE_CHANGE_PARAMETERS.latentHeatVaporizationJPerKg;
+const L_S_AMMONIA = AMMONIA_PHASE_CHANGE_PARAMETERS.latentHeatSublimationJPerKg;
+const EVAP_ALBEDO_AMMONIA = AMMONIA_PHASE_CHANGE_PARAMETERS.liquidAlbedo;
+const SUBLIMATION_ALBEDO_AMMONIA_ICE = AMMONIA_PHASE_CHANGE_PARAMETERS.solidAlbedo;
 
-const AMMONIA_T_TRIPLE = 195.40;   // K
-const AMMONIA_P_TRIPLE = 6.06e3;   // Pa
-const AMMONIA_T_CRIT = 405.40;     // K
-const AMMONIA_P_CRIT = 11.33e6;    // Pa
-const AMMONIA_BOILING_T = 239.81;  // K (1 atm)
-const AMMONIA_BOILING_P = 101325;  // Pa
-const AMMONIA_MOLAR_MASS = 0.017031; // kg/mol
-const GAS_CONSTANT = 8.314462618; // J/mol/K
-var DEFAULT_EQUILIBRIUM_AMMONIA_CONDENSATION_PARAMETER = 0.002;
+const AMMONIA_T_TRIPLE = AMMONIA_PHASE_CHANGE_PARAMETERS.triplePointTemperatureK;
+const AMMONIA_P_TRIPLE = AMMONIA_PHASE_CHANGE_PARAMETERS.triplePointPressurePa;
+const AMMONIA_T_CRIT = AMMONIA_PHASE_CHANGE_PARAMETERS.criticalPointTemperatureK;
+const AMMONIA_P_CRIT = AMMONIA_PHASE_CHANGE_PARAMETERS.criticalPointPressurePa;
+const AMMONIA_BOILING_T = AMMONIA_PHASE_CHANGE_PARAMETERS.boilingPointTemperatureK;
+const AMMONIA_BOILING_P = AMMONIA_PHASE_CHANGE_PARAMETERS.boilingPointPressurePa;
+const AMMONIA_MOLAR_MASS = AMMONIA_PHASE_CHANGE_PARAMETERS.molarMassKgPerMol;
+const GAS_CONSTANT = terraformingParameters.physical.universalGasConstant;
+var DEFAULT_EQUILIBRIUM_AMMONIA_CONDENSATION_PARAMETER = AMMONIA_PHASE_CHANGE_PARAMETERS.equilibriumCondensationParameter;
 
 let isNodeAmmoniaCycle = false;
 try {

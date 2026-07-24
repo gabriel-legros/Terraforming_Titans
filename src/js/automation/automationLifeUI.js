@@ -25,8 +25,7 @@ function buildAutomationLifeUI() {
 
   const presetRow = createAutomationPresetRow(body);
   const lifeTransferButtons = createAutomationPresetTransferButtons('life-automation-preset');
-  presetRow.presetRow.appendChild(lifeTransferButtons.importButton);
-  presetRow.presetRow.appendChild(lifeTransferButtons.exportButton);
+  presetRow.presetButtons.append(lifeTransferButtons.importButton, lifeTransferButtons.exportButton);
 
   const purchaseSection = document.createElement('div');
   purchaseSection.classList.add('life-automation-section');

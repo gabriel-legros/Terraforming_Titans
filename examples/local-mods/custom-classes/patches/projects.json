@@ -1,0 +1,25 @@
+{
+  "entries": {
+    "customClassExample_fluxCalibration": {
+      "type": "example.custom-classes.FluxCalibrationProject",
+      "name": "",
+      "category": "infrastructure",
+      "description": "",
+      "cost": {
+        "colony": {
+          "metal": 100,
+          "energy": 1000000
+        }
+      },
+      "duration": 10000,
+      "repeatable": true,
+      "maxRepeatCount": {
+        "$number": "Infinity"
+      },
+      "unlocked": true,
+      "attributes": {
+        "customMetalReward": 25
+      }
+    }
+  }
+}

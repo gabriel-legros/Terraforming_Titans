@@ -619,6 +619,16 @@
   font-size: 13px;
 }
 
+#space-artificial .artificial-advanced-settings-button {
+  background: #1a2538;
+  color: #e7ecf7;
+  border-color: #4a5568;
+}
+
+#space-artificial .artificial-advanced-settings-button:hover {
+  background: #24324a;
+}
+
 .artificial-inline-checkbox {
   display: inline-flex;
   align-items: center;
@@ -1067,6 +1077,19 @@
   font-size: 14px;
   font-weight: 600;
   color: var(--space-fg-muted);
+}
+
+.space-galactic-population-sidebar-toggle {
+  align-self: flex-start;
+  gap: 6px;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.space-galactic-population-sidebar-toggle .ui-toggle__label {
+  min-width: 0;
+  white-space: nowrap;
 }
 
 .space-sliders-section {

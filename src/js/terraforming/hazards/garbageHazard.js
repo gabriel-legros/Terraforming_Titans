@@ -70,7 +70,7 @@ function normalizeGarbageParameters(parameters) {
   return normalized;
 }
 
-const HIDE_WHEN_SMALL_THRESHOLD = 1e-4;
+const HIDE_WHEN_SMALL_THRESHOLD = terraformingParameters.hazards.garbage.hideWhenSmallThreshold;
 
 class GarbageHazard {
   constructor(manager) {

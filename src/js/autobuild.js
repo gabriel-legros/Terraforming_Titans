@@ -648,10 +648,17 @@ function updateConstructionOfficeUI() {
     for (const key in constructionOfficeReserveSettingsElements.inputs) {
         if (!Object.prototype.hasOwnProperty.call(constructionOfficeReserveSettingsElements.inputs, key)) continue;
         const input = constructionOfficeReserveSettingsElements.inputs[key];
-        if (input && input !== document.activeElement) {
+        if (!input) continue;
+        const hasOverride = key === 'default'
+            || Object.prototype.hasOwnProperty.call(constructionOfficeState.strategicReserveResources, key);
+        const inherited = !hasOverride;
+        if (input.classList.contains('is-inherited') !== inherited) {
+            input.classList.toggle('is-inherited', inherited);
+        }
+        if (input !== document.activeElement) {
             const value = key === 'default'
                 ? constructionOfficeState.strategicReserve
-                : (Object.prototype.hasOwnProperty.call(constructionOfficeState.strategicReserveResources, key)
+                : (hasOverride
                     ? constructionOfficeState.strategicReserveResources[key]
                     : constructionOfficeState.strategicReserve);
             input.dataset.constructionOfficeReserve = String(value);
@@ -720,13 +727,12 @@ function createConstructionOfficeReserveSettingsWindow() {
     grid.classList.add('construction-office-reserve-grid');
     constructionOfficeReserveSettingsElements.inputs = {};
 
-    const createReserveRow = (labelText, inputId, value, onValue) => {
+    const createReserveRow = (labelText, inputId, value, onValue, getEmptyValue = () => 0) => {
         const row = document.createElement('div');
         row.classList.add('space-storage-settings-row');
 
-        const label = document.createElement('label');
+        const label = document.createElement('div');
         label.classList.add('space-storage-settings-label');
-        label.htmlFor = inputId;
         label.textContent = labelText;
 
         const inputWrap = document.createElement('div');
@@ -735,11 +741,14 @@ function createConstructionOfficeReserveSettingsWindow() {
         input.type = 'text';
         input.id = inputId;
         input.classList.add('space-storage-settings-input');
+        input.setAttribute('aria-label', labelText);
         input.dataset.constructionOfficeReserve = String(value);
         input.value = input.dataset.constructionOfficeReserve;
         wireStringNumberInput(input, {
             datasetKey: 'constructionOfficeReserve',
-            parseValue: (inputValue) => normalizeConstructionOfficeReservePercent(parseFlexibleNumber(inputValue)),
+            parseValue: (inputValue) => inputValue.trim() === ''
+                ? getEmptyValue()
+                : normalizeConstructionOfficeReservePercent(parseFlexibleNumber(inputValue)),
             formatValue: (inputValue) => String(inputValue),
             onValue,
         });
@@ -770,9 +779,15 @@ function createConstructionOfficeReserveSettingsWindow() {
             Object.prototype.hasOwnProperty.call(constructionOfficeState.strategicReserveResources, option.key)
                 ? constructionOfficeState.strategicReserveResources[option.key]
                 : constructionOfficeState.strategicReserve,
-            (value) => {
-                setStrategicReserveForResource(option.key, value);
-            }
+            (value, inputValue) => {
+                if (inputValue.trim() === '') {
+                    delete constructionOfficeState.strategicReserveResources[option.key];
+                } else {
+                    setStrategicReserveForResource(option.key, value);
+                }
+                updateConstructionOfficeUI();
+            },
+            () => constructionOfficeState.strategicReserve
         );
         grid.appendChild(reserveRow.row);
         constructionOfficeReserveSettingsElements.inputs[option.key] = reserveRow.input;

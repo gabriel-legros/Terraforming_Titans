@@ -1,15 +1,17 @@
 const isNodeChem = typeof module !== 'undefined' && module.exports;
 
-const METHANE_COMBUSTION_PARAMETER = 1e-15; // Rate coefficient for CH4/O2 combustion
-const OXYGEN_COMBUSTION_THRESHOLD = 12000; // 12 kPa - minimum oxygen pressure for combustion
-const METHANE_COMBUSTION_THRESHOLD = 100; // 0.1 kPa - minimum methane pressure for combustion
-const CALCITE_HALF_LIFE_SECONDS = 240; // Calcite aerosol half-life
+const ATMOSPHERIC_CHEMISTRY_PARAMETERS = terraformingParameters.atmosphere.chemistry;
+const EXOSPHERE_PARAMETERS = terraformingParameters.atmosphere.exosphere;
+const METHANE_COMBUSTION_PARAMETER = ATMOSPHERIC_CHEMISTRY_PARAMETERS.methaneCombustionRateCoefficient;
+const OXYGEN_COMBUSTION_THRESHOLD = ATMOSPHERIC_CHEMISTRY_PARAMETERS.oxygenCombustionThresholdPa;
+const METHANE_COMBUSTION_THRESHOLD = ATMOSPHERIC_CHEMISTRY_PARAMETERS.methaneCombustionThresholdPa;
+const CALCITE_HALF_LIFE_SECONDS = ATMOSPHERIC_CHEMISTRY_PARAMETERS.calciteHalfLifeSeconds;
 const CALCITE_DECAY_CONSTANT = Math.log(2) / CALCITE_HALF_LIFE_SECONDS;
-const SULFURIC_ACID_RAIN_THRESHOLD_K = 570;
-const SULFURIC_ACID_REFERENCE_TEMPERATURE_K = 300;
-const SULFURIC_ACID_REFERENCE_DECAY_CONSTANT = Math.log(2) / 300;
-const SULFURIC_ACID_RAIN_WATER_CONVERSION_FRACTION = 0.5;
-const H2SO4_TO_H2O_MASS_RATIO = 18.01528 / 98.079;
+const SULFURIC_ACID_RAIN_THRESHOLD_K = ATMOSPHERIC_CHEMISTRY_PARAMETERS.sulfuricAcidRainThresholdK;
+const SULFURIC_ACID_REFERENCE_TEMPERATURE_K = ATMOSPHERIC_CHEMISTRY_PARAMETERS.sulfuricAcidReferenceTemperatureK;
+const SULFURIC_ACID_REFERENCE_DECAY_CONSTANT = Math.log(2) / ATMOSPHERIC_CHEMISTRY_PARAMETERS.sulfuricAcidReferenceHalfLifeSeconds;
+const SULFURIC_ACID_RAIN_WATER_CONVERSION_FRACTION = ATMOSPHERIC_CHEMISTRY_PARAMETERS.sulfuricAcidRainWaterConversionFraction;
+const H2SO4_TO_H2O_MASS_RATIO = ATMOSPHERIC_CHEMISTRY_PARAMETERS.sulfuricAcidToWaterMassRatio;
 
 // ------------------------------
 // Physically-motivated H escape
@@ -17,34 +19,34 @@ const H2SO4_TO_H2O_MASS_RATIO = 18.01528 / 98.079;
 // ------------------------------
 
 // --- physical constants ---
-const KB = 1.380649e-23;       // Boltzmann constant [J/K]
-const M_H = 1.6735575e-27;     // mass of atomic hydrogen [kg]
+const KB = terraformingParameters.physical.boltzmannConstant;
+const M_H = terraformingParameters.physical.atomicHydrogenMassKg;
 
 // --- model knobs (tuneable, but physically interpretable) ---
 // Exosphere temperature model: solarFlux -> T_exo (K).
 // Earth-calibrated relationship from satellite orbital decay studies.
 // T∞ = T0 * (1 - exp(-ν * F10.7))
-const EXO_TEMP_T0 = 1437;           // K, best-fit asymptotic temperature
-const EXO_TEMP_NU = 9.57e-7;        // Jy^-1, best-fit coefficient
-const SOLAR_FLUX_EARTH = 1361;      // W/m^2, solar constant at 1 AU
-const F10_7_AT_1AU = 1_500_000;           // Jy, typical solar 10.7 cm radio flux at 1 AU (solar flux units)
+const EXO_TEMP_T0 = EXOSPHERE_PARAMETERS.asymptoticTemperatureK;
+const EXO_TEMP_NU = EXOSPHERE_PARAMETERS.temperatureFluxCoefficientPerJy;
+const SOLAR_FLUX_EARTH = terraformingParameters.physical.solarFluxAtEarthWm2;
+const F10_7_AT_1AU = EXOSPHERE_PARAMETERS.radioFluxAtOneAuJy;
 
 // When λ is large, exp(-λ) is so tiny that escape is effectively zero.
 // This cutoff makes it *exactly* zero (your requirement).
-const JEANS_LAMBDA_CUTOFF = 50;
+const JEANS_LAMBDA_CUTOFF = EXOSPHERE_PARAMETERS.jeansLambdaCutoff;
 
 // Effective collision cross-sections (order-of-magnitude; used to place exobase).
 // You can tweak by factors of ~2–5 without breaking the model.
-const SIGMA_H  = 2e-19;  // [m^2]
-const SIGMA_H2 = 3e-19;  // [m^2]
+const SIGMA_H = EXOSPHERE_PARAMETERS.atomicHydrogenCollisionCrossSectionM2;
+const SIGMA_H2 = EXOSPHERE_PARAMETERS.molecularHydrogenCollisionCrossSectionM2;
 
 // Keep your existing photodissociation logic (optional, but reasonable):
-const HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX = 500;
-const HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION = 0.6;
+const HYDROGEN_PHOTODISSOCIATION_REFERENCE_FLUX = ATMOSPHERIC_CHEMISTRY_PARAMETERS.hydrogenPhotodissociationReferenceFluxWm2;
+const HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION = ATMOSPHERIC_CHEMISTRY_PARAMETERS.hydrogenPhotodissociationMaximumFraction;
 
 // Optional diffusion-limit cap (important if H is a trace gas in a heavy atmosphere).
 // Φ_DL ≈ C * f_T(H). For Earth C≈2.5e13 cm^-2 s^-1 = 2.5e17 m^-2 s^-1. 
-const DIFFUSION_LIMIT_C_EARTH = 2.5e17; // [H atoms m^-2 s^-1]
+const DIFFUSION_LIMIT_C_EARTH = EXOSPHERE_PARAMETERS.diffusionLimitAtomsM2Second;
 
 // --- temperature proxy ---
 // Earth-calibrated exosphere temperature from solar flux

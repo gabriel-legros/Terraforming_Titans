@@ -374,7 +374,9 @@ class AchievementManager {
   }
 
   isClassicRenewablesComplete() {
-    return this.isCurrentWorldTerraformed() && !this.tracking.disqualified.classicRenewables;
+    return currentPlanetParameters.specialAttributes.countsAsStandardTerraformingRun !== false
+      && this.isCurrentWorldTerraformed()
+      && !this.tracking.disqualified.classicRenewables;
   }
 
   isHeatOfTheSunComplete() {

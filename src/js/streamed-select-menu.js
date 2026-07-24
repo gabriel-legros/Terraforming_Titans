@@ -40,7 +40,7 @@ function getStreamedSelectMenuLabel(select) {
 }
 
 function appendStreamedSelectOption(menu, option, optionIndex, groupDisabled) {
-  if (option.hidden) return;
+  if (option.hidden || option.style.display === 'none') return;
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'streamed-select-menu-option';

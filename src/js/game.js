@@ -94,9 +94,6 @@ function preload() {
 function create() {
   initializeDefaultGlobals();
 
-  // Initialize the Planet Visualizer (Terraforming -> World subtab)
-  window.initializePlanetVisualizerUI();
-  
   const startupSelection = window.electronStartup
     ? window.electronStartup.getSelection()
     : { mode: 'latest', slot: '' };
@@ -653,6 +650,7 @@ function initializeGameState(options = {}) {
       globalThis.spaceManager = spaceManager;
     }
   }
+  spaceManager.syncGalacticPopulationResource();
   if (!preserveManagers || !achievementManager) {
     achievementManager = new AchievementManager();
   }

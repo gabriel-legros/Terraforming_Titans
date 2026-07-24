@@ -50,6 +50,7 @@
     <link rel="stylesheet" href="src/css/dark-grey-mode.css">
     <link rel="stylesheet" href="src/css/oled-black-mode.css">
     <link rel="stylesheet" href="src/css/streamed-select-menu.css">
+    <!-- MOD_CONTENT_STYLES -->
 
     <script src="src/js/lang/localization.js"></script>
     <script src="src/js/lang/current-language.js"></script>
@@ -62,6 +63,8 @@
     <script src="src/js/electron-crash-reporting.js"></script>
     <script src="src/js/modding/mod-runtime.js"></script>
     <script src="src/js/modding/apply-stage.js" data-mod-stage="language.current"></script>
+    <script src="src/js/terraforming/terraforming-parameters.js"></script>
+    <script src="src/js/modding/apply-stage.js" data-mod-stage="parameters.terraforming"></script>
     <script src="src/js/planet-resource-parameters.js"></script>
     <script src="src/js/modding/apply-stage.js" data-mod-stage="parameters.planetResources"></script>
     <script src="src/js/planet-parameters.js"></script>
@@ -114,7 +117,7 @@
     <script src="vendor/three-0.158.0.min.js"></script>
     <script src="src/js/numbers.js"></script>
     <script src="src/js/globals.js"></script>
-    <script src="src/js/world-geometry.js"></script>
+    <script src="src/js/terraforming/world-geometry.js"></script>
     <script src="src/js/buildCount.js"></script>
     <script src="src/js/tab.js"></script>
     <script src="src/js/ui-utils.js"></script>
@@ -377,6 +380,7 @@
     <script src="src/js/planet-visualizer/ships.js"></script>
     <script src="src/js/planet-visualizer/debug.js"></script>
     <script src="src/js/companion-research.js"></script>
+    <!-- MOD_CONTENT_CONSTRUCTORS -->
     <script src="src/js/game.js"></script>
     <script src="src/js/pause.js"></script>
     <script src="src/js/debug-runtime-monitor.js"></script>
@@ -653,6 +657,7 @@
 	                                        <span id="space-stat-galactic-population-tooltip" class="info-tooltip-icon">&#9432;</span>
 	                                    </div>
 	                                    <div id="space-stat-galactic-population-value" class="space-stat-value">0</div>
+                                        <div id="space-stat-galactic-population-sidebar-toggle-container"></div>
 	                                </div>
 	                                <div class="space-stat-card">
 	                                    <div class="space-stat-label">
@@ -1219,6 +1224,9 @@
                 </label>
                 <label class="settings-option difficulty-toggle-option">
                   <input type="checkbox" id="immigration-pool-toggle"> <span data-i18n="ui.settings.immigrationPool">Immigration pool</span> <span id="immigration-pool-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+                <label class="settings-option difficulty-toggle-option">
+                  <input type="checkbox" id="disable-colonist-decay-toggle"> <span data-i18n="ui.settings.disableColonistDecay">Disable colonist decay</span> <span id="disable-colonist-decay-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
                 <label class="settings-option difficulty-toggle-option">
                   <input type="checkbox" id="unfulfilled-maintenance-penalties-toggle"> <span data-i18n="ui.settings.unfulfilledMaintenancePenalties">Unfulfilled Maintenance Penalties</span> <span id="unfulfilled-maintenance-penalties-tooltip" class="info-tooltip-icon">&#9432;</span>

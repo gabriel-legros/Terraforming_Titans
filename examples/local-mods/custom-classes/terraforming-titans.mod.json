@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "example.custom-classes",
+  "name": "Custom Classes Example",
+  "version": "1.0.0",
+  "loadOrder": 10,
+  "content": {
+    "scripts": [
+      {
+        "file": "scripts/custom-classes.js",
+        "stage": "constructors"
+      }
+    ],
+    "styles": [
+      "styles/custom-classes.css"
+    ],
+    "assets": [
+      "assets/custom-class-badge.svg"
+    ],
+    "patches": [
+      {
+        "target": "language.current",
+        "file": "patches/language.json"
+      },
+      {
+        "target": "parameters.buildings",
+        "file": "patches/buildings.json"
+      },
+      {
+        "target": "parameters.projects",
+        "file": "patches/projects.json"
+      }
+    ],
+    "replacements": []
+  }
+}

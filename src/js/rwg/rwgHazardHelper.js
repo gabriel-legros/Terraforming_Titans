@@ -452,9 +452,8 @@
     const derivedLandFromOverrideRadius = overrideRadiusKm > 0 ? (4 * Math.PI * overrideRadiusKm * overrideRadiusKm * 100) : 0;
     const dynamicMassWorld = override.specialAttributes && override.specialAttributes.dynamicMass === true;
     const baseLandCandidates = [
-      terra ? terra.baseLand : null,
+      terra && terra.celestialParameters ? terra.celestialParameters.baseLand : null,
       override.celestialParameters ? override.celestialParameters.baseLand : null,
-      terra ? terra.initialLand : null,
       override.resources && override.resources.surface && override.resources.surface.land
         ? (override.resources.surface.land.baseLand || override.resources.surface.land.initialValue)
         : null,

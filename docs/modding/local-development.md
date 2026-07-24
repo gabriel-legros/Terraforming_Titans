@@ -1,6 +1,8 @@
 # Mod Development
 
-The Terraforming Titans mod loader supports complete renderer-file replacements and declarative JSON patches from both local development folders and subscribed Steam Workshop items. A pre-game launcher controls the active mod loadout and starting save, and opens Creator Tools for Workshop publishing. Additive scripts, additive styles, dependencies, and save isolation are not implemented yet.
+The Terraforming Titans mod loader supports additive constructor scripts, styles, media assets, complete renderer-file replacements, and declarative JSON patches from both local development folders and subscribed Steam Workshop items. A pre-game launcher controls the active mod loadout and starting save, and opens Creator Tools for Workshop publishing. Cross-mod dependencies and save isolation are not implemented yet.
+
+For a beginner-to-advanced authoring walkthrough with complete examples, see the [Technical Modding Guide](technical-modding-guide.md).
 
 ## Launch control
 
@@ -69,6 +71,9 @@ Each mod requires `terraforming-titans.mod.json`:
   "version": "1.0.0",
   "loadOrder": 0,
   "content": {
+    "scripts": [],
+    "styles": [],
+    "assets": [],
     "patches": [],
     "replacements": []
   }
@@ -76,6 +81,84 @@ Each mod requires `terraforming-titans.mod.json`:
 ```
 
 Ids use 3-80 lowercase letters, numbers, dots, underscores, or hyphens.
+
+## Custom classes and additive files
+
+Constructor scripts let a mod add new project and building subclasses without replacing a core game file. Scripts are classic browser scripts: do not use imports or exports. Declare each script with the `constructors` stage:
+
+```json
+{
+  "scripts": [
+    {
+      "file": "scripts/SolarFoundryProject.js",
+      "stage": "constructors"
+    }
+  ]
+}
+```
+
+Constructor scripts run in active launcher order and then manifest order. The game loads them after all built-in constructors and their gameplay dependencies, immediately before `game.js` initializes the game. Within a mod, place a base class before scripts that extend it. Cross-mod dependencies are not currently declared or validated.
+
+Register a namespaced constructor type and select it from the parameter entry's `type` field:
+
+```js
+class SolarFoundryProject extends Project {
+  constructor(config, name) {
+    super(config, name);
+    this.customCompletionCount = 0;
+  }
+
+  saveState() {
+    return {
+      ...super.saveState(),
+      customCompletionCount: this.customCompletionCount
+    };
+  }
+
+  loadState(state) {
+    super.loadState(state);
+    this.customCompletionCount = state.customCompletionCount || 0;
+  }
+}
+
+registerProjectConstructor('author.my-mod.SolarFoundryProject', SolarFoundryProject);
+```
+
+Buildings use the matching API:
+
+```js
+class SolarFoundryBuilding extends Building {
+}
+
+registerBuildingConstructor('author.my-mod.SolarFoundryBuilding', SolarFoundryBuilding);
+```
+
+Use namespaced constructor types to avoid registration collisions. Keep parameter entry ids DOM-safe, for example `authorMyMod_solarFoundry`. An unknown constructor type or duplicate registry entry stops initialization with a descriptive error instead of silently creating the base class.
+
+Declare additive styles and every file they reference:
+
+```json
+{
+  "styles": [
+    "styles/solar-foundry.css"
+  ],
+  "assets": [
+    "assets/solar-foundry.png"
+  ]
+}
+```
+
+Styles load after the game's styles and follow active launcher order, so later mods win normal CSS cascade conflicts. Relative CSS URLs work when the referenced asset is declared. Supported assets are images, fonts, audio, and video. JavaScript and CSS must use their dedicated manifest sections.
+
+Script code can resolve a declared asset without knowing its generated virtual URL:
+
+```js
+const iconUrl = getModAssetUrl('author.my-mod', 'assets/solar-foundry.png');
+```
+
+All additive files are served from exact `tt-game://app/__mods__/...` mappings. Physical local and Workshop paths are never exposed to renderer code. Their content participates in the deterministic mod-session fingerprint.
+
+The complete example under `examples/local-mods/custom-classes` adds a custom-class project and building, persists custom project state, applies additive styling, and loads a declared SVG asset.
 
 ## Parameter patches
 
@@ -137,9 +220,31 @@ Supported targets are:
 - `parameters.projects`
 - `parameters.research`
 - `parameters.skills`
+- `parameters.terraforming`
 - `parameters.terraformingRequirements`
 
 Language patches contain the language object directly rather than an `entries` wrapper.
+
+Terraforming patches provide global simulation defaults shared by all worlds. The stable sections are `physical`, `atmosphere`, `geometry`, `phaseChange`, `climate`, `gameplay`, and `hazards`. Keys with units include the unit in their name. World-specific celestial, resource, and hazard overrides remain under `parameters.planets` and `parameters.specialSeeds`.
+
+For example, this changes the global gravity penalty and water condensation defaults:
+
+```json
+{
+  "entries": {
+    "gameplay": {
+      "gravityPenalty": {
+        "linearThresholdMS2": 12
+      }
+    },
+    "phaseChange": {
+      "water": {
+        "equilibriumCondensationParameter": 0.2
+      }
+    }
+  }
+}
+```
 
 ## File replacements
 
@@ -155,6 +260,12 @@ Replacement declarations map an existing logical game path to a file inside the 
 Allowed roots are `src/js`, `src/css`, and `assets`. The Electron main process, preload, `index.html`, vendor libraries, build metadata, and the packaged mod runtime are protected. Replacement files are served through the `tt-game://app` overlay; installed game files are never modified.
 
 Patches are applied after the winning replacement file executes, so a full parameter-file replacement can still receive later mods' JSON patches. A replacement parameter file must continue to define the same required global.
+
+## Trust and lifecycle requirements
+
+Additive JavaScript and JavaScript replacements execute as full-trust game renderer code. Install code mods only from authors you trust. Electron keeps Node integration disabled, context isolation and the renderer sandbox enabled, and Electron/preload files outside the mod overlay.
+
+Custom classes must follow the base class save, load, reset, and travel contracts. Call the base `saveState()` and `loadState()` when adding persistent properties. A project with cached UI references must declare those properties in its constructor before `renderUI()` fills them so travel-time card rebinding does not discard current-instance state.
 
 ## Diagnostics
 

@@ -3,7 +3,7 @@ let zonesList;
 let getZonesHelper;
 let applyPostEquilibrationHazardTuningHelper;
 
-const HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER = 5;
+const HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER = terraformingParameters.hazards.hazardousBiomass.crusaderRemovalPerSecond;
 
 try {
   window.hazardousBiomassRemovalConstant = HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER;
@@ -211,8 +211,9 @@ class HazardousBiomassHazard {
     }
 
     const currentValue = Number.isFinite(crusaders.value) ? crusaders.value : 0;
-    if (currentValue < 10) {
-      crusaders.value = 10;
+    const minimumCrusaders = terraformingParameters.hazards.hazardousBiomass.minimumCrusadersWhenActive;
+    if (currentValue < minimumCrusaders) {
+      crusaders.value = minimumCrusaders;
     }
   }
 

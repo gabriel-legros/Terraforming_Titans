@@ -18,13 +18,13 @@ function condensationRateFactor({
   nightTemp,
   saturationFn,
   freezePoint,
-  transitionRange = 2,
-  maxDiff = 10,
+  transitionRange = terraformingParameters.phaseChange.condensation.phaseTransitionRangeK,
+  maxDiff = terraformingParameters.phaseChange.condensation.maximumTemperatureDifferenceK,
   boilingPoint = Infinity,
-  boilTransitionRange = 2,
+  boilTransitionRange = terraformingParameters.phaseChange.condensation.boilingTransitionRangeK,
   criticalTemperature = Infinity,
-  liftPressureFraction = 0.65,
-  kappa = 0.286
+  liftPressureFraction = terraformingParameters.phaseChange.condensation.liftPressureFraction,
+  kappa = terraformingParameters.phaseChange.condensation.adiabaticExponent
 }) {
   if (typeof saturationFn !== 'function') {
     throw new Error('condensationRateFactor requires saturationFn');
@@ -69,7 +69,8 @@ function condensationRateFactor({
       if (vaporPressure > saturationPressure) {
         const excessPressure = vaporPressure - saturationPressure;
         const excessMassKg = (excessPressure * zoneArea) / gravity;
-        const baseRate = (excessMassKg / 1000) / 86400; // tons per second
+        const baseRate = (excessMassKg / terraformingParameters.physical.kgPerTon)
+          / terraformingParameters.phaseChange.condensation.secondsPerDay;
         if (!isNaN(baseRate) && baseRate > 0) {
           let rate = baseRate;
           const mix = Math.min(Math.max((temp - (freezePoint - transitionRange)) / (2 * transitionRange), 0), 1);

@@ -15,6 +15,7 @@ const SUPPORTED_PATCH_TARGETS = new Set([
   'parameters.projects',
   'parameters.research',
   'parameters.skills',
+  'parameters.terraforming',
   'parameters.terraformingRequirements'
 ]);
 const ALLOWED_REPLACEMENT_ROOTS = ['src/js/', 'src/css/', 'assets/'];
@@ -25,11 +26,36 @@ const PROTECTED_GAME_PATHS = new Set([
   'src/js/game-version.js'
 ]);
 const PROTECTED_GAME_PREFIXES = [
+  '__mods__/',
   'electron/',
   'vendor/',
   'src/js/modding/'
 ];
 const DANGEROUS_PATCH_KEYS = new Set(['__proto__', 'prototype', 'constructor']);
+const SUPPORTED_SCRIPT_STAGES = new Set(['constructors']);
+const JAVASCRIPT_EXTENSIONS = new Set(['.js']);
+const STYLESHEET_EXTENSIONS = new Set(['.css']);
+const SUPPORTED_ASSET_EXTENSIONS = new Set([
+  '.avif',
+  '.gif',
+  '.ico',
+  '.jpeg',
+  '.jpg',
+  '.mp3',
+  '.mp4',
+  '.ogg',
+  '.otf',
+  '.png',
+  '.svg',
+  '.ttf',
+  '.wav',
+  '.webm',
+  '.webp',
+  '.woff',
+  '.woff2'
+]);
+const MOD_STYLES_MARKER = '<!-- MOD_CONTENT_STYLES -->';
+const MOD_CONSTRUCTORS_MARKER = '<!-- MOD_CONTENT_CONSTRUCTORS -->';
 
 function normalizeRelativePath(value, label) {
   const normalized = String(value || '').replace(/\\/g, '/');
@@ -102,6 +128,31 @@ function readJsonFile(filePath, label) {
   }
 }
 
+function validateFileExtension(file, extensions, label) {
+  const extension = path.extname(file).toLowerCase();
+  if (!extensions.has(extension)) {
+    throw new Error(`${label} has unsupported extension ${extension || '(none)'}.`);
+  }
+}
+
+function validateContentArrays(content) {
+  if (!Array.isArray(content.patches || [])) {
+    throw new Error('Manifest content.patches must be an array.');
+  }
+  if (!Array.isArray(content.replacements || [])) {
+    throw new Error('Manifest content.replacements must be an array.');
+  }
+  if (!Array.isArray(content.scripts || [])) {
+    throw new Error('Manifest content.scripts must be an array.');
+  }
+  if (!Array.isArray(content.styles || [])) {
+    throw new Error('Manifest content.styles must be an array.');
+  }
+  if (!Array.isArray(content.assets || [])) {
+    throw new Error('Manifest content.assets must be an array.');
+  }
+}
+
 function validateManifest(manifest, folderName) {
   if (!manifest || Object.prototype.toString.call(manifest) !== '[object Object]') {
     throw new Error('Manifest root must be an object.');
@@ -119,22 +170,21 @@ function validateManifest(manifest, folderName) {
     throw new Error('Manifest version is required.');
   }
   const content = manifest.content || {};
-  if (!Array.isArray(content.patches || [])) {
-    throw new Error('Manifest content.patches must be an array.');
-  }
-  if (!Array.isArray(content.replacements || [])) {
-    throw new Error('Manifest content.replacements must be an array.');
-  }
-  if ((content.scripts && content.scripts.length) || (content.styles && content.styles.length)) {
-    throw new Error('Extension scripts and additive styles are not available in the local loader yet.');
-  }
+  validateContentArrays(content);
   return {
     id: manifest.id,
     name: manifest.name.trim(),
     version: manifest.version.trim(),
     loadOrder: Number.isFinite(manifest.loadOrder) ? manifest.loadOrder : 0,
     folderName,
-    content
+    content: {
+      ...content,
+      patches: content.patches || [],
+      replacements: content.replacements || [],
+      scripts: content.scripts || [],
+      styles: content.styles || [],
+      assets: content.assets || []
+    }
   };
 }
 
@@ -169,6 +219,9 @@ function loadMod(modRoot, hash, source) {
   const manifest = validateManifest(JSON.parse(manifestBytes.toString('utf8')), path.basename(modRoot));
   const patches = [];
   const replacements = [];
+  const scripts = [];
+  const styles = [];
+  const assets = [];
 
   hash.update(manifest.id);
   hash.update(manifest.version);
@@ -199,7 +252,45 @@ function loadMod(modRoot, hash, source) {
     replacements.push({ gamePath, file: declaredFile.normalized, filePath: declaredFile.filePath });
   });
 
-  return { ...manifest, ...source, patches, replacements };
+  manifest.content.scripts.forEach((scriptDefinition, index) => {
+    if (!scriptDefinition || Object.prototype.toString.call(scriptDefinition) !== '[object Object]') {
+      throw new Error(`Script ${index + 1} must be an object.`);
+    }
+    const stage = String(scriptDefinition.stage || '');
+    if (!SUPPORTED_SCRIPT_STAGES.has(stage)) {
+      throw new Error(`Script ${index + 1} has unsupported stage ${stage || '(none)'}.`);
+    }
+    const declaredFile = resolveDeclaredFile(modRoot, scriptDefinition.file, `Script ${index + 1} file`);
+    validateFileExtension(declaredFile.normalized, JAVASCRIPT_EXTENSIONS, `Script ${index + 1}`);
+    const bytes = fs.readFileSync(declaredFile.filePath);
+    hash.update('script');
+    hash.update(stage);
+    hash.update(declaredFile.normalized);
+    hash.update(bytes);
+    scripts.push({ stage, file: declaredFile.normalized, filePath: declaredFile.filePath });
+  });
+
+  manifest.content.styles.forEach((styleFile, index) => {
+    const declaredFile = resolveDeclaredFile(modRoot, styleFile, `Style ${index + 1} file`);
+    validateFileExtension(declaredFile.normalized, STYLESHEET_EXTENSIONS, `Style ${index + 1}`);
+    const bytes = fs.readFileSync(declaredFile.filePath);
+    hash.update('style');
+    hash.update(declaredFile.normalized);
+    hash.update(bytes);
+    styles.push({ file: declaredFile.normalized, filePath: declaredFile.filePath });
+  });
+
+  manifest.content.assets.forEach((assetFile, index) => {
+    const declaredFile = resolveDeclaredFile(modRoot, assetFile, `Asset ${index + 1} file`);
+    validateFileExtension(declaredFile.normalized, SUPPORTED_ASSET_EXTENSIONS, `Asset ${index + 1}`);
+    const bytes = fs.readFileSync(declaredFile.filePath);
+    hash.update('asset');
+    hash.update(declaredFile.normalized);
+    hash.update(bytes);
+    assets.push({ file: declaredFile.normalized, filePath: declaredFile.filePath });
+  });
+
+  return { ...manifest, ...source, patches, replacements, scripts, styles, assets };
 }
 
 function createModCatalog({ appRoot, userDataPath, isPackaged, workshopMods = [] }) {
@@ -244,6 +335,9 @@ function createModCatalog({ appRoot, userDataPath, isPackaged, workshopMods = []
         contentHash: '',
         patches: [],
         replacements: [],
+        scripts: [],
+        styles: [],
+        assets: [],
         valid: false,
         validationError: error.message
       });
@@ -279,7 +373,10 @@ function createModCatalog({ appRoot, userDataPath, isPackaged, workshopMods = []
     valid: mod.valid,
     validationError: mod.validationError,
     patchTargets: [...new Set(mod.patches.map(patch => patch.target))],
-    replacementPaths: mod.replacements.map(replacement => replacement.gamePath)
+    replacementPaths: mod.replacements.map(replacement => replacement.gamePath),
+    scriptFiles: mod.scripts.map(script => script.file),
+    styleFiles: mod.styles.map(style => style.file),
+    assetFiles: mod.assets.map(asset => asset.file)
   }));
 
   return { entries, publicItems };
@@ -308,9 +405,12 @@ function createModService({ appRoot, mods, workshopStatus }) {
 
   const patches = {};
   const replacements = new Map();
+  const modFiles = new Map();
+  const constructorScripts = [];
+  const styles = [];
   const conflicts = [];
   const sessionHash = crypto.createHash('sha256');
-  activeMods.forEach(mod => {
+  activeMods.forEach((mod, modIndex) => {
     sessionHash.update(mod.source);
     sessionHash.update(mod.workshopId);
     sessionHash.update(mod.id);
@@ -329,6 +429,20 @@ function createModService({ appRoot, mods, workshopStatus }) {
       }
       replacements.set(replacement.gamePath, { modId: mod.id, filePath: replacement.filePath });
     });
+    const contentFiles = [...mod.scripts, ...mod.styles, ...mod.assets];
+    contentFiles.forEach(contentFile => {
+      const virtualPath = `__mods__/${modIndex}/${contentFile.file}`;
+      modFiles.set(virtualPath, contentFile.filePath);
+      contentFile.virtualPath = virtualPath;
+    });
+    mod.scripts.forEach(script => {
+      if (script.stage === 'constructors') {
+        constructorScripts.push({ modId: mod.id, file: script.file, virtualPath: script.virtualPath });
+      }
+    });
+    mod.styles.forEach(style => {
+      styles.push({ modId: mod.id, file: style.file, virtualPath: style.virtualPath });
+    });
   });
 
   const publicSession = {
@@ -340,7 +454,20 @@ function createModService({ appRoot, mods, workshopStatus }) {
       version: mod.version,
       contentHash: mod.contentHash,
       source: mod.source,
-      workshopId: mod.workshopId
+      workshopId: mod.workshopId,
+      scripts: mod.scripts.map(script => ({
+        file: script.file,
+        stage: script.stage,
+        url: toVirtualUrl(script.virtualPath)
+      })),
+      styles: mod.styles.map(style => ({
+        file: style.file,
+        url: toVirtualUrl(style.virtualPath)
+      })),
+      assets: mod.assets.map(asset => ({
+        file: asset.file,
+        url: toVirtualUrl(asset.virtualPath)
+      }))
     })),
     patches,
     replacements: [...replacements.entries()].map(([gamePath, replacement]) => ({
@@ -359,6 +486,10 @@ function createModService({ appRoot, mods, workshopStatus }) {
 
   function resolveGameFile(gamePath) {
     const normalized = normalizeRelativePath(gamePath, 'Game path');
+    const modFile = modFiles.get(normalized);
+    if (modFile) {
+      return modFile;
+    }
     const replacement = !isProtectedGamePath(normalized) && replacements.get(normalized);
     if (replacement) {
       return replacement.filePath;
@@ -370,7 +501,34 @@ function createModService({ appRoot, mods, workshopStatus }) {
     return basePath;
   }
 
-  return { publicSession, resolveGameFile };
+  function escapeHtmlAttribute(value) {
+    return String(value)
+      .replace(/&/g, '&amp;')
+      .replace(/"/g, '&quot;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function toVirtualUrl(virtualPath) {
+    return `/${virtualPath.split('/').map(segment => encodeURIComponent(segment)).join('/')}`;
+  }
+
+  function injectModContent(indexHtml) {
+    if (!indexHtml.includes(MOD_STYLES_MARKER) || !indexHtml.includes(MOD_CONSTRUCTORS_MARKER)) {
+      throw new Error('The game index is missing required mod content markers.');
+    }
+    const styleTags = styles.map(style => (
+      `<link rel="stylesheet" href="${escapeHtmlAttribute(toVirtualUrl(style.virtualPath))}" data-mod-id="${escapeHtmlAttribute(style.modId)}">`
+    )).join('\n    ');
+    const scriptTags = constructorScripts.map(script => (
+      `<script src="${escapeHtmlAttribute(toVirtualUrl(script.virtualPath))}" data-mod-id="${escapeHtmlAttribute(script.modId)}"></script>`
+    )).join('\n    ');
+    return indexHtml
+      .replace(MOD_STYLES_MARKER, `${MOD_STYLES_MARKER}${styleTags ? `\n    ${styleTags}` : ''}`)
+      .replace(MOD_CONSTRUCTORS_MARKER, `${MOD_CONSTRUCTORS_MARKER}${scriptTags ? `\n    ${scriptTags}` : ''}`);
+  }
+
+  return { publicSession, resolveGameFile, injectModContent };
 }
 
 module.exports = { createModCatalog, createModService };

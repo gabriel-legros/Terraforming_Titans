@@ -1125,10 +1125,16 @@ class NanotechManager extends EffectableEntity {
     this.currentMaintenance4Reduction = reduction4;
     NANOTECH_MAINTENANCE_RESOURCES.forEach((res) => {
       let resourceReduction = reduction3;
+      let effectId = 'nanotechMaint3_electronics';
+      let sourceId = 'nanotechMaintenance3';
       if (NANOTECH_STAGE_ONE_MAINTENANCE_RESOURCES.includes(res)) {
         resourceReduction = reduction;
+        effectId = `nanotechMaint_${res}`;
+        sourceId = 'nanotechMaintenance';
       } else if (NANOTECH_STAGE_TWO_MAINTENANCE_RESOURCES.includes(res)) {
         resourceReduction = reduction2;
+        effectId = `nanotechMaint2_${res}`;
+        sourceId = 'nanotechMaintenance2';
       }
       const targetMultiplier = 1 - Math.min(1, resourceReduction + reduction4);
       for (const name in structures) {
@@ -1136,8 +1142,8 @@ class NanotechManager extends EffectableEntity {
           name,
           res,
           targetMultiplier,
-          `nanotechMaint_${res}`,
-          'nanotechMaintenance'
+          effectId,
+          sourceId
         );
       }
     });

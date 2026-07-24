@@ -1,4 +1,9 @@
-const SOLAR_LUMINOSITY_W = 3.828e26; // Base solar luminosity (W)
+const TERRAFORMING_GAMEPLAY_PARAMETERS = terraformingParameters.gameplay;
+const TERRAFORMING_SOLAR_PARAMETERS = TERRAFORMING_GAMEPLAY_PARAMETERS.solar;
+const TERRAFORMING_TEMPERATURE_PARAMETERS = TERRAFORMING_GAMEPLAY_PARAMETERS.temperature;
+const TERRAFORMING_SURFACE_HEAT_PARAMETERS = TERRAFORMING_GAMEPLAY_PARAMETERS.surfaceHeat;
+const TERRAFORMING_SIMULATION_PARAMETERS = TERRAFORMING_GAMEPLAY_PARAMETERS.simulation;
+const SOLAR_LUMINOSITY_W = terraformingParameters.physical.solarLuminosityW;
 let starLuminosityMultiplier = 1; // Multiplier relative to Sol
 function setStarLuminosity(multiplier) {
   starLuminosityMultiplier = Number.isFinite(multiplier) ? multiplier : 1;
@@ -6,30 +11,24 @@ function setStarLuminosity(multiplier) {
 function getStarLuminosity() {
   return starLuminosityMultiplier;
 }
-const C_P_AIR = 1004; // J/kg·K
-const EPSILON = 0.622; // Molecular weight ratio
-const AU_METER = 149597870700;
-const SOLAR_RADIUS_AU = 0.00465047;
-const DISK_GRAZING_FLUX_FACTOR = 2 / (3 * Math.PI);
+const AU_METER = terraformingParameters.physical.astronomicalUnitMeters;
+const SOLAR_RADIUS_AU = terraformingParameters.physical.solarRadiusAu;
+const DISK_GRAZING_FLUX_FACTOR = TERRAFORMING_SOLAR_PARAMETERS.diskGrazingFluxFactor;
 
-const SOLAR_PANEL_BASE_LUMINOSITY = 1000;
-const BACKGROUND_SOLAR_FLUX = 6e-6;
-const COMFORTABLE_TEMPERATURE_MIN = 288.15; // 15°C
-const COMFORTABLE_TEMPERATURE_MAX = 293.15; // 20°C
-const MAINTENANCE_PENALTY_THRESHOLD = 373.15; // 100°C
-const MAINTENANCE_PENALTY_EXPONENTIAL_THRESHOLD = 973.15; // 700°C
-const MAINTENANCE_PENALTY_LINEAR_RATE = 0.01;
-const MAINTENANCE_PENALTY_EXPONENTIAL_DOUBLING_INTERVAL = 100; // K
-const MAINTENANCE_PENALTY_MAX_MULTIPLIER = 1e9;
-const KPA_PER_ATM = 101.325;
+const SOLAR_PANEL_BASE_LUMINOSITY = TERRAFORMING_SOLAR_PARAMETERS.solarPanelBaseLuminosity;
+const BACKGROUND_SOLAR_FLUX = TERRAFORMING_SOLAR_PARAMETERS.backgroundSolarFluxWm2;
+const COMFORTABLE_TEMPERATURE_MIN = TERRAFORMING_TEMPERATURE_PARAMETERS.comfortableMinimumK;
+const COMFORTABLE_TEMPERATURE_MAX = TERRAFORMING_TEMPERATURE_PARAMETERS.comfortableMaximumK;
+const MAINTENANCE_PENALTY_THRESHOLD = TERRAFORMING_TEMPERATURE_PARAMETERS.maintenancePenaltyThresholdK;
+const MAINTENANCE_PENALTY_EXPONENTIAL_THRESHOLD = TERRAFORMING_TEMPERATURE_PARAMETERS.maintenancePenaltyExponentialThresholdK;
+const MAINTENANCE_PENALTY_LINEAR_RATE = TERRAFORMING_TEMPERATURE_PARAMETERS.maintenancePenaltyLinearRatePerK;
+const MAINTENANCE_PENALTY_EXPONENTIAL_DOUBLING_INTERVAL = TERRAFORMING_TEMPERATURE_PARAMETERS.maintenancePenaltyDoublingIntervalK;
+const MAINTENANCE_PENALTY_MAX_MULTIPLIER = TERRAFORMING_TEMPERATURE_PARAMETERS.maintenancePenaltyMaximumMultiplier;
+const KPA_PER_ATM = terraformingParameters.physical.paPerAtmosphere / 1000;
 var resourcePhaseGroups;
 let syncDynamicWorldGeometryHelper = null;
 if (typeof module !== 'undefined' && module.exports) {
-  ({ syncDynamicWorldGeometry: syncDynamicWorldGeometryHelper } = require('../world-geometry.js'));
-}
-
-function getSyncDynamicWorldGeometryHelper() {
-  return syncDynamicWorldGeometryHelper || syncDynamicWorldGeometry;
+  ({ syncDynamicWorldGeometry: syncDynamicWorldGeometryHelper } = require('./world-geometry.js'));
 }
 
 function calculateMaintenancePenaltyForTemperature(temp) {
@@ -265,12 +264,11 @@ function mergeExtraTerraformingRequirements(baseRequirements, extraRequirements)
   return merged;
 }
 
-const STEFAN_BOLTZMANN = 5.670374419e-8;
-const MIN_SURFACE_HEAT_CAPACITY = 100;
-const AUTO_SLAB_ATMOS_CP = 850;
-const MEGA_HEAT_SINK_POWER_W = 1_000_000_000_000_000;
-const TERRAFORMING_RESOURCE_SUBSTEP_MS = 10;
-const TERRAFORMING_RESOURCE_MAX_SUBSTEPS = 24;
+const STEFAN_BOLTZMANN = terraformingParameters.physical.stefanBoltzmannConstant;
+const MIN_SURFACE_HEAT_CAPACITY = TERRAFORMING_SURFACE_HEAT_PARAMETERS.minimumHeatCapacityJPerM2K;
+const MEGA_HEAT_SINK_POWER_W = TERRAFORMING_SURFACE_HEAT_PARAMETERS.megaHeatSinkPowerW;
+const TERRAFORMING_RESOURCE_SUBSTEP_MS = TERRAFORMING_SIMULATION_PARAMETERS.resourceSubstepMs;
+const TERRAFORMING_RESOURCE_MAX_SUBSTEPS = TERRAFORMING_SIMULATION_PARAMETERS.maximumResourceSubsteps;
 let surfaceLiquidHeatCapacityConfigs = [];
 
 // Load utility functions when running under Node for tests
@@ -492,14 +490,6 @@ class Terraforming extends EffectableEntity{
     this.initialCelestialParameters = structuredClone(celestialParameters);
     this.celestialParameters.dayNightPeriod = this.celestialParameters.dayNightPeriod || this.celestialParameters.rotationPeriod || 24;
     this.initialCelestialParameters.dayNightPeriod = this.initialCelestialParameters.dayNightPeriod || this.initialCelestialParameters.rotationPeriod || 24;
-    this.baseLand = resolveWorldBaseLand(this, this.resources.surface?.land);
-    this.initialLand = this.baseLand;
-
-    if (this.resources.surface?.land) {
-      this.resources.surface.land.baseLand = this.baseLand;
-    }
-    this.celestialParameters.baseLand = this.baseLand;
-    this.initialCelestialParameters.baseLand = this.baseLand;
     this.refreshDynamicWorldGeometry();
 
     const isRogueWorld = this.celestialParameters.rogue === true;
@@ -1079,112 +1069,26 @@ class Terraforming extends EffectableEntity{
       this.synchronizeGlobalResources();
       if (planetParameters.specialAttributes?.dynamicMass === true) {
           const baseCelestialParameters = structuredClone(planetParameters.celestialParameters);
-          const baseRadius = baseCelestialParameters.baseRadius ?? baseCelestialParameters.radius ?? 0;
-          const baseMass = baseCelestialParameters.baseMass ?? baseCelestialParameters.mass ?? 0;
-          const radiusMeters = baseRadius * 1000;
-          const baseGravity = baseCelestialParameters.baseGravity
-            ?? (
-              baseMass > 0 && radiusMeters > 0
-                ? (6.6743e-11 * baseMass) / (radiusMeters * radiusMeters)
-                : (baseCelestialParameters.gravity ?? 0)
-            );
-          const surfaceMassKeys = [
-            'liquidWater', 'ice', 'dryIce', 'liquidCO2', 'liquidHydrogen',
-            'liquidMethane', 'hydrocarbonIce', 'fineSand', 'liquidAmmonia',
-            'ammoniaIce', 'liquidOxygen', 'oxygenIce', 'liquidNitrogen',
-            'nitrogenIce', 'biomass', 'graphite', 'scrapMetal', 'garbage',
-            'trash', 'junk', 'radioactiveWaste', 'hazardousBiomass', 'hazardousMachinery'
-          ];
-          const atmosphericMassKeys = [
-            'carbonDioxide', 'inertGas', 'oxygen', 'atmosphericWater',
-            'greenhouseGas', 'atmosphericMethane', 'atmosphericAmmonia',
-            'hydrogen', 'sulfuricAcid', 'calciteAerosol', 'vanadiumAerosol'
-          ];
-          let derivedBaseSurfaceMassKg = 0;
-          let derivedBaseAtmosphericMassKg = 0;
-          for (let index = 0; index < surfaceMassKeys.length; index += 1) {
-              const key = surfaceMassKeys[index];
-              const amount = planetParameters.resources.surface[key]?.initialValue || 0;
-              derivedBaseSurfaceMassKg += amount * 1000;
-          }
-          for (let index = 0; index < atmosphericMassKeys.length; index += 1) {
-              const key = atmosphericMassKeys[index];
-              const amount = planetParameters.resources.atmospheric[key]?.initialValue || 0;
-              derivedBaseAtmosphericMassKg += amount * 1000;
-          }
-          const baseSurfaceMassKg = Number.isFinite(baseCelestialParameters.baseSurfaceMassKg)
-            ? baseCelestialParameters.baseSurfaceMassKg
-            : derivedBaseSurfaceMassKg;
-          const baseAtmosphericMassKg = Number.isFinite(baseCelestialParameters.baseAtmosphericMassKg)
-            ? baseCelestialParameters.baseAtmosphericMassKg
-            : derivedBaseAtmosphericMassKg;
-          const basePlanetaryMass = Number.isFinite(baseCelestialParameters.basePlanetaryMass)
-            ? Math.max(0, baseCelestialParameters.basePlanetaryMass)
-            : Math.max(0, baseMass - baseSurfaceMassKg - baseAtmosphericMassKg);
-          const basePlanetaryVolumeM3 = Number.isFinite(baseCelestialParameters.basePlanetaryVolumeM3)
-            ? Math.max(0, baseCelestialParameters.basePlanetaryVolumeM3)
-            : null;
-          const dynamicDirectMassDeltaKg = Number.isFinite(baseCelestialParameters.dynamicDirectMassDeltaKg)
-            ? baseCelestialParameters.dynamicDirectMassDeltaKg
-            : 0;
-          const dynamicDirectVolumeDeltaM3 = Number.isFinite(baseCelestialParameters.dynamicDirectVolumeDeltaM3)
-            ? baseCelestialParameters.dynamicDirectVolumeDeltaM3
-            : 0;
-
           Object.assign(this.initialCelestialParameters, baseCelestialParameters);
-          Object.assign(this.celestialParameters, baseCelestialParameters);
-          this.baseMass = baseMass;
-          this.baseRadius = baseRadius;
-          this.baseGravity = baseGravity;
-          this.basePlanetaryMass = basePlanetaryMass;
-          this.baseSurfaceMassKg = baseSurfaceMassKg;
-          this.baseAtmosphericMassKg = baseAtmosphericMassKg;
-          this.basePlanetaryVolumeM3 = basePlanetaryVolumeM3;
-          this.baseLand = resolveWorldBaseLand(this, this.resources.surface?.land);
-          this.initialLand = this.baseLand;
-          if (this.resources.surface?.land) {
-              this.resources.surface.land.baseLand = this.baseLand;
-          }
-          this.celestialParameters.baseLand = this.baseLand;
-          this.celestialParameters.baseRadius = baseRadius;
-          this.celestialParameters.baseMass = baseMass;
-          this.celestialParameters.baseGravity = baseGravity;
-          this.celestialParameters.basePlanetaryMass = basePlanetaryMass;
-          this.celestialParameters.basePlanetaryVolumeM3 = basePlanetaryVolumeM3;
-          this.celestialParameters.baseSurfaceMassKg = baseSurfaceMassKg;
-          this.celestialParameters.baseAtmosphericMassKg = baseAtmosphericMassKg;
-          this.initialCelestialParameters.baseLand = this.baseLand;
-          this.initialCelestialParameters.baseRadius = baseRadius;
-          this.initialCelestialParameters.baseMass = baseMass;
-          this.initialCelestialParameters.baseGravity = baseGravity;
-          this.initialCelestialParameters.basePlanetaryMass = basePlanetaryMass;
-          this.initialCelestialParameters.basePlanetaryVolumeM3 = basePlanetaryVolumeM3;
-          this.initialCelestialParameters.baseSurfaceMassKg = baseSurfaceMassKg;
-          this.initialCelestialParameters.baseAtmosphericMassKg = baseAtmosphericMassKg;
-          this.currentPlanetaryMassKg = null;
-          this.currentSurfaceMassKg = null;
-          this.currentAtmosphericMassKg = null;
-          this.currentPlanetaryVolumeM3 = null;
-          this.currentSurfaceVolumeM3 = null;
-          this.dynamicDirectMassDeltaKg = dynamicDirectMassDeltaKg;
-          this.dynamicDirectVolumeDeltaM3 = dynamicDirectVolumeDeltaM3;
-          this.dynamicMassDeltaKg = 0;
-          this.dynamicSurfaceVolumeDeltaM3 = 0;
-          this.celestialParameters.currentPlanetaryMassKg = null;
-          this.celestialParameters.currentSurfaceMassKg = null;
-          this.celestialParameters.currentAtmosphericMassKg = null;
-          this.celestialParameters.currentPlanetaryVolumeM3 = null;
-          this.celestialParameters.currentSurfaceVolumeM3 = null;
-          this.celestialParameters.dynamicDirectMassDeltaKg = dynamicDirectMassDeltaKg;
-          this.celestialParameters.dynamicDirectVolumeDeltaM3 = dynamicDirectVolumeDeltaM3;
-          this.celestialParameters.dynamicMassDeltaKg = 0;
-          this.celestialParameters.dynamicSurfaceVolumeDeltaM3 = 0;
+          Object.assign(this.celestialParameters, baseCelestialParameters, {
+              dynamicDirectMassDeltaKg: baseCelestialParameters.dynamicDirectMassDeltaKg || 0,
+              dynamicDirectVolumeDeltaM3: baseCelestialParameters.dynamicDirectVolumeDeltaM3 || 0,
+              dynamicMassDeltaKg: 0,
+              dynamicSurfaceVolumeDeltaM3: 0,
+              currentPlanetaryMassKg: null,
+              currentSurfaceMassKg: null,
+              currentAtmosphericMassKg: null,
+              currentPlanetaryVolumeM3: null,
+              currentSurfaceVolumeM3: null
+          });
           this.refreshDynamicWorldGeometry(planetParameters);
-          this.initialCelestialParameters.mass = this.celestialParameters.mass;
-          this.initialCelestialParameters.radius = this.celestialParameters.radius;
-          this.initialCelestialParameters.gravity = this.celestialParameters.gravity;
-          this.initialCelestialParameters.surfaceArea = this.celestialParameters.surfaceArea;
-          this.initialCelestialParameters.crossSectionArea = this.celestialParameters.crossSectionArea;
+          Object.assign(this.initialCelestialParameters, {
+              mass: this.celestialParameters.mass,
+              radius: this.celestialParameters.radius,
+              gravity: this.celestialParameters.gravity,
+              surfaceArea: this.celestialParameters.surfaceArea,
+              crossSectionArea: this.celestialParameters.crossSectionArea
+          });
           reconcileLandResourceValue();
       }
       this._updateZonalCoverageCache();
@@ -1263,7 +1167,7 @@ class Terraforming extends EffectableEntity{
     }
 
     refreshDynamicWorldGeometry(planetParameters = currentPlanetParameters) {
-      return getSyncDynamicWorldGeometryHelper()(this, planetParameters);
+      return (syncDynamicWorldGeometryHelper || syncDynamicWorldGeometry)(this, planetParameters);
     }
 
     runUpdateStep(deltaTime = 0, options = {}) {
@@ -1847,16 +1751,22 @@ class Terraforming extends EffectableEntity{
     // Column mass (kg/m²) — higher => stronger mixing
     const columnMass = effectiveSurfacePressurePa / Math.max(gSurface, 1e-6);
 
-    // Tunables (picked to match Earth/Mars/Titan/Venus qualitatively)
-    const MASS_REF = 1.03e4;  // ≈ Earth column mass at 1 bar
-    const K_MASS   = 0.115;   // sets how fast massBoost rises
-    const A_MASS   = 0.50;    // sqrt scaling: slows Titan saturation vs Venus
+    const mixingParameters = terraformingParameters.climate.meridionalMixing;
+    const MASS_REF = mixingParameters.referenceColumnMassKgM2;
+    const K_MASS = mixingParameters.columnMassRate;
+    const A_MASS = mixingParameters.columnMassExponent;
 
     // 0..~1: 1-e^{-K (M/Mref)^a}
     const massBoost = 1 - Math.exp(-K_MASS * Math.pow(columnMass / MASS_REF, A_MASS));
 
     // Rotation boost: slower rotation ⇒ larger Hadley cells (cap at 3×)
-    const rotFactor = Math.min(3, Math.sqrt(Math.max(0.5, rotationPeriodH / 24)));
+    const rotFactor = Math.min(
+      mixingParameters.maximumRotationFactor,
+      Math.sqrt(Math.max(
+        mixingParameters.minimumRotationPeriodRatio,
+        rotationPeriodH / mixingParameters.referenceRotationPeriodHours
+      ))
+    );
 
     // Planet-wide liquid coverage (water + hydrocarbons), 0..1
     let liquidCoverageWeighted = 0, areaSum = 0;
@@ -1877,7 +1787,7 @@ class Terraforming extends EffectableEntity{
 
     // Combine independent channels so either can reach 1 alone
     let mixFrac = 1 - (1 - gasMix) * (1 - liqMix);
-    mixFrac = Math.max(0, Math.min(0.999, mixFrac));
+    mixFrac = Math.max(0, Math.min(mixingParameters.maximumMixFraction, mixFrac));
 
     // Weights are energy capacities (J/K) so updates conserve energy
     const W = {};
@@ -3262,11 +3172,6 @@ synchronizeGlobalResources() {
                 }
             }
           }
-      }
-      this.baseLand = resolveWorldBaseLand(this, this.resources.surface?.land);
-      this.initialLand = this.baseLand;
-      if (this.resources.surface?.land) {
-          this.resources.surface.land.baseLand = this.baseLand;
       }
       this.refreshDynamicWorldGeometry();
 

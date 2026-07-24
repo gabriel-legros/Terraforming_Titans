@@ -10,37 +10,9 @@ if (isNodeAtmos) {
 }
 
 // Common molecular weights in g/mol
-const MOLECULAR_WEIGHTS = {
-  N2: 28.0134,
-  O2: 31.9988,
-  Ar: 39.948,
-  CO2: 44.01,
-  CH4: 16.04,
-  NH3: 17.031,
-  H2: 2.016,
-  He: 4.0026,
-  H2O: 18.01528,
-  SF6: 146.06,
-  H2SO4: 98.079,
-  CaCO3: 100.0869,
-  V2O5: 181.88
-};
+const MOLECULAR_WEIGHTS = terraformingParameters.atmosphere.molecularWeightGPerMol;
 
-const SPECIFIC_HEAT_CAPACITIES = {
-  N2: 1040,
-  O2: 918,
-  Ar: 520,
-  CO2: 844,
-  CH4: 2220,
-  NH3: 2060,
-  H2: 14300,
-  He: 5190,
-  H2O: 1870,
-  SF6: 658,
-  H2SO4: 1400,
-  CaCO3: 820,
-  V2O5: 690
-};
+const SPECIFIC_HEAT_CAPACITIES = terraformingParameters.atmosphere.specificHeatJPerKgK;
 
 const MOLECULAR_WEIGHT_ALIASES = {
   carbondioxide: 'CO2',
@@ -75,9 +47,9 @@ const MOLECULAR_WEIGHT_ALIASES = {
   ar: 'Ar'
 };
 
-const GRAMS_PER_TON = 1e6;
-const TONS_TO_KG = 1e3;
-const UNIVERSAL_GAS_CONSTANT = 8.314462618;
+const GRAMS_PER_TON = terraformingParameters.physical.gramsPerTon;
+const TONS_TO_KG = terraformingParameters.physical.kgPerTon;
+const UNIVERSAL_GAS_CONSTANT = terraformingParameters.physical.universalGasConstant;
 
 
 function normalizeNumber(value) {
@@ -217,7 +189,7 @@ function calculateMolecularWeight(composition, weights = MOLECULAR_WEIGHTS) {
  * @returns {number} specific lift in kg/m^3.
  */
 function calculateSpecificLift(pressurePa, temperatureK, externalMolWeight, internalMolWeight = 29) {
-  const R = 8.314; // J mol^-1 K^-1
+  const R = UNIVERSAL_GAS_CONSTANT;
   const mExt = externalMolWeight / 1000; // kg/mol
   const mIn = internalMolWeight / 1000; // kg/mol
   return (pressurePa / (R * temperatureK)) * (mExt - mIn);

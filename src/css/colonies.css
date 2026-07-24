@@ -501,6 +501,10 @@ input[type="range"].pretty-slider::-moz-range-thumb {
   gap: 6px;
 }
 
+.construction-office-reserve-input-wrap .space-storage-settings-input.is-inherited {
+  color: #6c757d;
+}
+
 /* --- Nanocolony Card --- */
 #nanocolony-container .card-body {
   display: flex;

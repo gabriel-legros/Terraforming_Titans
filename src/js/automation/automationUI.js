@@ -1331,9 +1331,14 @@ function removeAutomationPresetValueAtPath(target, path) {
   if (!target || !Array.isArray(path) || path.length === 0) {
     return false;
   }
+  if (!hasAutomationPresetValueAtPath(target, path)) {
+    return false;
+  }
+  const containers = [target];
   let parent = target;
   for (let index = 0; index < path.length - 1; index += 1) {
     parent = parent[path[index]];
+    containers.push(parent);
   }
   const leafKey = path[path.length - 1];
   if (Array.isArray(parent)) {
@@ -1342,12 +1347,29 @@ function removeAutomationPresetValueAtPath(target, path) {
       return false;
     }
     parent.splice(numericIndex, 1);
-    return true;
+  } else {
+    if (!parent || parent.constructor !== Object || !Object.prototype.hasOwnProperty.call(parent, leafKey)) {
+      return false;
+    }
+    delete parent[leafKey];
   }
-  if (!parent || parent.constructor !== Object || !Object.prototype.hasOwnProperty.call(parent, leafKey)) {
-    return false;
+
+  for (let index = containers.length - 1; index > 0; index -= 1) {
+    const container = containers[index];
+    const isEmpty = Array.isArray(container)
+      ? container.length === 0
+      : container && container.constructor === Object && Object.keys(container).length === 0;
+    if (!isEmpty) {
+      break;
+    }
+    const owner = containers[index - 1];
+    const ownerKey = path[index - 1];
+    if (Array.isArray(owner)) {
+      owner.splice(ownerKey, 1);
+    } else {
+      delete owner[ownerKey];
+    }
   }
-  delete parent[leafKey];
   return true;
 }
 
@@ -2773,6 +2795,7 @@ function createAutomationPresetRow(body) {
 
   return {
     presetRow,
+    presetButtons,
     presetSelect,
     presetUsage,
     presetMoveUp,
@@ -2921,5 +2944,11 @@ function updateAutomationUI() {
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { initializeAutomationUI, updateAutomationVisibility, updateAutomationUI, queueAutomationUIRefresh };
+  module.exports = {
+    initializeAutomationUI,
+    updateAutomationVisibility,
+    updateAutomationUI,
+    queueAutomationUIRefresh,
+    removeAutomationPresetValueAtPath
+  };
 }

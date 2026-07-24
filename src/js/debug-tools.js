@@ -573,7 +573,8 @@
       && fastestTerraformRealSeconds !== null
       && realPlayTimeSeconds < fastestTerraformRealSeconds;
 
-    if (isBetterTime || sameTimeMissingReal || sameTimeBetterReal) {
+    if (currentPlanetParameters.specialAttributes.countsAsStandardTerraformingRun !== false
+      && (isBetterTime || sameTimeMissingReal || sameTimeBetterReal)) {
       fastestTerraformDays = playTimeSeconds;
       fastestTerraformRealSeconds = realPlayTimeSeconds;
     }

@@ -79,9 +79,9 @@ class ResourceCycle {
     slopeSaturationVaporPressureFn,
     freezePoint,
     sublimationPoint,
-    boilingRateMultiplier = 1e-7,
-    evaporationAlbedo = 0.6,
-    sublimationAlbedo = 0.6,
+    boilingRateMultiplier = terraformingParameters.phaseChange.resourceCycle.boilingRateMultiplier,
+    evaporationAlbedo = terraformingParameters.phaseChange.resourceCycle.defaultEvaporationAlbedo,
+    sublimationAlbedo = terraformingParameters.phaseChange.resourceCycle.defaultSublimationAlbedo,
     coverageKeys = {},
     precipitationKeys = {},
     surfaceFlowFn = null,
@@ -121,7 +121,14 @@ class ResourceCycle {
     return map[key] || key;
   }
 
-  evaporationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a = 100, albedo = this.evaporationAlbedo }) {
+  evaporationRate({
+    T,
+    solarFlux,
+    atmPressure,
+    vaporPressure: e_a,
+    r_a = terraformingParameters.phaseChange.penman.aerodynamicResistanceSecondsPerMeter,
+    albedo = this.evaporationAlbedo
+  }) {
     const Delta_s = this.slopeSaturationVaporPressureFn(T);
     const e_s = this.saturationVaporPressureFn(T);
     return penmanRateFn({
@@ -175,7 +182,14 @@ class ResourceCycle {
     return meltingFreezingRatesFn({ ...args, freezingPoint: this.freezePoint });
   }
 
-  sublimationRate({ T, solarFlux, atmPressure, vaporPressure: e_a, r_a = 100, albedo = this.sublimationAlbedo }) {
+  sublimationRate({
+    T,
+    solarFlux,
+    atmPressure,
+    vaporPressure: e_a,
+    r_a = terraformingParameters.phaseChange.penman.aerodynamicResistanceSecondsPerMeter,
+    albedo = this.sublimationAlbedo
+  }) {
     const Delta_s = this.slopeSaturationVaporPressureFn(T);
     const e_s = this.saturationVaporPressureFn(T);
     return penmanRateFn({
@@ -232,7 +246,7 @@ class ResourceCycle {
       precipitation: {},
     };
 
-    const daySolarFlux = 2 * zonalSolarFlux;
+    const daySolarFlux = terraformingParameters.phaseChange.resourceCycle.daytimeSolarFluxMultiplier * zonalSolarFlux;
     const nightSolarFlux = 0;
 
     const liquidArea = zoneArea * liquidCoverage;
@@ -248,7 +262,7 @@ class ResourceCycle {
           solarFlux: daySolarFlux,
           atmPressure,
           vaporPressure,
-          r_a: 100,
+          r_a: terraformingParameters.phaseChange.penman.aerodynamicResistanceSecondsPerMeter,
         }) * liquidArea / 1000;
       }
       if (typeof nightTemperature === 'number') {
@@ -257,7 +271,7 @@ class ResourceCycle {
           solarFlux: nightSolarFlux,
           atmPressure,
           vaporPressure,
-          r_a: 100,
+          r_a: terraformingParameters.phaseChange.penman.aerodynamicResistanceSecondsPerMeter,
         }) * liquidArea / 1000;
       }
       const evapRate = (dayEvap + nightEvap) / 2;
@@ -373,7 +387,7 @@ class ResourceCycle {
           solarFlux: daySolarFlux,
           atmPressure,
           vaporPressure,
-          r_a: 100,
+          r_a: terraformingParameters.phaseChange.penman.aerodynamicResistanceSecondsPerMeter,
         }) * iceArea / 1000;
       }
       if (typeof nightTemperature === 'number') {
@@ -382,7 +396,7 @@ class ResourceCycle {
           solarFlux: nightSolarFlux,
           atmPressure,
           vaporPressure,
-          r_a: 100,
+          r_a: terraformingParameters.phaseChange.penman.aerodynamicResistanceSecondsPerMeter,
         }) * iceArea / 1000;
       }
       const subRate = (daySub + nightSub) / 2;

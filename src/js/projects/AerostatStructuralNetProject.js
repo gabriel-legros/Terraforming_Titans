@@ -19,7 +19,10 @@ class AerostatStructuralNetProject extends ArtificialSkyProject {
   }
 
   getInitialLand() {
-    return Math.min(terraforming?.initialLand, Math.max(resolveWorldGeometricLand(terraforming, resources.surface.land), 0));
+    return Math.min(
+      resolveWorldBaseLand(terraforming, resources.surface.land),
+      Math.max(resolveWorldGeometricLand(terraforming, resources.surface.land), 0)
+    );
   }
 
   getMaxRepeats() {

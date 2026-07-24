@@ -1385,13 +1385,22 @@ class LifeManager extends EffectableEntity {
       .filter(([, coef]) => coef < 0);
 
     const biomassGrowthLimiters = {};
-    const addBiomassGrowthLimiter = (resourceKey, zoneName, scope) => {
+    const addBiomassGrowthLimiter = (resourceKey, zoneName, scope, missingAmount) => {
       const entry = biomassGrowthLimiters[resourceKey] || (biomassGrowthLimiters[resourceKey] = {
         scope,
         zones: [],
+        missingPerSecond: 0,
+        missingByZone: {},
       });
       if (scope === 'surface' && zoneName && !entry.zones.includes(zoneName)) {
         entry.zones.push(zoneName);
+      }
+      if (scope === 'surface' && zoneName) {
+        entry.missingByZone[zoneName] = Math.max(0, missingAmount / secondsMultiplier);
+        entry.missingPerSecond = Object.values(entry.missingByZone)
+          .reduce((total, missingRate) => total + missingRate, 0);
+      } else {
+        entry.missingPerSecond = Math.max(entry.missingPerSecond, missingAmount / secondsMultiplier);
       }
     };
 
@@ -1474,6 +1483,7 @@ class LifeManager extends EffectableEntity {
       let maxBySurfaceInputs = potentialBiomassDelta;
       let limitingSurfaceKey = '';
       let limitingSurfaceValue = potentialBiomassDelta;
+      let limitingSurfaceShortfall = 0;
       surfaceInputsPerBiomass.forEach(([resourceKey, coef]) => {
         const requiredPerBiomass = -coef;
         let available = 0;
@@ -1491,11 +1501,12 @@ class LifeManager extends EffectableEntity {
           if (maxGrowth < limitingSurfaceValue) {
             limitingSurfaceValue = maxGrowth;
             limitingSurfaceKey = inputResourceKey;
+            limitingSurfaceShortfall = potentialBiomassDelta * requiredPerBiomass - available;
           }
         }
       });
       if (limitingSurfaceKey && limitingSurfaceValue < potentialBiomassDelta) {
-        addBiomassGrowthLimiter(limitingSurfaceKey, zoneName, 'surface');
+        addBiomassGrowthLimiter(limitingSurfaceKey, zoneName, 'surface', limitingSurfaceShortfall);
       }
 
       const capped = Math.max(0, maxBySurfaceInputs);
@@ -1520,6 +1531,7 @@ class LifeManager extends EffectableEntity {
         const adjustedZoneGrowth = potentialGrowthByZone[zoneName];
         let surfaceCappedGrowth = adjustedZoneGrowth;
         let limitingSurfaceKey = '';
+        let limitingSurfaceShortfall = 0;
         surfaceInputsPerBiomass.forEach(([resourceKey, coef]) => {
           const requiredPerBiomass = -coef;
           let available = 0;
@@ -1536,23 +1548,25 @@ class LifeManager extends EffectableEntity {
             if (maxGrowth < surfaceCappedGrowth) {
               surfaceCappedGrowth = maxGrowth;
               limitingSurfaceKey = inputResourceKey;
+              limitingSurfaceShortfall = adjustedZoneGrowth * requiredPerBiomass - available;
             }
           }
         });
         if (limitingSurfaceKey) {
-          addBiomassGrowthLimiter(limitingSurfaceKey, zoneName, 'surface');
+          addBiomassGrowthLimiter(limitingSurfaceKey, zoneName, 'surface', limitingSurfaceShortfall);
         }
         potentialGrowthByZone[zoneName] = Math.max(0, surfaceCappedGrowth);
         totalPotentialGrowth += potentialGrowthByZone[zoneName];
       });
       if (yggieGrowthControl.nutrientLimited) {
-        addBiomassGrowthLimiter('yggieNutrients', '', 'special');
+        addBiomassGrowthLimiter('yggieNutrients', '', 'special', yggieGrowthControl.nutrientShortfall);
       }
     }
 
     let maxByAtmosphericInputs = totalPotentialGrowth;
     let limitingAtmosphericKey = '';
     let limitingAtmosphericValue = totalPotentialGrowth;
+    let limitingAtmosphericShortfall = 0;
     atmosphericInputsPerBiomass.forEach(([resourceKey, coef]) => {
       const requiredPerBiomass = -coef;
       const available = getAtmosphericAvailable(resourceKey, [naturalDecayAtmosphericDeltas]);
@@ -1562,16 +1576,18 @@ class LifeManager extends EffectableEntity {
         if (maxGrowth < limitingAtmosphericValue) {
           limitingAtmosphericValue = maxGrowth;
           limitingAtmosphericKey = resourceKey;
+          limitingAtmosphericShortfall = totalPotentialGrowth * requiredPerBiomass - available;
         }
       }
     });
     if (limitingAtmosphericKey && maxByAtmosphericInputs < totalPotentialGrowth) {
-      addBiomassGrowthLimiter(limitingAtmosphericKey, '', 'atmospheric');
+      addBiomassGrowthLimiter(limitingAtmosphericKey, '', 'atmospheric', limitingAtmosphericShortfall);
     }
 
     let maxByColonyInputs = totalPotentialGrowth;
     let limitingColonyKey = '';
     let limitingColonyValue = totalPotentialGrowth;
+    let limitingColonyShortfall = 0;
     colonyInputsPerBiomass.forEach(([resourceKey, coef]) => {
       const requiredPerBiomass = -coef;
       const available = getColonyAvailable(resourceKey);
@@ -1581,11 +1597,12 @@ class LifeManager extends EffectableEntity {
         if (maxGrowth < limitingColonyValue) {
           limitingColonyValue = maxGrowth;
           limitingColonyKey = resourceKey;
+          limitingColonyShortfall = totalPotentialGrowth * requiredPerBiomass - available;
         }
       }
     });
     if (limitingColonyKey && maxByColonyInputs < totalPotentialGrowth) {
-      addBiomassGrowthLimiter(limitingColonyKey, '', 'colony');
+      addBiomassGrowthLimiter(limitingColonyKey, '', 'colony', limitingColonyShortfall);
     }
 
     const totalGrowthBiomass = Math.max(0, Math.min(totalPotentialGrowth, maxByAtmosphericInputs, maxByColonyInputs));

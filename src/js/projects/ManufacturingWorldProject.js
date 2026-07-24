@@ -1549,7 +1549,7 @@
           return;
         }
         const storedCurrent = this.getStoredAssignmentAmount(key);
-        const displayedCurrent = this.isUnassignedAssignmentKey(key) ? available : storedCurrent;
+        const displayedCurrent = this.getDisplayedAssignmentAmount(key);
         const maxForKey = this.getAssignmentMaxTarget(key);
 
         const valueText = formatNumber(displayedCurrent, true, 2);

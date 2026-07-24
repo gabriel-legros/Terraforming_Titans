@@ -1360,9 +1360,18 @@ class SpaceMiningProject extends SpaceshipProject {
 
   getImportLimitRemainingForDelivery(resourceKey, targetCategory, targetResource, accumulatedChanges = null) {
     if (resourceKey === 'liquidWater') {
-      return targetCategory === 'surface'
-        ? this.getWaterImportLimitRemaining(accumulatedChanges)
-        : Infinity;
+      if (targetCategory === 'surface') {
+        return this.getWaterImportLimitRemaining(accumulatedChanges);
+      }
+      if (
+        targetCategory === 'colony'
+        && targetResource === 'water'
+        && this.waterCoverageLimitEnabled()
+        && this.getWaterImportLimitRemaining(accumulatedChanges) <= 0
+      ) {
+        return this.getColonyResourceCapacityRemaining('water', accumulatedChanges);
+      }
+      return Infinity;
     }
     let remaining = this.getGasImportPressureLimitRemaining(targetResource, accumulatedChanges);
     if (resourceKey === 'carbonDioxide') {

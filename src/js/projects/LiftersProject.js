@@ -676,7 +676,27 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     const clampAssignmentCaps = this.shouldClampAssignmentCaps();
     const landValue = resources.surface.land.value;
     const warpAverage = warpGateNetworkManager.getAverageWarpGateLevelAllSectors();
-    return `${total.toString()}|${clampAssignmentCaps}|${landValue}|${warpAverage}|${this.getManagedAssignmentKeys().join('|')}`;
+    const unitRate = this.getEffectiveUnitRatePerLifter();
+    const managedKeys = this.getManagedAssignmentKeys();
+    const recipeCapInputs = managedKeys.map((key) => {
+      const recipe = this.getRecipe(key);
+      if (!recipe) {
+        return `${key}:none`;
+      }
+      const capResourceKey = this.getGasGiantCapResourceKey(key, recipe);
+      const complexity = this.getRecipeComplexity(recipe);
+      const outputMultiplier = this.getRecipeTotalOutputMultiplier(recipe);
+      return `${key}:${capResourceKey}:${complexity}:${outputMultiplier}`;
+    }).join('|');
+    return [
+      `total:${total.toString()}`,
+      `clamp:${clampAssignmentCaps}`,
+      `stripCap:${gameSettings.liftersStrippingCap}`,
+      `land:${landValue}`,
+      `warp:${warpAverage}`,
+      `unitRate:${unitRate}`,
+      `recipes:${recipeCapInputs}`
+    ].join('|');
   }
 
   getDisplayedAssignmentAmount(key) {
@@ -980,8 +1000,10 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     result.energyUsed = result.colonyUsed + result.storedSpaceEnergyUsed + result.dysonEnergyUsed;
   }
 
-  buildOperationEntries(seconds, productivity = 1) {
-    this.normalizeAssignments();
+  buildOperationEntries(seconds, productivity = 1, options = {}) {
+    if (options.skipAssignmentNormalization !== true) {
+      this.normalizeAssignments();
+    }
     const entries = [];
 
     this.getAssignmentKeys().forEach((key) => {
@@ -1019,7 +1041,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
   }
 
   planOperation(seconds, productivity = 1, accumulatedChanges = null, options = {}) {
-    const entries = this.buildOperationEntries(seconds, productivity);
+    const entries = this.buildOperationEntries(seconds, productivity, options);
     const storage = this.getSpaceStorageProject();
     let stripAvailableAtmosphere = this.getStripAvailableAtmosphere(accumulatedChanges);
     const skipEnergyLimit = options.skipEnergyLimit === true;
@@ -1139,7 +1161,10 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       return productivities;
     }
 
-    const plan = this.planOperation(seconds, defaultProductivity, null, { skipEnergyLimit: true });
+    const plan = this.planOperation(seconds, defaultProductivity, null, {
+      skipEnergyLimit: true,
+      skipAssignmentNormalization: true
+    });
     plan.entries.forEach((entry) => {
       productivities[entry.key] = entry.productivityRatio;
     });
@@ -1392,7 +1417,8 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
 
     const hasSharedOperationProductivity = productivity && typeof productivity === 'object';
     const plan = this.planOperation(seconds, productivity, accumulatedChanges, {
-      skipEnergyLimit: hasSharedOperationProductivity
+      skipEnergyLimit: hasSharedOperationProductivity,
+      skipAssignmentNormalization: true
     });
     const productivityByRecipe = {};
     const displayRatesByRecipe = {};
@@ -1639,7 +1665,8 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
 
     const hasSharedOperationProductivity = productivity && typeof productivity === 'object';
     const plan = this.planOperation(seconds, productivity, accumulatedChanges, {
-      skipEnergyLimit: hasSharedOperationProductivity
+      skipEnergyLimit: hasSharedOperationProductivity,
+      skipAssignmentNormalization: true
     });
     if (!(plan.plannedTotalUnits > 0)) {
       return totals;
@@ -1755,7 +1782,9 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       return totals;
     }
 
-    const entries = this.buildOperationEntries(seconds, 1);
+    const entries = this.buildOperationEntries(seconds, 1, {
+      skipAssignmentNormalization: true
+    });
     if (entries.length === 0) {
       return totals;
     }

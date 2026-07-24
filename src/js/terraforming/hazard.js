@@ -173,10 +173,12 @@ function migrateSavedHazardParameters(baseParameters, savedParameters) {
     savedDebrisDisk.kesslerRegenerationRatePerBinPerSecond === 0.01 &&
     (
       !Number.isFinite(baseDebrisDisk.kesslerRegenerationRatePerBinPerSecond) ||
-      baseDebrisDisk.kesslerRegenerationRatePerBinPerSecond === 0.001
+      baseDebrisDisk.kesslerRegenerationRatePerBinPerSecond
+        === terraformingParameters.hazards.debrisDisk.defaultKesslerRegenerationRatePerBinPerSecond
     )
   ) {
-    savedDebrisDisk.kesslerRegenerationRatePerBinPerSecond = 0.001;
+    savedDebrisDisk.kesslerRegenerationRatePerBinPerSecond
+      = terraformingParameters.hazards.debrisDisk.defaultKesslerRegenerationRatePerBinPerSecond;
   }
 
   return migrated;
@@ -650,8 +652,8 @@ class HazardManager {
     if (this.pulsarHazard && this.pulsarHazard.applyPendingSurfaceSalvage) {
       this.pulsarHazard.applyPendingSurfaceSalvage();
     }
-    if (this.debrisDiskHazard && this.debrisDiskHazard.applyPendingSurfaceSalvage) {
-      this.debrisDiskHazard.applyPendingSurfaceSalvage();
+    if (this.debrisDiskHazard) {
+      this.debrisDiskHazard.applyPendingResourceConversions();
     }
   }
 
@@ -692,8 +694,7 @@ class HazardManager {
       return resolveLandReservationInitialLandHelper(terraformingState, landResource);
     }
     const candidates = [
-      terraformingState?.baseLand,
-      terraformingState?.initialLand,
+      terraformingState?.celestialParameters?.baseLand,
       landResource?.baseLand,
       landResource?.initialValue
     ];

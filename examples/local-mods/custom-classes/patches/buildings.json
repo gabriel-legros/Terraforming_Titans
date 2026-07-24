@@ -1,0 +1,35 @@
+{
+  "entries": {
+    "customClassExample_fluxRefinery": {
+      "type": "example.custom-classes.FluxRefineryBuilding",
+      "name": "",
+      "category": "production",
+      "description": "",
+      "cost": {
+        "colony": {
+          "metal": 100,
+          "components": 5
+        }
+      },
+      "consumption": {
+        "colony": {
+          "energy": 100000
+        }
+      },
+      "production": {
+        "colony": {
+          "metal": 2
+        }
+      },
+      "storage": {},
+      "factoryHeatCoefficient": 1,
+      "dayNightActivity": false,
+      "canBeToggled": true,
+      "requiresMaintenance": false,
+      "requiresWorker": 0,
+      "maintenanceFactor": 1,
+      "fluxProductionMultiplier": 1.5,
+      "unlocked": true
+    }
+  }
+}

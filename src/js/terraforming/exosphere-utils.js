@@ -1,7 +1,7 @@
-const EXOSPHERE_KB = 1.380649e-23; // Boltzmann constant [J/K]
-const AVOGADRO = 6.02214076e23; // mol^-1
-const EXOSPHERE_COLLISION_SIGMA = 2e-19; // m^2
-const EXOSPHERE_TEMP_COLUMN_SCALE = 2000; // kg/m^2
+const EXOSPHERE_KB = terraformingParameters.physical.boltzmannConstant;
+const AVOGADRO = terraformingParameters.physical.avogadroConstant;
+const EXOSPHERE_COLLISION_SIGMA = terraformingParameters.atmosphere.exosphere.collisionCrossSectionM2;
+const EXOSPHERE_TEMP_COLUMN_SCALE = terraformingParameters.atmosphere.exosphere.temperatureColumnScaleKgM2;
 
 function estimateExosphereHeightMeters(params = {}) {
   const totalMassKg = params.totalMassKg || 0;

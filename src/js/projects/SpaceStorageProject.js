@@ -125,11 +125,11 @@ function getSpaceStorageProjectText(path, vars, fallback = '') {
   }
 }
 
-let SpaceStorageContinuousExpansionHelpers = null;
+let SpaceStorageContinuousExpansion = null;
 try {
-  SpaceStorageContinuousExpansionHelpers = ContinuousExpansionProject.prototype;
+  SpaceStorageContinuousExpansion = ContinuousExpansionProject;
 } catch (error) {
-  SpaceStorageContinuousExpansionHelpers = require('./ContinuousExpansionProject.js').prototype;
+  SpaceStorageContinuousExpansion = require('./ContinuousExpansionProject.js');
 }
 
 class SpaceStorageProject extends SpaceshipProject {
@@ -3244,39 +3244,7 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 }
 
-const SPACE_STORAGE_CONTINUOUS_METHODS = [
-  'isExpansionContinuous',
-  'isContinuous',
-  'startContinuousExpansion',
-  'getExpansionProgressField',
-  'getExpansionCompletedField',
-  'getExpansionProgressValue',
-  'setExpansionProgressValue',
-  'getExpansionCompletedValue',
-  'setExpansionCompletedValue',
-  'getExpansionCompletedTotal',
-  'getContinuousExpansionTickState',
-  'applyExpansionColonyChange',
-  'applyExpansionCostForProgress',
-  'applyExpansionSpentRates',
-  'applyRequestedExpansionProgress',
-  'estimateExpansionCostForProgress',
-  'mergeResourceTotals',
-  'createExpansionStorageState',
-  'getAffordableExpansionProgress',
-  'getRemainingExpansionCapacity',
-  'applyFractionalProgress',
-  'carryDiscreteExpansionProgress',
-  'applyExpansionProgress',
-];
-
-SPACE_STORAGE_CONTINUOUS_METHODS.forEach((methodName) => {
-  const method = SpaceStorageContinuousExpansionHelpers[methodName];
-  if (!method) {
-    throw new Error(`Missing continuous expansion method: ${methodName}`);
-  }
-  SpaceStorageProject.prototype[methodName] = method;
-});
+SpaceStorageContinuousExpansion.applyCapabilityTo(SpaceStorageProject);
 
 if (typeof globalThis !== 'undefined') {
   globalThis.SpaceStorageProject = SpaceStorageProject;

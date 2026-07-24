@@ -141,8 +141,7 @@ function buildAutomationShipUI() {
 
   const presetRow = createAutomationPresetRow(body);
   const shipTransferButtons = createAutomationPresetTransferButtons('ship-automation-preset');
-  presetRow.presetRow.appendChild(shipTransferButtons.importButton);
-  presetRow.presetRow.appendChild(shipTransferButtons.exportButton);
+  presetRow.presetButtons.append(shipTransferButtons.importButton, shipTransferButtons.exportButton);
 
   const stepsContainer = document.createElement('div');
   stepsContainer.classList.add('automation-steps');

@@ -10,11 +10,14 @@
   const getOrderedZones = () => getZones();
 
   let WorkerCapacityBatchProjectBase;
+  let ContinuousExpansionCapability;
 
   if (typeof module !== 'undefined' && module.exports) {
     WorkerCapacityBatchProjectBase = require('./WorkerCapacityBatchProject.js');
+    ContinuousExpansionCapability = require('./ContinuousExpansionProject.js');
   } else {
     WorkerCapacityBatchProjectBase = WorkerCapacityBatchProject;
+    ContinuousExpansionCapability = ContinuousExpansionProject;
   }
 
   function getMegaHeatSinkText(path, fallback, vars) {
@@ -30,6 +33,7 @@
       super(config, name);
       this.summaryElements = null;
       this.workersPerCompletion = WORKERS_PER_HEAT_SINK;
+      this.continuousThreshold = MEGA_HEAT_SINK_CONTINUOUS_THRESHOLD_MS;
       this.heatSinksActive = true;
       this.autoMax = false;
       this.buildCount = 1;
@@ -531,39 +535,29 @@
       }
 
       const requestedProgress = (deltaTime / duration) * productivity;
-      const progress = Math.min(requestedProgress, this.getRemainingCap());
+      const cappedProgress = Math.min(requestedProgress, this.getRemainingCap());
+      const cost = Project.prototype.getScaledCost.call(this);
+      const storageState = this.createExpansionStorageState(accumulatedChanges);
+      const progress = this.getAffordableExpansionProgress(
+        cappedProgress,
+        cost,
+        storageState,
+        accumulatedChanges
+      );
       if (!(progress > 0)) {
         return totals;
       }
-      const seconds = deltaTime / 1000;
-      const rate = seconds > 0 ? progress / seconds : 0;
-      const cost = Project.prototype.getScaledCost.call(this);
-      const storageProj = this.createSpaceStorageAccess('expansions');
-      for (const category in cost) {
-        if (!totals.cost[category]) {
-          totals.cost[category] = {};
+      totals.cost = this.estimateExpansionCostForProgress(
+        cost,
+        progress,
+        deltaTime,
+        accumulatedChanges,
+        storageState,
+        {
+          applyRates: applyRates && this.showsInResourcesRate(),
+          sourceLabel: this.displayName
         }
-        for (const resource in cost[category]) {
-          const amount = cost[category][resource] * progress;
-          totals.cost[category][resource] = amount;
-          if (applyRates && this.showsInResourcesRate() && amount > 0) {
-            const key = resource === 'water' ? 'liquidWater' : resource;
-            const colonyAvailable = Math.max(
-              (resources[category]?.[resource]?.value || 0) + (accumulatedChanges?.[category]?.[resource] ?? 0),
-              0
-            );
-            const allocation = getMegaProjectResourceAllocation(storageProj, key, amount, colonyAvailable);
-            const colonyRate = cost[category][resource] * rate * productivity * (allocation.fromColony / amount);
-            const storageRate = cost[category][resource] * rate * productivity * (allocation.fromStorage / amount);
-            if (colonyRate > 0) {
-              resources[category][resource].modifyRate(-colonyRate, this.displayName, 'project');
-            }
-            if (storageRate > 0) {
-              resources?.spaceStorage?.[key]?.modifyRate?.(-storageRate, this.displayName, 'project');
-            }
-          }
-        }
-      }
+      );
       return totals;
     }
 
@@ -588,54 +582,22 @@
       }
 
       const cost = Project.prototype.getScaledCost.call(this);
-      const storageProj = this.createSpaceStorageAccess('expansions', { accumulatedChanges });
-      let paidProgress = Math.min(requestedProgress, remainingCap);
-      for (const category in cost) {
-        for (const resource in cost[category]) {
-          const perSinkCost = cost[category][resource];
-          if (!(perSinkCost > 0)) {
-            continue;
-          }
-          const key = resource === 'water' ? 'liquidWater' : resource;
-          const pending = accumulatedChanges?.[category]?.[resource] ?? 0;
-          const available = Math.max(0, (resources[category][resource].value || 0) + pending);
-          const requestedAmount = perSinkCost * requestedProgress;
-          const allocation = getMegaProjectResourceAllocation(storageProj, key, requestedAmount, available);
-          const affordableAmount = allocation.fromColony + allocation.fromStorage;
-          paidProgress = Math.min(paidProgress, affordableAmount / perSinkCost);
-        }
-      }
-
-      paidProgress = Math.max(0, Math.min(requestedProgress, paidProgress));
-      if (!(paidProgress > 0)) {
-        return;
-      }
-
-      for (const category in cost) {
-        for (const resource in cost[category]) {
-          const amount = cost[category][resource] * paidProgress;
-          const key = resource === 'water' ? 'liquidWater' : resource;
-          const colonyAvailable = Math.max(0, (resources[category][resource].value || 0) + (accumulatedChanges?.[category]?.[resource] ?? 0));
-          const allocation = getMegaProjectResourceAllocation(storageProj, key, amount, colonyAvailable);
-          if (!accumulatedChanges[category]) {
-            accumulatedChanges[category] = {};
-          }
-          if (accumulatedChanges[category][resource] === undefined) {
-            accumulatedChanges[category][resource] = 0;
-          }
-          if (allocation.fromColony > 0) {
-            accumulatedChanges[category][resource] -= allocation.fromColony;
-          }
-          if (allocation.fromStorage > 0 && storageProj && typeof storageProj.spendStoredResource === 'function') {
-            storageProj.spendStoredResource(key, allocation.fromStorage);
-            storageProj.reconcileUsedStorage?.();
+      this.applyRequestedExpansionProgress(
+        Math.min(requestedProgress, remainingCap),
+        cost,
+        accumulatedChanges,
+        {
+          applyRates: this.showsInResourcesRate(),
+          seconds: deltaTime / 1000,
+          rateSourceLabel: this.displayName,
+          applyProgress(progress) {
+            this.repeatCount += progress;
+            if (this.isCapReached()) {
+              this.isActive = false;
+            }
           }
         }
-      }
-      this.repeatCount += paidProgress;
-      if (this.isCapReached()) {
-        this.isActive = false;
-      }
+      );
     }
 
     complete() {
@@ -742,6 +704,8 @@
         : MEGA_HEAT_SINK_CAP_MODES.GEOMETRIC_LAND_PERCENT;
     }
   }
+
+  ContinuousExpansionCapability.applyCapabilityTo(MegaHeatSinkProject);
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = MegaHeatSinkProject;

@@ -1,19 +1,20 @@
-const SOLIS_RESOURCE_CAP = 1000;
-const SOLIS_WATER_KEEP = 1000;
-const SOLIS_CAPPED_RESOURCES = ['food', 'components', 'electronics', 'glass', 'androids'];
-const KESSLER_FAILURE_BASE_DEBRIS_PER_LAND = 100;
-const SMALL_PROJECT_BASE_SUCCESS = 0.3;
-const LARGE_PROJECT_BASE_SUCCESS = 0.02;
-const PERIAPSIS_SAMPLE_COUNT = 64;
-const DEBRIS_DECAY_BASE_RATE = 1/(3.6e3);
-const DEBRIS_DENSITY_CENTER = 1e-13;
-const DEBRIS_DENSITY_SEARCH_MAX = 50000000;
-const DEBRIS_DECAY_DENSITY_REFERENCE = 1e-12;
-const DEBRIS_DISTRIBUTION_DRAG_LINE_MIN_METERS = 10000;
-const DEBRIS_DISTRIBUTION_MEAN_MIN_METERS = 12000;
-const DEBRIS_DECAY_DENSITY_FLOOR = 1e-20;
-const DEBRIS_DECAY_MAX_MULTIPLIER = 100;
-const KESSLER_BIN_REGENERATION_CAP_EPSILON = 1e-9;
+const KESSLER_PARAMETERS = terraformingParameters.hazards.kessler;
+const SOLIS_RESOURCE_CAP = KESSLER_PARAMETERS.solisResourceCap;
+const SOLIS_WATER_KEEP = KESSLER_PARAMETERS.solisWaterKeep;
+const SOLIS_CAPPED_RESOURCES = KESSLER_PARAMETERS.solisCappedResources;
+const KESSLER_FAILURE_BASE_DEBRIS_PER_LAND = KESSLER_PARAMETERS.failureBaseDebrisPerLand;
+const SMALL_PROJECT_BASE_SUCCESS = KESSLER_PARAMETERS.smallProjectBaseSuccess;
+const LARGE_PROJECT_BASE_SUCCESS = KESSLER_PARAMETERS.largeProjectBaseSuccess;
+const PERIAPSIS_SAMPLE_COUNT = KESSLER_PARAMETERS.periapsisSampleCount;
+const DEBRIS_DECAY_BASE_RATE = KESSLER_PARAMETERS.debrisDecayBaseRatePerSecond;
+const DEBRIS_DENSITY_CENTER = KESSLER_PARAMETERS.debrisDensityCenter;
+const DEBRIS_DENSITY_SEARCH_MAX = KESSLER_PARAMETERS.debrisDensitySearchMaximum;
+const DEBRIS_DECAY_DENSITY_REFERENCE = KESSLER_PARAMETERS.debrisDecayDensityReference;
+const DEBRIS_DISTRIBUTION_DRAG_LINE_MIN_METERS = KESSLER_PARAMETERS.distributionDragLineMinimumMeters;
+const DEBRIS_DISTRIBUTION_MEAN_MIN_METERS = KESSLER_PARAMETERS.distributionMeanMinimumMeters;
+const DEBRIS_DECAY_DENSITY_FLOOR = KESSLER_PARAMETERS.debrisDecayDensityFloor;
+const DEBRIS_DECAY_MAX_MULTIPLIER = KESSLER_PARAMETERS.debrisDecayMaximumMultiplier;
+const KESSLER_BIN_REGENERATION_CAP_EPSILON = KESSLER_PARAMETERS.binRegenerationCapEpsilon;
 const KESSLER_DECAY_CONSTANTS = {
   baseRate: DEBRIS_DECAY_BASE_RATE,
   densityFloor: DEBRIS_DECAY_DENSITY_FLOOR,
@@ -52,7 +53,6 @@ function calculateKesslerRadiusContext(terraforming, entry) {
   const referenceRadiusKm = entry?.referenceRadiusKm
     || terraforming?.initialCelestialParameters?.radius
     || terraforming?.celestialParameters?.radius
-    || terraforming?.baseRadius
     || terraforming?.initialCelestialParameters?.baseRadius
     || terraforming?.celestialParameters?.baseRadius
     || 0;
@@ -71,9 +71,8 @@ function getEffectivePeriapsisAltitudeMeters(entry, terraforming) {
 
 function shouldRebaseKesslerRadiusReference(terraforming, referenceRadiusKm) {
   const initialRadiusKm = terraforming?.initialCelestialParameters?.radius || 0;
-  const baseRadiusKm = terraforming?.baseRadius
+  const baseRadiusKm = terraforming?.celestialParameters?.baseRadius
     || terraforming?.initialCelestialParameters?.baseRadius
-    || terraforming?.celestialParameters?.baseRadius
     || 0;
   return Boolean(
     initialRadiusKm
