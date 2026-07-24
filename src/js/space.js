@@ -510,8 +510,34 @@ class SpaceManager extends EffectableEntity {
             name: this._getCurrentWorldDisplayName(),
             playTimeSeconds: Math.max(0, Number(playTime) || 0),
             realTimeSeconds: Math.max(0, Number(realTime) || 0),
+            travelTimeSeconds: null,
+            travelRealTimeSeconds: null,
             completedAt: Date.now()
         };
+    }
+
+    _recordCurrentTerraformTravelTime() {
+        let worldId = this.currentPlanetKey;
+        let worldType = 'story';
+        if (this.currentRandomSeed !== null) {
+            worldId = String(this.currentRandomSeed);
+            worldType = 'random';
+        } else if (this.currentArtificialKey !== null) {
+            worldId = String(this.currentArtificialKey);
+            worldType = 'artificial';
+        }
+        for (let index = this.terraformHistory.length - 1; index >= 0; index -= 1) {
+            const entry = this.terraformHistory[index];
+            if (
+                entry.worldId === worldId
+                && entry.worldType === worldType
+                && entry.travelTimeSeconds === null
+            ) {
+                entry.travelTimeSeconds = Math.max(0, Number(playTimeSeconds) || 0);
+                entry.travelRealTimeSeconds = Math.max(0, Number(realPlayTimeSeconds) || 0);
+                return;
+            }
+        }
     }
 
     _getCurrentWorldArchetype() {
@@ -2772,6 +2798,7 @@ class SpaceManager extends EffectableEntity {
     recordDepartureSnapshot(options = {}) {
         // Call unified prepareForTravel before recording snapshot
         this.prepareForTravel({ savePretravel: options.savePretravel });
+        this._recordCurrentTerraformTravelTime();
         
         const now = Date.now();
         const pop = resources.colony.colonists.value || 0;
@@ -3718,6 +3745,12 @@ class SpaceManager extends EffectableEntity {
                     name: entry?.name == null ? '' : String(entry.name),
                     playTimeSeconds: Math.max(0, Number(entry?.playTimeSeconds) || 0),
                     realTimeSeconds: Math.max(0, Number(entry?.realTimeSeconds) || 0),
+                    travelTimeSeconds: entry?.travelTimeSeconds == null
+                        ? null
+                        : Math.max(0, Number(entry.travelTimeSeconds) || 0),
+                    travelRealTimeSeconds: entry?.travelRealTimeSeconds == null
+                        ? null
+                        : Math.max(0, Number(entry.travelRealTimeSeconds) || 0),
                     completedAt: Math.max(0, Number(entry?.completedAt) || 0)
                 }))
                 .filter((entry) => entry.name);

@@ -60,6 +60,45 @@
     margin: 0;
   }
 
+  #recent-terraform-history-table {
+    width: min(100%, 900px);
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  #recent-terraform-history-table th,
+  #recent-terraform-history-table td {
+    padding: 5px 12px;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.35);
+    text-align: center;
+    vertical-align: middle;
+  }
+
+  #recent-terraform-history-table th {
+    font-weight: 600;
+  }
+
+  #recent-terraform-history-table th:first-child,
+  #recent-terraform-history-table td:first-child {
+    text-align: left;
+  }
+
+  #recent-terraform-history-table tbody tr:first-child td {
+    font-weight: 600;
+  }
+
+  #recent-terraform-history-table tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  @media (max-width: 620px) {
+    #recent-terraform-history-table th,
+    #recent-terraform-history-table td {
+      padding: 5px 4px;
+      overflow-wrap: anywhere;
+    }
+  }
+
   .settings-subtab-content h2 {
     margin-top: 0;
     text-align: center;

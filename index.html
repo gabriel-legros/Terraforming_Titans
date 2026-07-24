@@ -1374,8 +1374,16 @@
               <h3 id="fastest-terraform-by-type-title" data-i18n="ui.settings.fastestTerraformByTypeTitle" style="display: none;">Fastest Terraform by World Type</h3>
               <div id="fastest-terraform-by-type-list" style="display: none;"></div>
               <h3 id="recent-terraform-history-title" data-i18n="ui.settings.recentTerraformHistoryTitle">Last 10 Terraformed Worlds</h3>
-              <p class="settings-stat-line" id="recent-terraform-average-display"></p>
-              <div id="recent-terraform-history-list"></div>
+              <table id="recent-terraform-history-table">
+                <thead>
+                  <tr>
+                    <th id="recent-terraform-world-heading" scope="col" data-i18n="ui.settings.recentTerraformHistoryWorld">World</th>
+                    <th id="recent-terraform-time-heading" scope="col" data-i18n="ui.settings.recentTerraformHistoryTerraformTime">Time to Terraform</th>
+                    <th id="recent-travel-time-heading" scope="col" data-i18n="ui.settings.recentTerraformHistoryTravelTime">Time to Travel</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-terraform-history-list"></tbody>
+              </table>
             </div>
             <div id="achievements-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">
               <h2 data-i18n="ui.settings.achievements.title">Achievements</h2>
