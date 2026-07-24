@@ -1,46 +1,18 @@
 # Terraforming Titans Technical Modding Guide
 
-This guide is for both first-time mod authors and JavaScript developers who want to extend Terraforming Titans. It covers the supported Electron/Steam mod loader, from a one-file balance patch to custom `Building` and `Project` subclasses.
-
-For maintainer-facing loader behavior and Workshop setup, see [Local Mod Development](local-development.md). Working examples live under [`examples/local-mods`](../../examples/local-mods/).
-
-## Contents
-
-- [Quick start: make an ore mine patch](#quick-start-make-an-ore-mine-patch)
-- [Manifest reference](#manifest-reference)
-- [JSON patch semantics](#json-patch-semantics)
-- [Supported patch targets](#supported-patch-targets)
-- [Localization](#localization)
-- [Example: add a resource, building, and research](#example-add-a-resource-building-and-research)
-- [Additive scripts and custom classes](#additive-scripts-and-custom-classes)
-- [Styles and assets](#styles-and-assets)
-- [File replacements](#file-replacements)
-- [Save and compatibility design](#save-and-compatibility-design)
-- [Diagnostics](#diagnostics)
-- [Testing checklist](#testing-checklist)
-- [Steam Workshop publishing](#steam-workshop-publishing)
-- [Security model](#security-model)
-- [Bundled examples](#bundled-examples)
+This guide documents how to mod Terraforming Titans (this guide is written in collaboration with GPT 5.6 Sol.  Will expand and update as things change.)
 
 ## What mods can change
 
 The current mod API supports:
 
 - Declarative JSON patches for language data and supported parameter objects.
-- New resources, buildings, projects, research, planets, skills, and other parameter-driven content.
-- Additive classic JavaScript files for custom building and project constructors.
+- New resources, buildings, projects, research, atlas worlds, skills, and other parameter-driven content.
+- Additive classic JavaScript files for custom buildings and projects (including UI).
 - Additive CSS and declared image, font, audio, or video assets.
-- Complete replacement of permitted renderer files.
-- Local development folders and Steam Workshop subscriptions.
+- Complete replacement of permitted files.
 
-Mods run only in the Electron/Steam build. The browser build has no filesystem-backed mod catalog and starts with an empty `activeModSession`.
-
-There are two important limits:
-
-- Cross-mod dependencies are not declared or resolved.
-- Saves are not isolated by mod loadout.
-
-Back up an important save before testing a changing loadout. Removing a content mod can leave save data referring to content that no longer exists.
+Back up your saves when developing.
 
 ## How loading works
 
@@ -57,13 +29,12 @@ The launcher's top-to-bottom order is the effective load order. Earlier mods app
 
 ## Quick start: make an ore mine patch
 
-This example changes the Ore Mine's metal cost to `5` and marks its name so the result is easy to see.
+This example changes the Ore Mine's metal cost to `5` and changes its name.
 
 ### 1. Create the folder
 
-When running the repository's unpackaged Electron app, create:
+Create as a local mod in the local mods folder :
 
-```text
 local-mods/
 └── guide.cheaper-ore-mine/
     ├── terraforming-titans.mod.json
@@ -71,8 +42,6 @@ local-mods/
         ├── buildings.json
         └── language.json
 ```
-
-In a packaged build, use **Open Local Mods** in Launch Control and create the same mod folder there.
 
 ### 2. Add the manifest
 
@@ -122,10 +91,11 @@ Create `patches/buildings.json`:
 }
 ```
 
-Objects merge recursively, so this changes only `oreMine.cost.colony.metal`. Every unmentioned Ore Mine property keeps its base-game value.
+Objects merge recursively, so this changes only `oreMine.cost.colony.metal`. IMPORTANT : Every unmentioned Ore Mine property keeps its base-game value.
 
 ### 4. Patch the localized name
 
+This is optional but is good to keep things organized and easier to localize later.
 Create `patches/language.json`:
 
 ```json
@@ -140,47 +110,14 @@ Create `patches/language.json`:
 }
 ```
 
-Language patches contain the language object directly. Do not wrap them in `entries`.
-
 ### 5. Launch and verify
 
-From the repository:
-
-```powershell
-npm run electron:dev
-```
-
-In Launch Control:
+In the launcher
 
 1. Refresh the mod list if needed.
 2. Enable **Guide: Cheaper Ore Mine**.
 3. Launch a new game or a test save.
 4. Confirm the card says **Ore Mine (Modded)** and displays the new cost.
-
-Restart Electron after changing a manifest, patch, script, style, or asset. A running game session does not hot-reload mods.
-
-The repository already includes the equivalent complete example at [`examples/local-mods/cheaper-ore-mine`](../../examples/local-mods/cheaper-ore-mine/).
-
-## Mod discovery and local development
-
-Electron scans local mod roots in this order:
-
-1. The directory in `TERRAFORMING_TITANS_MODS_DIR`, when set.
-2. `mods/local` under Electron's user-data directory.
-3. The repository's `local-mods` directory when Electron is unpackaged.
-
-Each direct child directory is one mod. A nested directory is not discovered as a separate mod. Directory names beginning with `.` or `_` are ignored.
-
-For a separate development workspace in PowerShell:
-
-```powershell
-$env:TERRAFORMING_TITANS_MODS_DIR = "C:\Modding\TerraformingTitans"
-npm run electron:dev
-```
-
-Do not keep two discovered copies with the same manifest id. Duplicate ids are reported and only one copy can be active.
-
-New mods initially sort by numeric `loadOrder` and then manifest id. Once the player saves a custom order in Launch Control, that launcher order is authoritative. Changing `loadOrder` does not override an existing saved order.
 
 ## Manifest reference
 
@@ -224,12 +161,12 @@ Every mod needs a UTF-8 JSON file named exactly `terraforming-titans.mod.json` a
 
 | Field | Requirement |
 | --- | --- |
-| `schemaVersion` | Must currently be the number `1`. |
+| `schemaVersion` | Must currently be the number `1`. This represents the version of this schema here.|
 | `id` | 3-80 lowercase letters, numbers, dots, underscores, or hyphens. Start with a letter or number. |
-| `name` | Required non-empty player-facing string. |
-| `version` | Required non-empty string. Semantic versioning is recommended but not enforced. |
-| `loadOrder` | Optional finite number; defaults to `0`. It controls only initial/default ordering. |
-| `content.scripts` | Optional array of `{ "file", "stage" }` objects. The only current stage is `constructors`. |
+| `name` | The name as it will appear in the launcher. |
+| `version` | The version as it will appear in the launcher. |
+| `loadOrder` | Optional finite number; defaults to `0`. It controls only initial/default ordering. The launcher will manage this value itself when reordering mods.|
+| `content.scripts` | Optional array of `{ "file", "stage" }` objects. The only current option is `constructors`. |
 | `content.styles` | Optional array of CSS file paths. |
 | `content.assets` | Optional array of asset file paths. |
 | `content.patches` | Optional array of `{ "target", "file" }` objects. |
@@ -247,7 +184,7 @@ The loader validates the manifest, paths, extensions, JSON syntax, and dangerous
 
 ## JSON patch semantics
 
-Non-language parameter patches normally use an `entries` object:
+All parameters patches other than language normally use an `entries` object:
 
 ```json
 {
@@ -267,9 +204,9 @@ The patch rules are:
 - A missing property is left unchanged.
 - Later mods see and can override earlier mods' results.
 
-The keys `__proto__`, `prototype`, and `constructor` are rejected anywhere in patch JSON.
-
 ### Delete a property
+
+Updating is actually easier than deleting.  To delete :
 
 ```json
 {
@@ -286,6 +223,8 @@ The keys `__proto__`, `prototype`, and `constructor` are rejected anywhere in pa
 Use `$delete` as the only member of that operation object.
 
 ### Replace a complete object or array
+
+Because every update is a recursive merge, we have a special way to replace an entire object.  This avoids having to use delete everywhere.  This also allows replacing an entire building or project if needed.
 
 ```json
 {
@@ -317,7 +256,7 @@ JSON cannot directly represent `Infinity`, `-Infinity`, or `NaN`. Use:
 
 The only supported `$number` strings are `Infinity`, `-Infinity`, and `NaN`.
 
-For example, an indefinitely repeatable project can use:
+This is useful for infinitely repeated projects.  For example :
 
 ```json
 {
@@ -331,24 +270,6 @@ For example, an indefinitely repeatable project can use:
 }
 ```
 
-### Replace an entire patch target
-
-This is intentionally high-risk because it removes every base-game entry from that target:
-
-```json
-{
-  "entries": {
-    "$replace": {
-      "onlyEntry": {
-        "value": 1
-      }
-    }
-  }
-}
-```
-
-Prefer stable-key merges unless the mod deliberately owns the whole target.
-
 ## Supported patch targets
 
 Use the source file in the last column as the current parameter-shape reference. Copy the smallest relevant entry and patch only the fields your mod owns.
@@ -357,9 +278,9 @@ Use the source file in the last column as the current parameter-shape reference.
 | --- | --- | --- |
 | `language.current` | UI, catalogs, story, and other localized text | [`src/js/lang/current-language.js`](../../src/js/lang/current-language.js) and [`story-language.js`](../../src/js/lang/story-language.js) |
 | `parameters.terraforming` | Global simulation defaults | [`terraforming-parameters.js`](../../src/js/terraforming/terraforming-parameters.js) |
-| `parameters.planetResources` | Default resource definitions | [`planet-resource-parameters.js`](../../src/js/planet-resource-parameters.js) |
-| `parameters.planets` | Planet and world definitions | [`planet-parameters.js`](../../src/js/planet-parameters.js) |
-| `parameters.specialSeeds` | Special random-world seed definitions | [`special-seeds.js`](../../src/js/special-seeds.js) |
+| `parameters.planetResources` | Resource definitions | [`planet-resource-parameters.js`](../../src/js/planet-resource-parameters.js) |
+| `parameters.planets` | Story world definitions | [`planet-parameters.js`](../../src/js/planet-parameters.js) |
+| `parameters.specialSeeds` | Atlas worlds | [`special-seeds.js`](../../src/js/special-seeds.js) |
 | `parameters.life` | Life Designer parameters | [`life-parameters.js`](../../src/js/life-parameters.js) |
 | `parameters.buildings` | Building definitions | [`buildings-parameters.js`](../../src/js/buildings-parameters.js) |
 | `parameters.colonies` | Colony definitions | [`colony-parameters.js`](../../src/js/colony-parameters.js) |
@@ -369,7 +290,6 @@ Use the source file in the last column as the current parameter-shape reference.
 | `parameters.skills` | Skill definitions | [`skills-parameters.js`](../../src/js/skills-parameters.js) |
 | `parameters.terraformingRequirements` | Terraforming victory requirements | [`terraforming-requirements.js`](../../src/js/terraforming/terraforming-requirements.js) |
 
-Patch targets are fixed. A manifest using an unrecognized target is invalid.
 
 ### Terraforming defaults versus world overrides
 
@@ -406,7 +326,7 @@ Example:
 
 ### Research is a special target
 
-The runtime stores research categories as arrays, but research patches address entries by stable id:
+Due to spaghetti code, research is handled a bit differently and requires defining a category first.  Available categories are Energy, Industry, Colonization, Terraforming and Advanced.
 
 ```json
 {
@@ -454,11 +374,11 @@ Replace a complete category array:
 }
 ```
 
-Replacing a category is highly incompatible with other mods and future game updates.
+Replacing a category is a very extreme thing to do.
 
 ## Localization
 
-Player-facing names and descriptions should live in a `language.current` patch, not in parameter data. Parameter entries commonly use an empty string until localization is applied:
+Player-facing names and descriptions should preferrably live in a `language.current` patch, not in parameter data.
 
 ```json
 {
@@ -501,7 +421,7 @@ Common catalog paths include:
 - `catalogs.orbitals.<orbitalId>`
 - `catalogs.terraformingRequirements.<requirementId>`
 
-Use [`current-language.js`](../../src/js/lang/current-language.js) for shared game and UI text and [`story-language.js`](../../src/js/lang/story-language.js) for story text. A translation mod may declare more than one `language.current` patch; they are merged in manifest order.
+Use [`current-language.js`](../../src/js/lang/current-language.js) for shared game and UI text and [`story-language.js`](../../src/js/lang/story-language.js) for story text. You may create multiple files.
 
 ## Example: add a resource, building, and research
 
@@ -673,13 +593,7 @@ This is the same integration pattern demonstrated by [`examples/local-mods/torme
 
 ## Additive scripts and custom classes
 
-Use a custom class only when parameter data cannot express the behavior. Constructor scripts are classic browser scripts:
-
-- Do not use `import` or `export`.
-- Do not assume Node APIs are available.
-- Use game globals already loaded before the `constructors` marker.
-- Put scripts in dependency order inside the manifest.
-- Namespace every registered type with your mod id.
+There is a limit to what can be achieved from parameters alone.  Many buildings and projects in the game actually use custom classes.  Using a custom class grant you the full power of Javascript.
 
 Declare a script:
 
@@ -719,20 +633,152 @@ registerBuildingConstructor(
 );
 ```
 
-Select the registered type from the building parameter entry:
+In this case, you need to specify in the parameters that your building must use this constructor.  This is done via the type attribute.
 
 ```json
 {
   "entries": {
     "authorFluxIndustry_fluxRefinery": {
-      "type": "author.flux-industry.FluxRefineryBuilding",
-      "fluxProductionMultiplier": 1.5
+      "type": "author.flux-industry.FluxRefineryBuilding"
     }
   }
 }
 ```
 
 The abbreviated patch above assumes the rest of the required building fields already exist. For a new building, include the full shape shown in the earlier building example or copy a current compatible entry.
+
+### Common building methods
+
+Building subclasses normally change a small part of the standard building pipeline. Prefer the multiplier, limit, and visibility hooks over replacing the complete production or construction methods.
+
+#### Building logic methods
+
+| Signature | Purpose and return value |
+| --- | --- |
+| `constructor(config, buildingName)` | Runs when game state is initialized. Call `super(config, buildingName)` first, then initialize custom state and cached UI properties. |
+| `isVisible()` | Returns whether the building should have a visible row. Combine custom conditions with `super.isVisible()`. |
+| `getBuildLimit()` | Returns the maximum total number of this building that may exist. The base implementation derives a limit from required deposits or returns `Infinity`. |
+| `getEffectiveProductionMultiplier()` | Returns the multiplier applied to every configured production output. Multiply the value from `super` to preserve research, skill, and other active effects. |
+| `getEffectiveConsumptionMultiplier()` | Returns the multiplier applied to configured consumption. Multiply the value from `super` to preserve active effects. |
+| `getEffectiveStorageMultiplier()` | Returns the multiplier applied to configured storage. Multiply the value from `super` to preserve active effects. |
+| `getEffectiveCostMultiplier(resourceCategory, resourceId)` | Returns the construction-cost multiplier for one resource. This is usually safer than replacing `getEffectiveCost(buildCount)`. |
+| `build(buildCount = 1, activate = true)` | Attempts construction and returns `true` on success. Call `super.build(...)` so affordability, land, deposits, storage, counts, and hazards remain correct. |
+| `produce(accumulatedChanges, deltaTime)` | Adds this tick's production to `accumulatedChanges`. This is a low-level hook; call `super.produce(...)` unless replacing all normal configured output. |
+| `consume(accumulatedChanges, deltaTime, accumulatedSpecialChanges)` | Adds this tick's consumption to the resource accumulators. This is a low-level hook; call `super.consume(...)` unless replacing the complete configured-consumption path. |
+| `saveState()` / `loadState(state = {})` | Serializes and restores state in ordinary saves. Merge the result of `super.saveState()` and call `super.loadState(state)` first. |
+
+For example, this building is hidden on rogue worlds, is capped at 25 copies, and receives an additional configured production multiplier:
+
+```js
+class CappedFluxRefineryBuilding extends Building {
+  constructor(config, buildingName) {
+    super(config, buildingName);
+    this.fluxProductionMultiplier = config.fluxProductionMultiplier;
+  }
+
+  isVisible() {
+    return !currentPlanetParameters.celestialParameters.rogue
+      && super.isVisible();
+  }
+
+  getBuildLimit() {
+    return Math.min(super.getBuildLimit(), 25);
+  }
+
+  getEffectiveProductionMultiplier() {
+    return super.getEffectiveProductionMultiplier()
+      * this.fluxProductionMultiplier;
+  }
+}
+```
+
+Use `getEffectiveCostMultiplier(resourceCategory, resourceId)` when only one construction resource needs special scaling:
+
+```js
+getEffectiveCostMultiplier(resourceCategory, resourceId) {
+  const multiplier =
+    super.getEffectiveCostMultiplier(resourceCategory, resourceId);
+
+  if (resourceCategory === 'colony' && resourceId === 'metal') {
+    return multiplier * 0.5;
+  }
+
+  return multiplier;
+}
+```
+
+Custom building state follows the same save pattern as project state:
+
+```js
+saveState() {
+  return {
+    ...super.saveState(),
+    overdriveEnabled: this.overdriveEnabled
+  };
+}
+
+loadState(state = {}) {
+  super.loadState(state);
+  this.overdriveEnabled = state.overdriveEnabled === true;
+}
+```
+
+#### Building UI methods
+
+The building UI calls three optional hooks. `Building` itself does not provide base implementations for them, so do not blindly call `super.initUI()` or `super.updateUI()`. Call a UI method on `super` only when the class you directly extend implements it.
+
+| Signature | When it is called |
+| --- | --- |
+| `initializeCustomUI(context = {})` | Called once while the main Controls column is built. `context` contains `leftContainer`, `hideButton`, and `cachedElements`. Use it for controls that belong beside the standard Hide action. |
+| `initUI(autoBuildContainer, cachedElements)` | Called once after the standard automation controls are built. Use it to create custom status or automation elements. |
+| `updateUI(cachedElements)` | Called during the generic building-row refresh. Update cached nodes in place and guard unchanged DOM writes. |
+
+`cachedElements` is the stable cache owned by the building row. Store custom nodes on it instead of querying the document during each update:
+
+```js
+class FluxStatusBuilding extends Building {
+  initUI(autoBuildContainer, cachedElements) {
+    const status = document.createElement('span');
+    status.classList.add('flux-refinery-status');
+    autoBuildContainer.appendChild(status);
+    cachedElements.fluxStatus = status;
+  }
+
+  updateUI(cachedElements) {
+    const status = cachedElements.fluxStatus;
+    const multiplier = this.getEffectiveProductionMultiplier();
+    const text = t(
+      'ui.authorFluxIndustry.outputMultiplier',
+      { multiplier: formatNumber(multiplier, false, 2) },
+      'Output: x{multiplier}'
+    );
+
+    if (status.textContent !== text) {
+      status.textContent = text;
+    }
+  }
+}
+```
+
+Use `initializeCustomUI(context)` instead when the element is an action button:
+
+```js
+initializeCustomUI({ leftContainer, cachedElements }) {
+  const buildingName = this.name;
+  const button = document.createElement('button');
+  button.textContent = t(
+    'ui.authorFluxIndustry.ventFlux',
+    null,
+    'Vent Flux'
+  );
+  button.addEventListener(
+    'click',
+    () => buildings[buildingName].ventFlux()
+  );
+  leftContainer.appendChild(button);
+  cachedElements.ventFluxButton = button;
+}
+```
 
 ### Custom project with saved state
 
@@ -770,7 +816,7 @@ registerProjectConstructor(
 );
 ```
 
-Select it in project parameters:
+Select it as type in project parameters:
 
 ```json
 {
@@ -800,9 +846,158 @@ Select it in project parameters:
 }
 ```
 
-Constructor registration is strict. An unknown parameter `type` or a duplicate type registered to a different constructor stops initialization with an error. A namespaced type such as `author.flux-industry.FluxCalibrationProject` avoids collisions.
+Constructor registration is strict. An unknown parameter `type` or a duplicate type registered to a different constructor stops initialization with an error. A namespaced type such as `author.flux-industry.FluxCalibrationProject` avoids collisions with the game and other mods.
 
 The complete, tested pattern is in [`examples/local-mods/custom-classes`](../../examples/local-mods/custom-classes/).
+
+### Common project methods
+
+Projects have a timed logic lifecycle and optional UI hooks. The manager calls `update(deltaTime)` for every relevant project, including inactive and completed projects, so custom update logic must check the state it needs.
+
+#### Project logic methods
+
+| Signature | Purpose and return value |
+| --- | --- |
+| `constructor(config, name)` | Runs during game initialization. Call `super(config, name)` first, then declare all custom state and UI caches. |
+| `isVisible()` | Returns whether the project card should be rendered. Combine custom conditions with `super.isVisible()`. |
+| `canStart()` | Returns whether the project can start or resume. Call `super.canStart()` first to retain unlock, completion, hazard, cost, and resource checks. |
+| `getEffectiveCostMultiplier(resourceCategory, resourceId)` | Returns the multiplier for one resource in the base project cost. Multiply the value from `super` to retain ordinary effects and megaproject difficulty scaling. |
+| `getEffectiveCost(buildCount = 1)` | Returns cost after per-resource effects. Prefer overriding `getEffectiveCostMultiplier(...)` or `getScaledCost()` unless the complete cost shape is custom. |
+| `getScaledCost()` | Returns the cost used to start the next run, including repeat-count scaling. Call `super.getScaledCost()` and transform the returned object. |
+| `getBaseDuration()` | Returns the duration before active duration multipliers. Call `super.getBaseDuration()` and apply the custom factor. Durations are milliseconds. |
+| `getWarningState()` | Returns `null` or `{ blocksStart, blocksProgress, message, statusText }`. The base start/update logic and generic project UI both consume this state. |
+| `start(resources)` | Attempts to start and returns a boolean. Call `super.start(resources)` before applying effects that should occur only after a successful start. |
+| `update(deltaTime)` | Called from the simulation loop with elapsed milliseconds. Call `super.update(deltaTime)` to retain timed progress, sustain costs, pausing, hazards, and completion. Never update the DOM here.  This one is particularly useful if you just want your project to manage certain things every tick.  It runs regardless of whether or not the project has been started or is completed.  Some projects do not need an update() method at all, for example if they only have completion effects.|
+| `complete()` | Runs when progress finishes. Call `super.complete()` to retain repeat handling, configured resource gains, completion effects, and story steps. |
+| `resetProject()` | Resets a repeatable project for another run. Call `super.resetProject()` before adding custom reset state. |
+| `saveState()` / `loadState(state)` | Serializes and restores ordinary save state. Extend the object returned by `super.saveState()` and call `super.loadState(state)`. |
+| `saveTravelState()` / `loadTravelState(state = {})` | Serializes only the state that should survive planet travel. This is separate from ordinary save/load state. |
+
+Add a custom start condition with `canStart()`:
+
+```js
+canStart() {
+  if (!super.canStart()) {
+    return false;
+  }
+
+  return resources.special.guideCrystals.value >= 10;
+}
+```
+
+If the condition should also explain itself in the generic card, use `getWarningState()` instead. The base `canStart()` method consumes this state, so a separate `canStart()` override is unnecessary for this blocker:
+
+```js
+getWarningState() {
+  if (resources.special.guideCrystals.value >= 10) {
+    return null;
+  }
+
+  return {
+    blocksStart: true,
+    blocksProgress: false,
+    message: t(
+      'ui.authorFluxIndustry.needCrystals',
+      null,
+      'At least 10 crystals are required to begin calibration.'
+    ),
+    statusText: t(
+      'ui.authorFluxIndustry.blockedByCrystals',
+      null,
+      'Blocked: requires 10 crystals'
+    )
+  };
+}
+```
+
+`blocksStart` is checked by `canStart()`. `blocksProgress` pauses the countdown without cancelling the project. `message` appears in the warning row, while `statusText` replaces the normal progress-button text when supplied.
+
+Use the return value from `super.start(resources)` before applying a start-side effect:
+
+```js
+start(resources) {
+  const started = super.start(resources);
+  if (!started) {
+    return false;
+  }
+
+  this.timesStarted += 1;
+  return true;
+}
+```
+
+Add per-tick logic without bypassing standard project progress:
+
+```js
+update(deltaTime) {
+  super.update(deltaTime);
+
+  if (!this.isActive) {
+    return;
+  }
+
+  this.activeTime += deltaTime;
+}
+```
+
+To change duration while retaining all normal modifiers.:
+
+```js
+getBaseDuration() {
+  const duration = super.getBaseDuration();
+  return duration / Math.max(this.calibrationSpeed, 1);
+}
+```
+
+#### Project UI methods
+
+`Project` does not define base `renderUI()`, `renderAutomationUI()`, or `updateUI()` methods. Call the corresponding `super` method only if you extend a class that does.
+
+| Signature | When it is called |
+| --- | --- |
+| `renderUI(container)` | Called once when the project card body is created. Append the project's static custom layout to `container` and cache every node needed later. |
+| `renderAutomationUI(container)` | Called once when the generic Automation settings container is created (this is the footer below the project that persists when collapsed). Add project-specific automation controls here. |
+| `updateUI()` | Called after the generic project UI refresh. Read simulation state and update cached nodes in place. |
+| `shouldHideStartBar()` | Returns whether the generic cost/progress controls should be hidden for a fully custom project interface. The default is `false`. |
+
+Declare the UI cache in the constructor so project-instance rebinding across load and travel can preserve it:
+
+```js
+class FluxMonitorProject extends Project {
+  constructor(config, name) {
+    super(config, name);
+    this.el = {};
+  }
+
+  renderUI(container) {
+    const section = document.createElement('div');
+    section.classList.add('project-section-container');
+
+    const label = document.createElement('strong');
+    label.textContent = t(
+      'ui.authorFluxIndustry.storedFlux',
+      null,
+      'Stored Flux'
+    );
+
+    const value = document.createElement('span');
+    section.append(label, ': ', value);
+    container.appendChild(section);
+
+    this.el.storedFlux = value;
+  }
+
+  updateUI() {
+    const value = this.el.storedFlux;
+    const text = formatNumber(resources.special.guideCrystals.value, true);
+    if (value.textContent !== text) {
+      value.textContent = text;
+    }
+  }
+}
+```
+
+The generic project renderer creates and updates the normal name, description, cost, gain, progress, warning, and automation controls. A custom `renderUI(container)` should add only the project-specific portion unless the class deliberately returns `true` from `shouldHideStartBar()`.
 
 ### Class lifecycle rules
 
@@ -815,7 +1010,7 @@ Custom subclasses participate in normal new-game, save/load, and planet-travel r
 - Keep simulation methods free of DOM work.
 - Build or update UI through the class's established render/update hooks.
 - Cache UI elements and reconcile them in place; do not rebuild identical DOM every update tick.
-- If a class holds cached UI references, declare those properties before `renderUI()` populates them so travel-time card rebinding uses the current instance correctly.
+- If a class holds cached UI references, declare those properties before `renderUI()` populates them so travel-time card rebinding uses the current instance correctly.  Otherwise this will cause churn and memory leaks.
 
 The base implementations are the authoritative API references:
 
@@ -828,7 +1023,7 @@ Treat undocumented globals and internal methods as unstable. Prefer a small subc
 
 ### Tooltips and custom UI
 
-Use the shared dynamic tooltip for mod-created help text. Create an attached info icon and localize its text:
+The game has a built-in dynamic tooltip setup.  This is the text that appears when hovering certain things.  It is recommended to use this over browser tooltips.
 
 ```js
 const infoIcon = document.createElement('span');
@@ -913,7 +1108,7 @@ Mod content is served through exact `tt-game://app/__mods__/...` mappings. The r
 
 ## File replacements
 
-Replacements map an existing logical renderer path to a file in the mod:
+Replacement is modding at its full power.  You can replace entire files from the game.  Use at your own risk.
 
 ```json
 {
@@ -937,156 +1132,3 @@ Permitted replacement roots are:
 Protected content includes:
 
 - `index.html`
-- `package.json`
-- `src/js/build-target.js`
-- `src/js/game-version.js`
-- Everything under `electron/`
-- Everything under `vendor/`
-- Everything under `src/js/modding/`
-- The generated `__mods__/` namespace
-
-Installed game files are never overwritten. The trusted Electron protocol serves the winning replacement when the game requests that logical path.
-
-If several enabled mods replace the same path, the later mod wins and the conflict appears in `activeModSession.conflicts`. JSON patches still apply after a winning replacement's parameter file executes, so a replacement must define the required global expected by its patch stage.
-
-Replacements are the least compatible extension mechanism. They take ownership of a complete file and can miss upstream fixes or collide with another mod. Prefer a parameter patch or additive constructor whenever possible.
-
-## Save and compatibility design
-
-Mods share the base game's save format. There is no per-mod save namespace and the active loadout is not embedded as an enforced dependency set.
-
-For safer updates:
-
-- Keep manifest ids, parameter ids, constructor type ids, and saved property names stable.
-- Namespace new ids to avoid collisions.
-- Add fields compatibly instead of renaming or removing them.
-- Default missing custom state when loading an older save.
-- Do not reuse an old id for unrelated content.
-- Test new game, save/load, travel away, and travel back.
-- Test disabling the mod against a backup save.
-- Document breaking changes in the Workshop change note.
-
-Parameter ids can become DOM keys or selectors. Use DOM-safe ids containing letters, digits, `_`, and `-`, and start with a letter. Constructor type ids are not DOM ids and should use the full manifest namespace.
-
-Active mods do not disable Steam achievement publication.
-
-## Diagnostics
-
-### Launch Control and Creator Tools
-
-Launch Control displays invalid discovered mods and their validation errors. Creator Tools also validates a selected local mod even when Workshop publishing is unavailable.
-
-Typical validation failures include:
-
-- A missing or malformed manifest.
-- An id that does not match the required lowercase format.
-- Invalid JSON.
-- An unsupported patch target or script stage.
-- A missing declared file.
-- An absolute path or a path containing `..`.
-- An unsupported file extension.
-- A protected or out-of-scope replacement path.
-- A forbidden patch key.
-
-### DevTools
-
-Open Electron DevTools and inspect the read-only diagnostic global:
-
-```js
-activeModSession
-```
-
-Useful fields include:
-
-```js
-activeModSession.mods
-activeModSession.errors
-activeModSession.conflicts
-activeModSession.replacements
-activeModSession.fingerprint
-activeModSession.workshop
-```
-
-Each active mod entry identifies its id, version, source (`local` or `workshop`), Workshop id when applicable, content hash, and declared script/style/asset virtual URLs. The session fingerprint changes when active mod identity, order, version, or declared content changes.
-
-Keep console logging compact. Logging large live manager, save, or patch graphs can retain those object graphs in an attached DevTools session and distort memory investigation.
-
-### Runtime failures
-
-If validation succeeds but the game fails during initialization:
-
-1. Check the DevTools console for the first error.
-2. Confirm every new parameter entry matches a current entry of the same kind.
-3. Confirm every custom `type` is registered before `game.js`.
-4. Confirm the constructor type string exactly matches the registration string.
-5. Disable other mods to rule out load-order conflicts.
-6. Re-enable mods from top to bottom until the conflict returns.
-7. Test a new game to distinguish initialization errors from old-save migration errors.
-
-## Testing checklist
-
-Before publishing:
-
-- Launch with only the mod enabled.
-- Launch with the mod last and first among likely compatibility partners.
-- Start a new game.
-- Load a save created before the mod was installed.
-- Save, restart, and load again.
-- Travel away from and back to a world affected by the mod.
-- Exercise repeatable projects and custom saved state.
-- Verify localized names, descriptions, costs, resource-rate source labels, and tooltips.
-- Check every supported theme if the mod adds CSS.
-- Check DevTools for errors.
-- Verify every CSS, audio, font, and image reference is declared in `assets`.
-- Increment the manifest version for the release.
-- Test the exact folder that will be uploaded, not a separate working copy.
-
-The repository's Jest suite tests the game, but there is no general semantic validator for arbitrary mod parameter data. A clean Launch Control validation is necessary, not sufficient.
-
-## Steam Workshop publishing
-
-Open **Creator Tools** from Launch Control. Publishing uses the signed-in Steam client; it does not ask for Steam credentials or use SteamCMD.
-
-For a new item:
-
-1. Select the validated local mod.
-2. Choose **Create a new Workshop item**.
-3. Enter its title and description.
-4. Choose visibility.
-5. Select a PNG, JPEG, or GIF preview smaller than 1 MB.
-6. Choose **Create & Upload**.
-7. Accept the Steam Workshop legal agreement on the opened item page if required.
-
-For an update, select the linked item, enter a change note, and choose **Update Workshop Item**. A new preview is optional.
-
-Publishing requires a packaged Steam build launched through Steam. It targets the AppID of that running build, so production and Playtest Workshop items are separate. Family Sharing and temporary licenses cannot publish.
-
-Creator-to-item links stay in the game's user-data `mods/creator-items.json` and are not uploaded. The entire selected mod folder is uploaded as Workshop content, so remove private notes, source archives, and unrelated large files before publishing.
-
-See [Local Mod Development](local-development.md#creator-tools) for Steamworks configuration and subscription download behavior.
-
-## Security model
-
-JSON-only mods are data, but additive JavaScript and JavaScript replacements execute as full-trust game renderer code. Install code mods only from authors you trust.
-
-Electron still keeps:
-
-- `nodeIntegration: false`
-- `contextIsolation: true`
-- `sandbox: true`
-- `webSecurity: true`
-
-Mods cannot replace the Electron main process, preload, mod runtime, `index.html`, or vendor code. These boundaries protect the application shell, but they do not make untrusted renderer JavaScript harmless. A code mod can read and change game state available to the renderer.
-
-## Bundled examples
-
-| Example | Demonstrates |
-| --- | --- |
-| [`cheaper-ore-mine`](../../examples/local-mods/cheaper-ore-mine/) | Small building and language patches plus a renderer-file replacement. |
-| [`torment-nexus`](../../examples/local-mods/torment-nexus/) | A new resource, building, research, effects, and localization. |
-| [`custom-classes`](../../examples/local-mods/custom-classes/) | Custom building/project classes, saved project state, CSS, and an SVG asset. |
-| [`english-translation`](../../examples/local-mods/english-translation/) | A complete language pack structure. |
-| [`ai-french-translation`](../../examples/local-mods/ai-french-translation/) | A second full language-pack example. |
-| [`lorem-ipsum-language`](../../examples/local-mods/lorem-ipsum-language/) | Language replacement for visual testing. |
-
-Start from the smallest example that matches the feature you need. Copying a large parameter file or class creates unnecessary maintenance work and makes compatibility harder.
