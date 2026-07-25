@@ -74,6 +74,7 @@ function parseArguments(argv) {
     verificationThreshold: null,
     tuneCondensation: new Set(),
     preserveExposed: new Set(),
+    solveAtmosphere: new Set(),
     pressureRanges: new Map()
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -100,6 +101,12 @@ function parseArguments(argv) {
         throw new Error(`Unknown phase family for --preserve-exposed: ${family}`);
       }
       options.preserveExposed.add(family);
+    } else if (argument === '--solve-atmosphere') {
+      const family = String(argv[++index] || '');
+      if (!PHASE_FAMILIES.some((entry) => entry.id === family)) {
+        throw new Error(`Unknown phase family for --solve-atmosphere: ${family}`);
+      }
+      options.solveAtmosphere.add(family);
     } else if (argument === '--pressure-range') {
       const [family, minimumText, maximumText] = String(argv[++index] || '').split(':');
       const minimum = Number(minimumText);
@@ -155,6 +162,9 @@ function printHelp() {
     + '  --preserve-exposed <family>\n'
     + '                       Preserve total exposed liquid/solid inventory while solving\n'
     + '                       its atmosphere and zonal distribution\n'
+    + '  --solve-atmosphere <family>\n'
+    + '                       Solve atmospheric mass with every zonal exposed reservoir;\n'
+    + '                       store the inventory remainder in the largest buried reservoir\n'
     + '  --pressure-range <family>:<minimum-Pa>:<maximum-Pa>\n'
     + '                       Reject any solution that leaves this partial-pressure band\n'
     + '                       during verification; repeat for multiple families\n'
@@ -384,12 +394,16 @@ function buildSolver(window, options) {
     );
     const tuneCondensation = options.tuneCondensation.has(config.id);
     const preserveSurfaceMass = options.preserveExposed.has(config.id);
+    const solveAtmosphere = options.solveAtmosphere.has(config.id);
     const initialBuriedMass = ZONES.reduce(
       (total, zone) => total + (baselineSurface[zone][config.buried] || 0),
       0
     );
     const useAtmosphereReservoir =
-      !tuneCondensation && !preserveSurfaceMass && initialBuriedMass === 0;
+      !tuneCondensation
+      && !preserveSurfaceMass
+      && !solveAtmosphere
+      && initialBuriedMass === 0;
     const baselineBuried = Object.fromEntries(
       ZONES.map((zone) => [zone, baselineSurface[zone][config.buried] || 0])
     );
@@ -404,7 +418,7 @@ function buildSolver(window, options) {
       reservoirZone,
       tuneCondensation,
       preserveSurfaceMass,
-      solveAtmosphere: preserveSurfaceMass,
+      solveAtmosphere: preserveSurfaceMass || solveAtmosphere,
       deferAtmosphereSolve: false,
       globalOnly: false,
       useAtmosphereReservoir,
@@ -424,10 +438,7 @@ function buildSolver(window, options) {
       condensationParameter: cycle.equilibriumCondensationParameter,
       fixedBuried: Object.fromEntries(
         ZONES.filter((zone) =>
-          tuneCondensation
-          || useAtmosphereReservoir
-          || (!preserveSurfaceMass && zone !== reservoirZone)
-          || (preserveSurfaceMass && zone !== reservoirZone)
+          tuneCondensation || useAtmosphereReservoir || zone !== reservoirZone
         ).map((zone) => [zone, baselineBuried[zone]])
       )
     });
