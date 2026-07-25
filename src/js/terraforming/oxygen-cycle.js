@@ -20,13 +20,11 @@
 
   var resourcePhaseGroups;
   var psychrometricConstant;
-  var redistributePrecipitationFn;
   var ResourceCycleClass;
 
   try {
     resourcePhaseGroups = window.resourcePhaseGroups;
     psychrometricConstant = window.psychrometricConstant;
-    redistributePrecipitationFn = window.redistributePrecipitation;
     ResourceCycleClass = window.ResourceCycle;
   } catch (error) {
     // Browser globals not available.
@@ -42,13 +40,10 @@
   try {
     const phaseUtils = require('./phase-change-utils.js');
     psychrometricConstant = psychrometricConstant || phaseUtils.psychrometricConstant;
-    redistributePrecipitationFn = redistributePrecipitationFn || phaseUtils.redistributePrecipitation;
     ResourceCycleClass = ResourceCycleClass || require('./resource-cycle.js');
   } catch (error) {
     // fall back to globals if require fails
   }
-
-  redistributePrecipitationFn = redistributePrecipitationFn || (() => {});
 
   const OXYGEN_LIQ_B = (Math.log(OXYGEN_BOILING_P) - Math.log(OXYGEN_P_TRIPLE))
     / ((1 / OXYGEN_T_TRIPLE) - (1 / OXYGEN_BOILING_T));
@@ -229,10 +224,6 @@
       liquidOxygenCoverage: data.liquidOxygen ?? 0,
       oxygenIceCoverage: data.oxygenIce ?? 0,
     };
-  }
-
-  redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {
-    redistributePrecipitationFn(terraforming, 'oxygen', zonalChanges, zonalTemperatures);
   }
 
   updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {

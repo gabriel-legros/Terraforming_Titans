@@ -19,7 +19,6 @@ var DEFAULT_EQUILIBRIUM_CO2_CONDENSATION_PARAMETER = CO2_PHASE_CHANGE_PARAMETERS
 
 const isNodeCO2 = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
-var redistributePrecipitationFn = globalThis.redistributePrecipitation;
 var ResourceCycleClass = globalThis.ResourceCycle;
 // Optional: surface flow for CO₂ (often negligible); keep null unless you have a dedicated model
 var simulateSurfaceCO2Flow = globalThis.simulateSurfaceCO2Flow;
@@ -28,7 +27,7 @@ if (isNodeCO2) {
   require('../planet-resource-parameters.js');
   resourcePhaseGroups = global.resourcePhaseGroups;
   try {
-    ({ psychrometricConstant, redistributePrecipitation: redistributePrecipitationFn } = require('./phase-change-utils.js'));
+    ({ psychrometricConstant } = require('./phase-change-utils.js'));
     ResourceCycleClass = require('./resource-cycle.js');
     try {
       // Provide flow if you have one; otherwise this will remain undefined.
@@ -289,12 +288,6 @@ class CO2Cycle extends ResourceCycleClass {
       liquidCO2Coverage: data.liquidCO2 ?? 0,
       dryIceCoverage: data.dryIce ?? 0,
     };
-  }
-
-  redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {
-    if (typeof redistributePrecipitationFn === 'function') {
-      redistributePrecipitationFn(terraforming, 'co2', zonalChanges, zonalTemperatures);
-    }
   }
 
   updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {

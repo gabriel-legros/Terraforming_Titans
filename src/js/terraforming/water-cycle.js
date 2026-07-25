@@ -10,14 +10,13 @@ var DEFAULT_EQUILIBRIUM_WATER_CONDENSATION_PARAMETER = WATER_PHASE_CHANGE_PARAME
 
 const isNodeWaterCycle = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
-var redistributePrecipitationFn = globalThis.redistributePrecipitation;
 var ResourceCycleClass = globalThis.ResourceCycle;
 var simulateSurfaceWaterFlow = globalThis.simulateSurfaceWaterFlow;
 if (isNodeWaterCycle) {
   require('../planet-resource-parameters.js');
   resourcePhaseGroups = global.resourcePhaseGroups;
   try {
-    ({ psychrometricConstant, redistributePrecipitation: redistributePrecipitationFn } = require('./phase-change-utils.js'));
+    ({ psychrometricConstant } = require('./phase-change-utils.js'));
     ResourceCycleClass = require('./resource-cycle.js');
     simulateSurfaceWaterFlow = require('./hydrology.js').simulateSurfaceWaterFlow;
   } catch (e) {
@@ -251,14 +250,6 @@ class WaterCycle extends ResourceCycleClass {
   // Delegate to shared ResourceCycle implementation
   processZone(params) { return super.processZone(params); }
 
-
-  // Use base finalizeAtmosphere with constructor-provided finalizeProcesses
-
-  redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {
-    if (typeof redistributePrecipitationFn === 'function') {
-      redistributePrecipitationFn(terraforming, 'water', zonalChanges, zonalTemperatures);
-    }
-  }
 
   // Override only to add focused-melt and water-specific aliases
   updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {

@@ -1771,8 +1771,8 @@ const earthOverrunOverrides = {
   resources: {
     surface: {
       land: { initialValue: 51007200000 },
-      ice: { initialValue: 0, unlocked: true },
-      liquidWater: { initialValue: 644656795267087900, unlocked: true },
+      ice: { initialValue: 113740957061150610, unlocked: true },
+      liquidWater: { initialValue: 645100002394780400, unlocked: true },
       dryIce: { initialValue: 0 },
       liquidMethane: { initialValue: 0 },
       hydrocarbonIce: { initialValue: 0 }
@@ -1786,7 +1786,7 @@ const earthOverrunOverrides = {
         "initialValue": 2056831169131.2002
       },
       "atmosphericWater": {
-        "initialValue": 18678784443623.46
+        "initialValue": 12713440112597.875
       },
       "atmosphericMethane": {
         "initialValue": 9882092383
@@ -1810,7 +1810,7 @@ const earthOverrunOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "liquidWater": 280304580319841150,
+      "liquidWater": 280496849037381000,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
@@ -1830,7 +1830,7 @@ const earthOverrunOverrides = {
       "buriedNitrogenIce": 0
     },
     "temperate": {
-      "liquidWater": 364351819684932350,
+      "liquidWater": 364603067885995000,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
@@ -1850,8 +1850,8 @@ const earthOverrunOverrides = {
       "buriedNitrogenIce": 0
     },
     "polar": {
-      "liquidWater": 395262314397.17847,
-      "ice": 114178198844575490,
+      "liquidWater": 85471404411.08202,
+      "ice": 113740957061150610,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
@@ -1872,19 +1872,19 @@ const earthOverrunOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 292.223771743476,
-      "day": 292.38559470842,
-      "night": 292.061948778532
+      "value": 295.37917455312305,
+      "day": 295.54987115534664,
+      "night": 295.20847795089946
     },
     "temperate": {
-      "value": 286.6503936467183,
-      "day": 286.7849616296886,
-      "night": 286.51582566374805
+      "value": 288.66083142500725,
+      "day": 288.8027782804183,
+      "night": 288.5188845695962
     },
     "polar": {
-      "value": 258.1925403339957,
-      "day": 259.46768991923057,
-      "night": 256.9173907487608
+      "value": 254.34686095096612,
+      "day": 255.4378879299488,
+      "night": 253.25583397198344
     }
   },
   hazards: {

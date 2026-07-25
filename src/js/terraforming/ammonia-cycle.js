@@ -24,14 +24,12 @@ try {
 
 var resourcePhaseGroups;
 var psychrometricConstant;
-var redistributePrecipitationFn;
 var ResourceCycleClass;
 var simulateSurfaceAmmoniaFlow;
 
 try {
   resourcePhaseGroups = window.resourcePhaseGroups;
   psychrometricConstant = window.psychrometricConstant;
-  redistributePrecipitationFn = window.redistributePrecipitation;
   ResourceCycleClass = window.ResourceCycle;
   simulateSurfaceAmmoniaFlow = window.simulateSurfaceAmmoniaFlow;
 } catch (error) {
@@ -48,7 +46,6 @@ try {
 try {
   const phaseUtils = require('./phase-change-utils.js');
   psychrometricConstant = psychrometricConstant || phaseUtils.psychrometricConstant;
-  redistributePrecipitationFn = redistributePrecipitationFn || phaseUtils.redistributePrecipitation;
   ResourceCycleClass = ResourceCycleClass || require('./resource-cycle.js');
 } catch (error) {
   // fall back to globals if require fails
@@ -61,7 +58,6 @@ try {
   // fall back to globals if require fails
 }
 
-redistributePrecipitationFn = redistributePrecipitationFn || (() => {});
 simulateSurfaceAmmoniaFlow = simulateSurfaceAmmoniaFlow || (() => ({
   changes: {},
   totalMelt: 0,
@@ -279,10 +275,6 @@ class AmmoniaCycle extends ResourceCycleClass {
       liquidAmmoniaCoverage: data.liquidAmmonia ?? 0,
       ammoniaIceCoverage: data.ammoniaIce ?? 0,
     };
-  }
-
-  redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {
-    redistributePrecipitationFn(terraforming, 'ammonia', zonalChanges, zonalTemperatures);
   }
 
   updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {

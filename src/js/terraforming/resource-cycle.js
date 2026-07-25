@@ -1,16 +1,19 @@
 // Base class for resource cycle phase-change calculations
 const isNodeResourceCycle = (typeof module !== 'undefined' && module.exports);
-let penmanRateFn = globalThis.penmanRate;
-let condensationRateFactorFn = globalThis.condensationRateFactor;
-let meltingFreezingRatesFn = globalThis.meltingFreezingRates;
+let penmanRateFn = isNodeResourceCycle ? null : window.penmanRate;
+let condensationPressureStateFn = isNodeResourceCycle ? null : window.calculateCondensationPressureState;
+let condensationRateFactorFn = isNodeResourceCycle ? null : window.condensationRateFactor;
+let meltingFreezingRatesFn = isNodeResourceCycle ? null : window.meltingFreezingRates;
 let resolvePhaseTransitionEnergyFn;
 if (isNodeResourceCycle) {
   try {
     const phaseUtils = require('./phase-change-utils.js');
+    const condensationUtils = require('./condensation-utils.js');
     penmanRateFn = phaseUtils.penmanRate;
     meltingFreezingRatesFn = phaseUtils.meltingFreezingRates;
     resolvePhaseTransitionEnergyFn = phaseUtils.resolvePhaseTransitionEnergy;
-    condensationRateFactorFn = require('./condensation-utils.js').condensationRateFactor;
+    condensationPressureStateFn = condensationUtils.calculateCondensationPressureState;
+    condensationRateFactorFn = condensationUtils.condensationRateFactor;
   } catch (e) {
     // fall back to globals if require fails
   }
@@ -162,35 +165,73 @@ class ResourceCycle {
 
   condensationRateFactor({
     zoneArea,
-    vaporPressure,
     gravity,
-    atmPressure,
     dayTemp,
     nightTemp,
     transitionRange,
-    maxDiff,
-    boilingPoint,
-    boilTransitionRange,
-    liftPressureFraction,
-    kappa
+    statisticalHumidityMean,
+    dayPressureState,
+    nightPressureState
   }) {
     return condensationRateFactorFn({
       zoneArea,
-      vaporPressure,
       gravity,
-      atmPressure,
       dayTemp,
       nightTemp,
-      saturationFn: this.saturationVaporPressureFn,
       freezePoint: this.freezePoint,
       transitionRange,
-      maxDiff,
-      boilingPoint,
-      boilTransitionRange,
-      criticalTemperature: this.criticalTemperature,
-      liftPressureFraction,
-      kappa,
+      statisticalHumidityMean,
+      dayPressureState,
+      nightPressureState,
     });
+  }
+
+  buildStatisticalHumidityState(terraforming, zones, atmPressure, vaporPressure) {
+    const condensationParameters = terraformingParameters.phaseChange.condensation;
+    const boilingPoint = this.boilingPointFn ? this.boilingPointFn(atmPressure) : Infinity;
+    const byZone = {};
+    let totalArea = 0;
+    let weightedHumidityScale = 0;
+
+    for (const zone of zones) {
+      const temperatures = terraforming.temperature.zones[zone];
+      const zoneArea = terraforming.zonalCoverageCache[zone].zoneArea;
+      const sharedState = {
+        atmPressure,
+        saturationFn: this.saturationVaporPressureFn,
+        freezePoint: this.freezePoint,
+        boilingPoint,
+        criticalTemperature: this.criticalTemperature,
+        liftPressureFraction: condensationParameters.liftPressureFraction,
+        kappa: condensationParameters.adiabaticExponent,
+      };
+      const dayPressureState = condensationPressureStateFn({
+        ...sharedState,
+        temp: temperatures.day,
+      });
+      const nightPressureState = condensationPressureStateFn({
+        ...sharedState,
+        temp: temperatures.night,
+      });
+      const humidityScale =
+        (dayPressureState.humidityScale + nightPressureState.humidityScale) / 2;
+
+      byZone[zone] = {
+        dayPressureState,
+        nightPressureState,
+        humidityScale,
+      };
+      totalArea += zoneArea;
+      weightedHumidityScale += humidityScale * zoneArea;
+    }
+
+    const meanHumidityScale = totalArea > 0 ? weightedHumidityScale / totalArea : 0;
+    const meanHumidity = meanHumidityScale > 0 ? vaporPressure / meanHumidityScale : 0;
+    for (const zone of zones) {
+      byZone[zone].vaporPressure = byZone[zone].humidityScale * meanHumidity;
+    }
+
+    return { meanHumidity, boilingPoint, byZone };
   }
 
   meltingFreezingRates(args) {
@@ -228,11 +269,15 @@ class ResourceCycle {
       nightTemperature,
       zoneTemperature,
       atmPressure,
+      boilingPoint,
       vaporPressure,
       zonalSolarFlux = 0,
       durationSeconds = 1,
       gravity = 1,
       condensationParameter = 1,
+      statisticalHumidityMean,
+      dayPressureState,
+      nightPressureState,
       availableLiquid = 0,
       availableIce = 0,
       availableBuriedIce = 0,
@@ -242,8 +287,6 @@ class ResourceCycle {
     !!this.disallowLiquidBelowTriple &&
     (typeof this.triplePressure === 'number') &&
     (atmPressure <= this.triplePressure);
-    const boilingPoint = this.boilingPointFn ? this.boilingPointFn(atmPressure) : undefined;
-
     const atmosphereKey = this.atmosphereKey;
     const surfaceBucket = this.surfaceBucket;
     const liquidKey = this.resolveSurfaceKey('liquid');
@@ -329,17 +372,13 @@ class ResourceCycle {
     if (typeof this.condensationRateFactor === 'function') {
       const { liquidRate = 0, iceRate = 0 } = this.condensationRateFactor({
         zoneArea,
-        vaporPressure,
         gravity,
-        atmPressure,
         dayTemp: dayTemperature,
         nightTemp: nightTemperature,
         transitionRange: this.transitionRange,
-        maxDiff: this.maxDiff,
-        boilingPoint,
-        boilTransitionRange: this.boilTransitionRange,
-        liftPressureFraction: params.liftPressureFraction,
-        kappa: params.kappa,
+        statisticalHumidityMean,
+        dayPressureState,
+        nightPressureState,
       });
       const safeLiquidRate = liquidForbidden ? 0 : liquidRate;
       const safeIceRate = liquidForbidden ? liquidRate + iceRate : iceRate;
@@ -550,10 +589,6 @@ class ResourceCycle {
     };
   }
 
-  // Optional hook for subclasses to redistribute precipitation across zones
-  // eslint-disable-next-line no-unused-vars
-  redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {}
-
   finalizeAtmosphere({ available = 0, zonalChanges = {}, atmosphereKey, processes = [] }) {
     const totalsByProcess = {};
     const zonePotentialLoss = {};
@@ -638,6 +673,12 @@ class ResourceCycle {
     const cycleTotals = { evaporation: 0, sublimation: 0, rapidSublimation: 0, boiling: 0, melt: 0, freeze: 0 };
     const mergedExtra = { ...(this.defaultExtraParams || {}), ...extraParams };
     const zonalFluxDivisor = isAldersonDiskWorld() || isRingWorld() ? 1 : 4;
+    const statisticalHumidity = this.buildStatisticalHumidityState(
+      terraforming,
+      zones,
+      atmPressure,
+      vaporPressure
+    );
 
     for (const zone of zones) {
       const temps = terraforming.temperature.zones[zone] || {};
@@ -653,7 +694,11 @@ class ResourceCycle {
         nightTemperature: temps.night,
         zoneTemperature: temps.value,
         atmPressure,
-        vaporPressure,
+        boilingPoint: statisticalHumidity.boilingPoint,
+        vaporPressure: statisticalHumidity.byZone[zone].vaporPressure,
+        statisticalHumidityMean: statisticalHumidity.meanHumidity,
+        dayPressureState: statisticalHumidity.byZone[zone].dayPressureState,
+        nightPressureState: statisticalHumidity.byZone[zone].nightPressureState,
         zonalSolarFlux: terraforming.calculateZoneSolarFlux(zone) / zonalFluxDivisor,
         durationSeconds,
         phaseChangeHeatEnabled,
@@ -697,10 +742,6 @@ class ResourceCycle {
       atmosphereKey,
       processes: this.finalizeProcesses || [],
     });
-
-    if (typeof this.redistributePrecipitation === 'function') {
-      this.redistributePrecipitation(terraforming, zonalChanges, terraforming.temperature.zones);
-    }
 
     if (phaseChangeHeatEnabled) {
       for (const zone of zones) {

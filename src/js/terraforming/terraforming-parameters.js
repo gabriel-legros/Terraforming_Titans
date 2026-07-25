@@ -160,7 +160,7 @@ var terraformingParameters = {
       triplePointPressurePa: 611.657,
       criticalPointTemperatureK: 647.096,
       meltingPointK: 273.15,
-      equilibriumCondensationParameter: 0.451833045526663
+      equilibriumCondensationParameter: 1
     },
     carbonDioxide: {
       latentHeatVaporizationJPerKg: 3.75e5,
@@ -264,11 +264,8 @@ var terraformingParameters = {
       molarMassKgPerMol: 0.0280134,
       equilibriumCondensationParameter: 0.002
     },
-    precipitationRedistribution: {
-      windWeight: 0.05,
-      liquidBiasWeight: 0.60,
-      remainWeight: 0.35,
-      methaneFreezingPointK: 90.7
+    statisticalHumidity: {
+      drySkewShape: 2
     },
     condensation: {
       phaseTransitionRangeK: 2,
@@ -372,12 +369,13 @@ var terraformingParameters = {
     greenhouse: {
       referenceColumnMassKgM2: 5e4,
       pressureExponent: 0.55,
-      strength: { h2o: 28, co2: 10, ch4: 22, greenhousegas: 2500 },
+      pressureExponentByGas: { h2o: 0.45 },
+      strength: { h2o: 27.8, co2: 10, ch4: 22, greenhousegas: 2500 },
       saturationColumnKgM2: { ch4: 3 },
       saturationExponent: { ch4: 1 }
     },
     cloudSpecies: {
-      h2o: { refMix: 0.007, cfMax: 0.99, pScale: 0.6, aBase: 0.69, aVar: 0.03, fractionExponent: 0.5, layerMax: 0.76, coverageExponent: 1.6 },
+      h2o: { refMix: 0.004, cfMax: 0.99, pScale: 0.6, aBase: 0.69, aVar: 0.03, fractionExponent: 0.5, layerMax: 0.6, coverageExponent: 1 },
       ch4: { refMix: 0.02, cfMax: 0.14, pScale: 2.5, aBase: 0.58, aVar: 0.08, layerMax: 0.10, coverageExponent: 1.2 },
       h2so4: { refMix: 1e-4, cfMax: 0.99, pScale: 11, aBase: 0.71, aVar: 0.03, fractionExponent: 0.5, layerMax: 0.76, coverageExponent: 1.6 }
     },

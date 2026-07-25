@@ -13,14 +13,13 @@ var DEFAULT_EQUILIBRIUM_METHANE_CONDENSATION_PARAMETER = METHANE_PHASE_CHANGE_PA
 
 const isNodeHydrocarbon = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
-var redistributePrecipitationFn = globalThis.redistributePrecipitation;
 var ResourceCycleClass = globalThis.ResourceCycle;
 var simulateSurfaceHydrocarbonFlow = globalThis.simulateSurfaceHydrocarbonFlow;
 if (isNodeHydrocarbon) {
   require('../planet-resource-parameters.js');
   resourcePhaseGroups = global.resourcePhaseGroups;
   try {
-    ({ psychrometricConstant, redistributePrecipitation: redistributePrecipitationFn } = require('./phase-change-utils.js'));
+    ({ psychrometricConstant } = require('./phase-change-utils.js'));
     ResourceCycleClass = require('./resource-cycle.js');
     simulateSurfaceHydrocarbonFlow = require('./hydrology.js').simulateSurfaceHydrocarbonFlow;
   } catch (e) {
@@ -299,12 +298,6 @@ class MethaneCycle extends ResourceCycleClass {
       liquidMethaneCoverage: data.liquidMethane ?? 0,
       hydrocarbonIceCoverage: data.hydrocarbonIce ?? 0,
     };
-  }
-
-  redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {
-    if (typeof redistributePrecipitationFn === 'function') {
-      redistributePrecipitationFn(terraforming, 'methane', zonalChanges, zonalTemperatures);
-    }
   }
 
   updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {

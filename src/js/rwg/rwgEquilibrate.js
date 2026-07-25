@@ -249,6 +249,44 @@
     }
     return metrics;
   }
+
+  function buildEquilibrationDiagnostics(terra) {
+    terra._updateZonalCoverageCache();
+    const atmosphericWater = terra.resources.atmospheric.atmosphericWater.value || 0;
+    const surfaceArea = terra.celestialParameters.surfaceArea;
+    const gravity = terra.celestialParameters.gravity;
+    const zones = {};
+    for (const zone of ZONE_KEYS) {
+      zones[zone] = {
+        temperatureK: terra.temperature.zones[zone].value,
+        dayTemperatureK: terra.temperature.zones[zone].day,
+        nightTemperatureK: terra.temperature.zones[zone].night,
+        liquidWaterTons: terra.zonalSurface[zone].liquidWater || 0,
+        iceTons: terra.zonalSurface[zone].ice || 0,
+        liquidWaterCoverage: terra.zonalCoverageCache[zone].liquidWater || 0,
+        iceCoverage: terra.zonalCoverageCache[zone].ice || 0
+      };
+    }
+    return {
+      temperatureK: terra.temperature.value,
+      atmosphericWaterTons: atmosphericWater,
+      atmosphericWaterPressurePa: calculateAtmosphericPressure(
+        atmosphericWater,
+        gravity,
+        terra.celestialParameters.radius,
+        surfaceArea
+      ),
+      ratesTonsPerDay: {
+        evaporation: terra.totalEvaporationRate || 0,
+        sublimation: terra.totalWaterSublimationRate || 0,
+        boiling: terra.totalBoilingRate || 0,
+        rainfall: terra.totalRainfallRate || 0,
+        snowfall: terra.totalSnowfallRate || 0
+      },
+      zones
+    };
+  }
+
   function deltaSmall(prev, curr, absTol, relTol) {
     for (let i = 0; i < prev.length; i++) {
       const a = prev[i], b = curr[i];
@@ -287,6 +325,9 @@
     const skipAdditionalFastForward = options.skipAdditionalFastForward === true;
     let additionalRunMs = options.additionalRunMs ?? 60000;
     let timeoutMs = options.timeoutMs ?? (minRunMs + additionalRunMs);
+    const instabilityRefinementIntervalMs = options.instabilityRefinementIntervalMs ?? 5000;
+    const instabilityRefinementEveryChecks = options.instabilityRefinementEveryChecks ?? 0;
+    const maxSteps = options.maxSteps ?? 0;
 
     return new Promise((resolve, reject) => {
       const prevLum = typeof getStarLuminosity === 'function' ? getStarLuminosity() : 1;
@@ -325,6 +366,7 @@
         let prevSnap = snapshotMetrics(terra);
         let refinementCount = 0;
         let refinementsFromInstability = 0;
+        let checksSinceInstabilityRefinement = 0;
         let lastUnstableCheckTime = 0;
         let totalSimulatedMs = 0;
         previousResourceSubstepMs = terra.resourceSubstepMilliseconds;
@@ -347,7 +389,7 @@
           terra.maxResourceSubsteps = previousMaxResourceSubsteps;
           terra._updateZonalCoverageCache();
           terra.updateLuminosity();
-          terra.updateSurfaceTemperature();
+          terra.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
           terra.synchronizeGlobalResources();
           clearTimeout(timeoutHandle);
           isEquilibrating = false;
@@ -368,11 +410,12 @@
           globalThis.calculateZoneSolarFluxWithFacility = prevFacilityFn;
           if (!ok) return;
           const outOverride = copyBackToOverrideFromSandbox(fullParams, sandboxResources, terra);
+          const diagnostics = buildEquilibrationDiagnostics(terra);
           const specialSeedKey = outOverride?.rwgMeta?.specialSeedKey || fullParams?.rwgMeta?.specialSeedKey;
           if (!specialSeedKey) {
             applyPostEquilibrationHazardTuning(outOverride, terra);
           }
-          resolve({ override: outOverride, steps: stepIdx });
+          resolve({ override: outOverride, steps: stepIdx, diagnostics });
         }
 
         function loopChunk() {
@@ -398,6 +441,7 @@
             terra.synchronizeGlobalResources();
             terra._updateZonalCoverageCache();
             if (typeof terra.updateLuminosity === 'function') terra.updateLuminosity();
+            terra.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
             terra.updateResources(stepMs, {
               refreshStandaloneRates: true,
               ignoreSubstepping: true,
@@ -413,6 +457,7 @@
               const small = deltaSmall(prevSnap, snap, absTol, relTol);
               const elapsedNow = Date.now() - startTime;
               stableCount = small ? (stableCount + 1) : 0;
+              checksSinceInstabilityRefinement++;
               prevSnap = snap;
               if (stableCount >= 100) {
                 if (refinementCount < 20) {
@@ -421,20 +466,29 @@
                   relTol /= 4;
                   stepMs = applyEquilibrationStep(1000 * stepDays);
                   lastUnstableCheckTime = elapsedNow;
+                  checksSinceInstabilityRefinement = 0;
                   stableCount = 0; // Reset for next level of stability
                   console.log(`RWG_LOG: Stable for 100 steps. Reducing stepDays to ${stepDays}`);
                 } else {
                   finalize(true);
                   return;
                 }
-              } else if (elapsedNow - lastUnstableCheckTime > 5000 && stableCount < 100) {
-                // Alternative refinement: If it's been 10s since the last unstable check
-                // and we're still not stable, reduce the time step.
+              } else if (
+                (
+                  instabilityRefinementEveryChecks > 0
+                    ? checksSinceInstabilityRefinement >= instabilityRefinementEveryChecks
+                    : elapsedNow - lastUnstableCheckTime > instabilityRefinementIntervalMs
+                )
+                && stableCount < 100
+                && stepMs > MIN_TERRAFORMING_SUBSTEP_MS
+              ) {
+                // Calibration can refine by a deterministic check count; UI runs use wall time.
                 stepDays /= 2;
                 stepMs = applyEquilibrationStep(1000 * stepDays);
                 lastUnstableCheckTime = elapsedNow; // Reset the timer
+                checksSinceInstabilityRefinement = 0;
                 refinementsFromInstability++;
-                console.log(`RWG_LOG: Unstable for 10s. Reducing stepDays to ${stepDays}`);
+                console.log(`RWG_LOG: Unstable. Reducing stepDays to ${stepDays}`);
               }
               if (onProgress) {
                 const inMinRun = elapsedNow < minRunMs;
@@ -457,6 +511,10 @@
                   refinementsFromInstability,
                   simulatedMs: totalSimulatedMs
                 });
+              }
+              if (maxSteps > 0 && stepIdx + 1 >= maxSteps) {
+                finalize(true);
+                return;
               }
               if (skipAdditionalFastForward && elapsedNow >= minRunMs) {
                 finalize(true);

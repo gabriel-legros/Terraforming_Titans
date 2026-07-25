@@ -380,6 +380,24 @@
     let potentialMethaneCondensationRateFactor = 0;
 
     const zones = ZONES;
+    const waterHumidity = waterCycleInstance.buildStatisticalHumidityState(
+      this,
+      zones,
+      initialTotalPressurePa,
+      initialWaterPressurePa
+    );
+    const co2Humidity = co2CycleInstance.buildStatisticalHumidityState(
+      this,
+      zones,
+      initialTotalPressurePa,
+      initialCo2PressurePa
+    );
+    const methaneHumidity = methaneCycleInstance.buildStatisticalHumidityState(
+      this,
+      zones,
+      initialTotalPressurePa,
+      initialMethanePressurePa
+    );
     for (const zone of zones) {
       const dayTemp = this.temperature.zones[zone].day;
       const nightTemp = this.temperature.zones[zone].night;
@@ -403,7 +421,7 @@
         liquidWaterCoverage,
         dayTemperature: dayTemp,
         nightTemperature: nightTemp,
-        waterVaporPressure: initialWaterPressurePa,
+        waterVaporPressure: waterHumidity.byZone[zone].vaporPressure,
         avgAtmPressure: initialTotalPressurePa,
         zonalSolarFlux,
       });
@@ -413,7 +431,7 @@
         iceCoverage,
         dayTemperature: dayTemp,
         nightTemperature: nightTemp,
-        waterVaporPressure: initialWaterPressurePa,
+        waterVaporPressure: waterHumidity.byZone[zone].vaporPressure,
         avgAtmPressure: initialTotalPressurePa,
         zonalSolarFlux,
       });
@@ -425,7 +443,7 @@
           T: dayTemp,
           solarFlux: daySolarFlux,
           atmPressure: initialTotalPressurePa,
-          vaporPressure: initialCo2PressurePa,
+          vaporPressure: co2Humidity.byZone[zone].vaporPressure,
           r_a: 100,
         });
         dayCo2Subl = rate * dryIceArea / 1000;
@@ -435,7 +453,7 @@
           T: nightTemp,
           solarFlux: nightSolarFlux,
           atmPressure: initialTotalPressurePa,
-          vaporPressure: initialCo2PressurePa,
+          vaporPressure: co2Humidity.byZone[zone].vaporPressure,
           r_a: 100,
         });
         nightCo2Subl = rate * dryIceArea / 1000;
@@ -450,26 +468,27 @@
       const rapidCo2Rate = rapidSublimationRateCO2(dayTemp, availableDryIce);
       initialTotalCO2SublRate += rapidCo2Rate;
 
-      const waterBoil = boilingPointWater(initialTotalPressurePa);
       const { liquidRate, iceRate } = waterCycleInstance.condensationRateFactor({
         zoneArea,
-        vaporPressure: initialWaterPressurePa,
-        atmPressure: initialTotalPressurePa,
         gravity,
         dayTemp,
         nightTemp,
         transitionRange: 2,
-        maxDiff: 10,
-        boilingPoint: waterBoil,
-        boilTransitionRange: 5
+        statisticalHumidityMean: waterHumidity.meanHumidity,
+        dayPressureState: waterHumidity.byZone[zone].dayPressureState,
+        nightPressureState: waterHumidity.byZone[zone].nightPressureState
       });
       potentialPrecipitationRateFactor += liquidRate + iceRate;
 
       const { iceRate: co2CondRateFactor } = co2CycleInstance.condensationRateFactor({
         zoneArea,
-        co2VaporPressure: initialCo2PressurePa,
-        dayTemperature: dayTemp,
-        nightTemperature: nightTemp
+        gravity,
+        dayTemp,
+        nightTemp,
+        transitionRange: 2,
+        statisticalHumidityMean: co2Humidity.meanHumidity,
+        dayPressureState: co2Humidity.byZone[zone].dayPressureState,
+        nightPressureState: co2Humidity.byZone[zone].nightPressureState
       });
       potentialCondensationRateFactor += co2CondRateFactor;
 
@@ -480,7 +499,7 @@
         liquidMethaneCoverage,
         dayTemperature: dayTemp,
         nightTemperature: nightTemp,
-        methaneVaporPressure: initialMethanePressurePa,
+        methaneVaporPressure: methaneHumidity.byZone[zone].vaporPressure,
         avgAtmPressure: initialTotalPressurePa,
         zonalSolarFlux
       });
@@ -493,24 +512,21 @@
         hydrocarbonIceCoverage,
         dayTemperature: dayTemp,
         nightTemperature: nightTemp,
-        methaneVaporPressure: initialMethanePressurePa,
+        methaneVaporPressure: methaneHumidity.byZone[zone].vaporPressure,
         avgAtmPressure: initialTotalPressurePa,
         zonalSolarFlux
       });
       initialTotalMethaneEvapRate += methaneSublimationRateValue;
 
-      const methaneBoil = boilingPointMethane(initialTotalPressurePa);
       const { liquidRate: ch4Liquid, iceRate: ch4Ice } = methaneCycleInstance.condensationRateFactor({
         zoneArea,
-        vaporPressure: initialMethanePressurePa,
-        atmPressure: initialTotalPressurePa,
-        gravity: 1,
+        gravity,
         dayTemp,
         nightTemp,
         transitionRange: 2,
-        maxDiff: 10,
-        boilingPoint: methaneBoil,
-        boilTransitionRange: 5
+        statisticalHumidityMean: methaneHumidity.meanHumidity,
+        dayPressureState: methaneHumidity.byZone[zone].dayPressureState,
+        nightPressureState: methaneHumidity.byZone[zone].nightPressureState
       });
       potentialMethaneCondensationRateFactor += ch4Liquid + ch4Ice;
     }
