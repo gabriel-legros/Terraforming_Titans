@@ -69,12 +69,14 @@ function parseArguments(argv) {
   const options = {
     planet: '',
     passes: 50,
+    relaxationSteps: 0,
     verificationSteps: 20000,
     threshold: 0.01,
     verificationThreshold: null,
     tuneCondensation: new Set(),
     preserveExposed: new Set(),
     solveAtmosphere: new Set(),
+    globalBalance: new Set(),
     pressureRanges: new Map()
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -83,6 +85,8 @@ function parseArguments(argv) {
       options.planet = String(argv[++index] || '').toLowerCase();
     } else if (argument === '--passes') {
       options.passes = Number(argv[++index]);
+    } else if (argument === '--relax-steps') {
+      options.relaxationSteps = Number(argv[++index]);
     } else if (argument === '--steps') {
       options.verificationSteps = Number(argv[++index]);
     } else if (argument === '--threshold') {
@@ -107,6 +111,12 @@ function parseArguments(argv) {
         throw new Error(`Unknown phase family for --solve-atmosphere: ${family}`);
       }
       options.solveAtmosphere.add(family);
+    } else if (argument === '--global-balance') {
+      const family = String(argv[++index] || '');
+      if (!PHASE_FAMILIES.some((entry) => entry.id === family)) {
+        throw new Error(`Unknown phase family for --global-balance: ${family}`);
+      }
+      options.globalBalance.add(family);
     } else if (argument === '--pressure-range') {
       const [family, minimumText, maximumText] = String(argv[++index] || '').split(':');
       const minimum = Number(minimumText);
@@ -130,6 +140,9 @@ function parseArguments(argv) {
   if (!Number.isInteger(options.passes) || options.passes < 1) {
     throw new Error('--passes must be a positive integer.');
   }
+  if (!Number.isInteger(options.relaxationSteps) || options.relaxationSteps < 0) {
+    throw new Error('--relax-steps must be a non-negative integer.');
+  }
   if (!Number.isInteger(options.verificationSteps) || options.verificationSteps < 1) {
     throw new Error('--steps must be a positive integer.');
   }
@@ -152,6 +165,7 @@ function printHelp() {
     + 'Options:\n'
     + '  --planet <key>       Story-world key from planet-parameters.js (required)\n'
     + '  --passes <count>     Coordinate-solver passes (default: 50)\n'
+    + '  --relax-steps <count> Browser-exact 10 ms updates before solving (default: 0)\n'
     + '  --steps <count>      Exact 10 ms verification updates (default: 20000)\n'
     + '  --threshold <rate>   Maximum absolute phase rate in t/s (default: 0.01)\n'
     + '  --verification-threshold <rate>\n'
@@ -165,6 +179,9 @@ function printHelp() {
     + '  --solve-atmosphere <family>\n'
     + '                       Solve atmospheric mass with every zonal exposed reservoir;\n'
     + '                       store the inventory remainder in the largest buried reservoir\n'
+    + '  --global-balance <family>\n'
+    + '                       Solve global atmosphere and solid-phase rates while preserving\n'
+    + '                       the other seeded exposed reservoirs\n'
     + '  --pressure-range <family>:<minimum-Pa>:<maximum-Pa>\n'
     + '                       Reject any solution that leaves this partial-pressure band\n'
     + '                       during verification; repeat for multiple families\n'
@@ -395,6 +412,7 @@ function buildSolver(window, options) {
     const tuneCondensation = options.tuneCondensation.has(config.id);
     const preserveSurfaceMass = options.preserveExposed.has(config.id);
     const solveAtmosphere = options.solveAtmosphere.has(config.id);
+    const globalPhaseBalance = options.globalBalance.has(config.id);
     const initialBuriedMass = ZONES.reduce(
       (total, zone) => total + (baselineSurface[zone][config.buried] || 0),
       0
@@ -403,6 +421,7 @@ function buildSolver(window, options) {
       !tuneCondensation
       && !preserveSurfaceMass
       && !solveAtmosphere
+      && !globalPhaseBalance
       && initialBuriedMass === 0;
     const baselineBuried = Object.fromEntries(
       ZONES.map((zone) => [zone, baselineSurface[zone][config.buried] || 0])
@@ -418,7 +437,8 @@ function buildSolver(window, options) {
       reservoirZone,
       tuneCondensation,
       preserveSurfaceMass,
-      solveAtmosphere: preserveSurfaceMass || solveAtmosphere,
+      globalPhaseBalance,
+      solveAtmosphere: preserveSurfaceMass || solveAtmosphere || globalPhaseBalance,
       deferAtmosphereSolve: false,
       globalOnly: false,
       useAtmosphereReservoir,
@@ -537,6 +557,12 @@ function buildSolver(window, options) {
     return netRate(resources.atmospheric[family.atmosphere]);
   }
 
+  function evaluateSurfaceResource(resourceKey) {
+    setState();
+    terraforming.updateResources(STEP_MS, { refreshStandaloneRates: true });
+    return netRate(resources.surface[resourceKey]);
+  }
+
   function solve() {
     const coordinateTolerance = options.threshold / 10;
     const activateAtmosphereSolve = (family) => {
@@ -575,6 +601,56 @@ function buildSolver(window, options) {
     const solveCoordinates = () => {
     for (let pass = 0; pass < options.passes; pass += 1) {
       for (const family of familyStates) {
+        if (family.globalPhaseBalance) {
+          try {
+            const previousAtmosphere = family.atmosphericAmount;
+            solveAtmosphereAmount(family);
+            family.atmosphericAmount =
+              (previousAtmosphere + family.atmosphericAmount) / 2;
+            const solidZones = ZONES.filter(
+              (zone) => family.phaseByZone[zone] === family.solid
+            );
+            if (solidZones.length === 0) {
+              throw new Error('No seeded solid-phase zone is available.');
+            }
+            const solidZone = solidZones.reduce(
+              (best, zone) =>
+                family.amountByZone[zone] > family.amountByZone[best] ? zone : best,
+              solidZones[0]
+            );
+            const fixedBuriedTotal = Object.values(family.fixedBuried).reduce(
+              (total, amount) => total + amount,
+              0
+            );
+            const otherSurface = ZONES.reduce(
+              (total, zone) => zone === solidZone
+                ? total
+                : total + family.amountByZone[zone],
+              0
+            );
+            const maximumSolid = Math.max(
+              0,
+              family.totalMass
+                - fixedBuriedTotal
+                - family.atmosphericAmount
+                - otherSurface
+            );
+            const previousSolid = family.amountByZone[solidZone];
+            const solvedSolid = bisect(
+              (candidate) => {
+                family.amountByZone[solidZone] = candidate;
+                return evaluateSurfaceResource(family.solid);
+              },
+              0,
+              maximumSolid,
+              coordinateTolerance
+            );
+            family.amountByZone[solidZone] = (previousSolid + solvedSolid) / 2;
+          } catch (error) {
+            throw new Error(`${family.id}.global: ${error.message}`);
+          }
+          continue;
+        }
         if (family.solveAtmosphere && !family.deferAtmosphereSolve) {
           try {
             solveAtmosphereAmount(family);
@@ -869,6 +945,14 @@ async function main() {
   let solution;
   try {
     selectWorld(dom.window, options.planet);
+    if (options.relaxationSteps > 0) {
+      process.stdout.write(
+        `Pre-relaxing ${options.planet} for ${options.relaxationSteps} exact ${STEP_MS} ms updates...\n`
+      );
+      for (let step = 0; step < options.relaxationSteps; step += 1) {
+        dom.window.eval('produceResources(10, buildings)');
+      }
+    }
     const solver = buildSolver(dom.window, options);
     process.stdout.write(`Solving ${options.planet} at exact ${STEP_MS} ms phase steps...\n`);
     solution = solver.solve();
