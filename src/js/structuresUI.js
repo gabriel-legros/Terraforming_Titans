@@ -1111,7 +1111,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     upgradeButton.id = `${structure.name}-upgrade-button`;
     upgradeButton.classList.add('upgrade-button');
     upgradeButton.addEventListener('click', function () {
-      const upgrades = Math.max(1, selectedBuildCounts[structure.name] / 10 || 1);
+      const upgrades = getManualUpgradeCount(structure);
       if (structure.upgrade(upgrades)) {
         if (gameSettings.colonyUpgradeUnchecksAutobuild) {
           autoBuildCheckbox.checked = false;
@@ -1980,6 +1980,15 @@ function updateDecreaseButtonText(button, buildCount) {
     }
   }
 
+  function getManualUpgradeCount(structure) {
+    const selectedCount = normalizeBuildingCount(selectedBuildCounts[structure.name]);
+    const requestedUpgrades = selectedCount >= 10n ? selectedCount / 10n : 1n;
+    if (selectedCount <= structure.count) return requestedUpgrades;
+    return structure instanceof Colony
+      ? (structure.count + 9n) / 10n
+      : structure.count / 10n;
+  }
+
   function updateUpgradeButton(button, structure) {
     const nextName = structure.getNextTierName();
     const isColony = structure instanceof Colony;
@@ -1991,8 +2000,9 @@ function updateDecreaseButtonText(button, buildCount) {
       return;
     }
 
-    const upgradeCount = Math.max(1, selectedBuildCounts[structure.name] / 10 || 1);
-    const amount = Math.min(upgradeCount * 10, getStructureCountNumber(structure.count));
+    const upgradeCount = getManualUpgradeCount(structure);
+    const requestedAmount = upgradeCount * 10n;
+    const amount = requestedAmount < structure.count ? requestedAmount : structure.count;
     const cost = structure.getUpgradeCost(upgradeCount);
     if (!cost) {
       button.style.display = 'none';
