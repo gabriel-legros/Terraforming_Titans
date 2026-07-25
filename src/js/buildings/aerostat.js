@@ -1408,7 +1408,9 @@ function getAerostatMaintenanceMitigation(context = {}) {
     const maxSupported = Math.max(0, activeAerostats * reduction);
     const supported = Math.min(activeCount, maxSupported);
     const coverage = activeCount > 0 ? Math.min(1, supported / activeCount) : 0;
-    const remainingFraction = activeCount > 0 ? 1 - coverage : 1;
+    const maintenanceCount = Math.max(1, activeCount);
+    const remainingFraction =
+      1 - Math.min(1, maxSupported / maintenanceCount);
 
     const entry = {
       id,
