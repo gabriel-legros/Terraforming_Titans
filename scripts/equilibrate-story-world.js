@@ -366,16 +366,31 @@ function buildSolver(window, options) {
       (total, zone) => total + (baselineSurface[zone][config.buried] || 0),
       0
     );
+    const useAtmosphereReservoir = !tuneCondensation && initialBuriedMass === 0;
+    const baselineBuried = Object.fromEntries(
+      ZONES.map((zone) => [zone, baselineSurface[zone][config.buried] || 0])
+    );
     familyStates.push({
       ...config,
       atmosphericAmount,
+      initialAtmosphericAmount: atmosphericAmount,
       totalMass,
       phaseByZone,
       amountByZone,
+      baselineAmountByZone: { ...amountByZone },
       reservoirZone,
       tuneCondensation,
-      useAtmosphereReservoir: !tuneCondensation && initialBuriedMass === 0,
+      solveAtmosphere: false,
+      globalOnly: false,
+      useAtmosphereReservoir,
+      baselineBuried,
       targetSurfaceMass: ZONES.reduce(
+        (total, zone) => total
+          + (baselineSurface[zone][config.liquid] || 0)
+          + (baselineSurface[zone][config.solid] || 0),
+        0
+      ),
+      exchangeableMass: atmosphericAmount + ZONES.reduce(
         (total, zone) => total
           + (baselineSurface[zone][config.liquid] || 0)
           + (baselineSurface[zone][config.solid] || 0),
@@ -383,8 +398,9 @@ function buildSolver(window, options) {
       ),
       condensationParameter: cycle.equilibriumCondensationParameter,
       fixedBuried: Object.fromEntries(
-        ZONES.filter((zone) => tuneCondensation || zone !== reservoirZone)
-          .map((zone) => [zone, baselineSurface[zone][config.buried] || 0])
+        ZONES.filter((zone) =>
+          tuneCondensation || useAtmosphereReservoir || zone !== reservoirZone
+        ).map((zone) => [zone, baselineBuried[zone]])
       )
     });
   }
@@ -415,12 +431,7 @@ function buildSolver(window, options) {
           (total, zone) => total + family.amountByZone[zone],
           0
         );
-        const fixedBuriedTotal = Object.values(family.fixedBuried).reduce(
-          (total, amount) => total + amount,
-          0
-        );
-        family.atmosphericAmount =
-          family.totalMass - assignedSurface - fixedBuriedTotal;
+        family.atmosphericAmount = family.exchangeableMass - assignedSurface;
         const atmosphereRoundingTolerance = Math.max(1, family.totalMass * 1e-12);
         if (family.atmosphericAmount < -atmosphereRoundingTolerance) {
           throw new Error(
@@ -436,7 +447,11 @@ function buildSolver(window, options) {
           activePhase === family.liquid ? family.amountByZone[zone] : 0;
         terraforming.zonalSurface[zone][family.solid] =
           activePhase === family.solid ? family.amountByZone[zone] : 0;
-        if (family.tuneCondensation || zone !== family.reservoirZone) {
+        if (
+          family.tuneCondensation
+          || family.useAtmosphereReservoir
+          || zone !== family.reservoirZone
+        ) {
           terraforming.zonalSurface[zone][family.buried] = family.fixedBuried[zone];
         }
       }
@@ -485,8 +500,52 @@ function buildSolver(window, options) {
 
   function solve() {
     const coordinateTolerance = options.threshold / 10;
+    const activateAtmosphereSolve = (family) => {
+      family.solveAtmosphere = true;
+      family.amountByZone = { ...family.baselineAmountByZone };
+      family.atmosphericAmount = family.initialAtmosphericAmount;
+    };
+    const activateGlobalOnlySolve = (family) => {
+      family.globalOnly = true;
+      family.amountByZone = { ...family.baselineAmountByZone };
+      family.atmosphericAmount = family.initialAtmosphericAmount;
+    };
+    const solveAtmosphereAmount = (family) => {
+      const fixedBuriedTotal = Object.values(family.fixedBuried).reduce(
+        (total, amount) => total + amount,
+        0
+      );
+      const assignedSurface = ZONES.reduce(
+        (total, zone) => total + family.amountByZone[zone],
+        0
+      );
+      const maximumAtmosphere = Math.max(
+        0,
+        family.totalMass - fixedBuriedTotal - assignedSurface
+      );
+      family.atmosphericAmount = bisect(
+        (candidate) => {
+          family.atmosphericAmount = candidate;
+          return evaluateAtmosphere(family);
+        },
+        0,
+        maximumAtmosphere,
+        coordinateTolerance
+      );
+    };
+    const solveCoordinates = () => {
     for (let pass = 0; pass < options.passes; pass += 1) {
       for (const family of familyStates) {
+        if (family.solveAtmosphere) {
+          try {
+            solveAtmosphereAmount(family);
+          } catch (error) {
+            throw new Error(`${family.id}.atmosphere: ${error.message}`);
+          }
+        }
+        if (family.globalOnly) {
+          continue;
+        }
         const solveZones = family.tuneCondensation
           ? ZONES.filter((zone) => zone !== family.reservoirZone)
           : ZONES;
@@ -517,7 +576,7 @@ function buildSolver(window, options) {
             : family.useAtmosphereReservoir
               ? Math.max(
                 0,
-                family.totalMass - fixedBuriedTotal - otherSurfaceTotal
+                family.exchangeableMass - otherSurfaceTotal
               )
             : Math.max(
               0,
@@ -541,10 +600,28 @@ function buildSolver(window, options) {
               coordinateTolerance
             );
           } catch (error) {
+            if (
+              !family.tuneCondensation
+              && !family.useAtmosphereReservoir
+              && !family.solveAtmosphere
+            ) {
+              activateAtmosphereSolve(family);
+              return solveCoordinates();
+            }
+            if (family.solveAtmosphere && !family.globalOnly) {
+              activateGlobalOnlySolve(family);
+              return solveCoordinates();
+            }
             throw new Error(`${family.id}.${zone}.${phase}: ${error.message}`);
           }
         }
-        if (family.tuneCondensation) {
+        if (family.solveAtmosphere) {
+          try {
+            solveAtmosphereAmount(family);
+          } catch (error) {
+            throw new Error(`${family.id}.atmosphere: ${error.message}`);
+          }
+        } else if (family.tuneCondensation) {
           try {
             family.condensationParameter = bisect(
               (candidate) => {
@@ -561,6 +638,8 @@ function buildSolver(window, options) {
         }
       }
     }
+    };
+    solveCoordinates();
     setState();
     const solvedZonalSurface = structuredClone(terraforming.zonalSurface);
     const solvedTemperatures = Object.fromEntries(
