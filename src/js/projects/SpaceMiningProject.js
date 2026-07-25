@@ -1942,7 +1942,7 @@ class SpaceMiningProject extends SpaceshipProject {
           accumulatedChanges,
           importWithoutOverflow ? accumulatedSpecialChanges : null,
           {
-            allowOverflow: this.waterImportTarget === 'colony' || importWithoutOverflow,
+            allowOverflow: !!accumulatedChanges && (this.waterImportTarget === 'colony' || importWithoutOverflow),
             specialChangeKey: importWithoutOverflow ? 'colonyWaterNoOverflow' : null
           }
         );
@@ -1999,7 +1999,7 @@ class SpaceMiningProject extends SpaceshipProject {
         accumulatedChanges,
         importWithoutOverflow ? accumulatedSpecialChanges : null,
         {
-          allowOverflow: this.gasImportTarget === 'colony' || importWithoutOverflow,
+          allowOverflow: !!accumulatedChanges && (this.gasImportTarget === 'colony' || importWithoutOverflow),
           specialChangeKey: importWithoutOverflow ? 'colonyHydrogenNoOverflow' : null
         }
       );

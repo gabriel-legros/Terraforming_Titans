@@ -212,7 +212,7 @@ describe('SpaceMiningProject pressure limiter with life buffer', () => {
     cleanup();
   });
 
-  it('does not require an accumulated special ledger for direct colony-only hydrogen completion', () => {
+  it('caps direct colony-only hydrogen completion without an accumulated special ledger', () => {
     const cleanup = setupGlobals();
     const SpaceMiningProject = require(path.resolve(__dirname, '../src/js/projects/SpaceMiningProject.js'));
     const project = new SpaceMiningProject({
@@ -230,7 +230,7 @@ describe('SpaceMiningProject pressure limiter with life buffer', () => {
     expect(() => {
       project.applySpaceshipResourceGain({ colony: { colonyHydrogen: 25 } }, 1);
     }).not.toThrow();
-    expect(resources.colony.colonyHydrogen.value).toBe(115);
+    expect(resources.colony.colonyHydrogen.value).toBe(100);
 
     cleanup();
   });
