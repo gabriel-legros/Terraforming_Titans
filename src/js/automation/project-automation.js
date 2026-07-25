@@ -23,6 +23,7 @@ function normalizeProjectAutomationSpaceStorageFluidTarget(resourceKey, target) 
 const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS = new Set([
   'resourceStrategicReserves',
   'resourceCaps',
+  'resourceTransferWeights',
   'resourceImportLimitRespects',
   'resourceBiomassDensityWithdrawLimits',
   'resourcePressureWithdrawLimits',
