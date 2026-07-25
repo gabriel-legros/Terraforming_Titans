@@ -186,7 +186,7 @@ describe('Space Mirror advanced oversight debug saves', () => {
           const polarCurrent = getGlobal(window, 'terraforming.temperature.zones.polar.day');
           const polarTrend =
             settings.lastProjectedTemperatureState.temperature.zones.polar.day;
-          expect(polarCurrent).toBeGreaterThan(polarTarget + 1);
+          expect(Math.abs(polarCurrent - polarTarget)).toBeLessThan(0.05);
           expect(Math.abs(polarTrend - polarTarget)).toBeLessThan(0.01);
         } else {
           expect(after.tempError).toBeLessThan(0.2);
