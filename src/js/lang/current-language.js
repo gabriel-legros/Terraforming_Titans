@@ -5189,7 +5189,7 @@ setLanguageData({
       earlyAdvancedOversight: 'Early Advanced Oversight',
       earlyAdvancedOversightTooltip: 'The game has a powerful solver for space mirrors that can automatically target specified temperature values.  It is intended to be something that must be earned, and is usually available on Story World 5.  If you find the fiddling too frustrating however feel free to have it early.  You still need the Space Mirror Facility Oversight research.',
       phaseChangeHeat: 'Phase Change Heat',
-      phaseChangeHeatTooltip: 'When enabled, melting, evaporation, boiling, and sublimation absorb planetary heat, while freezing, condensation, and deposition release it. Phase changes are limited by available zonal energy and may hold a zone near a transition temperature. Advanced Oversight accounts for this zonal heat load.',
+      phaseChangeHeatTooltip: 'When enabled, melting, evaporation, boiling, and sublimation absorb planetary heat, while freezing, condensation, and deposition release it. This may lead to dramatic changes in net energy flux. Advanced Oversight is capable of accounting for it.',
       factoryHeating: 'Factory heating',
       factoryHeatingTooltip: 'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production reduced by surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. A certain megastructure can help mitigate factory heating.  \n\n You should use this setting alongside Realistic factory energy consumption',
       realisticFactoryEnergyConsumption: 'Realistic factory energy consumption',
