@@ -183,6 +183,7 @@ class ResourceCycle {
       statisticalHumidityMean,
       dayPressureState,
       nightPressureState,
+      homogeneousHumidity: this.homogeneousHumidity,
     });
   }
 
@@ -1012,6 +1013,61 @@ class ResourceCycle {
         };
       }
     }
+    if (!options.phaseChangeHeatEnabled) {
+      const snapRate =
+        terraformingParameters.gameplay.simulation.equilibriumSnapRateTonsPerSecond;
+      const snapAmount = snapRate * duration / 86400;
+      const snapSurfaceBucket = options.surfaceBucket || this.surfaceBucket;
+      const snapZonalKey = options.zonalKey || this.zonalKey;
+      const atmosphericValue =
+        terraforming.resources.atmospheric[this.atmKey]?.value || 0;
+      const atmosphericTolerance = Math.max(
+        snapAmount,
+        Math.abs(atmosphericValue) * Number.EPSILON
+      );
+      let canSnap =
+        Math.abs(data.totals.totalAtmosphericChange || 0) <= atmosphericTolerance;
+      for (const zone of zones) {
+        const surfaceChanges = data.zonalChanges[zone]?.[snapSurfaceBucket] || {};
+        for (const [state, amount] of Object.entries(surfaceChanges)) {
+          const surfaceValue = terraforming[snapZonalKey]?.[zone]?.[state] || 0;
+          const surfaceTolerance = Math.max(
+            snapAmount,
+            Math.abs(surfaceValue) * Number.EPSILON
+          );
+          if (Math.abs(amount) > surfaceTolerance) {
+            canSnap = false;
+            break;
+          }
+        }
+        if (!canSnap) break;
+      }
+      if (canSnap) {
+        const atmosphericRemainder = data.totals.totalAtmosphericChange || 0;
+        let balancingProcess = null;
+        for (const process of this.finalizeProcesses || []) {
+          if (
+            !balancingProcess
+            || (data.totals[process.totalKey] || 0)
+              > (data.totals[balancingProcess.totalKey] || 0)
+          ) {
+            balancingProcess = process;
+          }
+        }
+        if (balancingProcess) {
+          data.totals[balancingProcess.totalKey] =
+            (data.totals[balancingProcess.totalKey] || 0) + atmosphericRemainder;
+        }
+        data.totals.totalAtmosphericChange = 0;
+        for (const zone of zones) {
+          const surfaceChanges = data.zonalChanges[zone]?.[snapSurfaceBucket] || {};
+          for (const state in surfaceChanges) {
+            surfaceChanges[state] = 0;
+          }
+        }
+      }
+    }
+
     this.applyZonalChanges(terraforming, data.zonalChanges, options.zonalKey, options.surfaceBucket);
     Object.defineProperty(data.totals, 'phaseHeat', {
       value: phaseHeat,

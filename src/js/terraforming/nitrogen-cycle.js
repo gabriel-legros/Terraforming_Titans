@@ -208,6 +208,7 @@
     this.availableKeys = availableKeys;
     this.defaultExtraParams = { gravity };
     this.equilibriumCondensationParameter = condensationParameter;
+    this.homogeneousHumidity = true;
   }
 
   getExtraParams(terraforming) {

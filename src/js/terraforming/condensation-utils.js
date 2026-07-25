@@ -56,7 +56,8 @@ function condensationRateFactor({
   transitionRange = terraformingParameters.phaseChange.condensation.phaseTransitionRangeK,
   statisticalHumidityMean,
   dayPressureState,
-  nightPressureState
+  nightPressureState,
+  homogeneousHumidity = false
 }) {
   const calc = (temp, pressureState) => {
     const humidityScale = pressureState.humidityScale;
@@ -65,8 +66,10 @@ function condensationRateFactor({
     }
 
     const normalizedThreshold = pressureState.saturationPressure / humidityScale;
-    const excessPressure = humidityScale
-      * calculateExpectedHumidityExcess(statisticalHumidityMean, normalizedThreshold);
+    const normalizedExcess = homogeneousHumidity
+      ? Math.max(0, statisticalHumidityMean - normalizedThreshold)
+      : calculateExpectedHumidityExcess(statisticalHumidityMean, normalizedThreshold);
+    const excessPressure = humidityScale * normalizedExcess;
     const excessMassKg = (excessPressure * zoneArea) / gravity;
     const rate = (excessMassKg / terraformingParameters.physical.kgPerTon)
       / terraformingParameters.phaseChange.condensation.secondsPerDay;

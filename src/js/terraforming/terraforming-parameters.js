@@ -175,7 +175,7 @@ var terraformingParameters = {
       criticalPointTemperatureK: 304.1282,
       criticalPointPressurePa: 7.3773e6,
       meltingPointK: 216.58,
-      equilibriumCondensationParameter: 1.40e-3
+      equilibriumCondensationParameter: 6.271195900038446e-4
     },
     methane: {
       latentHeatVaporizationJPerKg: 5.1e5,
@@ -191,7 +191,7 @@ var terraformingParameters = {
       criticalPointPressurePa: 4.5992e6,
       meltingPointK: 90.7,
       solidCorrelationMinimumTemperatureK: 48,
-      equilibriumCondensationParameter: 0.0000541
+      equilibriumCondensationParameter: 3.586948746313331e-5
     },
     ammonia: {
       latentHeatVaporizationJPerKg: 1.37e6,
@@ -429,7 +429,8 @@ var terraformingParameters = {
     },
     simulation: {
       resourceSubstepMs: 10,
-      maximumResourceSubsteps: 24
+      maximumResourceSubsteps: 24,
+      equilibriumSnapRateTonsPerSecond: 0.01
     },
     landReservation: {
       moltenWorldFullTemperatureK: 1273.15,

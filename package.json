@@ -6,6 +6,7 @@
   "main": "electron/main.cjs",
   "scripts": {
     "audit:memory": "node scripts/manual-tests/run-chrome-memory-repro.js --audit",
+    "equilibrate:world": "node scripts/equilibrate-story-world.js",
     "audit:localization": "node scripts/audit-localization.js",
     "mod:generate-english-base": "bash scripts/generate-base-english-language.sh",
     "mod:seed-english-translations": "node scripts/translation-workflow.js seed-english all",
