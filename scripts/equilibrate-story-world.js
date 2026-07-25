@@ -71,7 +71,9 @@ function parseArguments(argv) {
     passes: 50,
     verificationSteps: 20000,
     threshold: 0.01,
+    verificationThreshold: null,
     tuneCondensation: new Set(),
+    preserveExposed: new Set(),
     pressureRanges: new Map()
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -84,12 +86,20 @@ function parseArguments(argv) {
       options.verificationSteps = Number(argv[++index]);
     } else if (argument === '--threshold') {
       options.threshold = Number(argv[++index]);
+    } else if (argument === '--verification-threshold') {
+      options.verificationThreshold = Number(argv[++index]);
     } else if (argument === '--tune-condensation') {
       const family = String(argv[++index] || '');
       if (!PHASE_FAMILIES.some((entry) => entry.id === family)) {
         throw new Error(`Unknown phase family for --tune-condensation: ${family}`);
       }
       options.tuneCondensation.add(family);
+    } else if (argument === '--preserve-exposed') {
+      const family = String(argv[++index] || '');
+      if (!PHASE_FAMILIES.some((entry) => entry.id === family)) {
+        throw new Error(`Unknown phase family for --preserve-exposed: ${family}`);
+      }
+      options.preserveExposed.add(family);
     } else if (argument === '--pressure-range') {
       const [family, minimumText, maximumText] = String(argv[++index] || '').split(':');
       const minimum = Number(minimumText);
@@ -119,6 +129,12 @@ function parseArguments(argv) {
   if (!(options.threshold > 0)) {
     throw new Error('--threshold must be greater than zero.');
   }
+  if (options.verificationThreshold === null) {
+    options.verificationThreshold = options.threshold;
+  }
+  if (!(options.verificationThreshold > 0)) {
+    throw new Error('--verification-threshold must be greater than zero.');
+  }
   return options;
 }
 
@@ -131,9 +147,14 @@ function printHelp() {
     + '  --passes <count>     Coordinate-solver passes (default: 50)\n'
     + '  --steps <count>      Exact 10 ms verification updates (default: 20000)\n'
     + '  --threshold <rate>   Maximum absolute phase rate in t/s (default: 0.01)\n'
+    + '  --verification-threshold <rate>\n'
+    + '                       Long-run acceptance rate; defaults to --threshold\n'
     + '  --tune-condensation <family>\n'
     + '                       Preserve that family\'s exposed inventory and tune its global\n'
     + '                       condensation coefficient; repeat for multiple families\n'
+    + '  --preserve-exposed <family>\n'
+    + '                       Preserve total exposed liquid/solid inventory while solving\n'
+    + '                       its atmosphere and zonal distribution\n'
     + '  --pressure-range <family>:<minimum-Pa>:<maximum-Pa>\n'
     + '                       Reject any solution that leaves this partial-pressure band\n'
     + '                       during verification; repeat for multiple families\n'
@@ -362,11 +383,13 @@ function buildSolver(window, options) {
       'polar'
     );
     const tuneCondensation = options.tuneCondensation.has(config.id);
+    const preserveSurfaceMass = options.preserveExposed.has(config.id);
     const initialBuriedMass = ZONES.reduce(
       (total, zone) => total + (baselineSurface[zone][config.buried] || 0),
       0
     );
-    const useAtmosphereReservoir = !tuneCondensation && initialBuriedMass === 0;
+    const useAtmosphereReservoir =
+      !tuneCondensation && !preserveSurfaceMass && initialBuriedMass === 0;
     const baselineBuried = Object.fromEntries(
       ZONES.map((zone) => [zone, baselineSurface[zone][config.buried] || 0])
     );
@@ -380,7 +403,9 @@ function buildSolver(window, options) {
       baselineAmountByZone: { ...amountByZone },
       reservoirZone,
       tuneCondensation,
-      solveAtmosphere: false,
+      preserveSurfaceMass,
+      solveAtmosphere: preserveSurfaceMass,
+      deferAtmosphereSolve: false,
       globalOnly: false,
       useAtmosphereReservoir,
       baselineBuried,
@@ -399,7 +424,10 @@ function buildSolver(window, options) {
       condensationParameter: cycle.equilibriumCondensationParameter,
       fixedBuried: Object.fromEntries(
         ZONES.filter((zone) =>
-          tuneCondensation || useAtmosphereReservoir || zone !== reservoirZone
+          tuneCondensation
+          || useAtmosphereReservoir
+          || (!preserveSurfaceMass && zone !== reservoirZone)
+          || (preserveSurfaceMass && zone !== reservoirZone)
         ).map((zone) => [zone, baselineBuried[zone]])
       )
     });
@@ -410,7 +438,7 @@ function buildSolver(window, options) {
     for (const family of familyStates) {
       const cycle = window.eval(family.cycle);
       cycle.equilibriumCondensationParameter = family.condensationParameter;
-      if (family.tuneCondensation) {
+      if (family.tuneCondensation || family.preserveSurfaceMass) {
         const assignedOutsideReservoir = ZONES.reduce(
           (total, zone) => zone === family.reservoirZone
             ? total
@@ -536,7 +564,7 @@ function buildSolver(window, options) {
     const solveCoordinates = () => {
     for (let pass = 0; pass < options.passes; pass += 1) {
       for (const family of familyStates) {
-        if (family.solveAtmosphere) {
+        if (family.solveAtmosphere && !family.deferAtmosphereSolve) {
           try {
             solveAtmosphereAmount(family);
           } catch (error) {
@@ -546,7 +574,7 @@ function buildSolver(window, options) {
         if (family.globalOnly) {
           continue;
         }
-        const solveZones = family.tuneCondensation
+        const solveZones = family.tuneCondensation || family.preserveSurfaceMass
           ? ZONES.filter((zone) => zone !== family.reservoirZone)
           : ZONES;
         for (const zone of solveZones) {
@@ -618,6 +646,7 @@ function buildSolver(window, options) {
         if (family.solveAtmosphere) {
           try {
             solveAtmosphereAmount(family);
+            family.deferAtmosphereSolve = false;
           } catch (error) {
             throw new Error(`${family.id}.atmosphere: ${error.message}`);
           }
@@ -640,6 +669,101 @@ function buildSolver(window, options) {
     }
     };
     solveCoordinates();
+    setState();
+    terraforming.updateResources(STEP_MS, { refreshStandaloneRates: true });
+    let globallyUnbalancedFamilies = familyStates.filter((family) =>
+      family.useAtmosphereReservoir
+      && Math.max(
+        Math.abs(netRate(resources.surface[family.liquid])),
+        Math.abs(netRate(resources.surface[family.solid]))
+      ) >= options.threshold
+    );
+    const singlePhaseFamilies = globallyUnbalancedFamilies.filter((family) =>
+      new Set(Object.values(family.phaseByZone)).size === 1
+    );
+    for (const family of singlePhaseFamilies) {
+      const baselineSurfaceTotal = ZONES.reduce(
+        (total, zone) => total + family.baselineAmountByZone[zone],
+        0
+      );
+      const weights = Object.fromEntries(ZONES.map((zone) => [
+        zone,
+        baselineSurfaceTotal > 0
+          ? family.baselineAmountByZone[zone] / baselineSurfaceTotal
+          : 1 / ZONES.length
+      ]));
+      const solvedSurfaceTotal = bisect(
+        (candidate) => {
+          for (const zone of ZONES) {
+            family.amountByZone[zone] = candidate * weights[zone];
+          }
+          return evaluateAtmosphere(family);
+        },
+        0,
+        family.exchangeableMass,
+        coordinateTolerance
+      );
+      for (const zone of ZONES) {
+        family.amountByZone[zone] = solvedSurfaceTotal * weights[zone];
+      }
+    }
+    if (singlePhaseFamilies.length > 0) {
+      setState();
+      terraforming.updateResources(STEP_MS, { refreshStandaloneRates: true });
+      globallyUnbalancedFamilies = globallyUnbalancedFamilies.filter((family) =>
+        Math.max(
+          Math.abs(netRate(resources.surface[family.liquid])),
+          Math.abs(netRate(resources.surface[family.solid]))
+        ) >= options.threshold
+      );
+    }
+    if (globallyUnbalancedFamilies.length > 0) {
+      for (const family of globallyUnbalancedFamilies) {
+        family.useAtmosphereReservoir = false;
+        family.solveAtmosphere = true;
+        family.deferAtmosphereSolve = true;
+        family.globalOnly = false;
+        family.amountByZone = { ...family.baselineAmountByZone };
+        family.atmosphericAmount = family.initialAtmosphericAmount;
+        family.fixedBuried = Object.fromEntries(
+          ZONES.filter((zone) => zone !== family.reservoirZone)
+            .map((zone) => [zone, family.baselineBuried[zone]])
+        );
+      }
+      solveCoordinates();
+      setState();
+      terraforming.updateResources(STEP_MS, { refreshStandaloneRates: true });
+      globallyUnbalancedFamilies = globallyUnbalancedFamilies.filter((family) =>
+        Math.max(
+          Math.abs(netRate(resources.surface[family.liquid])),
+          Math.abs(netRate(resources.surface[family.solid]))
+        ) >= options.threshold
+      );
+      if (globallyUnbalancedFamilies.length > 0) {
+        for (const family of globallyUnbalancedFamilies) {
+          family.globalOnly = true;
+          family.deferAtmosphereSolve = false;
+          family.amountByZone = { ...family.baselineAmountByZone };
+          family.atmosphericAmount = family.initialAtmosphericAmount;
+        }
+        solveCoordinates();
+        setState();
+        terraforming.updateResources(STEP_MS, { refreshStandaloneRates: true });
+        globallyUnbalancedFamilies = globallyUnbalancedFamilies.filter((family) =>
+          Math.max(
+            Math.abs(netRate(resources.surface[family.liquid])),
+            Math.abs(netRate(resources.surface[family.solid]))
+          ) >= options.threshold
+        );
+        if (globallyUnbalancedFamilies.length > 0) {
+          const details = globallyUnbalancedFamilies.map((family) => (
+            `${family.id} liquid=${netRate(resources.surface[family.liquid])}, `
+            + `solid=${netRate(resources.surface[family.solid])}`
+          )).join('; ');
+          throw new Error(`Global buried-reservoir solve did not converge: ${details}.`);
+        }
+      }
+    }
     setState();
     const solvedZonalSurface = structuredClone(terraforming.zonalSurface);
     const solvedTemperatures = Object.fromEntries(
@@ -714,7 +838,7 @@ async function verifyWrittenWorld(options, phaseResourceKeys) {
       }
     }
     const failures = Object.entries(maxima)
-      .filter(([, maximum]) => maximum >= options.threshold);
+      .filter(([, maximum]) => maximum >= options.verificationThreshold);
     return { maxima, failures, pressureObservations };
   } finally {
     window.close();
@@ -777,7 +901,8 @@ async function main() {
       .map(([key, maximum]) => `${key}=${maximum}`)
       .join(', ');
     throw new Error(
-      `Verification exceeded ${options.threshold} t/s (${details}); source edit was reverted.`
+      `Verification exceeded ${options.verificationThreshold} t/s `
+      + `(${details}); source edit was reverted.`
     );
   }
 

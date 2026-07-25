@@ -1025,8 +1025,9 @@ class ResourceCycle {
         snapAmount,
         Math.abs(atmosphericValue) * Number.EPSILON
       );
-      let canSnap =
+      const canSnapAtmosphere =
         Math.abs(data.totals.totalAtmosphericChange || 0) <= atmosphericTolerance;
+      let canSnap = canSnapAtmosphere;
       for (const zone of zones) {
         const surfaceChanges = data.zonalChanges[zone]?.[snapSurfaceBucket] || {};
         for (const [state, amount] of Object.entries(surfaceChanges)) {
@@ -1042,7 +1043,7 @@ class ResourceCycle {
         }
         if (!canSnap) break;
       }
-      if (canSnap) {
+      if (canSnapAtmosphere) {
         const atmosphericRemainder = data.totals.totalAtmosphericChange || 0;
         let balancingProcess = null;
         for (const process of this.finalizeProcesses || []) {
@@ -1059,6 +1060,8 @@ class ResourceCycle {
             (data.totals[balancingProcess.totalKey] || 0) + atmosphericRemainder;
         }
         data.totals.totalAtmosphericChange = 0;
+      }
+      if (canSnap) {
         for (const zone of zones) {
           const surfaceChanges = data.zonalChanges[zone]?.[snapSurfaceBucket] || {};
           for (const state in surfaceChanges) {
