@@ -94,7 +94,7 @@
   }
 
   const ZONE_KEYS = ['tropical', 'temperate', 'polar'];
-  const MIN_TERRAFORMING_SUBSTEP_MS = 10;
+  const MIN_TERRAFORMING_SUBSTEP_MS = terraformingParameters.gameplay.simulation.resourceSubstepMs;
 
   function quantizeEquilibrationStepMs(stepMs) {
     const numericStep = Number(stepMs) || 0;

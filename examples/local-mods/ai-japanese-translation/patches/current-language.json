@@ -4986,8 +4986,8 @@
         "fps20": "20  FPS",
         "fps30": "30  FPS"
       },
-      "terraformingSubsteps": "サブステップの10msテラフォーミングを使用する",
-      "terraformingSubstepsTooltip": "デフォルトでは、気候モデルは10msのティックベースで実行され、フルタイムデルタを使用する代わりに行われます。 このオフをオンにしてパフォーマンスを向上させることができますが、気候モデルの数値的安定性を減らすことができます。",
+      "terraformingSubsteps": "サブステップの{milliseconds}msテラフォーミングを使用する",
+      "terraformingSubstepsTooltip": "デフォルトでは、気候モデルは{milliseconds}msのティックベースで実行され、フルタイムデルタを使用する代わりに行われます。 このオフをオンにしてパフォーマンスを向上させることができますが、気候モデルの数値的安定性を減らすことができます。",
       "celsius": "摂氏温度の表示の温度",
       "colorblindPalette": "ステータスカラー",
       "colorblindPalettes": {

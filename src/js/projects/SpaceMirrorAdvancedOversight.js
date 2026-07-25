@@ -129,6 +129,36 @@ class SpaceMirrorAdvancedOversight {
         reverse.any = false;
       };
 
+      if (
+        (!(totalMirrors > 0) || !(mirrorPowerPer > 0)) &&
+        (!(totalLanterns > 0) || !(lanternPowerPer > 0))
+      ) {
+        clearAssignments();
+        syncDerivedReverseState();
+        settings.assignments.mirrors = assignM;
+        settings.assignments.lanterns = assignL;
+        settings.assignments.reversalMode = reverse;
+        settings.availableHeating = availableHeating;
+        settings.lastSolution = {
+          mirrors: { ...assignM },
+          lanterns: { ...assignL },
+          availableHeating: { ...availableHeating },
+          availableHeatingPowerTarget: 0,
+          reversalMode: { ...reverse },
+        };
+
+        const projectionOptions = { ignoreHeatCapacity: true };
+        if (gameSettings.phaseChangeHeat) {
+          projectionOptions.zonalSurfaceHeatFluxes =
+            terraforming.phaseChangeHeatFluxByZone;
+        }
+        terraforming.runUpdateStep(0, projectionOptions);
+        solvedSnapshot = terraforming.saveTemperatureState();
+        terraforming.restoreTemperatureState(snapshot);
+        settings.lastProjectedTemperatureState = solvedSnapshot;
+        return;
+      }
+
       const getTrendMetric = (zone) => {
         const mode = getZoneMode(zone);
         if (mode === 'flux') {

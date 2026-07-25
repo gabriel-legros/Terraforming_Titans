@@ -18,7 +18,7 @@
 
 var game = null;
 let lastFrameTimeMs = 0;
-const LOGIC_DELTA_QUANTUM_MS = 10;
+const LOGIC_DELTA_QUANTUM_MS = terraformingParameters.gameplay.simulation.resourceSubstepMs;
 let logicDeltaCarryMs = 0;
 const GAME_FRAMERATE_OPTIONS = [10, 20, 30];
 const DEFAULT_GAME_FRAMERATE = 30;

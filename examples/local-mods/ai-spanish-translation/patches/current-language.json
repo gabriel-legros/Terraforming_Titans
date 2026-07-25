@@ -4986,8 +4986,8 @@
         "fps20": "20 FPS",
         "fps30": "30 FPS"
       },
-      "terraformingSubsteps": "Usar subpasos de terraformación de 10 ms",
-      "terraformingSubstepsTooltip": "De forma predeterminada, el modelo climático se ejecuta en ciclos de 10 ms en lugar de usar todo el delta de tiempo. Puedes desactivarlo para mejorar el rendimiento, pero disminuirá la estabilidad numérica del modelo climático.",
+      "terraformingSubsteps": "Usar subpasos de terraformación de {milliseconds} ms",
+      "terraformingSubstepsTooltip": "De forma predeterminada, el modelo climático se ejecuta en ciclos de {milliseconds} ms en lugar de usar todo el delta de tiempo. Puedes desactivarlo para mejorar el rendimiento, pero disminuirá la estabilidad numérica del modelo climático.",
       "celsius": "Mostrar la temperatura en Celsius",
       "colorblindPalette": "Colores de estado",
       "colorblindPalettes": {

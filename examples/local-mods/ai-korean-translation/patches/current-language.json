@@ -4986,8 +4986,8 @@
         "fps20": "20 FPS",
         "fps30": "30 FPS"
       },
-      "terraformingSubsteps": "10ms 테라포밍 하위 단계 사용",
-      "terraformingSubstepsTooltip": "기본적으로 기후 모델은 전체 시간 차이를 사용하는 대신 10ms 틱 단위로 실행됩니다. 성능을 높이기 위해 끌 수 있지만 기후 모델의 수치 안정성이 낮아집니다.",
+      "terraformingSubsteps": "{milliseconds}ms 테라포밍 하위 단계 사용",
+      "terraformingSubstepsTooltip": "기본적으로 기후 모델은 전체 시간 차이를 사용하는 대신 {milliseconds}ms 틱 단위로 실행됩니다. 성능을 높이기 위해 끌 수 있지만 기후 모델의 수치 안정성이 낮아집니다.",
       "celsius": "온도를 섭씨로 표시",
       "colorblindPalette": "상태 색상",
       "colorblindPalettes": {

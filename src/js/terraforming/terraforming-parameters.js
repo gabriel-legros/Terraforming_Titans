@@ -428,7 +428,7 @@ var terraformingParameters = {
       megaHeatSinkPowerW: 1e15
     },
     simulation: {
-      resourceSubstepMs: 10,
+      resourceSubstepMs: 20,
       maximumResourceSubsteps: 24,
       equilibriumSnapRateTonsPerSecond: 0.01
     },

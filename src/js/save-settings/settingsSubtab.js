@@ -20,6 +20,7 @@ function cacheSettingsElements() {
     electronUIScaleSelect: document.getElementById('electron-ui-scale-select'),
     electronFullscreenKeybindOption: document.getElementById('electron-fullscreen-keybind-option'),
     terraformingSubstepsToggle: document.getElementById('terraforming-substeps-toggle'),
+    terraformingSubstepsLabel: document.getElementById('terraforming-substeps-label'),
     celsiusToggle: document.getElementById('celsius-toggle'),
     colorblindPaletteSelect: document.getElementById('colorblind-palette-select'),
     silenceToggle: document.getElementById('solis-silence-toggle'),
@@ -597,13 +598,20 @@ function addSettingsListeners() {
     });
   }
 
+  const terraformingSubstepMilliseconds = terraformingParameters.gameplay.simulation.resourceSubstepMs;
+  cached.terraformingSubstepsLabel.textContent = t(
+    'ui.settings.terraformingSubsteps',
+    { milliseconds: terraformingSubstepMilliseconds },
+    'Use {milliseconds}ms terraforming substeps'
+  );
+
   if (cached.terraformingSubstepsTooltip) {
     attachDynamicInfoTooltip(
       cached.terraformingSubstepsTooltip,
       t(
         'ui.settings.terraformingSubstepsTooltip',
-        {},
-        'By default, the climate model runs on a 10ms tick basis, instead of using the full time delta.  You can turn this off to improve performance, but decrease numerical stability of the climate model.'
+        { milliseconds: terraformingSubstepMilliseconds },
+        'By default, the climate model runs on a {milliseconds}ms tick basis, instead of using the full time delta.  You can turn this off to improve performance, but decrease numerical stability of the climate model.'
       )
     );
   }

@@ -4986,8 +4986,8 @@
         "fps20": "20 FPS",
         "fps30": "30 FPS"
       },
-      "terraformingSubsteps": "Utilizzare 10ms sottopassi terraformanti",
-      "terraformingSubstepsTooltip": "Per impostazione predefinita, il modello climatico viene eseguito con tick di 10 ms invece di usare l'intero delta temporale. Puoi disattivare questa opzione per migliorare le prestazioni, riducendo però la stabilità numerica del modello climatico.",
+      "terraformingSubsteps": "Utilizzare {milliseconds}ms sottopassi terraformanti",
+      "terraformingSubstepsTooltip": "Per impostazione predefinita, il modello climatico viene eseguito con tick di {milliseconds} ms invece di usare l'intero delta temporale. Puoi disattivare questa opzione per migliorare le prestazioni, riducendo però la stabilità numerica del modello climatico.",
       "celsius": "Temperatura di visualizzazione in Celsius",
       "colorblindPalette": "Colori di stato",
       "colorblindPalettes": {

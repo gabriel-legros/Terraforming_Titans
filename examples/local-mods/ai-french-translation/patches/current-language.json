@@ -4986,8 +4986,8 @@
         "fps20": "20 FPS",
         "fps30": "30 FPS"
       },
-      "terraformingSubsteps": "Utiliser des sous-étapes de terraformation de 10 ms",
-      "terraformingSubstepsTooltip": "Par défaut, le modèle climatique fonctionne par cycles de 10 ms plutôt qu'en utilisant l'intervalle temporel complet. Vous pouvez désactiver cette option pour améliorer les performances, au prix d'une moindre stabilité numérique du modèle climatique.",
+      "terraformingSubsteps": "Utiliser des sous-étapes de terraformation de {milliseconds} ms",
+      "terraformingSubstepsTooltip": "Par défaut, le modèle climatique fonctionne par cycles de {milliseconds} ms plutôt qu'en utilisant l'intervalle temporel complet. Vous pouvez désactiver cette option pour améliorer les performances, au prix d'une moindre stabilité numérique du modèle climatique.",
       "celsius": "Afficher la température en Celsius",
       "colorblindPalette": "Couleurs d'état",
       "colorblindPalettes": {

@@ -12,7 +12,10 @@ const TERRAFORMING_PARAMETERS_PATH = path.join(
   'terraforming',
   'terraforming-parameters.js'
 );
-const STEP_MS = 10;
+const STEP_MS = Function(
+  `${fs.readFileSync(TERRAFORMING_PARAMETERS_PATH, 'utf8')};`
+  + ' return terraformingParameters.gameplay.simulation.resourceSubstepMs;'
+)();
 const ZONES = ['tropical', 'temperate', 'polar'];
 const PHASE_FAMILIES = [
   {
@@ -165,8 +168,8 @@ function printHelp() {
     + 'Options:\n'
     + '  --planet <key>       Story-world key from planet-parameters.js (required)\n'
     + '  --passes <count>     Coordinate-solver passes (default: 50)\n'
-    + '  --relax-steps <count> Browser-exact 10 ms updates before solving (default: 0)\n'
-    + '  --steps <count>      Exact 10 ms verification updates (default: 20000)\n'
+    + `  --relax-steps <count> Browser-exact ${STEP_MS} ms updates before solving (default: 0)\n`
+    + `  --steps <count>      Exact ${STEP_MS} ms verification updates (default: 20000)\n`
     + '  --threshold <rate>   Maximum absolute phase rate in t/s (default: 0.01)\n'
     + '  --verification-threshold <rate>\n'
     + '                       Long-run acceptance rate; defaults to --threshold\n'
@@ -918,7 +921,7 @@ async function verifyWrittenWorld(options, phaseResourceKeys) {
     };
     observePressures();
     for (let step = 0; step < options.verificationSteps; step += 1) {
-      window.eval('produceResources(10, buildings)');
+      window.eval(`produceResources(${STEP_MS}, buildings)`);
       observePressures();
       for (const key of phaseResourceKeys) {
         maxima[key] = Math.max(maxima[key], Math.abs(netRate(window.resources.surface[key])));
@@ -950,7 +953,7 @@ async function main() {
         `Pre-relaxing ${options.planet} for ${options.relaxationSteps} exact ${STEP_MS} ms updates...\n`
       );
       for (let step = 0; step < options.relaxationSteps; step += 1) {
-        dom.window.eval('produceResources(10, buildings)');
+        dom.window.eval(`produceResources(${STEP_MS}, buildings)`);
       }
     }
     const solver = buildSolver(dom.window, options);

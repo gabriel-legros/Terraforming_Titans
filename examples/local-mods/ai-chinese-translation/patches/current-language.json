@@ -4986,8 +4986,8 @@
         "fps20": "20 FPS",
         "fps30": "30 FPS"
       },
-      "terraformingSubsteps": "使用 10 毫秒地球化子步长",
-      "terraformingSubstepsTooltip": "默认情况下，气候模型以 10 毫秒为一个计算步长运行，而不是直接使用完整的时间差。关闭此选项可提升性能，但会降低气候模型的数值稳定性。",
+      "terraformingSubsteps": "使用 {milliseconds} 毫秒地球化子步长",
+      "terraformingSubstepsTooltip": "默认情况下，气候模型以 {milliseconds} 毫秒为一个计算步长运行，而不是直接使用完整的时间差。关闭此选项可提升性能，但会降低气候模型的数值稳定性。",
       "celsius": "以摄氏度显示温度",
       "colorblindPalette": "状态颜色",
       "colorblindPalettes": {

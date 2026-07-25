@@ -4986,8 +4986,8 @@
         "fps20": "20 FPS",
         "fps30": "30 FPS"
       },
-      "terraformingSubsteps": "Verwenden Sie 10ms terraforming Unterschritte",
-      "terraformingSubstepsTooltip": "Standardmäßig läuft das Klimamodell auf einer 10ms Tick-Basis, anstatt die volle Zeit delta zu verwenden.  Sie können dies ausschalten, um die Leistung zu verbessern, aber die numerische Stabilität des Klimamodells zu verringern.",
+      "terraformingSubsteps": "Verwenden Sie {milliseconds}ms terraforming Unterschritte",
+      "terraformingSubstepsTooltip": "Standardmäßig läuft das Klimamodell auf einer {milliseconds}ms Tick-Basis, anstatt die volle Zeit delta zu verwenden.  Sie können dies ausschalten, um die Leistung zu verbessern, aber die numerische Stabilität des Klimamodells zu verringern.",
       "celsius": "Temperatur in Celsius anzeigen",
       "colorblindPalette": "Statusfarben",
       "colorblindPalettes": {
