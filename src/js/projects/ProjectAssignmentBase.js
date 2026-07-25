@@ -576,7 +576,9 @@ function createProjectAssignmentBase(BaseClass) {
         changed = true;
       }
       if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights') && shouldApplyPresetAutoWeights) {
-        this.autoAssignWeights = { ...(settings.autoAssignWeights || {}) };
+        this.autoAssignWeights = isPresetApplication
+          ? { ...this.autoAssignWeights, ...(settings.autoAssignWeights || {}) }
+          : { ...(settings.autoAssignWeights || {}) };
         changed = true;
       }
       if (changed) {
