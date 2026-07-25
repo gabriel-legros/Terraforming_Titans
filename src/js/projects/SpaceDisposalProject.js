@@ -14,7 +14,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     this.maxDisposalTargets = 15;
     this.nextDisposalTargetId = 1;
     this.disposalTargets = [];
-    this.lastDisposalEnergyDemand = 0;
+    this.lastDisposalEnergyDemand = 0; // Stored as a per-second rate so tick length changes do not distort the grace floor.
     this.lastActiveDisposalTargetIds = [];
     this.ensureDisposalTargets();
   }
@@ -1637,13 +1637,21 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
   estimateProductivityCostAndGain(deltaTime = 1000) {
     const totals = this.getDisposalConstrainedContinuousDemand(deltaTime, 1, null);
-    const previousEnergyDemand = Math.max(0, this.lastDisposalEnergyDemand || 0);
+    const demandSeconds = deltaTime / 1000;
+    const previousEnergyDemandRate = Math.max(0, this.lastDisposalEnergyDemand || 0);
     const currentEnergyDemand = totals.cost.colony?.energy || 0;
-    if (this.isActive && this.hasAnyAutoStartTarget() && previousEnergyDemand > currentEnergyDemand) {
+    const currentEnergyDemandRate = demandSeconds > 0
+      ? currentEnergyDemand / demandSeconds
+      : 0;
+    if (
+      this.isActive
+      && this.hasAnyAutoStartTarget()
+      && previousEnergyDemandRate > currentEnergyDemandRate
+    ) {
       if (!totals.cost.colony) {
         totals.cost.colony = {};
       }
-      totals.cost.colony.energy = previousEnergyDemand;
+      totals.cost.colony.energy = previousEnergyDemandRate * demandSeconds;
     }
     return { cost: totals.cost, gain: {} };
   }
@@ -1995,7 +2003,10 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
   applyContinuousPlan(plan, accumulatedChanges = null) {
     const demand = this.getDisposalConstrainedContinuousDemand(plan.context?.deltaTime || 0, 1, accumulatedChanges);
-    this.lastDisposalEnergyDemand = demand.cost.colony?.energy || 0;
+    const demandSeconds = (plan.context?.deltaTime || 0) / 1000;
+    this.lastDisposalEnergyDemand = demandSeconds > 0
+      ? (demand.cost.colony?.energy || 0) / demandSeconds
+      : 0;
     this.lastActiveDisposalTargetIds = plan.disposalEntries
       .filter(entry => (entry.appliedAmount || 0) > 0)
       .map(entry => entry.targetId);
