@@ -75,7 +75,7 @@ class AchievementManager {
       ['that-was-fastest', 'thatWasFastest', 'That was fastest', 'Terraform a world under 5s.', () => this.hasTerraformRealTimeUnder(5)],
       ['classic-renewables', 'classicRenewables', 'Classic Renewables', 'Terraform a world without building any power generators except solar panels and wind turbines.', () => this.isClassicRenewablesComplete()],
       ['heat-of-the-sun', 'heatOfTheSun', 'Heat of the Sun', 'Reach a global mean surface temperature of at least 5,500°C without using Planetary Thrusters.', () => this.isHeatOfTheSunComplete()],
-      ['yo-dawg-terraforming', 'yoDawgTerraforming', 'Yo dawg, I heard you liked terraforming', 'Have all your terraforming times in the past 10 terraformed worlds be faster than the previous one.', () => this.isRecentTerraformImprovementChainComplete()],
+      ['yo-dawg-terraforming', 'yoDawgTerraforming', 'Yo dawg, I heard you liked terraforming', 'Have all your terraforming times in the past 10 terraformed worlds be faster than the previous one. (game time)', () => this.isRecentTerraformImprovementChainComplete()],
       ['coruscant', 'coruscant', 'Coruscant', 'Build a full ecumenopolis.', () => this.isEcumenopolisComplete()],
       ['orbital-ring', 'orbitalRing', 'We need more real estate', 'Build an orbital ring.', () => this.hasAnyOrbitalRing()],
       ['dream-big', 'dreamBig', 'Dream big', 'Construct an artificial world.', () => this.hasConstructedArtificialWorld()],
@@ -392,8 +392,8 @@ class AchievementManager {
     }
     const recent = history.slice(-10);
     for (let i = 1; i < recent.length; i += 1) {
-      const previous = Number(recent[i - 1].realTimeSeconds);
-      const current = Number(recent[i].realTimeSeconds);
+      const previous = Number(recent[i - 1].playTimeSeconds);
+      const current = Number(recent[i].playTimeSeconds);
       if (!(current > 0 && previous > 0 && current < previous)) {
         return false;
       }

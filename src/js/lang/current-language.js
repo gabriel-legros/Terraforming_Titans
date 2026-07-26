@@ -4969,7 +4969,7 @@ setLanguageData({
         },
         yoDawgTerraforming: {
           title: 'Yo dawg, I heard you liked terraforming',
-          requirement: 'Have all your terraforming times in the past 10 terraformed worlds be faster than the previous one.'
+          requirement: 'Have all your terraforming times in the past 10 terraformed worlds be faster than the previous one. (game time)'
         },
         coruscant: {
           title: 'Coruscant',
