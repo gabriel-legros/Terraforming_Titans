@@ -28,7 +28,9 @@ function penmanRate({
   if (typeof Delta_s !== 'number' || typeof e_s !== 'number') {
     throw new Error('penmanRate requires Delta_s and e_s');
   }
-  const R_n = (1 - albedo) * solarFlux;
+  const R_n = (1 - albedo)
+    * solarFlux
+    * terraformingParameters.phaseChange.penman.netRadiationFraction;
   const gamma_s = psychrometricConstant(atmPressure, latentHeat);
   const rho_a_val = airDensityFn(atmPressure, T);
 

@@ -175,6 +175,7 @@ class WaterCycle extends ResourceCycleClass {
       sublimationPoint: 273.15,
       evaporationAlbedo: EVAP_ALBEDO_WATER,
       sublimationAlbedo: SUBLIMATION_ALBEDO_ICE,
+      nearSurfaceVaporPressureMultiplier: WATER_PHASE_CHANGE_PARAMETERS.nearSurfaceVaporPressureMultiplier,
       tripleTemperature: WATER_TRIPLE_T,
       triplePressure: WATER_TRIPLE_P,
       disallowLiquidBelowTriple: true,

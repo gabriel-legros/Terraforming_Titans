@@ -92,6 +92,7 @@ class ResourceCycle {
     boilingRateMultiplier = terraformingParameters.phaseChange.resourceCycle.boilingRateMultiplier,
     evaporationAlbedo = terraformingParameters.phaseChange.resourceCycle.defaultEvaporationAlbedo,
     sublimationAlbedo = terraformingParameters.phaseChange.resourceCycle.defaultSublimationAlbedo,
+    nearSurfaceVaporPressureMultiplier = 1,
     coverageKeys = {},
     precipitationKeys = {},
     surfaceFlowFn = null,
@@ -121,6 +122,7 @@ class ResourceCycle {
     this.boilingRateMultiplier = boilingRateMultiplier;
     this.evaporationAlbedo = evaporationAlbedo;
     this.sublimationAlbedo = sublimationAlbedo;
+    this.nearSurfaceVaporPressureMultiplier = nearSurfaceVaporPressureMultiplier;
     this.coverageKeys = coverageKeys;
     this.precipitationKeys = precipitationKeys;
     this.surfaceFlowFn = surfaceFlowFn;
@@ -153,7 +155,7 @@ class ResourceCycle {
       T,
       solarFlux,
       atmPressure,
-      e_a,
+      e_a: Math.min(e_s, e_a * this.nearSurfaceVaporPressureMultiplier),
       latentHeat: this.latentHeatVaporization,
       albedo,
       r_a,
@@ -228,8 +230,18 @@ class ResourceCycle {
 
     const meanHumidityScale = totalArea > 0 ? weightedHumidityScale / totalArea : 0;
     const meanHumidity = meanHumidityScale > 0 ? vaporPressure / meanHumidityScale : 0;
+    const horizontalMixingFraction =
+      terraformingParameters.phaseChange.statisticalHumidity.horizontalMixingFraction;
     for (const zone of zones) {
-      byZone[zone].vaporPressure = byZone[zone].humidityScale * meanHumidity;
+      const saturationFollowingPressure = byZone[zone].humidityScale * meanHumidity;
+      const zonalVaporPressure =
+        saturationFollowingPressure * (1 - horizontalMixingFraction) +
+        vaporPressure * horizontalMixingFraction;
+      byZone[zone].vaporPressure = zonalVaporPressure;
+      byZone[zone].meanHumidity =
+        byZone[zone].humidityScale > 0
+          ? zonalVaporPressure / byZone[zone].humidityScale
+          : 0;
     }
 
     return { meanHumidity, boilingPoint, byZone };
@@ -253,7 +265,7 @@ class ResourceCycle {
       T,
       solarFlux,
       atmPressure,
-      e_a,
+      e_a: Math.min(e_s, e_a * this.nearSurfaceVaporPressureMultiplier),
       latentHeat: this.latentHeatSublimation,
       albedo,
       r_a,
@@ -697,7 +709,7 @@ class ResourceCycle {
         atmPressure,
         boilingPoint: statisticalHumidity.boilingPoint,
         vaporPressure: statisticalHumidity.byZone[zone].vaporPressure,
-        statisticalHumidityMean: statisticalHumidity.meanHumidity,
+        statisticalHumidityMean: statisticalHumidity.byZone[zone].meanHumidity,
         dayPressureState: statisticalHumidity.byZone[zone].dayPressureState,
         nightPressureState: statisticalHumidity.byZone[zone].nightPressureState,
         zonalSolarFlux: terraforming.calculateZoneSolarFlux(zone) / zonalFluxDivisor,

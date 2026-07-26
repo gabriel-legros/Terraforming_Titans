@@ -160,7 +160,8 @@ var terraformingParameters = {
       triplePointPressurePa: 611.657,
       criticalPointTemperatureK: 647.096,
       meltingPointK: 273.15,
-      equilibriumCondensationParameter: 1
+      nearSurfaceVaporPressureMultiplier: 6.5,
+      equilibriumCondensationParameter: 0.3094
     },
     carbonDioxide: {
       latentHeatVaporizationJPerKg: 3.75e5,
@@ -175,7 +176,7 @@ var terraformingParameters = {
       criticalPointTemperatureK: 304.1282,
       criticalPointPressurePa: 7.3773e6,
       meltingPointK: 216.58,
-      equilibriumCondensationParameter: 6.271195900038446e-4
+      equilibriumCondensationParameter: 0.00019386130324835913
     },
     methane: {
       latentHeatVaporizationJPerKg: 5.1e5,
@@ -265,7 +266,8 @@ var terraformingParameters = {
       equilibriumCondensationParameter: 0.002
     },
     statisticalHumidity: {
-      drySkewShape: 2
+      drySkewShape: 2,
+      horizontalMixingFraction: 0.07
     },
     condensation: {
       phaseTransitionRangeK: 2,
@@ -277,7 +279,8 @@ var terraformingParameters = {
     },
     penman: {
       defaultAlbedo: 0.6,
-      aerodynamicResistanceSecondsPerMeter: 100
+      aerodynamicResistanceSecondsPerMeter: 100,
+      netRadiationFraction: 0.35
     },
     meltingAndFreezing: {
       meltingRatePerKSecond: 1e-7,

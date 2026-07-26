@@ -80,7 +80,10 @@ function parseArguments(argv) {
     preserveExposed: new Set(),
     solveAtmosphere: new Set(),
     globalBalance: new Set(),
-    pressureRanges: new Map()
+    pressureRanges: new Map(),
+    adaptiveOnly: false,
+    adaptiveBalance: new Set(),
+    relaxationRefinementChecks: 100
   };
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
@@ -90,6 +93,8 @@ function parseArguments(argv) {
       options.passes = Number(argv[++index]);
     } else if (argument === '--relax-steps') {
       options.relaxationSteps = Number(argv[++index]);
+    } else if (argument === '--relax-refine-checks') {
+      options.relaxationRefinementChecks = Number(argv[++index]);
     } else if (argument === '--steps') {
       options.verificationSteps = Number(argv[++index]);
     } else if (argument === '--threshold') {
@@ -120,6 +125,14 @@ function parseArguments(argv) {
         throw new Error(`Unknown phase family for --global-balance: ${family}`);
       }
       options.globalBalance.add(family);
+    } else if (argument === '--adaptive-only') {
+      options.adaptiveOnly = true;
+    } else if (argument === '--adaptive-balance') {
+      const family = String(argv[++index] || '');
+      if (!PHASE_FAMILIES.some((entry) => entry.id === family)) {
+        throw new Error(`Unknown phase family for --adaptive-balance: ${family}`);
+      }
+      options.adaptiveBalance.add(family);
     } else if (argument === '--pressure-range') {
       const [family, minimumText, maximumText] = String(argv[++index] || '').split(':');
       const minimum = Number(minimumText);
@@ -146,6 +159,12 @@ function parseArguments(argv) {
   if (!Number.isInteger(options.relaxationSteps) || options.relaxationSteps < 0) {
     throw new Error('--relax-steps must be a non-negative integer.');
   }
+  if (
+    !Number.isInteger(options.relaxationRefinementChecks)
+    || options.relaxationRefinementChecks < 1
+  ) {
+    throw new Error('--relax-refine-checks must be a positive integer.');
+  }
   if (!Number.isInteger(options.verificationSteps) || options.verificationSteps < 1) {
     throw new Error('--steps must be a positive integer.');
   }
@@ -158,6 +177,15 @@ function parseArguments(argv) {
   if (!(options.verificationThreshold > 0)) {
     throw new Error('--verification-threshold must be greater than zero.');
   }
+  if (options.adaptiveOnly && options.relaxationSteps === 0) {
+    throw new Error('--adaptive-only requires --relax-steps.');
+  }
+  if (options.adaptiveOnly && options.tuneCondensation.size > 0) {
+    throw new Error('--adaptive-only cannot tune condensation coefficients.');
+  }
+  if (options.adaptiveBalance.size > 0 && !options.adaptiveOnly) {
+    throw new Error('--adaptive-balance requires --adaptive-only.');
+  }
   return options;
 }
 
@@ -168,7 +196,10 @@ function printHelp() {
     + 'Options:\n'
     + '  --planet <key>       Story-world key from planet-parameters.js (required)\n'
     + '  --passes <count>     Coordinate-solver passes (default: 50)\n'
-    + `  --relax-steps <count> Browser-exact ${STEP_MS} ms updates before solving (default: 0)\n`
+    + '  --relax-steps <count> Maximum adaptive coarse-to-fine updates before solving\n'
+    + `                       (default: 0; final refinement is ${STEP_MS} ms)\n`
+    + '  --relax-refine-checks <count>\n'
+    + '                       Unstable checks before halving the adaptive step (default: 100)\n'
     + `  --steps <count>      Exact ${STEP_MS} ms verification updates (default: 20000)\n`
     + '  --threshold <rate>   Maximum absolute phase rate in t/s (default: 0.01)\n'
     + '  --verification-threshold <rate>\n'
@@ -185,6 +216,11 @@ function printHelp() {
     + '  --global-balance <family>\n'
     + '                       Solve global atmosphere and solid-phase rates while preserving\n'
     + '                       the other seeded exposed reservoirs\n'
+    + '  --adaptive-only      Save the adaptively relaxed state directly; skip the algebraic\n'
+    + `                       phase solver and use ${STEP_MS} ms steps only for verification\n`
+    + '  --adaptive-balance <family>\n'
+    + '                       After adaptive relaxation, solve only that family\'s conserved\n'
+    + '                       atmosphere/exposed-reservoir split; repeat for multiple families\n'
     + '  --pressure-range <family>:<minimum-Pa>:<maximum-Pa>\n'
     + '                       Reject any solution that leaves this partial-pressure band\n'
     + '                       during verification; repeat for multiple families\n'
@@ -256,21 +292,33 @@ function rewriteOverride(
   const overrideNode = findOverrideDeclaration(ast, PLANET_PARAMETERS_PATH, planet);
   const zonalSurfaceProperty = getObjectProperty(overrideNode, 'zonalSurface');
   const zonalTemperaturesProperty = getObjectProperty(overrideNode, 'zonalTemperatures');
-  if (!zonalSurfaceProperty || !zonalTemperaturesProperty) {
-    throw new Error(`World '${planet}' must define zonalSurface and zonalTemperatures in its override.`);
+  if (!zonalTemperaturesProperty) {
+    throw new Error(`World '${planet}' must define zonalTemperatures in its override.`);
   }
-  const replacements = [
-    {
+  const replacements = [];
+  if (zonalSurfaceProperty) {
+    replacements.push({
       start: zonalSurfaceProperty.value.start,
       end: zonalSurfaceProperty.value.end,
       text: formatReplacement(source, zonalSurfaceProperty, zonalSurface)
-    },
-    {
-      start: zonalTemperaturesProperty.value.start,
-      end: zonalTemperaturesProperty.value.end,
-      text: formatReplacement(source, zonalTemperaturesProperty, zonalTemperatures)
-    }
-  ];
+    });
+  } else {
+    const lineStart = source.lastIndexOf('\n', zonalTemperaturesProperty.start) + 1;
+    const indentation =
+      source.slice(lineStart, zonalTemperaturesProperty.start).match(/^\s*/)[0];
+    const formattedSurface = JSON.stringify(zonalSurface, null, 2)
+      .replace(/\n/g, `\n${indentation}`);
+    replacements.push({
+      start: lineStart,
+      end: lineStart,
+      text: `${indentation}zonalSurface: ${formattedSurface},\n`
+    });
+  }
+  replacements.push({
+    start: zonalTemperaturesProperty.value.start,
+    end: zonalTemperaturesProperty.value.end,
+    text: formatReplacement(source, zonalTemperaturesProperty, zonalTemperatures)
+  });
   const resourcesNode = getObjectProperty(overrideNode, 'resources')?.value;
   const atmosphericNode = getObjectProperty(resourcesNode, 'atmospheric')?.value;
   for (const [resourceKey, value] of Object.entries(atmosphericValues)) {
@@ -338,6 +386,159 @@ function selectWorld(window, planet) {
   window.eval(`currentPlanetParameters = getPlanetParameters(${JSON.stringify(planet)})`);
   window.eval('initializeGameState()');
   window.eval('terraforming.calculateInitialValues()');
+}
+
+async function adaptivelyRelaxWorld(
+  window,
+  maximumSteps,
+  threshold,
+  refinementChecks,
+  input = null
+) {
+  const relaxationInput =
+    input || window.eval('JSON.parse(JSON.stringify(currentPlanetParameters))');
+  let reportedRefinements = -1;
+  const result = await window.runEquilibration(
+    relaxationInput,
+    {
+      stepDays: 10,
+      checkEvery: 5,
+      chunkSteps: 1000,
+      minRunMs: 60 * 60 * 1000,
+      additionalRunMs: 0,
+      timeoutMs: 60 * 60 * 1000,
+      maxSteps: maximumSteps,
+      instabilityRefinementEveryChecks: refinementChecks,
+      absTol: threshold * STEP_MS / 1000,
+      relTol: -1
+    },
+    (progress, info) => {
+      const refinements =
+        info.refinementsFromStability + info.refinementsFromInstability;
+      if (refinements !== reportedRefinements) {
+        reportedRefinements = refinements;
+        process.stdout.write(
+          `  Adaptive relaxation step ${info.step}, refinements ${refinements}, `
+          + `simulated ${info.simulatedMs} ms\n`
+        );
+      }
+    }
+  );
+  window.eval(`currentPlanetParameters = ${JSON.stringify(result.override)}`);
+  window.eval('initializeGameState()');
+  window.eval('terraforming.calculateInitialValues()');
+  return result;
+}
+
+function balanceAdaptiveFamily(window, familyId, threshold) {
+  const family = PHASE_FAMILIES.find((entry) => entry.id === familyId);
+  const terraforming = window.eval('terraforming');
+  const resources = window.resources;
+  const baselineAtmosphere = Object.fromEntries(
+    PHASE_FAMILIES.map((entry) => [
+      entry.atmosphere,
+      resources.atmospheric[entry.atmosphere].value
+    ])
+  );
+  const baselineSurface = structuredClone(terraforming.zonalSurface);
+  const baselineTemperatures = structuredClone(terraforming.temperature.zones);
+  const exposedEntries = ZONES.flatMap((zone) => [
+    { zone, phase: family.liquid, amount: baselineSurface[zone][family.liquid] || 0 },
+    { zone, phase: family.solid, amount: baselineSurface[zone][family.solid] || 0 }
+  ]);
+  const reservoir = exposedEntries.reduce(
+    (largest, entry) => entry.amount > largest.amount ? entry : largest,
+    exposedEntries[0]
+  );
+  const exchangeableMass =
+    baselineAtmosphere[family.atmosphere]
+    + exposedEntries.reduce((total, entry) => total + entry.amount, 0);
+  const fixedExposedMass = exposedEntries.reduce(
+    (total, entry) => total + (
+      entry.zone === reservoir.zone && entry.phase === reservoir.phase
+        ? 0
+        : entry.amount
+    ),
+    0
+  );
+  const maximumAtmosphere = Math.max(0, exchangeableMass - fixedExposedMass);
+
+  const setState = (atmosphericAmount) => {
+    for (const [atmosphereKey, value] of Object.entries(baselineAtmosphere)) {
+      resources.atmospheric[atmosphereKey].value = value;
+    }
+    resources.atmospheric[family.atmosphere].value = atmosphericAmount;
+    for (const zone of ZONES) {
+      terraforming.zonalSurface[zone] = { ...baselineSurface[zone] };
+      terraforming.temperature.zones[zone] = { ...baselineTemperatures[zone] };
+    }
+    terraforming.zonalSurface[reservoir.zone][reservoir.phase] =
+      exchangeableMass - fixedExposedMass - atmosphericAmount;
+    terraforming.synchronizeGlobalResources();
+    terraforming._updateZonalCoverageCache();
+    terraforming._updateAtmosphericPressureCache();
+    terraforming.updateLuminosity();
+    terraforming.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
+  };
+  const solvedAtmosphere = bisect(
+    (candidate) => {
+      setState(candidate);
+      terraforming.updateResources(STEP_MS, { refreshStandaloneRates: true });
+      return netRate(resources.atmospheric[family.atmosphere]);
+    },
+    0,
+    maximumAtmosphere,
+    threshold / 10
+  );
+  setState(solvedAtmosphere);
+  process.stdout.write(
+    `Adaptive ${familyId} balance: atmosphere ${solvedAtmosphere} tons, `
+    + `${reservoir.zone} ${reservoir.phase} `
+    + `${terraforming.zonalSurface[reservoir.zone][reservoir.phase]} tons.\n`
+  );
+}
+
+function captureAdaptiveSolution(window) {
+  const terraforming = window.eval('terraforming');
+  const resources = window.resources;
+  const activeFamilies = PHASE_FAMILIES.filter((family) => (
+    resources.atmospheric[family.atmosphere].value > 0
+    || ZONES.some((zone) => (
+      (terraforming.zonalSurface[zone][family.liquid] || 0) > 0
+      || (terraforming.zonalSurface[zone][family.solid] || 0) > 0
+      || (terraforming.zonalSurface[zone][family.buried] || 0) > 0
+    ))
+  ));
+  const zonalSurface = structuredClone(terraforming.zonalSurface);
+  const zonalTemperatures = Object.fromEntries(
+    ZONES.map((zone) => [zone, {
+      value: terraforming.temperature.zones[zone].value,
+      day: terraforming.temperature.zones[zone].day,
+      night: terraforming.temperature.zones[zone].night
+    }])
+  );
+  const atmosphericValues = Object.fromEntries(
+    activeFamilies.map((family) => [
+      family.atmosphere,
+      resources.atmospheric[family.atmosphere].value
+    ])
+  );
+  terraforming.updateResources(STEP_MS, { refreshStandaloneRates: true });
+  const phaseResourceKeys = Array.from(new Set(
+    activeFamilies.flatMap((family) => [family.liquid, family.solid])
+  ));
+  return {
+    zonalSurface,
+    zonalTemperatures,
+    atmosphericValues,
+    phaseResourceKeys,
+    families: activeFamilies.map((family) => family.id),
+    condensationParameters: {},
+    oneStepRates: Object.fromEntries(
+      phaseResourceKeys.map((key) => [key, netRate(resources.surface[key])])
+    ),
+    pressurePa: terraforming.atmosphericPressureCache.totalPressure
+  };
 }
 
 function getCoverageScale(terraforming, resourceKey) {
@@ -950,15 +1151,32 @@ async function main() {
     selectWorld(dom.window, options.planet);
     if (options.relaxationSteps > 0) {
       process.stdout.write(
-        `Pre-relaxing ${options.planet} for ${options.relaxationSteps} exact ${STEP_MS} ms updates...\n`
+        `Adaptively relaxing ${options.planet} for at most `
+        + `${options.relaxationSteps} coarse-to-fine updates...\n`
       );
-      for (let step = 0; step < options.relaxationSteps; step += 1) {
-        dom.window.eval(`produceResources(${STEP_MS}, buildings)`);
-      }
+      const relaxation = await adaptivelyRelaxWorld(
+        dom.window,
+        options.relaxationSteps,
+        options.threshold,
+        options.relaxationRefinementChecks
+      );
+      process.stdout.write(
+        `Adaptive relaxation completed after ${relaxation.steps} updates.\n`
+      );
     }
-    const solver = buildSolver(dom.window, options);
-    process.stdout.write(`Solving ${options.planet} at exact ${STEP_MS} ms phase steps...\n`);
-    solution = solver.solve();
+    if (options.adaptiveOnly) {
+      for (const family of options.adaptiveBalance) {
+        balanceAdaptiveFamily(dom.window, family, options.threshold);
+      }
+      process.stdout.write(
+        `Capturing adaptively equilibrated ${options.planet} state directly.\n`
+      );
+      solution = captureAdaptiveSolution(dom.window);
+    } else {
+      const solver = buildSolver(dom.window, options);
+      process.stdout.write(`Solving ${options.planet} at exact ${STEP_MS} ms phase steps...\n`);
+      solution = solver.solve();
+    }
     process.stdout.write(
       `Solved coefficient(s): ${JSON.stringify(solution.condensationParameters)}\n`
       + `One-step rates: ${JSON.stringify(solution.oneStepRates)}\n`
