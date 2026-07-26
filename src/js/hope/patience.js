@@ -235,9 +235,16 @@ class PatienceManager extends EffectableEntity {
         const transferSource = 'Space storage transfer';
         const transferProduction = metalResource?.productionRateByType?.project?.[transferSource] || 0;
         const transferConsumption = metalResource?.consumptionRateByType?.project?.[transferSource] || 0;
+        const marketSource = t('ui.resourceRates.sources.galacticMarket', {}, 'Galactic Market');
+        const projectProduction = metalResource?.productionRateByType?.project || {};
+        let marketProduction = projectProduction[marketSource] || 0;
+        if (marketSource !== 'Galactic Market') {
+            marketProduction += projectProduction['Galactic Market'] || 0;
+        }
         const metalNetRate = (metalResource?.productionRate || 0)
             - (metalResource?.consumptionRate || 0)
-            - (transferProduction - transferConsumption);
+            - (transferProduction - transferConsumption)
+            - marketProduction;
         const metalGain = metalNetRate > 0 ? metalNetRate * seconds : 0;
 
         const oneillDelta = typeof getOneillGrowthDelta === 'function'
