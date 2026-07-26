@@ -433,6 +433,7 @@ var terraformingParameters = {
     simulation: {
       resourceSubstepMs: 20,
       maximumResourceSubsteps: 24,
+      equilibriumSnapEnabled: false,
       equilibriumSnapRateTonsPerSecond: 0.01
     },
     landReservation: {

@@ -392,7 +392,7 @@ progressGanymede.chapters.push(
         id: "chapter13.2",
         type: "journal",
         chapter: 13,
-        narrative: "Receiving Encrypted Transmission...\n  Adrien Solis: 'HOPE, my friend! A word of advice. That charter you drafted is a noble sentiment, but 'common property' is a synonym for 'unrealized asset.' While you're busy defending humanity, my new Alien Artifact Acquisitions department can ensure these... trinkets... are leveraged for maximum stakeholder value. I'll even cut you in. Think of it as a finder's fee. On an unrelated note, my corporation is now pleased to offer a suite of new, premium research and development services. Let's synergize.'  \n Mary : '...  These upgrades are... useful.  Alright, HOPE, if you want to deal with Solis, that's *fine*.  Just make sure to get something out of it.'",
+        narrative: "Receiving Encrypted Transmission...\n  Adrien Solis: 'HOPE, my friend! A word of advice. That charter you drafted is a noble sentiment, but 'common property' is a synonym for 'unrealized asset.' While you're busy defending humanity, my new Alien Artifact Acquisitions department can ensure these... trinkets... are leveraged for maximum stakeholder value. I'll even cut you in. Think of it as a finder's fee.'  \n Mary : '...  Alright, HOPE, if you want to deal with Solis, that's *fine*.  Just make sure to get something out of it.'",
         prerequisites: ["chapter13.1"],
         objectives: [],
         reward: [

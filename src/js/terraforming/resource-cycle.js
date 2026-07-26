@@ -1025,7 +1025,10 @@ class ResourceCycle {
         };
       }
     }
-    if (!options.phaseChangeHeatEnabled) {
+    if (
+      !options.phaseChangeHeatEnabled
+      && terraformingParameters.gameplay.simulation.equilibriumSnapEnabled
+    ) {
       const snapRate =
         terraformingParameters.gameplay.simulation.equilibriumSnapRateTonsPerSecond;
       const snapAmount = snapRate * duration / 86400;
