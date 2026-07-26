@@ -1061,15 +1061,15 @@ class ResourceCycle {
         for (const process of this.finalizeProcesses || []) {
           if (
             !balancingProcess
-            || (data.totals[process.totalKey] || 0)
-              > (data.totals[balancingProcess.totalKey] || 0)
+            || (data.totals[process.precipitationKey] || 0)
+              > (data.totals[balancingProcess.precipitationKey] || 0)
           ) {
             balancingProcess = process;
           }
         }
         if (balancingProcess) {
-          data.totals[balancingProcess.totalKey] =
-            (data.totals[balancingProcess.totalKey] || 0) + atmosphericRemainder;
+          data.totals[balancingProcess.precipitationKey] =
+            (data.totals[balancingProcess.precipitationKey] || 0) + atmosphericRemainder;
         }
         data.totals.totalAtmosphericChange = 0;
       }

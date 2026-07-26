@@ -392,11 +392,10 @@ async function adaptivelyRelaxWorld(
   window,
   maximumSteps,
   threshold,
-  refinementChecks,
-  input = null
+  refinementChecks
 ) {
   const relaxationInput =
-    input || window.eval('JSON.parse(JSON.stringify(currentPlanetParameters))');
+    window.eval('JSON.parse(JSON.stringify(currentPlanetParameters))');
   let reportedRefinements = -1;
   const result = await window.runEquilibration(
     relaxationInput,
