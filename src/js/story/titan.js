@@ -313,6 +313,7 @@ progressTitan.chapters.push(
         onLoad: false
       },
       { target: 'solisManager', type: 'enable' },
+      { target: 'solisManager', type: 'booleanFlag', flagId: 'solisResearchUpgrades', value: true },
       {
         target: 'global',
         type: 'activateSubtab',
