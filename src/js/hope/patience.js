@@ -443,7 +443,6 @@ class PatienceManager extends EffectableEntity {
         if (data.everPossibleSpendGainIds) {
             this.everPossibleSpendGainIds = new Set(data.everPossibleSpendGainIds);
         }
-        this.enforceInfinitePatience();
     }
 
     /**
