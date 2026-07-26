@@ -41,6 +41,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
     this.fractionalCollectors = 0; // Track partial collectors in continuous mode
     this.collectorShortfallLastTick = false;
     this.lastCollectorColonyCost = null;
+    this.lastCollectorStorageCost = null;
   }
 
   getCollectorCost() {
@@ -146,6 +147,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
     const storageProj = this.createSpaceStorageAccess('expansions', { reconcileOnDirectSpend: true });
     const collectorCost = this.getCollectorCost();
     const colonyCost = {};
+    const storageCost = {};
     for (const cat in collectorCost) {
       for (const res in collectorCost[cat]) {
         const amount = collectorCost[cat][res];
@@ -159,7 +161,10 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
             resources[cat][res].decrease(allocation.fromColony);
           }
           if (allocation.fromStorage > 0) {
-            storageProj.spendStoredResource?.(key, allocation.fromStorage);
+            const storageUsed = storageProj.spendStoredResource?.(key, allocation.fromStorage) || 0;
+            if (storageUsed > 0) {
+              storageCost[key] = (storageCost[key] || 0) + storageUsed;
+            }
             storageProj.reconcileUsedStorage?.();
           }
         } else {
@@ -171,6 +176,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
         }
       }
     }
+    this.lastCollectorStorageCost = storageCost;
     return colonyCost;
   }
 
@@ -333,8 +339,10 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
     }
 
     const colonyCost = this.lastCollectorColonyCost || {};
+    const storageCost = this.lastCollectorStorageCost || {};
     const duration = this.collectorDuration;
     const perSecondRate = duration > 0 ? 1000 / duration : 0;
+    const sourceLabel = t('ui.resourceRates.sources.dysonCollector', {}, 'Dyson Collector');
     for (const category in colonyCost) {
       const categoryCost = colonyCost[category];
       for (const resource in categoryCost) {
@@ -344,11 +352,17 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
           if (rateValue > 0) {
             resources[category][resource].modifyRate(
               -rateValue,
-              t('ui.resourceRates.sources.dysonCollector', {}, 'Dyson Collector'),
+              sourceLabel,
               'project'
             );
           }
         }
+      }
+    }
+    for (const resource in storageCost) {
+      const rateValue = storageCost[resource] * perSecondRate;
+      if (applyRates && rateValue > 0) {
+        resources.spaceStorage[resource].modifyRate(-rateValue, sourceLabel, 'project');
       }
     }
     return totals;
@@ -437,6 +451,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
       autoDeployCollectors: this.autoDeployCollectors,
       fractionalCollectors: this.fractionalCollectors,
       lastCollectorColonyCost: this.lastCollectorColonyCost,
+      lastCollectorStorageCost: this.lastCollectorStorageCost,
     };
   }
 
@@ -447,6 +462,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
     this.autoContinuousOperation = state.autoContinuousOperation === true || state.autoDeployCollectors === true;
     this.fractionalCollectors = state.fractionalCollectors || 0;
     this.lastCollectorColonyCost = state.lastCollectorColonyCost || null;
+    this.lastCollectorStorageCost = state.lastCollectorStorageCost || null;
   }
 
   saveTravelState() {
