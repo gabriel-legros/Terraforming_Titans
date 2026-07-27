@@ -648,11 +648,6 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
         source.hydrogenTransferTarget
       );
     }
-    if (!Object.prototype.hasOwnProperty.call(filtered, 'transferWeight')) {
-      filtered.transferWeight = Object.prototype.hasOwnProperty.call(weightSource, resourceKey)
-        ? this.deepClone(weightSource[resourceKey])
-        : 1;
-    }
     if (!Object.prototype.hasOwnProperty.call(filtered, 'mode')
       && Object.prototype.hasOwnProperty.call(source, 'resourceTransferModes')) {
       const transferSource = source.resourceTransferModes || {};
