@@ -232,11 +232,16 @@ class PatienceManager extends EffectableEntity {
         const advancedResearchGain = advancedResearchRate > 0 ? advancedResearchRate * seconds : 0;
 
         const metalResource = colonyResources?.metal;
-        const transferSource = 'Space storage transfer';
-        const transferProduction = metalResource?.productionRateByType?.project?.[transferSource] || 0;
-        const transferConsumption = metalResource?.consumptionRateByType?.project?.[transferSource] || 0;
-        const marketSource = t('ui.resourceRates.sources.galacticMarket', {}, 'Galactic Market');
+        const transferSource = t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer');
         const projectProduction = metalResource?.productionRateByType?.project || {};
+        const projectConsumption = metalResource?.consumptionRateByType?.project || {};
+        let transferProduction = projectProduction[transferSource] || 0;
+        let transferConsumption = projectConsumption[transferSource] || 0;
+        if (transferSource !== 'Space storage transfer') {
+            transferProduction += projectProduction['Space storage transfer'] || 0;
+            transferConsumption += projectConsumption['Space storage transfer'] || 0;
+        }
+        const marketSource = t('ui.resourceRates.sources.galacticMarket', {}, 'Galactic Market');
         let marketProduction = projectProduction[marketSource] || 0;
         if (marketSource !== 'Galactic Market') {
             marketProduction += projectProduction['Galactic Market'] || 0;

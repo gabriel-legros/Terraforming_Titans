@@ -414,7 +414,7 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
         },
         applyRates: true,
         seconds: deltaTime / 1000,
-        rateSourceLabel: 'Dyson Collector'
+        rateSourceLabel: t('ui.resourceRates.sources.dysonCollector', {}, 'Dyson Collector')
       }
     );
     this.collectorShortfallLastTick = result.shortfall;

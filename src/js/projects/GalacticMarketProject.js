@@ -1136,6 +1136,7 @@ class GalacticMarketProject extends Project {
 
   applyActualProductionRateDisplay(actualProductionRates) {
     const touchedResources = {};
+    const rateSource = t('ui.resourceRates.sources.galacticMarket', {}, 'Galactic Market');
 
     this.buySelections.forEach(({ category, resource }) => {
       if (this.isSelectionResourceUnlocked(category, resource)) {
@@ -1161,8 +1162,11 @@ class GalacticMarketProject extends Project {
           resourceObject.productionRateByType.project = {};
         }
         if (rate > 0) {
-          resourceObject.productionRateByType.project['Galactic Market'] = rate;
+          resourceObject.productionRateByType.project[rateSource] = rate;
         } else {
+          delete resourceObject.productionRateByType.project[rateSource];
+        }
+        if (rateSource !== 'Galactic Market') {
           delete resourceObject.productionRateByType.project['Galactic Market'];
         }
         resourceObject.recalculateTotalRates();

@@ -4,7 +4,11 @@ const DEBRIS_DISK_PARAMETERS = terraformingParameters.hazards.debrisDisk;
 const DEBRIS_DISK_STRUCTURE_MINIMUM = BigInt(DEBRIS_DISK_PARAMETERS.structureMinimum);
 const DEBRIS_DISK_AEROSTAT_MINIMUM = BigInt(DEBRIS_DISK_PARAMETERS.aerostatMinimum);
 const DEBRIS_DISK_COLONY_RESOURCE_MINIMUM = DEBRIS_DISK_PARAMETERS.colonyResourceMinimum;
-const DEBRIS_DISK_SPACESHIP_MINING_SOURCE = 'Spaceship Mining';
+const DEBRIS_DISK_SPACESHIP_MINING_SOURCE = t(
+  'ui.projects.spaceship.rateSources.mining',
+  {},
+  'Spaceship Mining'
+);
 const DEBRIS_DISK_DEFAULT_KESSLER_REGENERATION_RATE_PER_BIN_PER_SECOND = DEBRIS_DISK_PARAMETERS.defaultKesslerRegenerationRatePerBinPerSecond;
 
 function normalizeDebrisDiskParameters(parameters = {}) {
@@ -76,7 +80,12 @@ function getDebrisDiskSpaceshipMiningRate(category, resourceKey) {
   if (!resource || !resource.productionRateByType || !resource.productionRateByType.project) {
     return 0;
   }
-  return Math.max(0, resource.productionRateByType.project[DEBRIS_DISK_SPACESHIP_MINING_SOURCE] || 0);
+  const projectRates = resource.productionRateByType.project;
+  let miningRate = projectRates[DEBRIS_DISK_SPACESHIP_MINING_SOURCE] || 0;
+  if (DEBRIS_DISK_SPACESHIP_MINING_SOURCE !== 'Spaceship Mining') {
+    miningRate += projectRates['Spaceship Mining'] || 0;
+  }
+  return Math.max(0, miningRate);
 }
 
 function getDebrisDiskPositiveAccumulatedChange(accumulatedChanges, category, resourceKey) {
@@ -93,8 +102,11 @@ function getDebrisDiskMinedResourceAmount(category, resourceKey, seconds, accumu
 }
 
 function getDebrisDiskPlanetaryMassImportAmount(accumulatedSpecialChanges, materialKey) {
-  const imports = accumulatedSpecialChanges?.planetaryMassImports?.[DEBRIS_DISK_SPACESHIP_MINING_SOURCE];
-  const amount = imports?.materials?.[materialKey] || 0;
+  const imports = accumulatedSpecialChanges?.planetaryMassImports || {};
+  let amount = imports[DEBRIS_DISK_SPACESHIP_MINING_SOURCE]?.materials?.[materialKey] || 0;
+  if (DEBRIS_DISK_SPACESHIP_MINING_SOURCE !== 'Spaceship Mining') {
+    amount += imports['Spaceship Mining']?.materials?.[materialKey] || 0;
+  }
   return Math.max(0, amount);
 }
 
