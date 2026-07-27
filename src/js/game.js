@@ -842,10 +842,7 @@ function updateLogic(delta, realDelta = delta) {
     milestonesManager.update(delta);
   }
 
-  // **** Update the Story Manager ****
-  // This will check objectives for active events, process completions,
-  // apply rewards, and check for/activate newly available events.
-  storyManager.update(); // <--- NEW CENTRAL UPDATE CALL
+  storyManager.update();
   achievementManager.update();
 
   recalculateTotalRates();
@@ -940,69 +937,6 @@ function updateRender(force = false, options = {}) {
       // Ensure the visualizer resizes once the tab becomes visible
       if (!suppressPlanetVisualizerRuntime && typeof window !== 'undefined' && window.planetVisualizer && typeof window.planetVisualizer.onResize === 'function') {
         window.planetVisualizer.onResize();
-      }
-    }
-
-    // Push world coverage to the visualizer for shading/tinting
-    if (!suppressPlanetVisualizerRuntime && typeof window !== 'undefined' && window.planetVisualizer) {
-      try {
-        const pv = window.planetVisualizer;
-        const mode = pv?.debug?.mode || 'game';
-        if (mode !== 'debug') {
-          // Global coverages for tinting
-          const waterFrac = calculateAverageCoverage(terraforming, 'liquidWater') || 0;
-          const lifeFrac = calculateAverageCoverage(terraforming, 'biomass') || 0;
-          const pct = (x) => Math.max(0, Math.min(100, x * 100));
-          pv.viz.coverage.water = pct(waterFrac);
-          pv.viz.coverage.life = pct(lifeFrac);
-          const cloudFrac = Number.isFinite(terraforming?.luminosity?.cloudFraction)
-            ? Math.max(0, Math.min(1, terraforming.luminosity.cloudFraction))
-            : waterFrac;
-          pv.viz.coverage.cloud = pct(cloudFrac);
-          pv.viz.coverage.ecumenopolis = GAME_FEATURES.steamExclusiveEcumenopolisVisualizer
-            ? pct(getEcumenopolisLandFraction(terraforming))
-            : 0;
-          pv.viz.coverage.nanoworld = projectManager.projects.nanoworld.isCompleted ? 100 : 0;
-
-          // Zonal coverages for rendering bands
-          const zones = ['tropical', 'temperate', 'polar'];
-          const zonal = {};
-          let hazardousLifeSum = 0;
-          let zoneWeightSum = 0;
-          for (const z of zones) {
-            // Returns fractions 0..1
-            const f = calculateZonalSurfaceFractions(terraforming, z);
-            const hazardousLife = Math.max(0, Math.min(1, terraforming.zonalCoverageCache[z]?.hazardousBiomass || 0));
-            const zoneWeight = terraforming.getZoneWeight ? terraforming.getZoneWeight(z) : getZonePercentage(z);
-            hazardousLifeSum += hazardousLife * zoneWeight;
-            zoneWeightSum += zoneWeight;
-            zonal[z] = {
-              water: Math.max(0, Math.min(1, f.ocean || 0)),
-              ice: Math.max(0, Math.min(1, f.ice || 0)),
-              life: Math.max(0, Math.min(1, f.biomass || 0)),
-              hazardousLife,
-            };
-          }
-          if (
-            spaceManager.getCurrentPlanetKey() === 'earth' &&
-            earthManager &&
-            earthManager.enabled &&
-            earthManager.getActionCount('addWater') >= EARTH_RECONSTRUCTION_MAX_WATER_STEPS
-          ) {
-            zonal.tropical.water = 0.71;
-            zonal.temperate.water = 0.70;
-          }
-          pv.viz.coverage.hazardousLife = pct(zoneWeightSum > 0 ? hazardousLifeSum / zoneWeightSum : 0);
-          pv.viz.zonalCoverage = zonal;
-          if (typeof pv.setBaseColor === 'function') {
-            const baseColor = pv.getGameBaseColor
-              ? pv.getGameBaseColor()
-              : currentPlanetParameters?.visualization?.baseColor;
-            pv.setBaseColor(baseColor, { fromGame: true });
-          }
-        }
-      } catch (e) {
-        // Non-fatal if terraforming utilities are not ready yet
       }
     }
 
