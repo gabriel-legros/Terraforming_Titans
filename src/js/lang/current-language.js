@@ -5398,7 +5398,7 @@ setLanguageData({
           allFiveHazards: 'All five hazard systems are active on this world.',
           allSixHazards: 'Features all hazards and even a new horrible one.',
           teleportersDisabled: 'The 100Q advanced research is disabled.',
-          startingResearchWarning: 'You may need at least 1M starting research from Solis to acquire some critical researches.',
+          startingResearchWarning: 'You may need at least 1M starting research from Solis to acquire some critical researches.  Chemical reactor research also enables pyrolyzers.',
           powerfulFeaturesLimited: 'Many other powerful features are disabled or limited.',
         },
         rewards: {
