@@ -173,11 +173,17 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
   }
 
   getExportRateLabel() {
-    return this.getSpaceDisposalText('ui.projects.spaceDisposal.resourceDisposal', 'Resource Disposal');
+    return registerRateSource(
+      'project:resourceDisposal',
+      this.getSpaceDisposalText('ui.projects.spaceDisposal.resourceDisposal', 'Resource Disposal')
+    );
   }
 
   getCostRateLabel() {
-    return this.getSpaceDisposalText('ui.projects.spaceDisposal.resourceDisposal', 'Resource Disposal');
+    return registerRateSource(
+      'project:resourceDisposal',
+      this.getSpaceDisposalText('ui.projects.spaceDisposal.resourceDisposal', 'Resource Disposal')
+    );
   }
 
   getDefaultDisposalSelection() {

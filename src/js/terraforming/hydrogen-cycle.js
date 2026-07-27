@@ -359,12 +359,20 @@
       terraforming.flowHydrogenShiftRate = flowShiftRate;
 
       if (evaporationRate > 0) {
-        const evaporationSource = t('ui.resourceRates.sources.evaporation', {}, 'Evaporation');
+        const evaporationSource = getLocalizedRateSource(
+          'terraforming:hydrogenEvaporation',
+          'ui.resourceRates.sources.evaporation',
+          'Evaporation'
+        );
         resources.atmospheric.hydrogen?.modifyRate(evaporationRate, evaporationSource, 'terraforming');
         resources.surface.liquidHydrogen?.modifyRate(-evaporationRate, evaporationSource, 'terraforming');
       }
       if (condensationRate > 0) {
-        const condensationSource = t('ui.resourceRates.sources.condensation', {}, 'Condensation');
+        const condensationSource = getLocalizedRateSource(
+          'terraforming:hydrogenCondensation',
+          'ui.resourceRates.sources.condensation',
+          'Condensation'
+        );
         resources.atmospheric.hydrogen?.modifyRate(-condensationRate, condensationSource, 'terraforming');
         resources.surface.liquidHydrogen?.modifyRate(condensationRate, condensationSource, 'terraforming');
       }

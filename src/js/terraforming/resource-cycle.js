@@ -73,6 +73,7 @@ function localizeRateMappings(rateMappings) {
       if (labelKey) {
         mapping.label = t(`ui.terraforming.cycleLabels.${labelKey}`, {}, mapping.label);
       }
+      mapping.sourceId = `terraforming:${labelKey || totalKey}`;
     }
   }
   return rateMappings;
@@ -1110,7 +1111,11 @@ class ResourceCycle {
       for (const map of mappings) {
         const resource = map.path.split('.').reduce((obj, k) => (obj ? obj[k] : undefined), terraforming.resources);
         if (resource && typeof resource.modifyRate === 'function') {
-          resource.modifyRate(rate * (map.sign ?? 1), map.label || capKey, rateType);
+          resource.modifyRate(
+            rate * (map.sign ?? 1),
+            registerRateSource(map.sourceId, map.label || capKey),
+            rateType
+          );
         }
       }
     }

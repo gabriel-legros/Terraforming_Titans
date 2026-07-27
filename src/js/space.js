@@ -258,7 +258,7 @@ class SpaceManager extends EffectableEntity {
         const growth = this.galacticPopulation * this.galacticPopulationGrowthRate * capacityFactor * seconds;
         resources.special.galacticPopulation.modifyRate(
             growth / seconds,
-            t('ui.resourceRates.sources.galacticNaturalGrowth', {}, 'Natural growth'),
+            getLocalizedRateSource('population:galacticNaturalGrowth', 'ui.resourceRates.sources.galacticNaturalGrowth', 'Natural growth'),
             'population'
         );
         this.nonBirchGalacticPopulation = Math.max(

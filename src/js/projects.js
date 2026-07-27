@@ -149,6 +149,10 @@ class Project extends EffectableEntity {
 
   applyEffects() {}
 
+  getRateSource() {
+    return registerRateSource(`project:${this.name}`, this.displayName);
+  }
+
 
   getKesslerSuccessChance() {
     if (!this.kesslerDebrisSize) {
@@ -587,7 +591,7 @@ class Project extends EffectableEntity {
           res.decrease(totalCost);
         }
         if (res.modifyRate && this.showsInResourcesRate()) {
-          res.modifyRate(-rate, this.displayName, 'project');
+          res.modifyRate(-rate, this.getRateSource(), 'project');
         }
       }
     }
@@ -892,7 +896,7 @@ class Project extends EffectableEntity {
             if (colonyRate > 0) {
               resources[category][resource].modifyRate(
                 -colonyRate,
-                this.displayName,
+                this.getRateSource(),
                 'project'
               );
             }
@@ -900,7 +904,7 @@ class Project extends EffectableEntity {
             if (storageRate > 0) {
               resources?.spaceStorage?.[key]?.modifyRate?.(
                 -storageRate,
-                this.displayName,
+                this.getRateSource(),
                 'project'
               );
             }
@@ -919,7 +923,7 @@ class Project extends EffectableEntity {
             if (applyRates && resources[category] && resources[category][resource] && this.showsInResourcesRate()) {
               resources[category][resource].modifyRate(
                 rateValue,
-                this.displayName,
+                this.getRateSource(),
                 'project'
               );
             }

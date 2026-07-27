@@ -34,7 +34,10 @@ class StellarEngineProject extends ArtificialSkyProject {
   }
 
   getCostRateLabel() {
-    return getStellarEngineText('costRateLabel', null, 'Stellar Engine');
+    return registerRateSource(
+      'project:stellarEngine:cost',
+      getStellarEngineText('costRateLabel', null, 'Stellar Engine')
+    );
   }
 
   isSpaceMirrorFacilityLocked() {
@@ -290,7 +293,10 @@ class StellarEngineProject extends ArtificialSkyProject {
     const seconds = deltaTime / 1000;
     const perSecond = this.getConfig().decayPerSecond || 0.10;
     const fraction = Math.max(0, perSecond * intensity * seconds);
-    const source = getStellarEngineText('eventName', null, 'Chaotic stellar flux');
+    const source = registerRateSource(
+      'project:stellarEngine:chaoticFlux',
+      getStellarEngineText('eventName', null, 'Chaotic stellar flux')
+    );
     this.currentAttritionSeconds = seconds;
     this.applyResourceAttrition(resources.colony.colonists, fraction, source, 'population');
     this.applyResourceAttrition(resources.colony.androids, fraction, source, 'project');

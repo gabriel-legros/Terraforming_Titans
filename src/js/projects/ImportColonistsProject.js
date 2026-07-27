@@ -400,7 +400,7 @@ class ImportColonistsProject extends Project {
         );
         resources.special.galacticPopulation.modifyRate(
           -(galacticWithdrawal / seconds),
-          this.displayName,
+          this.getRateSource(),
           'project'
         );
       }
@@ -417,14 +417,14 @@ class ImportColonistsProject extends Project {
     if (target === 'crusaders') {
       totals.special = { crusaders: amount };
       if (applyRates && this.showsInResourcesRate()) {
-        resources.special.crusaders.modifyRate(amount / (deltaTime / 1000), this.displayName, 'project');
+        resources.special.crusaders.modifyRate(amount / (deltaTime / 1000), this.getRateSource(), 'project');
       }
       return totals;
     }
 
     totals.colony = { colonists: amount };
     if (applyRates && this.showsInResourcesRate()) {
-      resources.colony.colonists.modifyRate(amount / (deltaTime / 1000), this.displayName, 'project');
+      resources.colony.colonists.modifyRate(amount / (deltaTime / 1000), this.getRateSource(), 'project');
       if (gameSettings.immigrationPool) {
         const galacticWithdrawal = Math.min(
           amount,
@@ -432,7 +432,7 @@ class ImportColonistsProject extends Project {
         );
         resources.special.galacticPopulation.modifyRate(
           -(galacticWithdrawal / (deltaTime / 1000)),
-          this.displayName,
+          this.getRateSource(),
           'project'
         );
       }

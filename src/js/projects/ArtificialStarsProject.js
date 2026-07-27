@@ -217,8 +217,8 @@ class ArtificialStarsProject extends NuclearAlchemyFurnaceProject {
     const hydrogenRate = plan.finalHydrogen / seconds;
     const outputRate = plan.finalOutput / seconds;
 
-    resources.spaceStorage.hydrogen.modifyRate(-hydrogenRate, this.displayName, 'project');
-    resources.space.energy.modifyRate(outputRate, this.displayName, 'project');
+    resources.spaceStorage.hydrogen.modifyRate(-hydrogenRate, this.getRateSource(), 'project');
+    resources.space.energy.modifyRate(outputRate, this.getRateSource(), 'project');
 
     this.setLastRunStats(outputRate, { energy: outputRate }, hydrogenRate);
     this.updateStatus(this.getText('status.running', null, 'Running'));
@@ -243,8 +243,8 @@ class ArtificialStarsProject extends NuclearAlchemyFurnaceProject {
     }
 
     if (applyRates) {
-      resources.spaceStorage.hydrogen.modifyRate(-(plan.finalHydrogen / seconds), this.displayName, 'project');
-      resources.space.energy.modifyRate(plan.finalOutput / seconds, this.displayName, 'project');
+      resources.spaceStorage.hydrogen.modifyRate(-(plan.finalHydrogen / seconds), this.getRateSource(), 'project');
+      resources.space.energy.modifyRate(plan.finalOutput / seconds, this.getRateSource(), 'project');
     }
 
     totals.cost.spaceStorage ||= {};

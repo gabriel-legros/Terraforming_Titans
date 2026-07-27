@@ -11,10 +11,13 @@ class AerostatStructuralNetProject extends ArtificialSkyProject {
   }
 
   getCostRateLabel() {
-    return t(
-      'ui.projects.aerostatStructuralNet.costRateLabel',
-      null,
-      'Aerostat Structural Net'
+    return registerRateSource(
+      `project:${this.name}:cost`,
+      t(
+        'ui.projects.aerostatStructuralNet.costRateLabel',
+        null,
+        'Aerostat Structural Net'
+      )
     );
   }
 

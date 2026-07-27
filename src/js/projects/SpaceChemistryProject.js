@@ -327,7 +327,7 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
   }
 
   getExpansionRateSourceLabel() {
-    return `${this.displayName} expansion`;
+    return registerRateSource(`project:${this.name}:expansion`, `${this.displayName} expansion`);
   }
 
   getOperationNoteText() {
@@ -379,7 +379,7 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
     if (!(rate !== 0)) {
       return;
     }
-    resources[category][resourceKey].modifyRate(rate, this.displayName, 'project');
+    resources[category][resourceKey].modifyRate(rate, this.getRateSource(), 'project');
   }
 
   getRecipeOperationProductivity(key, productivity = 1) {

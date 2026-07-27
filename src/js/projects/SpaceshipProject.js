@@ -31,7 +31,7 @@ function applySpecialProjectResourceGain(project, category, resource, amount, so
     return false;
   }
   addDynamicWorldPlanetaryMaterial(terraforming, material, amount);
-  modifyPlanetaryMassRate(amount, source || getSpaceshipProjectText('ui.projects.export', 'Spaceship Export'));
+  modifyPlanetaryMassRate(amount, source || project.getExportRateLabel('Spaceship Export'));
   terraforming.refreshDynamicWorldGeometry(currentPlanetParameters);
   reconcileLandResourceValue();
   return true;
@@ -243,7 +243,7 @@ class SpaceshipProject extends Project {
   reportKesslerDebrisRate(amount, seconds, sourceName) {
     const rate = amount / seconds;
     try {
-      const source = sourceName || this.displayName || this.name;
+      const source = sourceName || this.getRateSource();
       resources.special.orbitalDebris.modifyRate(rate, source, 'project');
     } catch (error) {
       // no-op
@@ -343,11 +343,17 @@ class SpaceshipProject extends Project {
 
   getExportRateLabel(baseLabel) {
     const key = baseLabel === 'Spaceship Mining' ? 'mining' : 'export';
-    return getSpaceshipProjectText(`ui.projects.spaceship.rateSources.${key}`, baseLabel);
+    return registerRateSource(
+      key === 'mining' ? RESOURCE_RATE_SOURCE_IDS.spaceshipMining : RESOURCE_RATE_SOURCE_IDS.spaceshipExport,
+      getSpaceshipProjectText(`ui.projects.spaceship.rateSources.${key}`, baseLabel)
+    );
   }
 
   getCostRateLabel() {
-    return getSpaceshipProjectText('ui.projects.spaceship.costLabel', 'Spaceship Cost');
+    return registerRateSource(
+      RESOURCE_RATE_SOURCE_IDS.spaceshipCost,
+      getSpaceshipProjectText('ui.projects.spaceship.costLabel', 'Spaceship Cost')
+    );
   }
 
   assignSpaceships(count) {

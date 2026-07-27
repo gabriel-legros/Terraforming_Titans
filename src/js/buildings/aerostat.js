@@ -506,7 +506,7 @@ class Aerostat extends BaseColony {
       (accumulatedChanges.colony.research || 0) - additionalResearchUpkeep;
     resources.colony.research.modifyRate(
       -(additionalResearchUpkeep * (1000 / deltaTime)),
-      this.displayName,
+      this.getRateSource(),
       'building'
     );
     accumulatedMaintenance.research =
@@ -1183,7 +1183,7 @@ class Aerostat extends BaseColony {
       (accumulatedChanges.colony.energy || 0) - scaledConsumption;
     resources.colony.energy.modifyRate(
       -(scaledConsumption * (1000 / deltaTime)),
-      this.displayName,
+      this.getRateSource(),
       'building'
     );
   }

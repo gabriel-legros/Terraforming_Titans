@@ -4,7 +4,10 @@ const PULSAR_STORM_DEFAULT_DURATION_SECONDS = PULSAR_PARAMETERS.stormDefaultDura
 const PULSAR_STORM_ANDROID_ATTRITION_RATE = PULSAR_PARAMETERS.androidAttritionRate;
 const PULSAR_STORM_ELECTRONICS_ATTRITION_RATE = PULSAR_PARAMETERS.electronicsAttritionRate;
 const PULSAR_STORM_NANOBOT_ATTRITION_RATE = PULSAR_PARAMETERS.nanobotAttritionRate;
-const PULSAR_STORM_EFFECT_LABEL = t('ui.terraforming.hazardEffects.electromagneticStorm', {}, 'Electromagnetic Storm');
+const PULSAR_STORM_EFFECT_LABEL = registerRateSource(
+  'hazard:electromagneticStorm',
+  t('ui.terraforming.hazardEffects.electromagneticStorm', {}, 'Electromagnetic Storm')
+);
 const PULSAR_RADIATION_EFFECT_ID = 'pulsar-hazard-radiation-dose';
 const PULSAR_RADIATION_EFFECT_SOURCE_ID = 'pulsar-hazard-radiation-dose';
 const PULSAR_MIRROR_LOCKOUT_SOURCE_ID = 'pulsar-hazard-mirror-lockout';

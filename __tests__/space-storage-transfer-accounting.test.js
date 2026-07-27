@@ -33,6 +33,10 @@ function createResource(value = 0, cap = Infinity) {
 function loadSpaceStorageProjectClass() {
   jest.resetModules();
   const originalGlobals = {};
+  const {
+    RESOURCE_RATE_SOURCE_IDS,
+    registerRateSource,
+  } = require(path.resolve(__dirname, '../src/js/rate-sources.js'));
 
   class MockSpaceshipProject {}
   class MockContinuousExpansionProject {}
@@ -66,6 +70,8 @@ function loadSpaceStorageProjectClass() {
 
   setGlobal('SpaceshipProject', MockSpaceshipProject, originalGlobals);
   setGlobal('ContinuousExpansionProject', MockContinuousExpansionProject, originalGlobals);
+  setGlobal('RESOURCE_RATE_SOURCE_IDS', RESOURCE_RATE_SOURCE_IDS, originalGlobals);
+  setGlobal('registerRateSource', registerRateSource, originalGlobals);
   setGlobal('MEGA_PROJECT_RESOURCE_MODES', { SPACE_FIRST: 'space-first' }, originalGlobals);
   setGlobal('resources', {}, originalGlobals);
 
@@ -105,8 +111,8 @@ describe.skip('Space Storage transfer accounting', () => {
     expect(spaceStorage.autoStart).toBe(false);
     expect(spaceStorage.shipTransferMode).toBe('withdraw');
     expect(spaceStorage.shipOperationIsActive).toBe(true);
-    expect(energyProjectConsumption['Space storage transfer']).toBeGreaterThan(0);
-    expect(metalProjectProduction['Space storage transfer']).toBeGreaterThan(0);
+    expect(energyProjectConsumption['project:spaceStorageTransfer']).toBeGreaterThan(0);
+    expect(metalProjectProduction['project:spaceStorageTransfer']).toBeGreaterThan(0);
 
     dom.window.close();
   }, 40000);
@@ -187,10 +193,10 @@ describe.skip('Space Storage transfer accounting', () => {
     expect(resources.colony.energy.value).toBe(130);
     expect(resources.colony.metal.value).toBe(57.5);
     expect(resources.colony.energy.rateEntries).toEqual([
-      { amount: 3, source: 'Space storage transfer', type: 'project' }
+      { amount: 3, source: 'project:spaceStorageTransfer', type: 'project' }
     ]);
     expect(resources.colony.metal.rateEntries).toEqual([
-      { amount: 0.75, source: 'Space storage transfer', type: 'project' }
+      { amount: 0.75, source: 'project:spaceStorageTransfer', type: 'project' }
     ]);
 
     resources = originalResources;

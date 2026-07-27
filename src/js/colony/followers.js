@@ -1423,7 +1423,11 @@ class FollowersManager extends EffectableEntity {
       }
       targetResource.modifyRate(
         rate,
-        t('ui.colony.followers.orbitals.rateSource', {}, 'Orbital'),
+        getLocalizedRateSource(
+          'followers:orbitals',
+          'ui.colony.followers.orbitals.rateSource',
+          'Orbital'
+        ),
         'followers'
       );
     }

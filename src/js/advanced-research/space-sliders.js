@@ -135,7 +135,11 @@ function updateSpaceSliders(deltaTime, { space, accumulatedChanges, forcedProduc
   const tick = getCylindersHopeTick(space);
   if (runtime.actualTotal > 0) {
     accumulatedChanges.space.energy -= runtime.actualTotal;
-    resources.space.energy.modifyRate(-runtime.actualPerSecond, t('ui.resourceRates.sources.oneillCylinders', {}, "O'Neill Cylinders"), 'project');
+    resources.space.energy.modifyRate(
+      -runtime.actualPerSecond,
+      getLocalizedRateSource('project:oneillCylinders', 'ui.resourceRates.sources.oneillCylinders', "O'Neill Cylinders"),
+      'project'
+    );
   }
   if (space?.setSpaceSliderRuntimeData) {
     space.setSpaceSliderRuntimeData('cylindersHope', {
@@ -158,7 +162,7 @@ function createCylindersHopeProductivityOperation(space) {
     applyProjectedRates() {
       resources.space.energy.modifyRate(
         -desiredPerSecond,
-        t('ui.resourceRates.sources.oneillCylinders', {}, "O'Neill Cylinders"),
+        getLocalizedRateSource('project:oneillCylinders', 'ui.resourceRates.sources.oneillCylinders', "O'Neill Cylinders"),
         'project'
       );
     },

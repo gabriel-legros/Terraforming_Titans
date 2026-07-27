@@ -1383,11 +1383,17 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
   }
 
   getExpansionRateSourceLabel() {
-    return getLiftersProjectText('rateSources.expansion', null, 'Lifter expansion');
+    return registerRateSource(
+      'project:lifters:expansion',
+      getLiftersProjectText('rateSources.expansion', null, 'Lifter expansion')
+    );
   }
 
   getOperationRateSourceLabel() {
-    return getLiftersProjectText('rateSources.operation', null, 'Lifting');
+    return registerRateSource(
+      'project:lifters:operation',
+      getLiftersProjectText('rateSources.operation', null, 'Lifting')
+    );
   }
 
   shouldKeepRunningOnTravel() {

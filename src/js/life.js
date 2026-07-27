@@ -1234,7 +1234,9 @@ class LifeManager extends EffectableEntity {
     const design = lifeDesigner.currentDesign;
     const baseGrowthRate = Number(design.getBaseGrowthRate());
     const requirements = getActiveLifeDesignRequirements();
-    const process = getActiveLifeMetabolismProcess();
+    const metabolism = requirements.metabolism ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.metabolism;
+    const processId = metabolism.primaryProcessId ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.metabolism.primaryProcessId;
+    const process = metabolism.processes[processId] ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.metabolism.processes.photosynthesis;
     const growthPerBiomass = process.growth.perBiomass;
     const decayPerBiomass = process.decay.perBiomass;
     const liquidRequirementKeys = Object.entries(growthPerBiomass.surface || {})
@@ -1261,9 +1263,15 @@ class LifeManager extends EffectableEntity {
       && (decayPerBiomass.atmospheric?.oxygen || 0) < 0
       && getAtmosphericAvailable('oxygen') <= 0;
     const processName = process.displayName || getLifeText('ui.life.photosynthesis', 'Photosynthesis');
-    const growthReason = processName;
-    const decayReason = getLifeText('ui.life.rateLabels.processDecay', '{name} Decay', { name: processName });
-    const naturalDecayReason = getLifeText('ui.life.rateLabels.naturalDecay', 'Natural Biomass Decay');
+    const growthReason = registerRateSource(`life:process:${processId}:growth`, processName);
+    const decayReason = registerRateSource(
+      `life:process:${processId}:decay`,
+      getLifeText('ui.life.rateLabels.processDecay', '{name} Decay', { name: processName })
+    );
+    const naturalDecayReason = registerRateSource(
+      'life:naturalDecay',
+      getLifeText('ui.life.rateLabels.naturalDecay', 'Natural Biomass Decay')
+    );
     const usesLuminosity = process.growth.usesLuminosity === true;
     const secondsMultiplier = deltaTime / 1000;
     const yggieGrowthController = this.getYggieGrowthController();
@@ -1926,7 +1934,11 @@ class LifeManager extends EffectableEntity {
       terraforming.zonalSurface[zoneName].biomass -= overflowDecay;
       biomassDyingChangeByZone[zoneName] -= overflowDecay;
       if (secondsMultiplier > 0 && overflowDecay > 1e-9) {
-        resources.surface.biomass.modifyRate(-overflowDecay / secondsMultiplier, t('ui.resourceRates.sources.lifeDensityDecay', {}, 'Life Density Decay'), 'life');
+        resources.surface.biomass.modifyRate(
+          -overflowDecay / secondsMultiplier,
+          getLocalizedRateSource('life:densityDecay', 'ui.resourceRates.sources.lifeDensityDecay', 'Life Density Decay'),
+          'life'
+        );
       }
     });
 
@@ -2055,7 +2067,10 @@ class LifeManager extends EffectableEntity {
       });
 
       if (totalConvertedBiomass > 1e-9) {
-        const bioshipsReason = getLifeText('ui.lifeDesigner.attributes.bioships.rateReason', 'Bioships');
+        const bioshipsReason = registerRateSource(
+          'life:bioships',
+          getLifeText('ui.lifeDesigner.attributes.bioships.rateReason', 'Bioships')
+        );
         const producedSpaceships = totalConvertedBiomass / BIOSHIP_BIOMASS_PER_SPACESHIP;
         resources.surface.biomass.modifyRate(-totalConvertedBiomass / secondsMultiplier, bioshipsReason, 'life');
         resources.special.spaceships.modifyRate(producedSpaceships / secondsMultiplier, bioshipsReason, 'life');
@@ -2083,11 +2098,15 @@ class LifeManager extends EffectableEntity {
           if (burialAmount > 1e-9) { // Only apply if significant
             terraforming.zonalSurface[zoneName].biomass -= burialAmount;
             if (resources.surface.biomass) {
-              resources.surface.biomass.modifyRate(-burialAmount / secondsMultiplier, t('ui.resourceRates.sources.geologicalBurial', {}, 'Geological Burial'), 'life');
+              resources.surface.biomass.modifyRate(
+                -burialAmount / secondsMultiplier,
+                getLocalizedRateSource('life:geologicalBurial', 'ui.resourceRates.sources.geologicalBurial', 'Geological Burial'),
+                'life'
+              );
             }
             accumulateSpecialPlanetaryMassImport(
               accumulatedSpecialChanges,
-              t('ui.resourceRates.sources.geologicalBurial', {}, 'Geological Burial'),
+              getLocalizedRateSource('life:geologicalBurial', 'ui.resourceRates.sources.geologicalBurial', 'Geological Burial'),
               'organic',
               burialAmount,
               true,
@@ -2105,7 +2124,11 @@ class LifeManager extends EffectableEntity {
 
       if (foodResource && biomassAmount > 0) {
         const foodPerSecond = biomassAmount * 0.01;
-        foodResource.modifyRate(foodPerSecond, t('ui.resourceRates.sources.surfaceBiomass', {}, 'Surface Biomass'), 'life');
+        foodResource.modifyRate(
+          foodPerSecond,
+          getLocalizedRateSource('life:surfaceBiomass', 'ui.resourceRates.sources.surfaceBiomass', 'Surface Biomass'),
+          'life'
+        );
 
         if (secondsMultiplier > 0) {
           foodResource.increase(foodPerSecond * secondsMultiplier);

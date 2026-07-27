@@ -1,5 +1,13 @@
 const originalT = global.t;
+const originalRegisterRateSource = global.registerRateSource;
+const originalGetLocalizedRateSource = global.getLocalizedRateSource;
 global.t = (path, vars, fallback) => fallback;
+const {
+  registerRateSource,
+  getLocalizedRateSource,
+} = require('../src/js/rate-sources.js');
+global.registerRateSource = registerRateSource;
+global.getLocalizedRateSource = getLocalizedRateSource;
 
 const { KesslerHazard } = require('../src/js/terraforming/hazards/kesslerHazard.js');
 const { JSDOM } = require('jsdom');
@@ -81,6 +89,8 @@ describe('Kessler drag line altitude for low-pressure water-only atmospheres', (
 
   afterAll(() => {
     global.t = originalT;
+    global.registerRateSource = originalRegisterRateSource;
+    global.getLocalizedRateSource = originalGetLocalizedRateSource;
   });
 
   afterEach(() => {
@@ -196,11 +206,17 @@ describe('Kessler decay-rate display', () => {
     formatNumber: global.formatNumber,
     formatScientific: global.formatScientific,
     hazardManager: global.hazardManager,
+    getLocalizedRateSource: global.getLocalizedRateSource,
+    registerRateSource: global.registerRateSource,
     resources: global.resources,
     t: global.t,
     terraforming: global.terraforming,
     window: global.window
   };
+
+  beforeEach(() => {
+    Object.assign(global, originalGlobals);
+  });
 
   afterEach(() => {
     Object.assign(global, originalGlobals);
@@ -223,7 +239,7 @@ describe('Kessler decay-rate display', () => {
     const terraforming = createTerraformingForWaterPressurePa(100);
     let resourceDecayRate = 0;
     terraforming.resources.special.orbitalDebris.modifyRate = (value, source, type) => {
-      if (source === 'Debris decay' && type === 'hazard') {
+      if (source === 'hazard:kesslerDebrisDecay' && type === 'hazard') {
         resourceDecayRate = -value;
       }
     };

@@ -144,6 +144,10 @@ function createResources(initial = {}) {
 }
 
 function addProjectedRateMethods(building) {
+  building.getRateSource = function() {
+    const sourceName = this.name || this.displayName || 'testBuilding';
+    return registerRateSource(`building:${sourceName}`, this.displayName || sourceName);
+  };
   building.getProjectedProductionRate = function(category, resource, options = {}) {
     const automationMultiplier = options.automationMultiplier !== undefined
       ? options.automationMultiplier
@@ -412,6 +416,9 @@ function createDysonCollectorProject(collectorPowerPerSecond = 0) {
     autoStart: false,
     operationPreRunThisTick: false,
     unlocked: true,
+    getRateSource() {
+      return registerRateSource(`project:${this.name}`, this.displayName);
+    },
     collectors: collectorPowerPerSecond > 0 ? 1 : 0,
     energyPerCollector: collectorPowerPerSecond,
     isPermanentlyDisabled() {
@@ -458,6 +465,9 @@ function createSpaceEnergyDrainProject(energyPerSecond = 0, name = 'Dyson Receiv
     autoStart: false,
     operationPreRunThisTick: false,
     unlocked: true,
+    getRateSource() {
+      return registerRateSource(`project:${this.name}`, this.displayName);
+    },
     isPermanentlyDisabled() {
       return false;
     },
@@ -488,10 +498,15 @@ function createSpaceEnergyDrainProject(energyPerSecond = 0, name = 'Dyson Receiv
 
 function createSpaceStorageProject(resources) {
   return {
+    name: 'spaceStorage',
+    displayName: 'Space Storage',
     megaProjectResourceMode: 'spaceFirst',
     maxStorage: resources._spaceStorageMaxStorage ?? Infinity,
     usedStorage: 0,
     resourceStrategicReserves: {},
+    getRateSource() {
+      return registerRateSource(`project:${this.name}`, this.displayName);
+    },
     isPermanentlyDisabled() {
       return false;
     },
@@ -812,6 +827,10 @@ function setupHarness(initialStorage = {}) {
     getEffectiveCostMultiplier() {
       return 1;
     }
+
+    getRateSource() {
+      return registerRateSource(`project:${this.name}`, this.displayName);
+    }
   }
 
   class BaseProject extends EffectableEntity {
@@ -1016,6 +1035,19 @@ function setupHarness(initialStorage = {}) {
   const { Project } = require(path.resolve(__dirname, '../src/js/projects.js'));
   setGlobal('Project', Project, originalGlobals);
   const resourceModule = require(path.resolve(__dirname, '../src/js/resource.js'));
+  setGlobal('RESOURCE_RATE_SOURCE_IDS', resourceModule.RESOURCE_RATE_SOURCE_IDS, originalGlobals);
+  setGlobal('registerRateSource', resourceModule.registerRateSource, originalGlobals);
+  setGlobal('getLocalizedRateSource', resourceModule.getLocalizedRateSource, originalGlobals);
+  [
+    MockDemandProject,
+    MockColonyMetalDemandProject,
+    MockProductionProject,
+    MockClampedContinuousEnergyProject,
+  ].forEach((ProjectType) => {
+    ProjectType.prototype.getRateSource = function() {
+      return registerRateSource(`project:${this.name}`, this.displayName);
+    };
+  });
   jest.doMock(path.resolve(__dirname, '../src/js/projects/SpecializationProject.js'), () => ({
     SpecializationProject,
   }));
@@ -1869,9 +1901,9 @@ describe('Space building productivity via produceResources', () => {
     expectApprox(resources.space.energy.value, 0);
     expectApprox(resources.spaceStorage.graphite.value, unitRate * expectedProductivity * (12 / 28));
     expectApprox(resources.spaceStorage.oxygen.value, unitRate * expectedProductivity * (16 / 28));
-    expectApprox(resources.space.energy.projectedConsumptionRateBySource['White Dwarf Harvesting'] || 0, initialEnergy);
-    expectApprox(resources.spaceStorage.graphite.projectedProductionRateBySource['White Dwarf Harvesting'] || 0, unitRate * expectedProductivity * (12 / 28));
-    expectApprox(resources.spaceStorage.oxygen.projectedProductionRateBySource['White Dwarf Harvesting'] || 0, unitRate * expectedProductivity * (16 / 28));
+    expectApprox(resources.space.energy.projectedConsumptionRateBySource['project:whiteDwarfHarvesters:operation'] || 0, initialEnergy);
+    expectApprox(resources.spaceStorage.graphite.projectedProductionRateBySource['project:whiteDwarfHarvesters:operation'] || 0, unitRate * expectedProductivity * (12 / 28));
+    expectApprox(resources.spaceStorage.oxygen.projectedProductionRateBySource['project:whiteDwarfHarvesters:operation'] || 0, unitRate * expectedProductivity * (16 / 28));
     cleanup();
   });
 
@@ -2010,8 +2042,8 @@ describe('Space building productivity via produceResources', () => {
     expectApprox(receiver.productivity, 1);
     expectApprox(quasars.operationProductivity?.blackHoleSpinEnergy, 1);
     expectApprox(resources.space.energy.value, 0);
-    expectApprox(resources.space.energy.projectedProductionRateBySource['Artificial Quasar'] || 0, 100);
-    expectApprox(resources.space.energy.projectedConsumptionRateBySource['Quasar-fed Receiver'] || 0, 100);
+    expectApprox(resources.space.energy.projectedProductionRateBySource['project:artificialQuasars:operation'] || 0, 100);
+    expectApprox(resources.space.energy.projectedConsumptionRateBySource['building:Quasar-fed Receiver'] || 0, 100);
     cleanup();
   });
 
@@ -2041,7 +2073,7 @@ describe('Space building productivity via produceResources', () => {
     expectApprox(artificialStars.operationProductivity, 0);
     expectApprox(artificialStars.lastSpaceEnergyPerSecond, 0);
     expectApprox(resources.space.energy.value, 0);
-    expectApprox(resources.space.energy.projectedProductionRateBySource['Artificial Stars'] || 0, 0);
+    expectApprox(resources.space.energy.projectedProductionRateBySource['project:artificialStars'] || 0, 0);
     expectApprox(resources.spaceStorage.hydrogen.value, 50_000_000_000);
     cleanup();
   });
@@ -2073,7 +2105,7 @@ describe('Space building productivity via produceResources', () => {
     expectApprox(artificialStars.operationProductivity, 0);
     expectApprox(buildings.dysonReceiver.productivity, 0);
     expectApprox(resources.space.energy.value, 0);
-    expectApprox(resources.space.energy.projectedProductionRateBySource['Artificial Stars'] || 0, 0);
+    expectApprox(resources.space.energy.projectedProductionRateBySource['project:artificialStars'] || 0, 0);
     cleanup();
   });
 
@@ -2104,7 +2136,7 @@ describe('Space building productivity via produceResources', () => {
     expectApprox(artificialStars.operationProductivity, 0);
     expectApprox(artificialStars.lastSpaceEnergyPerSecond, 0);
     expectApprox(resources.space.energy.value, 0);
-    expectApprox(resources.space.energy.projectedProductionRateBySource['Artificial Stars'] || 0, 0);
+    expectApprox(resources.space.energy.projectedProductionRateBySource['project:artificialStars'] || 0, 0);
     expectApprox(resources.spaceStorage.hydrogen.value, reserve - 1 + reserve * 2);
     cleanup();
   });

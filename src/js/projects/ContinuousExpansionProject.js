@@ -325,7 +325,7 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
 
     const seconds = options.seconds || 0;
     if (options.applyRates === true && seconds > 0) {
-      const sourceLabel = options.rateSourceLabel || this.displayName || this.name;
+      const sourceLabel = options.rateSourceLabel || this.getRateSource();
       this.applyExpansionSpentRates(
         spent.spentColonyByCategory,
         spent.spentStorageByKey,
@@ -362,7 +362,7 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
 
     const applyRates = options.applyRates === true;
     const shouldApplyRates = applyRates && !(accumulatedChanges && this.isExpansionContinuous());
-    const sourceLabel = options.sourceLabel || this.displayName || this.name;
+    const sourceLabel = options.sourceLabel || this.getRateSource();
     const perSecondFactor = deltaTime > 0 ? 1000 / deltaTime : 0;
 
     for (const category in cost) {

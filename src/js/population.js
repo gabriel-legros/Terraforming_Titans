@@ -337,29 +337,45 @@ class PopulationModule extends EffectableEntity {
         if (naturalGrowthPerSecond > 0) {
           this.populationResource.modifyRate(
             naturalGrowthPerSecond,
-            t('ui.colony.growthRate.naturalGrowth', null, 'Natural growth'),
+            getLocalizedRateSource('population:naturalGrowth', 'ui.colony.growthRate.naturalGrowth', 'Natural growth'),
             'population'
           );
         }
         if (immigrationPerSecond > 0) {
           this.populationResource.modifyRate(
             immigrationPerSecond,
-            t('ui.colony.growthRate.immigration', null, 'Immigration'),
+            getLocalizedRateSource('population:immigration', 'ui.colony.growthRate.immigration', 'Immigration'),
             'population'
           );
         }
       }
       if (starvationDecayPerSecond > 0) {
-        this.populationResource.modifyRate(-starvationDecayPerSecond, t('ui.resourceRates.sources.starvation', {}, 'Starvation'), 'population');
+        this.populationResource.modifyRate(
+          -starvationDecayPerSecond,
+          getLocalizedRateSource('population:starvation', 'ui.resourceRates.sources.starvation', 'Starvation'),
+          'population'
+        );
       }
       if (energyDecayPerSecond > 0) {
-        this.populationResource.modifyRate(-energyDecayPerSecond, t('ui.resourceRates.sources.energyShortage', {}, 'Energy Shortage'), 'population');
+        this.populationResource.modifyRate(
+          -energyDecayPerSecond,
+          getLocalizedRateSource('population:energyShortage', 'ui.resourceRates.sources.energyShortage', 'Energy Shortage'),
+          'population'
+        );
       }
       if (gravityDecayPerSecond > 0) {
-        this.populationResource.modifyRate(-gravityDecayPerSecond, t('ui.resourceRates.sources.gravityStrain', {}, 'Gravity Strain'), 'population');
+        this.populationResource.modifyRate(
+          -gravityDecayPerSecond,
+          getLocalizedRateSource('population:gravityStrain', 'ui.resourceRates.sources.gravityStrain', 'Gravity Strain'),
+          'population'
+        );
       }
       if (overpopulationDecayPerSecond > 0) {
-        this.populationResource.modifyRate(-overpopulationDecayPerSecond, t('ui.resourceRates.sources.overpopulation', {}, 'Overpopulation'), 'population');
+        this.populationResource.modifyRate(
+          -overpopulationDecayPerSecond,
+          getLocalizedRateSource('population:overpopulation', 'ui.resourceRates.sources.overpopulation', 'Overpopulation'),
+          'population'
+        );
       }
 
       // Apply the population change and update production/consumption rates
@@ -371,7 +387,7 @@ class PopulationModule extends EffectableEntity {
       if (immigration > 0) {
         resources.special.galacticPopulation.modifyRate(
           -immigrationPerSecond,
-          t('ui.resourceRates.sources.galacticImmigration', {}, 'Immigration'),
+          getLocalizedRateSource('population:galacticImmigration', 'ui.resourceRates.sources.galacticImmigration', 'Immigration'),
           'population'
         );
         spaceManager.withdrawGalacticPopulation(immigration);

@@ -2790,7 +2790,10 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
 
   if (productionDiv) {
     const productionEntries = antimatterSynced ? [] : Object.entries(resource.productionRateBySource)
-      .filter(([source, rate]) => rate !== 0 && source !== 'Overflow' && source !== 'Overflow (not summed)');
+      .filter(([source, rate]) => rate !== 0
+        && source !== RESOURCE_RATE_SOURCE_IDS.overflow
+        && source !== RESOURCE_RATE_SOURCE_IDS.overflowExcluded)
+      .map(([source, rate]) => [getRateSourceDisplayName(source), rate]);
     const showProduction = updateRateTableWithCooldown(
       productionDiv,
       productionEntries,
@@ -2802,7 +2805,8 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
 
   if (consumptionDiv) {
     const consumptionEntries = antimatterSynced ? [] : Object.entries(consumptionDisplay.bySource)
-      .filter(([source, rate]) => rate !== 0 && source !== 'Overflow (not summed)');
+      .filter(([source, rate]) => rate !== 0 && source !== RESOURCE_RATE_SOURCE_IDS.overflowExcluded)
+      .map(([source, rate]) => [getRateSourceDisplayName(source), rate]);
     const showConsumption = updateRateTableWithCooldown(
       consumptionDiv,
       consumptionEntries,
@@ -2828,7 +2832,12 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       ...Object.entries(resource.productionRateByType?.overflow || {})
     ]
       .filter(([, rate]) => rate !== 0)
-      .map(([src, rate]) => [src.replace(' (not summed)', ''), rate]);
+      .map(([source, rate]) => [
+        source === RESOURCE_RATE_SOURCE_IDS.overflowExcluded
+          ? getRateSourceDisplayName(RESOURCE_RATE_SOURCE_IDS.overflow)
+          : getRateSourceDisplayName(source),
+        rate
+      ]);
     updateRateTable(overflowDiv, overflowEntries, r => `${formatNumber(r, false, 2)}/s`);
     overflowDiv.style.display = overflowEntries.length > 0 ? 'block' : 'none';
   }

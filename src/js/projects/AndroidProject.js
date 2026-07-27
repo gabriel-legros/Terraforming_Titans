@@ -201,7 +201,7 @@ class AndroidProject extends Project {
           if (applyRates && resources[category]?.[resource]) {
             resources[category][resource].modifyRate(
               -rateValue,
-              this.displayName,
+              this.getRateSource(),
               'project'
             );
           }

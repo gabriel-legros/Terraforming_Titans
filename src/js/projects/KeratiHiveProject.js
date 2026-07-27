@@ -266,14 +266,14 @@ class KeratiHiveProject extends Project {
     terraforming.synchronizeGlobalResources();
 
     if (hazardousUsed > 0) {
-      resources.surface.hazardousBiomass.modifyRate(-(hazardousUsed / seconds), this.displayName, 'project');
+      resources.surface.hazardousBiomass.modifyRate(-(hazardousUsed / seconds), this.getRateSource(), 'project');
       if (hazardManager?.hazardousBiomassHazard) {
         hazardManager.hazardousBiomassHazard.updateHazardousLandReservation(terraforming, hazardManager.parameters.hazardousBiomass);
       }
     }
 
     if (regularUsed > 0) {
-      resources.surface.biomass.modifyRate(-(regularUsed / seconds), this.displayName, 'project');
+      resources.surface.biomass.modifyRate(-(regularUsed / seconds), this.getRateSource(), 'project');
     }
 
     return totalUsed;

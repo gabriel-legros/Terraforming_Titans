@@ -257,7 +257,7 @@ class UndergroundExpansionProject extends AndroidProject {
     const progressForRate = Math.min((deltaTime / duration) * productivity, remainingRepeats);
     const landRate = seconds > 0 ? (progressForRate * perCompletionLand) / seconds : 0;
     if (landRate > 0 && applyRates && this.showsInResourcesRate()) {
-      resources.surface.land.modifyRate(landRate, this.displayName, 'project');
+      resources.surface.land.modifyRate(landRate, this.getRateSource(), 'project');
     }
 
     const progressForTotals = Math.min(deltaTime / duration, remainingRepeats);

@@ -72,7 +72,10 @@ function updateArtificialEcosystems(deltaTime, accumulatedChanges) {
     return;
   }
 
-  const source = getArtificialEcosystemsText('artificialEcosystemsSource', 'Artificial Ecosystems');
+  const source = registerRateSource(
+    RESOURCE_RATE_SOURCE_IDS.artificialEcosystems,
+    getArtificialEcosystemsText('artificialEcosystemsSource', 'Artificial Ecosystems')
+  );
   const waterDelta = actualGrowth * ARTIFICIAL_ECOSYSTEMS_PHOTOSYNTHESIS.liquidWater;
   const carbonDioxideDelta = actualGrowth * ARTIFICIAL_ECOSYSTEMS_PHOTOSYNTHESIS.carbonDioxide;
   const oxygenDelta = actualGrowth * ARTIFICIAL_ECOSYSTEMS_PHOTOSYNTHESIS.oxygen;

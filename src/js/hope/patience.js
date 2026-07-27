@@ -215,12 +215,12 @@ class PatienceManager extends EffectableEntity {
         const seconds = hours * 3600;
         const colonyResources = resources?.colony;
 
-        const superalloySource = buildings?.superalloyFoundry?.displayName || 'Superalloy Foundry';
+        const superalloySource = buildings?.superalloyFoundry?.getRateSource();
         const superalloyResource = colonyResources?.superalloys;
         const superalloyRate = this.getBuildingProductionRate(superalloyResource, [superalloySource]);
         const superalloyGain = superalloyRate > 0 ? superalloyRate * seconds : 0;
 
-        const superconductorSource = buildings?.superconductorFactory?.displayName || 'Superconductor Factory';
+        const superconductorSource = buildings?.superconductorFactory?.getRateSource();
         const superconductorResource = colonyResources?.superconductors;
         const superconductorRate = superconductorResource?.unlocked === false
             ? 0
@@ -232,20 +232,19 @@ class PatienceManager extends EffectableEntity {
         const advancedResearchGain = advancedResearchRate > 0 ? advancedResearchRate * seconds : 0;
 
         const metalResource = colonyResources?.metal;
-        const transferSource = t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer');
+        const transferSource = registerRateSource(
+            RESOURCE_RATE_SOURCE_IDS.spaceStorageTransfer,
+            t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer')
+        );
         const projectProduction = metalResource?.productionRateByType?.project || {};
         const projectConsumption = metalResource?.consumptionRateByType?.project || {};
         let transferProduction = projectProduction[transferSource] || 0;
         let transferConsumption = projectConsumption[transferSource] || 0;
-        if (transferSource !== 'Space storage transfer') {
-            transferProduction += projectProduction['Space storage transfer'] || 0;
-            transferConsumption += projectConsumption['Space storage transfer'] || 0;
-        }
-        const marketSource = t('ui.resourceRates.sources.galacticMarket', {}, 'Galactic Market');
+        const marketSource = registerRateSource(
+            RESOURCE_RATE_SOURCE_IDS.galacticMarket,
+            t('ui.resourceRates.sources.galacticMarket', {}, 'Galactic Market')
+        );
         let marketProduction = projectProduction[marketSource] || 0;
-        if (marketSource !== 'Galactic Market') {
-            marketProduction += projectProduction['Galactic Market'] || 0;
-        }
         const metalNetRate = (metalResource?.productionRate || 0)
             - (metalResource?.consumptionRate || 0)
             - (transferProduction - transferConsumption)

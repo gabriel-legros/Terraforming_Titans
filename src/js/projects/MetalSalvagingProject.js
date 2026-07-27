@@ -52,7 +52,7 @@ class MetalSalvagingProject extends AndroidProject {
     const duration = this.getEffectiveDuration();
     const amount = (deltaTime / duration) * productivity;
     if (applyRates) {
-      resources.surface.scrapMetal.modifyRate(amount / (deltaTime / 1000), this.displayName, 'project');
+      resources.surface.scrapMetal.modifyRate(amount / (deltaTime / 1000), this.getRateSource(), 'project');
     }
     return {
       cost: {},

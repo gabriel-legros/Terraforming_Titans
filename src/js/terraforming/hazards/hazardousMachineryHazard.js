@@ -995,7 +995,10 @@ class HazardousMachineryHazard {
       resource.increase(naturalGrowthDelta);
       resource.modifyRate?.(
         penaltyValues.naturalGrowthRatePerSecond,
-        getHazardousMachineryText('rateLabels.baseGrowth', 'Self-Replication'),
+        registerRateSource(
+          'hazard:hazardousMachinerySelfReplication',
+          getHazardousMachineryText('rateLabels.baseGrowth', 'Self-Replication')
+        ),
         'hazard'
       );
       currentAmount += naturalGrowthDelta;
@@ -1005,7 +1008,10 @@ class HazardousMachineryHazard {
         resource.decrease(naturalDecay);
         resource.modifyRate?.(
           -Math.abs(penaltyValues.naturalGrowthRatePerSecond),
-          getHazardousMachineryText('rateLabels.baseDecay', 'Natural Decay'),
+          registerRateSource(
+            'hazard:hazardousMachineryNaturalDecay',
+            getHazardousMachineryText('rateLabels.baseDecay', 'Natural Decay')
+          ),
           'hazard'
         );
         currentAmount -= naturalDecay;
@@ -1021,7 +1027,10 @@ class HazardousMachineryHazard {
       oxygenResource.decrease(oxygenDecay);
       oxygenResource.modifyRate?.(
         -penaltyValues.oxygenDecayRatePerSecond,
-        getHazardousMachineryText('rateLabels.oxidation', 'Oxidation'),
+        registerRateSource(
+          'hazard:hazardousMachineryOxidation',
+          getHazardousMachineryText('rateLabels.oxidation', 'Oxidation')
+        ),
         'hazard'
       );
     }
@@ -1034,7 +1043,10 @@ class HazardousMachineryHazard {
       resource.decrease(crusaderDecay);
       resource.modifyRate?.(
         -penaltyValues.crusaderDecayRatePerSecond,
-        getHazardousMachineryText('rateLabels.crusaders', 'Crusader Patrols'),
+        registerRateSource(
+          'hazard:hazardousMachineryCrusaders',
+          getHazardousMachineryText('rateLabels.crusaders', 'Crusader Patrols')
+        ),
         'hazard'
       );
       currentAmount -= crusaderDecay;
@@ -1049,12 +1061,18 @@ class HazardousMachineryHazard {
       resource.increase(androidLoss);
       resources.colony.androids.modifyRate?.(
         -penaltyValues.androidDecayRatePerSecond,
-        getHazardousMachineryText('rateLabels.androidDecay', 'Hazardous Machinery'),
+        registerRateSource(
+          'hazard:hazardousMachineryAndroidConversion',
+          getHazardousMachineryText('rateLabels.androidDecay', 'Hazardous Machinery')
+        ),
         'hazard'
       );
       resource.modifyRate?.(
         penaltyValues.androidDecayRatePerSecond,
-        getHazardousMachineryText('rateLabels.androidDecay', 'Hazardous Machinery'),
+        registerRateSource(
+          'hazard:hazardousMachineryAndroidConversion',
+          getHazardousMachineryText('rateLabels.androidDecay', 'Hazardous Machinery')
+        ),
         'hazard'
       );
     }

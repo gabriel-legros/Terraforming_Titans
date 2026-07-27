@@ -1636,7 +1636,10 @@ function updateSpaceStorageUI(project) {
     els.artificialEcosystemsCheckbox.checked = project.artificialEcosystemsEnabled === true;
   }
   if (els.artificialEcosystemsConsumptionDisplay && els.artificialEcosystemsProductionDisplay) {
-    const source = getSpaceStorageUIText('ui.projects.spaceStorage.artificialEcosystemsSource', 'Artificial Ecosystems');
+    const source = registerRateSource(
+      RESOURCE_RATE_SOURCE_IDS.artificialEcosystems,
+      getSpaceStorageUIText('ui.projects.spaceStorage.artificialEcosystemsSource', 'Artificial Ecosystems')
+    );
     const waterLabel = getSpaceStorageUIText('ui.projects.spaceStorage.resources.water', 'Water');
     const carbonDioxideLabel = getSpaceStorageUIText('ui.projects.spaceStorage.resources.carbonDioxide', 'Carbon Dioxide');
     const biomassLabel = getSpaceStorageUIText('ui.projects.spaceStorage.resources.biomass', 'Biomass');
