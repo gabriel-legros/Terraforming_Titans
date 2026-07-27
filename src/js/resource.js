@@ -1,60 +1,12 @@
 // Resource Class and Core Logic
 var debug_production = {};
 var debug_consumption = {};
-let resourceDebugRateTracking = false;
-var RESOURCE_RATE_SOURCE_IDS;
-var registerRateSource;
-var getRateSourceDisplayName;
-var getLocalizedRateSource;
+const resourceDebugRateTracking = DEBUG_MODE;
 const EXACT_LAND_SCALE_DIGITS = 15;
-let resolveWorldGeometricLandHelper = null;
-let getDynamicWorldPlanetaryMassAvailableTonsHelper = null;
-let hasDynamicMassEnabledHelper = null;
-let disposeDynamicWorldPlanetaryMassHelper = null;
-let addDynamicWorldPlanetaryMaterialHelper = null;
 let storageProviderCacheRoot = null;
 let storageProviderProjectCacheRoot = null;
 let storageProviderCache = null;
 let projectStorageProviders = {};
-if (typeof module !== 'undefined' && module.exports) {
-  ({
-    RESOURCE_RATE_SOURCE_IDS,
-    registerRateSource,
-    getRateSourceDisplayName,
-    getLocalizedRateSource
-  } = require('./rate-sources.js'));
-  ({
-    resolveWorldGeometricLand: resolveWorldGeometricLandHelper,
-    getDynamicWorldPlanetaryMassAvailableTons: getDynamicWorldPlanetaryMassAvailableTonsHelper,
-    hasDynamicMassEnabled: hasDynamicMassEnabledHelper,
-    disposeDynamicWorldPlanetaryMass: disposeDynamicWorldPlanetaryMassHelper,
-    addDynamicWorldPlanetaryMaterial: addDynamicWorldPlanetaryMaterialHelper
-  } = require('./terraforming/world-geometry.js'));
-  ({ DEBUG_MODE: resourceDebugRateTracking } = require('./debug_constants.js'));
-}
-
-function getDynamicWorldPlanetaryMassAvailableTonsSafe(terraformingState, celestialParameters) {
-  return (getDynamicWorldPlanetaryMassAvailableTonsHelper || getDynamicWorldPlanetaryMassAvailableTons)(
-    terraformingState,
-    celestialParameters
-  );
-}
-
-function hasDynamicMassEnabledSafe(terraformingState, planetParameters) {
-  return (hasDynamicMassEnabledHelper || hasDynamicMassEnabled)(terraformingState, planetParameters);
-}
-
-function disposeDynamicWorldPlanetaryMassSafe(terraformingState, amountTons) {
-  return (disposeDynamicWorldPlanetaryMassHelper || disposeDynamicWorldPlanetaryMass)(terraformingState, amountTons);
-}
-
-function addDynamicWorldPlanetaryMaterialSafe(terraformingState, materialKey, amountTons) {
-  return (addDynamicWorldPlanetaryMaterialHelper || addDynamicWorldPlanetaryMaterial)(
-    terraformingState,
-    materialKey,
-    amountTons
-  );
-}
 
 function trackResourceDebugRate(target, category, resource, source, amount) {
   if (!target[category]) {
@@ -1485,11 +1437,9 @@ function reconcileLandResourceValue() {
   const params = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
   const activeProjectManager = typeof projectManager !== 'undefined' ? projectManager : null;
   const activeSpaceManager = typeof spaceManager !== 'undefined' ? spaceManager : null;
-  const resolveWorldGeometricLandFn = resolveWorldGeometricLandHelper || resolveWorldGeometricLand;
-
   const geometricLand = Math.max(
     0,
-    resolveWorldGeometricLandFn(tf, landResource) || 0
+    resolveWorldGeometricLand(tf, landResource) || 0
   );
   let baseLand = Math.max(
     0,
@@ -1559,9 +1509,9 @@ function reconcilePlanetaryMassResourceValue() {
 
   const tf = typeof terraforming !== 'undefined' ? terraforming : null;
   const params = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
-  const dynamicMassEnabled = hasDynamicMassEnabledSafe(tf, params);
+  const dynamicMassEnabled = hasDynamicMassEnabled(tf, params);
   const currentMassTons = dynamicMassEnabled
-    ? getDynamicWorldPlanetaryMassAvailableTonsSafe(tf, params?.celestialParameters)
+    ? getDynamicWorldPlanetaryMassAvailableTons(tf, params?.celestialParameters)
     : 0;
 
   massResource.value = Math.max(0, currentMassTons);
@@ -1577,7 +1527,7 @@ function reconcilePlanetaryMassResourceValue() {
 
 function applyAccumulatedPlanetaryMassChanges(deltaTime, accumulatedSpecialChanges) {
   const planetParameters = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
-  if (!hasDynamicMassEnabledSafe(terraforming, planetParameters)) {
+  if (!hasDynamicMassEnabled(terraforming, planetParameters)) {
     return;
   }
 
@@ -1597,7 +1547,7 @@ function applyAccumulatedPlanetaryMassChanges(deltaTime, accumulatedSpecialChang
       continue;
     }
 
-    const removedAmount = disposeDynamicWorldPlanetaryMassSafe(terraforming, amount);
+    const removedAmount = disposeDynamicWorldPlanetaryMass(terraforming, amount);
     if (!(removedAmount > 0)) {
       continue;
     }
@@ -1618,7 +1568,7 @@ function applyAccumulatedPlanetaryMassChanges(deltaTime, accumulatedSpecialChang
       if (!(amount > 0)) {
         continue;
       }
-      totalAddedAmount += addDynamicWorldPlanetaryMaterialSafe(terraforming, materialKey, amount);
+      totalAddedAmount += addDynamicWorldPlanetaryMaterial(terraforming, materialKey, amount);
     }
     if (!(totalAddedAmount > 0)) {
       continue;
@@ -1631,10 +1581,6 @@ function applyAccumulatedPlanetaryMassChanges(deltaTime, accumulatedSpecialChang
       );
     }
   }
-}
-
-if (typeof globalThis !== 'undefined') {
-  globalThis.reconcileLandResourceValue = reconcileLandResourceValue;
 }
 
 const shouldTreatProjectAsBuilding = (project) => {
@@ -2561,7 +2507,7 @@ function produceResources(deltaTime, buildings) {
 
   const planetParameters = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
   applyAccumulatedPlanetaryMassChanges(deltaTime, accumulatedSpecialChanges);
-  if (hasDynamicMassEnabledSafe(terraforming, planetParameters)) {
+  if (hasDynamicMassEnabled(terraforming, planetParameters)) {
     terraforming?.refreshDynamicWorldGeometry?.(planetParameters);
     reconcileLandResourceValue();
   }
@@ -2831,33 +2777,5 @@ function updateResourceAvailabilityRatios(resources, deltaTime) {
       resource.availabilityRatio = availabilityDetails.ratio;
     }
   }
-}
-
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    Resource,
-    RESOURCE_RATE_SOURCE_IDS,
-    registerRateSource,
-    getRateSourceDisplayName,
-    getLocalizedRateSource,
-    checkResourceAvailability,
-    createResources,
-    produceResources,
-    calculateResourceAvailabilityDetails,
-    calculateResourceAvailabilityRatio,
-    updateResourceAvailabilityRatios,
-    calculateProjectProductivities,
-    recalculateTotalRates,
-    reconcileLandResourceValue,
-    invalidateStorageProviderCache,
-  };
-}
-
-try {
-  window.calculateResourceAvailabilityDetails = calculateResourceAvailabilityDetails;
-  window.calculateResourceAvailabilityRatio = calculateResourceAvailabilityRatio;
-  window.updateResourceAvailabilityRatios = updateResourceAvailabilityRatios;
-} catch (error) {
-  // window is not available
 }
 

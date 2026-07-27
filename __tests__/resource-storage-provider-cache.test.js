@@ -1,9 +1,11 @@
 const path = require('path');
+const { loadClassicScript } = require('./helpers/classic-script-loader');
 
 function loadResourceModule(initialStructures) {
   jest.resetModules();
 
   global.EffectableEntity = require(path.resolve(__dirname, '../src/js/effectable-entity.js'));
+  global.DEBUG_MODE = false;
   global.structures = initialStructures;
   global.followersManager = {};
   global.isManagerEffectivelyEnabled = () => false;
@@ -12,7 +14,10 @@ function loadResourceModule(initialStructures) {
     kesslerHazard: { isCleared: () => true }
   };
 
-  return require(path.resolve(__dirname, '../src/js/resource.js'));
+  return loadClassicScript(
+    path.resolve(__dirname, '../src/js/resource.js'),
+    ['Resource', 'invalidateStorageProviderCache']
+  );
 }
 
 function makeResource(Resource, name) {
@@ -36,6 +41,7 @@ function makeStorageProvider(storage, active = 1) {
 
 afterEach(() => {
   delete global.structures;
+  delete global.DEBUG_MODE;
   delete global.followersManager;
   delete global.isManagerEffectivelyEnabled;
   delete global.hazardManager;

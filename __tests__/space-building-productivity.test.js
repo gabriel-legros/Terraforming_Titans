@@ -1,4 +1,5 @@
 const path = require('path');
+const { loadClassicScript } = require('./helpers/classic-script-loader');
 
 function setGlobal(name, value, originalGlobals) {
   if (!(name in originalGlobals)) {
@@ -943,6 +944,7 @@ function setupHarness(initialStorage = {}) {
   resourcesObj._spaceStorageMaxStorage = initialStorage.spaceStorageMaxStorage;
 
   setGlobal('EffectableEntity', EffectableEntity, originalGlobals);
+  setGlobal('DEBUG_MODE', false, originalGlobals);
   setGlobal('TerraformingDurationProject', TerraformingDurationProject, originalGlobals);
   setGlobal('SpecializationProject', SpecializationProject, originalGlobals);
   setGlobal('MEGA_PROJECT_RESOURCE_MODES', {
@@ -1034,10 +1036,18 @@ function setupHarness(initialStorage = {}) {
 
   const { Project } = require(path.resolve(__dirname, '../src/js/projects.js'));
   setGlobal('Project', Project, originalGlobals);
-  const resourceModule = require(path.resolve(__dirname, '../src/js/resource.js'));
-  setGlobal('RESOURCE_RATE_SOURCE_IDS', resourceModule.RESOURCE_RATE_SOURCE_IDS, originalGlobals);
-  setGlobal('registerRateSource', resourceModule.registerRateSource, originalGlobals);
-  setGlobal('getLocalizedRateSource', resourceModule.getLocalizedRateSource, originalGlobals);
+  const rateSources = loadClassicScript(
+    path.resolve(__dirname, '../src/js/rate-sources.js'),
+    ['RESOURCE_RATE_SOURCE_IDS', 'registerRateSource', 'getRateSourceDisplayName', 'getLocalizedRateSource']
+  );
+  setGlobal('RESOURCE_RATE_SOURCE_IDS', rateSources.RESOURCE_RATE_SOURCE_IDS, originalGlobals);
+  setGlobal('registerRateSource', rateSources.registerRateSource, originalGlobals);
+  setGlobal('getRateSourceDisplayName', rateSources.getRateSourceDisplayName, originalGlobals);
+  setGlobal('getLocalizedRateSource', rateSources.getLocalizedRateSource, originalGlobals);
+  const resourceModule = loadClassicScript(
+    path.resolve(__dirname, '../src/js/resource.js'),
+    ['produceResources']
+  );
   [
     MockDemandProject,
     MockColonyMetalDemandProject,
