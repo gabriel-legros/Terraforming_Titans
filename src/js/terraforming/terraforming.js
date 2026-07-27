@@ -3046,11 +3046,24 @@ class Terraforming extends EffectableEntity{
 
     // [simulateAtmosphericFlow function removed - no longer needed with global atmosphere]
 
-// Distributes net changes from global resources (caused by buildings/other non-zonal processes)
-// proportionally into the zonal data structures after systems have finished accumulating changes.
-distributeSurfaceChangesToZones(surfaceChanges = {}) {
+calculateZonalSurfaceChanges(surfaceChanges = {}) {
     const zones = getZones();
     const configs = this.zonalSurfaceResourceConfigs;
+    const projectedSurface = {};
+    const changesByZone = {};
+    for (const zone of zones) {
+        projectedSurface[zone] = { ...this.zonalSurface[zone] };
+        changesByZone[zone] = {};
+    }
+
+    const applyProjectedChange = (zone, resourceKey, amount) => {
+        const currentValue = projectedSurface[zone][resourceKey] || 0;
+        const nextValue = Math.max(0, currentValue + amount);
+        const actualChange = nextValue - currentValue;
+        projectedSurface[zone][resourceKey] = nextValue;
+        changesByZone[zone][resourceKey] =
+            (changesByZone[zone][resourceKey] || 0) + actualChange;
+    };
 
     for (const config of configs) {
         const netChangeAmount = surfaceChanges[config.name] || 0;
@@ -3094,32 +3107,32 @@ distributeSurfaceChangesToZones(surfaceChanges = {}) {
             let totalSurfaceAmount = 0;
             let totalBuriedAmount = 0;
             for (const zone of zones) {
-                totalSurfaceAmount += this.zonalSurface[zone][config.distributionKey] || 0;
-                totalBuriedAmount += this.zonalSurface[zone][buriedKey] || 0;
+                totalSurfaceAmount += projectedSurface[zone][config.distributionKey] || 0;
+                totalBuriedAmount += projectedSurface[zone][buriedKey] || 0;
             }
 
             const surfaceTake = Math.min(-netChangeAmount, totalSurfaceAmount);
             if (surfaceTake > 0 && totalSurfaceAmount > 0) {
                 for (const zone of zones) {
-                    const currentAmount = this.zonalSurface[zone][config.distributionKey] || 0;
+                    const currentAmount = projectedSurface[zone][config.distributionKey] || 0;
                     if (currentAmount <= 0) {
                         continue;
                     }
                     const share = currentAmount / totalSurfaceAmount;
-                    this.zonalSurface[zone][config.distributionKey] = Math.max(0, currentAmount - surfaceTake * share);
+                    applyProjectedChange(zone, config.distributionKey, -surfaceTake * share);
                 }
             }
 
             const remaining = netChangeAmount + surfaceTake;
             if (remaining < 0 && totalBuriedAmount > 0) {
-                const buriedTake = -remaining;
+                const buriedTake = Math.min(-remaining, totalBuriedAmount);
                 for (const zone of zones) {
-                    const currentBuried = this.zonalSurface[zone][buriedKey] || 0;
+                    const currentBuried = projectedSurface[zone][buriedKey] || 0;
                     if (currentBuried <= 0) {
                         continue;
                     }
                     const share = currentBuried / totalBuriedAmount;
-                    this.zonalSurface[zone][buriedKey] = Math.max(0, currentBuried - buriedTake * share);
+                    applyProjectedChange(zone, buriedKey, -buriedTake * share);
                 }
             }
             continue;
@@ -3127,7 +3140,7 @@ distributeSurfaceChangesToZones(surfaceChanges = {}) {
 
         if (distributionMode === 'currentAmount') {
             for (const zone of zones) {
-                totalDistributionFactor += this.zonalSurface[zone][config.distributionKey] || 0;
+                totalDistributionFactor += projectedSurface[zone][config.distributionKey] || 0;
             }
         } else if (distributionMode === 'targetZoneArea') {
             for (const zone of targetZones) {
@@ -3149,7 +3162,7 @@ distributeSurfaceChangesToZones(surfaceChanges = {}) {
 
             if (totalDistributionFactor > 1e-9) {
                 if (distributionMode === 'currentAmount') {
-                    const currentAmount = this.zonalSurface[zone][config.distributionKey] || 0;
+                    const currentAmount = projectedSurface[zone][config.distributionKey] || 0;
                     proportion = currentAmount / totalDistributionFactor;
                 } else if (distributionMode === 'targetZoneArea' && isTargetZone) {
                     const zoneArea = this.celestialParameters.surfaceArea * this.getZoneWeight(zone);
@@ -3162,8 +3175,20 @@ distributeSurfaceChangesToZones(surfaceChanges = {}) {
             }
 
             const zonalChange = netChangeAmount * proportion;
-            const currentValue = this.zonalSurface[zone][config.distributionKey] || 0;
-            this.zonalSurface[zone][config.distributionKey] = Math.max(0, currentValue + zonalChange);
+            applyProjectedChange(zone, config.distributionKey, zonalChange);
+        }
+    }
+
+    return changesByZone;
+}
+
+// Distributes net changes from global resources (caused by buildings/other non-zonal processes)
+// proportionally into the zonal data structures after systems have finished accumulating changes.
+distributeSurfaceChangesToZones(surfaceChanges = {}) {
+    const changesByZone = this.calculateZonalSurfaceChanges(surfaceChanges);
+    for (const zone in changesByZone) {
+        for (const resourceKey in changesByZone[zone]) {
+            this.zonalSurface[zone][resourceKey] += changesByZone[zone][resourceKey];
         }
     }
 }

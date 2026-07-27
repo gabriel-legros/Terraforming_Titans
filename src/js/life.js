@@ -1283,16 +1283,38 @@ class LifeManager extends EffectableEntity {
       );
     }
     const zones = getZones();
+    const pendingSurfaceWithdrawals = {};
+    if (accumulatedChanges) {
+      for (const resourceKey in accumulatedChanges.surface) {
+        const amount = accumulatedChanges.surface[resourceKey] || 0;
+        if (amount < 0) {
+          pendingSurfaceWithdrawals[resourceKey] = amount;
+        }
+      }
+    }
+    const pendingSurfaceChangesByZone = accumulatedChanges
+      ? terraforming.calculateZonalSurfaceChanges(pendingSurfaceWithdrawals)
+      : {};
+    const getPendingSurfaceChange = (zoneName, resourceKey) =>
+      pendingSurfaceChangesByZone[zoneName]?.[resourceKey] || 0;
 
     const biomassByZone = {};
     const liquidByZone = {};
     const usesIceForWaterByZone = {};
     const overflowDecayByZone = {};
     zones.forEach(zoneName => {
-      biomassByZone[zoneName] = terraforming.zonalSurface[zoneName].biomass || 0;
+      biomassByZone[zoneName] = Math.max(
+        0,
+        (terraforming.zonalSurface[zoneName].biomass || 0)
+          + getPendingSurfaceChange(zoneName, 'biomass')
+      );
       liquidByZone[zoneName] = {};
       liquidRequirementKeys.forEach((resourceKey) => {
-        liquidByZone[zoneName][resourceKey] = terraforming.zonalSurface[zoneName][resourceKey] || 0;
+        liquidByZone[zoneName][resourceKey] = Math.max(
+          0,
+          (terraforming.zonalSurface[zoneName][resourceKey] || 0)
+            + getPendingSurfaceChange(zoneName, resourceKey)
+        );
       });
       overflowDecayByZone[zoneName] = 0;
     });
@@ -1302,7 +1324,8 @@ class LifeManager extends EffectableEntity {
     const decayAtmosphericInputsPerBiomass = Object.entries(decayPerBiomass.atmospheric || {})
       .filter(([, coef]) => coef < 0);
     const getSurfaceAvailable = (zoneName, resourceKey, deltaMaps = []) => {
-      let available = terraforming.zonalSurface[zoneName][resourceKey] || 0;
+      let available = (terraforming.zonalSurface[zoneName][resourceKey] || 0)
+        + getPendingSurfaceChange(zoneName, resourceKey);
       deltaMaps.forEach((deltasByZone) => {
         available += deltasByZone[zoneName]?.[resourceKey] || 0;
       });
