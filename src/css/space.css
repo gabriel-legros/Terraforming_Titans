@@ -416,6 +416,12 @@
   color: var(--space-fg);
 }
 
+.artificial-naming-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(90px, 0.4fr);
+  gap: 10px;
+}
+
 .artificial-select,
 .artificial-radius-input,
 .artificial-name,

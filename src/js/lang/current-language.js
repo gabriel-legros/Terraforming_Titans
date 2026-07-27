@@ -449,8 +449,10 @@ setLanguageData({
       },
       blueprint: {
         title: 'Blueprint',
-        worldName: 'World name',
+        worldName: 'Name',
         worldNamePlaceholder: 'Artificial world',
+        worldNumber: 'Number',
+        worldNumberPlaceholder: 'Optional',
         framework: 'Framework',
         core: 'Core',
         stellarContext: 'Stellar context',

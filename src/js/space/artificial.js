@@ -432,7 +432,7 @@ class ArtificialManager extends EffectableEntity {
         this.autoStore = false;
         this.autoStoreWithMaxStockpile = true;
         this.nextId = 1;
-        this.constructedCounts = { shell: 0, ring: 0, disk: 0 };
+        this.nextWorldNumber = 1;
         this.activeProject = null;
         this.unlockedTypes = new Set(
             ARTIFICIAL_TYPES
@@ -646,7 +646,8 @@ class ArtificialManager extends EffectableEntity {
             diskRadiusAU: clampDiskRadiusAU(diskBounds.min, diskBounds),
             sector: 'auto',
             sectorFilter: 'all',
-            name: ''
+            name: this.getDefaultWorldNamePrefix(typeDefault.value),
+            number: String(this.nextWorldNumber)
         };
     }
 
@@ -697,7 +698,8 @@ class ArtificialManager extends EffectableEntity {
             diskRadiusAU: diskOuterRadiusAU,
             sector: selection.sector || 'auto',
             sectorFilter: selection.sectorFilter || 'all',
-            name: selection.name || ''
+            name: String(selection.name || '').trim() || this.getDefaultWorldNamePrefix(typeValue),
+            number: this.normalizeWorldNumber(selection.number)
         };
     }
 
@@ -1247,15 +1249,15 @@ class ArtificialManager extends EffectableEntity {
     startDraftConstruction() {
         if (!this.enabled || this.activeProject) return false;
         const selection = this.getDraftSelection();
-        const chosenName = selection.name && String(selection.name).trim()
-            ? String(selection.name).trim()
-            : '';
+        const namePrefix = String(selection.name || '').trim() || this.getDefaultWorldNamePrefix(selection.type);
+        const nameNumber = this.normalizeWorldNumber(selection.number);
         if (selection.type === 'shell') {
             return this.startShellConstruction({
                 radiusEarth: selection.radiusEarth,
                 core: selection.core,
                 starContext: selection.starContext,
-                name: chosenName,
+                namePrefix,
+                nameNumber,
                 sector: selection.sector,
                 sectorFilter: selection.sectorFilter
             });
@@ -1266,7 +1268,8 @@ class ArtificialManager extends EffectableEntity {
                 orbitRadiusAU: selection.orbitRadiusAU,
                 widthKm: selection.widthKm,
                 targetFluxWm2: selection.targetFluxWm2,
-                name: chosenName,
+                namePrefix,
+                nameNumber,
                 sector: selection.sector,
                 sectorFilter: selection.sectorFilter
             });
@@ -1276,7 +1279,8 @@ class ArtificialManager extends EffectableEntity {
                 starCore: selection.diskStarCore,
                 diskInnerRadiusAU: selection.diskInnerRadiusAU,
                 diskRadiusAU: selection.diskRadiusAU,
-                name: chosenName,
+                namePrefix,
+                nameNumber,
                 sector: selection.sector,
                 sectorFilter: selection.sectorFilter
             });
@@ -1300,36 +1304,42 @@ class ArtificialManager extends EffectableEntity {
         return `A-${id}`;
     }
 
+    getDefaultWorldNamePrefix(type) {
+        return type === 'ring' ? 'Ringworld' : (type === 'disk' ? 'Alderson Disk' : 'Shellworld');
+    }
+
     getDefaultWorldName(type) {
-        const baseName = type === 'ring' ? 'Ringworld' : (type === 'disk' ? 'Alderson Disk' : 'Shellworld');
-        return `${baseName} ${this.constructedCounts[type] + 1}`;
+        return this.composeWorldName(this.getDefaultWorldNamePrefix(type), String(this.nextWorldNumber));
     }
 
-    incrementConstructedCount(type) {
-        this.constructedCounts[type] += 1;
+    normalizeWorldNumber(value) {
+        const text = String(value ?? '').trim();
+        if (!text) return '';
+        return String(Math.max(1, Math.floor(Number(text) || 1)));
     }
 
-    migrateConstructedCounts(savedCounts, activeProject) {
-        const counts = {
-            shell: Math.max(0, Math.floor(savedCounts?.shell || 0)),
-            ring: Math.max(0, Math.floor(savedCounts?.ring || 0)),
-            disk: Math.max(0, Math.floor(savedCounts?.disk || 0))
-        };
-        if (savedCounts) {
-            this.constructedCounts = counts;
-            return;
+    composeWorldName(name, number) {
+        const prefix = String(name || '').trim();
+        const suffix = this.normalizeWorldNumber(number);
+        return [prefix, suffix].filter(Boolean).join(' ');
+    }
+
+    splitWorldName(name) {
+        const fullName = String(name || '').trim();
+        const match = fullName.match(/^(.*\S)\s+(\d+)$/);
+        return match
+            ? { name: match[1], number: this.normalizeWorldNumber(match[2]) }
+            : { name: fullName, number: '' };
+    }
+
+    advanceWorldNumber(number) {
+        const usedNumber = this.normalizeWorldNumber(number);
+        if (usedNumber) {
+            this.nextWorldNumber = Number(usedNumber) + 1;
+        } else {
+            this.nextWorldNumber += 1;
         }
-        const statuses = spaceManager?.artificialWorldStatuses || {};
-        Object.values(statuses).forEach((status) => {
-            const type = status?.type || status?.artificialSnapshot?.type || status?.original?.merged?.classification?.type || status?.original?.classification?.type || 'shell';
-            if (counts[type] !== undefined) {
-                counts[type] += 1;
-            }
-        });
-        if (activeProject && counts[activeProject.type] !== undefined) {
-            counts[activeProject.type] += 1;
-        }
-        this.constructedCounts = counts;
+        this.draftSelection.number = String(this.nextWorldNumber);
     }
 
     getTotalPaymentAvailability(resourceKey, allowStorage = this.getAllowSpaceStoragePayments()) {
@@ -1536,7 +1546,11 @@ class ArtificialManager extends EffectableEntity {
         : (ARTIFICIAL_STAR_CONTEXTS.find((entry) => entry.hasStar === false)?.value || starOption.value);
       const requestedRadius = options?.radiusEarth || bounds.min;
       const radiusEarth = Math.min(Math.max(requestedRadius, bounds.min), bounds.max);
-      const chosenName = (options?.name && String(options.name).trim()) || this.getDefaultWorldName('shell');
+      const namePrefix = String(options?.namePrefix || '').trim();
+      const nameNumber = this.normalizeWorldNumber(options?.nameNumber);
+      const chosenName = namePrefix
+        ? this.composeWorldName(namePrefix, nameNumber)
+        : ((options?.name && String(options.name).trim()) || this.getDefaultWorldName('shell'));
       const cost = this.calculateCost(radiusEarth);
       const durationContext = this.getDurationContext(radiusEarth);
       if (this.exceedsDurationLimit(durationContext.durationMs)) {
@@ -1581,6 +1595,8 @@ class ArtificialManager extends EffectableEntity {
           id: this.nextId,
           seed: this.createSeed(),
           name: chosenName,
+          namePrefix: namePrefix || chosenName,
+          nameNumber,
           type: 'shell',
           core,
           starContext: effectiveStarContext,
@@ -1609,7 +1625,7 @@ class ArtificialManager extends EffectableEntity {
           worldDivisor: worldCount
       };
 
-      this.incrementConstructedCount('shell');
+      this.advanceWorldNumber(nameNumber);
       this.nextId += 1;
       this.markUIDirty(true);
       return true;
@@ -1629,7 +1645,11 @@ class ArtificialManager extends EffectableEntity {
       const landHa = this.calculateRingWorldAreaHectares(orbitRadiusAU, widthKm);
       const radiusEarth = this.calculateRadiusEarthFromLandHectares(landHa);
 
-      const chosenName = (options?.name && String(options.name).trim()) || this.getDefaultWorldName('ring');
+      const namePrefix = String(options?.namePrefix || '').trim();
+      const nameNumber = this.normalizeWorldNumber(options?.nameNumber);
+      const chosenName = namePrefix
+        ? this.composeWorldName(namePrefix, nameNumber)
+        : ((options?.name && String(options.name).trim()) || this.getDefaultWorldName('ring'));
       const cost = this.calculateRingworldCost(landHa, widthKm);
       const durationContext = this.getDurationContext(radiusEarth);
       if (this.exceedsDurationLimit(durationContext.durationMs)) return false;
@@ -1671,6 +1691,8 @@ class ArtificialManager extends EffectableEntity {
           id: this.nextId,
           seed: this.createSeed(),
           name: chosenName,
+          namePrefix: namePrefix || chosenName,
+          nameNumber,
           type: 'ring',
           core: starCore,
           starCore,
@@ -1702,7 +1724,7 @@ class ArtificialManager extends EffectableEntity {
           worldDivisor: worldCount
       };
 
-      this.incrementConstructedCount('ring');
+      this.advanceWorldNumber(nameNumber);
       this.nextId += 1;
       this.markUIDirty(true);
       return true;
@@ -1723,7 +1745,11 @@ class ArtificialManager extends EffectableEntity {
       const landHa = this.calculateDiskWorldAreaHectares(diskRadiusAU, diskInnerRadiusAU);
       const radiusEarth = this.calculateRadiusEarthFromLandHectares(landHa);
 
-      const chosenName = (options?.name && String(options.name).trim()) || this.getDefaultWorldName('disk');
+      const namePrefix = String(options?.namePrefix || '').trim();
+      const nameNumber = this.normalizeWorldNumber(options?.nameNumber);
+      const chosenName = namePrefix
+        ? this.composeWorldName(namePrefix, nameNumber)
+        : ((options?.name && String(options.name).trim()) || this.getDefaultWorldName('disk'));
       const cost = this.calculateDiskCost(landHa);
       const durationContext = this.getDurationContext(radiusEarth);
       if (this.exceedsDurationLimit(durationContext.durationMs)) return false;
@@ -1760,6 +1786,8 @@ class ArtificialManager extends EffectableEntity {
           id: this.nextId,
           seed: this.createSeed(),
           name: chosenName,
+          namePrefix: namePrefix || chosenName,
+          nameNumber,
           type: 'disk',
           core: starCore,
           starCore,
@@ -1792,7 +1820,7 @@ class ArtificialManager extends EffectableEntity {
           worldDivisor: worldCount
       };
 
-      this.incrementConstructedCount('disk');
+      this.advanceWorldNumber(nameNumber);
       this.nextId += 1;
       this.markUIDirty(true);
       return true;
@@ -2305,6 +2333,9 @@ class ArtificialManager extends EffectableEntity {
         const project = this.activeProject;
         if (project && String(project.id) === key) {
             project.name = nextName;
+            const naming = this.splitWorldName(nextName);
+            project.namePrefix = naming.name || this.getDefaultWorldNamePrefix(project.type);
+            project.nameNumber = naming.number;
             project.override = null;
         }
         if (spaceManager && spaceManager.artificialWorldStatuses && spaceManager.artificialWorldStatuses[key]) {
@@ -2328,6 +2359,17 @@ class ArtificialManager extends EffectableEntity {
         const project = this.activeProject;
         if (!project) return false;
         return this.setWorldNameById(project.id, name);
+    }
+
+    setActiveProjectNaming(name, number) {
+        const project = this.activeProject;
+        if (!project) return false;
+        project.namePrefix = String(name || '').trim() || this.getDefaultWorldNamePrefix(project.type);
+        project.nameNumber = this.normalizeWorldNumber(number);
+        project.name = this.composeWorldName(project.namePrefix, project.nameNumber);
+        project.override = null;
+        this.markUIDirty(true);
+        return true;
     }
 
     travelToConstructedWorld() {
@@ -2582,7 +2624,7 @@ class ArtificialManager extends EffectableEntity {
             autoStoreWithMaxStockpile: this.autoStoreWithMaxStockpile,
             fleetCapacityWorldCap: this.fleetCapacityWorldCap,
             nextId: this.nextId,
-            constructedCounts: { ...this.constructedCounts },
+            nextWorldNumber: this.nextWorldNumber,
             activeProject: project,
             unlockedTypes: Array.from(this.unlockedTypes),
             unlockedCores: Array.from(this.unlockedCores),
@@ -2605,7 +2647,6 @@ class ArtificialManager extends EffectableEntity {
         this.autoStart = state.autoStart === true;
         this.autoStore = state.autoStore === true;
         this.autoStoreWithMaxStockpile = state.autoStoreWithMaxStockpile !== false;
-        this.migrateConstructedCounts(state.constructedCounts, state.activeProject || null);
         if (Array.isArray(state.unlockedTypes)) {
             this.unlockedTypes = new Set(state.unlockedTypes);
         }
@@ -2637,7 +2678,16 @@ class ArtificialManager extends EffectableEntity {
             this.fleetCapacityWorldCap = existingFleetCap;
         }
         this.activeProject = state.activeProject || null;
-        const draft = state.draftSelection || {};
+        this.nextWorldNumber = Math.max(1, Math.floor(state.nextWorldNumber || state.nextId || this.nextWorldNumber));
+        const draft = { ...(state.draftSelection || {}) };
+        if (!Object.prototype.hasOwnProperty.call(draft, 'number')) {
+            const migratedName = this.splitWorldName(draft.name);
+            draft.name = migratedName.name;
+            draft.number = migratedName.number || String(this.nextWorldNumber);
+            if (migratedName.number) {
+                this.nextWorldNumber = Number(migratedName.number);
+            }
+        }
         const defaultDraft = this.createDefaultDraftSelection();
         this.draftSelection = this.normalizeDraftSelection({ ...defaultDraft, ...draft });
         const prepay = state.prepay || {};
@@ -2652,6 +2702,11 @@ class ArtificialManager extends EffectableEntity {
         if (this.activeProject) {
             this.resetPrepay();
             this.activeProject.override = null;
+            if (!Object.prototype.hasOwnProperty.call(this.activeProject, 'nameNumber')) {
+                const migratedName = this.splitWorldName(this.activeProject.name);
+                this.activeProject.namePrefix = migratedName.name || this.getDefaultWorldNamePrefix(this.activeProject.type);
+                this.activeProject.nameNumber = migratedName.number;
+            }
             if (!this.activeProject.stockpile) {
                 const legacyDeposit = this.activeProject.initialDeposit || {};
                 const metal = legacyDeposit.metal || 0;

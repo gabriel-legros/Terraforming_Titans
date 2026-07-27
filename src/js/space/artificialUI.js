@@ -15,6 +15,7 @@ const artificialUICache = {
   areaLabel: null,
   gravityValue: null,
   nameInput: null,
+  numberInput: null,
   costMetal: null,
   costMetalRow: null,
   costSuperalloy: null,
@@ -719,7 +720,8 @@ function storeDraftSelection(manager, options = {}) {
     diskRadiusAU: selection.diskRadiusAU,
     widthKm: selection.widthKm,
     targetFluxWm2: selection.targetFluxWm2,
-    name: artificialUICache.nameInput ? artificialUICache.nameInput.value : ''
+    name: artificialUICache.nameInput ? artificialUICache.nameInput.value : '',
+    number: artificialUICache.numberInput ? artificialUICache.numberInput.value : ''
   };
   if (!preserveSector) {
     const currentSector = artificialUICache.sector ? artificialUICache.sector.value : 'auto';
@@ -922,15 +924,30 @@ function ensureArtificialLayout() {
   blueprintTitle.textContent = getArtificialText('blueprint.title', 'Blueprint');
   blueprint.appendChild(blueprintTitle);
 
+  const namingRow = document.createElement('div');
+  namingRow.className = 'artificial-naming-row';
+
   const nameLabel = document.createElement('label');
   nameLabel.className = 'artificial-field';
-  nameLabel.textContent = getArtificialText('blueprint.worldName', 'World name');
+  nameLabel.textContent = getArtificialText('blueprint.worldName', 'Name');
   const nameInput = document.createElement('input');
   nameInput.className = 'artificial-name';
   nameInput.placeholder = getArtificialText('blueprint.worldNamePlaceholder', 'Artificial world');
   nameLabel.appendChild(nameInput);
-  blueprint.appendChild(nameLabel);
+  namingRow.appendChild(nameLabel);
   artificialUICache.nameInput = nameInput;
+
+  const numberLabel = document.createElement('label');
+  numberLabel.className = 'artificial-field';
+  numberLabel.textContent = getArtificialText('blueprint.worldNumber', 'Number');
+  const numberInput = document.createElement('input');
+  numberInput.className = 'artificial-name artificial-number';
+  numberInput.inputMode = 'numeric';
+  numberInput.placeholder = getArtificialText('blueprint.worldNumberPlaceholder', 'Optional');
+  numberLabel.appendChild(numberInput);
+  namingRow.appendChild(numberLabel);
+  blueprint.appendChild(namingRow);
+  artificialUICache.numberInput = numberInput;
 
   const typeLabel = document.createElement('label');
   typeLabel.className = 'artificial-field';
@@ -1956,14 +1973,24 @@ function ensureArtificialLayout() {
   nameInput.addEventListener('input', () => {
     const manager = artificialManager;
     const project = manager.activeProject;
-    project && manager.setActiveProjectName(nameInput.value);
+    project && manager.setActiveProjectNaming(nameInput.value, numberInput.value);
     project || manager.setDraftSelection({ name: nameInput.value });
   });
   nameInput.addEventListener('blur', () => {
     const manager = artificialManager;
     const project = manager.activeProject;
-    project && manager.setActiveProjectName(nameInput.value);
+    project && manager.setActiveProjectNaming(nameInput.value, numberInput.value);
     project || manager.setDraftSelection({ name: nameInput.value });
+  });
+  wireStringNumberInput(numberInput, {
+    parseValue: (value) => artificialManager.normalizeWorldNumber(value),
+    formatValue: (value) => value,
+    onValue: (value) => {
+      const manager = artificialManager;
+      const project = manager.activeProject;
+      project && manager.setActiveProjectNaming(nameInput.value, value);
+      project || manager.setDraftSelection({ number: value });
+    }
   });
   allowStorageCheckbox.addEventListener('change', () => {
     if (artificialManager) {
@@ -3018,7 +3045,7 @@ function updateArtificialUI(options = {}) {
   if (artificialUICache.nameInput) {
     if (project) {
       if (document.activeElement !== artificialUICache.nameInput) {
-        artificialUICache.nameInput.value = project.name;
+        artificialUICache.nameInput.value = project.namePrefix;
       }
       artificialUICache.nameInput.dataset.lastProjectId = String(project.id);
       artificialUICache.nameInput.disabled = false;
@@ -3028,12 +3055,14 @@ function updateArtificialUI(options = {}) {
         artificialUICache.nameInput.value = draft.name;
         artificialUICache.nameInput.dataset.lastProjectId = '';
       }
-      if (!artificialUICache.nameInput.value) {
-        const typeValue = artificialUICache.type ? artificialUICache.type.value : 'shell';
-        const defaultName = manager?.getDefaultWorldName(typeValue === 'ring' ? 'ring' : (typeValue === 'disk' ? 'disk' : 'shell'));
-        artificialUICache.nameInput.placeholder = defaultName || `Artificial World ${manager.nextId}`;
-      }
     }
+  }
+  if (artificialUICache.numberInput) {
+    const number = project ? project.nameNumber : draft.number;
+    if (document.activeElement !== artificialUICache.numberInput) {
+      artificialUICache.numberInput.value = number;
+    }
+    artificialUICache.numberInput.disabled = false;
   }
   if (artificialUICache.type) {
     const options = getArtificialTypes();
