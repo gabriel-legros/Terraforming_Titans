@@ -1326,6 +1326,7 @@ setLanguageData({
         productivityWorkerLine: '{resource}: {available} available / {required} needed ({percent}%)',
         productivityMaintenanceLine: 'Maintenance paid: {percent}%',
         productivityDayNight: 'Inactive at night',
+        productivityAutomationDisabled: 'Disabled by automation settings.',
         productivityNoDetails: 'No limiting factor found.',
       },
     },

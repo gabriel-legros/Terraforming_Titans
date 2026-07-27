@@ -84,6 +84,15 @@ function buildStructureProductivityTooltip(structure) {
     return getStructuresUIText('ui.structures.tooltips.productivityNoActive', 'No active structures');
   }
 
+  if (structure.getAutomationActivityMultiplier() === 0) {
+    return [
+      getStructuresUIText('ui.structures.tooltips.productivityLimitedHeader', 'Limited to {value}%', {
+        value: formatProductivityTooltipPercent(0),
+      }),
+      getStructuresUIText('ui.structures.tooltips.productivityAutomationDisabled', 'Disabled by automation settings.'),
+    ].join('\n');
+  }
+
   if (info.target >= 0.9995) {
     return getStructuresUIText('ui.structures.tooltips.productivityTrendingFull', 'Trending to 100%');
   }
