@@ -712,6 +712,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Poseidon applies a world effect that enables `Foundry`, a resource building capped by initial land that costs like an Ore Mine, needs 10 workers, produces 10 metal plus 10 silica, and only gets the metal half doubled by `Advanced Alloys`.
 - Terraforming completion rewards and travel-point systems were extended (including dominion-specific rewards).
 - Journal reconstruction and indexing were improved for story continuity.
+- Journal entries with an original story objective show a horizontal divider after their text in both reconstructed and live-typing views; entries without an objective do not.
 - Terraforming requirements now support `appliedEffects` (applied on load/travel like other effects) and per-liquid coverage comparisons (`atLeast`/`atMost`), and `Others` can include requirement-level checks such as project completion.
 
 ### Specialized Systems
