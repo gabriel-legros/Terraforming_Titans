@@ -70,6 +70,7 @@ function createPlanetVisualizerStub(window) {
     viz: { coverage: {} },
     onResize() {},
     dispose() {},
+    updateZonalCoverageFromGameSafe() {},
     resetSurfaceTextureThrottle() {},
     updateSurfaceTextureFromPressure() {},
     setBaseColor() {}

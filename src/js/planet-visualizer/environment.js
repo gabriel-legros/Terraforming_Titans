@@ -62,8 +62,73 @@
     this.cityLightsGroup = new THREE.Group();
     this.sphere.add(this.cityLightsGroup);
 
-    const geom = new THREE.SphereGeometry(0.003, 8, 8);
-    const mat = new THREE.MeshBasicMaterial({ color: 0xffd447 });
+    if (
+      !this.renderer.capabilities.isWebGL2
+      && !this.renderer.extensions.has('ANGLE_instanced_arrays')
+    ) {
+      const geometry = new THREE.SphereGeometry(0.003, 8, 8);
+      const material = new THREE.MeshBasicMaterial({ color: 0xffd447 });
+      for (let i = 0; i < this.maxCityLights; i++) {
+        const u = Math.random();
+        const v = Math.random();
+        const theta = 2 * Math.PI * u;
+        const phi = Math.acos(2 * v - 1);
+        const radius = 1.005;
+        const light = new THREE.Mesh(geometry, material.clone());
+        light.position.set(
+          radius * Math.sin(phi) * Math.cos(theta),
+          radius * Math.cos(phi),
+          radius * Math.sin(phi) * Math.sin(theta)
+        );
+        light.visible = false;
+        this.cityLightsGroup.add(light);
+        this.cityLights.push(light);
+      }
+      this.cityLightsMesh = null;
+      return;
+    }
+
+    const geometry = new THREE.SphereGeometry(0.003, 8, 8);
+    const uniforms = {
+      sunDir: { value: new THREE.Vector3(1, 0, 0) },
+      scale: { value: 1 },
+    };
+    const material = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+    });
+    material.onBeforeCompile = (shader) => {
+      shader.uniforms.cityLightSunDir = uniforms.sunDir;
+      shader.uniforms.cityLightScale = uniforms.scale;
+      shader.vertexShader = shader.vertexShader
+        .replace(
+          '#include <common>',
+          `#include <common>
+          varying vec3 vCityLightWorldCenter;
+          uniform float cityLightScale;`
+        )
+        .replace(
+          '#include <begin_vertex>',
+          `vec3 transformed = vec3(position) * cityLightScale;
+          vCityLightWorldCenter = (modelMatrix * instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;`
+        );
+      shader.fragmentShader = shader.fragmentShader
+        .replace(
+          '#include <common>',
+          `#include <common>
+          varying vec3 vCityLightWorldCenter;
+          uniform vec3 cityLightSunDir;`
+        )
+        .replace(
+          '#include <clipping_planes_fragment>',
+          `#include <clipping_planes_fragment>
+          if (dot(normalize(vCityLightWorldCenter), cityLightSunDir) > 0.0) discard;`
+        );
+    };
+    material.customProgramCacheKey = () => 'planet-city-lights-instanced-v1';
+
+    let mesh = null;
+    const matrix = new THREE.Matrix4();
+    const baseColor = new THREE.Color(0xffd447);
 
     for (let i = 0; i < this.maxCityLights; i++) {
       const u = Math.random();
@@ -74,12 +139,30 @@
       const x = r * Math.sin(phi) * Math.cos(theta);
       const y = r * Math.cos(phi);
       const z = r * Math.sin(phi) * Math.sin(theta);
-      const m = new THREE.Mesh(geom, mat.clone());
-      m.position.set(x, y, z);
-      m.visible = false;
-      this.cityLightsGroup.add(m);
-      this.cityLights.push(m);
+
+      // Preserve the UUID random draws made by the old material clone and Mesh.
+      THREE.MathUtils.generateUUID();
+      if (i === 0) {
+        mesh = new THREE.InstancedMesh(geometry, material, this.maxCityLights);
+        this.cityLightsGroup.add(mesh);
+      } else {
+        THREE.MathUtils.generateUUID();
+      }
+
+      matrix.makeTranslation(x, y, z);
+      mesh.setMatrixAt(i, matrix);
+      mesh.setColorAt(i, baseColor);
     }
+    mesh.instanceMatrix.needsUpdate = true;
+    mesh.instanceColor.needsUpdate = true;
+    mesh.count = 0;
+    mesh.visible = false;
+    mesh.frustumCulled = false;
+
+    this.cityLightsMesh = mesh;
+    this.cityLights = [];
+    this.cityLightsUniforms = uniforms;
+    this._cityLightsUseEcumenopolisColors = false;
   };
 
   PlanetVisualizer.prototype.updateCityLights = function updateCityLights() {
@@ -88,32 +171,55 @@
     const populationTarget = Math.floor(pop / 1_000_000);
     const ecumenopolisTarget = Math.floor(smoothstep(0.01, 0.48, ecumenopolis) * this.maxCityLights);
     const target = Math.max(0, Math.min(this.maxCityLights, Math.max(populationTarget, ecumenopolisTarget)));
-    this.lastCityLightCount = target;
 
-    const sunDir = this.sunLight ? this.sunLight.position.clone().normalize() : new THREE.Vector3(1, 0, 0);
-    const tmp = new THREE.Vector3();
-
-    for (let i = 0; i < this.maxCityLights; i++) {
-      const m = this.cityLights[i];
-      if (!m) continue;
-      const baseVisible = i < target;
-      if (!baseVisible) {
-        m.visible = false;
-        continue;
+    const mesh = this.cityLightsMesh;
+    if (!mesh) {
+      this.lastCityLightCount = target;
+      const sunDirection = this.sunLight
+        ? this.sunLight.position.clone().normalize()
+        : new THREE.Vector3(1, 0, 0);
+      const worldPosition = new THREE.Vector3();
+      for (let i = 0; i < this.maxCityLights; i++) {
+        const light = this.cityLights[i];
+        if (i >= target) {
+          light.visible = false;
+          continue;
+        }
+        if (ecumenopolis > 0) {
+          light.scale.setScalar(1 + ecumenopolis * 0.45);
+          light.material.color.setHex(i % 5 === 0 ? 0xfff1a6 : 0xffc928);
+        } else {
+          light.scale.setScalar(1);
+          light.material.color.setHex(0xffd447);
+        }
+        light.getWorldPosition(worldPosition);
+        light.visible = worldPosition.normalize().dot(sunDirection) <= 0;
       }
-      if (ecumenopolis > 0) {
-        const scale = 1 + ecumenopolis * 0.45;
-        m.scale.setScalar(scale);
-        const hue = i % 5 === 0 ? 0xfff1a6 : 0xffc928;
-        m.material.color.setHex(hue);
-      } else {
-        m.scale.setScalar(1);
-        m.material.color.setHex(0xffd447);
-      }
-      m.getWorldPosition(tmp);
-      tmp.normalize();
-      const daySide = tmp.dot(sunDir) > 0;
-      m.visible = !daySide;
+      return;
     }
+
+    const uniforms = this.cityLightsUniforms;
+    const useEcumenopolisColors = ecumenopolis > 0;
+    if (useEcumenopolisColors !== this._cityLightsUseEcumenopolisColors) {
+      const baseColor = new THREE.Color(0xffd447);
+      const brightCityColor = new THREE.Color(0xfff1a6);
+      const cityColor = new THREE.Color(0xffc928);
+      for (let i = 0; i < this.maxCityLights; i++) {
+        mesh.setColorAt(
+          i,
+          useEcumenopolisColors
+            ? (i % 5 === 0 ? brightCityColor : cityColor)
+            : baseColor
+        );
+      }
+      mesh.instanceColor.needsUpdate = true;
+      this._cityLightsUseEcumenopolisColors = useEcumenopolisColors;
+    }
+
+    uniforms.scale.value = useEcumenopolisColors ? 1 + ecumenopolis * 0.45 : 1;
+    uniforms.sunDir.value.copy(this.sunLight.position).normalize();
+    mesh.count = target;
+    mesh.visible = target > 0;
+    this.lastCityLightCount = target;
   };
 })();

@@ -64,6 +64,14 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Screenshot output under `artifacts/screenshots/` is ignored by Git. Inspect the generated PNG with the local image viewer before reporting visual results.
 - If Playwright Chromium is missing after `npm ci`, install it with Windows Node: `cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && npx playwright install chromium"`.
 
+## World Visualizer Rendering
+
+- Spherical worlds keep their exact initial CPU surface, then lazily build deterministic terrain/noise bases and composite pressure, water, ice, life, hazardous life, ecumenopolis, and Nanoworld changes into persistent GPU render targets. Do not restore recurring `generateCraterTexture` calls for dynamic spherical coverage; ring, disk, SMBH-shell, Earth-reconstruction, and unsupported-WebGL visuals retain their specialized CPU paths.
+- Cloud coverage uploads its deterministic raw field once and recomposites alpha into a persistent GPU target, with the exact CPU renderer retained for WebGL1. Preserve the original 8-bit alpha rounding, transparent-pixel RGB, wrapping, filtering, mipmap behavior, and UUID random draws; do not recreate canvases or GPU textures as coverage changes on WebGL2.
+- City lights use one `InstancedMesh` when instancing is available and retain the mesh-per-light fallback otherwise. Preserve the legacy random-number/UUID draw order when changing their construction so seeded surface craters and city placement remain unchanged.
+- Game-mode initialization synchronizes zonal coverage before creating the first surface texture so saved water, ice, and biomass are present on the first visible frame. Save loading derives coverage directly from the restored zonal surface, bypassing the newly recreated visualizer's stale coverage cache, immediately before its forced surface refresh. The first dynamic shader-basis transition bypasses the recurring five-second surface throttle; throttle resets must also make the next update immediately eligible regardless of page uptime.
+- From WSL, run `cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && node scripts\manual-tests\benchmark-world-visualizer.js --save test_saves\mars_speedrun_record.json"` for a focused canvas-allocation, crater-generation, shader-composite, renderer-resource, and frame-timing audit. The measured interval should pass its zero canvas creation, zero crater generation, stable texture count, and no-error checks.
+
 ## General UI Screenshots
 - Use `npm run screenshot:ui` to capture any game element by CSS selector. The harness starts a temporary local server, uses an isolated Playwright browser context, and writes PNGs under `artifacts/screenshots/` by default.
 - From WSL on the Windows checkout, run it with Windows Node:

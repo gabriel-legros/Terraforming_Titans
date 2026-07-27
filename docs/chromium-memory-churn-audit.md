@@ -85,6 +85,14 @@ The audit covers:
 - Coverage validation failed only on disconnected project-cost tooltip anchors from the unchanged `projectsUI.js` cost path (`Energy: 10B / Required: 10B / Colony available: 0`). The count was already 1 in the first navigation phase and rose across save/load and travel; no automation tooltip or detached-cache finding was reported.
 - The Buildings, Projects, and Colony automation cards were captured and inspected at `artifacts/screenshots/automation-buildings-refactor.png`, `artifacts/screenshots/automation-projects-refactor.png`, and `artifacts/screenshots/automation-colony-refactor.png`.
 
+### 2026-07-27 - World visualizer shader pass
+
+- Matched Mars speedrun reports: before `chrome-memory-2026-07-27T21-39-00-389Z.json`, after `chrome-memory-2026-07-27T22-32-43-836Z.json`.
+- Recurring `createElement canvas` operations fell from 201 to zero. The measured-window element-creation delta fell from 199 to zero, while connected element and listener totals did not grow.
+- Normalized script time fell from `0.215` to `0.127` seconds per wall-clock second, about a 41% reduction. The after-run heap moved from `40,196,868` to `40,012,300` bytes and reported no console or page errors.
+- A focused 15-second visualizer benchmark recorded zero canvas creations and zero crater-texture rebuilds after setup. Across 343 frames, CPU frame-submission duration had a `0.4 ms` p95 and `10.6 ms` maximum; GPU texture count stayed at 9.
+- Deterministically seeded 768 px before/after captures of initial Zeus, clouded Venus, evolved Mars, partial/full ecumenopolis, and partial/full Nanoworld differed by at most one 8-bit channel value. No pixel exceeded that tolerance, including seam-facing full-coverage captures.
+
 ## Findings and Fixes
 
 ### Retained listeners and lifecycle cleanup
@@ -121,6 +129,12 @@ The audit covers:
 - Terraforming graph data collection remains in the simulation update, while canvas drawing now runs from the render path.
 - Auto-travel checks UI-owned tab state without querying the DOM from automation logic.
 - Open the Box no longer manipulates its DOM from its recurring project tick.
+
+### World visualizer rendering
+
+- Spherical planet surfaces now keep deterministic static terrain fields and composite changing water, ice, biomass, hazardous biomass, pressure, ecumenopolis, and Nanoworld coverage on the GPU. The original CPU renderer remains the exact fallback for special geometries, Earth reconstruction, and unsupported WebGL capabilities.
+- Cloud density now updates through a persistent shader target fed by a one-time raw field upload, eliminating recurring canvas allocation on WebGL2. Transparent pixels and global UUID random draws preserve the original canvas path, which remains active on WebGL1.
+- City lights use one instanced draw with per-instance dayside rejection instead of 1,000 cloned meshes and materials when instancing is available. The initialization sequence preserves the prior random-number and UUID consumption so seeded planet terrain and city placement remain unchanged.
 
 ## Verification Results
 

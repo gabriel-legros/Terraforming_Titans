@@ -747,6 +747,15 @@
       this.renderer.setSize(this.width, this.height);
       this.renderer.setClearColor(0x000000, 1);
       container.appendChild(this.renderer.domElement);
+      this.onWebGlContextRestored = () => {
+        this.resetSurfaceTextureThrottle();
+        this.updateSurfaceTextureFromPressure(true);
+        if (this.cloudMaterial) this.updateCloudTexture(true);
+      };
+      this.renderer.domElement.addEventListener(
+        'webglcontextrestored',
+        this.onWebGlContextRestored
+      );
 
       this.scene = new THREE.Scene();
       this.createStarField();
@@ -844,6 +853,7 @@
       this.setDebugMode(this.debug.enabled, { skipPersist: true });
 
       this.updateOverlayText();
+      if (this.debug.mode === 'game') this.updateZonalCoverageFromGameSafe();
       this.updateSurfaceTextureFromPressure(true);
       this.applyEarthVisualOverrides();
       if (this.isEarthReconstructionVisualActive()) {
@@ -863,7 +873,9 @@
     }
 
     dispose() {
+      this.disposeCloudCompositor();
       window.removeEventListener('resize', this.onResize);
+      this.disposeSurfaceShaderResources();
 
       if (this.debug.container && this.debug.container.parentNode) {
         this.debug.container.parentNode.removeChild(this.debug.container);
@@ -904,6 +916,7 @@
         disposeTexture(this.scene.background);
         disposeTexture(this.scene.environment);
         this.scene.traverse(object => {
+          if (object.isInstancedMesh) object.dispose();
           if (object.geometry && !disposedGeometries.has(object.geometry)) {
             disposedGeometries.add(object.geometry);
             object.geometry.dispose();
@@ -928,6 +941,7 @@
 
       if (this.renderer) {
         const canvas = this.renderer.domElement;
+        canvas.removeEventListener('webglcontextrestored', this.onWebGlContextRestored);
         this.renderer.dispose();
         this.renderer.forceContextLoss();
         if (canvas.parentNode) {
@@ -1036,11 +1050,11 @@
       this.renderer.render(this.scene, this.camera);
     }
 
-    updateZonalCoverageFromGameSafe() {
-      try { this.updateZonalCoverageFromGame(); } catch (e) {}
+    updateZonalCoverageFromGameSafe(readZonalSurfaceDirectly = false) {
+      try { this.updateZonalCoverageFromGame(readZonalSurfaceDirectly); } catch (e) {}
     }
 
-    updateZonalCoverageFromGame() {
+    updateZonalCoverageFromGame(readZonalSurfaceDirectly = false) {
       const t = terraforming;
       const zones = this.getZoneKeys();
       const z = this.viz.zonalCoverage;
@@ -1050,7 +1064,12 @@
       let weightSum = 0;
       for (const zone of zones) {
         let w, i, b, hb;
-        if (t && t.zonalCoverageCache && t.zonalCoverageCache[zone]) {
+        if (
+          !readZonalSurfaceDirectly
+          && t
+          && t.zonalCoverageCache
+          && t.zonalCoverageCache[zone]
+        ) {
           const c = t.zonalCoverageCache[zone];
           w = c.liquidWater; i = c.ice; b = c.biomass;
           hb = c.hazardousBiomass;

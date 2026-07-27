@@ -151,6 +151,7 @@ function installPlanetVisualizerStub(window) {
     updateBackground: () => {},
     resize: () => {},
     render: () => {},
+    updateZonalCoverageFromGameSafe: () => {},
     resetSurfaceTextureThrottle: () => {},
     setDebugMode: () => {},
   };

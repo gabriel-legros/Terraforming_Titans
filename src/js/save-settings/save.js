@@ -849,6 +849,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
     }
     const pv = window.planetVisualizer;
     if (pv) {
+      if (pv.debug.mode === 'game') pv.updateZonalCoverageFromGameSafe(true);
       pv.resetSurfaceTextureThrottle();
       pv.updateSurfaceTextureFromPressure(true);
     }
