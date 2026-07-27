@@ -150,6 +150,16 @@ function getSpecialSeedDisplayName(result) {
   return seedKey ? getSpecialSeedLocalizationText(`catalogs.specialSeeds.${seedKey}.name`, fallback) : fallback;
 }
 
+function attachRwgWorldRenameControl(result, seedUsed) {
+  const container = rwgResultEl?.querySelector('.rwg-world-name');
+  const seed = String(result?.seedString || seedUsed || '');
+  if (!container || !seed) return;
+  const fallbackName = getSpecialSeedDisplayName(result);
+  const savedName = spaceManager.randomWorldStatuses[seed]?.name;
+  container.querySelector('.artificial-history-name-text').textContent = savedName || fallbackName;
+  attachRandomWorldRenameControl(container, seed, fallbackName);
+}
+
 function getSpecialSeedEffectDescription(entry) {
   const fallback = entry?.description || entry?.label || entry?.name || entry?.id || '';
   if (entry?.descriptionKey) {
@@ -1170,6 +1180,7 @@ function updateRandomWorldUI() {
 }
 
 function attachTravelHandler(res, sStr) {
+  attachRwgWorldRenameControl(res, sStr);
   const travelBtn = rwgTravelBtnEl || document.getElementById('rwg-travel-btn');
   rwgTravelBtnEl = travelBtn || rwgTravelBtnEl;
   if (!travelBtn) return;
@@ -1667,6 +1678,12 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
     </div>` : '';
 
   const sm = typeof spaceManager !== 'undefined' ? spaceManager : globalThis.spaceManager;
+  const worldSeed = String(res.seedString || seedUsed || '');
+  const defaultWorldName = getSpecialSeedDisplayName(res);
+  const worldName = sm?.randomWorldStatuses?.[worldSeed]?.name || defaultWorldName;
+  const renameControl = options.renameWorld === false || !worldSeed
+    ? ''
+    : `<button type="button" class="artificial-history-edit-btn" aria-label="${escapeTooltipAttribute(getRwgUiText('details.renameWorldTitle', 'Rename this random world'))}"></button>`;
   const replayAllowed = isReplayableSeedResult(res);
   const eqState = getRandomWorldEquilibrationState(seedUsed, res.seedString, isSpecialSeedResult(res), resultSkipsEquilibration(res));
   const equilibrateDisabled = eqState.skipEquilibration;
@@ -1700,7 +1717,10 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
     <details class="rwg-card rwg-collapsible" open>
       <summary class="rwg-collapsible-summary"><span class="summary-arrow">▼</span>${getRwgUiText('details.worldDetailsTitle', 'World Details')}</summary>
       <div class="rwg-collapsible-body">
-      <h3>${getSpecialSeedDisplayName(res)}</h3>
+      <h3 class="rwg-world-name artificial-history-name">
+        <span class="artificial-history-name-text">${escapeTooltipAttribute(worldName)}</span>
+        ${renameControl}
+      </h3>
       <div class="rwg-control-row">
         <button id="rwg-equilibrate-btn" class="rwg-btn" ${equilibrateDisabled ? 'disabled' : ''}>${getRwgUiText('controls.equilibrate', 'Equilibrate')}</button>
         <span id="rwg-equilibrate-info" class="info-tooltip-icon">&#9432;</span>

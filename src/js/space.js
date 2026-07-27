@@ -1876,6 +1876,22 @@ class SpaceManager extends EffectableEntity {
         return this.randomWorldStatuses[key];
     }
 
+    setRandomWorldName(seed, name, fallbackName = '') {
+        const key = String(seed);
+        const status = this._ensureRandomWorldStatus(key);
+        const defaultName = String(fallbackName || '').trim()
+            || status.original?.merged?.name
+            || status.original?.name
+            || t('ui.space.randomWorldSeedName', { seed: key }, 'Seed {seed}');
+        const nextName = String(name || '').trim() || defaultName;
+        status.name = nextName;
+        if (this.currentRandomSeed !== null && String(this.currentRandomSeed) === key) {
+            this.currentRandomName = nextName;
+            currentPlanetParameters.name = nextName;
+        }
+        return nextName;
+    }
+
     resetRandomWorldStatus(seed) {
         const key = String(seed);
         this._updateWorldCacheForStatusMutation('random', key, (status, map, resolvedKey) => {
@@ -3160,7 +3176,8 @@ class SpaceManager extends EffectableEntity {
         this.currentRandomSeed = isArtificial ? null : s;
         this.currentArtificialKey = isArtificial ? s : null;
         this.currentPlanetKey = s;
-        this.currentRandomName = travelResult?.merged?.name
+        this.currentRandomName = (!isArtificial && existing?.name)
+            || travelResult?.merged?.name
             || travelResult?.merged?.rwgMeta?.specialSeedName
             || (isArtificial ? `Artificial ${s}` : `Seed ${s}`);
         const terraformedValue = isArtificial

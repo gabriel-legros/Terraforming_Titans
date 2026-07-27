@@ -59,6 +59,16 @@
   font-size: 20px;
 }
 
+#current-world-header .artificial-history-name-text,
+.rwg-world-name .artificial-history-name-text {
+  flex: 0 1 auto;
+}
+
+#current-world-header .artificial-history-name-input,
+.rwg-world-name .artificial-history-name-input {
+  flex: 0 1 260px;
+}
+
 .details-container {
   background: var(--space-panel-bg);
   border: 1px solid var(--space-border-color);

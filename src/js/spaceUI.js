@@ -23,6 +23,8 @@ let spaceSubtabActivationHandlerRegistered = false;
 let lastWorldKey = null;
 let lastWorldSeed = null;
 let currentWorldDetailsDirty = true;
+let currentWorldNameEl = null;
+let currentWorldRenameButtonEl = null;
 let spaceStatUniqueValueEl = null;
 let spaceStatEffectiveValueEl = null;
 let spaceStatGalacticPopulationValueEl = null;
@@ -599,6 +601,47 @@ function resetCurrentWorldCache() {
     currentWorldDetailsDirty = true;
 }
 
+function attachRandomWorldRenameControl(nameContainer, seed, fallbackName) {
+    const nameText = nameContainer.querySelector('.artificial-history-name-text');
+    const editBtn = nameContainer.querySelector('.artificial-history-edit-btn');
+    if (!nameText || !editBtn) return;
+    editBtn.setAttribute('aria-label', getSpaceUIText('renameRandomWorldTitle', 'Rename this random world'));
+    editBtn.onclick = (event) => {
+        event.stopPropagation();
+        if (nameContainer.dataset.editing === 'true') return;
+        nameContainer.dataset.editing = 'true';
+        const currentName = nameText.textContent;
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'artificial-history-name-input';
+        input.value = currentName;
+        nameContainer.replaceChild(input, nameText);
+        editBtn.disabled = true;
+        input.focus();
+        input.select();
+        input.addEventListener('keydown', (keyEvent) => {
+            if (keyEvent.key === 'Enter') {
+                input.blur();
+            }
+            if (keyEvent.key === 'Escape') {
+                input.value = currentName;
+                input.blur();
+            }
+        });
+        input.addEventListener('blur', () => {
+            nameContainer.dataset.editing = '';
+            editBtn.disabled = false;
+            const nextName = _spaceManagerInstance.setRandomWorldName(seed, input.value, fallbackName);
+            nameText.textContent = nextName;
+            nameContainer.replaceChild(nameText, input);
+            if (_spaceManagerInstance.currentRandomSeed !== null
+                && String(_spaceManagerInstance.currentRandomSeed) === String(seed)) {
+                resetCurrentWorldCache();
+            }
+        });
+    };
+}
+
 /**
  * Initializes the Space Tab UI elements and stores the SpaceManager instance.
  * @param {SpaceManager} spaceManager - The instance of the SpaceManager.
@@ -653,6 +696,8 @@ function initializeSpaceUI(spaceManager) {
 
     const optionsContainer = document.getElementById('planet-selection-options');
     const statusContainer = document.getElementById('travel-status');
+    currentWorldNameEl = document.getElementById('current-world-name');
+    currentWorldRenameButtonEl = document.getElementById('current-world-rename-button');
     spaceStatUniqueValueEl = document.getElementById('space-stat-unique-value');
     spaceStatEffectiveValueEl = document.getElementById('space-stat-effective-value');
     spaceStatGalacticPopulationValueEl = document.getElementById('space-stat-galactic-population-value');
@@ -1108,10 +1153,15 @@ function updateCurrentWorldUI(forceDetailsRender = false) {
         return;
     }
 
-    const nameSpan = document.getElementById('current-world-name');
     const detailsBox = document.getElementById('current-world-details');
-    if (nameSpan) {
-        nameSpan.textContent = _spaceManagerInstance.getCurrentWorldName();
+    if (currentWorldNameEl) {
+        const worldName = _spaceManagerInstance.getCurrentWorldName();
+        currentWorldNameEl.textContent = worldName;
+        const randomWorldActive = seed !== null;
+        currentWorldRenameButtonEl.classList.toggle('hidden', !randomWorldActive);
+        if (randomWorldActive) {
+            attachRandomWorldRenameControl(currentWorldNameEl.parentElement, seed, worldName);
+        }
     }
     if (detailsBox) {
         if (detailsBox.classList.contains('hidden') && !forceDetailsRender) {
@@ -1132,7 +1182,10 @@ function updateCurrentWorldUI(forceDetailsRender = false) {
             }
             wrapper.style.display = '';
             const nextWrapper = document.createElement('div');
-            prepareCurrentWorldDetailsFragment(nextWrapper, renderWorldDetail(data, seedArg, undefined, { showDominion: false }), seedArg);
+            prepareCurrentWorldDetailsFragment(nextWrapper, renderWorldDetail(data, seedArg, undefined, {
+                showDominion: false,
+                renameWorld: false
+            }), seedArg);
             morphWorldDetailChildren(wrapper, nextWrapper);
             if (typeof attachPendingRwgTooltips === 'function') {
                 attachPendingRwgTooltips(wrapper);
