@@ -529,6 +529,7 @@ class Terraforming extends EffectableEntity{
     this.phaseChangeHeatEnergyByZone = { tropical: 0, temperate: 0, polar: 0 };
     this.factoryHeatPower = 0;
     this.factoryHeatFlux = 0;
+    this.factoryHeatContributors = [];
     this.exosphereHeightMeters = 0;
     this.resourceSubstepMilliseconds = TERRAFORMING_RESOURCE_SUBSTEP_MS;
     this.maxResourceSubsteps = TERRAFORMING_RESOURCE_MAX_SUBSTEPS;
@@ -728,11 +729,15 @@ class Terraforming extends EffectableEntity{
     return Math.max(0, coreHeatFlux - megaHeatSinkFlux);
   }
 
-  setFactoryHeatPower(power) {
+  setFactoryHeatPower(power, contributors = []) {
     const surfaceArea = this.celestialParameters.surfaceArea
       || (4 * Math.PI * Math.pow((this.celestialParameters.radius || 0) * 1000, 2));
     this.factoryHeatPower = Number(power) || 0;
     this.factoryHeatFlux = surfaceArea > 0 ? this.factoryHeatPower / surfaceArea : 0;
+    this.factoryHeatContributors = contributors.map((contributor) => ({
+      name: contributor.name,
+      flux: surfaceArea > 0 ? contributor.power / surfaceArea : 0,
+    }));
   }
 
   resetPhaseChangeHeat() {
@@ -806,6 +811,29 @@ class Terraforming extends EffectableEntity{
       ? this.getMegaHeatSinkRawFlux()
       : Math.max(0, this.getMegaHeatSinkFlux() - this.getCoreHeatFlux());
     return Math.max(0, factoryHeatFlux - sinkAfterCore);
+  }
+
+  getFactoryHeatBreakdown() {
+    if (!gameSettings.factoryHeating || isEquilibrating) {
+      return [];
+    }
+    const contributors = this.factoryHeatContributors.slice();
+    const factoryHeatFlux = this.getFactoryHeatFlux();
+    if (factoryHeatFlux <= 0) {
+      return contributors;
+    }
+    const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
+    const sinkAfterCore = megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()
+      ? this.getMegaHeatSinkRawFlux()
+      : Math.max(0, this.getMegaHeatSinkFlux() - this.getCoreHeatFlux());
+    const mitigatedFactoryHeat = Math.min(factoryHeatFlux, sinkAfterCore);
+    if (mitigatedFactoryHeat > 0) {
+      contributors.push({
+        name: megaHeatSinkProject.displayName,
+        flux: -mitigatedFactoryHeat,
+      });
+    }
+    return contributors;
   }
 
   getNetSurfaceHeatFlux() {

@@ -83,11 +83,36 @@ function getCoreHeatTooltipText() {
   );
 }
 
-function getFactoryHeatTooltipText() {
-  return getTerraformingSummaryText(
-    'temperature.factoryHeatTooltip',
-    'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is reduced by surface albedo. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat. Direct waste heat is not impacted by albedo or day-night averaging.'
-  );
+function getFactoryHeatTooltipText(contributors = terraforming.getFactoryHeatBreakdown()) {
+  const lines = [
+    getTerraformingSummaryText(
+      'temperature.factoryHeatTooltip',
+      'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is reduced by surface albedo. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat. Direct waste heat is not impacted by albedo or day-night averaging.'
+    ),
+  ];
+  contributors.sort((a, b) => Math.abs(b.flux) - Math.abs(a.flux));
+  if (contributors.length === 0) {
+    return lines[0];
+  }
+  lines.push('', getTerraformingSummaryText(
+    'temperature.factoryHeatTopContributors',
+    'Top contributors by absolute impact:'
+  ));
+  const visibleContributors = contributors.slice(0, 5);
+  for (const contributor of visibleContributors) {
+    const signedFlux = `${contributor.flux > 0 ? '+' : ''}${formatNumber(contributor.flux, false, 2)}`;
+    lines.push(`${contributor.name}: ${signedFlux} W/m^2`);
+  }
+  if (contributors.length > 5) {
+    const otherFlux = contributors.slice(5).reduce((total, contributor) => total + contributor.flux, 0);
+    const signedOtherFlux = `${otherFlux > 0 ? '+' : ''}${formatNumber(otherFlux, false, 2)}`;
+    const otherLabel = getTerraformingSummaryText(
+      'temperature.factoryHeatOtherSources',
+      'Other sources'
+    );
+    lines.push(`${otherLabel}: ${signedOtherFlux} W/m^2`);
+  }
+  return lines.join('\n');
 }
 
 function getPhaseChangeHeatTooltipText() {
@@ -1665,14 +1690,15 @@ function createTemperatureBox(row) {
     }
     const factoryHeatFlux = terraforming.getFactoryHeatFlux ? terraforming.getFactoryHeatFlux() : 0;
     const netFactoryHeatFlux = terraforming.getNetFactoryHeatFlux ? terraforming.getNetFactoryHeatFlux() : factoryHeatFlux;
+    const factoryHeatBreakdown = terraforming.getFactoryHeatBreakdown();
     if (els.factoryHeatLine) {
-      const display = factoryHeatFlux !== 0 ? '' : 'none';
+      const display = factoryHeatBreakdown.length > 0 ? '' : 'none';
       if (els.factoryHeatLine.style.display !== display) {
         els.factoryHeatLine.style.display = display;
       }
     }
     if (els.factoryHeatTooltip) {
-      const tooltipText = getFactoryHeatTooltipText();
+      const tooltipText = getFactoryHeatTooltipText(factoryHeatBreakdown);
       if (els.factoryHeatTooltip.textContent !== tooltipText) {
         setTooltipText(els.factoryHeatTooltip, tooltipText);
       }

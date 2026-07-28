@@ -2004,22 +2004,24 @@ function updateFactoryHeatPower(deltaTime, structures) {
     return;
   }
   if (!gameSettings.factoryHeating || !(deltaTime > 0)) {
-    terraforming.setFactoryHeatPower(0);
+    terraforming.setFactoryHeatPower(0, []);
     return;
   }
 
   let power = 0;
+  const contributors = [];
   const surfaceAlbedo = Math.max(0, Math.min(1, terraforming.luminosity.surfaceAlbedo || 0));
   const solarCoolingMultiplier = 1 - surfaceAlbedo;
   for (const structureName in structures) {
     const structure = structures[structureName];
     const coefficient = structure.factoryHeatCoefficient || 0;
     const coolingCoefficient = structure.factoryCoolingCoefficient || 0;
+    let structurePower = 0;
     if (coefficient > 0) {
       const heatConsumption = structure.currentFactoryHeatConsumption || structure.currentConsumption;
       const consumedEnergy = heatConsumption?.colony?.energy || 0;
       if (consumedEnergy > 0) {
-        power += consumedEnergy * (1000 / deltaTime) * coefficient;
+        structurePower += consumedEnergy * (1000 / deltaTime) * coefficient;
       }
     }
     if (coolingCoefficient > 0) {
@@ -2027,11 +2029,18 @@ function updateFactoryHeatPower(deltaTime, structures) {
         ? (structure.production?.colony?.energy || 0) * structure.activeNumber * structure.getProductionRatio() * structure.getEffectiveProductionMultiplier() * structure.getEffectiveResourceProductionMultiplier('colony', 'energy') * 0.5 * (deltaTime / 1000)
         : structure.currentProduction?.colony?.energy || 0;
       if (producedEnergy > 0) {
-        power -= producedEnergy * (1000 / deltaTime) * coolingCoefficient * solarCoolingMultiplier;
+        structurePower -= producedEnergy * (1000 / deltaTime) * coolingCoefficient * solarCoolingMultiplier;
       }
     }
+    if (structurePower !== 0) {
+      contributors.push({
+        name: structure.displayName,
+        power: structurePower,
+      });
+      power += structurePower;
+    }
   }
-  terraforming.setFactoryHeatPower(power);
+  terraforming.setFactoryHeatPower(power, contributors);
 }
 
 function produceResources(deltaTime, buildings) {
