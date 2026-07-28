@@ -124,7 +124,7 @@ function buildStructureProductivityTooltip(structure) {
         for (let demandIndex = 0; demandIndex < largestDemands.length; demandIndex += 1) {
           const demand = largestDemands[demandIndex];
           lines.push(getStructuresUIText('ui.structures.tooltips.productivityDemandLine', '  {source}: {amount}', {
-            source: demand.source,
+            source: getRateSourceDisplayName(demand.source),
             amount: formatNumber(demand.amount, true, 3),
           }));
         }
