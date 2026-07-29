@@ -381,7 +381,8 @@ class AchievementManager {
 
   isHeatOfTheSunComplete() {
     const targetKelvin = 5500 + 273.15;
-    return !this.tracking.disqualified.heatOfTheSun
+    return currentPlanetParameters.specialAttributes.countsAsStandardTerraformingRun !== false
+      && !this.tracking.disqualified.heatOfTheSun
       && Number(terraforming.temperature?.value) >= targetKelvin;
   }
 
@@ -563,7 +564,8 @@ class AchievementManager {
   }
 
   isWasteMassAchievementComplete() {
-    if (currentPlanetParameters?.specialAttributes?.dynamicMass !== true) {
+    if (currentPlanetParameters.specialAttributes.countsAsStandardTerraformingRun === false
+      || currentPlanetParameters.specialAttributes.dynamicMass !== true) {
       return false;
     }
     const wasteMass = ['garbage', 'trash', 'junk', 'scrapMetal', 'radioactiveWaste'].reduce((total, key) => (
