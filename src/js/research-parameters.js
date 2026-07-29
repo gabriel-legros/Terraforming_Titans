@@ -2963,7 +2963,7 @@ const researchParameters = {
         id: 'tractor_beams',
         name: '',
         description: '',
-        cost: { advancedResearch: 999_999_999 },
+        cost: { advancedResearch: 1_000_000_000 },
         prerequisites: [],
         effects: [
           {
