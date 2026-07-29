@@ -1328,6 +1328,7 @@ setLanguageData({
         productivityDemandLine: '  {source}: {amount}',
         productivityWorkerLine: '{resource}: {available} available / {required} needed ({percent}%)',
         productivityMaintenanceLine: 'Maintenance paid: {percent}%',
+        productivityAdvancedOversight: 'Advanced Oversight allocation: {percent}% of facility capacity.',
         productivityDayNight: 'Inactive at night',
         productivityAutomationDisabled: 'Disabled by automation settings.',
         productivityNoDetails: 'No limiting factor found.',

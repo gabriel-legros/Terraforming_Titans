@@ -140,6 +140,10 @@ function buildStructureProductivityTooltip(structure) {
       lines.push(getStructuresUIText('ui.structures.tooltips.productivityMaintenanceLine', 'Maintenance paid: {percent}%', {
         percent,
       }));
+    } else if (factor.type === 'advancedOversight') {
+      lines.push(getStructuresUIText('ui.structures.tooltips.productivityAdvancedOversight', 'Advanced Oversight allocation: {percent}% of facility capacity.', {
+        percent,
+      }));
     } else if (factor.type === 'dayNight') {
       lines.push(getStructuresUIText('ui.structures.tooltips.productivityDayNight', 'Inactive at night'));
     }
