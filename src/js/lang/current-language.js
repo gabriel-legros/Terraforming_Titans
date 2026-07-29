@@ -5650,7 +5650,7 @@ setLanguageData({
       },
       oxygenFactory: {
         name: 'Oxygen Factory',
-        description: 'Extracts oxygen from liquid water via electrolysis or uses a lot of energy to liberate oxygen from rocks.',
+        description: 'Extracts oxygen from liquid water via electrolysis or uses a lot of energy to liberate oxygen from rocks.  Releases hydrogen as byproduct.',
         recipes: {
           water: { shortName: 'Water -> Oxygen' },
           silicates: { shortName: 'Silicates -> Oxygen' },
