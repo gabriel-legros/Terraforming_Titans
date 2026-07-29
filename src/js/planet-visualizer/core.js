@@ -1174,6 +1174,7 @@
 
   function reportPlanetVisualizerFailure(error) {
     const message = error && error.message ? error.message : '';
+    console.error('World visualizer initialization failed:', error);
     suppressPlanetVisualizerRuntime = true;
     planetVisualizerRuntimeFailed = true;
     planetVisualizerRuntimeFailureReason = message;

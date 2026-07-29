@@ -166,6 +166,8 @@
   };
 
   PlanetVisualizer.prototype.updateCityLights = function updateCityLights() {
+    if (this.isFlatWorld()) return;
+
     const pop = this.getCurrentPopulation();
     const ecumenopolis = this.getEcumenopolisVisualizerStrength();
     const populationTarget = Math.floor(pop / 1_000_000);

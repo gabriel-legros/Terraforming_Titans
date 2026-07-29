@@ -746,6 +746,7 @@ function updateTerraformingSubtabUI(subtabId, deltaSeconds) {
         try {
           viz.animate(deltaSeconds);
         } catch (e) {
+          console.error('World visualizer animation failed:', e);
           setWorldVisualizerRuntimeFailure(e && e.message ? e.message : '');
         }
       }
