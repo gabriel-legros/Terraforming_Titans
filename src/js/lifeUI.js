@@ -654,11 +654,41 @@ function initializeLifeTerraformingDesignerUI() {
       revertBtn,
       applyProgressContainer: document.getElementById('life-apply-progress-container'),
       modifyHeader: document.getElementById('modify-header'),
+      biopigmentationRow: document.getElementById('life-biopigmentation-row'),
+      biomassColorInput: document.getElementById('life-biomass-color-input'),
+      biomassAlbedoLabel: document.getElementById('life-biomass-albedo'),
+      biomassGrowthPenaltyLabel: document.getElementById('life-biomass-growth-penalty'),
+      biopigmentationTooltipIcon: document.getElementById('life-biopigmentation-tooltip'),
+      biopigmentationTooltipEl: null,
     };
+
+    lifeUICache.controls.biopigmentationTooltipEl = attachDynamicInfoTooltip(
+      lifeUICache.controls.biopigmentationTooltipIcon,
+      getLifeUIText(
+        'ui.life.biopigmentation.tooltip',
+        'Biomass albedo follows the selected colour. Colours no brighter than the basic green have no growth penalty. Brighter colours reduce growth linearly, reaching -80% for white. Changing colour costs no life points.'
+      )
+    );
   
 
     function generateAttributeRows() {
-      let rows = '';
+      let rows = `
+        <tr id="life-biopigmentation-row" style="display:none;">
+          <td class="life-attribute-name">
+            ${getLifeUIText('ui.life.biopigmentation.name', 'Biopigmentation')}
+            <span id="life-biopigmentation-tooltip" class="info-tooltip-icon">&#9432;</span>
+            <div class="life-attribute-description">${getLifeUIText('ui.life.biopigmentation.description', 'Choose the colour of engineered biomass.')}</div>
+          </td>
+          <td colspan="3">
+            <div class="life-biopigmentation-control">
+              <label for="life-biomass-color-input">${getLifeUIText('ui.life.biopigmentation.colorLabel', 'Biomass colour:')}</label>
+              <input id="life-biomass-color-input" type="color" value="${lifeDesigner.biomassColor}">
+              <span id="life-biomass-albedo"></span>
+              <span id="life-biomass-growth-penalty"></span>
+            </div>
+          </td>
+        </tr>
+      `;
       const attributeOrder = baseLifeAttributeOrder;
       const metabolismStrings = buildMetabolismEfficiencyUIStrings();
       const bioworkersPerBiomassPerPoint = getActiveLifeDesignRequirements().bioworkersPerBiomassPerPoint ?? 0.00001;
@@ -709,6 +739,11 @@ function initializeLifeTerraformingDesignerUI() {
       }
       return rows;
     }
+
+    lifeUICache.controls.biomassColorInput.addEventListener('input', (event) => {
+      lifeDesigner.setBiomassColor(event.target.value);
+      updateLifeUI();
+    });
     // Event listener for the "Create New Design" button
     newDesignBtn.addEventListener('click', () => {
       lifeDesigner.createNewDesign(0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -965,6 +1000,7 @@ function updateLifeUI() {
     toggleGatedAttributeElements();
 
     updateMetabolismEfficiencyRow();
+    updateBiopigmentationControl();
     updateOptimalGrowthTemperatureDescription();
     updateDesignValues();
     updatePointsDisplay();
@@ -1187,6 +1223,35 @@ function updateLifeUI() {
 	        cells.tooltipEl = ensureDynamicInfoTooltip(cells.tooltipIcon, cells.tooltipEl, strings.tooltipText);
 	      }
 	    }
+
+      function updateBiopigmentationControl() {
+        const {
+          biopigmentationRow,
+          biomassColorInput,
+          biomassAlbedoLabel,
+          biomassGrowthPenaltyLabel,
+        } = lifeUICache.controls;
+        const unlocked = isLifeFlagActive('biopigmentation');
+        biopigmentationRow.style.display = unlocked ? '' : 'none';
+        if (!unlocked) {
+          return;
+        }
+        if (document.activeElement !== biomassColorInput) {
+          biomassColorInput.value = lifeDesigner.biomassColor;
+        }
+        const albedo = lifeDesigner.getBiomassAlbedo();
+        const penalty = (1 - lifeDesigner.getBiomassGrowthMultiplier()) * 100;
+        biomassAlbedoLabel.textContent = getLifeUIText(
+          'ui.life.biopigmentation.albedo',
+          'Albedo: {value}',
+          { value: albedo.toFixed(3) }
+        );
+        biomassGrowthPenaltyLabel.textContent = getLifeUIText(
+          'ui.life.biopigmentation.growthPenalty',
+          'Growth penalty: -{value}%',
+          { value: formatNumber(penalty, false, 1) }
+        );
+      }
 
 	    function updateOptimalGrowthTemperatureDescription() {
 	      const cells = lifeUICache.attributeCells.optimalGrowthTemperature;
@@ -1538,6 +1603,8 @@ function updateLifeStatusTable() {
                 effectMultiplier: 1,
                 nitrogenMultiplier: 1,
                 nitrogenPressureKPa: 0,
+                biomassAlbedo: BIOMASS_COLOR_ALBEDO_RANGE.base,
+                pigmentationMultiplier: 1,
                 totalMultiplier: 1,
             };
             const otherMult = growthBreakdown.totalMultiplier;
@@ -1563,6 +1630,16 @@ function updateLifeStatusTable() {
                     lines.push(
                         getLifeUIText('ui.life.growthTooltip.engineeredNitrogenFixation', 'Engineered Nitrogen Fixation: x{value} ({pressure} kPa)', { value: formatNumber(growthBreakdown.nitrogenMultiplier, false, 2), pressure: formatNumber(growthBreakdown.nitrogenPressureKPa, false, 2) })
                     );
+                }
+                if (isLifeFlagActive('biopigmentation')) {
+                    lines.push(getLifeUIText(
+                        'ui.life.growthTooltip.biopigmentation',
+                        'Biopigmentation: x{value} (albedo {albedo})',
+                        {
+                            value: formatNumber(growthBreakdown.pigmentationMultiplier, false, 2),
+                            albedo: formatNumber(growthBreakdown.biomassAlbedo, false, 3)
+                        }
+                    ));
                 }
                 if (usesIceForWater) {
                     lines.push(getLifeUIText(

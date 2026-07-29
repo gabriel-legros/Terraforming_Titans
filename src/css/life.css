@@ -44,6 +44,20 @@
     font-family: "Courier New", monospace;
     white-space: pre-wrap;
   }
+
+  .life-biopigmentation-control {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  #life-biomass-color-input {
+    width: 44px;
+    height: 30px;
+    padding: 1px;
+    cursor: pointer;
+  }
   
   #life-designs-table input {
     padding: 5px;

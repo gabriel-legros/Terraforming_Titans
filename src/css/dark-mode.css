@@ -1632,6 +1632,7 @@ body.dark-mode {
 .dark-mode .life-automation-toggle,
 .dark-mode .life-automation-field,
 .dark-mode .life-automation-deploy-row,
+.dark-mode .life-automation-color-row,
 .dark-mode .life-automation-seed-row {
     color: #cbd4e2;
 }

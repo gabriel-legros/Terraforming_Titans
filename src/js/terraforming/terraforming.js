@@ -2159,7 +2159,9 @@ class Terraforming extends EffectableEntity{
         const fractions = (typeof calculateZonalSurfaceFractions === 'function')
             ? calculateZonalSurfaceFractions(this, zone)
             : { ocean: 0, ice: 0, hydrocarbon: 0, hydrocarbonIce: 0, co2_ice: 0, ammonia: 0, ammoniaIce: 0, oxygen: 0, oxygenIce: 0, nitrogen: 0, nitrogenIce: 0, fineSand: 0, biomass: 0 };
-        return surfaceAlbedoMix(groundAlbedo, fractions);
+        return surfaceAlbedoMix(groundAlbedo, fractions, {
+            biomass: getActiveBiomassAlbedo()
+        });
     }
 
     calculateSurfaceAlbedo() {

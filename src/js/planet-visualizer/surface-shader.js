@@ -40,6 +40,7 @@
       ...ice.map(value => value.toFixed(2)),
       ...life.map(value => value.toFixed(2)),
       ...hazardousLife.map(value => value.toFixed(2)),
+      getActiveBiomassColor(),
       context.getEcumenopolisVisualizerStrength().toFixed(2),
       context.getNanoworldVisualizerStrength().toFixed(2),
     ].join('|');
@@ -370,6 +371,9 @@
       iceFromPoles: { value: 0 },
       lifeCoverage: { value: new THREE.Vector3() },
       lifeThresholds: { value: new THREE.Vector3(-1, -1, -1) },
+      lifePaletteBase: { value: new THREE.Vector3() },
+      lifePaletteLow: { value: new THREE.Vector3() },
+      lifePaletteHigh: { value: new THREE.Vector3() },
       hazardousCoverage: { value: new THREE.Vector3() },
       hazardousThresholds: { value: new THREE.Vector3(-1, -1, -1) },
       mountainThreshold: { value: state.mountainThreshold },
@@ -409,6 +413,9 @@
         uniform float iceFromPoles;
         uniform vec3 lifeCoverage;
         uniform vec3 lifeThresholds;
+        uniform vec3 lifePaletteBase;
+        uniform vec3 lifePaletteLow;
+        uniform vec3 lifePaletteHigh;
         uniform vec3 hazardousCoverage;
         uniform vec3 hazardousThresholds;
         uniform float mountainThreshold;
@@ -617,9 +624,9 @@
             color,
             lifeCoverage,
             lifeThresholds,
-            vec3(24.0, 105.0, 58.0),
-            vec3(34.0, 110.0, 78.0),
-            vec3(12.0, 150.0, 44.0),
+            lifePaletteBase,
+            lifePaletteLow,
+            lifePaletteHigh,
             height,
             fieldA.b,
             fieldA.a,
@@ -897,6 +904,10 @@
       uniforms.lifeThresholds.value,
       lifeCoverage.map((coverage, zone) => findDescendingThreshold(lifeHistograms[zone], coverage))
     );
+    const biomassPalette = getBiomassColorPalette(getActiveBiomassColor());
+    setVector3(uniforms.lifePaletteBase.value, biomassPalette.base);
+    setVector3(uniforms.lifePaletteLow.value, biomassPalette.low);
+    setVector3(uniforms.lifePaletteHigh.value, biomassPalette.high);
     setVector3(uniforms.hazardousCoverage.value, hazardousCoverage);
     setVector3(
       uniforms.hazardousThresholds.value,

@@ -90,6 +90,35 @@ function buildAutomationLifeUI() {
   deployRow.append(deployLabel, deployInput, deploySuffix, deployInfo);
   designSection.appendChild(deployRow);
 
+  const biomassColorRow = document.createElement('label');
+  biomassColorRow.classList.add('life-automation-color-row');
+  const biomassColorLabel = document.createElement('span');
+  biomassColorLabel.textContent = getAutomationCardText('lifeBiomassColorLabel', {}, 'Biomass colour');
+  const biomassColorInput = document.createElement('input');
+  biomassColorInput.type = 'color';
+  biomassColorInput.classList.add('life-automation-color-input');
+  const biomassAlbedoLabel = document.createElement('span');
+  const biomassGrowthPenaltyLabel = document.createElement('span');
+  const biomassColorInfo = document.createElement('span');
+  biomassColorInfo.classList.add('info-tooltip-icon');
+  biomassColorInfo.innerHTML = '&#9432;';
+  attachDynamicInfoTooltip(
+    biomassColorInfo,
+    getAutomationCardText(
+      'lifeBiomassColorTooltip',
+      {},
+      'This color is applied when the preset deploys a life design. Changing it costs no life points. Brighter-than-green biomass grows more slowly, up to -80% for white.'
+    )
+  );
+  biomassColorRow.append(
+    biomassColorLabel,
+    biomassColorInput,
+    biomassAlbedoLabel,
+    biomassGrowthPenaltyLabel,
+    biomassColorInfo
+  );
+  designSection.appendChild(biomassColorRow);
+
   const seedRow = document.createElement('div');
   seedRow.classList.add('life-automation-seed-row');
   const seedButton = document.createElement('button');
@@ -126,6 +155,10 @@ function buildAutomationLifeUI() {
   automationElements.lifeDesignStepsContainer = stepsContainer;
   automationElements.lifeAddStepButton = addStepButton;
   automationElements.lifeDeployInput = deployInput;
+  automationElements.lifeBiomassColorRow = biomassColorRow;
+  automationElements.lifeBiomassColorInput = biomassColorInput;
+  automationElements.lifeBiomassAlbedoLabel = biomassAlbedoLabel;
+  automationElements.lifeBiomassGrowthPenaltyLabel = biomassGrowthPenaltyLabel;
   automationElements.lifeSeedRow = seedRow;
   automationElements.lifeSeedButton = seedButton;
   automationElements.lifeDesignEnableCheckbox = designEnable;
@@ -156,6 +189,10 @@ function updateLifeAutomationUI() {
     lifeDesignStepsContainer,
     lifeAddStepButton,
     lifeDeployInput,
+    lifeBiomassColorRow,
+    lifeBiomassColorInput,
+    lifeBiomassAlbedoLabel,
+    lifeBiomassGrowthPenaltyLabel,
     lifeSeedRow,
     lifeDesignEnableCheckbox,
     lifeDeployNowButton,
@@ -205,6 +242,23 @@ function updateLifeAutomationUI() {
   if (document.activeElement !== lifeDeployInput) {
     lifeDeployInput.value = activePreset.deployImprovement;
   }
+  const biopigmentationUnlocked = isLifeFlagActive('biopigmentation');
+  lifeBiomassColorRow.style.display = biopigmentationUnlocked ? 'flex' : 'none';
+  if (document.activeElement !== lifeBiomassColorInput) {
+    lifeBiomassColorInput.value = normalizeBiomassColor(activePreset.biomassColor);
+  }
+  const presetBiomassAlbedo = getBiomassAlbedoFromColor(activePreset.biomassColor);
+  const presetGrowthPenalty = (1 - getBiomassGrowthMultiplierFromAlbedo(presetBiomassAlbedo)) * 100;
+  lifeBiomassAlbedoLabel.textContent = getAutomationCardText(
+    'lifeBiomassAlbedo',
+    { value: presetBiomassAlbedo.toFixed(3) },
+    `Albedo: ${presetBiomassAlbedo.toFixed(3)}`
+  );
+  lifeBiomassGrowthPenaltyLabel.textContent = getAutomationCardText(
+    'lifeBiomassGrowthPenalty',
+    { value: formatNumber(presetGrowthPenalty, false, 1) },
+    `Growth penalty: -${formatNumber(presetGrowthPenalty, false, 1)}%`
+  );
   lifeSeedRow.style.display = activePreset.designSteps.length === 0 ? '' : 'none';
   const deployCandidate = lifeDesigner.enabled && activePreset.designSteps.length > 0
     ? automation.buildCandidateDesign(activePreset)
@@ -293,6 +347,7 @@ function attachLifeAutomationHandlers() {
     lifePurchaseEnableCheckbox,
     lifeAddStepButton,
     lifeDeployInput,
+    lifeBiomassColorInput,
     lifeSeedButton,
     lifeDesignEnableCheckbox,
     lifeDeployNowButton
@@ -375,6 +430,13 @@ function attachLifeAutomationHandlers() {
     const automation = automationManager.lifeAutomation;
     const preset = automation.getActivePreset();
     automation.setDeployImprovement(preset.id, event.target.value);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+  lifeBiomassColorInput.addEventListener('input', (event) => {
+    const automation = automationManager.lifeAutomation;
+    const preset = automation.getActivePreset();
+    automation.setPresetBiomassColor(preset.id, event.target.value);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });

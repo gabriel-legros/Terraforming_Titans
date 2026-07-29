@@ -1085,6 +1085,14 @@ setLanguageData({
         growthChemistry: 'Growth chemistry: {equation}',
         detailed: 'Detailed: {equation}',
       },
+      biopigmentation: {
+        name: 'Biopigmentation',
+        description: 'Choose the colour of engineered biomass.',
+        colorLabel: 'Biomass colour:',
+        albedo: 'Albedo: {value}',
+        growthPenalty: 'Growth penalty: -{value}%',
+        tooltip: 'Biomass albedo follows the selected colour. Colours no brighter than the basic green have no growth penalty. Brighter colours reduce growth linearly, reaching -80% for white. Changing colour is free.',
+      },
       attributes: {
         minTemperatureTolerance: {
           name: 'Minimum Temperature Tolerance',
@@ -1206,6 +1214,7 @@ setLanguageData({
       },
       growthTooltip: {
         solidBiochemistry: 'Solid Biochemistry (ice substitution): x{value}',
+        biopigmentation: 'Biopigmentation: x{value} (albedo {albedo})',
         lowGravity: 'Low Gravity: x0.00',
         lowGravityDisabled: 'Growth is disabled because Ringworld gravity is below 0.1g, so atmosphere cannot be retained.',
         base: 'Base: {value}%',
@@ -4681,6 +4690,10 @@ setLanguageData({
         lifeDeployImproveLabel: 'Deploy only if design improves by',
         lifeDeployPointsSuffix: 'points',
         lifeDeployInfo: 'Auto deployment will only trigger if it improves a design by the given number of points.',
+        lifeBiomassColorLabel: 'Biomass colour',
+        lifeBiomassColorTooltip: 'This color is applied when the preset deploys a life design. Changing it costs no life points. Brighter-than-green biomass grows more slowly, up to -80% for white.',
+        lifeBiomassAlbedo: 'Albedo: {value}',
+        lifeBiomassGrowthPenalty: 'Growth penalty: -{value}%',
         lifeCreateStepsFromCurrentButton: 'Create steps from current design',
         lifeSpendAtLabel: 'Spend at',
         lifeMaxCostLabel: 'Max cost',
@@ -6596,6 +6609,10 @@ setLanguageData({
         next_gen_bioengineering: {
           name: 'Next-generation bio-engineering',
           description: 'Enables the use of advanced research to permanently increase life design potential',
+        },
+        biopigmentation: {
+          name: 'Biopigmentation',
+          description: 'Life can use other pigments.  This can help raise albedo, but bright colours suffer growth penalties.',
         },
         repeatable_ai_research: {
           name: 'Repeatable AI Researches',

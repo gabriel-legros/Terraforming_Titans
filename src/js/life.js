@@ -809,6 +809,8 @@ class LifeDesigner extends EffectableEntity {
     this.advancedResearchBaseCost = 1;
     this.advancedResearchLegacyBaseCost = 100000;
     this.saveVersion = 2;
+    this.biomassColor = DEFAULT_BIOMASS_COLOR;
+    setActiveBiomassColor(DEFAULT_BIOMASS_COLOR);
 
     this.purchaseCounts = this.createEmptyPurchaseCounts();
 
@@ -816,6 +818,19 @@ class LifeDesigner extends EffectableEntity {
     this.biodomePointRate = 0;
 
     this.enabled = false;
+  }
+
+  setBiomassColor(color) {
+    this.biomassColor = normalizeBiomassColor(color);
+    setActiveBiomassColor(this.biomassColor);
+  }
+
+  getBiomassAlbedo() {
+    return getBiomassAlbedoFromColor(this.biomassColor);
+  }
+
+  getBiomassGrowthMultiplier() {
+    return getBiomassGrowthMultiplierFromAlbedo(this.getBiomassAlbedo());
   }
 
   createEmptyPurchaseCounts() {
@@ -1119,6 +1134,7 @@ class LifeDesigner extends EffectableEntity {
       elapsedTime: this.elapsedTime,
       purchaseCounts: { ...this.purchaseCounts },
       biodomePoints: this.biodomePoints,
+      biomassColor: this.biomassColor,
       // spaceEfficiency and geologicalBurial are saved within currentDesign/tentativeDesign
     };
     return data;
@@ -1146,6 +1162,12 @@ class LifeDesigner extends EffectableEntity {
       }
     }
     this.biodomePoints = data.biodomePoints || 0;
+    this.biomassColor = normalizeBiomassColor(data.biomassColor);
+    setActiveBiomassColor(
+      lifeManager.isBooleanFlagSet('biopigmentation')
+        ? this.biomassColor
+        : DEFAULT_BIOMASS_COLOR
+    );
   }
 
   prepareTravelState() {
@@ -1178,7 +1200,14 @@ class LifeManager extends EffectableEntity {
     if (effect.flagId === 'quantumBiology') {
       lifeDesignerConfig.quantumBiology = !!effect.value;
     }
-    if (effect.flagId === 'bioworkforce' || effect.flagId === 'bioships') {
+    if (effect.flagId === 'biopigmentation') {
+      setActiveBiomassColor(
+        this.isBooleanFlagSet('biopigmentation')
+          ? lifeDesigner.biomassColor
+          : DEFAULT_BIOMASS_COLOR
+      );
+    }
+    if (effect.flagId === 'bioworkforce' || effect.flagId === 'bioships' || effect.flagId === 'biopigmentation') {
       queueAutomationUIRefresh();
     }
   }
@@ -1207,11 +1236,16 @@ class LifeManager extends EffectableEntity {
       nitrogenPressureKPa = info.pressureKPa;
     }
 
+    const biomassAlbedo = getActiveBiomassAlbedo();
+    const pigmentationMultiplier = getBiomassGrowthMultiplierFromAlbedo(biomassAlbedo);
+
     return {
       effectMultiplier,
       nitrogenMultiplier,
       nitrogenPressureKPa,
-      totalMultiplier: effectMultiplier * nitrogenMultiplier,
+      biomassAlbedo,
+      pigmentationMultiplier,
+      totalMultiplier: effectMultiplier * nitrogenMultiplier * pigmentationMultiplier,
     };
   }
 

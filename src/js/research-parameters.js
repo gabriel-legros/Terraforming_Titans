@@ -2436,6 +2436,21 @@ const researchParameters = {
         ]
       },
       {
+        id: 'biopigmentation',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 7_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'lifeManager',
+            type: 'booleanFlag',
+            flagId: 'biopigmentation',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'self_replicating_ships_concept',
         name: '',
         description: '',

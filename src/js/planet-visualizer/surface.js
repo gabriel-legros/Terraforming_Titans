@@ -691,6 +691,7 @@
     const dustKey = [dustRgb.r, dustRgb.g, dustRgb.b]
       .map(v => Math.round(v / 4))
       .join('_');
+    const biomassColorKey = getActiveBiomassColor();
     // Include planet type in cache key so palette changes (archetype) update texture
     let typeKey = 'default';
     try { typeKey = resolvePlanetArchetype(this, baseColorKey) || 'default'; } catch (e) {}
@@ -703,7 +704,7 @@
       this.heightMap = null;
       this.heightZoneHists = null;
     }
-    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${hazardousLife.toFixed(2)}|${ecumenopolis.toFixed(2)}|${nanoworld.toFixed(2)}|${zKey}|${dustKey}|${typeKey}|${fKey}|${heightKey}|${earthShapeKey}`;
+    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${hazardousLife.toFixed(2)}|${ecumenopolis.toFixed(2)}|${nanoworld.toFixed(2)}|${zKey}|${dustKey}|${biomassColorKey}|${typeKey}|${fKey}|${heightKey}|${earthShapeKey}`;
     if (!force && key === this.lastCraterFactorKey) return;
     this.lastCraterFactorKey = key;
 
@@ -1584,11 +1585,7 @@
       }
     };
 
-    renderLifeOverlay('life', {
-      base: [24, 105, 58],
-      low: [34, 110, 78],
-      high: [12, 150, 44],
-    });
+    renderLifeOverlay('life', getBiomassColorPalette(getActiveBiomassColor()));
     renderLifeOverlay('hazardousLife', {
       base: [130, 24, 24],
       low: [150, 42, 34],
