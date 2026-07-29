@@ -243,11 +243,13 @@ function updateLifeAutomationUI() {
   const stepsHasFocus = lifeDesignStepsContainer.contains(document.activeElement) &&
     (document.activeElement.tagName === 'SELECT' || document.activeElement.tagName === 'INPUT');
   if (!stepsHasFocus) {
+    const attributeOptions = getLifeAutomationAttributeOptions();
     const stepsSignature = JSON.stringify({
       presetId: activePreset.id,
       designEnabled: activePreset.designEnabled !== false,
       maxSteps: automation.maxSteps,
       lifeDesignerEnabled: !!lifeDesigner.enabled,
+      attributes: attributeOptions.map(option => option.value),
       designSteps: activePreset.designSteps.map(step => ({
         id: step.id,
         mode: step.mode,

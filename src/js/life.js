@@ -1178,6 +1178,9 @@ class LifeManager extends EffectableEntity {
     if (effect.flagId === 'quantumBiology') {
       lifeDesignerConfig.quantumBiology = !!effect.value;
     }
+    if (effect.flagId === 'bioworkforce' || effect.flagId === 'bioships') {
+      queueAutomationUIRefresh();
+    }
   }
 
   getEngineeredNitrogenFixationInfo() {
