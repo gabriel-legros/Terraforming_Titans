@@ -93,6 +93,10 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - CDP's broad DOM-node counter includes detached/native nodes and can make one-time lazy-initialization steps. Confirm a DOM leak with repeated monotonic growth and compare connected all-node, Element, Text, listener, tooltip-anchor, and cache-reference counts before attributing it to the game.
 - A detached cache reference that stays numerically flat is not a growing leak, but it is still a stale-cache or broken-UI defect unless the node has an explicit temporary-detachment and reattachment path.
 
+## Zeus Battle Rendering
+- The Battle of Zeus canvas runs its continuous animation loop only while its project card is connected and visible. Leaving or collapsing the project view stops the loop; returning to the active Story Projects view restarts it through `ZeusBattleProject.updateUI()`.
+- Hidden frame transitions settle immediately instead of continuing to allocate animation frames off-screen. Static battle frames reuse their immutable unit arrays; interpolated transitions still build temporary unit states.
+
 ## Project Overview
 - Browser incremental game with script entry via `index.html`.
 - English localization is split between `src/js/lang/current-language.js` for shared game/UI text and `src/js/lang/story-language.js` for chapter titles, narratives, prompts, story-project content, and story-project-specific UI.
