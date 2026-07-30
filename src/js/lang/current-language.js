@@ -910,7 +910,7 @@ setLanguageData({
         aerostatCapacity: 'Aerostat Capacity',
       },
       solarPanel: {
-        limitTooltip: 'Solar panels are limited to 2.5x the base land amount.',
+        limitTooltip: 'Solar panels are limited to 2.5x the current geometric land amount. Excess panels are automatically deactivated if land shrinks.',
       },
       windTurbine: {
         limitTooltip: 'Wind turbine arrays are limited to 1 per 50 units of base land.',
