@@ -823,7 +823,7 @@
         "scopeZones": " dans la zone {zones}{s}",
         "scopeAtmosphere": " dans l'ensemble de l'atmosphère",
         "hydrogenIntro": "L'hydrogène s'échappe lentement dans l'espace en fonction du flux solaire et de la gravité.",
-        "hydrogenPhoto": "Les UV stellaires peuvent photodissocier jusqu'à {percent}% de ce gaz, créant des atomes qui s'échappent environ {speed}x plus vite que les molécules.",
+        "hydrogenPhoto": "Les UV stellaires peuvent photodissocier jusqu'à {percent}% de ce gaz en atomes, qui s'échappent plus facilement que les molécules.",
         "hydrogenGravityDecay": ", attendez-vous donc à une dégradation continue.",
         "hydrogenGravityRetain": ", l'atmosphère peut donc retenir l'hydrogène.",
         "hydrogenGravityLine": "La gravité actuelle est de {value} m/s²{relation}",

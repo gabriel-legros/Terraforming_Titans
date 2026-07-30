@@ -823,7 +823,7 @@
         "scopeZones": " in der {zones} Zone{s}",
         "scopeAtmosphere": " über die Atmosphäre",
         "hydrogenIntro": "Wasserstoff entweicht langsam in den Raum, je nach Sonnenfluss und Schwerkraft.",
-        "hydrogenPhoto": "Stellar UV kann bis zu {percent}% dieses Gases fotodissoziieren, wodurch Atome entstehen, die über {speed}x schneller entweichen als Moleküle.",
+        "hydrogenPhoto": "Stellare UV-Strahlung kann bis zu {percent}% dieses Gases in Atome photodissoziieren, die leichter entweichen als Moleküle.",
         "hydrogenGravityDecay": ", so erwarten Sie anhaltende Verfall.",
         "hydrogenGravityRetain": ", so dass die Atmosphäre Wasserstoff halten kann.",
         "hydrogenGravityLine": "Die aktuelle Gravitation beträgt {value} m/s²{relation}",

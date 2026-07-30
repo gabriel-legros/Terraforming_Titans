@@ -823,7 +823,7 @@
         "scopeZones": " nella zona {zones}ZZ{s}",
         "scopeAtmosphere": " in tutta l'atmosfera",
         "hydrogenIntro": "L'idrogeno lentamente sfugge allo spazio a seconda del flusso solare e della gravità.",
-        "hydrogenPhoto": "Gli UV stellari possono fotodissociare fino a {percent}% di quel gas, creando atomi che escono più velocemente delle molecole su {speed}x.",
+        "hydrogenPhoto": "Gli UV stellari possono fotodissociare fino al {percent}% di quel gas in atomi, che sfuggono più facilmente delle molecole.",
         "hydrogenGravityDecay": ", quindi aspettatevi un decadimento continuo.",
         "hydrogenGravityRetain": ", così l'atmosfera può mantenere l'idrogeno.",
         "hydrogenGravityLine": "La gravità attuale è {value} m/s2{relation}",

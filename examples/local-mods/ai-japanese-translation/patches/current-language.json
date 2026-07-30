@@ -823,7 +823,7 @@
         "scopeZones": " で、 {zones} ゾーン{s}",
         "scopeAtmosphere": " 大気を越える",
         "hydrogenIntro": "太陽フラックスや重力に応じて、ゆっくりと空間に水素をエスケープします。",
-        "hydrogenPhoto": "ステラ UV までphotodissociateできます {percent}そのガスの%、エスケープする原子を作る {speed}分子より速くx。",
+        "hydrogenPhoto": "恒星の紫外線は、そのガスの最大 {percent}% を原子に光解離し、原子は分子よりも容易に散逸します。",
         "hydrogenGravityDecay": "そのため、進行中の腐敗を期待します。",
         "hydrogenGravityRetain": "そのため、水素を保ちながらも雰囲気が取れます。",
         "hydrogenGravityLine": "現在の重力はあります {value}  m/s²{relation}",

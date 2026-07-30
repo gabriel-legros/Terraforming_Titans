@@ -823,7 +823,7 @@
         "scopeZones": " {zones} 구역{s} 내에서",
         "scopeAtmosphere": " 대기 전체에서",
         "hydrogenIntro": "수소는 태양 플럭스와 중력에 따라 서서히 우주로 빠져나갑니다.",
-        "hydrogenPhoto": "항성 자외선은 해당 기체의 최대 {percent}%를 광해리하여 분자보다 약 {speed}배 빠르게 빠져나가는 원자를 만들 수 있습니다.",
+        "hydrogenPhoto": "항성 자외선은 해당 기체의 최대 {percent}%를 원자로 광해리할 수 있으며, 원자는 분자보다 더 쉽게 빠져나갑니다.",
         "hydrogenGravityDecay": ", 따라서 지속적인 감소가 예상됩니다.",
         "hydrogenGravityRetain": ", 따라서 대기가 수소를 유지할 수 있습니다.",
         "hydrogenGravityLine": "현재 중력은 {value} m/s²{relation}",

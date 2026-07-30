@@ -823,7 +823,7 @@
         "scopeZones": " in the {zones} zone{s}",
         "scopeAtmosphere": " across the atmosphere",
         "hydrogenIntro": "Hydrogen slowly escapes to space depending on solar flux and gravity.",
-        "hydrogenPhoto": "Stellar UV can photodissociate up to {percent}% of that gas, creating atoms that escape about {speed}x faster than molecules.",
+        "hydrogenPhoto": "Stellar UV can photodissociate up to {percent}% of that gas into atoms, which escape more readily than molecules.",
         "hydrogenGravityDecay": ", so expect ongoing decay.",
         "hydrogenGravityRetain": ", so the atmosphere can retain hydrogen.",
         "hydrogenGravityLine": "Current gravity is {value} m/s²{relation}",

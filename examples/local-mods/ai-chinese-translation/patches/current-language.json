@@ -823,7 +823,7 @@
         "scopeZones": "（{zones} 区域{s}内）",
         "scopeAtmosphere": "（整个大气层中）",
         "hydrogenIntro": "氢会依太阳辐照通量和重力缓慢逸散到太空。",
-        "hydrogenPhoto": "恒星紫外线最多可光解其中 {percent}% 的气体，产生的原子逸散速度约为分子的 {speed} 倍。",
+        "hydrogenPhoto": "恒星紫外线最多可将其中 {percent}% 的气体光解为原子，而原子比分子更容易逸散。",
         "hydrogenGravityDecay": "，因此预计会持续流失。",
         "hydrogenGravityRetain": "，因此大气层能够留住氢。",
         "hydrogenGravityLine": "当前重力为 {value} m/s²{relation}",

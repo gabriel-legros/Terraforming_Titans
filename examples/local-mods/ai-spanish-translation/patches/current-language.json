@@ -823,7 +823,7 @@
         "scopeZones": " en zona{s}: {zones}",
         "scopeAtmosphere": " en toda la atmósfera",
         "hydrogenIntro": "El hidrógeno escapa lentamente al espacio según el flujo solar y la gravedad.",
-        "hydrogenPhoto": "La radiación UV estelar puede fotodisociar hasta un {percent}% de ese gas, creando átomos que escapan unas {speed} veces más rápido que las moléculas.",
+        "hydrogenPhoto": "La radiación UV estelar puede fotodisociar hasta un {percent}% de ese gas en átomos, que escapan con más facilidad que las moléculas.",
         "hydrogenGravityDecay": ", por lo que cabe esperar una pérdida continua.",
         "hydrogenGravityRetain": ", por lo que la atmósfera puede retener el hidrógeno.",
         "hydrogenGravityLine": "La gravedad actual es de {value} m/s²{relation}",
