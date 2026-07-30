@@ -55,8 +55,14 @@ function setHazardousMachineryTitleStatus(isCleared) {
   if (!hazardousMachineryUICache.titleStatus) {
     return;
   }
-  hazardousMachineryUICache.titleStatus.textContent = ` (${getHazardousMachineryStatusText(isCleared)})`;
-  hazardousMachineryUICache.titleStatus.className = `hazard-card__status hazard-card__status--${isCleared ? 'cleared' : 'active'}`;
+  const text = ` (${getHazardousMachineryStatusText(isCleared)})`;
+  const className = `hazard-card__status hazard-card__status--${isCleared ? 'cleared' : 'active'}`;
+  if (hazardousMachineryUICache.titleStatus.textContent !== text) {
+    hazardousMachineryUICache.titleStatus.textContent = text;
+  }
+  if (hazardousMachineryUICache.titleStatus.className !== className) {
+    hazardousMachineryUICache.titleStatus.className = className;
+  }
 }
 
 function getHazardousMachineryDocument() {
@@ -925,7 +931,9 @@ function updateHazardousMachineryUI(parameters) {
   if (!card || !hazardInstance || !terraformingState || !parameters) {
     if (card) {
       setHazardousMachineryTitleStatus(true);
-      card.style.display = 'none';
+      if (card.style.display !== 'none') {
+        card.style.display = 'none';
+      }
     }
     return;
   }
@@ -940,10 +948,12 @@ function updateHazardousMachineryUI(parameters) {
   const hasEnoughResearchForBatch = (research?.value || 0) + 1e-9 >= requestedCost;
   const hasEnoughResearchToClear = (research?.value || 0) + 1e-9 >= clearCost;
 
-  card.style.display = '';
+  if (card.style.display !== '') {
+    card.style.display = '';
+  }
   setHazardousMachineryTitleStatus(hazardInstance.isCleared());
 
-  hazardousMachineryUICache.summaryStatusText.textContent = [
+  const statusText = [
     getHazardousMachineryUiText('labels.currentCoverage', 'Current Coverage: {value}%', {
       value: formatMachineryNumber(status.currentCoverageShare * 100, 2)
     }),
@@ -954,6 +964,9 @@ function updateHazardousMachineryUI(parameters) {
       value: formatMachineryNumber(status.currentAmount, 2)
     })
   ].join('\n');
+  if (hazardousMachineryUICache.summaryStatusText.textContent !== statusText) {
+    hazardousMachineryUICache.summaryStatusText.textContent = statusText;
+  }
 
   const oxygenUnit = status.oxygenEntry?.unit || 'kPa';
   const invasivenessRangeText = formatHazardousMachineryRange(status.invasivenessEntry);
@@ -1037,10 +1050,16 @@ function updateHazardousMachineryUI(parameters) {
   ]);
 
   if (hazardousMachineryUICache.baseGrowthValue) {
-    hazardousMachineryUICache.baseGrowthValue.textContent = formatMachineryPercent(status.baseGrowthPercentPerSecond, 2);
+    const baseGrowthText = formatMachineryPercent(status.baseGrowthPercentPerSecond, 2);
+    if (hazardousMachineryUICache.baseGrowthValue.textContent !== baseGrowthText) {
+      hazardousMachineryUICache.baseGrowthValue.textContent = baseGrowthText;
+    }
   }
   if (hazardousMachineryUICache.totalPenaltyValue) {
-    hazardousMachineryUICache.totalPenaltyValue.textContent = formatMachineryPercent(status.totalPenaltyPercentPerSecond, 2);
+    const totalPenaltyText = formatMachineryPercent(status.totalPenaltyPercentPerSecond, 2);
+    if (hazardousMachineryUICache.totalPenaltyValue.textContent !== totalPenaltyText) {
+      hazardousMachineryUICache.totalPenaltyValue.textContent = totalPenaltyText;
+    }
   }
 
   const decayLines = [];
@@ -1073,7 +1092,7 @@ function updateHazardousMachineryUI(parameters) {
       : [getHazardousMachineryUiText('labels.noDecay', 'No active decay or growth.')]
   );
 
-  hazardousMachineryUICache.summaryPenalties.textContent = [
+  const penaltiesText = [
     getHazardousMachineryUiText('labels.buildCost', 'Build Cost: {value}', {
       value: formatSignedMachineryPercent((status.buildCostMultiplier - 1) * 100, 1)
     }),
@@ -1096,43 +1115,94 @@ function updateHazardousMachineryUI(parameters) {
       value: formatMachineryNumber(status.shipWorkersPerAssignedShip, 0)
     })
   ].join('\n');
+  if (hazardousMachineryUICache.summaryPenalties.textContent !== penaltiesText) {
+    hazardousMachineryUICache.summaryPenalties.textContent = penaltiesText;
+  }
 
-  hazardousMachineryUICache.summaryHackingCost.textContent = getHazardousMachineryUiText('labels.convertCost', 'Research Cost: {value}', {
+  const hackingCostText = getHazardousMachineryUiText('labels.convertCost', 'Research Cost: {value}', {
     value: formatMachineryNumber(requestedCost, 0)
   });
-  hazardousMachineryUICache.summaryHackingCost.classList.toggle('hazard-machinery-hacking__cost--insufficient', !hasEnoughResearchForBatch);
-  hazardousMachineryUICache.summaryHackingClearCost.textContent = getHazardousMachineryUiText('labels.clearCost', 'Clear All Cost: {value}', {
+  if (hazardousMachineryUICache.summaryHackingCost.textContent !== hackingCostText) {
+    hazardousMachineryUICache.summaryHackingCost.textContent = hackingCostText;
+  }
+  if (hazardousMachineryUICache.summaryHackingCost.classList.contains('hazard-machinery-hacking__cost--insufficient') === hasEnoughResearchForBatch) {
+    hazardousMachineryUICache.summaryHackingCost.classList.toggle('hazard-machinery-hacking__cost--insufficient', !hasEnoughResearchForBatch);
+  }
+
+  const hackingClearCostText = getHazardousMachineryUiText('labels.clearCost', 'Clear All Cost: {value}', {
     value: formatMachineryNumber(clearCost, 0)
   });
-  hazardousMachineryUICache.summaryHackingClearCost.classList.toggle('hazard-machinery-hacking__cost--insufficient', !hasEnoughResearchToClear);
-  hazardousMachineryUICache.summaryHackingInfo.textContent = getHazardousMachineryUiText(
+  if (hazardousMachineryUICache.summaryHackingClearCost.textContent !== hackingClearCostText) {
+    hazardousMachineryUICache.summaryHackingClearCost.textContent = hackingClearCostText;
+  }
+  if (hazardousMachineryUICache.summaryHackingClearCost.classList.contains('hazard-machinery-hacking__cost--insufficient') === hasEnoughResearchToClear) {
+    hazardousMachineryUICache.summaryHackingClearCost.classList.toggle('hazard-machinery-hacking__cost--insufficient', !hasEnoughResearchToClear);
+  }
+
+  const hackingInfoText = getHazardousMachineryUiText(
     'labels.convertInfo',
     'Each hack spends {cost} research to disable 1 hazardous machinery.',
     { cost: formatMachineryNumber(costPerHack, 0) }
   );
-  hazardousMachineryUICache.hackButton.textContent = getHazardousMachineryUiText('labels.convertAction', 'Hack +{value}', {
+  if (hazardousMachineryUICache.summaryHackingInfo.textContent !== hackingInfoText) {
+    hazardousMachineryUICache.summaryHackingInfo.textContent = hackingInfoText;
+  }
+
+  const hackButtonText = getHazardousMachineryUiText('labels.convertAction', 'Hack +{value}', {
     value: formatMachineryNumber(batchSize, 0)
   });
-  hazardousMachineryUICache.hackButton.disabled = maxHackAmount <= 0;
-  hazardousMachineryUICache.hackMaxButton.disabled = maxHackAmount <= 0;
-  hazardousMachineryUICache.autoSpendCheckbox.checked = hazardInstance.autoSpendIfClear === true;
+  if (hazardousMachineryUICache.hackButton.textContent !== hackButtonText) {
+    hazardousMachineryUICache.hackButton.textContent = hackButtonText;
+  }
+  const hackingDisabled = maxHackAmount <= 0;
+  if (hazardousMachineryUICache.hackButton.disabled !== hackingDisabled) {
+    hazardousMachineryUICache.hackButton.disabled = hackingDisabled;
+  }
+  if (hazardousMachineryUICache.hackMaxButton.disabled !== hackingDisabled) {
+    hazardousMachineryUICache.hackMaxButton.disabled = hackingDisabled;
+  }
+  const autoSpendChecked = hazardInstance.autoSpendIfClear === true;
+  if (hazardousMachineryUICache.autoSpendCheckbox.checked !== autoSpendChecked) {
+    hazardousMachineryUICache.autoSpendCheckbox.checked = autoSpendChecked;
+  }
 
   const safePercent = Math.max(0, (1 - status.hazardStrength) * 100);
   const hazardPercent = Math.max(0, status.hazardStrength * 100);
-  hazardousMachineryUICache.barSafeLabel.textContent = getHazardousMachineryUiText('labels.barSafe', 'Clear {value}%', {
+  const safeLabelText = getHazardousMachineryUiText('labels.barSafe', 'Clear {value}%', {
     value: formatMachineryNumber(safePercent, 1)
   });
-  hazardousMachineryUICache.barHazardLabel.textContent = getHazardousMachineryUiText('labels.barHazard', 'Machinery {value}%', {
+  if (hazardousMachineryUICache.barSafeLabel.textContent !== safeLabelText) {
+    hazardousMachineryUICache.barSafeLabel.textContent = safeLabelText;
+  }
+  const hazardLabelText = getHazardousMachineryUiText('labels.barHazard', 'Machinery {value}%', {
     value: formatMachineryNumber(hazardPercent, 1)
   });
-  hazardousMachineryUICache.barSafe.style.width = `${safePercent}%`;
-  hazardousMachineryUICache.barHazard.style.width = `${hazardPercent}%`;
-  hazardousMachineryUICache.barSafe.style.flexBasis = `${safePercent}%`;
-  hazardousMachineryUICache.barHazard.style.flexBasis = `${hazardPercent}%`;
-  hazardousMachineryUICache.barDetails.textContent = getHazardousMachineryUiText('labels.barDetails', 'Hazardous Machinery: {current} / {max} ton', {
+  if (hazardousMachineryUICache.barHazardLabel.textContent !== hazardLabelText) {
+    hazardousMachineryUICache.barHazardLabel.textContent = hazardLabelText;
+  }
+
+  const safeWidth = `${safePercent}%`;
+  const hazardWidth = `${hazardPercent}%`;
+  if (hazardousMachineryUICache.barSafe.style.width !== safeWidth) {
+    hazardousMachineryUICache.barSafe.style.width = safeWidth;
+  }
+  if (hazardousMachineryUICache.barHazard.style.width !== hazardWidth) {
+    hazardousMachineryUICache.barHazard.style.width = hazardWidth;
+  }
+  if (hazardousMachineryUICache.barSafe.style.flexBasis !== safeWidth) {
+    hazardousMachineryUICache.barSafe.style.flexBasis = safeWidth;
+  }
+  if (hazardousMachineryUICache.barHazard.style.flexBasis !== hazardWidth) {
+    hazardousMachineryUICache.barHazard.style.flexBasis = hazardWidth;
+  }
+
+  const barDetailsText = getHazardousMachineryUiText('labels.barDetails', 'Hazardous Machinery: {current} / {max} ton', {
     current: formatMachineryNumber(status.currentAmount, 2),
     max: formatMachineryNumber(status.fullCoverageAmount, 2)
   });
+  if (hazardousMachineryUICache.barDetails.textContent !== barDetailsText) {
+    hazardousMachineryUICache.barDetails.textContent = barDetailsText;
+  }
 }
 
 try {

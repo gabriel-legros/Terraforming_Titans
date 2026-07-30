@@ -6628,7 +6628,7 @@ setLanguageData({
         },
         automatic_surplus_trading: {
           name: 'Automatic Surplus Trading',
-          description: 'At this point, colony resources have become merely commodities.  The Galactic Market shoud be able to adapt to rapid changes in our supply, allowing us to sell our surplus resources without having to find business partners first.  (Overflowing colony resources will be automatically sold on the market below saturation.  Happens on the next tick.)',
+          description: 'At this point, colony resources have become merely commodities.  The Galactic Market should be able to adapt to rapid changes in our supply, allowing us to sell our surplus resources without having to find business partners first.  (Overflowing colony resources will be automatically sold on the market below saturation.  Happens on the next tick.)',
         },
         mechanical_assistance: {
           name: 'Mechanical Assistance',
