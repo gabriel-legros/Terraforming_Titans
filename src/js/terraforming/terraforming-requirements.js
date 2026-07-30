@@ -667,7 +667,6 @@ const terraformingRequirements = {
     id: 'yggies',
     displayName: '',
     lore: '',
-    buildTargets: ['steam'],
     dominionUnlock: { type: 'fullyControlledSectors', minimum: 60 },
     temperatureRangeK: { min: 288.15, max: 318.15 },
     luminosityRange: { min: 50, max: 1000 },

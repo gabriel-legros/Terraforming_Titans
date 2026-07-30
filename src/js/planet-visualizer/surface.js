@@ -290,7 +290,6 @@
   };
 
   PlanetVisualizer.prototype.getEcumenopolisVisualizerStrength = function getEcumenopolisVisualizerStrength() {
-    if (!GAME_FEATURES.steamExclusiveEcumenopolisVisualizer) return 0;
     return clamp01((this.viz.coverage?.ecumenopolis || 0) / 100);
   };
 

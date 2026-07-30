@@ -1113,9 +1113,7 @@
       this.viz.coverage.life = Math.min(0.75, avgLife) * 100;
       this.viz.coverage.hazardousLife = Math.min(0.75, avgHazardousLife) * 100;
       this.viz.coverage.cloud = Math.max(0, Math.min(100, cloudFraction * 100));
-      this.viz.coverage.ecumenopolis = GAME_FEATURES.steamExclusiveEcumenopolisVisualizer
-        ? Math.max(0, Math.min(100, getEcumenopolisLandFraction(t) * 100))
-        : 0;
+      this.viz.coverage.ecumenopolis = Math.max(0, Math.min(100, getEcumenopolisLandFraction(t) * 100));
       this.viz.coverage.nanoworld = projectManager.projects.nanoworld.isCompleted ? 100 : 0;
     }
 

@@ -176,10 +176,6 @@ async function configureVisualizer(page, options) {
     if (!visualizer) throw new Error('Planet visualizer did not initialize');
     if (scene.planet && !planetParameters[scene.planet]) throw new Error(`Unknown planet preset: ${scene.planet}`);
 
-    if (scene.ecumenopolis !== null) {
-      GAME_FEATURES.steamExclusiveEcumenopolisVisualizer = true;
-    }
-
     visualizer.setDebugMode(true, { skipPersist: true });
     if (scene.save) {
       visualizer.debug.mode = 'game';
