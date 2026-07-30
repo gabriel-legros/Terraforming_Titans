@@ -183,61 +183,33 @@ class UndergroundExpansionProject extends AndroidProject {
     this.prepaidPortion = Math.max(0, this.prepaidPortion - progress);
 
     const cost = this.getScaledCost();
-    let shortfall = false;
-    let paidCostPortion = requestedCostPortion;
-
-    if (requestedCostPortion > 0) {
-      let maxAffordablePortion = requestedCostPortion;
-      for (const category in cost) {
-        for (const resource in cost[category]) {
-          const perCompletionCost = cost[category][resource];
-          if (perCompletionCost <= 0) {
-            continue;
-          }
-          const pendingChange = accumulatedChanges && accumulatedChanges[category] && accumulatedChanges[category][resource] !== undefined
-            ? accumulatedChanges[category][resource]
-            : 0;
-          const available = Math.max(0, (resources[category][resource].value || 0) + pendingChange);
-          const affordablePortion = available / perCompletionCost;
-          maxAffordablePortion = Math.min(maxAffordablePortion, affordablePortion);
+    const prepaidCompletions = this.applyContinuousProgress(prepaidCovered);
+    const result = this.applyRequestedExpansionProgress(
+      requestedCostPortion,
+      cost,
+      accumulatedChanges,
+      {
+        applyRates: this.showsInResourcesRate(),
+        seconds: deltaTime / 1000,
+        rateSourceLabel: this.getRateSource(),
+        applyProgress(progress) {
+          return this.applyContinuousProgress(progress);
         }
       }
-      paidCostPortion = Math.max(0, Math.min(requestedCostPortion, maxAffordablePortion));
-      shortfall = paidCostPortion < requestedCostPortion;
-    }
-
-    if (paidCostPortion > 0) {
-      for (const category in cost) {
-        for (const resource in cost[category]) {
-          const amount = cost[category][resource] * paidCostPortion;
-          if (accumulatedChanges) {
-            if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
-            if (accumulatedChanges[category][resource] === undefined) {
-              accumulatedChanges[category][resource] = 0;
-            }
-            accumulatedChanges[category][resource] -= amount;
-          } else {
-            resources[category][resource].decrease(amount);
-          }
-        }
-      }
-    }
-
-    const totalPaidProgress = prepaidCovered + paidCostPortion;
-    const completed = this.applyContinuousProgress(totalPaidProgress);
+    );
+    const completed = prepaidCompletions + (result.progressResult || 0);
     if (completed > 0) {
       this.prepaidPortion = 0;
     }
-    this.shortfallLastTick = shortfall;
+    this.shortfallLastTick = result.shortfall;
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
-    const totals = super.estimateCostAndGain(deltaTime, applyRates, productivity, accumulatedChanges);
-
     if (!this.isContinuous() || !this.isActive) {
-      return totals;
+      return super.estimateCostAndGain(deltaTime, applyRates, productivity, accumulatedChanges);
     }
 
+    const totals = { cost: {}, gain: {} };
     const duration = this.getEffectiveDuration();
     if (!duration || duration === Infinity) {
       return totals;
@@ -253,19 +225,41 @@ class UndergroundExpansionProject extends AndroidProject {
       return totals;
     }
 
+    const requestedProgress = Math.min((deltaTime / duration) * productivity, remainingRepeats);
+    const prepaidCovered = Math.min(requestedProgress, this.prepaidPortion);
+    const requestedCostPortion = Math.max(0, requestedProgress - prepaidCovered);
+    const cost = this.getScaledCost();
+    const storageState = this.createExpansionStorageState(accumulatedChanges);
+    const paidProgress = this.getAffordableExpansionProgress(
+      requestedCostPortion,
+      cost,
+      storageState,
+      accumulatedChanges
+    );
+    totals.cost = this.estimateExpansionCostForProgress(
+      cost,
+      paidProgress,
+      deltaTime,
+      accumulatedChanges,
+      storageState,
+      {
+        applyRates: applyRates && this.showsInResourcesRate(),
+        sourceLabel: this.getRateSource()
+      }
+    );
+
+    const progress = prepaidCovered + paidProgress;
     const seconds = deltaTime / 1000;
-    const progressForRate = Math.min((deltaTime / duration) * productivity, remainingRepeats);
-    const landRate = seconds > 0 ? (progressForRate * perCompletionLand) / seconds : 0;
+    const landRate = seconds > 0 ? (progress * perCompletionLand) / seconds : 0;
     if (landRate > 0 && applyRates && this.showsInResourcesRate()) {
       resources.surface.land.modifyRate(landRate, this.getRateSource(), 'project');
     }
 
-    const progressForTotals = Math.min(deltaTime / duration, remainingRepeats);
-    if (!totals.gain.surface) {
-      totals.gain.surface = {};
+    if (progress > 0) {
+      totals.gain.surface = {
+        land: progress * perCompletionLand
+      };
     }
-    totals.gain.surface.land = (totals.gain.surface.land || 0) + (progressForTotals * perCompletionLand);
-
     return totals;
   }
 
@@ -334,6 +328,8 @@ class UndergroundExpansionProject extends AndroidProject {
     super.update(deltaTime);
   }
 }
+
+ContinuousExpansionProject.applyCapabilityTo(UndergroundExpansionProject);
 
 if (typeof globalThis !== 'undefined') {
   globalThis.UndergroundExpansionProject = UndergroundExpansionProject;
