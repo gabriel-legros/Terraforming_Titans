@@ -2182,7 +2182,7 @@ function getDisplayConsumptionRates(resource) {
     if (amount <= 0 || building.active <= 0n) {
       continue;
     }
-    const sourceName = building.displayName || name;
+    const sourceName = building.getRateSource();
     const current = adjustedBySource[sourceName] || 0;
     const displayFactor = building.ignoreResourceForProductivityResourceDisplay
       ? building.displayProductivity
