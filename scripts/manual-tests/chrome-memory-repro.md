@@ -77,6 +77,22 @@ node scripts/manual-tests/run-chrome-memory-repro.js --channel bundled --headles
 
 The mode takes two full heap snapshots, so it is intentionally opt-in and is not suitable for a fast structural smoke run. Native sampling is statistical and released Chrome builds may return few or no attributed native stacks; the matched `extra_native_bytes` and process totals still measure the otherwise missed memory. Change its average sampling interval with `--native-sampling-interval <bytes>`.
 
+Replay Chrome's Allocation instrumentation on timeline recorder:
+
+```sh
+node scripts/manual-tests/run-chrome-memory-repro.js --channel bundled --headless --native-memory --allocation-timeline --duration 900 --sample 15
+```
+
+This uses `HeapProfiler.startTrackingHeapObjects({ trackAllocations: true })`, records live-object count/size fragments in the sample series, and discards the large traced snapshot after extracting its streamed size and header totals. It disables regular V8 allocation sampling. Run it both with and without `--force-gc`: growth that disappears after allocation tracking stops is DevTools profiler bookkeeping rather than retained game memory.
+
+Exercise the whole visible UI repeatedly during an ordinary long run:
+
+```sh
+node scripts/manual-tests/run-chrome-memory-repro.js --channel bundled --headless --native-memory --force-gc --explore-every 120 --duration 900 --sample 15
+```
+
+Each exploration revisits every visible tab/subtab and executes one logic/render step per surface. Keep this separate from allocation instrumentation because traced DOM-heavy sweeps are substantially slower and measure a different workload.
+
 Bundled Chromium:
 
 ```sh
@@ -132,6 +148,8 @@ Simple sampler reports contain:
 - `summary.domNodeDelta`: net DOM node growth.
 - `samples[]`: time series for heap, DOM nodes, listener count, observer counters, and DOM creation counters.
 - `samples[].chromiumPrivateBytes` / `chromiumWorkingSetBytes` and browser/renderer/GPU breakdowns when `--native-memory` is enabled.
+- `samples[].allocationTimelineLiveObjectCount` / `allocationTimelineLiveObjectSize` and `allocationTimeline.snapshot` when `--allocation-timeline` is enabled.
+- `explorations[]`: elapsed time and duration of each full UI sweep requested with `--explore-every`.
 - `finalProbe.topAdded`, `topRemoved`, and `topOperations`: hottest element/signature and DOM-operation stacks over the sampled run.
 - `topHeapAllocations`, `duplicateStrings`, `consoleMessages`, and `pageErrors`: allocation/string/error diagnostics.
 

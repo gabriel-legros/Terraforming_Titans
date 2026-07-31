@@ -34,6 +34,8 @@ function parseArgs(argv) {
     heapSampling: true,
     nativeMemory: false,
     nativeSamplingInterval: 32768,
+    allocationTimeline: false,
+    exploreEverySeconds: 0,
     stringDuplicates: true,
     duplicateStringMinLength: 24,
     duplicateStringLimit: 50
@@ -102,6 +104,11 @@ function parseArgs(argv) {
     } else if (arg === '--native-sampling-interval') {
       options.nativeSamplingInterval = Number(next);
       index += 1;
+    } else if (arg === '--allocation-timeline') {
+      options.allocationTimeline = true;
+    } else if (arg === '--explore-every') {
+      options.exploreEverySeconds = Number(next);
+      index += 1;
     } else if (arg === '--no-string-duplicates') {
       options.stringDuplicates = false;
     } else if (arg === '--duplicate-string-min-length') {
@@ -142,8 +149,20 @@ function parseArgs(argv) {
   if (!Number.isFinite(options.nativeSamplingInterval) || options.nativeSamplingInterval <= 0) {
     throw new Error('--native-sampling-interval must be a positive number of bytes');
   }
+  if (!Number.isFinite(options.exploreEverySeconds) || options.exploreEverySeconds < 0) {
+    throw new Error('--explore-every must be a non-negative number of seconds');
+  }
   if (options.audit && options.freezeLoop) {
     throw new Error('--freeze-loop cannot be combined with --audit; audit mode owns the running/manual-pause state');
+  }
+  if (options.audit && options.exploreEverySeconds > 0) {
+    throw new Error('--explore-every cannot be combined with --audit; audit mode owns its navigation schedule');
+  }
+  if (options.audit && options.allocationTimeline) {
+    throw new Error('--allocation-timeline is for the long simple sampler; do not combine it with --audit');
+  }
+  if (options.allocationTimeline) {
+    options.heapSampling = false;
   }
 
   return options;
@@ -177,6 +196,8 @@ function printHelp() {
     '  --no-heap-sampling    Disable V8 allocation sampling',
     '  --native-memory       Add matched extra-native snapshots, native allocation sampling, and Chromium process memory',
     '  --native-sampling-interval <bytes> Average bytes between native allocation samples. Default: 32768',
+    '  --allocation-timeline Replay Chrome allocation instrumentation instead of V8 sampling',
+    '  --explore-every <s>   Cycle every visible tab/subtab at this interval during simple sampling',
     '  --no-string-duplicates Disable final heap snapshot duplicate-string summary',
     '  --duplicate-string-min-length <n> Minimum string length to include. Default: 24',
     '  --duplicate-string-limit <n> Number of duplicate string rows to keep. Default: 50'
@@ -443,6 +464,93 @@ function createNativeMemoryCollector(cdpSession, browserCdpSession, samplingInte
   };
 }
 
+function parseAllocationTimelineSnapshotHeader(prefix, streamedCharacters) {
+  function numberField(name) {
+    const match = prefix.match(new RegExp(`"${name}":(\\d+)`));
+    return match ? Number(match[1]) : null;
+  }
+
+  return {
+    streamedCharacters,
+    nodeCount: numberField('node_count'),
+    edgeCount: numberField('edge_count'),
+    traceFunctionCount: numberField('trace_function_count'),
+    extraNativeBytes: numberField('extra_native_bytes')
+  };
+}
+
+function createAllocationTimelineCollector(cdpSession) {
+  const fragments = new Map();
+  let statsUpdateCount = 0;
+  let lastSeenObjectId = 0;
+  let lastSeenTimestamp = 0;
+
+  const onStatsUpdate = (event) => {
+    statsUpdateCount += 1;
+    for (let index = 0; index < event.statsUpdate.length; index += 3) {
+      fragments.set(event.statsUpdate[index], {
+        count: event.statsUpdate[index + 1],
+        size: event.statsUpdate[index + 2]
+      });
+    }
+  };
+  const onLastSeenObjectId = (event) => {
+    lastSeenObjectId = event.lastSeenObjectId;
+    lastSeenTimestamp = event.timestamp;
+  };
+
+  function sample() {
+    const totals = Array.from(fragments.values()).reduce((sum, fragment) => ({
+      count: sum.count + fragment.count,
+      size: sum.size + fragment.size
+    }), { count: 0, size: 0 });
+    return {
+      liveObjectCount: totals.count,
+      liveObjectSize: totals.size,
+      fragmentCount: fragments.size,
+      statsUpdateCount,
+      lastSeenObjectId,
+      lastSeenTimestamp
+    };
+  }
+
+  return {
+    async start() {
+      cdpSession.on('HeapProfiler.heapStatsUpdate', onStatsUpdate);
+      cdpSession.on('HeapProfiler.lastSeenObjectId', onLastSeenObjectId);
+      await cdpSession.send('HeapProfiler.startTrackingHeapObjects', {
+        trackAllocations: true
+      });
+    },
+    sample,
+    async stop() {
+      let prefix = '';
+      let streamedCharacters = 0;
+      const prefixLimit = 2 * 1024 * 1024;
+      const onChunk = (event) => {
+        streamedCharacters += event.chunk.length;
+        if (prefix.length < prefixLimit) {
+          prefix += event.chunk.slice(0, prefixLimit - prefix.length);
+        }
+      };
+      cdpSession.on('HeapProfiler.addHeapSnapshotChunk', onChunk);
+      try {
+        await cdpSession.send('HeapProfiler.stopTrackingHeapObjects', {
+          reportProgress: false
+        });
+      } finally {
+        cdpSession.off('HeapProfiler.addHeapSnapshotChunk', onChunk);
+        cdpSession.off('HeapProfiler.heapStatsUpdate', onStatsUpdate);
+        cdpSession.off('HeapProfiler.lastSeenObjectId', onLastSeenObjectId);
+      }
+      return {
+        finalStats: sample(),
+        snapshot: parseAllocationTimelineSnapshotHeader(prefix, streamedCharacters)
+      };
+    }
+  };
+}
+
 function summarizeSeries(samples) {
   if (samples.length === 0) {
     return {};
@@ -473,6 +581,14 @@ function summarizeSeries(samples) {
     chromiumWorkingSetDeltaBytes: Number.isFinite(first.chromiumWorkingSetBytes) && Number.isFinite(last.chromiumWorkingSetBytes)
       ? last.chromiumWorkingSetBytes - first.chromiumWorkingSetBytes
       : null,
+    allocationTimelineLiveObjectDelta: Number.isFinite(first.allocationTimelineLiveObjectCount)
+      && Number.isFinite(last.allocationTimelineLiveObjectCount)
+      ? last.allocationTimelineLiveObjectCount - first.allocationTimelineLiveObjectCount
+      : null,
+    allocationTimelineLiveSizeDeltaBytes: Number.isFinite(first.allocationTimelineLiveObjectSize)
+      && Number.isFinite(last.allocationTimelineLiveObjectSize)
+      ? last.allocationTimelineLiveObjectSize - first.allocationTimelineLiveObjectSize
+      : null,
     maxHeapBytes: maxHeap,
     minHeapBytes: minHeap,
     maxDomNodes: maxDom,
@@ -499,6 +615,10 @@ function toCsv(samples) {
     'rendererPrivateBytes',
     'gpuWorkingSetBytes',
     'gpuPrivateBytes',
+    'allocationTimelineLiveObjectCount',
+    'allocationTimelineLiveObjectSize',
+    'allocationTimelineFragmentCount',
+    'allocationTimelineStatsUpdateCount',
     'layoutCount',
     'recalcStyleCount',
     'layoutDuration',
@@ -1479,7 +1599,14 @@ async function freezeGameLoop(page) {
   });
 }
 
-async function collectMetrics(page, cdpSession, startedAt, forceGc, nativeMemoryCollector = null) {
+async function collectMetrics(
+  page,
+  cdpSession,
+  startedAt,
+  forceGc,
+  nativeMemoryCollector = null,
+  allocationTimelineCollector = null
+) {
   if (forceGc) {
     await cdpSession.send('HeapProfiler.collectGarbage');
   }
@@ -1493,6 +1620,9 @@ async function collectMetrics(page, cdpSession, startedAt, forceGc, nativeMemory
   const probe = await page.evaluate(() => window.memoryReproProbe.sample());
   const processMemory = nativeMemoryCollector
     ? await nativeMemoryCollector.collectProcessMemory()
+    : null;
+  const allocationTimeline = allocationTimelineCollector
+    ? allocationTimelineCollector.sample()
     : null;
 
   return {
@@ -1510,6 +1640,12 @@ async function collectMetrics(page, cdpSession, startedAt, forceGc, nativeMemory
     domListeners: domCounters.jsEventListeners,
     ...(processMemory ? flattenChromiumProcessMemory(processMemory) : {}),
     ...(processMemory ? { chromiumProcesses: processMemory.processes } : {}),
+    ...(allocationTimeline ? {
+      allocationTimelineLiveObjectCount: allocationTimeline.liveObjectCount,
+      allocationTimelineLiveObjectSize: allocationTimeline.liveObjectSize,
+      allocationTimelineFragmentCount: allocationTimeline.fragmentCount,
+      allocationTimelineStatsUpdateCount: allocationTimeline.statsUpdateCount
+    } : {}),
     ...probe
   };
 }
@@ -2602,6 +2738,7 @@ async function main() {
 
   const browser = await chromium.launch(launchOptions);
   let nativeMemoryCollector = null;
+  let allocationTimelineCollector = null;
 
   try {
     const context = await browser.newContext({
@@ -2657,6 +2794,11 @@ async function main() {
         `private=${Math.round(nativeMemoryBaseline.chromiumPrivateBytes / 1024 / 1024)}MB`,
         `workingSet=${Math.round(nativeMemoryBaseline.chromiumWorkingSetBytes / 1024 / 1024)}MB`
       ].join(' '));
+    }
+    if (options.allocationTimeline) {
+      allocationTimelineCollector = createAllocationTimelineCollector(cdpSession);
+      await allocationTimelineCollector.start();
+      console.log('[memory-repro] allocation instrumentation started');
     }
     if (options.audit) {
       if (options.heapSampling) {
@@ -2731,15 +2873,29 @@ async function main() {
 
     const startedAt = Date.now();
     const samples = [];
+    const explorations = [];
     const maxSamples = Math.floor(options.durationSeconds / options.sampleSeconds) + 1;
+    let nextExplorationAt = options.exploreEverySeconds > 0
+      ? startedAt + options.exploreEverySeconds * 1000
+      : Infinity;
 
     for (let index = 0; index < maxSamples; index += 1) {
+      if (Date.now() >= nextExplorationAt) {
+        const explorationStartedAt = Date.now();
+        await cycleVisibleTabs(page);
+        explorations.push({
+          elapsedSeconds: Number(((Date.now() - startedAt) / 1000).toFixed(3)),
+          durationSeconds: Number(((Date.now() - explorationStartedAt) / 1000).toFixed(3))
+        });
+        nextExplorationAt += options.exploreEverySeconds * 1000;
+      }
       samples.push(await collectMetrics(
         page,
         cdpSession,
         startedAt,
         options.forceGc,
-        nativeMemoryCollector
+        nativeMemoryCollector,
+        allocationTimelineCollector
       ));
       const latest = samples[samples.length - 1];
       console.log([
@@ -2748,6 +2904,10 @@ async function main() {
         ...(nativeMemoryCollector ? [
           `private=${Math.round(latest.chromiumPrivateBytes / 1024 / 1024)}MB`,
           `workingSet=${Math.round(latest.chromiumWorkingSetBytes / 1024 / 1024)}MB`
+        ] : []),
+        ...(allocationTimelineCollector ? [
+          `timelineLive=${Math.round(latest.allocationTimelineLiveObjectSize / 1024 / 1024)}MB`,
+          `timelineFragments=${latest.allocationTimelineFragmentCount}`
         ] : []),
         `dom=${latest.domNodes}`,
         `listeners=${latest.domListeners}`,
@@ -2768,6 +2928,9 @@ async function main() {
     const finalProbe = await page.evaluate(() => window.memoryReproProbe.sample());
     const heapSamplingProfile = options.heapSampling
       ? await cdpSession.send('HeapProfiler.stopSampling')
+      : null;
+    const allocationTimeline = allocationTimelineCollector
+      ? await allocationTimelineCollector.stop()
       : null;
     const nativeAllocationProfiles = nativeMemoryCollector
       ? await nativeMemoryCollector.finish()
@@ -2801,8 +2964,10 @@ async function main() {
       },
       summary: summarizeSeries(samples),
       samples,
+      explorations,
       finalProbe,
       topHeapAllocations: heapSamplingProfile ? summarizeHeapSamplingProfile(heapSamplingProfile.profile) : [],
+      allocationTimeline,
       nativeMemory,
       duplicateStrings,
       consoleMessages,
