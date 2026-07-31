@@ -391,7 +391,7 @@ class Colony extends Building {
         // Update consumption rate for the resource
         resources[category][resource].modifyRate(
           - (fullConsumption * (1000 / deltaTime)),
-          this.displayName,
+          this.getRateSource(),
           'building'
         );
       }

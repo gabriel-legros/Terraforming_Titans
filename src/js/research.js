@@ -202,7 +202,11 @@ class Research {
       const multiplier = this.calculateAdvancedResearchMultiplier();
       const rate = count * multiplier; // 1 per second per terraformed planet scaled by effects
       resources.colony.advancedResearch.increase((rate * deltaTime) / 1000);
-      resources.colony.advancedResearch.modifyRate(rate, t('ui.resourceRates.sources.researchManager', {}, 'Research Manager'), 'research');
+      resources.colony.advancedResearch.modifyRate(
+        rate,
+        getLocalizedRateSource('research:manager', 'ui.resourceRates.sources.researchManager', 'Research Manager'),
+        'research'
+      );
     }
 
     calculateAdvancedResearchMultiplier() {
@@ -473,9 +477,6 @@ class Research {
         return false;
       }
       if (research.category === 'advanced' && !this.isBooleanFlagSet('advancedResearchUnlocked')) {
-        return false;
-      }
-      if (research.requiredGameFeature && !GAME_FEATURES[research.requiredGameFeature]) {
         return false;
       }
       if (research.disableFlag) {

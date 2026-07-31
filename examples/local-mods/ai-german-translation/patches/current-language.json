@@ -823,7 +823,7 @@
         "scopeZones": " in der {zones} Zone{s}",
         "scopeAtmosphere": " über die Atmosphäre",
         "hydrogenIntro": "Wasserstoff entweicht langsam in den Raum, je nach Sonnenfluss und Schwerkraft.",
-        "hydrogenPhoto": "Stellar UV kann bis zu {percent}% dieses Gases fotodissoziieren, wodurch Atome entstehen, die über {speed}x schneller entweichen als Moleküle.",
+        "hydrogenPhoto": "Stellare UV-Strahlung kann bis zu {percent}% dieses Gases in Atome photodissoziieren, die leichter entweichen als Moleküle.",
         "hydrogenGravityDecay": ", so erwarten Sie anhaltende Verfall.",
         "hydrogenGravityRetain": ", so dass die Atmosphäre Wasserstoff halten kann.",
         "hydrogenGravityLine": "Die aktuelle Gravitation beträgt {value} m/s²{relation}",
@@ -4986,8 +4986,8 @@
         "fps20": "20 FPS",
         "fps30": "30 FPS"
       },
-      "terraformingSubsteps": "Verwenden Sie 10ms terraforming Unterschritte",
-      "terraformingSubstepsTooltip": "Standardmäßig läuft das Klimamodell auf einer 10ms Tick-Basis, anstatt die volle Zeit delta zu verwenden.  Sie können dies ausschalten, um die Leistung zu verbessern, aber die numerische Stabilität des Klimamodells zu verringern.",
+      "terraformingSubsteps": "Verwenden Sie {milliseconds}ms terraforming Unterschritte",
+      "terraformingSubstepsTooltip": "Standardmäßig läuft das Klimamodell auf einer {milliseconds}ms Tick-Basis, anstatt die volle Zeit delta zu verwenden.  Sie können dies ausschalten, um die Leistung zu verbessern, aber die numerische Stabilität des Klimamodells zu verringern.",
       "celsius": "Temperatur in Celsius anzeigen",
       "colorblindPalette": "Statusfarben",
       "colorblindPalettes": {

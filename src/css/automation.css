@@ -851,6 +851,21 @@
   color: #4c5872;
 }
 
+.life-automation-color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  color: #4c5872;
+}
+
+.life-automation-color-input {
+  width: 44px;
+  height: 30px;
+  padding: 1px;
+  cursor: pointer;
+}
+
 .life-automation-seed-row {
   display: flex;
   align-items: center;

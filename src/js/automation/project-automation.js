@@ -23,6 +23,7 @@ function normalizeProjectAutomationSpaceStorageFluidTarget(resourceKey, target) 
 const PROJECT_AUTOMATION_SPACE_STORAGE_CAPS_AND_RESERVE_KEYS = new Set([
   'resourceStrategicReserves',
   'resourceCaps',
+  'resourceTransferWeights',
   'resourceImportLimitRespects',
   'resourceBiomassDensityWithdrawLimits',
   'resourcePressureWithdrawLimits',
@@ -555,10 +556,14 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       if (Object.prototype.hasOwnProperty.call(reserveSource, resourceKey)) {
         const reserveSetting = reserveSource[resourceKey] || {};
         if (reserveSetting.mode === 'amount' || reserveSetting.mode === 'percentCap' || reserveSetting.mode === 'percentTotal') {
-          filtered.resourceStrategicReserves = {
-            [resourceKey]: this.deepClone(reserveSetting)
-          };
+          filtered.strategicReserve = this.deepClone(reserveSetting);
         }
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'strategicReserve')) {
+      const reserveSetting = source.strategicReserve || {};
+      if (reserveSetting.mode === 'amount' || reserveSetting.mode === 'percentCap' || reserveSetting.mode === 'percentTotal') {
+        filtered.strategicReserve = this.deepClone(reserveSetting);
       }
     }
     if (Object.prototype.hasOwnProperty.call(source, 'resourceCaps')) {
@@ -566,17 +571,18 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       if (Object.prototype.hasOwnProperty.call(capSource, resourceKey)) {
         const capSetting = capSource[resourceKey] || {};
         if (capSetting.mode === 'amount' || capSetting.mode === 'percent' || capSetting.mode === 'weight' || capSetting.mode === 'remaining') {
-          filtered.resourceCaps = {
-            [resourceKey]: this.deepClone(capSetting)
-          };
+          filtered.cap = this.deepClone(capSetting);
         }
+      }
+    }
+    if (Object.prototype.hasOwnProperty.call(source, 'cap')) {
+      const capSetting = source.cap || {};
+      if (capSetting.mode === 'amount' || capSetting.mode === 'percent' || capSetting.mode === 'weight' || capSetting.mode === 'remaining') {
+        filtered.cap = this.deepClone(capSetting);
       }
     }
     if (Object.prototype.hasOwnProperty.call(source, 'resourceTransferWeights')) {
       if (Object.prototype.hasOwnProperty.call(weightSource, resourceKey)) {
-        filtered.resourceTransferWeights = {
-          [resourceKey]: this.deepClone(weightSource[resourceKey])
-        };
         filtered.transferWeight = this.deepClone(weightSource[resourceKey]);
       }
     }
@@ -588,71 +594,47 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
     }
     if (Object.prototype.hasOwnProperty.call(source, 'resourceImportLimitRespects')) {
       if (Object.prototype.hasOwnProperty.call(importLimitSource, resourceKey)) {
-        filtered.resourceImportLimitRespects = {
-          [resourceKey]: importLimitSource[resourceKey] === true
-        };
+        filtered.respectImportProjectLimits = importLimitSource[resourceKey] === true;
       }
     }
     if (Object.prototype.hasOwnProperty.call(source, 'resourceBiomassDensityWithdrawLimits')) {
       if (Object.prototype.hasOwnProperty.call(biomassDensityLimitSource, resourceKey)) {
-        filtered.resourceBiomassDensityWithdrawLimits = {
-          [resourceKey]: biomassDensityLimitSource[resourceKey] === true
-        };
+        filtered.limitWithdrawalsToMaxBiomassDensity = biomassDensityLimitSource[resourceKey] === true;
       }
     }
     if (Object.prototype.hasOwnProperty.call(source, 'resourcePressureWithdrawLimits')) {
       if (Object.prototype.hasOwnProperty.call(pressureLimitSource, resourceKey)) {
-        filtered.resourcePressureWithdrawLimits = {
-          [resourceKey]: this.deepClone(pressureLimitSource[resourceKey])
-        };
+        filtered.pressureWithdrawLimitPa = this.deepClone(pressureLimitSource[resourceKey]);
       }
     }
     if (Object.prototype.hasOwnProperty.call(source, 'resourceAmountWithdrawLimits')) {
       if (Object.prototype.hasOwnProperty.call(amountLimitSource, resourceKey)) {
-        filtered.resourceAmountWithdrawLimits = {
-          [resourceKey]: this.deepClone(amountLimitSource[resourceKey])
-        };
+        filtered.amountWithdrawLimit = this.deepClone(amountLimitSource[resourceKey]);
       }
     }
     if (Object.prototype.hasOwnProperty.call(source, 'respectImportProjectLimits')) {
-      filtered.resourceImportLimitRespects = {
-        [resourceKey]: source.respectImportProjectLimits === true
-      };
+      filtered.respectImportProjectLimits = source.respectImportProjectLimits === true;
     }
     if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourceRespectImportProjectLimits')) {
-      filtered.resourceImportLimitRespects = {
-        [resourceKey]: source.spaceStorageSingleResourceRespectImportProjectLimits === true
-      };
+      filtered.respectImportProjectLimits = source.spaceStorageSingleResourceRespectImportProjectLimits === true;
     }
     if (Object.prototype.hasOwnProperty.call(source, 'limitWithdrawalsToMaxBiomassDensity')) {
-      filtered.resourceBiomassDensityWithdrawLimits = {
-        [resourceKey]: source.limitWithdrawalsToMaxBiomassDensity === true
-      };
+      filtered.limitWithdrawalsToMaxBiomassDensity = source.limitWithdrawalsToMaxBiomassDensity === true;
     }
     if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourceLimitWithdrawalsToMaxBiomassDensity')) {
-      filtered.resourceBiomassDensityWithdrawLimits = {
-        [resourceKey]: source.spaceStorageSingleResourceLimitWithdrawalsToMaxBiomassDensity === true
-      };
+      filtered.limitWithdrawalsToMaxBiomassDensity = source.spaceStorageSingleResourceLimitWithdrawalsToMaxBiomassDensity === true;
     }
     if (Object.prototype.hasOwnProperty.call(source, 'pressureWithdrawLimitPa')) {
-      filtered.resourcePressureWithdrawLimits = {
-        [resourceKey]: source.pressureWithdrawLimitPa
-      };
+      filtered.pressureWithdrawLimitPa = source.pressureWithdrawLimitPa;
     }
     if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourcePressureWithdrawLimitPa')) {
-      filtered.resourcePressureWithdrawLimits = {
-        [resourceKey]: source.spaceStorageSingleResourcePressureWithdrawLimitPa
-      };
+      filtered.pressureWithdrawLimitPa = source.spaceStorageSingleResourcePressureWithdrawLimitPa;
     }
     if (Object.prototype.hasOwnProperty.call(source, 'amountWithdrawLimit')) {
-      filtered.resourceAmountWithdrawLimits = {
-        [resourceKey]: source.amountWithdrawLimit
-      };
+      filtered.amountWithdrawLimit = source.amountWithdrawLimit;
     }
     if (Object.prototype.hasOwnProperty.call(source, 'spaceStorageSingleResourceAmountWithdrawLimit')) {
-      filtered.resourceAmountWithdrawLimits = {
-        [resourceKey]: source.spaceStorageSingleResourceAmountWithdrawLimit
-      };
+      filtered.amountWithdrawLimit = source.spaceStorageSingleResourceAmountWithdrawLimit;
     }
     if (resourceKey === 'liquidWater' && Object.prototype.hasOwnProperty.call(source, 'waterWithdrawTarget')) {
       filtered.waterWithdrawTarget = normalizeProjectAutomationSpaceStorageFluidTarget(
@@ -665,11 +647,6 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
         resourceKey,
         source.hydrogenTransferTarget
       );
-    }
-    if (!Object.prototype.hasOwnProperty.call(filtered, 'transferWeight')) {
-      filtered.transferWeight = Object.prototype.hasOwnProperty.call(weightSource, resourceKey)
-        ? this.deepClone(weightSource[resourceKey])
-        : 1;
     }
     if (!Object.prototype.hasOwnProperty.call(filtered, 'mode')
       && Object.prototype.hasOwnProperty.call(source, 'resourceTransferModes')) {
@@ -879,6 +856,8 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceTransferMode');
     const hasSelectedFlag = Object.prototype.hasOwnProperty.call(settings, 'selected')
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceSelected');
+    const hasCap = Object.prototype.hasOwnProperty.call(settings, 'cap');
+    const hasStrategicReserve = Object.prototype.hasOwnProperty.call(settings, 'strategicReserve');
     const hasTransferWeight = Object.prototype.hasOwnProperty.call(settings, 'transferWeight')
       || Object.prototype.hasOwnProperty.call(settings, 'spaceStorageSingleResourceTransferWeight');
     const hasRespectImportLimits = Object.prototype.hasOwnProperty.call(settings, 'respectImportProjectLimits')
@@ -893,11 +872,11 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       && Object.prototype.hasOwnProperty.call(settings, 'waterWithdrawTarget');
     const hasHydrogenTransferTarget = resourceKey === 'hydrogen'
       && Object.prototype.hasOwnProperty.call(settings, 'hydrogenTransferTarget');
-    const capSetting = capsSource[resourceKey] || {};
-    const reserveSetting = reserveSource[resourceKey] || {};
-    const capsHasKey = Object.prototype.hasOwnProperty.call(capsSource, resourceKey)
+    const capSetting = hasCap ? settings.cap || {} : capsSource[resourceKey] || {};
+    const reserveSetting = hasStrategicReserve ? settings.strategicReserve || {} : reserveSource[resourceKey] || {};
+    const capsHasKey = (hasCap || Object.prototype.hasOwnProperty.call(capsSource, resourceKey))
       && (capSetting.mode === 'amount' || capSetting.mode === 'percent' || capSetting.mode === 'weight' || capSetting.mode === 'remaining');
-    const reserveHasKey = Object.prototype.hasOwnProperty.call(reserveSource, resourceKey)
+    const reserveHasKey = (hasStrategicReserve || Object.prototype.hasOwnProperty.call(reserveSource, resourceKey))
       && (reserveSetting.mode === 'amount' || reserveSetting.mode === 'percentCap' || reserveSetting.mode === 'percentTotal');
     const weightHasKey = Object.prototype.hasOwnProperty.call(weightSource, resourceKey);
     const importLimitHasKey = Object.prototype.hasOwnProperty.call(importLimitSource, resourceKey);
@@ -931,7 +910,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       if (!project.resourceCaps) {
         project.resourceCaps = {};
       }
-      project.resourceCaps[resourceKey] = this.deepClone(capsSource[resourceKey]);
+      project.resourceCaps[resourceKey] = this.deepClone(capSetting);
       project.sanitizeResourceCaps();
       changed = changed || !this.areSettingsEqual(beforeCaps, project.resourceCaps[resourceKey]);
     }
@@ -939,7 +918,7 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       if (!project.resourceStrategicReserves) {
         project.resourceStrategicReserves = {};
       }
-      project.resourceStrategicReserves[resourceKey] = this.deepClone(reserveSource[resourceKey]);
+      project.resourceStrategicReserves[resourceKey] = this.deepClone(reserveSetting);
       project.sanitizeResourceStrategicReserves();
       changed = changed || !this.areSettingsEqual(beforeReserve, project.resourceStrategicReserves[resourceKey]);
     }

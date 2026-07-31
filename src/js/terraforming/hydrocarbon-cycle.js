@@ -13,14 +13,13 @@ var DEFAULT_EQUILIBRIUM_METHANE_CONDENSATION_PARAMETER = METHANE_PHASE_CHANGE_PA
 
 const isNodeHydrocarbon = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
-var redistributePrecipitationFn = globalThis.redistributePrecipitation;
 var ResourceCycleClass = globalThis.ResourceCycle;
 var simulateSurfaceHydrocarbonFlow = globalThis.simulateSurfaceHydrocarbonFlow;
 if (isNodeHydrocarbon) {
   require('../planet-resource-parameters.js');
   resourcePhaseGroups = global.resourcePhaseGroups;
   try {
-    ({ psychrometricConstant, redistributePrecipitation: redistributePrecipitationFn } = require('./phase-change-utils.js'));
+    ({ psychrometricConstant } = require('./phase-change-utils.js'));
     ResourceCycleClass = require('./resource-cycle.js');
     simulateSurfaceHydrocarbonFlow = require('./hydrology.js').simulateSurfaceHydrocarbonFlow;
   } catch (e) {
@@ -230,6 +229,7 @@ class MethaneCycle extends ResourceCycleClass {
         terraforming.flowMethaneFreezeOutRate = durationSeconds > 0 ? freezeOut / durationSeconds * 86400 : 0;
         return {
           changes: flow.changes || {},
+          phaseTransitions: flow.phaseTransitions || [],
           // Only report flowMelt as a separate total; phase-change melt remains in 'melt'
           totals: {
             flowMelt: totalMelt,
@@ -245,6 +245,9 @@ class MethaneCycle extends ResourceCycleClass {
     super({
       latentHeatVaporization: L_V_METHANE,
       latentHeatSublimation: L_S_METHANE,
+      latentHeatFusion: METHANE_PHASE_CHANGE_PARAMETERS.latentHeatFusionJPerKg,
+      solidSpecificHeat: METHANE_PHASE_CHANGE_PARAMETERS.solidSpecificHeatJPerKgK,
+      liquidSpecificHeat: METHANE_PHASE_CHANGE_PARAMETERS.liquidSpecificHeatJPerKgK,
       saturationVaporPressureFn: calculateSaturationPressureMethane,
       slopeSaturationVaporPressureFn: slopeSVPMethane,
       freezePoint: METHANE_T_TRIPLE,     // liquid cannot exist below T_triple
@@ -295,12 +298,6 @@ class MethaneCycle extends ResourceCycleClass {
       liquidMethaneCoverage: data.liquidMethane ?? 0,
       hydrocarbonIceCoverage: data.hydrocarbonIce ?? 0,
     };
-  }
-
-  redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {
-    if (typeof redistributePrecipitationFn === 'function') {
-      redistributePrecipitationFn(terraforming, 'methane', zonalChanges, zonalTemperatures);
-    }
   }
 
   updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {

@@ -132,12 +132,13 @@ class Biodome extends Building {
     biomassResource.productionRate = Math.max(0, biomassResource.productionRate - reductionRate);
 
     const buildingRates = biomassResource.productionRateByType.building;
-    const sourceRate = buildingRates[this.displayName] || 0;
+    const source = this.getRateSource();
+    const sourceRate = buildingRates[source] || 0;
     const updatedSourceRate = Math.max(0, sourceRate - reductionRate);
     if (updatedSourceRate > 1e-9) {
-      buildingRates[this.displayName] = updatedSourceRate;
+      buildingRates[source] = updatedSourceRate;
     } else {
-      delete buildingRates[this.displayName];
+      delete buildingRates[source];
     }
   }
 }

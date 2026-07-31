@@ -1411,7 +1411,11 @@ function updateCostDisplay(project) {
           buildProjectCostTooltip(project, category, resource, requiredAmount, storageAccess),
           highlight
         );
-        const color = highlight ? 'red' : '';
+        const isStorageBlocked = highlight
+          && requiredAmount > resources[category][resource].cap;
+        const color = highlight
+          ? (isStorageBlocked ? getStatusColor('storageBlocked') : 'red')
+          : '';
         if (item._refs.text.style.color !== color) {
           item._refs.text.style.color = color;
         }

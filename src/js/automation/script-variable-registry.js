@@ -1185,6 +1185,9 @@ class ScriptVariableRegistry {
     if (project.getSurfaceGravityRatio) {
       return Math.max(0, Math.min(100, this.toNumber(project.getSurfaceGravityRatio()) * 100));
     }
+    if (project.getCompletionFraction) {
+      return Math.max(0, Math.min(100, this.toNumber(project.getCompletionFraction()) * 100));
+    }
     const starting = this.toNumber(project.startingDuration || project.duration);
     if (starting <= 0) return project.isCompleted ? 100 : 0;
     return Math.max(0, Math.min(100, ((starting - this.toNumber(project.remainingTime)) / starting) * 100));

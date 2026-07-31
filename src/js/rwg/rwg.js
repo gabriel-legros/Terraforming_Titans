@@ -23,17 +23,6 @@ try {
   }
 }
 
-let rwgBuildFeatures = { steamExclusiveDominions: false };
-try {
-  rwgBuildFeatures = GAME_FEATURES;
-} catch (error) {
-  try {
-    ({ GAME_FEATURES: rwgBuildFeatures } = require('../build-target.js'));
-  } catch (innerError) {
-    rwgBuildFeatures = { steamExclusiveDominions: false };
-  }
-}
-
 let getSpecialSeedDefinitionCatalog;
 let getSpecialSeedParametersCatalog;
 try {
@@ -779,15 +768,12 @@ const RWG_HAZARD_PRESETS = {
 };
 
 const RWG_HAZARD_ORDER = ['hazardousBiomass', 'garbage', 'kessler', 'pulsar', 'hazardousMachinery', 'debrisDisk'];
-const RWG_DOMINION_BASE_ORDER = ['human', 'gabbagian', 'ammonia', 'oommaa', 'klishy', 'kerati', 'shrilek', 'vanadophore'];
-const RWG_STEAM_EXCLUSIVE_DOMINIONS = ['yggies'];
+const RWG_DOMINION_ORDER = ['human', 'gabbagian', 'ammonia', 'oommaa', 'klishy', 'kerati', 'shrilek', 'vanadophore', 'yggies'];
 const RWG_DOMINION_BASE_LOCKS = ['gabbagian'];
 const DOMINION_UNLOCK_ALWAYS = { type: 'always' };
 
 function getRwgDominionOrder() {
-  return rwgBuildFeatures.steamExclusiveDominions
-    ? RWG_DOMINION_BASE_ORDER.concat(RWG_STEAM_EXCLUSIVE_DOMINIONS)
-    : RWG_DOMINION_BASE_ORDER.slice();
+  return RWG_DOMINION_ORDER.slice();
 }
 
 function getDominionUnlockRule(dominionId) {

@@ -215,12 +215,12 @@ class PatienceManager extends EffectableEntity {
         const seconds = hours * 3600;
         const colonyResources = resources?.colony;
 
-        const superalloySource = buildings?.superalloyFoundry?.displayName || 'Superalloy Foundry';
+        const superalloySource = buildings?.superalloyFoundry?.getRateSource();
         const superalloyResource = colonyResources?.superalloys;
         const superalloyRate = this.getBuildingProductionRate(superalloyResource, [superalloySource]);
         const superalloyGain = superalloyRate > 0 ? superalloyRate * seconds : 0;
 
-        const superconductorSource = buildings?.superconductorFactory?.displayName || 'Superconductor Factory';
+        const superconductorSource = buildings?.superconductorFactory?.getRateSource();
         const superconductorResource = colonyResources?.superconductors;
         const superconductorRate = superconductorResource?.unlocked === false
             ? 0
@@ -232,12 +232,23 @@ class PatienceManager extends EffectableEntity {
         const advancedResearchGain = advancedResearchRate > 0 ? advancedResearchRate * seconds : 0;
 
         const metalResource = colonyResources?.metal;
-        const transferSource = 'Space storage transfer';
-        const transferProduction = metalResource?.productionRateByType?.project?.[transferSource] || 0;
-        const transferConsumption = metalResource?.consumptionRateByType?.project?.[transferSource] || 0;
+        const transferSource = registerRateSource(
+            RESOURCE_RATE_SOURCE_IDS.spaceStorageTransfer,
+            t('ui.resourceRates.sources.spaceStorageTransfer', {}, 'Space storage transfer')
+        );
+        const projectProduction = metalResource?.productionRateByType?.project || {};
+        const projectConsumption = metalResource?.consumptionRateByType?.project || {};
+        let transferProduction = projectProduction[transferSource] || 0;
+        let transferConsumption = projectConsumption[transferSource] || 0;
+        const marketSource = registerRateSource(
+            RESOURCE_RATE_SOURCE_IDS.galacticMarket,
+            t('ui.resourceRates.sources.galacticMarket', {}, 'Galactic Market')
+        );
+        let marketProduction = projectProduction[marketSource] || 0;
         const metalNetRate = (metalResource?.productionRate || 0)
             - (metalResource?.consumptionRate || 0)
-            - (transferProduction - transferConsumption);
+            - (transferProduction - transferConsumption)
+            - marketProduction;
         const metalGain = metalNetRate > 0 ? metalNetRate * seconds : 0;
 
         const oneillDelta = typeof getOneillGrowthDelta === 'function'
@@ -436,7 +447,6 @@ class PatienceManager extends EffectableEntity {
         if (data.everPossibleSpendGainIds) {
             this.everPossibleSpendGainIds = new Set(data.everPossibleSpendGainIds);
         }
-        this.enforceInfinitePatience();
     }
 
     /**

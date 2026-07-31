@@ -18,7 +18,6 @@ cp -R "$ROOT_DIR/src/css" "$OUT_DIR/src/css"
 BROWSER_VERSION="$(node -p "require('$ROOT_DIR/package.json').version")"
 BROWSER_VERSION="${BROWSER_VERSION%%-playtest.*}"
 printf "const GAME_VERSION = '%s';\n" "$BROWSER_VERSION" > "$OUT_DIR/src/js/game-version.js"
-node "$ROOT_DIR/scripts/purge-browser-parameters.js" "$OUT_DIR"
 cat > "$OUT_DIR/src/js/build-target.js" <<'BUILD_TARGET'
 const GAME_BUILD_TARGET = 'browser';
 const STEAM_APP_ID = null;
@@ -31,11 +30,7 @@ const GAME_FEATURES = {
     electronWindowControls: GAME_BUILD_TARGET !== 'browser',
     electronUIScale: GAME_BUILD_TARGET !== 'browser',
     electronCrashReporting: GAME_BUILD_TARGET !== 'browser',
-    streamedSelectMenus: GAME_BUILD_TARGET !== 'browser',
-    steamExclusiveDominions: GAME_BUILD_TARGET !== 'browser',
-    steamExclusiveResearch: GAME_BUILD_TARGET !== 'browser',
-    steamExclusiveEcumenopolisVisualizer: GAME_BUILD_TARGET !== 'browser',
-    steamExclusiveAtlasWorlds: GAME_BUILD_TARGET !== 'browser'
+    streamedSelectMenus: GAME_BUILD_TARGET !== 'browser'
 };
 
 if (typeof module !== 'undefined' && module.exports) {

@@ -1453,6 +1453,7 @@ body.dark-grey-mode {
 .dark-grey-mode .life-automation-toggle,
 .dark-grey-mode .life-automation-field,
 .dark-grey-mode .life-automation-deploy-row,
+.dark-grey-mode .life-automation-color-row,
 .dark-grey-mode .life-automation-seed-row {
     color: #cbd4e2;
 }

@@ -552,15 +552,101 @@ class SolisManager extends EffectableEntity {
   }
 
   purchaseUpgradeMultiple(key, count) {
-    const purchaseCount = Math.max(1, Math.floor(count));
-    let purchased = 0;
-    for (let i = 0; i < purchaseCount; i += 1) {
-      if (!this.purchaseUpgrade(key)) {
-        break;
+    const up = this.shopUpgrades[key];
+    if (!up || !this.isUpgradeEnabled(key)) return 0;
+
+    const requestedCount = Math.max(1, Math.floor(count));
+    const availableCount = Number.isFinite(up.max)
+      ? Math.min(requestedCount, up.max - up.purchases)
+      : requestedCount;
+    if (availableCount <= 0) return 0;
+    if (Number.isFinite(up.max)) {
+      let purchased = 0;
+      for (let i = 0; i < availableCount; i += 1) {
+        if (!this.purchaseUpgrade(key)) break;
+        purchased += 1;
       }
-      purchased += 1;
+      return purchased;
     }
-    return purchased;
+
+    const shipsResource = key === 'startingShips'
+      ? resources.special.spaceships
+      : null;
+    if (key === 'startingShips' && !shipsResource) return 0;
+
+    let purchaseCount = availableCount;
+    if (this.getUpgradeTotalCost(key, purchaseCount) > this.solisPoints) {
+      const affordableSteps = this.solisPoints / up.baseCost;
+      const existingStep = 2 * up.purchases + 1;
+      const root = 4 * (
+        affordableSteps /
+        (Math.hypot(existingStep, Math.sqrt(affordableSteps) * Math.sqrt(8)) + existingStep)
+      );
+      purchaseCount = Math.min(availableCount, Math.floor(root));
+      if (
+        purchaseCount > 0 &&
+        this.getUpgradeTotalCost(key, purchaseCount) > this.solisPoints
+      ) {
+        purchaseCount -= 1;
+      } else if (
+        purchaseCount < availableCount &&
+        this.getUpgradeTotalCost(key, purchaseCount + 1) <= this.solisPoints
+      ) {
+        purchaseCount += 1;
+      }
+    }
+    if (purchaseCount <= 0) return 0;
+
+    const totalCost = this.getUpgradeTotalCost(key, purchaseCount);
+    this.solisPoints -= totalCost;
+    up.purchases += purchaseCount;
+
+    if (key === 'funding') {
+      addEffect({
+        target: 'fundingModule',
+        type: 'fundingBonus',
+        value: up.purchases,
+        effectId: 'solisFunding',
+        sourceId: 'solisShop'
+      });
+    } else if (key === 'colonistRocket') {
+      addEffect({
+        target: 'project',
+        targetId: 'import_colonists_1',
+        type: 'increaseResourceGain',
+        resourceCategory: 'colony',
+        resourceId: 'colonists',
+        value: up.purchases,
+        effectId: 'solisColonistRocket',
+        sourceId: 'solisShop'
+      });
+    } else if (key === 'startingShips') {
+      if (!shipsResource.unlocked) {
+        if (shipsResource.enable) {
+          shipsResource.enable();
+        } else {
+          shipsResource.unlocked = true;
+        }
+      }
+    } else {
+      const amount = RESOURCE_UPGRADE_AMOUNTS[key];
+      const res = resources.colony[key];
+      if (res.hasCap) {
+        addEffect({
+          target: 'resource',
+          resourceType: 'colony',
+          targetId: key,
+          type: 'baseStorageBonus',
+          value: up.purchases * amount,
+          effectId: `solisStorage-${key}`,
+          sourceId: 'solisShop'
+        });
+      }
+      if (key === 'research') {
+        res.increase(amount * purchaseCount);
+      }
+    }
+    return purchaseCount;
   }
 
   applyResearchUpgrade(options = {}) {

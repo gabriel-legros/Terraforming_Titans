@@ -267,7 +267,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyAssignmentTools.createP
   }
 
   getExpansionRateSourceLabel() {
-    return `${this.displayName} expansion`;
+    return registerRateSource(`project:${this.name}:expansion`, `${this.displayName} expansion`);
   }
 
   getOperationNoteText() {
@@ -522,7 +522,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyAssignmentTools.createP
       if (outputRates[entry.key] > 0) {
         resources?.spaceStorage?.[entry.storageKey]?.modifyRate?.(
           outputRates[entry.key],
-          this.displayName,
+          this.getRateSource(),
           'project'
         );
       }
@@ -531,7 +531,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyAssignmentTools.createP
     const hydrogenRate = hydrogenDisplaySpent / seconds;
     resources?.spaceStorage?.hydrogen?.modifyRate?.(
       -hydrogenRate,
-      this.displayName,
+      this.getRateSource(),
       'project'
     );
 
@@ -651,7 +651,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyAssignmentTools.createP
       const hydrogenRate = hydrogenDisplaySpent / seconds;
       resources?.spaceStorage?.hydrogen?.modifyRate?.(
         -hydrogenRate,
-        this.displayName,
+        this.getRateSource(),
         'project'
       );
       entries.forEach((entry) => {
@@ -659,7 +659,7 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyAssignmentTools.createP
         if (outputRate > 0) {
           resources?.spaceStorage?.[entry.storageKey]?.modifyRate?.(
             outputRate,
-            this.displayName,
+            this.getRateSource(),
             'project'
           );
         }

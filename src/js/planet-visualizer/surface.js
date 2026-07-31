@@ -171,6 +171,7 @@
     }
     return type || 'default';
   }
+  PlanetVisualizer.prototype.resolveSurfaceArchetype = resolvePlanetArchetype;
 
   function resolveHeightMapKey(context) {
     const key = context?.viz?.heightMapKey || currentPlanetParameters?.visualization?.heightMapKey || '';
@@ -289,7 +290,6 @@
   };
 
   PlanetVisualizer.prototype.getEcumenopolisVisualizerStrength = function getEcumenopolisVisualizerStrength() {
-    if (!GAME_FEATURES.steamExclusiveEcumenopolisVisualizer) return 0;
     return clamp01((this.viz.coverage?.ecumenopolis || 0) / 100);
   };
 
@@ -690,6 +690,7 @@
     const dustKey = [dustRgb.r, dustRgb.g, dustRgb.b]
       .map(v => Math.round(v / 4))
       .join('_');
+    const biomassColorKey = getActiveBiomassColor();
     // Include planet type in cache key so palette changes (archetype) update texture
     let typeKey = 'default';
     try { typeKey = resolvePlanetArchetype(this, baseColorKey) || 'default'; } catch (e) {}
@@ -702,7 +703,7 @@
       this.heightMap = null;
       this.heightZoneHists = null;
     }
-    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${hazardousLife.toFixed(2)}|${ecumenopolis.toFixed(2)}|${nanoworld.toFixed(2)}|${zKey}|${dustKey}|${typeKey}|${fKey}|${heightKey}|${earthShapeKey}`;
+    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${hazardousLife.toFixed(2)}|${ecumenopolis.toFixed(2)}|${nanoworld.toFixed(2)}|${zKey}|${dustKey}|${biomassColorKey}|${typeKey}|${fKey}|${heightKey}|${earthShapeKey}`;
     if (!force && key === this.lastCraterFactorKey) return;
     this.lastCraterFactorKey = key;
 
@@ -1583,11 +1584,7 @@
       }
     };
 
-    renderLifeOverlay('life', {
-      base: [24, 105, 58],
-      low: [34, 110, 78],
-      high: [12, 150, 44],
-    });
+    renderLifeOverlay('life', getBiomassColorPalette(getActiveBiomassColor()));
     renderLifeOverlay('hazardousLife', {
       base: [130, 24, 24],
       low: [150, 42, 34],
@@ -1604,9 +1601,16 @@
       if (!this._ecumenopolisExposure || this._ecumenopolisExposure.length !== w * h) {
         this._ecumenopolisExposure = new Float32Array(w * h);
       }
+      if (
+        !this._ecumenopolisShaderAttributes
+        || this._ecumenopolisShaderAttributes.length !== w * h * 4
+      ) {
+        this._ecumenopolisShaderAttributes = new Float32Array(w * h * 4);
+      }
 
       const score = this._ecumenopolisScore;
       const exposure = this._ecumenopolisExposure;
+      const shaderAttributes = this._ecumenopolisShaderAttributes;
       if (!this._ecumenopolisEmissionCanvas) {
         this._ecumenopolisEmissionCanvas = document.createElement('canvas');
       }
@@ -1865,6 +1869,7 @@
         const cityR = Math.round(6 + 18 * metalShade);
         const cityG = Math.round(7 + 18 * metalShade);
         const cityB = Math.round(8 + 20 * metalShade);
+        shaderAttributes[idx] = metalShade;
         const alpha = clamp01((0.8 + cityIntensity * 0.18) * districtAlpha);
         blendPixel(
           tdata,
@@ -1875,17 +1880,27 @@
           alpha
         );
 
-        const transitGold = smoothstep(0.34, 0.82, street * 0.86 + tower * 0.14) * districtAlpha;
+        const transitGoldBase = smoothstep(0.34, 0.82, street * 0.86 + tower * 0.14);
         const windowHash = hashCity(x * 0.83 + tower * 19.1, y * 0.91 - street * 7.4);
-        const warmWindows = smoothstep(0.82, 0.995, windowHash) * districtAlpha * (0.22 + tower * 0.42);
-        const whiteGoldWindows = smoothstep(0.92, 0.999, hashCity(x * 1.17 - 33.2, y * 0.77 + 10.6)) * districtAlpha * street * 0.42;
-        const goldAlpha = clamp01(transitGold * 0.78 + warmWindows * 0.7 + whiteGoldWindows * 0.95);
+        const warmWindowsBase = smoothstep(0.82, 0.995, windowHash) * (0.22 + tower * 0.42);
+        const whiteGoldWindowsBase = smoothstep(0.92, 0.999, hashCity(x * 1.17 - 33.2, y * 0.77 + 10.6)) * street * 0.42;
+        const goldBase = (
+          transitGoldBase * 0.78
+          + warmWindowsBase * 0.7
+          + whiteGoldWindowsBase * 0.95
+        );
+        const whiteGold = whiteGoldWindowsBase > warmWindowsBase;
+        const glowScale = 0.75 + street * 0.5;
+        shaderAttributes[idx + 1] = whiteGold ? -goldBase : goldBase;
+        shaderAttributes[idx + 2] = glowScale;
+        shaderAttributes[idx + 3] = 1;
+        const goldAlpha = clamp01(goldBase * districtAlpha);
         if (goldAlpha > 0.01) {
-          const goldR = whiteGoldWindows > warmWindows ? 255 : 245;
-          const goldG = whiteGoldWindows > warmWindows ? 244 : 188;
-          const goldB = whiteGoldWindows > warmWindows ? 160 : 24;
+          const goldR = whiteGold ? 255 : 245;
+          const goldG = whiteGold ? 244 : 188;
+          const goldB = whiteGold ? 160 : 24;
           blendPixel(tdata, idx, goldR, goldG, goldB, goldAlpha);
-          const glow = Math.max(0, Math.min(1, goldAlpha * (0.75 + street * 0.5)));
+          const glow = Math.max(0, Math.min(1, goldAlpha * glowScale));
           emissionData[idx] = Math.max(emissionData[idx], Math.round(goldR * glow));
           emissionData[idx + 1] = Math.max(emissionData[idx + 1], Math.round(goldG * glow));
           emissionData[idx + 2] = Math.max(emissionData[idx + 2], Math.round(goldB * glow));
@@ -1915,6 +1930,13 @@
       const emissionCtx = emissionCanvas.getContext('2d');
       const emissionImg = emissionCtx.createImageData(w, h);
       const emissionData = emissionImg.data;
+      if (
+        !this._nanoworldShaderAttributes
+        || this._nanoworldShaderAttributes.length !== w * h * 4
+      ) {
+        this._nanoworldShaderAttributes = new Float32Array(w * h * 4);
+      }
+      const shaderAttributes = this._nanoworldShaderAttributes;
       const naniteSeed = Math.floor((seed.x * 104729) ^ (seed.y * 130363)) >>> 0;
       const hashNanite = (x, y) => {
         const n = Math.sin(x * 91.731 + y * 159.217 + naniteSeed * 0.000071) * 43758.5453123;
@@ -1984,11 +2006,16 @@
         const red = Math.round(4 + baseNoise * 7 + purple * 34 + node * 52);
         const green = Math.round(11 + baseNoise * 11 + cyan * 72 + filament * 20);
         const blue = Math.round(22 + baseNoise * 18 + purple * 68 + cyan * 108);
+        const emissionBase = clamp01(cellEdge * 0.34 + filament * 0.22 + node * 0.95);
+        const violetNode = node > 0.45 && nodeChance > 0.92;
+        shaderAttributes[idx] = red / 255;
+        shaderAttributes[idx + 1] = green / 255;
+        shaderAttributes[idx + 2] = blue / 255;
+        shaderAttributes[idx + 3] = violetNode ? -emissionBase : emissionBase;
         blendPixel(tdata, idx, red, green, blue, 0.985 * strength);
 
-        const emission = clamp01(cellEdge * 0.34 + filament * 0.22 + node * 0.95) * strength;
+        const emission = emissionBase * strength;
         if (emission > 0.01) {
-          const violetNode = node > 0.45 && nodeChance > 0.92;
           emissionData[idx] = Math.round((violetNode ? 180 : 32) * emission);
           emissionData[idx + 1] = Math.round((violetNode ? 92 : 224) * emission);
           emissionData[idx + 2] = Math.round(255 * emission);

@@ -918,7 +918,7 @@ function initializeMirrorOversightUI(container) {
         <label for="mirror-oversight-any-reverse" class="slider-reverse-label" style="display:none;">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.common.reverse', 'Reverse')}</label>
       </div>
       <div id="mirror-oversight-focus-group" class="control-group" style="display:none;">
-        <label for="mirror-oversight-focus">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.zones.focus', 'Focusing')}:<span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.focusingTooltip', 'Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. Uses the heat required to warm the ice to 0°C plus the energy of fusion/melting.')}">&#9432;</span></label>
+        <label for="mirror-oversight-focus">${getSpaceMirrorText('ui.projects.spaceMirrorFacility.zones.focus', 'Focusing')}:<span class="info-tooltip-icon" data-tooltip-text="${getSpaceMirrorText('ui.projects.spaceMirrorFacility.oversight.focusingTooltip', 'Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. With Phase Change Heat enabled, the calculation includes warming the resulting meltwater to the local zone temperature.')}">&#9432;</span></label>
         <input type="range" id="mirror-oversight-focus" min="0" max="100" step="1" value="0">
         <span id="mirror-oversight-focus-value" class="slider-value">0%</span>
         <input type="checkbox" id="mirror-oversight-focus-reverse" class="slider-reversal-checkbox" data-zone="focus" style="display:none; visibility:hidden;">
@@ -1842,39 +1842,59 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
       }
     }
     if (focusPower > 0) {
-      const C_P_ICE = 2100; // J/kg·K
-      const L_F_WATER = 334000; // J/kg
-      const deltaT = Math.max(0, 273.15 - (terraforming.temperature.value || 0));
-      const energyPerKg = C_P_ICE * deltaT + L_F_WATER;
-      if (energyPerKg > 0) {
-        const meltKgPerSec = focusPower / energyPerKg;
-        const meltTons = meltKgPerSec * durationSeconds / 1000;
-        const zonesData = ['tropical','temperate','polar'].map(z => ({
-          zone: z,
-          temp: terraforming.temperature.zones[z].value,
-          ice: terraforming.zonalSurface[z].ice
-        })).filter(z => z.ice > 0);
-        const totalSurfaceIce = zonesData.reduce((sum, z) => sum + z.ice, 0);
-        if (totalSurfaceIce > 0) {
-          const desiredMelt = Math.min(meltTons, totalSurfaceIce);
-          let remaining = desiredMelt;
-          zonesData.sort((a, b) => b.temp - a.temp);
-          for (const z of zonesData) {
-            if (remaining <= 0) break;
-            const meltHere = Math.min(z.ice, remaining);
-            if (meltHere > 0) {
-              terraforming.zonalSurface[z.zone].ice -= meltHere;
-              terraforming.zonalSurface[z.zone].liquidWater += meltHere;
-              remaining -= meltHere;
-            }
-          }
-          const actualMelt = desiredMelt - remaining;
-          if (actualMelt > 0) {
-            focusMeltAmount = actualMelt;
-            if (resources.surface?.ice) resources.surface.ice.value -= actualMelt;
-            if (resources.surface?.liquidWater) resources.surface.liquidWater.value += actualMelt;
-          }
+      const zonesData = ['tropical','temperate','polar'].map(z => ({
+        zone: z,
+        temp: terraforming.temperature.zones[z].value,
+        ice: terraforming.zonalSurface[z].ice
+      })).filter(z => z.ice > 0);
+      zonesData.sort((a, b) => b.temp - a.temp);
+
+      if (gameSettings.phaseChangeHeat) {
+        let remainingEnergy = focusPower * durationSeconds;
+        const thermodynamics = terraformingParameters.phaseChange.water;
+        for (const z of zonesData) {
+          if (!(remainingEnergy > 0)) break;
+          const energyPerKg = calculatePhaseTransitionEnergyPerKg(
+            'solid',
+            'liquid',
+            z.temp,
+            thermodynamics
+          );
+          const meltHere = Math.min(
+            z.ice,
+            remainingEnergy / energyPerKg / terraformingParameters.physical.kgPerTon
+          );
+          if (!(meltHere > 0)) continue;
+          terraforming.zonalSurface[z.zone].ice -= meltHere;
+          terraforming.zonalSurface[z.zone].liquidWater += meltHere;
+          focusMeltAmount += meltHere;
+          remainingEnergy -=
+            meltHere * terraformingParameters.physical.kgPerTon * energyPerKg;
         }
+      } else {
+        const C_P_ICE = 2100; // J/kg·K
+        const L_F_WATER = 334000; // J/kg
+        const deltaT = Math.max(0, 273.15 - (terraforming.temperature.value || 0));
+        const energyPerKg = C_P_ICE * deltaT + L_F_WATER;
+        const meltKgPerSec = focusPower / energyPerKg;
+        let remaining = Math.min(
+          meltKgPerSec * durationSeconds / 1000,
+          zonesData.reduce((sum, z) => sum + z.ice, 0)
+        );
+        const desiredMelt = remaining;
+        for (const z of zonesData) {
+          if (remaining <= 0) break;
+          const meltHere = Math.min(z.ice, remaining);
+          terraforming.zonalSurface[z.zone].ice -= meltHere;
+          terraforming.zonalSurface[z.zone].liquidWater += meltHere;
+          remaining -= meltHere;
+        }
+        focusMeltAmount = desiredMelt - remaining;
+      }
+
+      if (focusMeltAmount > 0) {
+        if (resources.surface?.ice) resources.surface.ice.value -= focusMeltAmount;
+        if (resources.surface?.liquidWater) resources.surface.liquidWater.value += focusMeltAmount;
       }
     }
   }

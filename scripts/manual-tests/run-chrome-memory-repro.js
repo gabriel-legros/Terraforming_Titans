@@ -3,6 +3,7 @@
 const fs = require('fs');
 const http = require('http');
 const path = require('path');
+const { spawn } = require('child_process');
 const { pathToFileURL } = require('url');
 
 const repoRoot = path.resolve(__dirname, '..', '..');
@@ -31,6 +32,10 @@ function parseArgs(argv) {
     phaseSeconds: 2,
     stackAttribution: true,
     heapSampling: true,
+    nativeMemory: false,
+    nativeSamplingInterval: 32768,
+    allocationTimeline: false,
+    exploreEverySeconds: 0,
     stringDuplicates: true,
     duplicateStringMinLength: 24,
     duplicateStringLimit: 50
@@ -94,6 +99,16 @@ function parseArgs(argv) {
       options.stackAttribution = false;
     } else if (arg === '--no-heap-sampling') {
       options.heapSampling = false;
+    } else if (arg === '--native-memory') {
+      options.nativeMemory = true;
+    } else if (arg === '--native-sampling-interval') {
+      options.nativeSamplingInterval = Number(next);
+      index += 1;
+    } else if (arg === '--allocation-timeline') {
+      options.allocationTimeline = true;
+    } else if (arg === '--explore-every') {
+      options.exploreEverySeconds = Number(next);
+      index += 1;
     } else if (arg === '--no-string-duplicates') {
       options.stringDuplicates = false;
     } else if (arg === '--duplicate-string-min-length') {
@@ -131,8 +146,23 @@ function parseArgs(argv) {
   if (!Number.isFinite(options.duplicateStringLimit) || options.duplicateStringLimit <= 0) {
     throw new Error('--duplicate-string-limit must be a positive number');
   }
+  if (!Number.isFinite(options.nativeSamplingInterval) || options.nativeSamplingInterval <= 0) {
+    throw new Error('--native-sampling-interval must be a positive number of bytes');
+  }
+  if (!Number.isFinite(options.exploreEverySeconds) || options.exploreEverySeconds < 0) {
+    throw new Error('--explore-every must be a non-negative number of seconds');
+  }
   if (options.audit && options.freezeLoop) {
     throw new Error('--freeze-loop cannot be combined with --audit; audit mode owns the running/manual-pause state');
+  }
+  if (options.audit && options.exploreEverySeconds > 0) {
+    throw new Error('--explore-every cannot be combined with --audit; audit mode owns its navigation schedule');
+  }
+  if (options.audit && options.allocationTimeline) {
+    throw new Error('--allocation-timeline is for the long simple sampler; do not combine it with --audit');
+  }
+  if (options.allocationTimeline) {
+    options.heapSampling = false;
   }
 
   return options;
@@ -164,6 +194,10 @@ function printHelp() {
     '  --phase-duration <s>  Idle wait before each audit endpoint snapshot. Default: 2',
     '  --no-stack-attribution Count operation types without collecting a stack for every DOM call',
     '  --no-heap-sampling    Disable V8 allocation sampling',
+    '  --native-memory       Add matched extra-native snapshots, native allocation sampling, and Chromium process memory',
+    '  --native-sampling-interval <bytes> Average bytes between native allocation samples. Default: 32768',
+    '  --allocation-timeline Replay Chrome allocation instrumentation instead of V8 sampling',
+    '  --explore-every <s>   Cycle every visible tab/subtab at this interval during simple sampling',
     '  --no-string-duplicates Disable final heap snapshot duplicate-string summary',
     '  --duplicate-string-min-length <n> Minimum string length to include. Default: 24',
     '  --duplicate-string-limit <n> Number of duplicate string rows to keep. Default: 50'
@@ -239,6 +273,284 @@ function stamp() {
   return new Date().toISOString().replace(/[:.]/g, '-');
 }
 
+function createWindowsProcessMemorySampler() {
+  const script = [
+    '$input | ForEach-Object {',
+    '  $ids = @($_.Split(\",\") | Where-Object { $_ } | ForEach-Object { [int]$_ })',
+    '  $rows = @(Get-Process -Id $ids -ErrorAction SilentlyContinue | ForEach-Object {',
+    '    [pscustomobject]@{',
+    '      id = [int]$_.Id',
+    '      workingSetBytes = [double]$_.WorkingSet64',
+    '      privateBytes = [double]$_.PrivateMemorySize64',
+    '      virtualBytes = [double]$_.VirtualMemorySize64',
+    '      pagedBytes = [double]$_.PagedMemorySize64',
+    '      handleCount = [int]$_.HandleCount',
+    '    }',
+    '  })',
+    '  [pscustomobject]@{ rows = $rows } | ConvertTo-Json -Compress -Depth 3',
+    '}'
+  ].join('\n');
+  const child = spawn('powershell.exe', [
+    '-NoLogo',
+    '-NoProfile',
+    '-NonInteractive',
+    '-Command',
+    script
+  ], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+    windowsHide: true
+  });
+  const pending = [];
+  let output = '';
+  let stderr = '';
+  let exited = false;
+
+  function rejectPending(error) {
+    while (pending.length) pending.shift().reject(error);
+  }
+
+  child.stdout.setEncoding('utf8');
+  child.stderr.setEncoding('utf8');
+  child.stdout.on('data', (chunk) => {
+    output += chunk;
+    let newline = output.indexOf('\n');
+    while (newline >= 0) {
+      const line = output.slice(0, newline).trim();
+      output = output.slice(newline + 1);
+      if (line) {
+        const request = pending.shift();
+        if (request) {
+          try {
+            request.resolve(JSON.parse(line).rows || []);
+          } catch (error) {
+            request.reject(new Error(`Could not parse Chromium process memory: ${line}\n${error.message}`));
+          }
+        }
+      }
+      newline = output.indexOf('\n');
+    }
+  });
+  child.stderr.on('data', chunk => {
+    stderr += chunk;
+  });
+  child.on('error', rejectPending);
+  child.on('close', (code) => {
+    exited = true;
+    if (code !== 0) {
+      rejectPending(new Error(`Chromium process memory sampler exited with code ${code}: ${stderr.trim()}`));
+    }
+  });
+
+  return {
+    sample(processInfo) {
+      return new Promise((resolve, reject) => {
+        pending.push({ resolve, reject });
+        child.stdin.write(processInfo.map(process => process.id).join(',') + '\n');
+      });
+    },
+    close() {
+      if (exited) return Promise.resolve();
+      return new Promise((resolve) => {
+        child.once('close', resolve);
+        child.stdin.end();
+      });
+    }
+  };
+}
+
+function summarizeChromiumProcessMemory(processInfo, memoryRows) {
+  const memoryById = new Map(memoryRows.map(row => [row.id, row]));
+  const byType = {};
+  const processes = processInfo.map((process) => {
+    const memory = memoryById.get(process.id) || {
+      workingSetBytes: 0,
+      privateBytes: 0,
+      virtualBytes: 0,
+      pagedBytes: 0,
+      handleCount: 0
+    };
+    const type = process.type;
+    if (!byType[type]) {
+      byType[type] = {
+        count: 0,
+        workingSetBytes: 0,
+        privateBytes: 0,
+        virtualBytes: 0,
+        pagedBytes: 0,
+        handleCount: 0
+      };
+    }
+    byType[type].count += 1;
+    byType[type].workingSetBytes += memory.workingSetBytes;
+    byType[type].privateBytes += memory.privateBytes;
+    byType[type].virtualBytes += memory.virtualBytes;
+    byType[type].pagedBytes += memory.pagedBytes;
+    byType[type].handleCount += memory.handleCount;
+    return {
+      type,
+      id: process.id,
+      cpuTime: process.cpuTime,
+      ...memory
+    };
+  });
+  const total = Object.values(byType).reduce((sum, entry) => ({
+    count: sum.count + entry.count,
+    workingSetBytes: sum.workingSetBytes + entry.workingSetBytes,
+    privateBytes: sum.privateBytes + entry.privateBytes,
+    virtualBytes: sum.virtualBytes + entry.virtualBytes,
+    pagedBytes: sum.pagedBytes + entry.pagedBytes,
+    handleCount: sum.handleCount + entry.handleCount
+  }), {
+    count: 0,
+    workingSetBytes: 0,
+    privateBytes: 0,
+    virtualBytes: 0,
+    pagedBytes: 0,
+    handleCount: 0
+  });
+  return { total, byType, processes };
+}
+
+function flattenChromiumProcessMemory(processMemory) {
+  const browser = processMemory.byType.browser || {};
+  const renderer = processMemory.byType.renderer || {};
+  const gpu = processMemory.byType.GPU || {};
+  return {
+    chromiumWorkingSetBytes: processMemory.total.workingSetBytes,
+    chromiumPrivateBytes: processMemory.total.privateBytes,
+    chromiumVirtualBytes: processMemory.total.virtualBytes,
+    chromiumHandleCount: processMemory.total.handleCount,
+    browserWorkingSetBytes: browser.workingSetBytes || 0,
+    browserPrivateBytes: browser.privateBytes || 0,
+    rendererWorkingSetBytes: renderer.workingSetBytes || 0,
+    rendererPrivateBytes: renderer.privateBytes || 0,
+    gpuWorkingSetBytes: gpu.workingSetBytes || 0,
+    gpuPrivateBytes: gpu.privateBytes || 0
+  };
+}
+
+function createNativeMemoryCollector(cdpSession, browserCdpSession, samplingInterval) {
+  if (process.platform !== 'win32') {
+    throw new Error('--native-memory requires Windows Node so Chromium private and working-set bytes can be sampled');
+  }
+  const processSampler = createWindowsProcessMemorySampler();
+
+  return {
+    async start() {
+      await cdpSession.send('Memory.startSampling', {
+        samplingInterval,
+        suppressRandomness: false
+      });
+    },
+    async collectProcessMemory() {
+      const result = await browserCdpSession.send('SystemInfo.getProcessInfo');
+      const rows = await processSampler.sample(result.processInfo);
+      return summarizeChromiumProcessMemory(result.processInfo, rows);
+    },
+    async finish() {
+      const rendererProfile = await cdpSession.send('Memory.getSamplingProfile');
+      const rendererAllTimeProfile = await cdpSession.send('Memory.getAllTimeSamplingProfile');
+      const browserProfile = await browserCdpSession.send('Memory.getBrowserSamplingProfile');
+      await cdpSession.send('Memory.stopSampling');
+      return {
+        rendererMeasuredWindow: summarizeNativeSamplingProfile(rendererProfile.profile),
+        rendererAllTime: summarizeNativeSamplingProfile(rendererAllTimeProfile.profile),
+        browserAllTime: summarizeNativeSamplingProfile(browserProfile.profile)
+      };
+    },
+    close() {
+      return processSampler.close();
+    }
+  };
+}
+
+function parseAllocationTimelineSnapshotHeader(prefix, streamedCharacters) {
+  function numberField(name) {
+    const match = prefix.match(new RegExp(`"${name}":(\\d+)`));
+    return match ? Number(match[1]) : null;
+  }
+
+  return {
+    streamedCharacters,
+    nodeCount: numberField('node_count'),
+    edgeCount: numberField('edge_count'),
+    traceFunctionCount: numberField('trace_function_count'),
+    extraNativeBytes: numberField('extra_native_bytes')
+  };
+}
+
+function createAllocationTimelineCollector(cdpSession) {
+  const fragments = new Map();
+  let statsUpdateCount = 0;
+  let lastSeenObjectId = 0;
+  let lastSeenTimestamp = 0;
+
+  const onStatsUpdate = (event) => {
+    statsUpdateCount += 1;
+    for (let index = 0; index < event.statsUpdate.length; index += 3) {
+      fragments.set(event.statsUpdate[index], {
+        count: event.statsUpdate[index + 1],
+        size: event.statsUpdate[index + 2]
+      });
+    }
+  };
+  const onLastSeenObjectId = (event) => {
+    lastSeenObjectId = event.lastSeenObjectId;
+    lastSeenTimestamp = event.timestamp;
+  };
+
+  function sample() {
+    const totals = Array.from(fragments.values()).reduce((sum, fragment) => ({
+      count: sum.count + fragment.count,
+      size: sum.size + fragment.size
+    }), { count: 0, size: 0 });
+    return {
+      liveObjectCount: totals.count,
+      liveObjectSize: totals.size,
+      fragmentCount: fragments.size,
+      statsUpdateCount,
+      lastSeenObjectId,
+      lastSeenTimestamp
+    };
+  }
+
+  return {
+    async start() {
+      cdpSession.on('HeapProfiler.heapStatsUpdate', onStatsUpdate);
+      cdpSession.on('HeapProfiler.lastSeenObjectId', onLastSeenObjectId);
+      await cdpSession.send('HeapProfiler.startTrackingHeapObjects', {
+        trackAllocations: true
+      });
+    },
+    sample,
+    async stop() {
+      let prefix = '';
+      let streamedCharacters = 0;
+      const prefixLimit = 2 * 1024 * 1024;
+      const onChunk = (event) => {
+        streamedCharacters += event.chunk.length;
+        if (prefix.length < prefixLimit) {
+          prefix += event.chunk.slice(0, prefixLimit - prefix.length);
+        }
+      };
+      cdpSession.on('HeapProfiler.addHeapSnapshotChunk', onChunk);
+      try {
+        await cdpSession.send('HeapProfiler.stopTrackingHeapObjects', {
+          reportProgress: false
+        });
+      } finally {
+        cdpSession.off('HeapProfiler.addHeapSnapshotChunk', onChunk);
+        cdpSession.off('HeapProfiler.heapStatsUpdate', onStatsUpdate);
+        cdpSession.off('HeapProfiler.lastSeenObjectId', onLastSeenObjectId);
+      }
+      return {
+        finalStats: sample(),
+        snapshot: parseAllocationTimelineSnapshotHeader(prefix, streamedCharacters)
+      };
+    }
+  };
+}
+
 function summarizeSeries(samples) {
   if (samples.length === 0) {
     return {};
@@ -247,6 +559,8 @@ function summarizeSeries(samples) {
   const last = samples[samples.length - 1];
   const heapValues = samples.map(sample => sample.jsHeapUsedSize).filter(Number.isFinite);
   const domValues = samples.map(sample => sample.domNodes).filter(Number.isFinite);
+  const privateValues = samples.map(sample => sample.chromiumPrivateBytes).filter(Number.isFinite);
+  const workingSetValues = samples.map(sample => sample.chromiumWorkingSetBytes).filter(Number.isFinite);
   const maxHeap = heapValues.length ? Math.max(...heapValues) : null;
   const minHeap = heapValues.length ? Math.min(...heapValues) : null;
   const maxDom = domValues.length ? Math.max(...domValues) : null;
@@ -261,10 +575,28 @@ function summarizeSeries(samples) {
     domNodeDelta: Number.isFinite(first.domNodes) && Number.isFinite(last.domNodes)
       ? last.domNodes - first.domNodes
       : null,
+    chromiumPrivateDeltaBytes: Number.isFinite(first.chromiumPrivateBytes) && Number.isFinite(last.chromiumPrivateBytes)
+      ? last.chromiumPrivateBytes - first.chromiumPrivateBytes
+      : null,
+    chromiumWorkingSetDeltaBytes: Number.isFinite(first.chromiumWorkingSetBytes) && Number.isFinite(last.chromiumWorkingSetBytes)
+      ? last.chromiumWorkingSetBytes - first.chromiumWorkingSetBytes
+      : null,
+    allocationTimelineLiveObjectDelta: Number.isFinite(first.allocationTimelineLiveObjectCount)
+      && Number.isFinite(last.allocationTimelineLiveObjectCount)
+      ? last.allocationTimelineLiveObjectCount - first.allocationTimelineLiveObjectCount
+      : null,
+    allocationTimelineLiveSizeDeltaBytes: Number.isFinite(first.allocationTimelineLiveObjectSize)
+      && Number.isFinite(last.allocationTimelineLiveObjectSize)
+      ? last.allocationTimelineLiveObjectSize - first.allocationTimelineLiveObjectSize
+      : null,
     maxHeapBytes: maxHeap,
     minHeapBytes: minHeap,
     maxDomNodes: maxDom,
-    minDomNodes: minDom
+    minDomNodes: minDom,
+    maxChromiumPrivateBytes: privateValues.length ? Math.max(...privateValues) : null,
+    minChromiumPrivateBytes: privateValues.length ? Math.min(...privateValues) : null,
+    maxChromiumWorkingSetBytes: workingSetValues.length ? Math.max(...workingSetValues) : null,
+    minChromiumWorkingSetBytes: workingSetValues.length ? Math.min(...workingSetValues) : null
   };
 }
 
@@ -273,6 +605,20 @@ function toCsv(samples) {
     'elapsedSeconds',
     'jsHeapUsedSize',
     'jsHeapTotalSize',
+    'chromiumWorkingSetBytes',
+    'chromiumPrivateBytes',
+    'chromiumVirtualBytes',
+    'chromiumHandleCount',
+    'browserWorkingSetBytes',
+    'browserPrivateBytes',
+    'rendererWorkingSetBytes',
+    'rendererPrivateBytes',
+    'gpuWorkingSetBytes',
+    'gpuPrivateBytes',
+    'allocationTimelineLiveObjectCount',
+    'allocationTimelineLiveObjectSize',
+    'allocationTimelineFragmentCount',
+    'allocationTimelineStatsUpdateCount',
     'layoutCount',
     'recalcStyleCount',
     'layoutDuration',
@@ -316,6 +662,11 @@ function auditToCsv(audit) {
   const headers = [
     'name',
     'heapDeltaBytes',
+    'chromiumWorkingSetDeltaBytes',
+    'chromiumPrivateDeltaBytes',
+    'browserPrivateDeltaBytes',
+    'rendererPrivateDeltaBytes',
+    'gpuPrivateDeltaBytes',
     'domNodeDelta',
     'domDocumentDelta',
     'domListenerDelta',
@@ -356,6 +707,11 @@ function auditToCsv(audit) {
     const values = [
       phase.name,
       phase.delta.jsHeapUsedSize,
+      phase.delta.chromiumWorkingSetBytes,
+      phase.delta.chromiumPrivateBytes,
+      phase.delta.browserPrivateBytes,
+      phase.delta.rendererPrivateBytes,
+      phase.delta.gpuPrivateBytes,
       phase.delta.domNodes,
       phase.delta.domDocuments,
       phase.delta.domListeners,
@@ -425,6 +781,33 @@ function summarizeHeapSamplingProfile(profile, limit = 30) {
     .slice(0, limit);
 }
 
+function summarizeNativeSamplingProfile(profile, limit = 30) {
+  const rowsByStack = new Map();
+  (profile.samples || []).forEach((sample) => {
+    const stack = sample.stack.length ? sample.stack : ['(unknown native stack)'];
+    const key = stack.join('\n');
+    const row = rowsByStack.get(key) || {
+      stack,
+      sampleCount: 0,
+      sampledAllocationBytes: 0,
+      attributedBytes: 0
+    };
+    row.sampleCount += 1;
+    row.sampledAllocationBytes += sample.size;
+    row.attributedBytes += sample.total;
+    rowsByStack.set(key, row);
+  });
+  const rows = Array.from(rowsByStack.values())
+    .sort((a, b) => b.attributedBytes - a.attributedBytes);
+  return {
+    sampleCount: (profile.samples || []).length,
+    sampledAllocationBytes: rows.reduce((sum, row) => sum + row.sampledAllocationBytes, 0),
+    attributedBytes: rows.reduce((sum, row) => sum + row.attributedBytes, 0),
+    moduleCount: (profile.modules || []).length,
+    top: rows.slice(0, limit)
+  };
+}
+
 async function takeHeapSnapshot(cdpSession) {
   const chunks = [];
   const onChunk = event => {
@@ -437,6 +820,58 @@ async function takeHeapSnapshot(cdpSession) {
     cdpSession.off('HeapProfiler.addHeapSnapshotChunk', onChunk);
   }
   return JSON.parse(chunks.join(''));
+}
+
+function summarizeHeapSnapshotMemory(snapshot) {
+  const metadata = snapshot.snapshot;
+  const nodeFields = metadata.meta.node_fields;
+  const fieldCount = nodeFields.length;
+  const selfSizeOffset = nodeFields.indexOf('self_size');
+  let nodeSelfSizeBytes = 0;
+  for (let index = selfSizeOffset; index < snapshot.nodes.length; index += fieldCount) {
+    nodeSelfSizeBytes += snapshot.nodes[index];
+  }
+  const extraNativeBytes = metadata.extra_native_bytes || 0;
+  return {
+    nodeCount: metadata.node_count,
+    edgeCount: metadata.edge_count,
+    nodeSelfSizeBytes,
+    extraNativeBytes,
+    snapshotAccountedBytes: nodeSelfSizeBytes + extraNativeBytes
+  };
+}
+
+async function collectNativeCheckpoint(cdpSession, nativeMemoryCollector, snapshot) {
+  const heapSnapshot = snapshot || await takeHeapSnapshot(cdpSession);
+  const processMemory = await nativeMemoryCollector.collectProcessMemory();
+  return {
+    heapSnapshot: summarizeHeapSnapshotMemory(heapSnapshot),
+    processMemory,
+    ...flattenChromiumProcessMemory(processMemory)
+  };
+}
+
+function diffNativeCheckpoints(before, after) {
+  const fields = [
+    'chromiumWorkingSetBytes',
+    'chromiumPrivateBytes',
+    'chromiumVirtualBytes',
+    'chromiumHandleCount',
+    'browserWorkingSetBytes',
+    'browserPrivateBytes',
+    'rendererWorkingSetBytes',
+    'rendererPrivateBytes',
+    'gpuWorkingSetBytes',
+    'gpuPrivateBytes'
+  ];
+  const delta = {};
+  fields.forEach(field => {
+    delta[field] = after[field] - before[field];
+  });
+  delta.nodeSelfSizeBytes = after.heapSnapshot.nodeSelfSizeBytes - before.heapSnapshot.nodeSelfSizeBytes;
+  delta.extraNativeBytes = after.heapSnapshot.extraNativeBytes - before.heapSnapshot.extraNativeBytes;
+  delta.snapshotAccountedBytes = after.heapSnapshot.snapshotAccountedBytes - before.heapSnapshot.snapshotAccountedBytes;
+  return delta;
 }
 
 function summarizeDuplicateStrings(snapshot, options = {}) {
@@ -1164,7 +1599,14 @@ async function freezeGameLoop(page) {
   });
 }
 
-async function collectMetrics(page, cdpSession, startedAt, forceGc) {
+async function collectMetrics(
+  page,
+  cdpSession,
+  startedAt,
+  forceGc,
+  nativeMemoryCollector = null,
+  allocationTimelineCollector = null
+) {
   if (forceGc) {
     await cdpSession.send('HeapProfiler.collectGarbage');
   }
@@ -1176,6 +1618,12 @@ async function collectMetrics(page, cdpSession, startedAt, forceGc) {
   });
   const domCounters = await cdpSession.send('Memory.getDOMCounters');
   const probe = await page.evaluate(() => window.memoryReproProbe.sample());
+  const processMemory = nativeMemoryCollector
+    ? await nativeMemoryCollector.collectProcessMemory()
+    : null;
+  const allocationTimeline = allocationTimelineCollector
+    ? allocationTimelineCollector.sample()
+    : null;
 
   return {
     elapsedSeconds: Number(((Date.now() - startedAt) / 1000).toFixed(3)),
@@ -1190,6 +1638,14 @@ async function collectMetrics(page, cdpSession, startedAt, forceGc) {
     domNodes: domCounters.nodes,
     domDocuments: domCounters.documents,
     domListeners: domCounters.jsEventListeners,
+    ...(processMemory ? flattenChromiumProcessMemory(processMemory) : {}),
+    ...(processMemory ? { chromiumProcesses: processMemory.processes } : {}),
+    ...(allocationTimeline ? {
+      allocationTimelineLiveObjectCount: allocationTimeline.liveObjectCount,
+      allocationTimelineLiveObjectSize: allocationTimeline.liveObjectSize,
+      allocationTimelineFragmentCount: allocationTimeline.fragmentCount,
+      allocationTimelineStatsUpdateCount: allocationTimeline.statsUpdateCount
+    } : {}),
     ...probe
   };
 }
@@ -1399,11 +1855,11 @@ async function collectDetachedCacheReferences(page) {
   });
 }
 
-async function collectAuditSnapshot(page, cdpSession) {
+async function collectAuditSnapshot(page, cdpSession, nativeMemoryCollector = null) {
   await cdpSession.send('Runtime.discardConsoleEntries');
   await cdpSession.send('HeapProfiler.collectGarbage');
   await wait(100);
-  const metrics = await collectMetrics(page, cdpSession, Date.now(), false);
+  const metrics = await collectMetrics(page, cdpSession, Date.now(), false, nativeMemoryCollector);
   const cacheReferences = await collectDetachedCacheReferences(page);
   return { ...metrics, cacheReferences };
 }
@@ -1414,7 +1870,10 @@ function diffAuditSnapshots(before, after) {
     'layoutDuration', 'recalcStyleDuration', 'scriptDuration', 'taskDuration',
     'domNodes', 'domDocuments', 'domListeners', 'elementCount',
     'connectedNodeCount', 'connectedTextNodeCount', 'connectedCommentNodeCount',
-    'bodyTooltipCount'
+    'bodyTooltipCount', 'chromiumWorkingSetBytes', 'chromiumPrivateBytes',
+    'chromiumVirtualBytes', 'chromiumHandleCount', 'browserWorkingSetBytes',
+    'browserPrivateBytes', 'rendererWorkingSetBytes', 'rendererPrivateBytes',
+    'gpuWorkingSetBytes', 'gpuPrivateBytes'
   ];
   const delta = {};
   browserFields.forEach((field) => {
@@ -1843,13 +2302,13 @@ async function runStoryProjectWorldSweep(page, saveText, initialProjectResult) {
   };
 }
 
-async function runMeasuredAuditPhase(page, cdpSession, options, phase) {
+async function runMeasuredAuditPhase(page, cdpSession, options, phase, nativeMemoryCollector) {
   if (phase.prepare) await phase.prepare();
-  const before = await collectAuditSnapshot(page, cdpSession);
+  const before = await collectAuditSnapshot(page, cdpSession, nativeMemoryCollector);
   await page.evaluate(() => memoryReproProbe.reset());
   const actionResult = phase.action ? await phase.action() : null;
   if (options.phaseSeconds > 0) await wait(options.phaseSeconds * 1000);
-  const after = await collectAuditSnapshot(page, cdpSession);
+  const after = await collectAuditSnapshot(page, cdpSession, nativeMemoryCollector);
   const delta = diffAuditSnapshots(before, after);
   const probe = await page.evaluate(() => memoryReproProbe.sample());
   if (phase.cleanup) await phase.cleanup();
@@ -1923,33 +2382,40 @@ async function runTravelCycles(page, saveText, rounds, paused, onCycle) {
   return results;
 }
 
-async function runAuditMatrix(page, cdpSession, saveText, options) {
+async function runAuditMatrix(page, cdpSession, saveText, options, nativeMemoryCollector) {
   const phases = [];
   const running = () => setManualPause(page, false);
   const paused = () => setManualPause(page, true);
   const resume = () => setManualPause(page, false);
+  const measured = phase => runMeasuredAuditPhase(
+    page,
+    cdpSession,
+    options,
+    phase,
+    nativeMemoryCollector
+  );
 
   await page.evaluate(() => setAutosaveIntervalSeconds(0));
   const initialCoverage = await collectRuntimeCoverage(page);
 
-  phases.push(await runMeasuredAuditPhase(page, cdpSession, options, {
+  phases.push(await measured({
     name: 'first-navigation-running', prepare: running,
     action: () => exerciseVisibleTabs(page, 1, true)
   }));
-  phases.push(await runMeasuredAuditPhase(page, cdpSession, options, {
+  phases.push(await measured({
     name: 'repeat-navigation-running', prepare: running,
     action: () => exerciseVisibleTabs(page, options.rounds, true)
   }));
-  phases.push(await runMeasuredAuditPhase(page, cdpSession, options, {
+  phases.push(await measured({
     name: 'buildings-running', prepare: running,
     action: () => exerciseBuildingCards(page, options.rounds, true)
   }));
-  const projectsRunningPhase = await runMeasuredAuditPhase(page, cdpSession, options, {
+  const projectsRunningPhase = await measured({
     name: 'projects-running', prepare: running,
     action: () => exerciseProjectCards(page, options.rounds, true)
   });
   phases.push(projectsRunningPhase);
-  phases.push(await runMeasuredAuditPhase(page, cdpSession, options, {
+  phases.push(await measured({
     name: 'settings-idle-running',
     prepare: async () => {
       await running();
@@ -1957,7 +2423,7 @@ async function runAuditMatrix(page, cdpSession, saveText, options) {
     },
     action: () => page.evaluate(() => ({ paused: isGamePaused() }))
   }));
-  phases.push(await runMeasuredAuditPhase(page, cdpSession, options, {
+  phases.push(await measured({
     name: 'settings-idle-manual-pause',
     prepare: async () => {
       await paused();
@@ -1966,19 +2432,19 @@ async function runAuditMatrix(page, cdpSession, saveText, options) {
     action: () => page.evaluate(() => ({ paused: isGamePaused() })),
     cleanup: resume
   }));
-  phases.push(await runMeasuredAuditPhase(page, cdpSession, options, {
+  phases.push(await measured({
     name: 'repeat-navigation-manual-pause', prepare: paused,
     action: () => exerciseVisibleTabs(page, options.rounds, false), cleanup: resume
   }));
-  phases.push(await runMeasuredAuditPhase(page, cdpSession, options, {
+  phases.push(await measured({
     name: 'buildings-manual-pause', prepare: paused,
     action: () => exerciseBuildingCards(page, options.rounds, false), cleanup: resume
   }));
-  phases.push(await runMeasuredAuditPhase(page, cdpSession, options, {
+  phases.push(await measured({
     name: 'projects-manual-pause', prepare: paused,
     action: () => exerciseProjectCards(page, options.rounds, false), cleanup: resume
   }));
-  phases.push(await runMeasuredAuditPhase(page, cdpSession, options, {
+  phases.push(await measured({
     name: 'save-load-running',
     prepare: async () => {
       await running();
@@ -1987,12 +2453,12 @@ async function runAuditMatrix(page, cdpSession, saveText, options) {
     action: async () => {
       const snapshots = [];
       const cycles = await runSaveLoadCycles(page, saveText, options.rounds, false, async () => {
-        snapshots.push(await collectAuditSnapshot(page, cdpSession));
+        snapshots.push(await collectAuditSnapshot(page, cdpSession, nativeMemoryCollector));
       });
       return { cycles, snapshots };
     }
   }));
-  phases.push(await runMeasuredAuditPhase(page, cdpSession, options, {
+  phases.push(await measured({
     name: 'save-load-manual-pause',
     prepare: async () => {
       await paused();
@@ -2001,12 +2467,12 @@ async function runAuditMatrix(page, cdpSession, saveText, options) {
     action: async () => {
       const snapshots = [];
       const cycles = await runSaveLoadCycles(page, saveText, options.rounds, true, async () => {
-        snapshots.push(await collectAuditSnapshot(page, cdpSession));
+        snapshots.push(await collectAuditSnapshot(page, cdpSession, nativeMemoryCollector));
       });
       return { cycles, snapshots };
     }, cleanup: resume
   }));
-  phases.push(await runMeasuredAuditPhase(page, cdpSession, options, {
+  phases.push(await measured({
     name: 'travel-running',
     prepare: async () => {
       await running();
@@ -2015,12 +2481,12 @@ async function runAuditMatrix(page, cdpSession, saveText, options) {
     action: async () => {
       const snapshots = [];
       const cycles = await runTravelCycles(page, saveText, options.rounds, false, async () => {
-        snapshots.push(await collectAuditSnapshot(page, cdpSession));
+        snapshots.push(await collectAuditSnapshot(page, cdpSession, nativeMemoryCollector));
       });
       return { cycles, snapshots };
     }
   }));
-  phases.push(await runMeasuredAuditPhase(page, cdpSession, options, {
+  phases.push(await measured({
     name: 'travel-manual-pause',
     prepare: async () => {
       await paused();
@@ -2029,7 +2495,7 @@ async function runAuditMatrix(page, cdpSession, saveText, options) {
     action: async () => {
       const snapshots = [];
       const cycles = await runTravelCycles(page, saveText, options.rounds, true, async () => {
-        snapshots.push(await collectAuditSnapshot(page, cdpSession));
+        snapshots.push(await collectAuditSnapshot(page, cdpSession, nativeMemoryCollector));
       });
       return { cycles, snapshots };
     }, cleanup: resume
@@ -2037,7 +2503,7 @@ async function runAuditMatrix(page, cdpSession, saveText, options) {
 
   let storyProjectSweep = null;
   if (options.storyProjects) {
-    const storyProjectPhase = await runMeasuredAuditPhase(page, cdpSession, options, {
+    const storyProjectPhase = await measured({
       name: 'story-project-world-sweep',
       prepare: running,
       action: () => runStoryProjectWorldSweep(page, saveText, projectsRunningPhase.actionResult)
@@ -2271,6 +2737,8 @@ async function main() {
   }
 
   const browser = await chromium.launch(launchOptions);
+  let nativeMemoryCollector = null;
+  let allocationTimelineCollector = null;
 
   try {
     const context = await browser.newContext({
@@ -2289,6 +2757,9 @@ async function main() {
     });
 
     const cdpSession = await context.newCDPSession(page);
+    const browserCdpSession = options.nativeMemory
+      ? await browser.newBrowserCDPSession()
+      : null;
     await cdpSession.send('Performance.enable');
     await cdpSession.send('HeapProfiler.enable');
 
@@ -2307,21 +2778,64 @@ async function main() {
 
     await installProbe(page, { stackAttribution: options.stackAttribution });
     await wait(options.settleSeconds * 1000);
+    let nativeMemoryBaseline = null;
+    if (options.nativeMemory) {
+      nativeMemoryCollector = createNativeMemoryCollector(
+        cdpSession,
+        browserCdpSession,
+        options.nativeSamplingInterval
+      );
+      nativeMemoryBaseline = await collectNativeCheckpoint(cdpSession, nativeMemoryCollector);
+      await nativeMemoryCollector.start();
+      console.log([
+        '[memory-repro] native baseline',
+        `snapshot=${Math.round(nativeMemoryBaseline.heapSnapshot.snapshotAccountedBytes / 1024 / 1024)}MB`,
+        `extra=${Math.round(nativeMemoryBaseline.heapSnapshot.extraNativeBytes / 1024 / 1024)}MB`,
+        `private=${Math.round(nativeMemoryBaseline.chromiumPrivateBytes / 1024 / 1024)}MB`,
+        `workingSet=${Math.round(nativeMemoryBaseline.chromiumWorkingSetBytes / 1024 / 1024)}MB`
+      ].join(' '));
+    }
+    if (options.allocationTimeline) {
+      allocationTimelineCollector = createAllocationTimelineCollector(cdpSession);
+      await allocationTimelineCollector.start();
+      console.log('[memory-repro] allocation instrumentation started');
+    }
     if (options.audit) {
       if (options.heapSampling) {
         await cdpSession.send('HeapProfiler.startSampling', { samplingInterval: 32768 });
       }
-      const audit = await runAuditMatrix(page, cdpSession, saveText, options);
+      const audit = await runAuditMatrix(
+        page,
+        cdpSession,
+        saveText,
+        options,
+        nativeMemoryCollector
+      );
       const finalProbe = await page.evaluate(() => window.memoryReproProbe.sample());
       const heapSamplingProfile = options.heapSampling
         ? await cdpSession.send('HeapProfiler.stopSampling')
         : null;
+      const nativeAllocationProfiles = nativeMemoryCollector
+        ? await nativeMemoryCollector.finish()
+        : null;
+      const finalHeapSnapshot = options.stringDuplicates || nativeMemoryCollector
+        ? await takeHeapSnapshot(cdpSession)
+        : null;
       const duplicateStrings = options.stringDuplicates
-        ? summarizeDuplicateStrings(await takeHeapSnapshot(cdpSession), {
+        ? summarizeDuplicateStrings(finalHeapSnapshot, {
           minLength: options.duplicateStringMinLength,
           limit: options.duplicateStringLimit
         })
         : null;
+      const nativeMemoryFinal = nativeMemoryCollector
+        ? await collectNativeCheckpoint(cdpSession, nativeMemoryCollector, finalHeapSnapshot)
+        : null;
+      const nativeMemory = nativeMemoryCollector ? {
+        baseline: nativeMemoryBaseline,
+        final: nativeMemoryFinal,
+        delta: diffNativeCheckpoints(nativeMemoryBaseline, nativeMemoryFinal),
+        allocationProfiles: nativeAllocationProfiles
+      } : null;
       audit.validation = validateAuditCoverage(audit, options, consoleMessages, pageErrors);
       const report = {
         createdAt: new Date().toISOString(),
@@ -2335,6 +2849,7 @@ async function main() {
         audit,
         finalProbe,
         topHeapAllocations: heapSamplingProfile ? summarizeHeapSamplingProfile(heapSamplingProfile.profile) : [],
+        nativeMemory,
         duplicateStrings,
         consoleMessages,
         pageErrors
@@ -2358,14 +2873,42 @@ async function main() {
 
     const startedAt = Date.now();
     const samples = [];
+    const explorations = [];
     const maxSamples = Math.floor(options.durationSeconds / options.sampleSeconds) + 1;
+    let nextExplorationAt = options.exploreEverySeconds > 0
+      ? startedAt + options.exploreEverySeconds * 1000
+      : Infinity;
 
     for (let index = 0; index < maxSamples; index += 1) {
-      samples.push(await collectMetrics(page, cdpSession, startedAt, options.forceGc));
+      if (Date.now() >= nextExplorationAt) {
+        const explorationStartedAt = Date.now();
+        await cycleVisibleTabs(page);
+        explorations.push({
+          elapsedSeconds: Number(((Date.now() - startedAt) / 1000).toFixed(3)),
+          durationSeconds: Number(((Date.now() - explorationStartedAt) / 1000).toFixed(3))
+        });
+        nextExplorationAt += options.exploreEverySeconds * 1000;
+      }
+      samples.push(await collectMetrics(
+        page,
+        cdpSession,
+        startedAt,
+        options.forceGc,
+        nativeMemoryCollector,
+        allocationTimelineCollector
+      ));
       const latest = samples[samples.length - 1];
       console.log([
         `[memory-repro] ${latest.elapsedSeconds}s`,
         `heap=${Math.round(latest.jsHeapUsedSize / 1024 / 1024)}MB`,
+        ...(nativeMemoryCollector ? [
+          `private=${Math.round(latest.chromiumPrivateBytes / 1024 / 1024)}MB`,
+          `workingSet=${Math.round(latest.chromiumWorkingSetBytes / 1024 / 1024)}MB`
+        ] : []),
+        ...(allocationTimelineCollector ? [
+          `timelineLive=${Math.round(latest.allocationTimelineLiveObjectSize / 1024 / 1024)}MB`,
+          `timelineFragments=${latest.allocationTimelineFragmentCount}`
+        ] : []),
         `dom=${latest.domNodes}`,
         `listeners=${latest.domListeners}`,
         `extras=${latest.connectedExtraCount}`,
@@ -2386,12 +2929,30 @@ async function main() {
     const heapSamplingProfile = options.heapSampling
       ? await cdpSession.send('HeapProfiler.stopSampling')
       : null;
+    const allocationTimeline = allocationTimelineCollector
+      ? await allocationTimelineCollector.stop()
+      : null;
+    const nativeAllocationProfiles = nativeMemoryCollector
+      ? await nativeMemoryCollector.finish()
+      : null;
+    const finalHeapSnapshot = options.stringDuplicates || nativeMemoryCollector
+      ? await takeHeapSnapshot(cdpSession)
+      : null;
     const duplicateStrings = options.stringDuplicates
-      ? summarizeDuplicateStrings(await takeHeapSnapshot(cdpSession), {
+      ? summarizeDuplicateStrings(finalHeapSnapshot, {
         minLength: options.duplicateStringMinLength,
         limit: options.duplicateStringLimit
       })
       : null;
+    const nativeMemoryFinal = nativeMemoryCollector
+      ? await collectNativeCheckpoint(cdpSession, nativeMemoryCollector, finalHeapSnapshot)
+      : null;
+    const nativeMemory = nativeMemoryCollector ? {
+      baseline: nativeMemoryBaseline,
+      final: nativeMemoryFinal,
+      delta: diffNativeCheckpoints(nativeMemoryBaseline, nativeMemoryFinal),
+      allocationProfiles: nativeAllocationProfiles
+    } : null;
     const report = {
       createdAt: new Date().toISOString(),
       repoRoot,
@@ -2403,8 +2964,11 @@ async function main() {
       },
       summary: summarizeSeries(samples),
       samples,
+      explorations,
       finalProbe,
       topHeapAllocations: heapSamplingProfile ? summarizeHeapSamplingProfile(heapSamplingProfile.profile) : [],
+      allocationTimeline,
+      nativeMemory,
       duplicateStrings,
       consoleMessages,
       pageErrors
@@ -2432,6 +2996,9 @@ async function main() {
     console.log(`[memory-repro] wrote ${pathToFileURL(`${reportBase}.json`).href}`);
     console.log(`[memory-repro] wrote ${pathToFileURL(`${reportBase}.csv`).href}`);
   } finally {
+    if (nativeMemoryCollector) {
+      await nativeMemoryCollector.close();
+    }
     await browser.close();
     if (staticServer) {
       await new Promise(resolve => staticServer.close(resolve));

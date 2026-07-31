@@ -13,12 +13,14 @@ function printHelp() {
     '',
     'Options:',
     '  --output <path>                 PNG output path',
-    '  --planet <key>                  Planet preset key. Default: mars',
+    '  --planet <key>                  Planet preset key. Default: mars when no save is provided',
+    '  --save <path>                   Load a save JSON instead of a planet preset',
     '  --biomass <tropical,temperate,polar>',
     '  --hazardous-biomass <tropical,temperate,polar>',
     '  --water <tropical,temperate,polar>',
     '  --ice <tropical,temperate,polar>',
     '  --clouds <percent>              Cloud coverage override',
+    '  --ecumenopolis <percent>        Ecumenopolis coverage override (enables its Steam visual)',
     '  --nanoworld                     Enable the completed Nanoworld surface',
     '  --base-color <#rrggbb>          Surface base-colour override',
     '  --illumination <value>          Visualizer illumination override',
@@ -49,13 +51,15 @@ function parseNumber(value, flag, min, max) {
 function parseArgs(argv) {
   const options = {
     output: defaultOutput,
-    planet: 'mars',
+    planet: null,
+    save: null,
     biomass: null,
     hazardousBiomass: null,
     water: null,
     ice: null,
     clouds: null,
-    nanoworld: false,
+    ecumenopolis: null,
+    nanoworld: null,
     baseColor: null,
     illumination: null,
     rotation: 0.08,
@@ -84,11 +88,13 @@ function parseArgs(argv) {
     }
     if (arg === '--output') options.output = path.resolve(next);
     else if (arg === '--planet') options.planet = next;
+    else if (arg === '--save') options.save = path.resolve(next);
     else if (arg === '--biomass') options.biomass = parseTriplet(next, arg);
     else if (arg === '--hazardous-biomass') options.hazardousBiomass = parseTriplet(next, arg);
     else if (arg === '--water') options.water = parseTriplet(next, arg);
     else if (arg === '--ice') options.ice = parseTriplet(next, arg);
     else if (arg === '--clouds') options.clouds = parseNumber(next, arg, 0, 100);
+    else if (arg === '--ecumenopolis') options.ecumenopolis = parseNumber(next, arg, 0, 100);
     else if (arg === '--base-color') {
       if (!/^#[0-9a-f]{6}$/i.test(next)) throw new Error('--base-color must use #rrggbb format');
       options.baseColor = next;
@@ -100,6 +106,15 @@ function parseArgs(argv) {
     index++;
   }
 
+  if (options.save && options.planet) {
+    throw new Error('--save cannot be combined with --planet');
+  }
+  if (options.save && (!fs.existsSync(options.save) || !fs.statSync(options.save).isFile())) {
+    throw new Error(`Save file not found: ${options.save}`);
+  }
+  if (!options.save) {
+    options.planet = options.planet || 'mars';
+  }
   return options;
 }
 
@@ -159,12 +174,18 @@ async function configureVisualizer(page, options) {
     window.popupActive = false;
     const visualizer = window.planetVisualizer;
     if (!visualizer) throw new Error('Planet visualizer did not initialize');
-    if (!planetParameters[scene.planet]) throw new Error(`Unknown planet preset: ${scene.planet}`);
+    if (scene.planet && !planetParameters[scene.planet]) throw new Error(`Unknown planet preset: ${scene.planet}`);
 
     visualizer.setDebugMode(true, { skipPersist: true });
+    if (scene.save) {
+      visualizer.debug.mode = 'game';
+      visualizer.syncSlidersFromGame();
+    }
     visualizer.debug.mode = 'debug';
     visualizer.debug.modeSelect.value = 'debug';
-    visualizer.applyPlanetPresetToSliders(scene.planet);
+    if (scene.planet) {
+      visualizer.applyPlanetPresetToSliders(scene.planet);
+    }
 
     const rows = visualizer.debug.rows;
     const setValue = (pair, value) => {
@@ -184,7 +205,10 @@ async function configureVisualizer(page, options) {
     setZones(scene.water, 'wTrop', 'wTemp', 'wPol');
     setZones(scene.ice, 'iTrop', 'iTemp', 'iPol');
     setValue(rows.cloudCov, scene.clouds);
-    setValue(rows.nanoworld, scene.nanoworld ? 100 : 0);
+    setValue(rows.ecumenopolis, scene.ecumenopolis);
+    if (scene.nanoworld !== null) {
+      setValue(rows.nanoworld, scene.nanoworld ? 100 : 0);
+    }
     setValue(rows.illum, scene.illumination);
     visualizer.applySlidersToGame();
 
@@ -213,8 +237,27 @@ async function configureVisualizer(page, options) {
   }, options);
 }
 
+async function loadVisualizerSave(page, saveText) {
+  const loaded = await page.evaluate(text => {
+    const result = loadGame(text, true, { skipRender: true });
+    if (!result) return false;
+    updateRender.lastDelta = 0;
+    updateRender(true, { forceAllSubtabs: true });
+    return true;
+  }, saveText);
+  if (!loaded) {
+    throw new Error('Unable to load save JSON');
+  }
+  await page.waitForFunction(() => (
+    window.planetVisualizer
+    && window.planetVisualizer.renderer
+    && document.querySelector('#planet-visualizer canvas')
+  ));
+}
+
 async function main() {
   const options = parseArgs(process.argv.slice(2));
+  const saveText = options.save ? fs.readFileSync(options.save, 'utf8') : null;
   let chromium;
   try {
     ({ chromium } = require('playwright'));
@@ -266,12 +309,18 @@ async function main() {
       ].join('\n'));
     }
 
+    if (saveText) {
+      await loadVisualizerSave(page, saveText);
+    }
     await configureVisualizer(page, options);
     await page.waitForTimeout(options.settleMs);
     await page.evaluate(() => window.planetVisualizer.animate());
 
-    if (pageErrors.length) {
-      throw new Error(`Page errors:\n${pageErrors.join('\n')}`);
+    if (pageErrors.length || consoleErrors.length) {
+      throw new Error([
+        ...pageErrors.map(message => `Page error: ${message}`),
+        ...consoleErrors.map(message => `Console error: ${message}`),
+      ].join('\n'));
     }
 
     fs.mkdirSync(path.dirname(options.output), { recursive: true });

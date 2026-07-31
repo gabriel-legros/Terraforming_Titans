@@ -654,7 +654,6 @@ const projectParameters = {
     description: '',
     repeatable: false,
     unlocked: false,
-    buildTargets: ['steam'],
     automationRequiresEverEnabled: true,
     attributes: {}
   },
@@ -1417,7 +1416,6 @@ const projectParameters = {
   },
   resortWorld: {
     type: 'ResortWorldProject',
-    buildTargets: ['steam'],
     name: '',
     category: 'mega',
     cost: {},

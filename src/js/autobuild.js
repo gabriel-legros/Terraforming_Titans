@@ -129,6 +129,20 @@ const CONSTRUCTION_OFFICE_GUIDE_RECOMMENDATIONS = [
     'If you need a bit more of something or want to free up your workers a little, the box in 2a is great for small adjustments.',
 ];
 
+const CONSTRUCTION_OFFICE_GUIDE_STARTER_SETUP = [
+    { buildingKey: 'oreMine', fallbackName: 'Ore Mine', value: '0.1', basis: 'max', modeKey: 'max', fallbackMode: 'Max', priority: 2 },
+    { buildingKey: 'sandQuarry', fallbackName: 'Sand Quarry', value: '100', basis: 'sandQuarry:glassSmelterPlus4ElectronicsFactory', modeKey: 'sandQuarryDemand', fallbackMode: '% of G.S.+E.F. Demand', priority: 0 },
+    { buildingKey: 'iceHarvester', fallbackName: 'Ice Harvester', value: '16', basis: 'workers', modeKey: 'workers', fallbackMode: '% of workers', priority: 0 },
+    { buildingKey: 'glassSmelter', fallbackName: 'Glass Smelter', value: '5', basis: 'workers', modeKey: 'workers', fallbackMode: '% of workers', priority: 0 },
+    { buildingKey: 'hydroponicFarm', fallbackName: 'Hydroponic Farm', value: '1', basis: 'population', modeKey: 'population', fallbackMode: '% of pop', priority: 0 },
+    { buildingKey: 'componentFactory', fallbackName: 'Component Factory', value: '50', basis: 'workerShare', modeKey: 'workerShare', fallbackMode: '% worker share', priority: 0 },
+    { buildingKey: 'electronicsFactory', fallbackName: 'Electronics Factory', value: '35', basis: 'workerShare', modeKey: 'workerShare', fallbackMode: '% worker share', priority: 0 },
+    { buildingKey: 'geothermalGenerator', fallbackName: 'Geothermal Generator', value: '0.1', basis: 'max', modeKey: 'max', fallbackMode: 'Max', priority: 2 },
+    { buildingKey: 'nuclearPowerPlant', fallbackName: 'Nuclear Power Plant', value: '0.04', basis: 'workers', modeKey: 'workers', fallbackMode: '% of workers', priority: 1 },
+    { buildingKey: 'storageDepot', fallbackName: 'Storage Depot', value: '1', basis: 'workers', modeKey: 'workers', fallbackMode: '% of workers', priority: 0 },
+    { buildingKey: 'waterTank', fallbackName: 'Water Tank', value: '0.5', basis: 'workers', modeKey: 'workers', fallbackMode: '% of workers', priority: 0 },
+];
+
 const CONSTRUCTION_OFFICE_GUIDE_MARKERS = [
     { label: '1', className: 'construction-office-guide-marker-1' },
     { label: '2a', className: 'construction-office-guide-marker-2a' },
@@ -156,6 +170,39 @@ function getConstructionOfficeReserveResourceLabel(option) {
 function closeConstructionOfficeGuide(overlay) {
     overlay.remove();
     window.popupActive = false;
+}
+
+function getConstructionOfficeStarterSetupPresetId() {
+    const buildingsAutomation = automationManager.buildingsAutomation;
+    if (buildingsAutomation.getPresetById(constructionOfficeState.starterSetupPresetId)) {
+        return constructionOfficeState.starterSetupPresetId;
+    }
+
+    const presetBuildings = {};
+    CONSTRUCTION_OFFICE_GUIDE_STARTER_SETUP.forEach(entry => {
+        presetBuildings[entry.buildingKey] = {
+            automation: {
+                autoBuildEnabled: true,
+                autoBuildPriority: entry.priority,
+                autoBuildBasis: entry.basis,
+                autoBuildPercent: Number(entry.value),
+            },
+        };
+    });
+    constructionOfficeState.starterSetupPresetId = buildingsAutomation.importPreset({
+        name: getConstructionOfficeText('ui.colony.constructionOffice.guide.starterSetupTitle', 'Starter setup'),
+        includeControl: false,
+        includeAutomation: true,
+        buildings: presetBuildings,
+    });
+    return constructionOfficeState.starterSetupPresetId;
+}
+
+function applyConstructionOfficeStarterSetup() {
+    const presetId = getConstructionOfficeStarterSetupPresetId();
+    automationManager.buildingsAutomation.applyPresetOnce(presetId);
+    updateStructureDisplay(buildings);
+    automationManager.markUIDirty();
 }
 
 function openConstructionOfficeGuide() {
@@ -225,13 +272,74 @@ function openConstructionOfficeGuide() {
         recommendations.appendChild(item);
     });
 
+    const starterSetupTitle = document.createElement('h3');
+    starterSetupTitle.classList.add('construction-office-guide-starter-setup-title');
+    starterSetupTitle.textContent = getConstructionOfficeText('ui.colony.constructionOffice.guide.starterSetupTitle', 'Starter setup');
+
+    const starterSetupWrap = document.createElement('div');
+    starterSetupWrap.classList.add('construction-office-guide-starter-setup-wrap');
+
+    const starterSetup = document.createElement('table');
+    starterSetup.classList.add('construction-office-guide-starter-setup');
+    const starterSetupHead = document.createElement('thead');
+    const starterSetupHeaderRow = document.createElement('tr');
+    [
+        ['building', 'Building name'],
+        ['value', 'Value'],
+        ['mode', 'Mode'],
+        ['priority', 'Priority'],
+    ].forEach(([key, fallback]) => {
+        const headerCell = document.createElement('th');
+        headerCell.scope = 'col';
+        headerCell.textContent = getConstructionOfficeText(`ui.colony.constructionOffice.guide.starterSetup${key[0].toUpperCase()}${key.slice(1)}`, fallback);
+        starterSetupHeaderRow.appendChild(headerCell);
+    });
+    starterSetupHead.appendChild(starterSetupHeaderRow);
+
+    const starterSetupBody = document.createElement('tbody');
+    CONSTRUCTION_OFFICE_GUIDE_STARTER_SETUP.forEach(entry => {
+        const row = document.createElement('tr');
+        const buildingCell = document.createElement('td');
+        buildingCell.textContent = getConstructionOfficeText(`buildings.${entry.buildingKey}.name`, entry.fallbackName);
+        const valueCell = document.createElement('td');
+        valueCell.textContent = entry.value;
+        const modeCell = document.createElement('td');
+        modeCell.textContent = getConstructionOfficeText(`ui.colony.constructionOffice.guide.starterSetupMode${entry.modeKey[0].toUpperCase()}${entry.modeKey.slice(1)}`, entry.fallbackMode);
+        const priorityCell = document.createElement('td');
+        const priorityIcons = document.createElement('span');
+        priorityIcons.classList.add('construction-office-guide-priority-icons');
+        [
+            { value: 2, icon: '⏫︎' },
+            { value: 1, icon: '▲' },
+            { value: -1, icon: '▼' },
+            { value: -2, icon: '⏬︎' },
+        ].forEach(({ value, icon }) => {
+            const priorityIcon = document.createElement('span');
+            priorityIcon.classList.add('worker-priority-btn');
+            priorityIcon.classList.toggle('active', entry.priority === value);
+            priorityIcon.textContent = icon;
+            priorityIcons.appendChild(priorityIcon);
+        });
+        priorityCell.appendChild(priorityIcons);
+        row.append(buildingCell, valueCell, modeCell, priorityCell);
+        starterSetupBody.appendChild(row);
+    });
+    starterSetup.append(starterSetupHead, starterSetupBody);
+    starterSetupWrap.appendChild(starterSetup);
+
+    const applyStarterSetup = document.createElement('button');
+    applyStarterSetup.type = 'button';
+    applyStarterSetup.classList.add('construction-office-guide-starter-setup-apply');
+    applyStarterSetup.textContent = getConstructionOfficeText('ui.colony.constructionOffice.guide.starterSetupApply', 'Apply Starter setup');
+    applyStarterSetup.addEventListener('click', applyConstructionOfficeStarterSetup);
+
     overlay.addEventListener('click', (event) => {
         if (event.target === overlay) {
             closeConstructionOfficeGuide(overlay);
         }
     });
 
-    win.append(header, imageWrap, sectionGrid, recommendationsTitle, recommendations);
+    win.append(header, imageWrap, sectionGrid, recommendationsTitle, recommendations, starterSetupTitle, starterSetupWrap, applyStarterSetup);
     overlay.appendChild(win);
     document.body.appendChild(overlay);
 }
@@ -592,6 +700,7 @@ const constructionOfficeState = {
     strategicReserve: 0,
     strategicReserveResources: {},
     guidePromptSeen: false,
+    starterSetupPresetId: null,
 };
 
 const constructionOfficeReserveSettingsElements = {
@@ -845,6 +954,7 @@ function loadConstructionOfficeState(state) {
     setAutobuilderActive(state.autobuilderActive);
     setStrategicReserve(state.strategicReserve);
     constructionOfficeState.guidePromptSeen = state.guidePromptSeen === true;
+    constructionOfficeState.starterSetupPresetId = state.starterSetupPresetId || null;
     constructionOfficeState.strategicReserveResources = {};
     if (state.strategicReserveResources && state.strategicReserveResources.constructor === Object) {
         CONSTRUCTION_OFFICE_RESERVE_RESOURCES.forEach(option => {

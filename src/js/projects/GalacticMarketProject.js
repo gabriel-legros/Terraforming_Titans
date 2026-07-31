@@ -1,4 +1,11 @@
 class GalacticMarketProject extends Project {
+  getRateSource() {
+    return registerRateSource(
+      RESOURCE_RATE_SOURCE_IDS.galacticMarket,
+      t('ui.resourceRates.sources.galacticMarket', {}, 'Galactic Market')
+    );
+  }
+
   getGalacticMarketText(path, fallback, vars) {
     try {
       return t(path, vars, fallback);
@@ -1107,7 +1114,7 @@ class GalacticMarketProject extends Project {
       if (!totals.gain[category]) totals.gain[category] = {};
       totals.gain[category][resource] = (totals.gain[category][resource] || 0) + scaledQuantity * seconds;
       if (applyRates) {
-        const rateSource = t('ui.resourceRates.sources.galacticMarket', {}, 'Galactic Market');
+        const rateSource = this.getRateSource();
         resources[category][resource].modifyRate(scaledQuantity * rateMultiplier, rateSource, 'project');
         resources.colony.funding.modifyRate(-costPerSecond * rateMultiplier, rateSource, 'project');
       }
@@ -1125,7 +1132,7 @@ class GalacticMarketProject extends Project {
       if (!totals.gain.colony) totals.gain.colony = {};
       totals.gain.colony.funding = (totals.gain.colony.funding || 0) + revenuePerSecond * seconds;
       if (applyRates) {
-        const rateSource = t('ui.resourceRates.sources.galacticMarket', {}, 'Galactic Market');
+        const rateSource = this.getRateSource();
         resources[category][resource].modifyRate(-scaledQuantity * rateMultiplier, rateSource, 'project');
         resources.colony.funding.modifyRate(revenuePerSecond * rateMultiplier, rateSource, 'project');
       }
@@ -1136,6 +1143,7 @@ class GalacticMarketProject extends Project {
 
   applyActualProductionRateDisplay(actualProductionRates) {
     const touchedResources = {};
+    const rateSource = this.getRateSource();
 
     this.buySelections.forEach(({ category, resource }) => {
       if (this.isSelectionResourceUnlocked(category, resource)) {
@@ -1161,9 +1169,9 @@ class GalacticMarketProject extends Project {
           resourceObject.productionRateByType.project = {};
         }
         if (rate > 0) {
-          resourceObject.productionRateByType.project['Galactic Market'] = rate;
+          resourceObject.productionRateByType.project[rateSource] = rate;
         } else {
-          delete resourceObject.productionRateByType.project['Galactic Market'];
+          delete resourceObject.productionRateByType.project[rateSource];
         }
         resourceObject.recalculateTotalRates();
       }

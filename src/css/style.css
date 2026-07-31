@@ -416,7 +416,7 @@ body.journal-collapsed .tab-content {
     }
 }
 
-/* Separator for story project entries */
+/* Separator between journal entries */
 #journal-entries hr.journal-entry-separator {
     border: 0;
     border-top: 1px solid #ccc;

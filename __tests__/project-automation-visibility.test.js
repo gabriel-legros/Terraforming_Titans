@@ -81,6 +81,11 @@ function createSpaceStorageProject(selectedResources = []) {
         hydrogenTransferTarget: this.hydrogenTransferTarget
       };
     },
+    loadAutomationSettings(settings = {}) {
+      if (Object.prototype.hasOwnProperty.call(settings, 'resourceTransferWeights')) {
+        this.resourceTransferWeights = { ...(settings.resourceTransferWeights || {}) };
+      }
+    },
     sanitizeTransferModes() {},
     isResourceUnlocked() {
       return true;
@@ -231,6 +236,39 @@ describe('Project automation visibility', () => {
     });
   });
 
+  it('does not snapshot or apply resource weights in a Space Storage operations preset', () => {
+    const automation = new ProjectAutomation();
+    const spaceStorage = createSpaceStorageProject();
+    spaceStorage.resourceTransferWeights.liquidWater = 4;
+    setGlobal('projectManager', createSpaceStorageProjectManager(spaceStorage), originalGlobals);
+
+    const presetId = automation.addPreset('Space Storage operations', ['spaceStorageOperations'], {
+      includeExpansion: false,
+      includeOperations: true,
+      scopeAll: false
+    });
+    const capsPresetId = automation.addPreset('Space Storage caps', ['spaceStorageCapsReserve'], {
+      includeExpansion: false,
+      includeOperations: true,
+      scopeAll: false
+    });
+
+    const preset = automation.getPresetById(presetId);
+    expect(preset.projects.spaceStorageOperations.operations.resourceTransferWeights).toBeUndefined();
+    expect(
+      automation.getPresetById(capsPresetId).projects.spaceStorageCapsReserve.operations.resourceTransferWeights
+    ).toEqual({ liquidWater: 4 });
+
+    spaceStorage.resourceTransferWeights.liquidWater = 8;
+    automation.applyPresetOnce(presetId);
+
+    expect(spaceStorage.resourceTransferWeights.liquidWater).toBe(8);
+
+    automation.applyPresetOnce(capsPresetId);
+
+    expect(spaceStorage.resourceTransferWeights.liquidWater).toBe(4);
+  });
+
   it('applies Space Storage single-resource selected state to the actual checkbox entry', () => {
     const automation = new ProjectAutomation();
     const spaceStorage = createSpaceStorageProject([
@@ -266,6 +304,39 @@ describe('Project automation visibility', () => {
     automation.applyPresetOnce(1);
 
     expect(spaceStorage.selectedResources).toEqual([]);
+  });
+
+  it('leaves a single-resource weight unchanged when the preset omits it', () => {
+    const automation = new ProjectAutomation();
+    const spaceStorage = createSpaceStorageProject();
+    spaceStorage.resourceTransferWeights.liquidWater = 7;
+    setGlobal('projectManager', createSpaceStorageProjectManager(spaceStorage), originalGlobals);
+    automation.presets = [{
+      id: 1,
+      name: 'Water without weight',
+      includeExpansion: false,
+      includeOperations: true,
+      scopeAll: false,
+      projects: {
+        'spaceStorageSingleResource:liquidWater': {
+          operations: {
+            spaceStorageSingleResourceKey: 'liquidWater',
+            mode: 'withdraw',
+            selected: true,
+            category: 'surface'
+          }
+        }
+      }
+    }];
+
+    automation.applyPresetOnce(1);
+
+    expect(spaceStorage.resourceTransferWeights.liquidWater).toBe(7);
+
+    automation.presets[0].projects['spaceStorageSingleResource:liquidWater'].operations.transferWeight = 0;
+    automation.applyPresetOnce(1);
+
+    expect(spaceStorage.resourceTransferWeights.liquidWater).toBe(0);
   });
 
   it('ignores empty Space Storage cap and reserve artifacts in single-resource presets', () => {

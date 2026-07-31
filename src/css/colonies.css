@@ -462,16 +462,79 @@ input[type="range"].pretty-slider::-moz-range-thumb {
   margin: 6px 0;
 }
 
+.construction-office-guide-starter-setup-title {
+  margin: 18px 0 8px;
+  font-size: 18px;
+}
+
+.construction-office-guide-starter-setup-wrap {
+  overflow-x: auto;
+}
+
+.construction-office-guide-starter-setup {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.construction-office-guide-starter-setup th,
+.construction-office-guide-starter-setup td {
+  padding: 8px 10px;
+  border: 1px solid #d4d9e2;
+  text-align: left;
+}
+
+.construction-office-guide-starter-setup th {
+  background-color: #edf3fb;
+  font-weight: 700;
+}
+
+.construction-office-guide-starter-setup td:nth-child(2),
+.construction-office-guide-starter-setup td:nth-child(4) {
+  text-align: center;
+}
+
+.construction-office-guide-priority-icons {
+  white-space: nowrap;
+}
+
+.construction-office-guide-priority-icons .worker-priority-btn {
+  cursor: default;
+}
+
+.construction-office-guide-starter-setup-apply {
+  display: block;
+  margin: 12px 0 0 auto;
+  padding: 8px 12px;
+  border: 1px solid #1559a8;
+  border-radius: 4px;
+  background-color: #1b6ac9;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.construction-office-guide-starter-setup-apply:hover {
+  background-color: #1559a8;
+}
+
 .dark-mode .construction-office-guide-window {
   background-color: #151515;
   color: #f3f4f6;
 }
 
 .dark-mode .construction-office-guide-close,
-.dark-mode .construction-office-guide-section {
+.dark-mode .construction-office-guide-section,
+.dark-mode .construction-office-guide-starter-setup th,
+.dark-mode .construction-office-guide-starter-setup td {
   border-color: #4b5563;
   background-color: #1f2937;
   color: #f9fafb;
+}
+
+.dark-mode .construction-office-guide-starter-setup th {
+  background-color: #273548;
 }
 
 .construction-office-reserve-window {

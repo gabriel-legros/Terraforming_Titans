@@ -164,6 +164,10 @@ class Building extends EffectableEntity {
     return true;
   }
 
+    getRateSource() {
+      return registerRateSource(`building:${this.name}`, this.displayName);
+    }
+
     // Method to initialize configurable properties
     initializeFromConfig(config, buildingName) {
       const {
@@ -1878,7 +1882,7 @@ class Building extends EffectableEntity {
         // Update production rate for the resource
         resources[displayTarget.category][displayTarget.resource].modifyRate(
           displayTarget.amount * (1000 / deltaTime),
-          this.displayName,
+          this.getRateSource(),
           'building'
         );
       }
@@ -1915,7 +1919,7 @@ class Building extends EffectableEntity {
         accumulatedChanges[target.category][target.resource] = (accumulatedChanges[target.category][target.resource] || 0) - scaled;
         resources[target.category][target.resource].modifyRate(
           -displayScaled * (1000 / deltaTime),
-          this.displayName,
+          this.getRateSource(),
           'building'
         );
 
@@ -1966,7 +1970,7 @@ class Building extends EffectableEntity {
         // Update consumption rate for the resource
         resources[category][resource].modifyRate(
           -displayConsumption * (1000 / deltaTime),
-          this.displayName,
+          this.getRateSource(),
           'building'
         );
       }
@@ -1979,8 +1983,9 @@ class Building extends EffectableEntity {
         this.currentProduction?.[planetaryMassChange.category]?.[planetaryMassChange.resource] || 0
       );
       if (amount > 0) {
-        accumulatedSpecialChanges.planetaryMass[this.displayName] =
-          (accumulatedSpecialChanges.planetaryMass[this.displayName] || 0) + amount;
+        const source = this.getRateSource();
+        accumulatedSpecialChanges.planetaryMass[source] =
+          (accumulatedSpecialChanges.planetaryMass[source] || 0) + amount;
       }
     }
   }
@@ -2014,7 +2019,7 @@ class Building extends EffectableEntity {
         // Update consumption rate for maintenance costs
         resources['colony'][resource].modifyRate(
           -(displayMaintenanceCost * (1000 / deltaTime)),
-          this.displayName,
+          this.getRateSource(),
           'building'
         );
 
@@ -2039,7 +2044,7 @@ class Building extends EffectableEntity {
               // Update production rate for the converted resource
               resources[conversion.category][conversion.resource].modifyRate(
                 displayConvertedAmount * (1000 / deltaTime),
-                this.displayName,
+                this.getRateSource(),
                 'building'
               );
             }

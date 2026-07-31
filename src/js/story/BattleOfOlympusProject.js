@@ -297,14 +297,22 @@ class BattleOfOlympusProject extends AndroidProject {
     if (growthAmount > 0) {
       hazardousResource.modifyRate(
         growthAmount / seconds,
-        t('ui.projects.battleOfOlympus.regrowthRateSource', null, 'Battle of Olympus regrowth'),
+        getLocalizedRateSource(
+          'project:battleOfOlympus:regrowth',
+          'ui.projects.battleOfOlympus.regrowthRateSource',
+          'Battle of Olympus regrowth'
+        ),
         'project'
       );
     }
     if (decayAmount > 0) {
       hazardousResource.modifyRate(
         -(decayAmount / seconds),
-        t('ui.projects.battleOfOlympus.executionerRateSource', null, 'Executioners'),
+        getLocalizedRateSource(
+          'project:battleOfOlympus:executioners',
+          'ui.projects.battleOfOlympus.executionerRateSource',
+          'Executioners'
+        ),
         'project'
       );
     }

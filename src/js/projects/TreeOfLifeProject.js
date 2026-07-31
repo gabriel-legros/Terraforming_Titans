@@ -139,7 +139,7 @@ class TreeOfLifeProject extends Project {
     );
     nutrientResource.value -= nutrientCost;
     this.lastNutrientConsumptionRate = nutrientCost / seconds;
-    nutrientResource.modifyRate(-this.lastNutrientConsumptionRate, this.displayName, 'project');
+    nutrientResource.modifyRate(-this.lastNutrientConsumptionRate, this.getRateSource(), 'project');
   }
 
   produceResearch(deltaTime, accumulatedChanges) {
@@ -150,7 +150,7 @@ class TreeOfLifeProject extends Project {
     }
     const researchGain = this.lastResearchRate * seconds;
     accumulatedChanges.colony.research += researchGain;
-    resources.colony.research.modifyRate(this.lastResearchRate, this.displayName, 'project');
+    resources.colony.research.modifyRate(this.lastResearchRate, this.getRateSource(), 'project');
   }
 
   applyCostAndGain(deltaTime, accumulatedChanges) {

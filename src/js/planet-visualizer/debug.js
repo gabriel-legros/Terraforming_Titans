@@ -328,7 +328,7 @@
     this.viz.coverage.water = ((wT + wM + wP) / 3) * 100;
     this.viz.coverage.life = ((bT + bM + bP) / 3) * 100;
     this.viz.coverage.hazardousLife = ((hbT + hbM + hbP) / 3) * 100;
-    if (r.ecumenopolis) this.viz.coverage.ecumenopolis = GAME_FEATURES.steamExclusiveEcumenopolisVisualizer ? clampFrom(r.ecumenopolis) : 0;
+    if (r.ecumenopolis) this.viz.coverage.ecumenopolis = clampFrom(r.ecumenopolis);
     if (r.nanoworld) this.viz.coverage.nanoworld = clampFrom(r.nanoworld);
     if (r.cloudCov) this.viz.coverage.cloud = clampFrom(r.cloudCov);
     if (r.cloudWind) this.cloudDriftSpeed = clampFrom(r.cloudWind);
@@ -631,9 +631,7 @@
       life: avg(z.tropical.life, z.temperate.life, z.polar.life) * 100,
       hazardousLife: avg(z.tropical.hazardousLife, z.temperate.hazardousLife, z.polar.hazardousLife) * 100,
       cloud: cloudGame,
-      ecumenopolis: GAME_FEATURES.steamExclusiveEcumenopolisVisualizer
-        ? Math.max(0, Math.min(100, this.viz.coverage?.ecumenopolis || 0))
-        : 0,
+      ecumenopolis: Math.max(0, Math.min(100, this.viz.coverage?.ecumenopolis || 0)),
       nanoworld: Math.max(0, Math.min(100, this.viz.coverage?.nanoworld || 0)),
     };
     this.viz.ships = Number(r.ships ? r.ships.range.value : 0);

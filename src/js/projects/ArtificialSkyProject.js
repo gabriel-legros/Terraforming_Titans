@@ -24,7 +24,10 @@ class ArtificialSkyProject extends SpaceshipProject {
   }
 
   getCostRateLabel() {
-    return getArtificialSkyText('costRateLabel', null, 'Artificial Sky');
+    return registerRateSource(
+      `project:${this.name}:cost`,
+      getArtificialSkyText('costRateLabel', null, 'Artificial Sky')
+    );
   }
 
   getInitialLand() {
@@ -475,7 +478,7 @@ class ArtificialSkyProject extends SpaceshipProject {
 
     const seconds = deltaTime / 1000;
     const progressPerSecond = seconds > 0 ? paidProgress / seconds : 0;
-    const rateLabel = this.getCostRateLabel ? this.getCostRateLabel() : this.displayName;
+    const rateLabel = this.getCostRateLabel();
 
     for (const category in costPerSegment) {
       totals.cost[category] = {};

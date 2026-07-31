@@ -374,7 +374,7 @@ class OlympusFieldWorkshopProject extends Project {
       }
       resources[entry.category][entry.resource].modifyRate(
         amount / seconds,
-        this.displayName || this.name,
+        this.getRateSource(),
         'project'
       );
     };

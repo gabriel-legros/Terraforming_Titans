@@ -20,7 +20,9 @@ function cacheStatisticsElements() {
     fastestTerraformByTypeTitle: document.getElementById('fastest-terraform-by-type-title'),
     fastestTerraformByTypeList: document.getElementById('fastest-terraform-by-type-list'),
     recentTerraformHistoryTitle: document.getElementById('recent-terraform-history-title'),
-    recentTerraformAverageDisplay: document.getElementById('recent-terraform-average-display'),
+    recentTerraformWorldHeading: document.getElementById('recent-terraform-world-heading'),
+    recentTerraformTimeHeading: document.getElementById('recent-terraform-time-heading'),
+    recentTravelTimeHeading: document.getElementById('recent-travel-time-heading'),
     recentTerraformHistoryList: document.getElementById('recent-terraform-history-list'),
   };
 
@@ -54,17 +56,30 @@ function getTerraformHistoryWorldTypeLabel(entry) {
   return t('ui.settings.terraformWorldTypeUnknown', null, 'Unknown');
 }
 
-function buildTerraformHistoryText(entry) {
-  const vars = {
-    name: entry.name,
-    type: getTerraformHistoryWorldTypeLabel(entry),
-    game: formatPlayTime(entry.playTimeSeconds),
-    real: formatDurationDetailed(entry.realTimeSeconds),
-  };
+function buildTerraformHistoryWorldText(entry) {
   return t(
-    'ui.settings.recentTerraformHistoryEntry',
-    vars,
-    '{name} ({type}): {game} ({real} real time)'
+    'ui.settings.recentTerraformHistoryWorldEntry',
+    { name: entry.name, type: getTerraformHistoryWorldTypeLabel(entry) },
+    '{name} ({type})'
+  );
+}
+
+function buildTerraformHistoryTimeText(gameSeconds, realSeconds) {
+  if (gameSeconds === null) {
+    return t('ui.settings.recentTerraformHistoryUnavailable', null, 'Unavailable');
+  }
+  const game = formatPlayTime(gameSeconds);
+  if (realSeconds === null) {
+    return t(
+      'ui.settings.realTimeUnavailableLine',
+      { game },
+      '{game} (real time unavailable)'
+    );
+  }
+  return t(
+    'ui.settings.realTimeLine',
+    { game, real: formatDurationDetailed(realSeconds) },
+    '{game} ({real} real time)'
   );
 }
 
@@ -82,29 +97,24 @@ function buildFastestTerraformByTypeText(worldType, entry) {
   );
 }
 
-function buildRecentTerraformAverageText(history) {
-  let totalGameSeconds = 0;
-  let totalRealSeconds = 0;
+function buildTerraformHistoryAverageTimeText(history, gameKey, realKey) {
+  let totalGame = 0;
+  let totalReal = 0;
+  let gameCount = 0;
   let realCount = 0;
-  const totalCount = history.length;
-
   history.forEach((entry) => {
-    totalGameSeconds += entry.playTimeSeconds;
-    if (entry.realTimeSeconds !== null) {
-      totalRealSeconds += entry.realTimeSeconds;
+    if (entry[gameKey] !== null) {
+      totalGame += entry[gameKey];
+      gameCount += 1;
+    }
+    if (entry[realKey] !== null) {
+      totalReal += entry[realKey];
       realCount += 1;
     }
   });
-
-  const avgGame = formatPlayTime(totalGameSeconds / totalCount);
-  const avgReal = realCount > 0
-    ? formatDurationDetailed(totalRealSeconds / realCount)
-    : t('ui.settings.realTimeUnavailable', null, 'real time unavailable');
-
-  return t(
-    'ui.settings.recentTerraformHistoryAverage',
-    { game: avgGame, real: avgReal },
-    'Average: {game} ({real} real time)'
+  return buildTerraformHistoryTimeText(
+    gameCount ? totalGame / gameCount : null,
+    realCount ? totalReal / realCount : null
   );
 }
 
@@ -125,6 +135,44 @@ function syncStatisticsLines(container, lines) {
     if (line.textContent !== lines[index]) {
       line.textContent = lines[index];
     }
+  });
+}
+
+function syncTerraformHistoryRows(container, rows) {
+  container._terraformHistoryRows ||= new Map();
+  const activeKeys = new Set(rows.map((row) => row.key));
+  container._terraformHistoryRows.forEach((row, key) => {
+    if (!activeKeys.has(key)) {
+      row.element.remove();
+      container._terraformHistoryRows.delete(key);
+    }
+  });
+
+  let cursor = container.firstElementChild;
+  rows.forEach((rowData) => {
+    let row = container._terraformHistoryRows.get(rowData.key);
+    if (!row) {
+      const element = document.createElement('tr');
+      const world = document.createElement('td');
+      const terraformTime = document.createElement('td');
+      const travelTime = document.createElement('td');
+      element.append(world, terraformTime, travelTime);
+      row = { element, world, terraformTime, travelTime };
+      container._terraformHistoryRows.set(rowData.key, row);
+    }
+    if (row.world.textContent !== rowData.world) {
+      row.world.textContent = rowData.world;
+    }
+    if (row.terraformTime.textContent !== rowData.terraformTime) {
+      row.terraformTime.textContent = rowData.terraformTime;
+    }
+    if (row.travelTime.textContent !== rowData.travelTime) {
+      row.travelTime.textContent = rowData.travelTime;
+    }
+    if (row.element !== cursor) {
+      container.insertBefore(row.element, cursor);
+    }
+    cursor = row.element.nextElementSibling;
   });
 }
 
@@ -235,30 +283,44 @@ function updateStatisticsDisplay() {
   if (cached.recentTerraformHistoryTitle.textContent !== recentTerraformTitle) {
     cached.recentTerraformHistoryTitle.textContent = recentTerraformTitle;
   }
-  if (cached.recentTerraformAverageDisplay && cached.recentTerraformAverageDisplay.textContent !== '') {
-    cached.recentTerraformAverageDisplay.textContent = '';
-  }
+  const recentHeadings = [
+    [cached.recentTerraformWorldHeading, t('ui.settings.recentTerraformHistoryWorld', null, 'World')],
+    [cached.recentTerraformTimeHeading, t('ui.settings.recentTerraformHistoryTerraformTime', null, 'Time to Terraform')],
+    [cached.recentTravelTimeHeading, t('ui.settings.recentTerraformHistoryTravelTime', null, 'Time to Travel')]
+  ];
+  recentHeadings.forEach(([heading, text]) => {
+    if (heading && heading.textContent !== text) {
+      heading.textContent = text;
+    }
+  });
 
   if (!history.length) {
-    syncStatisticsLines(cached.recentTerraformHistoryList, [t(
-      'ui.settings.recentTerraformHistoryEmpty',
-      null,
-      'No terraformed worlds recorded yet.'
-    )]);
+    syncTerraformHistoryRows(cached.recentTerraformHistoryList, [{
+      key: 'empty',
+      world: t('ui.settings.recentTerraformHistoryEmpty', null, 'No terraformed worlds recorded yet.'),
+      terraformTime: '',
+      travelTime: ''
+    }]);
+    const emptyRow = cached.recentTerraformHistoryList._terraformHistoryRows.get('empty');
+    emptyRow.world.colSpan = 3;
+    emptyRow.terraformTime.style.display = 'none';
+    emptyRow.travelTime.style.display = 'none';
     return;
   }
 
-  if (cached.recentTerraformAverageDisplay) {
-    const recentTerraformAverageText = buildRecentTerraformAverageText(history);
-    if (cached.recentTerraformAverageDisplay.textContent !== recentTerraformAverageText) {
-      cached.recentTerraformAverageDisplay.textContent = recentTerraformAverageText;
-    }
-  }
-
-  syncStatisticsLines(
-    cached.recentTerraformHistoryList,
-    history.map((entry) => buildTerraformHistoryText(entry))
-  );
+  const averageLabel = t('ui.settings.recentTerraformHistoryAverageLabel', null, 'Average');
+  const rows = [{
+    key: 'average',
+    world: averageLabel,
+    terraformTime: buildTerraformHistoryAverageTimeText(history, 'playTimeSeconds', 'realTimeSeconds'),
+    travelTime: buildTerraformHistoryAverageTimeText(history, 'travelTimeSeconds', 'travelRealTimeSeconds')
+  }].concat(history.map((entry) => ({
+    key: `${entry.worldType}:${entry.worldId}:${entry.completedAt}`,
+    world: buildTerraformHistoryWorldText(entry),
+    terraformTime: buildTerraformHistoryTimeText(entry.playTimeSeconds, entry.realTimeSeconds),
+    travelTime: buildTerraformHistoryTimeText(entry.travelTimeSeconds, entry.travelRealTimeSeconds)
+  })));
+  syncTerraformHistoryRows(cached.recentTerraformHistoryList, rows);
 }
 
 function initializeStatisticsSubtab() {

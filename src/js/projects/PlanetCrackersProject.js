@@ -443,7 +443,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     const planetsRate = plan.crackedTotal / seconds;
     const spaceEnergyRate = plan.spaceEnergyUse / seconds;
 
-    resources.space.energy.modifyRate(-spaceEnergyRate, this.displayName, 'project');
+    resources.space.energy.modifyRate(-spaceEnergyRate, this.getRateSource(), 'project');
 
     const ratesByType = {};
     const crackedRateKeys = Object.keys(plan.crackedByType);
@@ -484,7 +484,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     }
 
     if (applyRates) {
-      resources.space.energy.modifyRate(-(plan.spaceEnergyUse / seconds), this.displayName, 'project');
+      resources.space.energy.modifyRate(-(plan.spaceEnergyUse / seconds), this.getRateSource(), 'project');
     }
 
     totals.cost.space ||= {};

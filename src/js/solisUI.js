@@ -897,6 +897,7 @@ function updateSolisQuestArea(refs) {
 
 function updateSolisDonationSection(refs) {
   const donationUnlocked = solisManager.isBooleanFlagSet('solisAlienArtifactUpgrade');
+  const researchUpgradesUnlocked = solisManager.isBooleanFlagSet('solisResearchUpgrades');
   if (refs.donationSection) {
     const hidden = !donationUnlocked;
     if (refs.donationSection.classList.contains('hidden') !== hidden) {
@@ -904,7 +905,7 @@ function updateSolisDonationSection(refs) {
     }
   }
   if (refs.researchShop) {
-    const hidden = !donationUnlocked;
+    const hidden = !researchUpgradesUnlocked;
     if (refs.researchShop.classList.contains('hidden') !== hidden) {
       refs.researchShop.classList.toggle('hidden', hidden);
     }

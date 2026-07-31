@@ -84,6 +84,15 @@ function buildStructureProductivityTooltip(structure) {
     return getStructuresUIText('ui.structures.tooltips.productivityNoActive', 'No active structures');
   }
 
+  if (structure.getAutomationActivityMultiplier() === 0) {
+    return [
+      getStructuresUIText('ui.structures.tooltips.productivityLimitedHeader', 'Limited to {value}%', {
+        value: formatProductivityTooltipPercent(0),
+      }),
+      getStructuresUIText('ui.structures.tooltips.productivityAutomationDisabled', 'Disabled by automation settings.'),
+    ].join('\n');
+  }
+
   if (info.target >= 0.9995) {
     return getStructuresUIText('ui.structures.tooltips.productivityTrendingFull', 'Trending to 100%');
   }
@@ -115,7 +124,7 @@ function buildStructureProductivityTooltip(structure) {
         for (let demandIndex = 0; demandIndex < largestDemands.length; demandIndex += 1) {
           const demand = largestDemands[demandIndex];
           lines.push(getStructuresUIText('ui.structures.tooltips.productivityDemandLine', '  {source}: {amount}', {
-            source: demand.source,
+            source: getRateSourceDisplayName(demand.source),
             amount: formatNumber(demand.amount, true, 3),
           }));
         }
@@ -129,6 +138,10 @@ function buildStructureProductivityTooltip(structure) {
       }));
     } else if (factor.type === 'maintenance') {
       lines.push(getStructuresUIText('ui.structures.tooltips.productivityMaintenanceLine', 'Maintenance paid: {percent}%', {
+        percent,
+      }));
+    } else if (factor.type === 'advancedOversight') {
+      lines.push(getStructuresUIText('ui.structures.tooltips.productivityAdvancedOversight', 'Advanced Oversight allocation: {percent}% of facility capacity.', {
         percent,
       }));
     } else if (factor.type === 'dayNight') {
@@ -1111,7 +1124,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     upgradeButton.id = `${structure.name}-upgrade-button`;
     upgradeButton.classList.add('upgrade-button');
     upgradeButton.addEventListener('click', function () {
-      const upgrades = Math.max(1, selectedBuildCounts[structure.name] / 10 || 1);
+      const upgrades = getManualUpgradeCount(structure);
       if (structure.upgrade(upgrades)) {
         if (gameSettings.colonyUpgradeUnchecksAutobuild) {
           autoBuildCheckbox.checked = false;
@@ -1980,6 +1993,15 @@ function updateDecreaseButtonText(button, buildCount) {
     }
   }
 
+  function getManualUpgradeCount(structure) {
+    const selectedCount = normalizeBuildingCount(selectedBuildCounts[structure.name]);
+    const requestedUpgrades = selectedCount >= 10n ? selectedCount / 10n : 1n;
+    if (selectedCount <= structure.count) return requestedUpgrades;
+    return structure instanceof Colony
+      ? (structure.count + 9n) / 10n
+      : structure.count / 10n;
+  }
+
   function updateUpgradeButton(button, structure) {
     const nextName = structure.getNextTierName();
     const isColony = structure instanceof Colony;
@@ -1991,8 +2013,9 @@ function updateDecreaseButtonText(button, buildCount) {
       return;
     }
 
-    const upgradeCount = Math.max(1, selectedBuildCounts[structure.name] / 10 || 1);
-    const amount = Math.min(upgradeCount * 10, getStructureCountNumber(structure.count));
+    const upgradeCount = getManualUpgradeCount(structure);
+    const requestedAmount = upgradeCount * 10n;
+    const amount = requestedAmount < structure.count ? requestedAmount : structure.count;
     const cost = structure.getUpgradeCost(upgradeCount);
     if (!cost) {
       button.style.display = 'none';

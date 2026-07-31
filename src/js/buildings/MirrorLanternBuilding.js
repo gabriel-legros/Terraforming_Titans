@@ -49,7 +49,7 @@ class MirrorLanternBuilding extends MirrorBase {
     const settings = mirrorOversightSettings;
     const oversightEnabled = projectManager?.projects?.spaceMirrorFacility?.isBooleanFlagSet?.('spaceMirrorFacilityOversight');
     if (!settings || !oversightEnabled) {
-      return { cap: baseTarget, share: 1, allowFull: false };
+      return { cap: baseTarget, share: 1, allowFull: false, advancedOversight: false };
     }
 
     const typeKey = isMirror ? 'mirrors' : 'lanterns';
@@ -87,6 +87,7 @@ class MirrorLanternBuilding extends MirrorBase {
       cap: Math.min(baseTarget, assignmentShare),
       share: assignmentShare,
       allowFull: false,
+      advancedOversight: settings.advancedOversight,
     };
   }
 
@@ -132,6 +133,17 @@ class MirrorLanternBuilding extends MirrorBase {
       this._assignmentShare = 1;
       this._allowFullProductivity = false;
     }
+
+    const productivityDetails = this.getBaseProductivityFactors(resources, deltaTime);
+    const factors = productivityDetails.factors.filter(factor => factor.ratio < 0.9995);
+    if (assignmentData?.advancedOversight && assignmentData.share < 0.9995) {
+      factors.push({
+        type: 'advancedOversight',
+        ratio: assignmentData.share,
+      });
+    }
+    factors.sort((a, b) => a.ratio - b.ratio);
+    this.setProductivityLimitInfo(targetProductivity, targetProductivity, factors);
 
     this.productivity = this.applyProductivityDamping(
       this.productivity,

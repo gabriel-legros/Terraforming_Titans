@@ -496,12 +496,18 @@ class HazardousBiomassHazard {
     if (deltaSeconds > 0 && hazardResource && hazardResource.modifyRate) {
       if (growthDelta) {
         const growthRate = growthDelta / deltaSeconds;
-        const growthLabel = growthRate < 0 ? 'Hazard Decay' : 'Hazard Growth';
+        const growthLabel = growthRate < 0
+          ? getLocalizedRateSource('hazard:hazardousBiomassDecay', 'ui.resourceRates.sources.hazardDecay', 'Hazard Decay')
+          : registerRateSource('hazard:hazardousBiomassGrowth', 'Hazard Growth');
         hazardResource.modifyRate(growthRate, growthLabel, 'terraforming');
       }
 
       if (crusaderDelta) {
-        hazardResource.modifyRate(crusaderDelta / deltaSeconds, t('ui.resourceRates.sources.crusaderPatrols', {}, 'Crusader Patrols'), 'terraforming');
+        hazardResource.modifyRate(
+          crusaderDelta / deltaSeconds,
+          getLocalizedRateSource('hazard:crusaderPatrols', 'ui.resourceRates.sources.crusaderPatrols', 'Crusader Patrols'),
+          'terraforming'
+        );
       }
     }
 
@@ -522,7 +528,11 @@ class HazardousBiomassHazard {
           const decayDelta = naturalDecayDelta * ratio;
           const currentValue = Number.isFinite(targetResource.value) ? targetResource.value : 0;
           targetResource.value = Math.max(0, currentValue + decayDelta);
-          targetResource.modifyRate(decayRate * ratio, t('ui.resourceRates.sources.hazardDecay', {}, 'Hazard Decay'), 'terraforming');
+          targetResource.modifyRate(
+            decayRate * ratio,
+            getLocalizedRateSource('hazard:hazardousBiomassDecay', 'ui.resourceRates.sources.hazardDecay', 'Hazard Decay'),
+            'terraforming'
+          );
         });
       }
     }

@@ -823,7 +823,7 @@
         "scopeZones": " in the {zones} zone{s}",
         "scopeAtmosphere": " across the atmosphere",
         "hydrogenIntro": "Hydrogen slowly escapes to space depending on solar flux and gravity.",
-        "hydrogenPhoto": "Stellar UV can photodissociate up to {percent}% of that gas, creating atoms that escape about {speed}x faster than molecules.",
+        "hydrogenPhoto": "Stellar UV can photodissociate up to {percent}% of that gas into atoms, which escape more readily than molecules.",
         "hydrogenGravityDecay": ", so expect ongoing decay.",
         "hydrogenGravityRetain": ", so the atmosphere can retain hydrogen.",
         "hydrogenGravityLine": "Current gravity is {value} m/s²{relation}",
@@ -901,7 +901,7 @@
         "aerostatCapacity": "Aerostat Capacity"
       },
       "solarPanel": {
-        "limitTooltip": "Solar panels are limited to 2.5x the base land amount."
+        "limitTooltip": "Solar panels are limited to 2.5x the current geometric land amount. Excess panels are automatically deactivated if land shrinks."
       },
       "windTurbine": {
         "limitTooltip": "Wind turbine arrays are limited to 1 per 50 units of base land."
@@ -4986,8 +4986,8 @@
         "fps20": "20 FPS",
         "fps30": "30 FPS"
       },
-      "terraformingSubsteps": "Use 10ms terraforming substeps",
-      "terraformingSubstepsTooltip": "By default, the climate model runs on a 10ms tick basis, instead of using the full time delta.  You can turn this off to improve performance, but decrease numerical stability of the climate model.",
+      "terraformingSubsteps": "Use {milliseconds}ms terraforming substeps",
+      "terraformingSubstepsTooltip": "By default, the climate model runs on a {milliseconds}ms tick basis, instead of using the full time delta.  You can turn this off to improve performance, but decrease numerical stability of the climate model.",
       "celsius": "Display temperature in Celsius",
       "colorblindPalette": "Status colours",
       "colorblindPalettes": {

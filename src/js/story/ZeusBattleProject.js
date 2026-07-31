@@ -158,14 +158,15 @@ class ZeusBattleProject extends Project {
       return;
     }
 
+    if (this.isBattleVisible()) {
+      this.startRenderLoop();
+    }
     const maxUnlockedFrame = this.getMaxUnlockedFrame();
     const wasFollowingLatest = this.targetFrameIndex >= this.lastUnlockedFrame;
     if (maxUnlockedFrame > this.lastUnlockedFrame && wasFollowingLatest) {
       this.jumpToFrame(maxUnlockedFrame, true);
     } else if (this.targetFrameIndex > maxUnlockedFrame) {
       this.jumpToFrame(maxUnlockedFrame, false);
-    } else {
-      this.drawBattleFrame();
     }
 
     this.lastUnlockedFrame = maxUnlockedFrame;
@@ -192,13 +193,15 @@ class ZeusBattleProject extends Project {
     } else if (boundedFrame < 1) {
       this.primaryBattleActivatedAt = 0;
     }
-    if (!animate || boundedFrame === this.currentFrameIndex) {
+    if (!animate || !this.isBattleVisible() || boundedFrame === this.currentFrameIndex) {
       this.stopAnimation();
       this.currentFrameIndex = boundedFrame;
       this.animationFromFrameIndex = boundedFrame;
       this.animationToFrameIndex = boundedFrame;
       this.animationProgress = 1;
-      this.drawBattleFrame();
+      if (this.isBattleVisible()) {
+        this.drawBattleFrame();
+      }
       this.updateControls();
       return;
     }
@@ -226,6 +229,14 @@ class ZeusBattleProject extends Project {
   startAnimation() {
     this.stopAnimation();
     const tick = (timestamp) => {
+      if (!this.isBattleVisible()) {
+        this.currentFrameIndex = this.animationToFrameIndex;
+        this.animationFromFrameIndex = this.currentFrameIndex;
+        this.animationProgress = 1;
+        this.animationFrameId = 0;
+        this.updateControls();
+        return;
+      }
       if (!this.animationStartTime) {
         this.animationStartTime = timestamp;
       }
@@ -257,6 +268,10 @@ class ZeusBattleProject extends Project {
     }
   }
 
+  isBattleVisible() {
+    return this.ui.board.isConnected && this.ui.board.getClientRects().length > 0;
+  }
+
   startRenderLoop() {
     if (this.renderLoopId) {
       return;
@@ -266,7 +281,12 @@ class ZeusBattleProject extends Project {
       if (!this.ui || !this.ui.canvas || !this.ui.canvas.isConnected) {
         return;
       }
-      this.drawBattleFrame();
+      if (!this.isBattleVisible()) {
+        return;
+      }
+      if (!this.isAnimating()) {
+        this.drawBattleFrame();
+      }
       this.renderLoopId = requestAnimationFrame(render);
     };
     this.renderLoopId = requestAnimationFrame(render);
@@ -282,7 +302,7 @@ class ZeusBattleProject extends Project {
     if (fromIndex === toIndex || progress >= 1) {
       return {
         frameIndex: toIndex,
-        units: toFrame.units.map(unit => ({ ...unit }))
+        units: toFrame.units
       };
     }
 

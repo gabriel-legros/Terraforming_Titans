@@ -15,6 +15,7 @@ The audit covers:
 - repeated save/load cycles;
 - travel followed by another complete UI sweep, then reload and repeat;
 - listener counts, DOM-node counts, detached references exposed by game caches, element creation/removal/movement, text and class writes, DOM queries, JavaScript heap, console errors, and page errors.
+- optional heap-snapshot embedder/native bytes and Chromium browser/renderer/GPU/service working-set and private-memory totals for cases where OS memory diverges from the JavaScript heap.
 
 ## Method
 
@@ -85,6 +86,35 @@ The audit covers:
 - Coverage validation failed only on disconnected project-cost tooltip anchors from the unchanged `projectsUI.js` cost path (`Energy: 10B / Required: 10B / Colony available: 0`). The count was already 1 in the first navigation phase and rose across save/load and travel; no automation tooltip or detached-cache finding was reported.
 - The Buildings, Projects, and Colony automation cards were captured and inspected at `artifacts/screenshots/automation-buildings-refactor.png`, `artifacts/screenshots/automation-projects-refactor.png`, and `artifacts/screenshots/automation-colony-refactor.png`.
 
+### 2026-07-27 - World visualizer shader pass
+
+- Matched Mars speedrun reports: before `chrome-memory-2026-07-27T21-39-00-389Z.json`, after `chrome-memory-2026-07-27T22-32-43-836Z.json`.
+- Recurring `createElement canvas` operations fell from 201 to zero. The measured-window element-creation delta fell from 199 to zero, while connected element and listener totals did not grow.
+- Normalized script time fell from `0.215` to `0.127` seconds per wall-clock second, about a 41% reduction. The after-run heap moved from `40,196,868` to `40,012,300` bytes and reported no console or page errors.
+- A focused 15-second visualizer benchmark recorded zero canvas creations and zero crater-texture rebuilds after setup. Across 343 frames, CPU frame-submission duration had a `0.4 ms` p95 and `10.6 ms` maximum; GPU texture count stayed at 9.
+- Deterministically seeded 768 px before/after captures of initial Zeus, clouded Venus, evolved Mars, partial/full ecumenopolis, and partial/full Nanoworld differed by at most one 8-bit channel value. No pixel exceeded that tolerance, including seam-facing full-coverage captures.
+
+### 2026-07-30/31 - Zeus native/process-memory extension
+
+- Added opt-in `--native-memory` coverage to the Chromium harness. It records matched heap-snapshot `extra_native_bytes`, renderer native-allocation profiles, and Windows working-set/private-byte totals for each Chromium browser, renderer, GPU, and service process. Simple samples and audit phase snapshots now carry those OS metrics into JSON and CSV.
+- Native smoke report: `chrome-memory-2026-07-31T01-58-03-516Z.json`. The loaded Zeus save accounted for about `91 MiB` in the baseline heap snapshot but the Chromium process tree was already about `512 MiB` private and `732 MiB` working set. This confirms that the earlier JavaScript/DOM-only audit did not measure most of the memory visible to Chrome Task Manager or Windows.
+- Diagnostic matrix report: `chrome-memory-2026-07-31T02-00-27-594Z.json`. It reached about `1,007 MiB` working set and `672 MiB` private after broad UI/lifecycle initialization, versus `684 MiB` working set and `507 MiB` private at baseline. The matched snapshot total rose only from `91.02` to `112.85 MiB`; `extra_native_bytes` rose from `6.04` to `8.47 MiB`. The process delta was concentrated in the renderer (`+131 MiB` private) with a smaller GPU contribution (`+32 MiB` private), demonstrating how a player can observe roughly 1-1.2 GB without a comparable live-JavaScript increase. This report is diagnostic rather than a passing coverage result because the Zeus save cannot perform the matrix's expected Olympus travel and contains pre-existing disconnected tooltip anchors.
+- Focused post-initialization Zeus Story Projects hold: `chrome-memory-2026-07-31T02-04-26-973Z.json`. Across 121 seconds with forced GC, the JavaScript sample moved from `27.58` to `28.32 MiB`, DOM nodes changed by `+6`, Chromium private bytes fell `9.39 MiB`, and working set fell `19.51 MiB`. Matched endpoint snapshots fell from `100.43` to `98.70 MiB`, including `extra_native_bytes` from `8.05` to `7.98 MiB`; endpoint process private bytes fell `17.35 MiB`. The active Zeus project view therefore showed no continuing native, GPU, renderer, DOM, or JavaScript growth after its one-time UI initialization.
+- Released bundled Chromium returned no measured-window native allocation stack samples in these runs, so native stack attribution remains opportunistic. The process breakdown and matched `extra_native_bytes` measurements remain usable when that profile is empty.
+
+### 2026-07-31 - Fifteen-minute general exploration and allocation instrumentation
+
+- Extended the simple sampler with `--explore-every` for scheduled full tab/subtab sweeps and `--allocation-timeline` for the same allocation-tracking mode used by Chrome's Allocation instrumentation on timeline. The latter records live-object fragments and streams/discards the final traced snapshot after extracting its header, avoiding a second copy of the full profile in the harness.
+- Generic late-game ordinary exploration report: `chrome-memory-2026-07-31T02-26-02-242Z.json`. Seven complete UI sweeps across 917.7 seconds ended only `3.91 MiB` higher in Chromium private memory and `14.80 MiB` lower in working set. Matched snapshot-accounted memory changed from `82.98` to `84.03 MiB`; `extra_native_bytes` changed from `11.14` to `11.16 MiB`. GPU private memory fell `0.90 MiB`.
+- Paused-render control report: `chrome-memory-2026-07-31T02-26-02-243Z.json`. Across 905 seconds, private memory fell `15.98 MiB`, working set fell `33.52 MiB`, JavaScript heap moved only `0.64 MiB`, DOM changed by one node, and matched snapshot memory fell from `82.60` to `80.29 MiB`.
+- Forced-GC allocation-instrumentation report: `chrome-memory-2026-07-31T02-26-02-256Z.json`. During recording, private memory rose `20.91 MiB` while the tracked live size rose `3.85 MiB`; the second-half private slope was about `0.13 MiB/min`. After tracking stopped, the matched private checkpoint was only `3.63 MiB` above baseline.
+- No-forced-GC allocation-instrumentation report: `chrome-memory-2026-07-31T02-45-50-144Z.json`. The renderer made one-time profiler bookkeeping steps from about `550` to `770 MiB` private while tracked live objects rose only `3.86 MiB`. Once tracking stopped, the matched process checkpoint was only `8.83 MiB` above baseline and working set was `4.49 MiB` below baseline. Roughly `211 MiB` was therefore released with the profiler itself. The traced snapshot was about `86.93 MiB`, with 2,371 trace functions and `11.21 MiB` of `extra_native_bytes`.
+- Player-save Zeus exploration before the WGC UI fix: `chrome-memory-2026-07-31T03-02-50-970Z.json`. Seven sweeps across 909 seconds kept matched snapshot memory flat (`100.28` to `100.19 MiB`), `extra_native_bytes` slightly down, working set `6.81 MiB` down, and GPU private memory flat. The run did expose `+307` connected nodes/`+148` elements, dominated by hidden Warp Gate Command log lines and success/artifact spans.
+- Warp Gate Command retains its existing 100-entry-per-team data cap but no longer formats or materializes log DOM while a team's log panel is hidden. Closing a log now releases its line/span subtree; reopening synchronously renders the latest capped history. A direct interaction check observed `0 -> 100 -> 0 -> 100` log lines across open, close, hidden update, and reopen, with the newest entry present and no page error.
+- Post-fix short stress report: `chrome-memory-2026-07-31T03-19-49-385Z.json`. Ten rapid full UI sweeps left DOM and listeners flat and produced no connected added-node signature.
+- Matched post-fix Zeus report: `chrome-memory-2026-07-31T03-20-57-333Z.json`. Seven sweeps across 908.9 seconds changed connected nodes by only `+2` and elements/listeners by `+1`, entirely from a legitimate newly appearing Golden Asteroid button. Matched snapshot memory fell `0.21 MiB`, `extra_native_bytes` was unchanged, private memory fell `1.93 MiB`, and working set fell `14.26 MiB`.
+- None of the ordinary, paused, player-save, or allocation-instrumented fifteen-minute runs reproduced multi-gigabyte retained growth. The observed 1-1.2 GB high-water mark remains credible after broad initialization, while Allocation Timeline itself can add hundreds of MiB of temporary renderer memory. The supplied 9 GB observation is not attributable to a universal renderer, GPU, DOM, listener, or JavaScript leak in the exercised state; reproducing it requires a more specific player action/state or a substantially longer profiler recording.
+
 ## Findings and Fixes
 
 ### Retained listeners and lifecycle cleanup
@@ -111,6 +141,7 @@ The audit covers:
 - Galaxy operation forms, fleet-capacity tooltip rows, logistics values, and operation visibility now update only when their values change. In a matched panel run, text writes fell from 6,484 to 2,777 and class writes from 2,916 to 688 while element/listener totals stayed flat.
 - Shared assignment controls now reconcile selected targets/options and guard labels, disabled states, values, and toggles. One targeted unchanged-disabled-state signature fell from 5,298 writes to 40.
 - Artificial-world history and invasion summaries preserve stable keyed rows and order instead of re-appending unchanged entries.
+- Warp Gate Command keeps its capped operation-log data without materializing or rebuilding the formatted line/span DOM for closed log panels. Opening renders the latest history immediately; closing releases it.
 - Project-specific controls for infrastructure, manufacturing, import, disposal, specialization, lifters, Dyson construction, and related cards now reuse their controls and guard recurring value/class/style writes.
 - A final steady-state render sample across the converted hot panels created, added, removed, or moved zero elements; only live resource values continued to change.
 
@@ -121,6 +152,12 @@ The audit covers:
 - Terraforming graph data collection remains in the simulation update, while canvas drawing now runs from the render path.
 - Auto-travel checks UI-owned tab state without querying the DOM from automation logic.
 - Open the Box no longer manipulates its DOM from its recurring project tick.
+
+### World visualizer rendering
+
+- Spherical planet surfaces now keep deterministic static terrain fields and composite changing water, ice, biomass, hazardous biomass, pressure, ecumenopolis, and Nanoworld coverage on the GPU. The original CPU renderer remains the exact fallback for special geometries, Earth reconstruction, and unsupported WebGL capabilities.
+- Cloud density now updates through a persistent shader target fed by a one-time raw field upload, eliminating recurring canvas allocation on WebGL2. Transparent pixels and global UUID random draws preserve the original canvas path, which remains active on WebGL1.
+- City lights use one instanced draw with per-instance dayside rejection instead of 1,000 cloned meshes and materials when instancing is available. The initialization sequence preserves the prior random-number and UUID consumption so seeded planet terrain and city placement remain unchanged.
 
 ## Verification Results
 

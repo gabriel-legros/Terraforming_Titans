@@ -542,7 +542,15 @@ class GarbageHazard {
     if (androidLoss > 0) {
       androidResource.value = Math.max(0, currentAndroids - androidLoss);
       if (androidResource.modifyRate) {
-        androidResource.modifyRate(-currentAndroids * totalAttritionRate, t('ui.resourceRates.sources.radioactiveAttrition', {}, 'Radioactive Attrition'), 'hazard');
+        androidResource.modifyRate(
+          -currentAndroids * totalAttritionRate,
+          getLocalizedRateSource(
+            'hazard:radioactiveAttrition',
+            'ui.resourceRates.sources.radioactiveAttrition',
+            'Radioactive Attrition'
+          ),
+          'hazard'
+        );
       }
     }
   }

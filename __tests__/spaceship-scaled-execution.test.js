@@ -25,6 +25,10 @@ function createResource(value = 0) {
 
 function createHarness() {
   const originalGlobals = {};
+  const {
+    RESOURCE_RATE_SOURCE_IDS,
+    registerRateSource,
+  } = require(path.resolve(__dirname, '../src/js/rate-sources.js'));
 
   class MockProject {
     constructor(config, name) {
@@ -97,6 +101,8 @@ function createHarness() {
   }
 
   setGlobal('Project', MockProject, originalGlobals);
+  setGlobal('RESOURCE_RATE_SOURCE_IDS', RESOURCE_RATE_SOURCE_IDS, originalGlobals);
+  setGlobal('registerRateSource', registerRateSource, originalGlobals);
   setGlobal('shipEfficiency', 1, originalGlobals);
   setGlobal('projectElements', {}, originalGlobals);
   setGlobal('projectManager', {

@@ -523,8 +523,15 @@ class Terraforming extends EffectableEntity{
         availableByKey: {},
     };
     this.heatCapacityCache = null;
+    this.phaseChangeHeatPower = 0;
+    this.phaseChangeHeatFlux = 0;
+    this.phaseChangeHeatFluxByZone = { tropical: 0, temperate: 0, polar: 0 };
+    this.phaseChangeHeatEnergyByZone = { tropical: 0, temperate: 0, polar: 0 };
     this.factoryHeatPower = 0;
     this.factoryHeatFlux = 0;
+    this.factoryCoolingPower = 0;
+    this.factoryCoolingFlux = 0;
+    this.factoryHeatContributors = [];
     this.exosphereHeightMeters = 0;
     this.resourceSubstepMilliseconds = TERRAFORMING_RESOURCE_SUBSTEP_MS;
     this.maxResourceSubsteps = TERRAFORMING_RESOURCE_MAX_SUBSTEPS;
@@ -724,11 +731,71 @@ class Terraforming extends EffectableEntity{
     return Math.max(0, coreHeatFlux - megaHeatSinkFlux);
   }
 
-  setFactoryHeatPower(power) {
+  setFactoryHeatPower(power, coolingPower, contributors = []) {
     const surfaceArea = this.celestialParameters.surfaceArea
       || (4 * Math.PI * Math.pow((this.celestialParameters.radius || 0) * 1000, 2));
     this.factoryHeatPower = Number(power) || 0;
+    this.factoryCoolingPower = Number(coolingPower) || 0;
+    this.factoryCoolingFlux = surfaceArea > 0 ? this.factoryCoolingPower / surfaceArea : 0;
     this.factoryHeatFlux = surfaceArea > 0 ? this.factoryHeatPower / surfaceArea : 0;
+    this.factoryHeatContributors = contributors.map((contributor) => ({
+      name: contributor.name,
+      flux: surfaceArea > 0 ? contributor.power / surfaceArea : 0,
+    }));
+  }
+
+  resetPhaseChangeHeat() {
+    this.phaseChangeHeatPower = 0;
+    this.phaseChangeHeatFlux = 0;
+    for (const zone of getZones()) {
+      this.phaseChangeHeatFluxByZone[zone] = 0;
+      this.phaseChangeHeatEnergyByZone[zone] = 0;
+    }
+  }
+
+  beginPhaseChangeHeatTick() {
+    for (const zone of getZones()) {
+      this.phaseChangeHeatEnergyByZone[zone] = 0;
+    }
+  }
+
+  accumulatePhaseChangeHeat(phaseHeat) {
+    for (const zone of getZones()) {
+      const result = phaseHeat.byZone[zone];
+      if (!result) continue;
+      this.phaseChangeHeatEnergyByZone[zone] += result.netHeatEnergyJ;
+    }
+  }
+
+  finalizePhaseChangeHeatTick(durationSeconds) {
+    const surfaceArea = this.celestialParameters.surfaceArea;
+    let totalEnergy = 0;
+    for (const zone of getZones()) {
+      const energy = this.phaseChangeHeatEnergyByZone[zone];
+      const zoneArea = surfaceArea * this.getZoneWeight(zone);
+      this.phaseChangeHeatFluxByZone[zone] =
+        durationSeconds > 0 && zoneArea > 0 ? energy / durationSeconds / zoneArea : 0;
+      totalEnergy += energy;
+    }
+    this.phaseChangeHeatPower = durationSeconds > 0 ? totalEnergy / durationSeconds : 0;
+    this.phaseChangeHeatFlux = surfaceArea > 0 ? this.phaseChangeHeatPower / surfaceArea : 0;
+  }
+
+  refreshPhaseChangeTemperatureTrend() {
+    const actualState = this.saveTemperatureState();
+    this.updateSurfaceTemperature(0, {
+      ignoreHeatCapacity: true,
+      zonalSurfaceHeatFluxes: this.phaseChangeHeatFluxByZone,
+      disableAvailableAdvancedHeating: true,
+    });
+    const projectedState = this.saveTemperatureState();
+    this.restoreTemperatureState(actualState);
+
+    this.temperature.trendValue = projectedState.temperature.trendValue;
+    for (const zone of getZones()) {
+      this.temperature.zones[zone].trendValue =
+        projectedState.temperature.zones[zone].trendValue;
+    }
   }
 
   getFactoryHeatFlux() {
@@ -736,6 +803,13 @@ class Terraforming extends EffectableEntity{
       return 0;
     }
     return this.factoryHeatFlux || 0;
+  }
+
+  getFactoryCoolingFlux() {
+    if (!gameSettings.factoryHeating || isEquilibrating) {
+      return 0;
+    }
+    return this.factoryCoolingFlux || 0;
   }
 
   getNetFactoryHeatFlux() {
@@ -750,18 +824,42 @@ class Terraforming extends EffectableEntity{
     return Math.max(0, factoryHeatFlux - sinkAfterCore);
   }
 
-  getNetSurfaceHeatFlux() {
+  getFactoryHeatBreakdown() {
+    if (!gameSettings.factoryHeating || isEquilibrating) {
+      return [];
+    }
+    const contributors = this.factoryHeatContributors.slice();
+    const factoryHeatFlux = this.getFactoryHeatFlux();
+    if (factoryHeatFlux <= 0) {
+      return contributors;
+    }
+    const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
+    const sinkAfterCore = megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()
+      ? this.getMegaHeatSinkRawFlux()
+      : Math.max(0, this.getMegaHeatSinkFlux() - this.getCoreHeatFlux());
+    const mitigatedFactoryHeat = Math.min(factoryHeatFlux, sinkAfterCore);
+    if (mitigatedFactoryHeat > 0) {
+      contributors.push({
+        name: megaHeatSinkProject.displayName,
+        flux: -mitigatedFactoryHeat,
+      });
+    }
+    return contributors;
+  }
+
+  getNetSurfaceHeatFlux(factoryCoolingScale = 1) {
     const coreHeatFlux = this.getCoreHeatFlux();
     const factoryHeatFlux = this.getFactoryHeatFlux();
+    const factoryCoolingAdjustment = this.getFactoryCoolingFlux() * (1 - factoryCoolingScale);
     const megaHeatSinkFlux = this.getMegaHeatSinkFlux();
     const positiveFactoryHeatFlux = Math.max(0, factoryHeatFlux);
     const factoryCoolingFlux = Math.max(0, -factoryHeatFlux);
     const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
     if (megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()) {
       const factoryHeatAfterSink = Math.max(0, positiveFactoryHeatFlux - this.getMegaHeatSinkRawFlux());
-      return coreHeatFlux + factoryHeatAfterSink - factoryCoolingFlux;
+      return coreHeatFlux + factoryHeatAfterSink - factoryCoolingFlux + factoryCoolingAdjustment;
     }
-    return Math.max(0, coreHeatFlux + positiveFactoryHeatFlux - megaHeatSinkFlux) - factoryCoolingFlux;
+    return Math.max(0, coreHeatFlux + positiveFactoryHeatFlux - megaHeatSinkFlux) - factoryCoolingFlux + factoryCoolingAdjustment;
   }
 
   getMegaHeatSinkCoolingFlux() {
@@ -1272,6 +1370,13 @@ class Terraforming extends EffectableEntity{
             this.cycles = [waterCycleInstance, hydrogenCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance, oxygenCycleInstance, nitrogenCycleInstance];
         }
 
+        const focusedMeltAmount = gameSettings.phaseChangeHeat
+            ? applyFocusedMelt(this, this.resources, durationSeconds)
+            : 0;
+        const phaseStartingTemperatures = {};
+        for (const zone of zones) {
+            phaseStartingTemperatures[zone] = this.temperature.zones[zone].value;
+        }
         const cycleResults = [];
         for (const cycle of this.cycles) {
             const params = {
@@ -1279,9 +1384,23 @@ class Terraforming extends EffectableEntity{
                 vaporPressure: pressureByKey[cycle.atmKey] || 0,
                 available: availableByKey[cycle.atmKey] || 0,
                 durationSeconds,
+                phaseChangeHeatEnabled: gameSettings.phaseChangeHeat,
+                phaseStartingTemperatures,
                 extraParams: cycle.getExtraParams ? cycle.getExtraParams(this) : {},
             };
             const totals = cycle.runCycle(this, zones, params);
+            if (totals.phaseHeat) {
+                this.accumulatePhaseChangeHeat(totals.phaseHeat);
+                for (const zone of zones) {
+                    const result = totals.phaseHeat.byZone[zone];
+                    if (result) {
+                        phaseStartingTemperatures[zone] = result.finalTemperatureK;
+                    }
+                }
+            }
+            if (cycle === waterCycleInstance && gameSettings.phaseChangeHeat) {
+                totals.focusedMelt = focusedMeltAmount;
+            }
             const delta = totals.totalAtmosphericChange || 0;
             const atmRes = this.resources.atmospheric[cycle.atmKey];
             if (atmRes) {
@@ -1374,6 +1493,18 @@ class Terraforming extends EffectableEntity{
         let totalRealSeconds = 0;
         let appliedFraction = 0;
         let wovenAlbedoOverflow = 0;
+        // Aggregate every resource substep into one controller/UI measurement.
+        this.beginPhaseChangeHeatTick();
+        const tickPhaseHeatFluxes = {};
+        for (const zone of getZones()) {
+            tickPhaseHeatFluxes[zone] = gameSettings.phaseChangeHeat
+                ? this.phaseChangeHeatFluxByZone[zone]
+                : 0;
+        }
+        const temperatureOptions = {
+            ...options,
+            zonalSurfaceHeatFluxes: tickPhaseHeatFluxes,
+        };
 
         for (let stepIndex = 0; stepIndex < stepDurations.length; stepIndex += 1) {
             const stepDuration = stepDurations[stepIndex];
@@ -1408,7 +1539,7 @@ class Terraforming extends EffectableEntity{
                 projectManager.projects.spaceMirrorFacility,
                 stepDuration
             );
-            this.runUpdateStep(stepDuration, options);
+            this.runUpdateStep(stepDuration, temperatureOptions);
             const stepResult = this.runResourceUpdateStep(stepDuration);
             totalDurationSeconds += stepResult.durationSeconds || 0;
             totalRealSeconds += stepResult.realSeconds || 0;
@@ -1432,6 +1563,11 @@ class Terraforming extends EffectableEntity{
             for (const key in chemChanges) {
                 combinedChemChanges[key] = (combinedChemChanges[key] || 0) + chemChanges[key];
             }
+        }
+
+        this.finalizePhaseChangeHeatTick(totalDurationSeconds);
+        if (gameSettings.phaseChangeHeat) {
+            this.refreshPhaseChangeTemperatureTrend();
         }
 
         this.runHazardUpdate(deltaTime, options);
@@ -1660,8 +1796,9 @@ class Terraforming extends EffectableEntity{
     const dtSeconds = Math.max(0, deltaTimeMs || 0) * (86400 / 1000);
     const ignoreHeatCapacity = !!(options && options.ignoreHeatCapacity);
     const zonalFluxOverrides = options && options.zonalFluxOverrides;
+    const zonalSurfaceHeatFluxes = options && options.zonalSurfaceHeatFluxes;
     const disableAvailableAdvancedHeating = !!(options && options.disableAvailableAdvancedHeating);
-    const netSurfaceHeatFlux = this.getNetSurfaceHeatFlux();
+    const globalNetSurfaceHeatFlux = this.getNetSurfaceHeatFlux();
     const megaHeatSinkCoolingFlux = this.getMegaHeatSinkCoolingFlux();
     const allowAvailableHeating =
         !!(mirrorOversightSettings?.advancedOversight) &&
@@ -1697,12 +1834,25 @@ class Terraforming extends EffectableEntity{
     const heatCapacityCache = this.getHeatCapacity();
     const effectiveAtmosphereCapacity = suppressAtmosphere ? 0 : heatCapacityCache.atmosphericHeatCapacity;
     const baseSlabOptions = { atmosphereCapacity: effectiveAtmosphereCapacity };
+    const zoneFluxes = {};
+    const zonalEffectiveLight = {};
+    let weightedEffectiveLight = 0;
     for (const zone of ORDER) {
         const overrideFlux = zonalFluxOverrides && zonalFluxOverrides[zone];
         const zoneFlux = Number.isFinite(overrideFlux)
             ? Math.max(overrideFlux, BACKGROUND_SOLAR_FLUX)
             : this.calculateZoneSolarFlux(zone);
+        const localSurfaceAlbedo = this.calculateZonalSurfaceAlbedo(zone);
+        const effectiveLight = Math.max(0, zoneFlux * (1 - localSurfaceAlbedo));
+        const pct = this.getZoneWeight(zone);
+        zoneFluxes[zone] = zoneFlux;
+        zonalEffectiveLight[zone] = effectiveLight;
+        weightedEffectiveLight += effectiveLight * pct;
         this.luminosity.zonalFluxes[zone] = zoneFlux;
+    }
+
+    for (const zone of ORDER) {
+        const zoneFlux = zoneFluxes[zone];
 
         const zoneCapacity = heatCapacityCache.zones[zone];
         const zoneFractions = zoneCapacity.fractions;
@@ -1716,11 +1866,18 @@ class Terraforming extends EffectableEntity{
             zoneArea,
             zoneLiquidWater: this.zonalSurface[zone]?.liquidWater || 0
         };
+        const zonalSurfaceHeatFlux = zonalSurfaceHeatFluxes
+            ? (zonalSurfaceHeatFluxes[zone] || 0)
+            : 0;
+        const factoryCoolingScale = weightedEffectiveLight > 0
+            ? zonalEffectiveLight[zone] / weightedEffectiveLight
+            : 0;
+        const netSurfaceHeatFlux = this.getNetSurfaceHeatFlux(factoryCoolingScale);
 
         const zTemps = dayNightTemperaturesModel({
             ...baseParams,
             flux: zoneFlux,
-            addedSurfaceFlux: netSurfaceHeatFlux,
+            addedSurfaceFlux: netSurfaceHeatFlux + zonalSurfaceHeatFlux,
             surfaceFractions: zoneFractions,
             autoSlabOptions: slabOptions
         });
@@ -1740,7 +1897,8 @@ class Terraforming extends EffectableEntity{
             frac:  zoneFractions,
             area,
             Cslab,
-            capacityPerArea
+            capacityPerArea,
+            netSurfaceHeatFlux
         };
 
         weightedEqTemp           += zTemps.equilibriumTemperature * pct;
@@ -1808,7 +1966,6 @@ class Terraforming extends EffectableEntity{
             T[zone] += (weightedMean - T[zone]) * mixFrac;
         }
     }
-
     const baselineCombinedFluxes = {};
     const availableHeatingPowerDemands = {};
     let totalAvailableHeatingPowerDemand = 0;
@@ -1818,7 +1975,13 @@ class Terraforming extends EffectableEntity{
         const greenhouseFactor = z[zone].greenhouseFactor || 1;
         const zoneFlux = this.luminosity.zonalFluxes[zone];
         const usesFlatSurfaceFlux = isRingWorld() || isAldersonDiskWorld();
-        const absorbedFlux = ((1 - z[zone].albedo) * zoneFlux * (usesFlatSurfaceFlux ? 1 : 0.25)) + netSurfaceHeatFlux;
+        const zonalSurfaceHeatFlux = zonalSurfaceHeatFluxes
+            ? (zonalSurfaceHeatFluxes[zone] || 0)
+            : 0;
+        const absorbedFlux =
+            ((1 - z[zone].albedo) * zoneFlux * (usesFlatSurfaceFlux ? 1 : 0.25))
+            + z[zone].netSurfaceHeatFlux
+            + zonalSurfaceHeatFlux;
         const emittedFlux = greenhouseFactor > 0
             ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / greenhouseFactor
             : 0;
@@ -1840,7 +2003,8 @@ class Terraforming extends EffectableEntity{
 
         let heatingPowerDemand = 0;
         if (allowAvailableHeating && !ignoreHeatCapacity && dtSeconds > 0 && desiredDelta > 0 && capacity > 0) {
-          const baselineTemperature = previousMean + (combinedFlux * dtSeconds) / capacity;
+          const baselineTemperature =
+            previousMean + (combinedFlux * dtSeconds) / capacity;
           const requiredHeatingFlux = Math.max(0, (T[zone] - baselineTemperature) * capacity / dtSeconds);
           heatingPowerDemand = requiredHeatingFlux * (z[zone].area || 0);
         }
@@ -1935,7 +2099,7 @@ class Terraforming extends EffectableEntity{
         this.luminosity.modifiedSolarFlux = this.luminosity.modifiedSolarFluxUnpenalized * (1 - penalty);
 
         this.temperature.effectiveTempNoAtmosphere =
-            effectiveTemp(this.luminosity.surfaceAlbedo, this.luminosity.modifiedSolarFluxUnpenalized, { addedFlux: netSurfaceHeatFlux });
+            effectiveTemp(this.luminosity.surfaceAlbedo, this.luminosity.modifiedSolarFluxUnpenalized, { addedFlux: globalNetSurfaceHeatFlux });
     }
 
     getRadiationDoseBoostFromEffects() {
@@ -2025,7 +2189,9 @@ class Terraforming extends EffectableEntity{
         const fractions = (typeof calculateZonalSurfaceFractions === 'function')
             ? calculateZonalSurfaceFractions(this, zone)
             : { ocean: 0, ice: 0, hydrocarbon: 0, hydrocarbonIce: 0, co2_ice: 0, ammonia: 0, ammoniaIce: 0, oxygen: 0, oxygenIce: 0, nitrogen: 0, nitrogenIce: 0, fineSand: 0, biomass: 0 };
-        return surfaceAlbedoMix(groundAlbedo, fractions);
+        return surfaceAlbedoMix(groundAlbedo, fractions, {
+            biomass: getActiveBiomassAlbedo()
+        });
     }
 
     calculateSurfaceAlbedo() {
@@ -2940,11 +3106,24 @@ class Terraforming extends EffectableEntity{
 
     // [simulateAtmosphericFlow function removed - no longer needed with global atmosphere]
 
-// Distributes net changes from global resources (caused by buildings/other non-zonal processes)
-// proportionally into the zonal data structures after systems have finished accumulating changes.
-distributeSurfaceChangesToZones(surfaceChanges = {}) {
+calculateZonalSurfaceChanges(surfaceChanges = {}) {
     const zones = getZones();
     const configs = this.zonalSurfaceResourceConfigs;
+    const projectedSurface = {};
+    const changesByZone = {};
+    for (const zone of zones) {
+        projectedSurface[zone] = { ...this.zonalSurface[zone] };
+        changesByZone[zone] = {};
+    }
+
+    const applyProjectedChange = (zone, resourceKey, amount) => {
+        const currentValue = projectedSurface[zone][resourceKey] || 0;
+        const nextValue = Math.max(0, currentValue + amount);
+        const actualChange = nextValue - currentValue;
+        projectedSurface[zone][resourceKey] = nextValue;
+        changesByZone[zone][resourceKey] =
+            (changesByZone[zone][resourceKey] || 0) + actualChange;
+    };
 
     for (const config of configs) {
         const netChangeAmount = surfaceChanges[config.name] || 0;
@@ -2988,32 +3167,32 @@ distributeSurfaceChangesToZones(surfaceChanges = {}) {
             let totalSurfaceAmount = 0;
             let totalBuriedAmount = 0;
             for (const zone of zones) {
-                totalSurfaceAmount += this.zonalSurface[zone][config.distributionKey] || 0;
-                totalBuriedAmount += this.zonalSurface[zone][buriedKey] || 0;
+                totalSurfaceAmount += projectedSurface[zone][config.distributionKey] || 0;
+                totalBuriedAmount += projectedSurface[zone][buriedKey] || 0;
             }
 
             const surfaceTake = Math.min(-netChangeAmount, totalSurfaceAmount);
             if (surfaceTake > 0 && totalSurfaceAmount > 0) {
                 for (const zone of zones) {
-                    const currentAmount = this.zonalSurface[zone][config.distributionKey] || 0;
+                    const currentAmount = projectedSurface[zone][config.distributionKey] || 0;
                     if (currentAmount <= 0) {
                         continue;
                     }
                     const share = currentAmount / totalSurfaceAmount;
-                    this.zonalSurface[zone][config.distributionKey] = Math.max(0, currentAmount - surfaceTake * share);
+                    applyProjectedChange(zone, config.distributionKey, -surfaceTake * share);
                 }
             }
 
             const remaining = netChangeAmount + surfaceTake;
             if (remaining < 0 && totalBuriedAmount > 0) {
-                const buriedTake = -remaining;
+                const buriedTake = Math.min(-remaining, totalBuriedAmount);
                 for (const zone of zones) {
-                    const currentBuried = this.zonalSurface[zone][buriedKey] || 0;
+                    const currentBuried = projectedSurface[zone][buriedKey] || 0;
                     if (currentBuried <= 0) {
                         continue;
                     }
                     const share = currentBuried / totalBuriedAmount;
-                    this.zonalSurface[zone][buriedKey] = Math.max(0, currentBuried - buriedTake * share);
+                    applyProjectedChange(zone, buriedKey, -buriedTake * share);
                 }
             }
             continue;
@@ -3021,7 +3200,7 @@ distributeSurfaceChangesToZones(surfaceChanges = {}) {
 
         if (distributionMode === 'currentAmount') {
             for (const zone of zones) {
-                totalDistributionFactor += this.zonalSurface[zone][config.distributionKey] || 0;
+                totalDistributionFactor += projectedSurface[zone][config.distributionKey] || 0;
             }
         } else if (distributionMode === 'targetZoneArea') {
             for (const zone of targetZones) {
@@ -3043,7 +3222,7 @@ distributeSurfaceChangesToZones(surfaceChanges = {}) {
 
             if (totalDistributionFactor > 1e-9) {
                 if (distributionMode === 'currentAmount') {
-                    const currentAmount = this.zonalSurface[zone][config.distributionKey] || 0;
+                    const currentAmount = projectedSurface[zone][config.distributionKey] || 0;
                     proportion = currentAmount / totalDistributionFactor;
                 } else if (distributionMode === 'targetZoneArea' && isTargetZone) {
                     const zoneArea = this.celestialParameters.surfaceArea * this.getZoneWeight(zone);
@@ -3056,8 +3235,20 @@ distributeSurfaceChangesToZones(surfaceChanges = {}) {
             }
 
             const zonalChange = netChangeAmount * proportion;
-            const currentValue = this.zonalSurface[zone][config.distributionKey] || 0;
-            this.zonalSurface[zone][config.distributionKey] = Math.max(0, currentValue + zonalChange);
+            applyProjectedChange(zone, config.distributionKey, zonalChange);
+        }
+    }
+
+    return changesByZone;
+}
+
+// Distributes net changes from global resources (caused by buildings/other non-zonal processes)
+// proportionally into the zonal data structures after systems have finished accumulating changes.
+distributeSurfaceChangesToZones(surfaceChanges = {}) {
+    const changesByZone = this.calculateZonalSurfaceChanges(surfaceChanges);
+    for (const zone in changesByZone) {
+        for (const resourceKey in changesByZone[zone]) {
+            this.zonalSurface[zone][resourceKey] += changesByZone[zone][resourceKey];
         }
     }
 }

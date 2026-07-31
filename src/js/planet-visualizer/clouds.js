@@ -35,7 +35,11 @@
     }
     this.cloudMesh.renderOrder = 5;
     this.scene.add(this.cloudMesh);
-    this.updateCloudMeshTexture();
+    if (this.renderer.capabilities.isWebGL2) {
+      this.prepareCloudShaderField();
+    } else {
+      this.updateCloudMeshTexture();
+    }
   };
 
   PlanetVisualizer.prototype.getCloudTextureSize = function getCloudTextureSize() {
@@ -53,13 +57,192 @@
     return { w: 512, h: 256 };
   };
 
-  PlanetVisualizer.prototype.updateCloudMeshTexture = function updateCloudMeshTexture() {
+  function updateCloudMeshTextureCpu(context, w, h) {
+    const cloudPct = Math.max(0, Math.min(100, context.viz.coverage?.cloud || 0));
+    const rawCov = cloudPct / 100;
+    const cov = rawCov * rawCov;
+    const histogram = context.cloudHist;
+    const total = histogram.total;
+    const target = Math.round(cov * total);
+    let threshold = 256;
+    if (target > 0) {
+      let accumulated = 0;
+      for (let bin = 255; bin >= 0; bin--) {
+        accumulated += histogram.counts[bin];
+        if (accumulated >= target) {
+          threshold = bin;
+          break;
+        }
+      }
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const imageContext = canvas.getContext('2d');
+    const image = imageContext.createImageData(w, h);
+    const data = image.data;
+    const thresholdValue = threshold <= 255 ? threshold / 255 : 2;
+    const edge = 0.025;
+    const overcastFloor = cov > 0.9 ? 0.35 * ((cov - 0.9) / 0.1) : 0;
+    const isRing = context.isRingWorld();
+    const isDisk = context.isDiskWorld();
+    const cloudSmoothstep = (a, b, value) => {
+      const amount = Math.max(0, Math.min(1, (value - a) / (b - a)));
+      return amount * amount * (3 - 2 * amount);
+    };
+    for (let i = 0; i < w * h; i++) {
+      const value = Math.max(0, Math.min(1, context.cloudMap[i] || 0));
+      let alphaBase = 0;
+      if (target >= total) {
+        alphaBase = 1;
+      } else if (target > 0) {
+        alphaBase = cloudSmoothstep(thresholdValue - edge, thresholdValue + edge, value);
+      }
+      const density = 0.25 + 0.75 * Math.pow(value, 1.1);
+      let bandMask = 1;
+      if (isRing) {
+        const y = Math.floor(i / w);
+        const verticalPosition = y / (h - 1);
+        bandMask = 1 - cloudSmoothstep(0.47, 0.5, Math.abs(verticalPosition - 0.5));
+      } else if (isDisk) {
+        const x = i % w;
+        const y = (i - x) / w;
+        const dx = (x / Math.max(1, w - 1)) * 2 - 1;
+        const dy = (y / Math.max(1, h - 1)) * 2 - 1;
+        const radius = Math.sqrt(dx * dx + dy * dy);
+        bandMask = cloudSmoothstep(
+          context.getDiskInnerRatio(),
+          context.getDiskInnerRatio() + 0.03,
+          radius
+        ) * (1 - cloudSmoothstep(0.97, 1, radius));
+      }
+      const alpha = Math.max(overcastFloor, alphaBase * density) * bandMask;
+      const offset = i * 4;
+      data[offset] = 255;
+      data[offset + 1] = 255;
+      data[offset + 2] = 255;
+      data[offset + 3] = Math.max(0, Math.min(255, Math.round(205 * alpha)));
+    }
+    for (let y = 0; y < h; y++) {
+      const row = y * w * 4;
+      const first = row;
+      const last = row + (w - 1) * 4;
+      data[last] = data[first];
+      data[last + 1] = data[first + 1];
+      data[last + 2] = data[first + 2];
+      data[last + 3] = data[first + 3];
+    }
+    imageContext.putImageData(image, 0, 0);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = isDisk ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
+    texture.needsUpdate = true;
+    const previousMap = context.cloudMaterial.map;
+    context.cloudMaterial.map = texture;
+    context.cloudMaterial.opacity = 0.45 + 0.55 * Math.pow(cov, 1.15);
+    context.cloudMaterial.needsUpdate = true;
+    if (previousMap && previousMap !== texture) previousMap.dispose();
+    context._lastCloudCoverageKey = `${cov.toFixed(3)}`;
+  }
+
+  let cloudCompositorRandomSeed = 0x6d2b79f5;
+
+  function isolateCloudCompositorRandom(callback) {
+    const originalRandom = Math.random;
+    let state = cloudCompositorRandomSeed;
+    cloudCompositorRandomSeed = (cloudCompositorRandomSeed + 0x9e3779b9) >>> 0;
+    Math.random = () => {
+      state = (1664525 * state + 1013904223) >>> 0;
+      return state / 0x100000000;
+    };
+    try {
+      return callback();
+    } finally {
+      Math.random = originalRandom;
+    }
+  }
+
+  function consumeLegacyCloudTextureUuids() {
+    THREE.MathUtils.generateUUID();
+    THREE.MathUtils.generateUUID();
+  }
+
+  PlanetVisualizer.prototype.disposeCloudCompositor = function disposeCloudCompositor() {
+    if (
+      this.cloudMaterial
+      && this._cloudCompositeTarget
+      && this.cloudMaterial.map === this._cloudCompositeTarget.texture
+    ) {
+      this.cloudMaterial.map = null;
+    }
+    if (this._cloudCompositeTarget) {
+      this._cloudCompositeTarget.dispose();
+    }
+    if (this._cloudFieldTexture) {
+      this._cloudFieldTexture.dispose();
+    }
+    if (this._cloudCompositeMesh) {
+      this._cloudCompositeMesh.geometry.dispose();
+      this._cloudCompositeMesh.material.dispose();
+    }
+    this._cloudCompositeTarget = null;
+    this._cloudFieldTexture = null;
+    this._cloudCompositeMesh = null;
+    this._cloudCompositeScene = null;
+    this._cloudCompositeCamera = null;
+    this._cloudCompositeUniforms = null;
+    this._cloudFieldWidth = 0;
+    this._cloudFieldHeight = 0;
+  };
+
+  PlanetVisualizer.prototype.prepareCloudShaderField = function prepareCloudShaderField() {
     const size = this.getCloudTextureSize();
     const w = size.w;
     const h = size.h;
     if (!this.cloudMap || !this.cloudHist || this.cloudMap.length !== w * h) {
       this.generateCloudMap(w, h);
     }
+    if (
+      this._cloudFieldTexture
+      && this._cloudFieldWidth === w
+      && this._cloudFieldHeight === h
+    ) {
+      return;
+    }
+
+    this.disposeCloudCompositor();
+    const fieldTexture = new THREE.DataTexture(
+      this.cloudMap,
+      w,
+      h,
+      THREE.RedFormat,
+      THREE.FloatType
+    );
+    fieldTexture.wrapS = THREE.RepeatWrapping;
+    fieldTexture.wrapT = this.isDiskWorld() ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
+    fieldTexture.magFilter = THREE.NearestFilter;
+    fieldTexture.minFilter = THREE.NearestFilter;
+    fieldTexture.generateMipmaps = false;
+    fieldTexture.flipY = true;
+    fieldTexture.needsUpdate = true;
+    this._cloudFieldTexture = fieldTexture;
+    this._cloudFieldWidth = w;
+    this._cloudFieldHeight = h;
+  };
+
+  PlanetVisualizer.prototype.updateCloudMeshTexture = function updateCloudMeshTexture() {
+    const size = this.getCloudTextureSize();
+    const w = size.w;
+    const h = size.h;
+    if (!this.renderer.capabilities.isWebGL2) {
+      if (!this.cloudMap || !this.cloudHist || this.cloudMap.length !== w * h) {
+        this.generateCloudMap(w, h);
+      }
+      updateCloudMeshTextureCpu(this, w, h);
+      return;
+    }
+    this.prepareCloudShaderField();
     const cloudPct = Math.max(0, Math.min(100, this.viz.coverage?.cloud || 0));
     const rawCov = cloudPct / 100;
     const cov = rawCov * rawCov;
@@ -73,76 +256,125 @@
         if (acc >= target) { thr = k; break; }
       }
     }
-    const canv = document.createElement('canvas');
-    canv.width = w;
-    canv.height = h;
-    const ctx = canv.getContext('2d');
-    const img = ctx.createImageData(w, h);
-    const data = img.data;
     const thrValue = thr <= 255 ? thr / 255 : 2;
-    const edge = 0.025;
     const overcastFloor = cov > 0.9 ? 0.35 * ((cov - 0.9) / 0.1) : 0;
-    const isRing = this.isRingWorld();
-    const isDisk = this.isDiskWorld();
-    const smoothstep = (a, b, t) => {
-      const v = Math.max(0, Math.min(1, (t - a) / (b - a)));
-      return v * v * (3 - 2 * v);
-    };
-    for (let i = 0; i < w * h; i++) {
-      const v = Math.max(0, Math.min(1, this.cloudMap[i] || 0));
-      let alphaBase = 0;
-      if (target >= total) {
-        alphaBase = 1;
-      } else if (target > 0) {
-        alphaBase = smoothstep(thrValue - edge, thrValue + edge, v);
-      }
-      const density = 0.25 + 0.75 * Math.pow(v, 1.1);
-      let bandMask = 1;
-      if (isRing) {
-        const y = Math.floor(i / w);
-        const vy = y / (h - 1);
-        const dist = Math.abs(vy - 0.5);
-        bandMask = 1 - smoothstep(0.47, 0.5, dist);
-      } else if (isDisk) {
-        const x = i % w;
-        const y = (i - x) / w;
-        const dx = (x / Math.max(1, w - 1)) * 2 - 1;
-        const dy = (y / Math.max(1, h - 1)) * 2 - 1;
-        const r = Math.sqrt(dx * dx + dy * dy);
-        bandMask = smoothstep(this.getDiskInnerRatio(), this.getDiskInnerRatio() + 0.03, r)
-          * (1 - smoothstep(0.97, 1, r));
-      }
-      const alpha = Math.max(overcastFloor, alphaBase * density) * bandMask;
-      const idx = i * 4;
-      data[idx] = 255;
-      data[idx + 1] = 255;
-      data[idx + 2] = 255;
-      data[idx + 3] = Math.max(0, Math.min(255, Math.round(205 * alpha)));
+
+    if (!this._cloudCompositeTarget) {
+      isolateCloudCompositorRandom(() => {
+        const uniforms = {
+          cloudMap: { value: this._cloudFieldTexture },
+          textureSize: { value: new THREE.Vector2(w, h) },
+          threshold: { value: 2 },
+          coverageMode: { value: 0 },
+          overcastFloor: { value: 0 },
+          worldMode: { value: this.isRingWorld() ? 1 : (this.isDiskWorld() ? 2 : 0) },
+          diskInnerRatio: { value: this.isDiskWorld() ? this.getDiskInnerRatio() : 0 },
+        };
+        const compositorMaterial = new THREE.ShaderMaterial({
+          uniforms,
+          vertexShader: `
+          varying vec2 vUv;
+          void main() {
+            vUv = uv;
+            gl_Position = vec4(position.xy, 0.0, 1.0);
+          }
+        `,
+          fragmentShader: `
+          uniform sampler2D cloudMap;
+          uniform vec2 textureSize;
+          uniform float threshold;
+          uniform float coverageMode;
+          uniform float overcastFloor;
+          uniform float worldMode;
+          uniform float diskInnerRatio;
+          varying vec2 vUv;
+
+          float cloudSmoothstep(float edge0, float edge1, float value) {
+            float amount = clamp((value - edge0) / (edge1 - edge0), 0.0, 1.0);
+            return amount * amount * (3.0 - 2.0 * amount);
+          }
+
+          void main() {
+            vec2 texel = floor(vUv * textureSize);
+            if (texel.x > textureSize.x - 1.5) {
+              texel.x = 0.0;
+            }
+            vec2 cloudUv = (texel + 0.5) / textureSize;
+            float cloudValue = clamp(texture2D(cloudMap, cloudUv).r, 0.0, 1.0);
+            float alphaBase = 0.0;
+            if (coverageMode > 1.5) {
+              alphaBase = 1.0;
+            } else if (coverageMode > 0.5) {
+              alphaBase = cloudSmoothstep(threshold - 0.025, threshold + 0.025, cloudValue);
+            }
+            float density = 0.25 + 0.75 * pow(cloudValue, 1.1);
+            float bandMask = 1.0;
+            if (worldMode > 0.5 && worldMode < 1.5) {
+              float verticalPosition = texel.y / max(1.0, textureSize.y - 1.0);
+              bandMask = 1.0 - cloudSmoothstep(0.47, 0.5, abs(verticalPosition - 0.5));
+            } else if (worldMode > 1.5) {
+              vec2 diskPosition = (texel / max(vec2(1.0), textureSize - 1.0)) * 2.0 - 1.0;
+              float radius = length(diskPosition);
+              bandMask = cloudSmoothstep(diskInnerRatio, diskInnerRatio + 0.03, radius)
+                * (1.0 - cloudSmoothstep(0.97, 1.0, radius));
+            }
+            float alpha = max(overcastFloor, alphaBase * density) * bandMask;
+            float alphaByte = floor(clamp(205.0 * alpha, 0.0, 255.0) + 0.5) / 255.0;
+            float cloudWhite = alphaByte > 0.0 ? 1.0 : 0.0;
+            gl_FragColor = vec4(vec3(cloudWhite), alphaByte);
+          }
+        `,
+          depthTest: false,
+          depthWrite: false,
+          toneMapped: false,
+        });
+        const compositorMesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(2, 2),
+          compositorMaterial
+        );
+        compositorMesh.frustumCulled = false;
+        const compositorScene = new THREE.Scene();
+        compositorScene.add(compositorMesh);
+        const compositorCamera = new THREE.Camera();
+
+        const targetTextureOptions = {
+          format: THREE.RGBAFormat,
+          type: THREE.UnsignedByteType,
+          magFilter: THREE.LinearFilter,
+          minFilter: THREE.LinearMipmapLinearFilter,
+          depthBuffer: false,
+          stencilBuffer: false,
+        };
+        const compositeTarget = new THREE.WebGLRenderTarget(w, h, targetTextureOptions);
+        compositeTarget.texture.wrapS = THREE.RepeatWrapping;
+        compositeTarget.texture.wrapT = this.isDiskWorld() ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
+        compositeTarget.texture.generateMipmaps = true;
+        compositeTarget.texture.colorSpace = THREE.SRGBColorSpace;
+
+        this._cloudCompositeUniforms = uniforms;
+        this._cloudCompositeMesh = compositorMesh;
+        this._cloudCompositeScene = compositorScene;
+        this._cloudCompositeCamera = compositorCamera;
+        this._cloudCompositeTarget = compositeTarget;
+        this.cloudMaterial.map = compositeTarget.texture;
+        this.cloudMaterial.needsUpdate = true;
+      });
+    } else {
+      consumeLegacyCloudTextureUuids();
     }
-    for (let y = 0; y < h; y++) {
-      const row = y * w * 4;
-      const first = row;
-      const last = row + (w - 1) * 4;
-      data[last] = data[first];
-      data[last + 1] = data[first + 1];
-      data[last + 2] = data[first + 2];
-      data[last + 3] = data[first + 3];
-    }
-    ctx.putImageData(img, 0, 0);
-    const tex = new THREE.CanvasTexture(canv);
-    if (THREE && THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
-    tex.wrapS = THREE.RepeatWrapping;
-    tex.wrapT = this.isDiskWorld() ? THREE.RepeatWrapping : THREE.ClampToEdgeWrapping;
-    tex.needsUpdate = true;
-    const previousMap = this.cloudMaterial.map;
-    this.cloudMaterial.map = tex;
-    if (this.cloudMaterial) {
-      this.cloudMaterial.opacity = 0.45 + 0.55 * Math.pow(cov, 1.15);
-    }
-    this.cloudMaterial.needsUpdate = true;
-    if (previousMap && previousMap !== tex && previousMap.dispose) {
-      previousMap.dispose();
-    }
+
+    const uniforms = this._cloudCompositeUniforms;
+    uniforms.threshold.value = thrValue;
+    uniforms.coverageMode.value = target >= total ? 2 : (target > 0 ? 1 : 0);
+    uniforms.overcastFloor.value = overcastFloor;
+    uniforms.diskInnerRatio.value = this.isDiskWorld() ? this.getDiskInnerRatio() : 0;
+
+    const previousTarget = this.renderer.getRenderTarget();
+    this.renderer.setRenderTarget(this._cloudCompositeTarget);
+    this.renderer.render(this._cloudCompositeScene, this._cloudCompositeCamera);
+    this.renderer.setRenderTarget(previousTarget);
+
+    this.cloudMaterial.opacity = 0.45 + 0.55 * Math.pow(cov, 1.15);
     this._lastCloudCoverageKey = `${cov.toFixed(3)}`;
   };
 
@@ -213,17 +445,8 @@
 
   PlanetVisualizer.prototype.updateCloudTexture = function updateCloudTexture(force = false) {
     if (!this.cloudMesh || !this.cloudMaterial) return;
-    const rawCov = Math.max(0, Math.min(1, (this.viz.coverage?.cloud || 0) / 100));
-    const cov = rawCov * rawCov;
-    if (!this.cloudMaterial.map || force) {
-      const canvas = this.generateCloudCanvas();
-      const tex = new THREE.CanvasTexture(canvas);
-      tex.wrapS = THREE.RepeatWrapping;
-      tex.wrapT = THREE.ClampToEdgeWrapping;
-      this.cloudMaterial.map = tex;
-      this.cloudMaterial.needsUpdate = true;
-    }
-    this.cloudMaterial.opacity = Math.min(1, 0.35 + 0.9 * cov);
+    if (force) this._lastCloudCoverageKey = '';
+    this.updateCloudMeshTexture();
   };
 
   PlanetVisualizer.prototype.updateCloudUniforms = function updateCloudUniforms() {

@@ -823,7 +823,7 @@
         "scopeZones": "（{zones} 区域{s}内）",
         "scopeAtmosphere": "（整个大气层中）",
         "hydrogenIntro": "氢会依太阳辐照通量和重力缓慢逸散到太空。",
-        "hydrogenPhoto": "恒星紫外线最多可光解其中 {percent}% 的气体，产生的原子逸散速度约为分子的 {speed} 倍。",
+        "hydrogenPhoto": "恒星紫外线最多可将其中 {percent}% 的气体光解为原子，而原子比分子更容易逸散。",
         "hydrogenGravityDecay": "，因此预计会持续流失。",
         "hydrogenGravityRetain": "，因此大气层能够留住氢。",
         "hydrogenGravityLine": "当前重力为 {value} m/s²{relation}",
@@ -4986,8 +4986,8 @@
         "fps20": "20 FPS",
         "fps30": "30 FPS"
       },
-      "terraformingSubsteps": "使用 10 毫秒地球化子步长",
-      "terraformingSubstepsTooltip": "默认情况下，气候模型以 10 毫秒为一个计算步长运行，而不是直接使用完整的时间差。关闭此选项可提升性能，但会降低气候模型的数值稳定性。",
+      "terraformingSubsteps": "使用 {milliseconds} 毫秒地球化子步长",
+      "terraformingSubstepsTooltip": "默认情况下，气候模型以 {milliseconds} 毫秒为一个计算步长运行，而不是直接使用完整的时间差。关闭此选项可提升性能，但会降低气候模型的数值稳定性。",
       "celsius": "以摄氏度显示温度",
       "colorblindPalette": "状态颜色",
       "colorblindPalettes": {

@@ -129,9 +129,9 @@
     <script src="src/js/save-settings/achievements.js"></script>
     <script src="src/js/save-settings/achievementsSubtab.js"></script>
     <script src="src/js/save-settings/creditsSubtab.js"></script>
+    <script src="src/js/save-settings/settings.js"></script>
     <script src="src/js/save-settings/save.js"></script>
     <script src="src/js/save-settings/saveSubtab.js"></script>
-    <script src="src/js/save-settings/settings.js"></script>
     <script src="src/js/structuresUI.js"></script>
     <script src="src/js/day-night-cycle.js"></script>
     <script src="src/js/day-night-setting.js"></script>
@@ -143,6 +143,7 @@
     <script src="src/js/advanced-research/space-slidersUI.js"></script>
     <script src="src/js/advanced-research/artificial-ecosystems.js"></script>
     <script src="src/js/special/antimatter.js"></script>
+    <script src="src/js/rate-sources.js"></script>
     <script src="src/js/resource.js"></script>
     <script src="src/js/resourceUI.js"></script>
     <script src="src/js/building.js"></script>
@@ -377,6 +378,7 @@
     <script src="src/js/planet-visualizer/ring-shades.js"></script>
     <script src="src/js/planet-visualizer/heightmaps.js"></script>
     <script src="src/js/planet-visualizer/surface.js"></script>
+    <script src="src/js/planet-visualizer/surface-shader.js"></script>
     <script src="src/js/planet-visualizer/ships.js"></script>
     <script src="src/js/planet-visualizer/debug.js"></script>
     <script src="src/js/companion-research.js"></script>
@@ -656,8 +658,10 @@
 	                                        <span data-i18n="ui.space.galacticPopulation">Galactic population</span>
 	                                        <span id="space-stat-galactic-population-tooltip" class="info-tooltip-icon">&#9432;</span>
 	                                    </div>
-	                                    <div id="space-stat-galactic-population-value" class="space-stat-value">0</div>
-                                        <div id="space-stat-galactic-population-sidebar-toggle-container"></div>
+                                        <div class="space-stat-value-toggle-row">
+	                                        <div id="space-stat-galactic-population-value" class="space-stat-value">0</div>
+                                            <div id="space-stat-galactic-population-sidebar-toggle-container"></div>
+                                        </div>
 	                                </div>
 	                                <div class="space-stat-card">
 	                                    <div class="space-stat-label">
@@ -704,7 +708,10 @@
                         <section id="current-world-section" class="space-card current-world-card">
                             <div id="current-world-header" class="space-card-header">
                                 <div class="space-card-label" data-i18n="ui.space.currentWorldLabel">Current World</div>
-                                <div class="space-card-title"><span id="current-world-name"></span></div>
+                                <div class="space-card-title artificial-history-name">
+                                    <span id="current-world-name" class="artificial-history-name-text"></span>
+                                    <button id="current-world-rename-button" type="button" class="artificial-history-edit-btn hidden" data-i18n-aria-label="ui.space.renameRandomWorldTitle" aria-label="Rename this random world"></button>
+                                </div>
                             </div>
                             <div id="current-world-details-container" class="details-container">
                                 <div class="summary-header">
@@ -1107,7 +1114,7 @@
                   <input type="checkbox" id="keep-tab-running-audio-toggle"> <span data-i18n="ui.settings.whiteNoiseLabel">Use white noise to keep tab active</span> <span id="white-noise-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
                 <label class="settings-option">
-                  <input type="checkbox" id="terraforming-substeps-toggle"> <span data-i18n="ui.settings.terraformingSubsteps">Use 10ms terraforming substeps</span> <span id="terraforming-substeps-tooltip" class="info-tooltip-icon">&#9432;</span>
+                  <input type="checkbox" id="terraforming-substeps-toggle"> <span id="terraforming-substeps-label">Use 20ms terraforming substeps</span> <span id="terraforming-substeps-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
                 <label class="settings-option">
                   <input type="checkbox" id="celsius-toggle"> <span data-i18n="ui.settings.celsius">Display temperature in Celsius</span>
@@ -1230,6 +1237,9 @@
                 </label>
                 <label class="settings-option difficulty-toggle-option">
                   <input type="checkbox" id="unfulfilled-maintenance-penalties-toggle"> <span data-i18n="ui.settings.unfulfilledMaintenancePenalties">Unfulfilled Maintenance Penalties</span> <span id="unfulfilled-maintenance-penalties-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+                <label class="settings-option difficulty-toggle-option">
+                  <input type="checkbox" id="phase-change-heat-toggle"> <span data-i18n="ui.settings.phaseChangeHeat">Phase Change Heat</span> <span id="phase-change-heat-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
                 <label class="settings-option difficulty-toggle-option">
                   <input type="checkbox" id="factory-heating-toggle"> <span data-i18n="ui.settings.factoryHeating">Factory heating</span> <span id="factory-heating-tooltip" class="info-tooltip-icon">&#9432;</span>
@@ -1372,8 +1382,16 @@
               <h3 id="fastest-terraform-by-type-title" data-i18n="ui.settings.fastestTerraformByTypeTitle" style="display: none;">Fastest Terraform by World Type</h3>
               <div id="fastest-terraform-by-type-list" style="display: none;"></div>
               <h3 id="recent-terraform-history-title" data-i18n="ui.settings.recentTerraformHistoryTitle">Last 10 Terraformed Worlds</h3>
-              <p class="settings-stat-line" id="recent-terraform-average-display"></p>
-              <div id="recent-terraform-history-list"></div>
+              <table id="recent-terraform-history-table">
+                <thead>
+                  <tr>
+                    <th id="recent-terraform-world-heading" scope="col" data-i18n="ui.settings.recentTerraformHistoryWorld">World</th>
+                    <th id="recent-terraform-time-heading" scope="col" data-i18n="ui.settings.recentTerraformHistoryTerraformTime">Time to Terraform</th>
+                    <th id="recent-travel-time-heading" scope="col" data-i18n="ui.settings.recentTerraformHistoryTravelTime">Time to Travel</th>
+                  </tr>
+                </thead>
+                <tbody id="recent-terraform-history-list"></tbody>
+              </table>
             </div>
             <div id="achievements-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">
               <h2 data-i18n="ui.settings.achievements.title">Achievements</h2>

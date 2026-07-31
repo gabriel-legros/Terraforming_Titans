@@ -1,50 +1,12 @@
 // Resource Class and Core Logic
 var debug_production = {};
 var debug_consumption = {};
-let resourceDebugRateTracking = false;
+const resourceDebugRateTracking = DEBUG_MODE;
 const EXACT_LAND_SCALE_DIGITS = 15;
-let resolveWorldGeometricLandHelper = null;
-let getDynamicWorldPlanetaryMassAvailableTonsHelper = null;
-let hasDynamicMassEnabledHelper = null;
-let disposeDynamicWorldPlanetaryMassHelper = null;
-let addDynamicWorldPlanetaryMaterialHelper = null;
 let storageProviderCacheRoot = null;
 let storageProviderProjectCacheRoot = null;
 let storageProviderCache = null;
 let projectStorageProviders = {};
-if (typeof module !== 'undefined' && module.exports) {
-  ({
-    resolveWorldGeometricLand: resolveWorldGeometricLandHelper,
-    getDynamicWorldPlanetaryMassAvailableTons: getDynamicWorldPlanetaryMassAvailableTonsHelper,
-    hasDynamicMassEnabled: hasDynamicMassEnabledHelper,
-    disposeDynamicWorldPlanetaryMass: disposeDynamicWorldPlanetaryMassHelper,
-    addDynamicWorldPlanetaryMaterial: addDynamicWorldPlanetaryMaterialHelper
-  } = require('./terraforming/world-geometry.js'));
-  ({ DEBUG_MODE: resourceDebugRateTracking } = require('./debug_constants.js'));
-}
-
-function getDynamicWorldPlanetaryMassAvailableTonsSafe(terraformingState, celestialParameters) {
-  return (getDynamicWorldPlanetaryMassAvailableTonsHelper || getDynamicWorldPlanetaryMassAvailableTons)(
-    terraformingState,
-    celestialParameters
-  );
-}
-
-function hasDynamicMassEnabledSafe(terraformingState, planetParameters) {
-  return (hasDynamicMassEnabledHelper || hasDynamicMassEnabled)(terraformingState, planetParameters);
-}
-
-function disposeDynamicWorldPlanetaryMassSafe(terraformingState, amountTons) {
-  return (disposeDynamicWorldPlanetaryMassHelper || disposeDynamicWorldPlanetaryMass)(terraformingState, amountTons);
-}
-
-function addDynamicWorldPlanetaryMaterialSafe(terraformingState, materialKey, amountTons) {
-  return (addDynamicWorldPlanetaryMaterialHelper || addDynamicWorldPlanetaryMaterial)(
-    terraformingState,
-    materialKey,
-    amountTons
-  );
-}
 
 function trackResourceDebugRate(target, category, resource, source, amount) {
   if (!target[category]) {
@@ -168,8 +130,8 @@ function copyRateTypeMap(target, source) {
     const sourceRates = source[rateType];
     const targetRates = target[rateType] || (target[rateType] = {});
     resetObjectValues(targetRates);
-    for (const sourceName in sourceRates) {
-      targetRates[sourceName] = sourceRates[sourceName];
+    for (const sourceId in sourceRates) {
+      targetRates[sourceId] = sourceRates[sourceId];
     }
   }
 }
@@ -178,8 +140,8 @@ function buildRateBySourceFromTypeMap(target, source) {
   resetObjectValues(target);
   for (const rateType in source) {
     const sourceRates = source[rateType];
-    for (const sourceName in sourceRates) {
-      target[sourceName] = (target[sourceName] || 0) + sourceRates[sourceName];
+    for (const sourceId in sourceRates) {
+      target[sourceId] = (target[sourceId] || 0) + sourceRates[sourceId];
     }
   }
 }
@@ -210,8 +172,16 @@ function routeColonyResourceOverflow(deltaTime, accumulatedChanges, config) {
   const rate = seconds > 0 ? overflow / seconds : 0;
 
   accumulatedChanges[target.category][target.resource] += overflow;
-  resources[target.category][target.resource].modifyRate(rate, t('ui.resourceRates.sources.overflow', {}, 'Overflow'), 'overflow');
-  resource.modifyRate(-rate, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)'), 'overflow');
+  resources[target.category][target.resource].modifyRate(
+    rate,
+    registerRateSource(RESOURCE_RATE_SOURCE_IDS.overflow, t('ui.resourceRates.sources.overflow', {}, 'Overflow')),
+    'overflow'
+  );
+  resource.modifyRate(
+    -rate,
+    registerRateSource(RESOURCE_RATE_SOURCE_IDS.overflowExcluded, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)')),
+    'overflow'
+  );
 }
 
 function routeColonyWaterOverflow(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
@@ -277,8 +247,16 @@ function routeColonyHydrogenOverflowToSpaceStorage(deltaTime, accumulatedChanges
 
   const seconds = deltaTime / 1000;
   const rate = seconds > 0 ? routedOverflow / seconds : 0;
-  resources.spaceStorage.hydrogen.modifyRate(rate, t('ui.resourceRates.sources.overflow', {}, 'Overflow'), 'overflow');
-  resource.modifyRate(-rate, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)'), 'overflow');
+  resources.spaceStorage.hydrogen.modifyRate(
+    rate,
+    registerRateSource(RESOURCE_RATE_SOURCE_IDS.overflow, t('ui.resourceRates.sources.overflow', {}, 'Overflow')),
+    'overflow'
+  );
+  resource.modifyRate(
+    -rate,
+    registerRateSource(RESOURCE_RATE_SOURCE_IDS.overflowExcluded, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)')),
+    'overflow'
+  );
 }
 
 function routeColonyMiningOverflowToSpaceStorage(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
@@ -313,8 +291,16 @@ function routeColonyMiningOverflowToSpaceStorage(deltaTime, accumulatedChanges, 
 
     const seconds = deltaTime / 1000;
     const rate = seconds > 0 ? routedOverflow / seconds : 0;
-    resources.spaceStorage[route.targetResource].modifyRate(rate, t('ui.resourceRates.sources.overflow', {}, 'Overflow'), 'overflow');
-    resource.modifyRate(-rate, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)'), 'overflow');
+    resources.spaceStorage[route.targetResource].modifyRate(
+      rate,
+      registerRateSource(RESOURCE_RATE_SOURCE_IDS.overflow, t('ui.resourceRates.sources.overflow', {}, 'Overflow')),
+      'overflow'
+    );
+    resource.modifyRate(
+      -rate,
+      registerRateSource(RESOURCE_RATE_SOURCE_IDS.overflowExcluded, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)')),
+      'overflow'
+    );
   }
 }
 
@@ -348,7 +334,11 @@ function routeColonyMaterialOverflowToPlanetaryMass(deltaTime, accumulatedChange
     accumulatedChanges.colony[materialKey] -= totalRoutedOverflow;
     const seconds = deltaTime / 1000;
     const rate = seconds > 0 ? totalRoutedOverflow / seconds : 0;
-    resource.modifyRate(-rate, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)'), 'overflow');
+    resource.modifyRate(
+      -rate,
+      registerRateSource(RESOURCE_RATE_SOURCE_IDS.overflowExcluded, t('ui.resourceRates.sources.overflowExcluded', {}, 'Overflow (not summed)')),
+      'overflow'
+    );
     for (const source in sourceEntries) {
       if (routedOverflow <= 0) {
         break;
@@ -540,7 +530,7 @@ class Resource extends EffectableEntity {
     this.baseCap = resourceData.baseCap || 0; // Store the base capacity of the resource
     this.cap = this.hasCap ? this.baseCap : Infinity; // Set the initial cap
     this.baseProductionRate = 0; // Keep for potential base calculations if needed later
-    // Store rates by type { type: { sourceName: rate } } e.g., { 'building': { 'Mine': 10 }, 'terraforming': { 'Evaporation': -5 } }
+    // Store rates by type and stable source ID, e.g. { building: { 'building:oreMine': 10 } }.
     this.productionRateByType = {};
     this.consumptionRateByType = {};
     // Keep overall rates for potential display/compatibility, calculated by summing typed rates
@@ -1185,10 +1175,10 @@ class Resource extends EffectableEntity {
     this.cap = this.hasCap ? newCap : Infinity;
   }
 
-  // Modify rate, now requires a rateType (e.g., 'building', 'terraforming', 'life', 'funding')
-  modifyRate(value, source, rateType) {
-    if (source === undefined) {
-      source = 'Unknown'; // Assign a default source if undefined
+  // Rate maps are keyed by stable source IDs; display labels are resolved only by the UI.
+  modifyRate(value, sourceId, rateType) {
+    if (sourceId === undefined) {
+      sourceId = registerRateSource('system:unknown', 'Unknown');
     }
     if (rateType === undefined) {
         rateType = 'unknown'; // Assign a default type if undefined - THIS IS AN ERROR
@@ -1207,10 +1197,10 @@ class Resource extends EffectableEntity {
         this.productionRateByType[rateType] = {};
       }
       // Initialize source within type if not present
-      if (!this.productionRateByType[rateType][source]) {
-        this.productionRateByType[rateType][source] = 0;
+      if (!this.productionRateByType[rateType][sourceId]) {
+        this.productionRateByType[rateType][sourceId] = 0;
       }
-      this.productionRateByType[rateType][source] += value;
+      this.productionRateByType[rateType][sourceId] += value;
     } else if (value < 0) { // Only process negative values for consumption
       this.consumptionRate += -value;
       if (this.rateTotalsOnly) {
@@ -1221,11 +1211,11 @@ class Resource extends EffectableEntity {
         this.consumptionRateByType[rateType] = {};
       }
       // Initialize source within type if not present
-      if (!this.consumptionRateByType[rateType][source]) {
-        this.consumptionRateByType[rateType][source] = 0;
+      if (!this.consumptionRateByType[rateType][sourceId]) {
+        this.consumptionRateByType[rateType][sourceId] = 0;
       }
       // Store consumption as a positive value
-      this.consumptionRateByType[rateType][source] -= value;
+      this.consumptionRateByType[rateType][sourceId] -= value;
     }
     // Note: We will recalculate total production/consumption rates later if needed
   }
@@ -1447,11 +1437,9 @@ function reconcileLandResourceValue() {
   const params = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
   const activeProjectManager = typeof projectManager !== 'undefined' ? projectManager : null;
   const activeSpaceManager = typeof spaceManager !== 'undefined' ? spaceManager : null;
-  const resolveWorldGeometricLandFn = resolveWorldGeometricLandHelper || resolveWorldGeometricLand;
-
   const geometricLand = Math.max(
     0,
-    resolveWorldGeometricLandFn(tf, landResource) || 0
+    resolveWorldGeometricLand(tf, landResource) || 0
   );
   let baseLand = Math.max(
     0,
@@ -1521,9 +1509,9 @@ function reconcilePlanetaryMassResourceValue() {
 
   const tf = typeof terraforming !== 'undefined' ? terraforming : null;
   const params = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
-  const dynamicMassEnabled = hasDynamicMassEnabledSafe(tf, params);
+  const dynamicMassEnabled = hasDynamicMassEnabled(tf, params);
   const currentMassTons = dynamicMassEnabled
-    ? getDynamicWorldPlanetaryMassAvailableTonsSafe(tf, params?.celestialParameters)
+    ? getDynamicWorldPlanetaryMassAvailableTons(tf, params?.celestialParameters)
     : 0;
 
   massResource.value = Math.max(0, currentMassTons);
@@ -1539,7 +1527,7 @@ function reconcilePlanetaryMassResourceValue() {
 
 function applyAccumulatedPlanetaryMassChanges(deltaTime, accumulatedSpecialChanges) {
   const planetParameters = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
-  if (!hasDynamicMassEnabledSafe(terraforming, planetParameters)) {
+  if (!hasDynamicMassEnabled(terraforming, planetParameters)) {
     return;
   }
 
@@ -1559,7 +1547,7 @@ function applyAccumulatedPlanetaryMassChanges(deltaTime, accumulatedSpecialChang
       continue;
     }
 
-    const removedAmount = disposeDynamicWorldPlanetaryMassSafe(terraforming, amount);
+    const removedAmount = disposeDynamicWorldPlanetaryMass(terraforming, amount);
     if (!(removedAmount > 0)) {
       continue;
     }
@@ -1580,7 +1568,7 @@ function applyAccumulatedPlanetaryMassChanges(deltaTime, accumulatedSpecialChang
       if (!(amount > 0)) {
         continue;
       }
-      totalAddedAmount += addDynamicWorldPlanetaryMaterialSafe(terraforming, materialKey, amount);
+      totalAddedAmount += addDynamicWorldPlanetaryMaterial(terraforming, materialKey, amount);
     }
     if (!(totalAddedAmount > 0)) {
       continue;
@@ -1593,10 +1581,6 @@ function applyAccumulatedPlanetaryMassChanges(deltaTime, accumulatedSpecialChang
       );
     }
   }
-}
-
-if (typeof globalThis !== 'undefined') {
-  globalThis.reconcileLandResourceValue = reconcileLandResourceValue;
 }
 
 const shouldTreatProjectAsBuilding = (project) => {
@@ -1658,7 +1642,7 @@ function applyProjectResourceRatesForAvailability(project, cost = {}, gain = {},
   if (!(seconds > 0)) {
     return;
   }
-  const source = project.displayName;
+  const source = project.getRateSource();
 
   for (const category in cost) {
     for (const resourceName in cost[category]) {
@@ -1681,11 +1665,56 @@ function applyProjectResourceRatesForAvailability(project, cost = {}, gain = {},
   }
 }
 
+function replayBuildingProductivityRates(ratePlan, productivityMap) {
+  for (let entryIndex = 0; entryIndex < ratePlan.entries.length; entryIndex += 1) {
+    const entry = ratePlan.entries[entryIndex];
+    const productivity = productivityMap[entry.name] ?? entry.building.productivity;
+    const productivityScale = productivity / (entry.workerRatio || 1);
+
+    for (let edgeIndex = 0; edgeIndex < entry.production.length; edgeIndex += 1) {
+      const edge = entry.production[edgeIndex];
+      const productionRate = edge.rate * productivityScale;
+      const target = routeAntimatterProductionTarget(
+        edge.category,
+        edge.resource,
+        productionRate
+      );
+      resources[target.category][target.resource].modifyRate(
+        target.amount,
+        entry.source,
+        'building'
+      );
+    }
+
+    for (let edgeIndex = 0; edgeIndex < entry.consumption.length; edgeIndex += 1) {
+      const edge = entry.consumption[edgeIndex];
+      edge.target.modifyRate(-edge.rate, entry.source, 'building');
+    }
+
+    for (let edgeIndex = 0; edgeIndex < entry.maintenance.length; edgeIndex += 1) {
+      const edge = entry.maintenance[edgeIndex];
+      const conversionRate = edge.base * productivity * edge.conversion.value;
+      const target = routeAntimatterProductionTarget(
+        edge.conversion.category,
+        edge.conversion.resource,
+        conversionRate
+      );
+      resources[target.category][target.resource].modifyRate(
+        target.amount,
+        entry.source,
+        'building'
+      );
+    }
+  }
+}
+
 function calculateProductionRates(deltaTime, buildings, options = {}) {
   const {
     useProductivity = false,
     keepProjected = false,
     totalsOnly = false,
+    captureBuildingProductivityRatePlan = null,
+    buildingProductivityRatePlan = null,
     productivityMap = {},
     projectProductivityMap = {},
     projectData = null,
@@ -1703,72 +1732,120 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
     }
   }
 
-  for (const buildingName in buildings) {
-    const building = buildings[buildingName];
-    if (building.activeNumber <= 0) {
-      continue;
-    }
-    const automationMultiplier = building.getAutomationActivityMultiplier?.() ?? 1;
-    const workerRatio = building.getTotalWorkerNeed() > 0
-      ? populationModule.getWorkerAvailabilityRatio(building.workerPriority)
-      : 1;
-    const productivityValue = useProductivity
-      ? (productivityMap[buildingName] ?? building.productivity)
-      : 1;
+  if (buildingProductivityRatePlan?.replayable) {
+    replayBuildingProductivityRates(buildingProductivityRatePlan, productivityMap);
+  } else {
+    for (const buildingName in buildings) {
+      const building = buildings[buildingName];
+      if (building.activeNumber <= 0) {
+        continue;
+      }
+      const automationMultiplier = building.getAutomationActivityMultiplier?.() ?? 1;
+      const workerRatio = building.getTotalWorkerNeed() > 0
+        ? populationModule.getWorkerAvailabilityRatio(building.workerPriority)
+        : 1;
+      const productivityValue = useProductivity
+        ? (productivityMap[buildingName] ?? building.productivity)
+        : 1;
+      const planEntry = captureBuildingProductivityRatePlan
+        ? {
+            name: buildingName,
+            building,
+            source: building.getRateSource(),
+            workerRatio,
+            production: [],
+            consumption: [],
+            maintenance: []
+          }
+        : null;
+      if (
+        captureBuildingProductivityRatePlan
+        && (
+          resourceDebugRateTracking
+          || building.getProjectedProductionRate !== Building.prototype.getProjectedProductionRate
+          || building.getProjectedConsumptionRate !== Building.prototype.getProjectedConsumptionRate
+        )
+      ) {
+        captureBuildingProductivityRatePlan.replayable = false;
+      }
 
-    // Calculate scaled production rates
-    for (const category in building.production) {
-      for (const resource in building.production[category]) {
-        const actualProduction = building.getProjectedProductionRate(category, resource, {
-          useProductivity,
-          productivity: productivityValue,
-          automationMultiplier,
-          workerRatio
-        });
-        const target = routeAntimatterProductionTarget(category, resource, actualProduction);
-        // Specify 'building' as the rateType
-        resources[target.category][target.resource].modifyRate(target.amount, building.displayName, 'building');
-        if (resourceDebugRateTracking && actualProduction) {
-          trackResourceDebugRate(localProduction, target.category, target.resource, building.displayName, target.amount);
+      // Calculate scaled production rates
+      for (const category in building.production) {
+        for (const resource in building.production[category]) {
+          const actualProduction = building.getProjectedProductionRate(category, resource, {
+            useProductivity,
+            productivity: productivityValue,
+            automationMultiplier,
+            workerRatio
+          });
+          if (planEntry) {
+            planEntry.production.push({ category, resource, rate: actualProduction });
+          }
+          const target = routeAntimatterProductionTarget(category, resource, actualProduction);
+          // Specify 'building' as the rateType
+          resources[target.category][target.resource].modifyRate(target.amount, building.getRateSource(), 'building');
+          if (resourceDebugRateTracking && actualProduction) {
+            trackResourceDebugRate(localProduction, target.category, target.resource, building.getRateSource(), target.amount);
+          }
         }
       }
-    }
 
-    // Calculate scaled consumption rates
-    const consumption = building.getConsumption();
-    for (const category in consumption) {
-      for (const resource in consumption[category]) {
-        const actualConsumption = building.getProjectedConsumptionRate(category, resource, {
-          automationMultiplier,
-          workerRatio
-        });
-        // Specify 'building' as the rateType
-        resources[category][resource].modifyRate(-actualConsumption, building.displayName, 'building');
-        if (resourceDebugRateTracking && actualConsumption) {
-          trackResourceDebugRate(localConsumption, category, resource, building.displayName, actualConsumption);
+      // Calculate scaled consumption rates
+      const consumption = building.getConsumption();
+      for (const category in consumption) {
+        for (const resource in consumption[category]) {
+          const actualConsumption = building.getProjectedConsumptionRate(category, resource, {
+            automationMultiplier,
+            workerRatio
+          });
+          if (planEntry) {
+            planEntry.consumption.push({
+              target: resources[category][resource],
+              rate: actualConsumption
+            });
+          }
+          // Specify 'building' as the rateType
+          resources[category][resource].modifyRate(-actualConsumption, building.getRateSource(), 'building');
+          if (resourceDebugRateTracking && actualConsumption) {
+            trackResourceDebugRate(localConsumption, category, resource, building.getRateSource(), actualConsumption);
+          }
         }
       }
-    }
 
-    // Include production from maintenance conversions but ignore maintenance costs
-    const maintenanceCost = typeof building.calculateMaintenanceCost === 'function' ? building.calculateMaintenanceCost() : {};
-    for (const resource in maintenanceCost) {
-      const sourceData = resources.colony[resource];
-      if (!sourceData || !sourceData.maintenanceConversion) continue;
-      const base = maintenanceCost[resource] * building.activeNumber * automationMultiplier * (useProductivity ? productivityValue : 1);
-      const conversionEntries = getMaintenanceConversionEntries(sourceData);
-      for (let i = 0; i < conversionEntries.length; i += 1) {
-        const conversion = conversionEntries[i];
-        const conversionRate = base * conversion.value;
-        const target = routeAntimatterProductionTarget(conversion.category, conversion.resource, conversionRate);
-        resources[target.category][target.resource].modifyRate(
-          target.amount,
-          building.displayName,
-          'building'
-        );
-        if (resourceDebugRateTracking && conversionRate) {
-          trackResourceDebugRate(localProduction, target.category, target.resource, `${building.displayName} maintenance`, target.amount);
+      // Include production from maintenance conversions but ignore maintenance costs
+      const maintenanceCost = typeof building.calculateMaintenanceCost === 'function' ? building.calculateMaintenanceCost() : {};
+      for (const resource in maintenanceCost) {
+        const sourceData = resources.colony[resource];
+        if (!sourceData || !sourceData.maintenanceConversion) continue;
+        const unscaledBase = maintenanceCost[resource] * building.activeNumber * automationMultiplier;
+        const base = unscaledBase * (useProductivity ? productivityValue : 1);
+        const conversionEntries = getMaintenanceConversionEntries(sourceData);
+        for (let i = 0; i < conversionEntries.length; i += 1) {
+          const conversion = conversionEntries[i];
+          if (planEntry) {
+            planEntry.maintenance.push({ base: unscaledBase, conversion });
+          }
+          const conversionRate = base * conversion.value;
+          const target = routeAntimatterProductionTarget(conversion.category, conversion.resource, conversionRate);
+          resources[target.category][target.resource].modifyRate(
+            target.amount,
+            building.getRateSource(),
+            'building'
+          );
+          if (resourceDebugRateTracking && conversionRate) {
+            trackResourceDebugRate(
+              localProduction,
+              target.category,
+              target.resource,
+              building.getRateSource(),
+              target.amount
+            );
+          }
         }
+      }
+
+      if (planEntry) {
+        captureBuildingProductivityRatePlan.entries.push(planEntry);
       }
     }
   }
@@ -1777,7 +1854,15 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
   if (antimatterBattery) {
     const antimatterAutoFillRate = antimatterBattery.getAutoFillEnergyRate(deltaTime);
     if (antimatterAutoFillRate > 0) {
-      resources.colony.energy.modifyRate(antimatterAutoFillRate, t('ui.resourceRates.sources.antimatterBatteryAutoFill', {}, 'Antimatter Battery Auto Fill'), 'building');
+      resources.colony.energy.modifyRate(
+        antimatterAutoFillRate,
+        getLocalizedRateSource(
+          'building:antimatterBatteryAutoFill',
+          'ui.resourceRates.sources.antimatterBatteryAutoFill',
+          'Antimatter Battery Auto Fill'
+        ),
+        'building'
+      );
     }
   }
 
@@ -1824,7 +1909,7 @@ function calculateProductionRates(deltaTime, buildings, options = {}) {
   if (fundingModule) {
     const fundingIncreaseRate = fundingModule.getEffectiveFunding(); // Get funding rate from funding module
     // Specify 'funding' as the rateType
-    const fundingRateSource = t('ui.resourceRates.sources.funding', {}, 'Funding');
+    const fundingRateSource = getLocalizedRateSource('system:funding', 'ui.resourceRates.sources.funding', 'Funding');
     resources.colony.funding.modifyRate(fundingIncreaseRate, fundingRateSource, 'funding'); // Update funding production rate
     if (resourceDebugRateTracking && fundingIncreaseRate) {
       trackResourceDebugRate(localProduction, 'colony', 'funding', fundingRateSource, fundingIncreaseRate);
@@ -1854,6 +1939,28 @@ function buildProjectOperationProductivityMap(projectEntries, projectProductivit
       : productivity;
   }
   return operationMap;
+}
+
+function beginProjectAssignmentNormalizationBatch() {
+  const projects = [];
+  if (!projectManager) {
+    return projects;
+  }
+  for (const name in projectManager.projects) {
+    const project = projectManager.projects[name];
+    if (!project.beginAssignmentNormalizationBatch) {
+      continue;
+    }
+    project.beginAssignmentNormalizationBatch();
+    projects.push(project);
+  }
+  return projects;
+}
+
+function endProjectAssignmentNormalizationBatch(projects) {
+  for (let index = 0; index < projects.length; index += 1) {
+    projects[index].endAssignmentNormalizationBatch();
+  }
 }
 
 function saveCurrentRatesAsProjected(resources) {
@@ -1897,22 +2004,25 @@ function updateFactoryHeatPower(deltaTime, structures) {
     return;
   }
   if (!gameSettings.factoryHeating || !(deltaTime > 0)) {
-    terraforming.setFactoryHeatPower(0);
+    terraforming.setFactoryHeatPower(0, 0, []);
     return;
   }
 
   let power = 0;
+  let coolingPower = 0;
+  const contributors = [];
   const surfaceAlbedo = Math.max(0, Math.min(1, terraforming.luminosity.surfaceAlbedo || 0));
   const solarCoolingMultiplier = 1 - surfaceAlbedo;
   for (const structureName in structures) {
     const structure = structures[structureName];
     const coefficient = structure.factoryHeatCoefficient || 0;
     const coolingCoefficient = structure.factoryCoolingCoefficient || 0;
+    let structurePower = 0;
     if (coefficient > 0) {
       const heatConsumption = structure.currentFactoryHeatConsumption || structure.currentConsumption;
       const consumedEnergy = heatConsumption?.colony?.energy || 0;
       if (consumedEnergy > 0) {
-        power += consumedEnergy * (1000 / deltaTime) * coefficient;
+        structurePower += consumedEnergy * (1000 / deltaTime) * coefficient;
       }
     }
     if (coolingCoefficient > 0) {
@@ -1920,11 +2030,20 @@ function updateFactoryHeatPower(deltaTime, structures) {
         ? (structure.production?.colony?.energy || 0) * structure.activeNumber * structure.getProductionRatio() * structure.getEffectiveProductionMultiplier() * structure.getEffectiveResourceProductionMultiplier('colony', 'energy') * 0.5 * (deltaTime / 1000)
         : structure.currentProduction?.colony?.energy || 0;
       if (producedEnergy > 0) {
-        power -= producedEnergy * (1000 / deltaTime) * coolingCoefficient * solarCoolingMultiplier;
+        const removedHeat = producedEnergy * (1000 / deltaTime) * coolingCoefficient * solarCoolingMultiplier;
+        structurePower -= removedHeat;
+        coolingPower += removedHeat;
       }
     }
+    if (structurePower !== 0) {
+      contributors.push({
+        name: structure.displayName,
+        power: structurePower,
+      });
+      power += structurePower;
+    }
   }
-  terraforming.setFactoryHeatPower(power);
+  terraforming.setFactoryHeatPower(power, coolingPower, contributors);
 }
 
 function produceResources(deltaTime, buildings) {
@@ -1978,7 +2097,11 @@ function produceResources(deltaTime, buildings) {
     }
   }
 
-  calculateProductionRates(deltaTime, buildings);
+  const assignmentNormalizationBatch = beginProjectAssignmentNormalizationBatch();
+  const buildingProductivityRatePlan = { replayable: true, entries: [] };
+  calculateProductionRates(deltaTime, buildings, {
+    captureBuildingProductivityRatePlan: buildingProductivityRatePlan
+  });
   applyProjectedExternalRates(deltaTime, externalProductivityOperations);
   updateResourceAvailabilityRatios(resources, deltaTime);
   updateExternalOperationProductivities(externalProductivityOperations);
@@ -2044,6 +2167,7 @@ function produceResources(deltaTime, buildings) {
         useProductivity: true,
         keepProjected: true,
         totalsOnly: true,
+        buildingProductivityRatePlan,
         productivityMap,
         projectProductivityMap: projectOperationProductivityMap,
         projectData,
@@ -2099,6 +2223,7 @@ function produceResources(deltaTime, buildings) {
     }
   }
 
+  endProjectAssignmentNormalizationBatch(assignmentNormalizationBatch);
   const galacticMarketProject = projectManager?.projects?.galactic_market;
   const spaceStorageProject = projectManager?.projects?.spaceStorage;
 
@@ -2394,7 +2519,7 @@ function produceResources(deltaTime, buildings) {
 
   const planetParameters = typeof currentPlanetParameters !== 'undefined' ? currentPlanetParameters : null;
   applyAccumulatedPlanetaryMassChanges(deltaTime, accumulatedSpecialChanges);
-  if (hasDynamicMassEnabledSafe(terraforming, planetParameters)) {
+  if (hasDynamicMassEnabled(terraforming, planetParameters)) {
     terraforming?.refreshDynamicWorldGeometry?.(planetParameters);
     reconcileLandResourceValue();
   }
@@ -2664,29 +2789,5 @@ function updateResourceAvailabilityRatios(resources, deltaTime) {
       resource.availabilityRatio = availabilityDetails.ratio;
     }
   }
-}
-
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
-    Resource,
-    checkResourceAvailability,
-    createResources,
-    produceResources,
-    calculateResourceAvailabilityDetails,
-    calculateResourceAvailabilityRatio,
-    updateResourceAvailabilityRatios,
-    calculateProjectProductivities,
-    recalculateTotalRates,
-    reconcileLandResourceValue,
-    invalidateStorageProviderCache,
-  };
-}
-
-try {
-  window.calculateResourceAvailabilityDetails = calculateResourceAvailabilityDetails;
-  window.calculateResourceAvailabilityRatio = calculateResourceAvailabilityRatio;
-  window.updateResourceAvailabilityRatios = updateResourceAvailabilityRatios;
-} catch (error) {
-  // window is not available
 }
 

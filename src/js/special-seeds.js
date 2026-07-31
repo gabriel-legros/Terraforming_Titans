@@ -1771,8 +1771,8 @@ const earthOverrunOverrides = {
   resources: {
     surface: {
       land: { initialValue: 51007200000 },
-      ice: { initialValue: 0, unlocked: true },
-      liquidWater: { initialValue: 644656795267087900, unlocked: true },
+      ice: { initialValue: 110884454796651650, unlocked: true },
+      liquidWater: { initialValue: 647956509460296000, unlocked: true },
       dryIce: { initialValue: 0 },
       liquidMethane: { initialValue: 0 },
       hydrocarbonIce: { initialValue: 0 }
@@ -1786,7 +1786,7 @@ const earthOverrunOverrides = {
         "initialValue": 2056831169131.2002
       },
       "atmosphericWater": {
-        "initialValue": 18678784443623.46
+        "initialValue": 12708638934290.695
       },
       "atmosphericMethane": {
         "initialValue": 9882092383
@@ -1810,7 +1810,7 @@ const earthOverrunOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "liquidWater": 280304580319841150,
+      "liquidWater": 281738964743358700,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
@@ -1830,7 +1830,7 @@ const earthOverrunOverrides = {
       "buriedNitrogenIce": 0
     },
     "temperate": {
-      "liquidWater": 364351819684932350,
+      "liquidWater": 366217544660080500,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
@@ -1850,8 +1850,8 @@ const earthOverrunOverrides = {
       "buriedNitrogenIce": 0
     },
     "polar": {
-      "liquidWater": 395262314397.17847,
-      "ice": 114178198844575490,
+      "liquidWater": 56856657.49533704,
+      "ice": 110884454796651650,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
@@ -1872,19 +1872,19 @@ const earthOverrunOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 292.223771743476,
-      "day": 292.38559470842,
-      "night": 292.061948778532
+      "value": 295.37904495805066,
+      "day": 295.5493858354907,
+      "night": 295.20870408061063
     },
     "temperate": {
-      "value": 286.6503936467183,
-      "day": 286.7849616296886,
-      "night": 286.51582566374805
+      "value": 288.6719635448537,
+      "day": 288.8136146050626,
+      "night": 288.53031248464487
     },
     "polar": {
-      "value": 258.1925403339957,
-      "day": 259.46768991923057,
-      "night": 256.9173907487608
+      "value": 254.41537683209293,
+      "day": 255.50709176369892,
+      "night": 253.32366190048694
     }
   },
   hazards: {
@@ -2157,7 +2157,6 @@ const specialSeedDefinitions = {
     difficultyKey: 'catalogs.specialSeeds.teebeepee.difficulty',
     difficultyRating: 'Very Hard',
     replayable: true,
-    steamExclusive: true,
     target: 'planet',
     archetype: 'cold-desert',
     orbitPreset: 'hz-mid',
@@ -2216,7 +2215,6 @@ const specialSeedDefinitions = {
     difficultyKey: 'catalogs.specialSeeds.shadesnightmare.difficulty',
     difficultyRating: 'Extreme',
     replayable: true,
-    steamExclusive: true,
     target: 'planet',
     archetype: 'jupiter-like',
     orbitPreset: 'cold',

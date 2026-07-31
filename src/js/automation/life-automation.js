@@ -324,6 +324,7 @@ class LifeAutomation {
       purchaseEnabled: true,
       designSteps: [],
       deployImprovement: 1,
+      biomassColor: DEFAULT_BIOMASS_COLOR,
       designEnabled: true
     };
     this.presets.push(preset);
@@ -383,6 +384,7 @@ class LifeAutomation {
       purchaseEnabled: true,
       designSteps: [],
       deployImprovement: 1,
+      biomassColor: DEFAULT_BIOMASS_COLOR,
       designEnabled: true
     };
     this.presets.push(preset);
@@ -635,6 +637,11 @@ class LifeAutomation {
     const preset = this.presets.find(item => item.id === presetId) || this.presets[0];
     preset.deployImprovement = Math.max(0, Math.floor(Number(value) || 0));
     this.refreshActiveDeployment(preset);
+  }
+
+  setPresetBiomassColor(presetId, color) {
+    const preset = this.presets.find(item => item.id === presetId) || this.presets[0];
+    preset.biomassColor = normalizeBiomassColor(color);
   }
 
   setDesignAutomationEnabled(presetId, enabled) {
@@ -1070,8 +1077,15 @@ class LifeAutomation {
     lifeDesigner.replaceDesign(candidate);
     document.dispatchEvent(new Event('lifeTentativeDesignCreated'));
     lifeDesigner.confirmDesign();
+    this.applyPresetBiomassColor(preset);
     document.dispatchEvent(new Event('lifeTentativeDesignDiscarded'));
     return true;
+  }
+
+  applyPresetBiomassColor(preset) {
+    if (lifeManager.isBooleanFlagSet('biopigmentation')) {
+      lifeDesigner.setBiomassColor(preset.biomassColor);
+    }
   }
 
   forceDeployDesign(presetId) {
@@ -1095,6 +1109,7 @@ class LifeAutomation {
     lifeDesigner.replaceDesign(candidate);
     document.dispatchEvent(new Event('lifeTentativeDesignCreated'));
     lifeDesigner.confirmDesign();
+    this.applyPresetBiomassColor(preset);
     document.dispatchEvent(new Event('lifeTentativeDesignDiscarded'));
   }
 
@@ -1123,6 +1138,7 @@ class LifeAutomation {
           }))
         })),
         deployImprovement: preset.deployImprovement,
+        biomassColor: normalizeBiomassColor(preset.biomassColor),
         designEnabled: !!preset.designEnabled
       })),
       activePresetId: this.activePresetId,
@@ -1159,6 +1175,7 @@ class LifeAutomation {
         purchaseEnabled: preset.purchaseEnabled !== false,
         designSteps: steps,
         deployImprovement: Math.max(0, Math.floor(Number(preset.deployImprovement) || 0)),
+        biomassColor: normalizeBiomassColor(preset.biomassColor),
         designEnabled: preset.designEnabled !== false
       };
     });
@@ -1208,6 +1225,7 @@ class LifeAutomation {
         }))
       })),
       deployImprovement: preset.deployImprovement,
+      biomassColor: normalizeBiomassColor(preset.biomassColor),
       designEnabled: !!preset.designEnabled
     };
   }
@@ -1237,6 +1255,7 @@ class LifeAutomation {
       purchaseEnabled: presetData.purchaseEnabled !== false,
       designSteps: steps,
       deployImprovement: Math.max(0, Math.floor(Number(presetData.deployImprovement) || 0)),
+      biomassColor: normalizeBiomassColor(presetData.biomassColor),
       designEnabled: presetData.designEnabled !== false
     };
     this.presets.push(importedPreset);

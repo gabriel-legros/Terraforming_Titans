@@ -1993,7 +1993,6 @@ const researchParameters = {
         description: '',
         cost: { advancedResearch: 5_000_000_000_000 },
         prerequisites: ['nanotechnology_stage_4'],
-        requiredGameFeature: 'steamExclusiveResearch',
         effects: [
           {
             target: 'project',
@@ -2128,7 +2127,6 @@ const researchParameters = {
         description: '',
         cost: { advancedResearch: 3_000_000_000 },
         prerequisites: [],
-        requiredGameFeature: 'steamExclusiveResearch',
         effects: [
           {
             target: 'project',
@@ -2143,7 +2141,6 @@ const researchParameters = {
         description: '',
         cost: { advancedResearch: 500_000_000_000_000_000 },
         prerequisites: [],
-        requiredGameFeature: 'steamExclusiveResearch',
         effects: [
           {
             target: 'project',
@@ -2362,7 +2359,6 @@ const researchParameters = {
         description: '',
         cost: { advancedResearch: 600000000 },
         prerequisites: [],
-        requiredGameFeature: 'steamExclusiveResearch',
         effects: [
           {
             target: 'spaceManager',
@@ -2431,6 +2427,21 @@ const researchParameters = {
             targetId: 'boschReactor',
             type: 'booleanFlag',
             flagId: 'chemistryOfScale',
+            value: true
+          }
+        ]
+      },
+      {
+        id: 'biopigmentation',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 7_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'lifeManager',
+            type: 'booleanFlag',
+            flagId: 'biopigmentation',
             value: true
           }
         ]
@@ -2731,7 +2742,6 @@ const researchParameters = {
         description: '',
         cost: { advancedResearch: 2_000_000_000_000 },
         prerequisites: [],
-        requiredGameFeature: 'steamExclusiveResearch',
         effects: [
           {
             target: 'lifeDesigner',
@@ -2963,7 +2973,7 @@ const researchParameters = {
         id: 'tractor_beams',
         name: '',
         description: '',
-        cost: { advancedResearch: 999_999_999 },
+        cost: { advancedResearch: 1_000_000_000 },
         prerequisites: [],
         effects: [
           {

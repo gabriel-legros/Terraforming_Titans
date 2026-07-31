@@ -20,6 +20,7 @@ function cacheSettingsElements() {
     electronUIScaleSelect: document.getElementById('electron-ui-scale-select'),
     electronFullscreenKeybindOption: document.getElementById('electron-fullscreen-keybind-option'),
     terraformingSubstepsToggle: document.getElementById('terraforming-substeps-toggle'),
+    terraformingSubstepsLabel: document.getElementById('terraforming-substeps-label'),
     celsiusToggle: document.getElementById('celsius-toggle'),
     colorblindPaletteSelect: document.getElementById('colorblind-palette-select'),
     silenceToggle: document.getElementById('solis-silence-toggle'),
@@ -67,6 +68,8 @@ function cacheSettingsElements() {
     unfulfilledMaintenancePenaltiesTooltip: document.getElementById('unfulfilled-maintenance-penalties-tooltip'),
     earlyAdvancedOversightToggle: document.getElementById('early-advanced-oversight-toggle'),
     earlyAdvancedOversightTooltip: document.getElementById('early-advanced-oversight-tooltip'),
+    phaseChangeHeatToggle: document.getElementById('phase-change-heat-toggle'),
+    phaseChangeHeatTooltip: document.getElementById('phase-change-heat-tooltip'),
     factoryHeatingToggle: document.getElementById('factory-heating-toggle'),
     factoryHeatingTooltip: document.getElementById('factory-heating-tooltip'),
     realisticFactoryEnergyConsumptionToggle: document.getElementById('realistic-factory-energy-consumption-toggle'),
@@ -296,6 +299,7 @@ function updateDifficultyLockUI() {
     cached.immigrationPoolToggle,
     cached.disableColonistDecayToggle,
     cached.unfulfilledMaintenancePenaltiesToggle,
+    cached.phaseChangeHeatToggle,
     cached.factoryHeatingToggle,
     cached.realisticFactoryEnergyConsumptionToggle,
     cached.infinitePatienceToggle,
@@ -447,6 +451,7 @@ function updateDifficultySettingInputs() {
     immigrationPool: cached.immigrationPoolToggle,
     disableColonistDecay: cached.disableColonistDecayToggle,
     unfulfilledMaintenancePenalties: cached.unfulfilledMaintenancePenaltiesToggle,
+    phaseChangeHeat: cached.phaseChangeHeatToggle,
     factoryHeating: cached.factoryHeatingToggle,
     realisticFactoryEnergyConsumption: cached.realisticFactoryEnergyConsumptionToggle,
     infinitePatience: cached.infinitePatienceToggle,
@@ -593,13 +598,20 @@ function addSettingsListeners() {
     });
   }
 
+  const terraformingSubstepMilliseconds = terraformingParameters.gameplay.simulation.resourceSubstepMs;
+  cached.terraformingSubstepsLabel.textContent = t(
+    'ui.settings.terraformingSubsteps',
+    { milliseconds: terraformingSubstepMilliseconds },
+    'Use {milliseconds}ms terraforming substeps'
+  );
+
   if (cached.terraformingSubstepsTooltip) {
     attachDynamicInfoTooltip(
       cached.terraformingSubstepsTooltip,
       t(
         'ui.settings.terraformingSubstepsTooltip',
-        {},
-        'By default, the climate model runs on a 10ms tick basis, instead of using the full time delta.  You can turn this off to improve performance, but decrease numerical stability of the climate model.'
+        { milliseconds: terraformingSubstepMilliseconds },
+        'By default, the climate model runs on a {milliseconds}ms tick basis, instead of using the full time delta.  You can turn this off to improve performance, but decrease numerical stability of the climate model.'
       )
     );
   }
@@ -1094,6 +1106,32 @@ function addSettingsListeners() {
     );
   }
 
+  if (cached.phaseChangeHeatToggle) {
+    cached.phaseChangeHeatToggle.checked = gameSettings.phaseChangeHeat;
+    cached.phaseChangeHeatToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.phaseChangeHeatToggle.checked = gameSettings.phaseChangeHeat;
+        return;
+      }
+      gameSettings.phaseChangeHeat = cached.phaseChangeHeatToggle.checked;
+      if (!gameSettings.phaseChangeHeat) {
+        terraforming.resetPhaseChangeHeat();
+      }
+      updateTerraformingUI();
+    });
+  }
+
+  if (cached.phaseChangeHeatTooltip) {
+    attachDynamicInfoTooltip(
+      cached.phaseChangeHeatTooltip,
+      t(
+        'ui.settings.phaseChangeHeatTooltip',
+        {},
+        'When enabled, melting, evaporation, boiling, and sublimation absorb planetary heat, while freezing, condensation, and deposition release it. Phase changes are limited by available zonal energy and may hold a zone near a transition temperature. Advanced Oversight accounts for this zonal heat load.'
+      )
+    );
+  }
+
   if (cached.factoryHeatingToggle) {
     cached.factoryHeatingToggle.checked = gameSettings.factoryHeating;
     cached.factoryHeatingToggle.addEventListener('change', () => {
@@ -1103,7 +1141,7 @@ function addSettingsListeners() {
       }
       gameSettings.factoryHeating = cached.factoryHeatingToggle.checked;
       if (!gameSettings.factoryHeating && terraforming) {
-        terraforming.setFactoryHeatPower(0);
+        terraforming.setFactoryHeatPower(0, 0);
       }
       updateTerraformingUI();
     });
@@ -1115,7 +1153,7 @@ function addSettingsListeners() {
       t(
         'ui.settings.factoryHeatingTooltip',
         {},
-        'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat.'
+        'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat.'
       )
     );
   }

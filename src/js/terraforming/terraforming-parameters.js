@@ -151,17 +151,24 @@ var terraformingParameters = {
     water: {
       latentHeatVaporizationJPerKg: 2.45e6,
       latentHeatSublimationJPerKg: 2.83e6,
+      latentHeatFusionJPerKg: 3.34e5,
+      solidSpecificHeatJPerKgK: 2100,
+      liquidSpecificHeatJPerKgK: 4200,
       liquidAlbedo: 0.06,
       solidAlbedo: 0.6,
       triplePointTemperatureK: 273.16,
       triplePointPressurePa: 611.657,
       criticalPointTemperatureK: 647.096,
       meltingPointK: 273.15,
-      equilibriumCondensationParameter: 0.451833045526663
+      nearSurfaceVaporPressureMultiplier: 6.5,
+      equilibriumCondensationParameter: 0.3094
     },
     carbonDioxide: {
       latentHeatVaporizationJPerKg: 3.75e5,
       latentHeatSublimationJPerKg: 5.90e5,
+      latentHeatFusionJPerKg: 2.15e5,
+      solidSpecificHeatJPerKgK: 850,
+      liquidSpecificHeatJPerKgK: 2100,
       liquidAlbedo: 0.10,
       solidAlbedo: 0.50,
       triplePointTemperatureK: 216.58,
@@ -169,11 +176,14 @@ var terraformingParameters = {
       criticalPointTemperatureK: 304.1282,
       criticalPointPressurePa: 7.3773e6,
       meltingPointK: 216.58,
-      equilibriumCondensationParameter: 1.40e-3
+      equilibriumCondensationParameter: 0.00019386130324835913
     },
     methane: {
       latentHeatVaporizationJPerKg: 5.1e5,
       latentHeatSublimationJPerKg: 5.87e5,
+      latentHeatFusionJPerKg: 7.7e4,
+      solidSpecificHeatJPerKgK: 2200,
+      liquidSpecificHeatJPerKgK: 3500,
       liquidAlbedo: 0.1,
       solidAlbedo: 0.6,
       triplePointTemperatureK: 90.694,
@@ -182,11 +192,14 @@ var terraformingParameters = {
       criticalPointPressurePa: 4.5992e6,
       meltingPointK: 90.7,
       solidCorrelationMinimumTemperatureK: 48,
-      equilibriumCondensationParameter: 0.0000541
+      equilibriumCondensationParameter: 3.586948746313331e-5
     },
     ammonia: {
       latentHeatVaporizationJPerKg: 1.37e6,
       latentHeatSublimationJPerKg: 1.65e6,
+      latentHeatFusionJPerKg: 2.8e5,
+      solidSpecificHeatJPerKgK: 2100,
+      liquidSpecificHeatJPerKgK: 4700,
       liquidAlbedo: 0.12,
       solidAlbedo: 0.70,
       triplePointTemperatureK: 195.40,
@@ -200,6 +213,11 @@ var terraformingParameters = {
       equilibriumCondensationParameter: 0.002
     },
     hydrogen: {
+      latentHeatVaporizationJPerKg: 4.45e5,
+      latentHeatSublimationJPerKg: 5.04e5,
+      latentHeatFusionJPerKg: 5.9e4,
+      solidSpecificHeatJPerKgK: 9600,
+      liquidSpecificHeatJPerKgK: 14300,
       triplePointTemperatureK: 13.957,
       triplePointPressurePa: 7.04e3,
       criticalPointTemperatureK: 33.19,
@@ -216,6 +234,9 @@ var terraformingParameters = {
     oxygen: {
       latentHeatVaporizationJPerKg: 2.13e5,
       latentHeatSublimationJPerKg: 2.70e5,
+      latentHeatFusionJPerKg: 5.7e4,
+      solidSpecificHeatJPerKgK: 920,
+      liquidSpecificHeatJPerKgK: 1700,
       liquidAlbedo: 0.15,
       solidAlbedo: 0.75,
       triplePointTemperatureK: 54.361,
@@ -230,6 +251,9 @@ var terraformingParameters = {
     nitrogen: {
       latentHeatVaporizationJPerKg: 1.99e5,
       latentHeatSublimationJPerKg: 2.60e5,
+      latentHeatFusionJPerKg: 6.1e4,
+      solidSpecificHeatJPerKgK: 1040,
+      liquidSpecificHeatJPerKgK: 2000,
       liquidAlbedo: 0.12,
       solidAlbedo: 0.80,
       triplePointTemperatureK: 63.151,
@@ -241,11 +265,9 @@ var terraformingParameters = {
       molarMassKgPerMol: 0.0280134,
       equilibriumCondensationParameter: 0.002
     },
-    precipitationRedistribution: {
-      windWeight: 0.05,
-      liquidBiasWeight: 0.60,
-      remainWeight: 0.35,
-      methaneFreezingPointK: 90.7
+    statisticalHumidity: {
+      drySkewShape: 2,
+      horizontalMixingFraction: 0.07
     },
     condensation: {
       phaseTransitionRangeK: 2,
@@ -257,7 +279,8 @@ var terraformingParameters = {
     },
     penman: {
       defaultAlbedo: 0.6,
-      aerodynamicResistanceSecondsPerMeter: 100
+      aerodynamicResistanceSecondsPerMeter: 100,
+      netRadiationFraction: 0.35
     },
     meltingAndFreezing: {
       meltingRatePerKSecond: 1e-7,
@@ -349,12 +372,13 @@ var terraformingParameters = {
     greenhouse: {
       referenceColumnMassKgM2: 5e4,
       pressureExponent: 0.55,
-      strength: { h2o: 28, co2: 10, ch4: 22, greenhousegas: 2500 },
+      pressureExponentByGas: { h2o: 0.45 },
+      strength: { h2o: 27.8, co2: 10, ch4: 22, greenhousegas: 2500 },
       saturationColumnKgM2: { ch4: 3 },
       saturationExponent: { ch4: 1 }
     },
     cloudSpecies: {
-      h2o: { refMix: 0.007, cfMax: 0.99, pScale: 0.6, aBase: 0.69, aVar: 0.03, fractionExponent: 0.5, layerMax: 0.76, coverageExponent: 1.6 },
+      h2o: { refMix: 0.004, cfMax: 0.99, pScale: 0.6, aBase: 0.69, aVar: 0.03, fractionExponent: 0.5, layerMax: 0.6, coverageExponent: 1 },
       ch4: { refMix: 0.02, cfMax: 0.14, pScale: 2.5, aBase: 0.58, aVar: 0.08, layerMax: 0.10, coverageExponent: 1.2 },
       h2so4: { refMix: 1e-4, cfMax: 0.99, pScale: 11, aBase: 0.71, aVar: 0.03, fractionExponent: 0.5, layerMax: 0.76, coverageExponent: 1.6 }
     },
@@ -407,8 +431,10 @@ var terraformingParameters = {
       megaHeatSinkPowerW: 1e15
     },
     simulation: {
-      resourceSubstepMs: 10,
-      maximumResourceSubsteps: 24
+      resourceSubstepMs: 20,
+      maximumResourceSubsteps: 24,
+      equilibriumSnapEnabled: false,
+      equilibriumSnapRateTonsPerSecond: 0.01
     },
     landReservation: {
       moltenWorldFullTemperatureK: 1273.15,

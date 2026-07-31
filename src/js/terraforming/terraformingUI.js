@@ -83,11 +83,51 @@ function getCoreHeatTooltipText() {
   );
 }
 
-function getFactoryHeatTooltipText() {
-  return getTerraformingSummaryText(
-    'temperature.factoryHeatTooltip',
-    'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is reduced by surface albedo. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat. Direct waste heat is not impacted by albedo or day-night averaging.'
-  );
+function getFactoryHeatTooltipText(contributors = terraforming.getFactoryHeatBreakdown()) {
+  const lines = [
+    getTerraformingSummaryText(
+      'temperature.factoryHeatTooltip',
+      'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat. Direct waste heat is not impacted by albedo or day-night averaging.'
+    ),
+  ];
+  contributors.sort((a, b) => Math.abs(b.flux) - Math.abs(a.flux));
+  if (contributors.length === 0) {
+    return lines[0];
+  }
+  lines.push('', getTerraformingSummaryText(
+    'temperature.factoryHeatTopContributors',
+    'Top contributors by absolute impact:'
+  ));
+  const visibleContributors = contributors.slice(0, 5);
+  for (const contributor of visibleContributors) {
+    const signedFlux = `${contributor.flux > 0 ? '+' : ''}${formatNumber(contributor.flux, false, 2)}`;
+    lines.push(`${contributor.name}: ${signedFlux} W/m^2`);
+  }
+  if (contributors.length > 5) {
+    const otherFlux = contributors.slice(5).reduce((total, contributor) => total + contributor.flux, 0);
+    const signedOtherFlux = `${otherFlux > 0 ? '+' : ''}${formatNumber(otherFlux, false, 2)}`;
+    const otherLabel = getTerraformingSummaryText(
+      'temperature.factoryHeatOtherSources',
+      'Other sources'
+    );
+    lines.push(`${otherLabel}: ${signedOtherFlux} W/m^2`);
+  }
+  return lines.join('\n');
+}
+
+function getPhaseChangeHeatTooltipText() {
+  const lines = [
+    getTerraformingSummaryText(
+      'temperature.phaseChangeHeatTooltip',
+      'Signed planetary heat exchanged by phase changes during the latest climate slice. Positive values mean freezing, condensation, or deposition released heat; negative values mean melting, evaporation, boiling, or sublimation absorbed heat. The effect is calculated separately in each climate zone.'
+    ),
+  ];
+  for (const zone of getZones()) {
+    const flux = terraforming.phaseChangeHeatFluxByZone[zone] || 0;
+    const signedFlux = `${flux > 0 ? '+' : ''}${formatNumber(flux, false, 2)}`;
+    lines.push(`${getTerraformingZoneLabel(zone)}: ${signedFlux} W/m²`);
+  }
+  return lines.join('\n');
 }
 
 const ATMOSPHERE_TOOLTIP_MOLAR_WEIGHTS = {
@@ -706,6 +746,7 @@ function updateTerraformingSubtabUI(subtabId, deltaSeconds) {
         try {
           viz.animate(deltaSeconds);
         } catch (e) {
+          console.error('World visualizer animation failed:', e);
           setWorldVisualizerRuntimeFailure(e && e.message ? e.message : '');
         }
       }
@@ -1326,6 +1367,7 @@ function createTemperatureBox(row) {
       <p>${getTerraformingSummaryText('temperature.labels.globalMeanTemp', 'Global Mean Temp')}: <span id="temperature-current"></span><span class="temp-unit"></span></p>
       <p>${getTerraformingSummaryText('temperature.labels.equilibriumTemp', 'Equilibrium Temp')}: <span id="equilibrium-temp"></span> <span class="temp-unit"></span> <span id="equilibrium-temp-info" class="info-tooltip-icon">&#9432;</span></p>
       <p id="temperature-core-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netCoreHeatFlux', 'Net Core Heat Flux')}: <span id="temperature-core-heat"></span> W/m^2</p>
+      <p id="temperature-phase-change-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netPhaseChangeHeatFlux', 'Net Phase Change Heat Flux')}: <span id="temperature-phase-change-heat"></span> W/m^2 <span id="temperature-phase-change-heat-info" class="info-tooltip-icon">&#9432;</span></p>
       <p id="temperature-factory-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netFactoryHeatFlux', 'Net Factory Heat Flux')}: <span id="temperature-factory-heat"></span> W/m^2</p>
       <table>
         <colgroup>
@@ -1398,6 +1440,12 @@ function createTemperatureBox(row) {
         getCoreHeatTooltipText()
       );
     }
+    const phaseChangeHeatLine = temperatureBox.querySelector('#temperature-phase-change-heat-line');
+    const phaseChangeHeatInfo = temperatureBox.querySelector('#temperature-phase-change-heat-info');
+    const phaseChangeHeatTooltip = attachDynamicInfoTooltip(
+      phaseChangeHeatInfo,
+      getPhaseChangeHeatTooltipText()
+    );
     const factoryHeatLine = temperatureBox.querySelector('#temperature-factory-heat-line');
     const factoryHeatInfo = document.createElement('span');
     factoryHeatInfo.classList.add('info-tooltip-icon');
@@ -1488,6 +1536,9 @@ function createTemperatureBox(row) {
       coreHeatLine,
       coreHeatTooltip: coreHeatInfo.querySelector('.resource-tooltip'),
       coreHeat: temperatureBox.querySelector('#temperature-core-heat'),
+      phaseChangeHeatLine,
+      phaseChangeHeatTooltip,
+      phaseChangeHeat: temperatureBox.querySelector('#temperature-phase-change-heat'),
       factoryHeatLine,
       factoryHeatTooltip: factoryHeatInfo.querySelector('.resource-tooltip'),
       factoryHeat: temperatureBox.querySelector('#temperature-factory-heat'),
@@ -1619,16 +1670,36 @@ function createTemperatureBox(row) {
         els.coreHeat.textContent = coreHeatText;
       }
     }
+    if (els.phaseChangeHeatLine) {
+      const display = gameSettings.phaseChangeHeat ? '' : 'none';
+      if (els.phaseChangeHeatLine.style.display !== display) {
+        els.phaseChangeHeatLine.style.display = display;
+      }
+    }
+    if (els.phaseChangeHeatTooltip) {
+      const tooltipText = getPhaseChangeHeatTooltipText();
+      if (els.phaseChangeHeatTooltip.textContent !== tooltipText) {
+        setTooltipText(els.phaseChangeHeatTooltip, tooltipText);
+      }
+    }
+    if (els.phaseChangeHeat) {
+      const flux = terraforming.phaseChangeHeatFlux || 0;
+      const phaseChangeHeatText = `${flux > 0 ? '+' : ''}${formatNumber(flux, false, 2)}`;
+      if (els.phaseChangeHeat.textContent !== phaseChangeHeatText) {
+        els.phaseChangeHeat.textContent = phaseChangeHeatText;
+      }
+    }
     const factoryHeatFlux = terraforming.getFactoryHeatFlux ? terraforming.getFactoryHeatFlux() : 0;
     const netFactoryHeatFlux = terraforming.getNetFactoryHeatFlux ? terraforming.getNetFactoryHeatFlux() : factoryHeatFlux;
+    const factoryHeatBreakdown = terraforming.getFactoryHeatBreakdown();
     if (els.factoryHeatLine) {
-      const display = factoryHeatFlux !== 0 ? '' : 'none';
+      const display = factoryHeatBreakdown.length > 0 ? '' : 'none';
       if (els.factoryHeatLine.style.display !== display) {
         els.factoryHeatLine.style.display = display;
       }
     }
     if (els.factoryHeatTooltip) {
-      const tooltipText = getFactoryHeatTooltipText();
+      const tooltipText = getFactoryHeatTooltipText(factoryHeatBreakdown);
       if (els.factoryHeatTooltip.textContent !== tooltipText) {
         setTooltipText(els.factoryHeatTooltip, tooltipText);
       }
@@ -2067,6 +2138,7 @@ function createTemperatureBox(row) {
         'Measures the effective Greenhouse Gas Effect. Higher value means more heat trapped. On very hot worlds, this value is reduced automatically as thermal emission shifts toward near-IR. To achieve both temperature and luminosity target, it is usually recommended, but not required, to keep this value below 3.'
       );
       const lines = Object.entries(contributions)
+        .filter(([, value]) => value !== null)
         .map(([gas, val]) => {
           const mapping = {
             co2: 'carbonDioxide',
@@ -3060,7 +3132,7 @@ function updateLifeBox() {
       [getTerraformingSummaryText('luminosity.albedoTable.hydrocarbonIce', 'Hydrocarbon Ice'), defaults.hydrocarbonIce.toFixed(2)],
       [getTerraformingSummaryText('luminosity.albedoTable.hydrogen', 'Liquid Hydrogen'), defaults.hydrogen.toFixed(2)],
       [getTerraformingSummaryText('luminosity.albedoTable.fineSand', 'Fine Sand'), defaults.fineSand.toFixed(2)],
-      [getTerraformingSummaryText('luminosity.albedoTable.biomass', 'Biomass'), defaults.biomass.toFixed(2)]
+      [getTerraformingSummaryText('luminosity.albedoTable.biomass', 'Biomass'), getActiveBiomassAlbedo().toFixed(2)]
     ];
   }
 

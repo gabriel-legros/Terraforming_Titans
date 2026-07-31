@@ -555,7 +555,7 @@
         storageState,
         {
           applyRates: applyRates && this.showsInResourcesRate(),
-          sourceLabel: this.displayName
+          sourceLabel: this.getRateSource()
         }
       );
       return totals;
@@ -589,7 +589,7 @@
         {
           applyRates: this.showsInResourcesRate(),
           seconds: deltaTime / 1000,
-          rateSourceLabel: this.displayName,
+          rateSourceLabel: this.getRateSource(),
           applyProgress(progress) {
             this.repeatCount += progress;
             if (this.isCapReached()) {

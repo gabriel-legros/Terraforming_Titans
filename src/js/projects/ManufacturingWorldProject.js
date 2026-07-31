@@ -1111,7 +1111,7 @@
 
       MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
         if (inputRates[inputKey] > 0) {
-          resources.spaceStorage[inputKey].modifyRate(-inputRates[inputKey], this.displayName, 'project');
+          resources.spaceStorage[inputKey].modifyRate(-inputRates[inputKey], this.getRateSource(), 'project');
         }
       });
       this.getAssignmentKeys().forEach((key) => {
@@ -1120,7 +1120,7 @@
           return;
         }
         const recipe = this.getRecipe(key);
-        resources.spaceStorage[recipe.outputStorageKey].modifyRate(rate, this.displayName, 'project');
+        resources.spaceStorage[recipe.outputStorageKey].modifyRate(rate, this.getRateSource(), 'project');
       });
 
       this.setLastRunStats(inputRates, outputRates);
@@ -1224,7 +1224,7 @@
         totals.cost.spaceStorage ||= {};
         totals.cost.spaceStorage[inputKey] = (totals.cost.spaceStorage[inputKey] || 0) + amount;
         if (applyRates) {
-          resources.spaceStorage[inputKey].modifyRate(-(amount / seconds), this.displayName, 'project');
+          resources.spaceStorage[inputKey].modifyRate(-(amount / seconds), this.getRateSource(), 'project');
         }
       });
 
@@ -1238,7 +1238,7 @@
         totals.gain.spaceStorage[recipe.outputStorageKey] =
           (totals.gain.spaceStorage[recipe.outputStorageKey] || 0) + amount;
         if (applyRates) {
-          resources.spaceStorage[recipe.outputStorageKey].modifyRate(amount / seconds, this.displayName, 'project');
+          resources.spaceStorage[recipe.outputStorageKey].modifyRate(amount / seconds, this.getRateSource(), 'project');
         }
       });
 

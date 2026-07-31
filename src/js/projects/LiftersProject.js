@@ -615,7 +615,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     );
   }
 
-  getAssignmentCapForKey(key, total = normalizeLifterInteger(this.repeatCount)) {
+  getAssignmentCapForKey(key, total = this.getAssignmentTotalCapacityForBatch()) {
     if (this.isUnassignedAssignmentKey(key)) {
       return total;
     }
@@ -656,6 +656,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       return;
     }
     this.deferAssignmentCapClamp = false;
+    this.markAssignmentsDirty();
     this.normalizeAssignments();
   }
 
@@ -672,7 +673,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
   }
 
   getAssignmentNormalizationSignature() {
-    const total = this.getAssignmentTotalCapacity();
+    const total = this.getAssignmentTotalCapacityForBatch();
     const clampAssignmentCaps = this.shouldClampAssignmentCaps();
     const landValue = resources.surface.land.value;
     const warpAverage = warpGateNetworkManager.getAverageWarpGateLevelAllSectors();
@@ -707,7 +708,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     if (this.isPermanentlyDisabled?.()) {
       return false;
     }
-    const total = normalizeLifterInteger(this.repeatCount);
+    const total = this.getAssignmentTotalCapacityForBatch();
     if (!this.isRunning || total <= 0n) {
       return false;
     }
@@ -1382,11 +1383,17 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
   }
 
   getExpansionRateSourceLabel() {
-    return getLiftersProjectText('rateSources.expansion', null, 'Lifter expansion');
+    return registerRateSource(
+      'project:lifters:expansion',
+      getLiftersProjectText('rateSources.expansion', null, 'Lifter expansion')
+    );
   }
 
   getOperationRateSourceLabel() {
-    return getLiftersProjectText('rateSources.operation', null, 'Lifting');
+    return registerRateSource(
+      'project:lifters:operation',
+      getLiftersProjectText('rateSources.operation', null, 'Lifting')
+    );
   }
 
   shouldKeepRunningOnTravel() {

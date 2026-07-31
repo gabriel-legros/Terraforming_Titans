@@ -601,15 +601,15 @@ class DiskworldTerraformingProject extends Project {
     const colonyHydrogenRate = seconds > 0 ? colonyAmount / seconds : 0;
     if (applyRates) {
       if (atmosphericRate > 0) {
-        resources.atmospheric.hydrogen.modifyRate(-atmosphericRate, this.displayName, 'project');
+        resources.atmospheric.hydrogen.modifyRate(-atmosphericRate, this.getRateSource(), 'project');
       }
       if (liquidHydrogenRate > 0) {
-        resources.surface.liquidHydrogen.modifyRate(-liquidHydrogenRate, this.displayName, 'project');
+        resources.surface.liquidHydrogen.modifyRate(-liquidHydrogenRate, this.getRateSource(), 'project');
       }
       if (colonyHydrogenRate > 0) {
-        resources.colony.colonyHydrogen.modifyRate(-colonyHydrogenRate, this.displayName, 'project');
+        resources.colony.colonyHydrogen.modifyRate(-colonyHydrogenRate, this.getRateSource(), 'project');
       }
-      resources.colony.energy.modifyRate(-energyRate, this.displayName, 'project');
+      resources.colony.energy.modifyRate(-energyRate, this.getRateSource(), 'project');
     }
     totals.cost.atmospheric = { hydrogen: atmosphericAmount };
     totals.cost.surface = { liquidHydrogen: liquidHydrogenAmount };
@@ -665,15 +665,15 @@ class DiskworldTerraformingProject extends Project {
       const liquidHydrogenRate = seconds > 0 ? usedLiquidHydrogen / seconds : 0;
       const colonyHydrogenRate = seconds > 0 ? usedColonyHydrogen / seconds : 0;
       if (atmosphericRate > 0) {
-        resources.atmospheric.hydrogen.modifyRate(-atmosphericRate, this.displayName, 'project');
+        resources.atmospheric.hydrogen.modifyRate(-atmosphericRate, this.getRateSource(), 'project');
       }
       if (liquidHydrogenRate > 0) {
-        resources.surface.liquidHydrogen.modifyRate(-liquidHydrogenRate, this.displayName, 'project');
+        resources.surface.liquidHydrogen.modifyRate(-liquidHydrogenRate, this.getRateSource(), 'project');
       }
       if (colonyHydrogenRate > 0) {
-        resources.colony.colonyHydrogen.modifyRate(-colonyHydrogenRate, this.displayName, 'project');
+        resources.colony.colonyHydrogen.modifyRate(-colonyHydrogenRate, this.getRateSource(), 'project');
       }
-      resources.colony.energy.modifyRate(-this.currentEnergyConsumptionRate, this.displayName, 'project');
+      resources.colony.energy.modifyRate(-this.currentEnergyConsumptionRate, this.getRateSource(), 'project');
     }
     this.refreshMassState();
   }

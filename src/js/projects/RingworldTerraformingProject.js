@@ -709,7 +709,7 @@ class RingworldTerraformingProject extends Project {
       return totals;
     }
     if (applyRates) {
-      resources.colony.energy.modifyRate(-this.power * productivity, this.displayName, 'project');
+      resources.colony.energy.modifyRate(-this.power * productivity, this.getRateSource(), 'project');
     }
     totals.cost.colony = { energy: this.power * (deltaTime / 1000) };
     return totals;
@@ -723,7 +723,7 @@ class RingworldTerraformingProject extends Project {
       return;
     }
     if (this.autoStart === false) {
-      resources.colony.energy.modifyRate(-this.power * productivity, this.displayName, 'project');
+      resources.colony.energy.modifyRate(-this.power * productivity, this.getRateSource(), 'project');
     }
     const seconds = deltaTime / 1000;
     const requested = this.power * seconds * productivity;

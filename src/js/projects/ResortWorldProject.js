@@ -495,7 +495,10 @@
       resources.colony.funding.increase(fundingRate * seconds);
       resources.colony.funding.modifyRate(
         fundingRate,
-        getResortWorldText('catalogs.specializations.resort.vacation.fundingSource'),
+        registerRateSource(
+          'project:resortWorld:vacationFunding',
+          getResortWorldText('catalogs.specializations.resort.vacation.fundingSource')
+        ),
         'project'
       );
     }

@@ -1360,16 +1360,12 @@ class SpaceMiningProject extends SpaceshipProject {
 
   getImportLimitRemainingForDelivery(resourceKey, targetCategory, targetResource, accumulatedChanges = null) {
     if (resourceKey === 'liquidWater') {
+      const coverageRemaining = this.getWaterImportLimitRemaining(accumulatedChanges);
       if (targetCategory === 'surface') {
-        return this.getWaterImportLimitRemaining(accumulatedChanges);
+        return coverageRemaining;
       }
-      if (
-        targetCategory === 'colony'
-        && targetResource === 'water'
-        && this.waterCoverageLimitEnabled()
-        && this.getWaterImportLimitRemaining(accumulatedChanges) <= 0
-      ) {
-        return this.getColonyResourceCapacityRemaining('water', accumulatedChanges);
+      if (targetCategory === 'colony' && targetResource === 'water') {
+        return this.getColonyResourceCapacityRemaining('water', accumulatedChanges) + coverageRemaining;
       }
       return Infinity;
     }
@@ -1942,7 +1938,7 @@ class SpaceMiningProject extends SpaceshipProject {
           accumulatedChanges,
           importWithoutOverflow ? accumulatedSpecialChanges : null,
           {
-            allowOverflow: this.waterImportTarget === 'colony' || importWithoutOverflow,
+            allowOverflow: !!accumulatedChanges && (this.waterImportTarget === 'colony' || importWithoutOverflow),
             specialChangeKey: importWithoutOverflow ? 'colonyWaterNoOverflow' : null
           }
         );
@@ -1999,7 +1995,7 @@ class SpaceMiningProject extends SpaceshipProject {
         accumulatedChanges,
         importWithoutOverflow ? accumulatedSpecialChanges : null,
         {
-          allowOverflow: this.gasImportTarget === 'colony' || importWithoutOverflow,
+          allowOverflow: !!accumulatedChanges && (this.gasImportTarget === 'colony' || importWithoutOverflow),
           specialChangeKey: importWithoutOverflow ? 'colonyHydrogenNoOverflow' : null
         }
       );

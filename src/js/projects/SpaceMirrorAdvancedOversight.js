@@ -129,6 +129,36 @@ class SpaceMirrorAdvancedOversight {
         reverse.any = false;
       };
 
+      if (
+        (!(totalMirrors > 0) || !(mirrorPowerPer > 0)) &&
+        (!(totalLanterns > 0) || !(lanternPowerPer > 0))
+      ) {
+        clearAssignments();
+        syncDerivedReverseState();
+        settings.assignments.mirrors = assignM;
+        settings.assignments.lanterns = assignL;
+        settings.assignments.reversalMode = reverse;
+        settings.availableHeating = availableHeating;
+        settings.lastSolution = {
+          mirrors: { ...assignM },
+          lanterns: { ...assignL },
+          availableHeating: { ...availableHeating },
+          availableHeatingPowerTarget: 0,
+          reversalMode: { ...reverse },
+        };
+
+        const projectionOptions = { ignoreHeatCapacity: true };
+        if (gameSettings.phaseChangeHeat) {
+          projectionOptions.zonalSurfaceHeatFluxes =
+            terraforming.phaseChangeHeatFluxByZone;
+        }
+        terraforming.runUpdateStep(0, projectionOptions);
+        solvedSnapshot = terraforming.saveTemperatureState();
+        terraforming.restoreTemperatureState(snapshot);
+        settings.lastProjectedTemperatureState = solvedSnapshot;
+        return;
+      }
+
       const getTrendMetric = (zone) => {
         const mode = getZoneMode(zone);
         if (mode === 'flux') {
@@ -185,11 +215,18 @@ class SpaceMirrorAdvancedOversight {
 
       const simulateFluxes = (zonalFluxes) => {
         terraforming.restoreTemperatureState(snapshot);
-        terraforming.runUpdateStep(0, {
+        const simulationOptions = {
           ignoreHeatCapacity: true,
           zonalFluxOverrides: zonalFluxes,
           disableAvailableAdvancedHeating: true,
-        });
+        };
+        if (gameSettings.phaseChangeHeat) {
+          // Solve against the same prior-tick phase flux that the real
+          // temperature update will apply.
+          simulationOptions.zonalSurfaceHeatFluxes =
+            terraforming.phaseChangeHeatFluxByZone;
+        }
+        terraforming.runUpdateStep(0, simulationOptions);
         const metrics = readCurrentMetrics();
         return {
           metrics,
@@ -610,11 +647,36 @@ class SpaceMirrorAdvancedOversight {
         );
         const dailyMeltTarget = Math.min(targets.water || 0, availableSurfaceIce);
         if (!(dailyMeltTarget > 0)) return 0;
-        const averageTemperature = snapshot?.temperature?.value ?? terraforming.temperature?.value ?? 0;
-        const deltaT = Math.max(0, 273.15 - averageTemperature);
-        const energyPerKg = (2100 * deltaT) + 334000;
-        if (!(energyPerKg > 0)) return 0;
-        return (dailyMeltTarget * 1000 / 86400) * energyPerKg;
+        if (!gameSettings.phaseChangeHeat) {
+          const averageTemperature = snapshot?.temperature?.value ?? terraforming.temperature?.value ?? 0;
+          const deltaT = Math.max(0, 273.15 - averageTemperature);
+          const energyPerKg = (2100 * deltaT) + 334000;
+          if (!(energyPerKg > 0)) return 0;
+          return (dailyMeltTarget * 1000 / 86400) * energyPerKg;
+        }
+
+        let remaining = dailyMeltTarget;
+        let requiredEnergy = 0;
+        const iceZones = ZONES.map((zone) => ({
+          zone,
+          temperature: snapshot.temperature.zones[zone].value,
+          ice: Math.max(0, terraforming.zonalSurface[zone].ice || 0),
+        })).filter((entry) => entry.ice > 0)
+          .sort((a, b) => b.temperature - a.temperature);
+        for (const entry of iceZones) {
+          if (!(remaining > 0)) break;
+          const amount = Math.min(remaining, entry.ice);
+          const energyPerKg = calculatePhaseTransitionEnergyPerKg(
+            'solid',
+            'liquid',
+            entry.temperature,
+            terraformingParameters.phaseChange.water
+          );
+          requiredEnergy +=
+            amount * terraformingParameters.physical.kgPerTon * energyPerKg;
+          remaining -= amount;
+        }
+        return requiredEnergy / 86400;
       };
 
       const focusPowerTarget = computeFocusPowerTarget();
@@ -796,7 +858,13 @@ class SpaceMirrorAdvancedOversight {
         reversalMode: { ...reverse },
       };
 
-      terraforming.runUpdateStep(0, { ignoreHeatCapacity: true });
+      const finalProjectionOptions = { ignoreHeatCapacity: true };
+      if (gameSettings.phaseChangeHeat) {
+        // Match the displayed projection to the same prior-tick flux used by the solver.
+        finalProjectionOptions.zonalSurfaceHeatFluxes =
+          terraforming.phaseChangeHeatFluxByZone;
+      }
+      terraforming.runUpdateStep(0, finalProjectionOptions);
       solvedSnapshot = terraforming.saveTemperatureState();
 
     } finally {

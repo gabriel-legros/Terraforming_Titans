@@ -1463,11 +1463,17 @@ function initializeWGCUI() {
           const t = parseInt(e.target.dataset.team, 10);
           const refs = teamElements[t];
           if (!refs || !refs.logContainer) return;
-          const { logContainer } = refs;
+          const { logContainer, logEl } = refs;
           logContainer.classList.toggle('hidden');
           if (!logContainer.classList.contains('hidden')) {
+            refs.lastRenderedHtml = '';
+            updateWGCUI();
             scrollWGCLogToBottom(logContainer);
             refs.logPinned = true;
+          } else if (logEl) {
+            logEl.replaceChildren();
+            refs.lastRenderedHtml = '';
+            refs.lastRenderedCount = 0;
           }
           return;
         }
@@ -1823,16 +1829,16 @@ function updateWGCUI() {
       const logEntries = warpGateCommand.logs[tIdx] || [];
       const visibleCount = logEntries.length;
       const logVisible = logContainer && !logContainer.classList.contains('hidden');
-      const wasPinned = logVisible ? isWGCLogPinned(logContainer) : refs.logPinned !== false;
-      const newHtml = renderWGCLogLines(logEntries);
-      const contentChanged = newHtml !== refs.lastRenderedHtml;
       const forceScroll = wgcPendingLogScroll.has(tIdx);
-      if (contentChanged) {
-        logEl.innerHTML = newHtml;
-        refs.lastRenderedHtml = newHtml;
-        refs.lastRenderedCount = visibleCount;
-      }
       if (logVisible) {
+        const wasPinned = isWGCLogPinned(logContainer);
+        const newHtml = renderWGCLogLines(logEntries);
+        const contentChanged = newHtml !== refs.lastRenderedHtml;
+        if (contentChanged) {
+          logEl.innerHTML = newHtml;
+          refs.lastRenderedHtml = newHtml;
+          refs.lastRenderedCount = visibleCount;
+        }
         if ((contentChanged && visibleCount > 0 && refs.logPinned !== false && wasPinned) || forceScroll) {
           scrollWGCLogToBottom(logContainer);
           refs.logPinned = true;

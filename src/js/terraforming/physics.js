@@ -245,6 +245,7 @@ const SIGMA = PHYSICS_PARAMETERS.physical.stefanBoltzmannConstant;
 // ─── Existing IR greenhouse parameters ─────────────────────────────
 const COLUMN_MASS_REF = PHYSICS_GREENHOUSE_PARAMETERS.referenceColumnMassKgM2;
 const BETA = PHYSICS_GREENHOUSE_PARAMETERS.pressureExponent;
+const GAS_PRESSURE_EXPONENT = PHYSICS_GREENHOUSE_PARAMETERS.pressureExponentByGas;
 
 // Keep original strengths EXCEPT water (we tune only H2O)
 const GAMMA = PHYSICS_GREENHOUSE_PARAMETERS.strength;
@@ -311,27 +312,28 @@ function opticalDepth(comp, pBar, gSurface) {
 
     const mu_i = x * mcolT;                      // column mass of gas i
     const R    = mu_i / COLUMN_MASS_REF;         // dimensionless
+    const pressureExponent = GAS_PRESSURE_EXPONENT[k] ?? BETA;
     let tau_i;
 
     if (k === 'ch4') {
       const saturationThreshold = 0.00021;
       if (R <= saturationThreshold) {
-        tau_i = G * Math.pow(R, BETA);
+        tau_i = G * Math.pow(R, pressureExponent);
       } else {
-        tau_i = G * (Math.pow(saturationThreshold, BETA) + 0.21*Math.pow(R - saturationThreshold,0.9));
+        tau_i = G * (Math.pow(saturationThreshold, pressureExponent) + 0.21*Math.pow(R - saturationThreshold,0.9));
       }
     } else if (k === 'co2') {
       const saturationThreshold = 0.0003;
       if(R <= saturationThreshold){
-        tau_i = G * Math.pow(R, BETA);
+        tau_i = G * Math.pow(R, pressureExponent);
       }
       else{
-        tau_i = G * (Math.pow(saturationThreshold, BETA) + CO2_HIGH_COLUMN_FACTOR * Math.pow(R - saturationThreshold,0.9));
+        tau_i = G * (Math.pow(saturationThreshold, pressureExponent) + CO2_HIGH_COLUMN_FACTOR * Math.pow(R - saturationThreshold,0.9));
       }
     }
     else  {
       // Default behavior for other gases
-      tau_i = G * Math.pow(R, BETA);
+      tau_i = G * Math.pow(R, pressureExponent);
     }
 
     total += tau_i;
@@ -686,6 +688,7 @@ function surfaceAlbedoMix(rockAlb, fractions, customAlb) {
 }
 
 function diurnalAmplitude(albedo, flux, T, heatCap, rotH) {
+  if (!(T > 0)) return 0;
   const omega = 2.0 * Math.PI / (Math.abs(rotH) * 3600.0);
   const num = (1 - albedo) * flux / 2.0;
   const den = Math.sqrt(heatCap * omega * 4.0 * SIGMA * Math.pow(T, 3));

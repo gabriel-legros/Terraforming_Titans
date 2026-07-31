@@ -50,6 +50,7 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
     let totalMelt = 0;
     let totalGasMelt = 0;
     let totalFreezeOut = 0;
+    const phaseTransitions = [];
 
     const zones = getZones();
     const defaultElevations = { tropical: 0, temperate: 0, polar: 0 };
@@ -178,6 +179,28 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
                 changes[target][liquidProp] += meltToLiquid;
                 totalMelt += meltToLiquid;
                 totalGasMelt += meltToGas;
+                if (meltToLiquid > 0) {
+                    phaseTransitions.push({
+                        zone: target,
+                        source,
+                        target,
+                        fromPhase: 'solid',
+                        toPhase: 'liquid',
+                        amount: meltToLiquid,
+                        totalKey: 'flowMelt',
+                    });
+                }
+                if (meltToGas > 0) {
+                    phaseTransitions.push({
+                        zone: target,
+                        source,
+                        target,
+                        fromPhase: 'solid',
+                        toPhase: 'gas',
+                        amount: meltToGas,
+                        totalKey: 'rapidSublimation',
+                    });
+                }
             }
         }
     }
@@ -239,6 +262,15 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
                 if (zonalTemperatures[target] < meltingPoint) {
                     changes[target][iceProp] += flow;
                     totalFreezeOut += flow;
+                    phaseTransitions.push({
+                        zone: target,
+                        source,
+                        target,
+                        fromPhase: 'liquid',
+                        toPhase: 'solid',
+                        amount: flow,
+                        totalKey: 'freezeOut',
+                    });
                 } else {
                     changes[target][liquidProp] += flow;
                 }
@@ -246,7 +278,7 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
         }
     }
 
-    return { changes, totalMelt, totalGasMelt, totalFreezeOut };
+    return { changes, totalMelt, totalGasMelt, totalFreezeOut, phaseTransitions };
 }
 
 function simulateSurfaceWaterFlow(zonalWaterInput, durationSeconds, zonalTemperatures = {}, zoneElevationsInput, flowOptions) {

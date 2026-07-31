@@ -1,10 +1,20 @@
 (function () {
   const HYDROGEN_PHASE_CHANGE_PARAMETERS = terraformingParameters.phaseChange.hydrogen;
   const KG_PER_TON = terraformingParameters.physical.kgPerTon;
+  const HYDROGEN_THERMODYNAMICS = {
+    latentHeatVaporizationJPerKg: HYDROGEN_PHASE_CHANGE_PARAMETERS.latentHeatVaporizationJPerKg,
+    latentHeatSublimationJPerKg: HYDROGEN_PHASE_CHANGE_PARAMETERS.latentHeatSublimationJPerKg,
+    latentHeatFusionJPerKg: HYDROGEN_PHASE_CHANGE_PARAMETERS.latentHeatFusionJPerKg,
+    solidSpecificHeatJPerKgK: HYDROGEN_PHASE_CHANGE_PARAMETERS.solidSpecificHeatJPerKgK,
+    liquidSpecificHeatJPerKgK: HYDROGEN_PHASE_CHANGE_PARAMETERS.liquidSpecificHeatJPerKgK,
+    meltingPointK: HYDROGEN_PHASE_CHANGE_PARAMETERS.triplePointTemperatureK,
+  };
   let simulateSurfaceHydrogenFlow = null;
+  let resolveHydrogenPhaseEnergy = null;
 
   try {
     simulateSurfaceHydrogenFlow = window.simulateSurfaceHydrogenFlow;
+    resolveHydrogenPhaseEnergy = window.resolvePhaseTransitionEnergy;
   } catch (error) {
     simulateSurfaceHydrogenFlow = null;
   }
@@ -12,6 +22,7 @@
   try {
     if (!simulateSurfaceHydrogenFlow && typeof require === 'function') {
       simulateSurfaceHydrogenFlow = require('./hydrology.js').simulateSurfaceHydrogenFlow;
+      resolveHydrogenPhaseEnergy = require('./phase-change-utils.js').resolvePhaseTransitionEnergy;
     }
   } catch (error) {
     // fall back to browser global if require fails
@@ -177,6 +188,57 @@
       return amountTons - remaining;
     }
 
+    transferSurfaceHydrogenWithHeat(terraforming, zones, amountTons, evaporating) {
+      const phaseHeat = { netHeatEnergyJ: 0, byZone: {} };
+      const heatCapacity = terraforming.getHeatCapacity();
+      let totalLiquid = 0;
+      for (const zone of zones) {
+        totalLiquid += terraforming.zonalSurface[zone].liquidHydrogen || 0;
+      }
+
+      let acceptedTotal = 0;
+      for (const zone of zones) {
+        const zoneStore = terraforming.zonalSurface[zone];
+        const current = zoneStore.liquidHydrogen || 0;
+        const basis = totalLiquid > 0
+          ? current / totalLiquid
+          : terraforming.getZoneWeight(zone);
+        const requested = Math.min(
+          amountTons * basis,
+          evaporating ? current : amountTons
+        );
+        if (!(requested > 0)) continue;
+
+        const zoneCapacity = heatCapacity.zones[zone];
+        const transition = {
+          fromPhase: evaporating ? 'liquid' : 'gas',
+          toPhase: evaporating ? 'gas' : 'liquid',
+          amount: requested,
+          floorTemperatureK: evaporating ? HYDROGEN_T_BOILING : 0,
+          ceilingTemperatureK: Infinity,
+          thermodynamics: HYDROGEN_THERMODYNAMICS,
+        };
+        const result = resolveHydrogenPhaseEnergy(
+          terraforming.temperature.zones[zone].value,
+          zoneCapacity.capacityPerArea * zoneCapacity.zoneArea,
+          [transition]
+        );
+        const accepted = result.acceptedAmounts[0];
+        zoneStore.liquidHydrogen = evaporating
+          ? current - accepted
+          : current + accepted;
+        acceptedTotal += accepted;
+        phaseHeat.netHeatEnergyJ += result.netHeatEnergyJ;
+        phaseHeat.byZone[zone] = {
+          netHeatEnergyJ: result.netHeatEnergyJ,
+          finalTemperatureK: result.finalTemperatureK,
+          transitions: [{ ...transition, amount: accepted }],
+        };
+      }
+
+      return { amount: acceptedTotal, phaseHeat };
+    }
+
     runCycle(terraforming, zones, options = {}) {
       const gravity = options.extraParams?.gravity || terraforming?.celestialParameters?.gravity || 0;
       const durationSeconds = options.durationSeconds || 0;
@@ -222,17 +284,31 @@
 
       if (pressureDelta > 0) {
         const requested = Math.min(surfaceHydrogen, requestedAmount);
-        const released = this.distributeSurfaceHydrogen(terraforming, zones, requested);
+        const transfer = options.phaseChangeHeatEnabled
+          ? this.transferSurfaceHydrogenWithHeat(terraforming, zones, requested, true)
+          : { amount: this.distributeSurfaceHydrogen(terraforming, zones, requested), phaseHeat: null };
+        const released = transfer.amount;
         totals.evaporation = released;
         totals.totalAtmosphericChange = released;
+        Object.defineProperty(totals, 'phaseHeat', {
+          value: transfer.phaseHeat,
+          enumerable: false,
+        });
         this.applySurfaceFlow(terraforming, zones, durationSeconds, totals);
         return totals;
       }
 
       const requested = Math.min(atmosphericHydrogen, requestedAmount);
-      const absorbed = this.depositSurfaceHydrogen(terraforming, zones, requested);
+      const transfer = options.phaseChangeHeatEnabled
+        ? this.transferSurfaceHydrogenWithHeat(terraforming, zones, requested, false)
+        : { amount: this.depositSurfaceHydrogen(terraforming, zones, requested), phaseHeat: null };
+      const absorbed = transfer.amount;
       totals.condensation = absorbed;
       totals.totalAtmosphericChange = -absorbed;
+      Object.defineProperty(totals, 'phaseHeat', {
+        value: transfer.phaseHeat,
+        enumerable: false,
+      });
       this.applySurfaceFlow(terraforming, zones, durationSeconds, totals);
       return totals;
     }
@@ -283,12 +359,20 @@
       terraforming.flowHydrogenShiftRate = flowShiftRate;
 
       if (evaporationRate > 0) {
-        const evaporationSource = t('ui.resourceRates.sources.evaporation', {}, 'Evaporation');
+        const evaporationSource = getLocalizedRateSource(
+          'terraforming:hydrogenEvaporation',
+          'ui.resourceRates.sources.evaporation',
+          'Evaporation'
+        );
         resources.atmospheric.hydrogen?.modifyRate(evaporationRate, evaporationSource, 'terraforming');
         resources.surface.liquidHydrogen?.modifyRate(-evaporationRate, evaporationSource, 'terraforming');
       }
       if (condensationRate > 0) {
-        const condensationSource = t('ui.resourceRates.sources.condensation', {}, 'Condensation');
+        const condensationSource = getLocalizedRateSource(
+          'terraforming:hydrogenCondensation',
+          'ui.resourceRates.sources.condensation',
+          'Condensation'
+        );
         resources.atmospheric.hydrogen?.modifyRate(-condensationRate, condensationSource, 'terraforming');
         resources.surface.liquidHydrogen?.modifyRate(condensationRate, condensationSource, 'terraforming');
       }

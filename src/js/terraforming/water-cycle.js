@@ -10,14 +10,13 @@ var DEFAULT_EQUILIBRIUM_WATER_CONDENSATION_PARAMETER = WATER_PHASE_CHANGE_PARAME
 
 const isNodeWaterCycle = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
-var redistributePrecipitationFn = globalThis.redistributePrecipitation;
 var ResourceCycleClass = globalThis.ResourceCycle;
 var simulateSurfaceWaterFlow = globalThis.simulateSurfaceWaterFlow;
 if (isNodeWaterCycle) {
   require('../planet-resource-parameters.js');
   resourcePhaseGroups = global.resourcePhaseGroups;
   try {
-    ({ psychrometricConstant, redistributePrecipitation: redistributePrecipitationFn } = require('./phase-change-utils.js'));
+    ({ psychrometricConstant } = require('./phase-change-utils.js'));
     ResourceCycleClass = require('./resource-cycle.js');
     simulateSurfaceWaterFlow = require('./hydrology.js').simulateSurfaceWaterFlow;
   } catch (e) {
@@ -167,12 +166,16 @@ class WaterCycle extends ResourceCycleClass {
     super({
       latentHeatVaporization: L_V_WATER,
       latentHeatSublimation: L_S_WATER,
+      latentHeatFusion: WATER_PHASE_CHANGE_PARAMETERS.latentHeatFusionJPerKg,
+      solidSpecificHeat: WATER_PHASE_CHANGE_PARAMETERS.solidSpecificHeatJPerKgK,
+      liquidSpecificHeat: WATER_PHASE_CHANGE_PARAMETERS.liquidSpecificHeatJPerKgK,
       saturationVaporPressureFn: saturationVaporPressureMK,
       slopeSaturationVaporPressureFn: derivativeSaturationVaporPressureMK,
       freezePoint: 273.15,
       sublimationPoint: 273.15,
       evaporationAlbedo: EVAP_ALBEDO_WATER,
       sublimationAlbedo: SUBLIMATION_ALBEDO_ICE,
+      nearSurfaceVaporPressureMultiplier: WATER_PHASE_CHANGE_PARAMETERS.nearSurfaceVaporPressureMultiplier,
       tripleTemperature: WATER_TRIPLE_T,
       triplePressure: WATER_TRIPLE_P,
       disallowLiquidBelowTriple: true,
@@ -196,6 +199,7 @@ class WaterCycle extends ResourceCycleClass {
           terraforming.flowFreezeOutRate = durationSeconds > 0 ? freezeOut / durationSeconds * 86400 : 0;
           return {
             changes: flow.changes || {},
+            phaseTransitions: flow.phaseTransitions || [],
             totals: {
               flowMelt: totalMelt,
               freezeOut,
@@ -248,14 +252,6 @@ class WaterCycle extends ResourceCycleClass {
   processZone(params) { return super.processZone(params); }
 
 
-  // Use base finalizeAtmosphere with constructor-provided finalizeProcesses
-
-  redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {
-    if (typeof redistributePrecipitationFn === 'function') {
-      redistributePrecipitationFn(terraforming, 'water', zonalChanges, zonalTemperatures);
-    }
-  }
-
   // Override only to add focused-melt and water-specific aliases
   updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {
     // Apply base rates and resource changes from mappings
@@ -264,14 +260,18 @@ class WaterCycle extends ResourceCycleClass {
     // Focused melt adds extra melt on top of phase-change and flow
     const resources = terraforming.resources;
     const rateType = 'terraforming';
-    const focusMeltAmount = typeof globalThis.applyFocusedMelt === 'function'
-      ? globalThis.applyFocusedMelt(terraforming, resources, durationSeconds)
-      : 0;
+    const focusMeltAmount = gameSettings.phaseChangeHeat
+      ? (totals.focusedMelt || 0)
+      : applyFocusedMelt(terraforming, resources, durationSeconds);
     terraforming.focusMeltAmount = focusMeltAmount;
     const focusRate = durationSeconds > 0 ? focusMeltAmount / durationSeconds * 86400 : 0;
     terraforming.focusMeltRate = focusRate;
     if (focusRate > 0) {
-      const focusedMeltSource = t('ui.resourceRates.sources.focusedMelt', {}, 'Focused Melt');
+      const focusedMeltSource = getLocalizedRateSource(
+        'terraforming:focusedMelt',
+        'ui.resourceRates.sources.focusedMelt',
+        'Focused Melt'
+      );
       resources.surface.liquidWater?.modifyRate(focusRate, focusedMeltSource, rateType);
       resources.surface.ice?.modifyRate(-focusRate, focusedMeltSource, rateType);
     }

@@ -2182,7 +2182,7 @@ function getDisplayConsumptionRates(resource) {
     if (amount <= 0 || building.active <= 0n) {
       continue;
     }
-    const sourceName = building.displayName || name;
+    const sourceName = building.getRateSource();
     const current = adjustedBySource[sourceName] || 0;
     const displayFactor = building.ignoreResourceForProductivityResourceDisplay
       ? building.displayProductivity
@@ -2589,15 +2589,12 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
 
     if (allowRegularWarnings && resource.category === 'atmospheric' && resource.name === 'hydrogen') {
       const gravityThreshold = (globalThis.HYDROGEN_ESCAPE_GRAVITY_THRESHOLD || 0);
-      const atomicMultiplier = globalThis.HYDROGEN_ATOMIC_HALF_LIFE_MULTIPLIER || 1;
-      const atomicSpeedup = Math.round(1 / atomicMultiplier);
       const photodissociationFraction = Math.round(
         (globalThis.HYDROGEN_PHOTODISSOCIATION_MAX_FRACTION || 0) * 100
       );
       let hydrogenMessage = getResourceUIWarningText('hydrogenIntro', 'Hydrogen slowly escapes to space depending on solar flux and gravity.');
-      hydrogenMessage += ` ${getResourceUIWarningText('hydrogenPhoto', 'Stellar UV can photodissociate up to {percent}% of that gas, creating atoms that escape about {speed}x faster than molecules.', {
+      hydrogenMessage += ` ${getResourceUIWarningText('hydrogenPhoto', 'Stellar UV can photodissociate up to {percent}% of that gas into atoms, which escape more readily than molecules.', {
         percent: photodissociationFraction,
-        speed: formatNumber(atomicSpeedup, false, 0),
       })}`;
 
       const gravity = globalThis.terraforming?.celestialParameters?.gravity;
@@ -2790,7 +2787,10 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
 
   if (productionDiv) {
     const productionEntries = antimatterSynced ? [] : Object.entries(resource.productionRateBySource)
-      .filter(([source, rate]) => rate !== 0 && source !== 'Overflow' && source !== 'Overflow (not summed)');
+      .filter(([source, rate]) => rate !== 0
+        && source !== RESOURCE_RATE_SOURCE_IDS.overflow
+        && source !== RESOURCE_RATE_SOURCE_IDS.overflowExcluded)
+      .map(([source, rate]) => [getRateSourceDisplayName(source), rate]);
     const showProduction = updateRateTableWithCooldown(
       productionDiv,
       productionEntries,
@@ -2802,7 +2802,8 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
 
   if (consumptionDiv) {
     const consumptionEntries = antimatterSynced ? [] : Object.entries(consumptionDisplay.bySource)
-      .filter(([source, rate]) => rate !== 0 && source !== 'Overflow (not summed)');
+      .filter(([source, rate]) => rate !== 0 && source !== RESOURCE_RATE_SOURCE_IDS.overflowExcluded)
+      .map(([source, rate]) => [getRateSourceDisplayName(source), rate]);
     const showConsumption = updateRateTableWithCooldown(
       consumptionDiv,
       consumptionEntries,
@@ -2828,7 +2829,12 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       ...Object.entries(resource.productionRateByType?.overflow || {})
     ]
       .filter(([, rate]) => rate !== 0)
-      .map(([src, rate]) => [src.replace(' (not summed)', ''), rate]);
+      .map(([source, rate]) => [
+        source === RESOURCE_RATE_SOURCE_IDS.overflowExcluded
+          ? getRateSourceDisplayName(RESOURCE_RATE_SOURCE_IDS.overflow)
+          : getRateSourceDisplayName(source),
+        rate
+      ]);
     updateRateTable(overflowDiv, overflowEntries, r => `${formatNumber(r, false, 2)}/s`);
     overflowDiv.style.display = overflowEntries.length > 0 ? 'block' : 'none';
   }

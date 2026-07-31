@@ -618,7 +618,8 @@ const PatienceUI = {
      */
     render() {
         if (this.currentValueEl) {
-            this.currentValueEl.textContent = patienceManager.currentHours.toFixed(1);
+            const displayedHours = Math.floor(patienceManager.currentHours * 100) / 100;
+            this.currentValueEl.textContent = displayedHours.toFixed(2);
         }
         
         if (this.maxValueEl) {

@@ -509,10 +509,23 @@ function displayJournalChapter(index) {
   updateJournalNavArrows();
 }
 
-function renderJournalEntries(entries) {
+function journalEntryHasObjective(source) {
+  if (!source || source.type !== 'chapter') {
+    return false;
+  }
+  const chapter = progressData.chapters.find(config => config.id === source.id);
+  return chapter.objectives.length > 0;
+}
+
+function renderJournalEntries(entries, entrySources) {
   const journalEntries = journalEntriesContainer;
   journalEntries.innerHTML = '';
-  entries.forEach(entryText => {
+  entries.forEach((entryText, index) => {
+    if (index > 0 && journalEntryHasObjective(entrySources[index - 1])) {
+      const separator = document.createElement('hr');
+      separator.className = 'journal-entry-separator';
+      journalEntries.appendChild(separator);
+    }
     const entry = document.createElement('p');
     appendJournalSegments(entry, buildJournalSegments(entryText));
     journalEntries.appendChild(entry);
@@ -523,7 +536,7 @@ function setDisplayedJournalEntries(entries, entrySources) {
   const journalContainer = journalContainerElement;
   journalEntrySources = entrySources ? entrySources.slice() : new Array(entries.length).fill(null);
   const displayEntries = getResolvedJournalTexts(entries, journalEntrySources);
-  renderJournalEntries(displayEntries);
+  renderJournalEntries(displayEntries, journalEntrySources);
   journalEntriesData = compactJournalTexts(entries, journalEntrySources);
   if (!journalUserScrolling && journalContainer) {
     journalContainer.scrollTop = journalContainer.scrollHeight;
@@ -623,6 +636,12 @@ function processNextJournalEntry() {
     buildJournalIndex();
   }
 
+  const previousSource = journalEntrySources[journalEntrySources.length - 2];
+  if (journalEntries.children.length > 0 && journalEntryHasObjective(previousSource)) {
+    const separator = document.createElement('hr');
+    separator.className = 'journal-entry-separator';
+    journalEntries.appendChild(separator);
+  }
   const entry = document.createElement('p');
   journalEntries.appendChild(entry);
 

@@ -292,9 +292,9 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     const metalRate = plan.finalMetal / seconds;
     const spaceEnergyRate = plan.finalSpaceEnergy / seconds;
 
-    resources?.spaceStorage?.metal?.modifyRate?.(-metalRate, this.displayName, 'project');
-    resources?.space?.energy?.modifyRate?.(-spaceEnergyRate, this.displayName, 'project');
-    resources?.spaceStorage?.superalloys?.modifyRate?.(outputRate, this.displayName, 'project');
+    resources?.spaceStorage?.metal?.modifyRate?.(-metalRate, this.getRateSource(), 'project');
+    resources?.space?.energy?.modifyRate?.(-spaceEnergyRate, this.getRateSource(), 'project');
+    resources?.spaceStorage?.superalloys?.modifyRate?.(outputRate, this.getRateSource(), 'project');
 
     this.setLastRunStats(spaceEnergyRate, { superalloys: outputRate }, metalRate);
     this.updateStatus(this.getText('status.running', null, 'Running'));
@@ -319,9 +319,9 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     }
 
     if (applyRates) {
-      resources?.spaceStorage?.metal?.modifyRate?.(-(plan.finalMetal / seconds), this.displayName, 'project');
-      resources?.space?.energy?.modifyRate?.(-(plan.finalSpaceEnergy / seconds), this.displayName, 'project');
-      resources?.spaceStorage?.superalloys?.modifyRate?.(plan.finalOutput / seconds, this.displayName, 'project');
+      resources?.spaceStorage?.metal?.modifyRate?.(-(plan.finalMetal / seconds), this.getRateSource(), 'project');
+      resources?.space?.energy?.modifyRate?.(-(plan.finalSpaceEnergy / seconds), this.getRateSource(), 'project');
+      resources?.spaceStorage?.superalloys?.modifyRate?.(plan.finalOutput / seconds, this.getRateSource(), 'project');
     }
 
     totals.cost.spaceStorage ||= {};

@@ -331,45 +331,52 @@ function applyAtmosphericChemistryRates(resources, changes = {}, realSeconds = 0
   const acidRainRate = seconds > 0 ? acidRainAmount / seconds : 0;
   const hydrogenRate = seconds > 0 ? hydrogenAmount / seconds : 0;
   const rateType = 'terraforming';
+  const methaneCombustionSource = registerRateSource(
+    'terraforming:methaneCombustion',
+    'Methane Combustion'
+  );
+  const calciteDecaySource = registerRateSource('terraforming:calciteDecay', 'Calcite Decay');
+  const acidRainSource = registerRateSource('terraforming:acidRain', 'Acid rain');
+  const hydrogenEscapeSource = registerRateSource('terraforming:hydrogenEscape', 'Hydrogen Escape');
 
   resources?.atmospheric?.atmosphericWater?.modifyRate?.(
     waterRate,
-    'Methane Combustion',
+    methaneCombustionSource,
     rateType
   );
   resources?.atmospheric?.carbonDioxide?.modifyRate?.(
     co2Rate,
-    'Methane Combustion',
+    methaneCombustionSource,
     rateType
   );
   resources?.atmospheric?.atmosphericMethane?.modifyRate?.(
     -methaneRate,
-    'Methane Combustion',
+    methaneCombustionSource,
     rateType
   );
   resources?.atmospheric?.oxygen?.modifyRate?.(
     -oxygenRate,
-    'Methane Combustion',
+    methaneCombustionSource,
     rateType
   );
   resources?.atmospheric?.calciteAerosol?.modifyRate?.(
     -calciteRate,
-    'Calcite Decay',
+    calciteDecaySource,
     rateType
   );
   resources?.atmospheric?.sulfuricAcid?.modifyRate?.(
     -acidRainRate,
-    'Acid rain',
+    acidRainSource,
     rateType
   );
   resources?.surface?.liquidWater?.modifyRate?.(
     acidRainWaterRate,
-    'Acid rain',
+    acidRainSource,
     rateType
   );
   resources?.atmospheric?.hydrogen?.modifyRate?.(
     -hydrogenRate,
-    'Hydrogen Escape',
+    hydrogenEscapeSource,
     rateType
   );
 }

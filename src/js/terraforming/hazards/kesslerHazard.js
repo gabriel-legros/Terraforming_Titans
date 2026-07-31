@@ -479,7 +479,11 @@ class KesslerHazard {
     if (regenerated > 0) {
       resource.modifyRate(
         regenerated / deltaSeconds,
-        t('ui.terraforming.hazardEffects.debrisDiskKesslerRegeneration', {}, 'Debris Disk Regeneration'),
+        getLocalizedRateSource(
+          'hazard:debrisDiskKesslerRegeneration',
+          'ui.terraforming.hazardEffects.debrisDiskKesslerRegeneration',
+          'Debris Disk Regeneration'
+        ),
         'hazard'
       );
       this.permanentlyCleared = false;
@@ -646,7 +650,11 @@ class KesslerHazard {
     });
     resource.value = Math.max(0, updatedTotal);
     const decayRate = deltaSeconds ? decayedTons / deltaSeconds : 0;
-    resource.modifyRate(-decayRate, t('ui.resourceRates.sources.debrisDecay', {}, 'Debris decay'), 'hazard');
+    resource.modifyRate(
+      -decayRate,
+      getLocalizedRateSource('hazard:kesslerDebrisDecay', 'ui.resourceRates.sources.debrisDecay', 'Debris decay'),
+      'hazard'
+    );
 
     this.decaySummary = {
       dragThresholdDensity: DEBRIS_DECAY_DENSITY_REFERENCE,

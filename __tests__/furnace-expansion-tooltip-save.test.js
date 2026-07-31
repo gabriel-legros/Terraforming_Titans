@@ -151,6 +151,7 @@ function installPlanetVisualizerStub(window) {
     updateBackground: () => {},
     resize: () => {},
     render: () => {},
+    updateZonalCoverageFromGameSafe: () => {},
     resetSurfaceTextureThrottle: () => {},
     setDebugMode: () => {},
   };
@@ -310,19 +311,19 @@ function getExpansionExpectation(projectKey, project) {
   if (projectKey === 'dysonSphere') {
     const costMap = project.lastCollectorColonyCost || project.getCollectorCost();
     return {
-      label: 'Dyson Collector',
+      label: 'project:dysonCollectorExpansion',
       rates: scaleCostMap(costMap, 1000 / project.collectorDuration),
     };
   }
   if (projectKey === 'spaceStorage') {
     return {
-      label: 'Space storage expansion',
+      label: 'project:spaceStorage:expansion',
       rates: scaleCostMap(project.getScaledCost(), 1000 / project.getEffectiveDuration()),
     };
   }
   if (projectKey === 'lifters') {
     return {
-      label: 'Lifter expansion',
+      label: 'project:lifters:expansion',
       rates: scaleCostMap(project.getScaledCost(), 1000 / project.getEffectiveDuration()),
     };
   }
@@ -370,12 +371,13 @@ describe.skip('furnace expansion tooltip save repro', () => {
       expect(furnace.autoStart).toBe(true);
       expect(furnace.isExpansionContinuous()).toBe(false);
 
-      const beforeActual = resources.colony.components.consumptionRateBySource['Nuclear Alchemical Furnace expansion'] || 0;
-      const beforeProjected = resources.colony.components.projectedConsumptionRateBySource['Nuclear Alchemical Furnace expansion'] || 0;
+      const source = 'project:nuclearAlchemyFurnace:expansion';
+      const beforeActual = resources.colony.components.consumptionRateBySource[source] || 0;
+      const beforeProjected = resources.colony.components.projectedConsumptionRateBySource[source] || 0;
 
       window.eval('updateLogic(1000)');
-      const afterActual = resources.colony.components.consumptionRateBySource['Nuclear Alchemical Furnace expansion'] || 0;
-      const afterProjected = resources.colony.components.projectedConsumptionRateBySource['Nuclear Alchemical Furnace expansion'] || 0;
+      const afterActual = resources.colony.components.consumptionRateBySource[source] || 0;
+      const afterProjected = resources.colony.components.projectedConsumptionRateBySource[source] || 0;
 
       expect(beforeProjected).toBeGreaterThan(0);
       expect(afterProjected).toBeGreaterThan(0);
@@ -396,7 +398,7 @@ describe.skip('ringworld furnace expansion double counting repro', () => {
       loadSave(window, 'ringworld_double_counting.json');
 
       const resources = getGlobal(window, 'resources');
-      const label = 'Nuclear Alchemical Furnace expansion';
+      const label = 'project:nuclearAlchemyFurnace:expansion';
       const resource = resources.spaceStorage.superalloys;
 
       const beforeProjected = resource.projectedConsumptionRateBySource[label] || 0;
@@ -424,7 +426,7 @@ describe.skip('ringworld hephaestus yard tooltip repro', () => {
 
       const resources = getGlobal(window, 'resources');
       const projectManager = getGlobal(window, 'projectManager');
-      const label = 'Hephaestus Yard expansion';
+      const label = 'project:hephaestusMegaconstruction:expansion';
       const resource = resources.spaceStorage.superalloys;
 
       window.eval('updateLogic(1000)');

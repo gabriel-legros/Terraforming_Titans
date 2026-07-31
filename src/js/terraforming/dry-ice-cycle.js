@@ -19,7 +19,6 @@ var DEFAULT_EQUILIBRIUM_CO2_CONDENSATION_PARAMETER = CO2_PHASE_CHANGE_PARAMETERS
 
 const isNodeCO2 = (typeof module !== 'undefined' && module.exports);
 var psychrometricConstant = globalThis.psychrometricConstant;
-var redistributePrecipitationFn = globalThis.redistributePrecipitation;
 var ResourceCycleClass = globalThis.ResourceCycle;
 // Optional: surface flow for CO₂ (often negligible); keep null unless you have a dedicated model
 var simulateSurfaceCO2Flow = globalThis.simulateSurfaceCO2Flow;
@@ -28,7 +27,7 @@ if (isNodeCO2) {
   require('../planet-resource-parameters.js');
   resourcePhaseGroups = global.resourcePhaseGroups;
   try {
-    ({ psychrometricConstant, redistributePrecipitation: redistributePrecipitationFn } = require('./phase-change-utils.js'));
+    ({ psychrometricConstant } = require('./phase-change-utils.js'));
     ResourceCycleClass = require('./resource-cycle.js');
     try {
       // Provide flow if you have one; otherwise this will remain undefined.
@@ -220,6 +219,7 @@ class CO2Cycle extends ResourceCycleClass {
         terraforming.flowCO2FreezeOutRate = durationSeconds > 0 ? freezeOut / durationSeconds * 86400 : 0;
         return {
           changes: flow.changes || {},
+          phaseTransitions: flow.phaseTransitions || [],
           totals: {
             flowMelt: totalMelt,
             freezeOut,
@@ -234,6 +234,9 @@ class CO2Cycle extends ResourceCycleClass {
     super({
       latentHeatVaporization: L_V_CO2,
       latentHeatSublimation: L_S_CO2,
+      latentHeatFusion: CO2_PHASE_CHANGE_PARAMETERS.latentHeatFusionJPerKg,
+      solidSpecificHeat: CO2_PHASE_CHANGE_PARAMETERS.solidSpecificHeatJPerKgK,
+      liquidSpecificHeat: CO2_PHASE_CHANGE_PARAMETERS.liquidSpecificHeatJPerKgK,
       saturationVaporPressureFn: calculateSaturationPressureCO2,
       slopeSaturationVaporPressureFn: slopeSVPCO2,
       freezePoint: CO2_T_TRIPLE,     // liquid cannot exist below the triple point if P < P_triple
@@ -285,12 +288,6 @@ class CO2Cycle extends ResourceCycleClass {
       liquidCO2Coverage: data.liquidCO2 ?? 0,
       dryIceCoverage: data.dryIce ?? 0,
     };
-  }
-
-  redistributePrecipitation(terraforming, zonalChanges, zonalTemperatures) {
-    if (typeof redistributePrecipitationFn === 'function') {
-      redistributePrecipitationFn(terraforming, 'co2', zonalChanges, zonalTemperatures);
-    }
   }
 
   updateResourceRates(terraforming, totals = {}, durationSeconds = 1) {
