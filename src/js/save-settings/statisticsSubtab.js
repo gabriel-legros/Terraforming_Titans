@@ -53,6 +53,9 @@ function getTerraformHistoryWorldTypeLabel(entry) {
   if (entry.worldType === 'artificial') {
     return t('ui.settings.terraformWorldTypeArtificial', null, 'Artificial');
   }
+  if (entry.worldType === 'story') {
+    return t('ui.settings.terraformWorldTypeStory', null, 'Story');
+  }
   return t('ui.settings.terraformWorldTypeUnknown', null, 'Unknown');
 }
 

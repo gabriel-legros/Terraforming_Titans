@@ -5297,6 +5297,7 @@ setLanguageData({
       recentTerraformHistoryWorldEntry: '{name} ({type})',
       recentTerraformHistoryUnavailable: 'Unavailable',
       terraformWorldTypeArtificial: 'Artificial',
+      terraformWorldTypeStory: 'Story',
       terraformWorldTypeShell: 'Shellworld',
       terraformWorldTypeRing: 'Ringworld',
       terraformWorldTypeDisk: 'Alderson disk',
