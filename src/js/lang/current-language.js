@@ -1089,6 +1089,7 @@ setLanguageData({
         name: 'Biopigmentation',
         description: 'Choose the colour of engineered biomass.',
         colorLabel: 'Biomass colour:',
+        reset: 'Reset',
         albedo: 'Albedo: {value}',
         growthPenalty: 'Growth penalty: -{value}%',
         tooltip: 'Biomass albedo follows the selected colour. Colours no brighter than the basic green have no growth penalty. Brighter colours reduce growth linearly, reaching -80% for white. Changing colour is free.',

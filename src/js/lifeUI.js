@@ -656,6 +656,7 @@ function initializeLifeTerraformingDesignerUI() {
       modifyHeader: document.getElementById('modify-header'),
       biopigmentationRow: document.getElementById('life-biopigmentation-row'),
       biomassColorInput: document.getElementById('life-biomass-color-input'),
+      biomassColorResetBtn: document.getElementById('life-biomass-color-reset-btn'),
       biomassAlbedoLabel: document.getElementById('life-biomass-albedo'),
       biomassGrowthPenaltyLabel: document.getElementById('life-biomass-growth-penalty'),
       biopigmentationTooltipIcon: document.getElementById('life-biopigmentation-tooltip'),
@@ -683,6 +684,7 @@ function initializeLifeTerraformingDesignerUI() {
             <div class="life-biopigmentation-control">
               <label for="life-biomass-color-input">${getLifeUIText('ui.life.biopigmentation.colorLabel', 'Biomass colour:')}</label>
               <input id="life-biomass-color-input" type="color" value="${lifeDesigner.biomassColor}">
+              <button id="life-biomass-color-reset-btn" type="button">${getLifeUIText('ui.life.biopigmentation.reset', 'Reset')}</button>
               <span id="life-biomass-albedo"></span>
               <span id="life-biomass-growth-penalty"></span>
             </div>
@@ -742,6 +744,10 @@ function initializeLifeTerraformingDesignerUI() {
 
     lifeUICache.controls.biomassColorInput.addEventListener('input', (event) => {
       lifeDesigner.setBiomassColor(event.target.value);
+      updateLifeUI();
+    });
+    lifeUICache.controls.biomassColorResetBtn.addEventListener('click', () => {
+      lifeDesigner.setBiomassColor(DEFAULT_BIOMASS_COLOR);
       updateLifeUI();
     });
     // Event listener for the "Create New Design" button
