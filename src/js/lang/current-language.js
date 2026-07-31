@@ -4536,6 +4536,8 @@ setLanguageData({
             luminosity: {
               solarFlux: 'Solar Flux',
               modifiedSolarFlux: 'Modified Solar Flux',
+              surfaceSolarFlux: 'Surface Solar Flux',
+              averageFlux: 'Average Flux',
               albedo: 'Albedo',
               opticalDepth: 'Optical Depth',
             },

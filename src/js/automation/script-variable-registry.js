@@ -395,6 +395,8 @@ class ScriptVariableRegistry {
       return [
         { id: 'solarFlux', label: this.getScriptVariableText('terraforming.luminosity.solarFlux', 'Solar Flux'), valueType: 'number' },
         { id: 'modifiedSolarFlux', label: this.getScriptVariableText('terraforming.luminosity.modifiedSolarFlux', 'Modified Solar Flux'), valueType: 'number' },
+        { id: 'surfaceSolarFlux', label: this.getScriptVariableText('terraforming.luminosity.surfaceSolarFlux', 'Surface Solar Flux'), valueType: 'number' },
+        { id: 'averageFlux', label: this.getScriptVariableText('terraforming.luminosity.averageFlux', 'Average Flux'), valueType: 'number' },
         { id: 'albedo', label: this.getScriptVariableText('terraforming.luminosity.albedo', 'Albedo'), valueType: 'number' },
         { id: 'opticalDepth', label: this.getScriptVariableText('terraforming.luminosity.opticalDepth', 'Optical Depth'), valueType: 'number' }
       ];
@@ -791,6 +793,12 @@ class ScriptVariableRegistry {
     if (attribute === 'geometricLand') return resolveWorldGeometricLand(terraforming, resources.surface.land);
     if (attribute === 'solarFlux') return this.toNumber(terraforming.luminosity.solarFlux);
     if (attribute === 'modifiedSolarFlux') return this.toNumber(terraforming.luminosity.modifiedSolarFlux);
+    if (attribute === 'surfaceSolarFlux') return this.toNumber(terraforming.luminosity.modifiedSolarFlux * (isAldersonDiskWorld() ? 4 : 1));
+    if (attribute === 'averageFlux') {
+      let averageFlux = 0;
+      for (const zone of getZones()) averageFlux += terraforming.luminosity.zonalFluxes[zone] * terraforming.getZoneWeight(zone);
+      return this.toNumber(averageFlux);
+    }
     if (attribute === 'albedo') return this.toNumber(terraforming.luminosity.surfaceAlbedo);
     if (attribute === 'opticalDepth') return this.toNumber(terraforming.temperature.opticalDepth);
     if (attribute === 'coreHeatFlux') return this.toNumber(terraforming.celestialParameters.coreHeatFlux);
