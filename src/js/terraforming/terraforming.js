@@ -529,6 +529,8 @@ class Terraforming extends EffectableEntity{
     this.phaseChangeHeatEnergyByZone = { tropical: 0, temperate: 0, polar: 0 };
     this.factoryHeatPower = 0;
     this.factoryHeatFlux = 0;
+    this.factoryCoolingPower = 0;
+    this.factoryCoolingFlux = 0;
     this.factoryHeatContributors = [];
     this.exosphereHeightMeters = 0;
     this.resourceSubstepMilliseconds = TERRAFORMING_RESOURCE_SUBSTEP_MS;
@@ -729,10 +731,12 @@ class Terraforming extends EffectableEntity{
     return Math.max(0, coreHeatFlux - megaHeatSinkFlux);
   }
 
-  setFactoryHeatPower(power, contributors = []) {
+  setFactoryHeatPower(power, coolingPower, contributors = []) {
     const surfaceArea = this.celestialParameters.surfaceArea
       || (4 * Math.PI * Math.pow((this.celestialParameters.radius || 0) * 1000, 2));
     this.factoryHeatPower = Number(power) || 0;
+    this.factoryCoolingPower = Number(coolingPower) || 0;
+    this.factoryCoolingFlux = surfaceArea > 0 ? this.factoryCoolingPower / surfaceArea : 0;
     this.factoryHeatFlux = surfaceArea > 0 ? this.factoryHeatPower / surfaceArea : 0;
     this.factoryHeatContributors = contributors.map((contributor) => ({
       name: contributor.name,
@@ -801,6 +805,13 @@ class Terraforming extends EffectableEntity{
     return this.factoryHeatFlux || 0;
   }
 
+  getFactoryCoolingFlux() {
+    if (!gameSettings.factoryHeating || isEquilibrating) {
+      return 0;
+    }
+    return this.factoryCoolingFlux || 0;
+  }
+
   getNetFactoryHeatFlux() {
     const factoryHeatFlux = this.getFactoryHeatFlux();
     if (factoryHeatFlux <= 0) {
@@ -836,18 +847,19 @@ class Terraforming extends EffectableEntity{
     return contributors;
   }
 
-  getNetSurfaceHeatFlux() {
+  getNetSurfaceHeatFlux(factoryCoolingScale = 1) {
     const coreHeatFlux = this.getCoreHeatFlux();
     const factoryHeatFlux = this.getFactoryHeatFlux();
+    const factoryCoolingAdjustment = this.getFactoryCoolingFlux() * (1 - factoryCoolingScale);
     const megaHeatSinkFlux = this.getMegaHeatSinkFlux();
     const positiveFactoryHeatFlux = Math.max(0, factoryHeatFlux);
     const factoryCoolingFlux = Math.max(0, -factoryHeatFlux);
     const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
     if (megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()) {
       const factoryHeatAfterSink = Math.max(0, positiveFactoryHeatFlux - this.getMegaHeatSinkRawFlux());
-      return coreHeatFlux + factoryHeatAfterSink - factoryCoolingFlux;
+      return coreHeatFlux + factoryHeatAfterSink - factoryCoolingFlux + factoryCoolingAdjustment;
     }
-    return Math.max(0, coreHeatFlux + positiveFactoryHeatFlux - megaHeatSinkFlux) - factoryCoolingFlux;
+    return Math.max(0, coreHeatFlux + positiveFactoryHeatFlux - megaHeatSinkFlux) - factoryCoolingFlux + factoryCoolingAdjustment;
   }
 
   getMegaHeatSinkCoolingFlux() {
@@ -1786,7 +1798,7 @@ class Terraforming extends EffectableEntity{
     const zonalFluxOverrides = options && options.zonalFluxOverrides;
     const zonalSurfaceHeatFluxes = options && options.zonalSurfaceHeatFluxes;
     const disableAvailableAdvancedHeating = !!(options && options.disableAvailableAdvancedHeating);
-    const netSurfaceHeatFlux = this.getNetSurfaceHeatFlux();
+    const globalNetSurfaceHeatFlux = this.getNetSurfaceHeatFlux();
     const megaHeatSinkCoolingFlux = this.getMegaHeatSinkCoolingFlux();
     const allowAvailableHeating =
         !!(mirrorOversightSettings?.advancedOversight) &&
@@ -1822,12 +1834,25 @@ class Terraforming extends EffectableEntity{
     const heatCapacityCache = this.getHeatCapacity();
     const effectiveAtmosphereCapacity = suppressAtmosphere ? 0 : heatCapacityCache.atmosphericHeatCapacity;
     const baseSlabOptions = { atmosphereCapacity: effectiveAtmosphereCapacity };
+    const zoneFluxes = {};
+    const zonalEffectiveLight = {};
+    let weightedEffectiveLight = 0;
     for (const zone of ORDER) {
         const overrideFlux = zonalFluxOverrides && zonalFluxOverrides[zone];
         const zoneFlux = Number.isFinite(overrideFlux)
             ? Math.max(overrideFlux, BACKGROUND_SOLAR_FLUX)
             : this.calculateZoneSolarFlux(zone);
+        const localSurfaceAlbedo = this.calculateZonalSurfaceAlbedo(zone);
+        const effectiveLight = Math.max(0, zoneFlux * (1 - localSurfaceAlbedo));
+        const pct = this.getZoneWeight(zone);
+        zoneFluxes[zone] = zoneFlux;
+        zonalEffectiveLight[zone] = effectiveLight;
+        weightedEffectiveLight += effectiveLight * pct;
         this.luminosity.zonalFluxes[zone] = zoneFlux;
+    }
+
+    for (const zone of ORDER) {
+        const zoneFlux = zoneFluxes[zone];
 
         const zoneCapacity = heatCapacityCache.zones[zone];
         const zoneFractions = zoneCapacity.fractions;
@@ -1844,6 +1869,10 @@ class Terraforming extends EffectableEntity{
         const zonalSurfaceHeatFlux = zonalSurfaceHeatFluxes
             ? (zonalSurfaceHeatFluxes[zone] || 0)
             : 0;
+        const factoryCoolingScale = weightedEffectiveLight > 0
+            ? zonalEffectiveLight[zone] / weightedEffectiveLight
+            : 0;
+        const netSurfaceHeatFlux = this.getNetSurfaceHeatFlux(factoryCoolingScale);
 
         const zTemps = dayNightTemperaturesModel({
             ...baseParams,
@@ -1868,7 +1897,8 @@ class Terraforming extends EffectableEntity{
             frac:  zoneFractions,
             area,
             Cslab,
-            capacityPerArea
+            capacityPerArea,
+            netSurfaceHeatFlux
         };
 
         weightedEqTemp           += zTemps.equilibriumTemperature * pct;
@@ -1950,7 +1980,7 @@ class Terraforming extends EffectableEntity{
             : 0;
         const absorbedFlux =
             ((1 - z[zone].albedo) * zoneFlux * (usesFlatSurfaceFlux ? 1 : 0.25))
-            + netSurfaceHeatFlux
+            + z[zone].netSurfaceHeatFlux
             + zonalSurfaceHeatFlux;
         const emittedFlux = greenhouseFactor > 0
             ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / greenhouseFactor
@@ -2069,7 +2099,7 @@ class Terraforming extends EffectableEntity{
         this.luminosity.modifiedSolarFlux = this.luminosity.modifiedSolarFluxUnpenalized * (1 - penalty);
 
         this.temperature.effectiveTempNoAtmosphere =
-            effectiveTemp(this.luminosity.surfaceAlbedo, this.luminosity.modifiedSolarFluxUnpenalized, { addedFlux: netSurfaceHeatFlux });
+            effectiveTemp(this.luminosity.surfaceAlbedo, this.luminosity.modifiedSolarFluxUnpenalized, { addedFlux: globalNetSurfaceHeatFlux });
     }
 
     getRadiationDoseBoostFromEffects() {

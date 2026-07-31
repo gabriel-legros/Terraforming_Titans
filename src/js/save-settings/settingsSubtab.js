@@ -1141,7 +1141,7 @@ function addSettingsListeners() {
       }
       gameSettings.factoryHeating = cached.factoryHeatingToggle.checked;
       if (!gameSettings.factoryHeating && terraforming) {
-        terraforming.setFactoryHeatPower(0);
+        terraforming.setFactoryHeatPower(0, 0);
       }
       updateTerraformingUI();
     });
@@ -1153,7 +1153,7 @@ function addSettingsListeners() {
       t(
         'ui.settings.factoryHeatingTooltip',
         {},
-        'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat.'
+        'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat.'
       )
     );
   }

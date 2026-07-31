@@ -2004,11 +2004,12 @@ function updateFactoryHeatPower(deltaTime, structures) {
     return;
   }
   if (!gameSettings.factoryHeating || !(deltaTime > 0)) {
-    terraforming.setFactoryHeatPower(0, []);
+    terraforming.setFactoryHeatPower(0, 0, []);
     return;
   }
 
   let power = 0;
+  let coolingPower = 0;
   const contributors = [];
   const surfaceAlbedo = Math.max(0, Math.min(1, terraforming.luminosity.surfaceAlbedo || 0));
   const solarCoolingMultiplier = 1 - surfaceAlbedo;
@@ -2029,7 +2030,9 @@ function updateFactoryHeatPower(deltaTime, structures) {
         ? (structure.production?.colony?.energy || 0) * structure.activeNumber * structure.getProductionRatio() * structure.getEffectiveProductionMultiplier() * structure.getEffectiveResourceProductionMultiplier('colony', 'energy') * 0.5 * (deltaTime / 1000)
         : structure.currentProduction?.colony?.energy || 0;
       if (producedEnergy > 0) {
-        structurePower -= producedEnergy * (1000 / deltaTime) * coolingCoefficient * solarCoolingMultiplier;
+        const removedHeat = producedEnergy * (1000 / deltaTime) * coolingCoefficient * solarCoolingMultiplier;
+        structurePower -= removedHeat;
+        coolingPower += removedHeat;
       }
     }
     if (structurePower !== 0) {
@@ -2040,7 +2043,7 @@ function updateFactoryHeatPower(deltaTime, structures) {
       power += structurePower;
     }
   }
-  terraforming.setFactoryHeatPower(power, contributors);
+  terraforming.setFactoryHeatPower(power, coolingPower, contributors);
 }
 
 function produceResources(deltaTime, buildings) {
