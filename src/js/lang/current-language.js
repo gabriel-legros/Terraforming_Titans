@@ -794,6 +794,13 @@ setLanguageData({
         totalLabel: 'Total :',
         spaceResources: 'Space Resources',
         categoryResources: '{name} Resources',
+        categories: {
+          colony: 'Colony',
+          surface: 'Surface',
+          underground: 'Underground',
+          atmospheric: 'Atmospheric',
+          special: 'Special',
+        },
         toggleView: 'Toggle colony/space resource view',
         landRecoverNote: 'Land can be recovered by turning off the corresponding building',
         wasteTooltipNote: 'Waste processing buildings display their consumption based on their available staffing and power, ignoring waste shortages. The numbers here are not their actual consumption.',

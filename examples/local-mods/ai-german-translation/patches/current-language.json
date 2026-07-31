@@ -785,6 +785,13 @@
         "totalLabel": "Insgesamt",
         "spaceResources": "Weltraumressourcen",
         "categoryResources": "{name} Ressourcen",
+        "categories": {
+          "colony": "Kolonie",
+          "surface": "Oberfläche",
+          "underground": "Untergrund",
+          "atmospheric": "Atmosphäre",
+          "special": "Spezial"
+        },
         "toggleView": "Kolonie/Raum Ressourcenansicht",
         "landRecoverNote": "Land kann durch Abschalten des entsprechenden Gebäudes wiederhergestellt werden",
         "wasteTooltipNote": "Abfallverarbeitungsgebäude zeigen ihren Verbrauch auf Basis ihrer verfügbaren Personal- und Stromversorgung, ohne Abfallmangel. Die Zahlen hier sind nicht ihr tatsächlicher Verbrauch.",

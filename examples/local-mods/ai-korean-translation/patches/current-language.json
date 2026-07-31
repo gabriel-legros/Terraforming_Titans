@@ -785,6 +785,13 @@
         "totalLabel": "합계:",
         "spaceResources": "우주 자원",
         "categoryResources": "{name} 자원",
+        "categories": {
+          "colony": "식민지",
+          "surface": "지표",
+          "underground": "지하",
+          "atmospheric": "대기",
+          "special": "특수"
+        },
         "toggleView": "식민지/우주 자원 보기 전환",
         "landRecoverNote": "해당 건물을 끄면 육지를 회수할 수 있습니다",
         "wasteTooltipNote": "폐기물 처리 건물은 폐기물 부족을 무시하고 사용 가능한 인력과 전력을 기준으로 소비량을 표시합니다. 여기에 표시되는 수치는 실제 소비량이 아닙니다.",

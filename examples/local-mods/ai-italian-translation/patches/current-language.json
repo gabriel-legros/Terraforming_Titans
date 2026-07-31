@@ -785,6 +785,13 @@
         "totalLabel": "Totale:",
         "spaceResources": "Risorse spaziali",
         "categoryResources": "Risorse {name}",
+        "categories": {
+          "colony": "della colonia",
+          "surface": "di superficie",
+          "underground": "sotterranee",
+          "atmospheric": "atmosferiche",
+          "special": "speciali"
+        },
         "toggleView": "Toggle colony/vista di risorse spaziali",
         "landRecoverNote": "La terra può essere recuperata spegnendo l'edificio corrispondente",
         "wasteTooltipNote": "Gli edifici di trattamento dei rifiuti mostrano il loro consumo in base al loro personale e alla loro potenza disponibile, ignorando la scarsità di rifiuti.",

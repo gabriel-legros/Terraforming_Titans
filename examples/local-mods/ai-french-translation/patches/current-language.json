@@ -785,6 +785,13 @@
         "totalLabel": "Total :",
         "spaceResources": "Ressources spatiales",
         "categoryResources": "Ressources — {name}",
+        "categories": {
+          "colony": "Colonie",
+          "surface": "Surface",
+          "underground": "Sous-sol",
+          "atmospheric": "Atmosphère",
+          "special": "Spéciales"
+        },
         "toggleView": "Basculer entre les ressources de la colonie et celles de l'espace",
         "landRecoverNote": "Les terres peuvent être récupérées en désactivant le bâtiment correspondant",
         "wasteTooltipNote": "Les bâtiments de traitement des déchets affichent leur consommation selon leur personnel et leur alimentation disponibles, sans tenir compte des pénuries de déchets. Les nombres indiqués ici ne correspondent pas à leur consommation réelle.",

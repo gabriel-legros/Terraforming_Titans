@@ -785,6 +785,13 @@
         "totalLabel": "总计：",
         "spaceResources": "太空资源",
         "categoryResources": "{name}资源",
+        "categories": {
+          "colony": "殖民地",
+          "surface": "地表",
+          "underground": "地下",
+          "atmospheric": "大气",
+          "special": "特殊"
+        },
         "toggleView": "切换殖民地/太空资源视图",
         "landRecoverNote": "关闭对应建筑即可收回陆地",
         "wasteTooltipNote": "废物处理建筑显示的消耗量以可用人员与电力为基础，不考虑废物短缺。这里的数值并非其实际消耗量。",

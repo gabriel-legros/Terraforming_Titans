@@ -785,6 +785,13 @@
         "totalLabel": "合計:",
         "spaceResources": "宇宙資源",
         "categoryResources": "{name} 資源",
+        "categories": {
+          "colony": "コロニー",
+          "surface": "地表",
+          "underground": "地下",
+          "atmospheric": "大気",
+          "special": "特殊"
+        },
         "toggleView": "切り替え colony/space リソースビュー",
         "landRecoverNote": "対応する建物をオフにすることによって、土地を回復することができます",
         "wasteTooltipNote": "廃棄物処理の建物は、利用可能なスタッフと電力に基づいて消費を表示し、廃棄物不足を無視します。ここでの数字は実際の消費ではありません。",

@@ -785,6 +785,13 @@
         "totalLabel": "Total:",
         "spaceResources": "Recursos espaciales",
         "categoryResources": "Recursos de {name}",
+        "categories": {
+          "colony": "la colonia",
+          "surface": "la superficie",
+          "underground": "el subsuelo",
+          "atmospheric": "la atmósfera",
+          "special": "tipo especial"
+        },
         "toggleView": "Alternar vista de recursos de colonia/espacio",
         "landRecoverNote": "La tierra puede recuperarse desactivando el edificio correspondiente",
         "wasteTooltipNote": "Los edificios de procesamiento de residuos muestran su consumo según el personal y la energía disponibles, sin tener en cuenta la escasez de residuos. Las cifras que aparecen aquí no representan su consumo real.",
