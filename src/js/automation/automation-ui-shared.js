@@ -742,6 +742,11 @@ function createAutomationTargetPresetController(config) {
     });
     refs.scopeSelect.addEventListener('change', (event) => {
       state.builderScope = event.target.value;
+      const automation = config.getAutomation();
+      const activePreset = automation.getSelectedPreset();
+      if (activePreset) {
+        activePreset.scopeAll = state.builderScope === 'all';
+      }
       refresh();
     });
     refs.presetModeSelect.addEventListener('change', (event) => {
