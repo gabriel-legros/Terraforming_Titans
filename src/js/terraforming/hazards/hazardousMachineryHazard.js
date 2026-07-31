@@ -727,12 +727,11 @@ class HazardousMachineryHazard {
     const oxygenRangePenalty = this.computeRangePenalty(oxygenEntry, oxygenPressureValue);
     const rawOxygenDecayPercentPerSecond = Math.max(0, oxygenRangePenalty) / 100;
     const oxygenDecayRatePerSecond = Math.min(
-      currentAmount,
       oxygenAmount,
       currentAmount * rawOxygenDecayPercentPerSecond
     );
     const oxygenDecayPercentPerSecond = currentAmount > 0
-      ? Math.min(1, oxygenDecayRatePerSecond / currentAmount)
+      ? oxygenDecayRatePerSecond / currentAmount
       : 0;
     const totalPenaltyPercentPerSecond = invasivenessDecayPercentPerSecond
       + temperatureDecayPercentPerSecond
