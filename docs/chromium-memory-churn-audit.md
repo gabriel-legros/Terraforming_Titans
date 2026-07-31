@@ -15,6 +15,7 @@ The audit covers:
 - repeated save/load cycles;
 - travel followed by another complete UI sweep, then reload and repeat;
 - listener counts, DOM-node counts, detached references exposed by game caches, element creation/removal/movement, text and class writes, DOM queries, JavaScript heap, console errors, and page errors.
+- optional heap-snapshot embedder/native bytes and Chromium browser/renderer/GPU/service working-set and private-memory totals for cases where OS memory diverges from the JavaScript heap.
 
 ## Method
 
@@ -92,6 +93,14 @@ The audit covers:
 - Normalized script time fell from `0.215` to `0.127` seconds per wall-clock second, about a 41% reduction. The after-run heap moved from `40,196,868` to `40,012,300` bytes and reported no console or page errors.
 - A focused 15-second visualizer benchmark recorded zero canvas creations and zero crater-texture rebuilds after setup. Across 343 frames, CPU frame-submission duration had a `0.4 ms` p95 and `10.6 ms` maximum; GPU texture count stayed at 9.
 - Deterministically seeded 768 px before/after captures of initial Zeus, clouded Venus, evolved Mars, partial/full ecumenopolis, and partial/full Nanoworld differed by at most one 8-bit channel value. No pixel exceeded that tolerance, including seam-facing full-coverage captures.
+
+### 2026-07-30/31 - Zeus native/process-memory extension
+
+- Added opt-in `--native-memory` coverage to the Chromium harness. It records matched heap-snapshot `extra_native_bytes`, renderer native-allocation profiles, and Windows working-set/private-byte totals for each Chromium browser, renderer, GPU, and service process. Simple samples and audit phase snapshots now carry those OS metrics into JSON and CSV.
+- Native smoke report: `chrome-memory-2026-07-31T01-58-03-516Z.json`. The loaded Zeus save accounted for about `91 MiB` in the baseline heap snapshot but the Chromium process tree was already about `512 MiB` private and `732 MiB` working set. This confirms that the earlier JavaScript/DOM-only audit did not measure most of the memory visible to Chrome Task Manager or Windows.
+- Diagnostic matrix report: `chrome-memory-2026-07-31T02-00-27-594Z.json`. It reached about `1,007 MiB` working set and `672 MiB` private after broad UI/lifecycle initialization, versus `684 MiB` working set and `507 MiB` private at baseline. The matched snapshot total rose only from `91.02` to `112.85 MiB`; `extra_native_bytes` rose from `6.04` to `8.47 MiB`. The process delta was concentrated in the renderer (`+131 MiB` private) with a smaller GPU contribution (`+32 MiB` private), demonstrating how a player can observe roughly 1-1.2 GB without a comparable live-JavaScript increase. This report is diagnostic rather than a passing coverage result because the Zeus save cannot perform the matrix's expected Olympus travel and contains pre-existing disconnected tooltip anchors.
+- Focused post-initialization Zeus Story Projects hold: `chrome-memory-2026-07-31T02-04-26-973Z.json`. Across 121 seconds with forced GC, the JavaScript sample moved from `27.58` to `28.32 MiB`, DOM nodes changed by `+6`, Chromium private bytes fell `9.39 MiB`, and working set fell `19.51 MiB`. Matched endpoint snapshots fell from `100.43` to `98.70 MiB`, including `extra_native_bytes` from `8.05` to `7.98 MiB`; endpoint process private bytes fell `17.35 MiB`. The active Zeus project view therefore showed no continuing native, GPU, renderer, DOM, or JavaScript growth after its one-time UI initialization.
+- Released bundled Chromium returned no measured-window native allocation stack samples in these runs, so native stack attribution remains opportunistic. The process breakdown and matched `extra_native_bytes` measurements remain usable when that profile is empty.
 
 ## Findings and Fixes
 

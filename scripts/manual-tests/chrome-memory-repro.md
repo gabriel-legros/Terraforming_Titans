@@ -62,6 +62,21 @@ Long retained-growth run:
 node scripts/manual-tests/run-chrome-memory-repro.js --duration 1800 --sample 10
 ```
 
+Include Chromium-native and process memory:
+
+```sh
+node scripts/manual-tests/run-chrome-memory-repro.js --channel bundled --headless --force-gc --native-memory --duration 1800 --sample 10
+```
+
+`--native-memory` is a Windows-Node diagnostic mode for cases where Chrome Task Manager or the OS grows while the live JavaScript heap stays flat. It adds:
+
+- matched baseline/final heap snapshots with node self-size, `extra_native_bytes`, and their combined snapshot-accounted total;
+- Chromium process-tree working set, private bytes, handles, and per-process rows for the browser, renderer, GPU, network, audio, and other services;
+- a process-memory time series in simple sampler JSON/CSV reports and before/after process totals in audit snapshots;
+- renderer native-allocation sampling for the measured window, plus renderer/browser all-time profiles when Chromium supplies samples.
+
+The mode takes two full heap snapshots, so it is intentionally opt-in and is not suitable for a fast structural smoke run. Native sampling is statistical and released Chrome builds may return few or no attributed native stacks; the matched `extra_native_bytes` and process totals still measure the otherwise missed memory. Change its average sampling interval with `--native-sampling-interval <bytes>`.
+
 Bundled Chromium:
 
 ```sh
@@ -106,6 +121,7 @@ Audit reports contain:
 - `audit.projectCoverage`: aggregate project coverage; with `--story-projects`, every registered project is checked across the initial save, its target world, and other worlds where it is available.
 - `audit.phases[].probe`: per-phase element creation/removal/movement, write/query, listener, and hot-signature counters. `addedNodeCount`, `removedNodeCount`, and `connectedExtraCount` count elements, not Text/Comment nodes.
 - `finalProbe`: the last audit phase's probe only. Use each `audit.phases[].probe` when comparing phases.
+- `nativeMemory` when enabled: matched snapshot/process baselines, final values, deltas, and native sampling profiles. `extraNativeBytes` is snapshot-accounted embedder/native memory; `chromiumPrivateBytes` and `chromiumWorkingSetBytes` are OS process-tree measurements and will normally be larger.
 - `topHeapAllocations`, `duplicateStrings`, `consoleMessages`, and `pageErrors`: whole-run allocation/string/error diagnostics.
 
 Before each forced-GC audit snapshot, the harness discards Chromium's stored console entries after its page listeners have captured errors. DevTools otherwise retains object arguments and can make repeated lifecycle logging look like a live game-object leak.
@@ -115,10 +131,13 @@ Simple sampler reports contain:
 - `summary.heapDeltaBytes`: retained or unreclaimed heap trend across the sampled window.
 - `summary.domNodeDelta`: net DOM node growth.
 - `samples[]`: time series for heap, DOM nodes, listener count, observer counters, and DOM creation counters.
+- `samples[].chromiumPrivateBytes` / `chromiumWorkingSetBytes` and browser/renderer/GPU breakdowns when `--native-memory` is enabled.
 - `finalProbe.topAdded`, `topRemoved`, and `topOperations`: hottest element/signature and DOM-operation stacks over the sampled run.
 - `topHeapAllocations`, `duplicateStrings`, `consoleMessages`, and `pageErrors`: allocation/string/error diagnostics.
 
 If normal samples trend up but `--force-gc` samples stay flat, the game is probably doing allocation churn rather than retaining objects.
 If both runs trend up, look first at `domNodeDelta`, listener growth, `connectedExtraCount`, and the top inserted signatures.
+
+If the JavaScript heap stays flat but Chromium private bytes, working set, or `extra_native_bytes` grows monotonically, investigate the process breakdown next. Renderer growth points toward DOM/canvas/WebGL/media/embedder state; GPU growth points toward textures, buffers, command queues, or driver allocations; browser/service growth points outside the page heap. Working set can fall when pages are reclaimed, while private bytes more closely tracks committed process-private memory. Virtual address-space totals are diagnostic only and must not be interpreted as resident RAM.
 
 For audit phases, compare repeated identical actions only after forced GC. Use the per-cycle lifecycle snapshots rather than just the phase endpoint. A world transition can legitimately change the live DOM and listener totals; the harness reloads the same baseline before each travel cycle so equal-index snapshots are comparable. The snapshots include connected all-node/Text/Comment counts to distinguish connected DOM from CDP's broader node counter. Treat heap movement as a confirmed leak only when it repeats and is supported by growing connected nodes/elements, listeners, detached references, tooltip anchors, or known caches.
