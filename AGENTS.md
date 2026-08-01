@@ -105,6 +105,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Browser incremental game with script entry via `index.html`.
 - Solar panel cooling conserves its planet-wide power while distributing the cooling flux among climate zones in proportion to each zone's mirror-modified sunlight after local surface albedo. Ordinary factory heat remains uniform across zones.
 - English localization is split between `src/js/lang/current-language.js` for shared game/UI text and `src/js/lang/story-language.js` for chapter titles, narratives, prompts, story-project content, and story-project-specific UI.
+- Shared building summaries, trading/disposal controls, colony tabs, garbage hazards, artificial-world history, Galaxy operations, and invasion reward labels resolve through `src/js/lang/current-language.js`; keep dynamic refresh paths localized as well as initial element creation.
 - Game-setting save migration, runtime application, and settings UI synchronization are owned by `src/js/save-settings/settings.js`; `save.js` only passes the saved settings payload to it.
 - Core simulation: `terraforming.js`, `physics.js`, cycle modules.
 - Economy/colony: `resource.js`, `building.js`, `colony.js`, related UI modules.

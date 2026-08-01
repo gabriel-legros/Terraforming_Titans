@@ -1211,16 +1211,19 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   constructedCountElement.classList.add('small-text'); // Add the 'small-text' class
 
 
+  const constructedLabel = document.createElement('strong');
+  constructedLabel.textContent = `${getStructuresUIText('ui.structures.labels.constructed', 'Constructed')}:`;
+  const constructedValue = document.createElement('span');
+  constructedCountElement.append(constructedLabel, document.createTextNode(' '), constructedValue);
+
   if (structure.canBeToggled) {
-    constructedCountElement.innerHTML = `
-      <strong>Constructed:</strong> <span id="${structure.name}-count-active">${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}</span>
-    `;
-    cached.countActiveElement = constructedCountElement.querySelector(`#${structure.name}-count-active`);
+    constructedValue.id = `${structure.name}-count-active`;
+    constructedValue.textContent = `${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}`;
+    cached.countActiveElement = constructedValue;
   } else {
-    constructedCountElement.innerHTML = `
-      <strong>Constructed:</strong> <span id="${structure.name}-count">${formatBuildingCount(structure.count)}</span>
-    `;
-    cached.countElement = constructedCountElement.querySelector(`#${structure.name}-count`);
+    constructedValue.id = `${structure.name}-count`;
+    constructedValue.textContent = formatBuildingCount(structure.count);
+    cached.countElement = constructedValue;
   }
 
   constructedInfo.appendChild(constructedCountElement);
@@ -3356,7 +3359,11 @@ function updateDecreaseButtonText(button, buildCount) {
       providesParts.push(`${formatNumber(flux, true, 2)} W/m² solar flux`);
     }
     if (providesParts.length > 0) {
-      sections.push({ key: 'provides', label: 'Provides', data: providesParts });
+      sections.push({
+        key: 'provides',
+        label: getStructuresUIText('ui.structures.labels.provides', 'Provides'),
+        data: providesParts
+      });
     }
 
     const production = scaleResourceMap(structure.getModifiedProduction(), buildCount);
@@ -3369,12 +3376,22 @@ function updateDecreaseButtonText(button, buildCount) {
       allowNegative: true
     });
     if (prodKeys.length > 0) {
-      sections.push({ key: 'production', label: 'Production', data: displayProduction, keys: prodKeys });
+      sections.push({
+        key: 'production',
+        label: getStructuresUIText('ui.structures.labels.production', 'Production'),
+        data: displayProduction,
+        keys: prodKeys
+      });
     }
 
     const consKeys = collectResourceKeys(displayConsumption, { forceShow: structure.alwaysShowConsumption });
     if (consKeys.length > 0) {
-      sections.push({ key: 'consumption', label: 'Consumption', data: displayConsumption, keys: consKeys });
+      sections.push({
+        key: 'consumption',
+        label: getStructuresUIText('ui.structures.labels.consumption', 'Consumption'),
+        data: displayConsumption,
+        keys: consKeys
+      });
     }
 
     if (structure.requiresMaintenance && Object.keys(structure.maintenanceCost).length > 0) {
@@ -3386,7 +3403,12 @@ function updateDecreaseButtonText(button, buildCount) {
         }, {});
       const maintenanceKeys = Object.keys(filteredMaintenance).map(r => `colony.${r}`);
       if (maintenanceKeys.length > 0) {
-        sections.push({ key: 'maintenance', label: 'Maintenance', data: filteredMaintenance, keys: maintenanceKeys });
+        sections.push({
+          key: 'maintenance',
+          label: getStructuresUIText('ui.structures.labels.maintenance', 'Maintenance'),
+          data: filteredMaintenance,
+          keys: maintenanceKeys
+        });
       }
     }
 

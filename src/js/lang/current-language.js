@@ -436,6 +436,9 @@ setLanguageData({
           abandoned: 'Abandoned',
         },
         typeLabels: {
+          shell: 'Shell',
+          ring: 'Ring',
+          disk: 'Disk',
           supermassiveShellworld: 'SMBH Shellworld',
         },
         columns: {
@@ -636,6 +639,7 @@ setLanguageData({
         unknownFaction: 'Unknown faction',
       },
       operationsPanel: {
+        title: 'Operations',
         emptySelectSector: 'Select a contested sector to assign fleet power.',
         fleetPowerLabel: 'Fleet Power',
         fleetPowerTooltip: 'Fleet power may be assigned to conduct operations on the map, in an attempt to gain sector control. You may only perform operations on a sector that you either contest, or is neighbour to a sector you fully control. The more fleet power assigned, the higher your chances of success, and the lower your losses, but your fleet will be busy in the meantime.',
@@ -737,6 +741,7 @@ setLanguageData({
         effectiveValue: 'Effective: {value}',
         remainingValue: 'Remaining: {value}',
         clearAll: 'Unassign all defensive assignments',
+        clearAllShort: 'Unassign All',
         lastFiveAttacks: 'Last 5 Attacks',
         toggleAttackHistory: 'Toggle attack history',
         historyEnemy: 'Enemy',
@@ -1253,6 +1258,11 @@ setLanguageData({
       labels: {
         productivity: 'Productivity',
         cost: 'Cost:',
+        constructed: 'Constructed',
+        provides: 'Provides',
+        production: 'Production',
+        consumption: 'Consumption',
+        maintenance: 'Maintenance',
         heat: 'Heat',
         cooling: 'Cooling',
       },
@@ -2273,6 +2283,7 @@ setLanguageData({
         disposalTargetsSubheading: 'Configure up to 15 resources. Active auto-start targets split assigned disposal evenly.',
         addTarget: '+ Add target',
         phase: 'Phase',
+        whichOne: 'Which one',
         none: '—',
         remove: 'Remove',
         waitForFullCapacity: 'Wait for full capacity',
@@ -2604,7 +2615,7 @@ setLanguageData({
     colony: {
       population: 'Population',
       nanocolony: 'Nanocolony',
-      followers: 'Followers',
+      followersTab: 'Followers',
       title: 'Colonies',
       unhideObsoleteBuildings: 'Unhide Obsolete Buildings',
       common: {
@@ -3900,7 +3911,16 @@ setLanguageData({
           },
         },
         rewards: {
+          manufacturingWorldThroughput: '+{value}% Manufacturing World throughput',
+          liftersSuperchargeMax: '+{value} Lifters supercharge max',
+          gigafoundryThroughput: '+{value}% Gigafoundry throughput',
+          spaceChemistryThroughput: '+{value}% Space Chemistry throughput',
           nuclearAlchemyThroughput: '+{value}% Nuclear Alchemy throughput',
+          oneillSectorCap: "O'Neill Cap Multiplier +{value}",
+          hephaestusYardEffectiveness: '+{value}% Hephaestus yard effectiveness',
+          spaceStorageCapacity: '+{value}% Space storage capacity',
+          liftersSuperchargeExponent: 'Lifters supercharge exponent -{value}',
+          liftersThroughput: '+{value}% Lifters throughput',
         },
       },
       statisticsTitle: 'Statistics',

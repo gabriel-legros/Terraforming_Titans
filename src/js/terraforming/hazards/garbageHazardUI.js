@@ -179,12 +179,12 @@ function createInfoIcon(text) {
 function formatGarbageResourceName(key) {
   const manager = getHazardManager();
   if (manager && manager.formatGarbageResourceName) {
-    return t(`resources.surface.${key}.name`, null, manager.formatGarbageResourceName(key));
+    return t(`catalogs.resources.surface.${key}.name`, null, manager.formatGarbageResourceName(key));
   }
 
   const withSpaces = `${key}`.replace(/([A-Z])/g, ' $1');
   const fallback = withSpaces.charAt(0).toUpperCase() + withSpaces.slice(1);
-  return t(`resources.surface.${key}.name`, null, fallback);
+  return t(`catalogs.resources.surface.${key}.name`, null, fallback);
 }
 
 function computeGarbagePenaltyValues(penalties, ratio) {
