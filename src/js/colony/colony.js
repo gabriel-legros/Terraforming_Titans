@@ -305,6 +305,52 @@ class Colony extends Building {
   updateProductivity(resources, deltaTime) {
     const targetProductivity = this.getTargetProductivity(resources, deltaTime);
 
+    if (this.active === 0n) {
+      this.setProductivityLimitInfo(0, 0, []);
+      this.productivity = 0;
+      this.displayProductivity = 0;
+      return;
+    }
+
+    const factors = [];
+    const consumption = this.getConsumption().colony || {};
+    for (const resource in colonyOutputNeedResources) {
+      if (!(resource in consumption)) {
+        continue;
+      }
+      const resourceData = resources.colony[resource];
+      const ratio = this.needProductivity[resource];
+      if (ratio < 0.9995) {
+        factors.push({
+          type: 'resource',
+          category: 'colony',
+          resource,
+          label: resourceData.displayName,
+          ratio,
+          availableAmount: resourceData.availabilityDetails.availableAmount,
+          requiredAmount: resourceData.availabilityDetails.requiredAmount,
+          largestDemands: [],
+        });
+      }
+    }
+
+    const colonists = resources.colony.colonists;
+    const colonistRatio = this.getConsumptionRatio();
+    if (colonistRatio < 0.9995) {
+      factors.push({
+        type: 'resource',
+        category: 'colony',
+        resource: 'colonists',
+        label: colonists.displayName,
+        ratio: colonistRatio,
+        availableAmount: colonists.value,
+        requiredAmount: colonists.cap,
+        largestDemands: [],
+      });
+    }
+    factors.sort((a, b) => a.ratio - b.ratio);
+    this.setProductivityLimitInfo(targetProductivity, targetProductivity, factors);
+
     const difference = Math.abs(targetProductivity - this.productivity);
     const baseFactor = difference < 0.05 ? 0.01 : 1;
     const dampingFactor = Building.getScaledDampingFactor(baseFactor, deltaTime);
