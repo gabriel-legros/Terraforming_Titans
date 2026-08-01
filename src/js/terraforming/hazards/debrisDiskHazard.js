@@ -422,6 +422,9 @@ class DebrisDiskHazard {
     const inactiveAvailable = structure.count > structure.active ? structure.count - structure.active : 0n;
     const inactiveLoss = inactiveAvailable < lossBigInt ? inactiveAvailable : lossBigInt;
     const activeLoss = lossBigInt - inactiveLoss;
+    if (structure.requiresDeposit) {
+      structure.releaseDeposit(resources, Number(lossBigInt));
+    }
     structure.count -= lossBigInt;
     if (activeLoss > 0n) {
       structure.active = structure.active > activeLoss ? structure.active - activeLoss : 0n;
