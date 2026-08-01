@@ -108,7 +108,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Shared building summaries, trading/disposal controls, colony tabs, garbage hazards, artificial-world history, Galaxy operations, and invasion reward labels resolve through `src/js/lang/current-language.js`; keep dynamic refresh paths localized as well as initial element creation.
 - Game-setting save migration, runtime application, and settings UI synchronization are owned by `src/js/save-settings/settings.js`; `save.js` only passes the saved settings payload to it.
 - Core simulation: `terraforming.js`, `physics.js`, cycle modules.
-- When phase-change heat would reverse a zone's non-phase temperature movement, it is normally stalled. Advanced Oversight may admit that phase heat when it moves the zone's selected mean/day/night metric toward its active temperature target, but the admitted movement is capped at that target; flux-mode targets retain the normal stall rule.
+- Before meridional temperature mixing, a local phase-heat reversal that the existing clamp would reject contributes the zone's current mean temperature instead of its raw phase-driven equilibrium. Phase heat admitted toward an Advanced Oversight temperature target remains unmodified. The existing post-wind reversal clamp remains authoritative for the trend and finite-heat-capacity update.
 - Economy/colony: `resource.js`, `building.js`, `colony.js`, related UI modules.
 - Story progression: `StoryManager` in `progress.js`.
 - Story-only project classes live under `src/js/story/`; keep their `index.html` script tags after required project base classes.
