@@ -2362,9 +2362,8 @@ setLanguageData({
         capModeGeometricLandPercent: '% of geometric land',
         capStatus: 'Cap: {value}',
         capReached: 'Cap reached',
-        liquidHydrogenWarning: 'Liquid hydrogen is preventing heat sinks from reducing core heat flux. Heat sinks can still mitigate factory heat and can still be built.',
+        liquidHydrogenWarning: 'Liquid hydrogen is preventing heat sinks from reducing core heat flux. Heat sinks can still mitigate factory and positive phase-change heat and can still be built.',
         liquidHydrogenStatus: 'Blocked: liquid hydrogen prevents core heat removal',
-        liquidHydrogenStatusShort: 'Blocked',
       },
       deeperMining: {
         deepeningSpeedBoost: 'Deepening speed boost',
@@ -3209,10 +3208,13 @@ setLanguageData({
             '',
             'This flux is not impacted by albedo or day-night averaging.',
           ].join('\n'),
-          factoryHeatTooltip: 'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. A certain megastructure can help reduce this. Direct waste heat is not impacted by albedo or day-night averaging.',
+          factoryHeatTooltip: 'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Mega Heat Sinks remove core heat first, then factory heat, then positive phase-change heat. Direct waste heat is not impacted by albedo or day-night averaging.',
           factoryHeatTopContributors: 'Top contributors by absolute impact:',
           factoryHeatOtherSources: 'Other sources',
-          phaseChangeHeatTooltip: 'Signed planetary heat exchanged by phase changes during the latest climate slice. Positive values mean freezing, condensation, or deposition released heat; negative values mean melting, evaporation, boiling, or sublimation absorbed heat. The effect is calculated separately in each climate zone.',
+          phaseChangeHeatTooltip: 'Signed planetary heat exchanged by phase changes during the latest climate slice. Positive values mean freezing, condensation, or deposition released heat; negative values mean melting, evaporation, boiling, or sublimation absorbed heat. Mega Heat Sinks use capacity remaining after core and factory heat to mitigate positive phase-change power proportionally across heating zones. Negative phase-change flux is unchanged.',
+          phaseChangeHeatRaw: 'Raw',
+          phaseChangeHeatMegaHeatSink: 'Mega Heat Sink',
+          phaseChangeHeatNet: 'Net',
           equilibriumTempTooltip: 'The blackbody radiative balance temperature from absorbed sunlight, albedo, and direct non-atmospheric heat. It ignores greenhouse heat trapping; physically, it is the temperature that would radiate the same energy back to space. Earth\'s value is about 255 K (-18°C).',
           labels: {
             globalMeanTemp: 'Global Mean Temp',
@@ -5231,9 +5233,9 @@ setLanguageData({
       earlyAdvancedOversight: 'Early Advanced Oversight',
       earlyAdvancedOversightTooltip: 'The game has a powerful solver for space mirrors that can automatically target specified temperature values.  It is intended to be something that must be earned, and is usually available on Story World 5.  If you find the fiddling too frustrating however feel free to have it early.  You still need the Space Mirror Facility Oversight research.',
       phaseChangeHeat: 'Phase Change Heat',
-      phaseChangeHeatTooltip: 'When enabled, melting, evaporation, boiling, and sublimation absorb planetary heat, while freezing, condensation, and deposition release it. This may lead to dramatic changes in net energy flux. Advanced Oversight is capable of accounting for it.',
+      phaseChangeHeatTooltip: 'When enabled, melting, evaporation, boiling, and sublimation absorb planetary heat, while freezing, condensation, and deposition release it. Mega Heat Sinks use capacity remaining after core and factory heat to mitigate positive phase-change heat proportionally across heating zones. Advanced Oversight accounts for the resulting zonal heat load.',
       factoryHeating: 'Factory heating',
-      factoryHeatingTooltip: 'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. A certain megastructure can help mitigate factory heating.  \n\n You should use this setting alongside Realistic factory energy consumption',
+      factoryHeatingTooltip: 'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat, then positive phase-change heat.\n\nYou should use this setting alongside Realistic factory energy consumption.',
       realisticFactoryEnergyConsumption: 'Realistic factory energy consumption',
       realisticFactoryEnergyConsumptionTooltip: 'When enabled, buildings use plausible industrial energy demands based on their workers and material throughput instead of the defaults.  This can make the game a lot easier.  This setting may one day become the new default once the game is rebalanced around it.',
       infinitePatience: 'Infinite patience',
@@ -5959,7 +5961,7 @@ setLanguageData({
       },
       megaHeatSink: {
         name: 'Mega Heat Sink',
-        description: 'Construct a titanic heatsink complex to siphon planetary heat at unprecedented scales, fully equipped with its own pumps.  Each heat sink will accelerate planet cooling by 1 PW.  Will not take the current temperature below its trend.',
+        description: 'Construct a titanic heatsink complex to siphon planetary heat at unprecedented scales, fully equipped with its own pumps. Each heat sink supplies 1 PW of cooling, mitigating core heat, factory heat, and positive phase-change heat before accelerating zonal cooling. Will not take any zone below its trend.',
       },
       spaceAntimatter: {
         name: 'Space Antimatter',
@@ -6583,7 +6585,7 @@ setLanguageData({
         },
         mega_heat_sink: {
           name: 'Mega Heat Sink',
-          description: 'Develops a blueprint for a massive superalloy heatsink, a repeatable special project capable of accelerating planet cooling and mitigating factory heating.',
+          description: 'Develops a blueprint for a massive superalloy heatsink, a repeatable special project capable of accelerating planet cooling and mitigating core, factory, and positive phase-change heat.',
         },
         lifting: {
           name: 'Lifting',

@@ -1127,7 +1127,7 @@ function addSettingsListeners() {
       t(
         'ui.settings.phaseChangeHeatTooltip',
         {},
-        'When enabled, melting, evaporation, boiling, and sublimation absorb planetary heat, while freezing, condensation, and deposition release it. Phase changes are limited by available zonal energy and may hold a zone near a transition temperature. Advanced Oversight accounts for this zonal heat load.'
+        'When enabled, melting, evaporation, boiling, and sublimation absorb planetary heat, while freezing, condensation, and deposition release it. Mega Heat Sinks use capacity remaining after core and factory heat to mitigate positive phase-change heat proportionally across heating zones. Advanced Oversight accounts for the resulting zonal heat load.'
       )
     );
   }
@@ -1153,7 +1153,7 @@ function addSettingsListeners() {
       t(
         'ui.settings.factoryHeatingTooltip',
         {},
-        'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat.'
+        'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat, then positive phase-change heat.'
       )
     );
   }

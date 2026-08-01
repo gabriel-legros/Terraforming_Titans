@@ -731,6 +731,53 @@ class Terraforming extends EffectableEntity{
     return Math.max(0, coreHeatFlux - megaHeatSinkFlux);
   }
 
+  getMegaHeatSinkAllocation(zonalSurfaceHeatFluxes = {}) {
+    const surfaceArea = this.celestialParameters.surfaceArea
+      || (4 * Math.PI * Math.pow((this.celestialParameters.radius || 0) * 1000, 2));
+    const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
+    let remainingPower = this.getMegaHeatSinkRawFlux() * surfaceArea;
+
+    const coreHeatPower = megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()
+      ? 0
+      : Math.min(remainingPower, this.getCoreHeatFlux() * surfaceArea);
+    remainingPower -= coreHeatPower;
+
+    const factoryHeatPower = Math.min(
+      remainingPower,
+      Math.max(0, this.getFactoryHeatFlux()) * surfaceArea
+    );
+    remainingPower -= factoryHeatPower;
+
+    let positivePhaseHeatPower = 0;
+    for (const zone of getZones()) {
+      const zoneArea = surfaceArea * this.getZoneWeight(zone);
+      const zonePower = Math.max(0, zonalSurfaceHeatFluxes[zone] || 0) * zoneArea;
+      positivePhaseHeatPower += zonePower;
+    }
+
+    const phaseHeatPower = Math.min(remainingPower, positivePhaseHeatPower);
+    const phaseHeatFraction = positivePhaseHeatPower > 0
+      ? phaseHeatPower / positivePhaseHeatPower
+      : 0;
+    const phaseHeatMitigationByZone = {};
+    const netPhaseHeatFluxByZone = {};
+    for (const zone of getZones()) {
+      const rawFlux = zonalSurfaceHeatFluxes[zone] || 0;
+      const mitigatedFlux = Math.max(0, rawFlux) * phaseHeatFraction;
+      phaseHeatMitigationByZone[zone] = mitigatedFlux;
+      netPhaseHeatFluxByZone[zone] = rawFlux - mitigatedFlux;
+    }
+    remainingPower -= phaseHeatPower;
+
+    return {
+      coreHeatFlux: surfaceArea > 0 ? coreHeatPower / surfaceArea : 0,
+      factoryHeatFlux: surfaceArea > 0 ? factoryHeatPower / surfaceArea : 0,
+      phaseHeatMitigationByZone,
+      netPhaseHeatFluxByZone,
+      surplusCoolingPower: remainingPower,
+    };
+  }
+
   setFactoryHeatPower(power, coolingPower, contributors = []) {
     const surfaceArea = this.celestialParameters.surfaceArea
       || (4 * Math.PI * Math.pow((this.celestialParameters.radius || 0) * 1000, 2));
@@ -817,11 +864,8 @@ class Terraforming extends EffectableEntity{
     if (factoryHeatFlux <= 0) {
       return factoryHeatFlux;
     }
-    const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
-    const sinkAfterCore = megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()
-      ? this.getMegaHeatSinkRawFlux()
-      : Math.max(0, this.getMegaHeatSinkFlux() - this.getCoreHeatFlux());
-    return Math.max(0, factoryHeatFlux - sinkAfterCore);
+    const allocation = this.getMegaHeatSinkAllocation();
+    return factoryHeatFlux - allocation.factoryHeatFlux;
   }
 
   getFactoryHeatBreakdown() {
@@ -834,10 +878,7 @@ class Terraforming extends EffectableEntity{
       return contributors;
     }
     const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
-    const sinkAfterCore = megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()
-      ? this.getMegaHeatSinkRawFlux()
-      : Math.max(0, this.getMegaHeatSinkFlux() - this.getCoreHeatFlux());
-    const mitigatedFactoryHeat = Math.min(factoryHeatFlux, sinkAfterCore);
+    const mitigatedFactoryHeat = this.getMegaHeatSinkAllocation().factoryHeatFlux;
     if (mitigatedFactoryHeat > 0) {
       contributors.push({
         name: megaHeatSinkProject.displayName,
@@ -847,29 +888,18 @@ class Terraforming extends EffectableEntity{
     return contributors;
   }
 
-  getNetSurfaceHeatFlux(factoryCoolingScale = 1) {
+  getNetSurfaceHeatFlux(factoryCoolingScale = 1, megaHeatSinkAllocation = this.getMegaHeatSinkAllocation()) {
     const coreHeatFlux = this.getCoreHeatFlux();
     const factoryHeatFlux = this.getFactoryHeatFlux();
     const factoryCoolingAdjustment = this.getFactoryCoolingFlux() * (1 - factoryCoolingScale);
-    const megaHeatSinkFlux = this.getMegaHeatSinkFlux();
     const positiveFactoryHeatFlux = Math.max(0, factoryHeatFlux);
     const factoryCoolingFlux = Math.max(0, -factoryHeatFlux);
-    const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
-    if (megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()) {
-      const factoryHeatAfterSink = Math.max(0, positiveFactoryHeatFlux - this.getMegaHeatSinkRawFlux());
-      return coreHeatFlux + factoryHeatAfterSink - factoryCoolingFlux + factoryCoolingAdjustment;
-    }
-    return Math.max(0, coreHeatFlux + positiveFactoryHeatFlux - megaHeatSinkFlux) - factoryCoolingFlux + factoryCoolingAdjustment;
-  }
-
-  getMegaHeatSinkCoolingFlux() {
-    const totalHeatFlux = this.getCoreHeatFlux() + Math.max(0, this.getFactoryHeatFlux());
-    const megaHeatSinkFlux = this.getMegaHeatSinkRawFlux();
-    const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
-    if (megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()) {
-      return megaHeatSinkFlux;
-    }
-    return Math.max(0, megaHeatSinkFlux - totalHeatFlux);
+    return coreHeatFlux
+      - megaHeatSinkAllocation.coreHeatFlux
+      + positiveFactoryHeatFlux
+      - megaHeatSinkAllocation.factoryHeatFlux
+      - factoryCoolingFlux
+      + factoryCoolingAdjustment;
   }
 
   setTemperatureValuesToTrend() {
@@ -1798,8 +1828,9 @@ class Terraforming extends EffectableEntity{
     const zonalFluxOverrides = options && options.zonalFluxOverrides;
     const zonalSurfaceHeatFluxes = options && options.zonalSurfaceHeatFluxes;
     const disableAvailableAdvancedHeating = !!(options && options.disableAvailableAdvancedHeating);
-    const globalNetSurfaceHeatFlux = this.getNetSurfaceHeatFlux();
-    const megaHeatSinkCoolingFlux = this.getMegaHeatSinkCoolingFlux();
+    const megaHeatSinkAllocation = this.getMegaHeatSinkAllocation(zonalSurfaceHeatFluxes);
+    const netZonalSurfaceHeatFluxes = megaHeatSinkAllocation.netPhaseHeatFluxByZone;
+    const globalNetSurfaceHeatFlux = this.getNetSurfaceHeatFlux(1, megaHeatSinkAllocation);
     const allowAvailableHeating =
         !!(mirrorOversightSettings?.advancedOversight) &&
         mirrorOversightSettings.allowAvailableToHeat !== false;
@@ -1866,13 +1897,11 @@ class Terraforming extends EffectableEntity{
             zoneArea,
             zoneLiquidWater: this.zonalSurface[zone]?.liquidWater || 0
         };
-        const zonalSurfaceHeatFlux = zonalSurfaceHeatFluxes
-            ? (zonalSurfaceHeatFluxes[zone] || 0)
-            : 0;
+        const zonalSurfaceHeatFlux = netZonalSurfaceHeatFluxes[zone];
         const factoryCoolingScale = weightedEffectiveLight > 0
             ? zonalEffectiveLight[zone] / weightedEffectiveLight
             : 0;
-        const netSurfaceHeatFlux = this.getNetSurfaceHeatFlux(factoryCoolingScale);
+        const netSurfaceHeatFlux = this.getNetSurfaceHeatFlux(factoryCoolingScale, megaHeatSinkAllocation);
 
         const zTemps = dayNightTemperaturesModel({
             ...baseParams,
@@ -1968,16 +1997,16 @@ class Terraforming extends EffectableEntity{
     }
     const baselineCombinedFluxes = {};
     const availableHeatingPowerDemands = {};
+    const megaHeatSinkCoolingPowerDemands = {};
     let totalAvailableHeatingPowerDemand = 0;
+    let totalMegaHeatSinkCoolingPowerDemand = 0;
     for (const zone of ORDER) {
         const previousMean = this.temperature.zones[zone].value;
         const capacity = z[zone].capacityPerArea;
         const greenhouseFactor = z[zone].greenhouseFactor || 1;
         const zoneFlux = this.luminosity.zonalFluxes[zone];
         const usesFlatSurfaceFlux = isRingWorld() || isAldersonDiskWorld();
-        const zonalSurfaceHeatFlux = zonalSurfaceHeatFluxes
-            ? (zonalSurfaceHeatFluxes[zone] || 0)
-            : 0;
+        const zonalSurfaceHeatFlux = netZonalSurfaceHeatFluxes[zone];
         const absorbedFlux =
             ((1 - z[zone].albedo) * zoneFlux * (usesFlatSurfaceFlux ? 1 : 0.25))
             + z[zone].netSurfaceHeatFlux
@@ -1994,25 +2023,34 @@ class Terraforming extends EffectableEntity{
             ? STEFAN_BOLTZMANN * Math.pow(Math.max(T[zone], 0), 4) / greenhouseFactor
             : 0;
         const windFlux = mixingDelta !== 0 ? emittedFluxPreTarget - emittedFluxTarget : 0;
-        let combinedFlux = absorbedFlux - emittedFlux - windFlux;
-
-        if (desiredDelta < 0 && megaHeatSinkCoolingFlux > 0) {
-          combinedFlux -= megaHeatSinkCoolingFlux;
-        }
+        const combinedFlux = absorbedFlux - emittedFlux - windFlux;
         baselineCombinedFluxes[zone] = combinedFlux;
 
+        const baselineTemperature = !ignoreHeatCapacity && dtSeconds > 0 && capacity > 0
+          ? previousMean + (combinedFlux * dtSeconds) / capacity
+          : previousMean;
         let heatingPowerDemand = 0;
         if (allowAvailableHeating && !ignoreHeatCapacity && dtSeconds > 0 && desiredDelta > 0 && capacity > 0) {
-          const baselineTemperature =
-            previousMean + (combinedFlux * dtSeconds) / capacity;
           const requiredHeatingFlux = Math.max(0, (T[zone] - baselineTemperature) * capacity / dtSeconds);
           heatingPowerDemand = requiredHeatingFlux * (z[zone].area || 0);
         }
         availableHeatingPowerDemands[zone] = heatingPowerDemand;
         totalAvailableHeatingPowerDemand += heatingPowerDemand;
+
+        let coolingPowerDemand = 0;
+        if (!ignoreHeatCapacity && dtSeconds > 0 && desiredDelta < 0 && capacity > 0) {
+          const requiredCoolingFlux = Math.max(0, (baselineTemperature - T[zone]) * capacity / dtSeconds);
+          coolingPowerDemand = requiredCoolingFlux * (z[zone].area || 0);
+        }
+        megaHeatSinkCoolingPowerDemands[zone] = coolingPowerDemand;
+        totalMegaHeatSinkCoolingPowerDemand += coolingPowerDemand;
     }
     this.availableAdvancedHeatingPowerDemand = totalAvailableHeatingPowerDemand;
     const usableAvailableHeatingPower = Math.min(availableAdvancedHeatingPower, totalAvailableHeatingPowerDemand);
+    const usableMegaHeatSinkCoolingPower = Math.min(
+      megaHeatSinkAllocation.surplusCoolingPower,
+      totalMegaHeatSinkCoolingPowerDemand
+    );
 
     // --- Write back temperatures; shift day/night by mean offset ------
     for (const zone of ORDER) {
@@ -2047,6 +2085,15 @@ class Terraforming extends EffectableEntity{
                 const heatingPower = usableAvailableHeatingPower * (heatingPowerDemand / totalAvailableHeatingPowerDemand);
                 const heatingFlux = heatingPower / zoneArea;
                 combinedFlux += heatingFlux;
+              }
+            }
+            if (desiredDelta < 0 && usableMegaHeatSinkCoolingPower > 0) {
+              const zoneArea = z[zone].area || 0;
+              const coolingPowerDemand = megaHeatSinkCoolingPowerDemands[zone] || 0;
+              if (zoneArea > 0 && totalMegaHeatSinkCoolingPowerDemand > 0 && coolingPowerDemand > 0) {
+                const coolingPower = usableMegaHeatSinkCoolingPower
+                  * (coolingPowerDemand / totalMegaHeatSinkCoolingPowerDemand);
+                combinedFlux -= coolingPower / zoneArea;
               }
             }
 

@@ -58,7 +58,7 @@
         blocksProgress: false,
         message: getMegaHeatSinkText(
           'ui.projects.megaHeatSink.liquidHydrogenWarning',
-          'Liquid hydrogen insulates the world from Mega Heat Sink core-flux suppression. Heat sinks can still mitigate factory heat, but they provide no core-heat reduction while any liquid hydrogen remains.'
+          'Liquid hydrogen insulates the world from Mega Heat Sink core-flux suppression. Heat sinks can still mitigate factory and positive phase-change heat, but they provide no core-heat reduction while any liquid hydrogen remains.'
         ),
         statusText: getMegaHeatSinkText(
           'ui.projects.megaHeatSink.liquidHydrogenStatus',
@@ -300,7 +300,6 @@
       const coolingPerHeatSink = this.calculateCoolingPerHeatSink();
       const coolingPerSecond = this.calculateCoolingPerSecond();
       const coolingActive = this.heatSinksActive;
-      const hydrogenBlocked = this.hasLiquidHydrogenBlocker();
       setToggleButtonState(elements.coolingToggle, coolingActive);
       elements.capCheckbox.checked = this.capEnabled;
       elements.activeCapCheckbox.checked = this.activeCapEnabled;
@@ -330,11 +329,6 @@
       }
       if (!coolingActive) {
         elements.fluxMitigationValue.textContent = getMegaHeatSinkText('ui.projects.common.off', 'Off');
-      } else if (hydrogenBlocked) {
-        elements.fluxMitigationValue.textContent = getMegaHeatSinkText(
-          'ui.projects.megaHeatSink.liquidHydrogenStatusShort',
-          'Blocked'
-        );
       } else if (Number.isFinite(fluxMitigation) && fluxMitigation > 0) {
         elements.fluxMitigationValue.textContent = `${formatValue(fluxMitigation, false, fluxMitigation >= 100 ? 2 : 4)} W/m^2`;
       } else {
@@ -355,8 +349,8 @@
         return 0;
       }
 
-      return terra.getMegaHeatSinkFlux
-        ? terra.getMegaHeatSinkFlux()
+      return terra.getMegaHeatSinkRawFlux
+        ? terra.getMegaHeatSinkRawFlux()
         : 0;
     }
 
