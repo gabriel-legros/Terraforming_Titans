@@ -1291,7 +1291,7 @@
 
 .kerati-hive-transfer-controls {
     display: grid;
-    grid-template-columns: minmax(120px, 180px) auto auto;
+    grid-template-columns: minmax(80px, 1fr) auto minmax(70px, 1fr) minmax(70px, 1fr);
     gap: 8px;
     align-items: center;
     width: 100%;
@@ -1303,7 +1303,7 @@
 }
 
 .kerati-hive-transfer-button {
-    min-width: 84px;
+    min-width: 70px;
 }
 
 .kerati-hive-action-grid {
@@ -1377,6 +1377,34 @@
     white-space: nowrap;
 }
 
+.kerati-hive-action-card__automation {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.kerati-hive-auto-label,
+.kerati-hive-weight-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    font-size: 0.82em;
+    white-space: nowrap;
+}
+
+.kerati-hive-auto-food-label {
+    justify-self: end;
+}
+
+.kerati-hive-weight-input {
+    width: 64px;
+    min-width: 0;
+    padding: 3px 5px;
+}
+
 @media (max-width: 720px) {
     .kerati-hive-summary-layout {
         grid-template-columns: 1fr;
@@ -1399,6 +1427,10 @@
     }
 
     .kerati-hive-action-card__batch {
+        justify-content: flex-start;
+    }
+
+    .kerati-hive-action-card__automation {
         justify-content: flex-start;
     }
 

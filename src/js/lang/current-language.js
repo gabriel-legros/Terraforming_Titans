@@ -1926,7 +1926,12 @@ setLanguageData({
         },
         foodTransfer: {
           add: 'Add Food',
+          auto: 'Auto /s',
           available: 'Colony Food {value}',
+        },
+        automation: {
+          auto: 'Auto',
+          weight: 'Weight',
         },
         hunting: {
           on: 'Hunting On',
@@ -4466,6 +4471,18 @@ setLanguageData({
             autoOperationEnabled: 'Auto Operation Enabled',
             spaceshipCostMultiplier: 'Spaceship Cost Multiplier',
             currentMass: 'Current Mass',
+            keratiHive: {
+              hiveFood: 'Hive Food',
+              honey: 'Honey',
+              spawningPools: 'Spawning Pools',
+              territory: 'Territory',
+              drones: 'Drones Owned',
+              builders: 'Builders Owned',
+              hunters: 'Hunters Owned',
+              princesses: 'Princesses Owned',
+              queens: 'Queens Owned',
+              empresses: 'Empresses Owned',
+            },
           },
           artificial: {
             source: 'Artificial',

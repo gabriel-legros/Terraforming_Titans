@@ -254,6 +254,20 @@ class ScriptVariableRegistry {
     if (targetId === 'ringworldTerraforming') {
       attributes.push({ id: 'currentMass', label: this.getScriptVariableText('projects.currentMass', 'Current Mass'), valueType: 'number' });
     }
+    if (targetId === 'keratiHive') {
+      attributes.push(
+        { id: 'hiveFood', label: this.getScriptVariableText('projects.keratiHive.hiveFood', 'Hive Food'), valueType: 'number' },
+        { id: 'honey', label: this.getScriptVariableText('projects.keratiHive.honey', 'Honey'), valueType: 'number' },
+        { id: 'spawningPools', label: this.getScriptVariableText('projects.keratiHive.spawningPools', 'Spawning Pools'), valueType: 'number' },
+        { id: 'territory', label: this.getScriptVariableText('projects.keratiHive.territory', 'Territory'), valueType: 'number' },
+        { id: 'drones', label: this.getScriptVariableText('projects.keratiHive.drones', 'Drones Owned'), valueType: 'number' },
+        { id: 'builders', label: this.getScriptVariableText('projects.keratiHive.builders', 'Builders Owned'), valueType: 'number' },
+        { id: 'hunters', label: this.getScriptVariableText('projects.keratiHive.hunters', 'Hunters Owned'), valueType: 'number' },
+        { id: 'princesses', label: this.getScriptVariableText('projects.keratiHive.princesses', 'Princesses Owned'), valueType: 'number' },
+        { id: 'queens', label: this.getScriptVariableText('projects.keratiHive.queens', 'Queens Owned'), valueType: 'number' },
+        { id: 'empresses', label: this.getScriptVariableText('projects.keratiHive.empresses', 'Empresses Owned'), valueType: 'number' }
+      );
+    }
     return attributes;
   }
 
@@ -730,6 +744,18 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'spaceshipCostMultiplier') return this.resolveProjectSpaceshipCostMultiplier(project);
     if (ref.attribute === 'currentMass' && ref.target === 'ringworldTerraforming') {
       return this.toNumber(project.getTotalRingworldMassTons());
+    }
+    if (ref.target === 'keratiHive') {
+      if (ref.attribute === 'hiveFood') return this.toNumber(project.hiveFood);
+      if (ref.attribute === 'honey') return this.toNumber(project.honey);
+      if (ref.attribute === 'spawningPools') return this.toNumber(project.spawningPools);
+      if (ref.attribute === 'territory') return this.toNumber(project.territory);
+      if (ref.attribute === 'drones') return this.toNumber(project.drones);
+      if (ref.attribute === 'builders') return this.toNumber(project.builders);
+      if (ref.attribute === 'hunters') return this.toNumber(project.hunters);
+      if (ref.attribute === 'princesses') return this.toNumber(project.princesses);
+      if (ref.attribute === 'queens') return this.toNumber(project.queens);
+      if (ref.attribute === 'empresses') return this.toNumber(project.empresses);
     }
     return 0;
   }
