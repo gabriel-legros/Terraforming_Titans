@@ -87,7 +87,7 @@ function getFactoryHeatTooltipText(contributors = terraforming.getFactoryHeatBre
   const lines = [
     getTerraformingSummaryText(
       'temperature.factoryHeatTooltip',
-      'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat, then positive phase-change heat. Direct waste heat is not impacted by albedo or day-night averaging.'
+      'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat; any remaining capacity accelerates cooling toward the temperature trend. Direct waste heat is not impacted by albedo or day-night averaging.'
     ),
   ];
   contributors.sort((a, b) => Math.abs(b.flux) - Math.abs(a.flux));
@@ -115,30 +115,18 @@ function getFactoryHeatTooltipText(contributors = terraforming.getFactoryHeatBre
   return lines.join('\n');
 }
 
-function getPhaseChangeHeatTooltipText(allocation) {
+function getPhaseChangeHeatTooltipText() {
   const lines = [
     getTerraformingSummaryText(
       'temperature.phaseChangeHeatTooltip',
-      'Signed planetary heat exchanged by phase changes during the latest climate slice. Positive values mean freezing, condensation, or deposition released heat; negative values mean melting, evaporation, boiling, or sublimation absorbed heat. Mega Heat Sinks use capacity remaining after core and factory heat to mitigate positive phase-change power proportionally across heating zones. Negative phase-change flux is unchanged.'
+      'Signed planetary heat exchanged by phase changes during the latest climate slice. Positive values mean freezing, condensation, or deposition released heat; negative values mean melting, evaporation, boiling, or sublimation absorbed heat. Phase-change heat does not alter the temperature trend or Advanced Oversight assignments. It can speed or slow movement toward the trend, but cannot reverse that movement or carry temperature past the trend.'
     ),
   ];
-  const rawLabel = getTerraformingSummaryText('temperature.phaseChangeHeatRaw', 'Raw');
-  const mitigationLabel = getTerraformingSummaryText(
-    'temperature.phaseChangeHeatMegaHeatSink',
-    'Mega Heat Sink'
-  );
-  const netLabel = getTerraformingSummaryText('temperature.phaseChangeHeatNet', 'Net');
   lines.push('');
   for (const zone of getZones()) {
-    const rawFlux = terraforming.phaseChangeHeatFluxByZone[zone] || 0;
-    const mitigationFlux = -(allocation.phaseHeatMitigationByZone[zone] || 0);
-    const netFlux = allocation.netPhaseHeatFluxByZone[zone];
-    const rawText = `${rawFlux > 0 ? '+' : ''}${formatNumber(rawFlux, false, 2)}`;
-    const mitigationText = `${mitigationFlux > 0 ? '+' : ''}${formatNumber(mitigationFlux, false, 2)}`;
-    const netText = `${netFlux > 0 ? '+' : ''}${formatNumber(netFlux, false, 2)}`;
-    lines.push(
-      `${getTerraformingZoneLabel(zone)}: ${rawLabel} ${rawText}; ${mitigationLabel} ${mitigationText}; ${netLabel} ${netText} W/m²`
-    );
+    const flux = terraforming.phaseChangeHeatFluxByZone[zone] || 0;
+    const fluxText = `${flux > 0 ? '+' : ''}${formatNumber(flux, false, 2)}`;
+    lines.push(`${getTerraformingZoneLabel(zone)}: ${fluxText} W/m²`);
   }
   return lines.join('\n');
 }
@@ -1457,9 +1445,7 @@ function createTemperatureBox(row) {
     const phaseChangeHeatInfo = temperatureBox.querySelector('#temperature-phase-change-heat-info');
     const phaseChangeHeatTooltip = attachDynamicInfoTooltip(
       phaseChangeHeatInfo,
-      getPhaseChangeHeatTooltipText(
-        terraforming.getMegaHeatSinkAllocation(terraforming.phaseChangeHeatFluxByZone)
-      )
+      getPhaseChangeHeatTooltipText()
     );
     const factoryHeatLine = temperatureBox.querySelector('#temperature-factory-heat-line');
     const factoryHeatInfo = document.createElement('span');
@@ -1691,11 +1677,8 @@ function createTemperatureBox(row) {
         els.phaseChangeHeatLine.style.display = display;
       }
     }
-    const phaseHeatAllocation = terraforming.getMegaHeatSinkAllocation(
-      terraforming.phaseChangeHeatFluxByZone
-    );
     if (els.phaseChangeHeatTooltip) {
-      const tooltipText = getPhaseChangeHeatTooltipText(phaseHeatAllocation);
+      const tooltipText = getPhaseChangeHeatTooltipText();
       if (els.phaseChangeHeatTooltip.textContent !== tooltipText) {
         setTooltipText(els.phaseChangeHeatTooltip, tooltipText);
       }
@@ -1703,7 +1686,7 @@ function createTemperatureBox(row) {
     if (els.phaseChangeHeat) {
       let flux = 0;
       for (const zone of getZones()) {
-        flux += phaseHeatAllocation.netPhaseHeatFluxByZone[zone] * terraforming.getZoneWeight(zone);
+        flux += terraforming.phaseChangeHeatFluxByZone[zone] * terraforming.getZoneWeight(zone);
       }
       const phaseChangeHeatText = `${flux > 0 ? '+' : ''}${formatNumber(flux, false, 2)}`;
       if (els.phaseChangeHeat.textContent !== phaseChangeHeatText) {

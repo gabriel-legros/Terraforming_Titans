@@ -58,7 +58,7 @@
         blocksProgress: false,
         message: getMegaHeatSinkText(
           'ui.projects.megaHeatSink.liquidHydrogenWarning',
-          'Liquid hydrogen insulates the world from Mega Heat Sink core-flux suppression. Heat sinks can still mitigate factory and positive phase-change heat, but they provide no core-heat reduction while any liquid hydrogen remains.'
+          'Liquid hydrogen insulates the world from Mega Heat Sink core-flux suppression. Heat sinks can still mitigate factory heat and accelerate cooling toward the temperature trend, but they provide no core-heat reduction while any liquid hydrogen remains.'
         ),
         statusText: getMegaHeatSinkText(
           'ui.projects.megaHeatSink.liquidHydrogenStatus',

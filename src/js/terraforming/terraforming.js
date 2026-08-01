@@ -731,7 +731,7 @@ class Terraforming extends EffectableEntity{
     return Math.max(0, coreHeatFlux - megaHeatSinkFlux);
   }
 
-  getMegaHeatSinkAllocation(zonalSurfaceHeatFluxes = {}) {
+  getMegaHeatSinkAllocation() {
     const surfaceArea = this.celestialParameters.surfaceArea
       || (4 * Math.PI * Math.pow((this.celestialParameters.radius || 0) * 1000, 2));
     const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
@@ -748,32 +748,9 @@ class Terraforming extends EffectableEntity{
     );
     remainingPower -= factoryHeatPower;
 
-    let positivePhaseHeatPower = 0;
-    for (const zone of getZones()) {
-      const zoneArea = surfaceArea * this.getZoneWeight(zone);
-      const zonePower = Math.max(0, zonalSurfaceHeatFluxes[zone] || 0) * zoneArea;
-      positivePhaseHeatPower += zonePower;
-    }
-
-    const phaseHeatPower = Math.min(remainingPower, positivePhaseHeatPower);
-    const phaseHeatFraction = positivePhaseHeatPower > 0
-      ? phaseHeatPower / positivePhaseHeatPower
-      : 0;
-    const phaseHeatMitigationByZone = {};
-    const netPhaseHeatFluxByZone = {};
-    for (const zone of getZones()) {
-      const rawFlux = zonalSurfaceHeatFluxes[zone] || 0;
-      const mitigatedFlux = Math.max(0, rawFlux) * phaseHeatFraction;
-      phaseHeatMitigationByZone[zone] = mitigatedFlux;
-      netPhaseHeatFluxByZone[zone] = rawFlux - mitigatedFlux;
-    }
-    remainingPower -= phaseHeatPower;
-
     return {
       coreHeatFlux: surfaceArea > 0 ? coreHeatPower / surfaceArea : 0,
       factoryHeatFlux: surfaceArea > 0 ? factoryHeatPower / surfaceArea : 0,
-      phaseHeatMitigationByZone,
-      netPhaseHeatFluxByZone,
       surplusCoolingPower: remainingPower,
     };
   }
@@ -826,23 +803,6 @@ class Terraforming extends EffectableEntity{
     }
     this.phaseChangeHeatPower = durationSeconds > 0 ? totalEnergy / durationSeconds : 0;
     this.phaseChangeHeatFlux = surfaceArea > 0 ? this.phaseChangeHeatPower / surfaceArea : 0;
-  }
-
-  refreshPhaseChangeTemperatureTrend() {
-    const actualState = this.saveTemperatureState();
-    this.updateSurfaceTemperature(0, {
-      ignoreHeatCapacity: true,
-      zonalSurfaceHeatFluxes: this.phaseChangeHeatFluxByZone,
-      disableAvailableAdvancedHeating: true,
-    });
-    const projectedState = this.saveTemperatureState();
-    this.restoreTemperatureState(actualState);
-
-    this.temperature.trendValue = projectedState.temperature.trendValue;
-    for (const zone of getZones()) {
-      this.temperature.zones[zone].trendValue =
-        projectedState.temperature.zones[zone].trendValue;
-    }
   }
 
   getFactoryHeatFlux() {
@@ -1596,10 +1556,6 @@ class Terraforming extends EffectableEntity{
         }
 
         this.finalizePhaseChangeHeatTick(totalDurationSeconds);
-        if (gameSettings.phaseChangeHeat) {
-            this.refreshPhaseChangeTemperatureTrend();
-        }
-
         this.runHazardUpdate(deltaTime, options);
         this.finalizeUpdate(options);
 
@@ -1828,8 +1784,7 @@ class Terraforming extends EffectableEntity{
     const zonalFluxOverrides = options && options.zonalFluxOverrides;
     const zonalSurfaceHeatFluxes = options && options.zonalSurfaceHeatFluxes;
     const disableAvailableAdvancedHeating = !!(options && options.disableAvailableAdvancedHeating);
-    const megaHeatSinkAllocation = this.getMegaHeatSinkAllocation(zonalSurfaceHeatFluxes);
-    const netZonalSurfaceHeatFluxes = megaHeatSinkAllocation.netPhaseHeatFluxByZone;
+    const megaHeatSinkAllocation = this.getMegaHeatSinkAllocation();
     const globalNetSurfaceHeatFlux = this.getNetSurfaceHeatFlux(1, megaHeatSinkAllocation);
     const allowAvailableHeating =
         !!(mirrorOversightSettings?.advancedOversight) &&
@@ -1897,7 +1852,6 @@ class Terraforming extends EffectableEntity{
             zoneArea,
             zoneLiquidWater: this.zonalSurface[zone]?.liquidWater || 0
         };
-        const zonalSurfaceHeatFlux = netZonalSurfaceHeatFluxes[zone];
         const factoryCoolingScale = weightedEffectiveLight > 0
             ? zonalEffectiveLight[zone] / weightedEffectiveLight
             : 0;
@@ -1906,7 +1860,7 @@ class Terraforming extends EffectableEntity{
         const zTemps = dayNightTemperaturesModel({
             ...baseParams,
             flux: zoneFlux,
-            addedSurfaceFlux: netSurfaceHeatFlux + zonalSurfaceHeatFlux,
+            addedSurfaceFlux: netSurfaceHeatFlux,
             surfaceFractions: zoneFractions,
             autoSlabOptions: slabOptions
         });
@@ -1996,7 +1950,6 @@ class Terraforming extends EffectableEntity{
         }
     }
     const baselineCombinedFluxes = {};
-    const phaseOversightTargetBounds = {};
     const availableHeatingPowerDemands = {};
     const megaHeatSinkCoolingPowerDemands = {};
     let totalAvailableHeatingPowerDemand = 0;
@@ -2007,11 +1960,10 @@ class Terraforming extends EffectableEntity{
         const greenhouseFactor = z[zone].greenhouseFactor || 1;
         const zoneFlux = this.luminosity.zonalFluxes[zone];
         const usesFlatSurfaceFlux = isRingWorld() || isAldersonDiskWorld();
-        const zonalSurfaceHeatFlux = netZonalSurfaceHeatFluxes[zone];
+        const zonalSurfaceHeatFlux = zonalSurfaceHeatFluxes?.[zone] || 0;
         const absorbedFlux =
             ((1 - z[zone].albedo) * zoneFlux * (usesFlatSurfaceFlux ? 1 : 0.25))
-            + z[zone].netSurfaceHeatFlux
-            + zonalSurfaceHeatFlux;
+            + z[zone].netSurfaceHeatFlux;
         const emittedFlux = greenhouseFactor > 0
             ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / greenhouseFactor
             : 0;
@@ -2023,57 +1975,19 @@ class Terraforming extends EffectableEntity{
             ? STEFAN_BOLTZMANN * Math.pow(Math.max(T[zone], 0), 4) / greenhouseFactor
             : 0;
         const windFlux = mixingDelta !== 0 ? emittedFluxPreTarget - emittedFluxTarget : 0;
-        const nonPhaseCombinedFlux =
-            absorbedFlux - zonalSurfaceHeatFlux - emittedFlux - windFlux;
-        const rawCombinedFlux = nonPhaseCombinedFlux + zonalSurfaceHeatFlux;
-        const phaseReversesTemperatureChange =
-            mirrorOversightSettings.advancedOversight &&
-            (
-                (nonPhaseCombinedFlux > 0 && rawCombinedFlux < 0) ||
-                (nonPhaseCombinedFlux < 0 && rawCombinedFlux > 0)
-            );
-        const oversightMode = mirrorOversightSettings.tempMode[zone] || 'average';
-        const oversightTarget = mirrorOversightSettings.targets[zone] || 0;
-        let currentOversightTemperature = previousMean;
-        if (oversightMode === 'day') {
-            currentOversightTemperature = this.temperature.zones[zone].day;
-        } else if (oversightMode === 'night') {
-            currentOversightTemperature = this.temperature.zones[zone].night;
-        }
-        const phaseMovesTowardOversightTarget =
-            phaseReversesTemperatureChange &&
-            mirrorOversightSettings.advancedOversight &&
-            oversightMode !== 'flux' &&
-            oversightTarget > 0 &&
-            ((zonalSurfaceHeatFlux > 0 && currentOversightTemperature < oversightTarget) ||
-             (zonalSurfaceHeatFlux < 0 && currentOversightTemperature > oversightTarget));
-        const combinedFlux =
-            phaseReversesTemperatureChange && !phaseMovesTowardOversightTarget
-                ? 0
-                : rawCombinedFlux;
-        if (phaseReversesTemperatureChange && !phaseMovesTowardOversightTarget) {
-            T[zone] = previousMean;
-        } else if (phaseMovesTowardOversightTarget) {
-            const dayOffset = z[zone].day - z[zone].mean;
-            let targetMean = oversightTarget;
-            if (oversightMode === 'day') {
-                targetMean = Math.max(0, oversightTarget - dayOffset);
-            } else if (oversightMode === 'night') {
-                targetMean = dayOffset <= 3 * oversightTarget
-                    ? oversightTarget + dayOffset
-                    : 4 * oversightTarget;
-            }
-            if (zonalSurfaceHeatFlux > 0) {
-                T[zone] = Math.min(T[zone], targetMean);
-            } else {
-                T[zone] = Math.max(T[zone], targetMean);
-            }
-            phaseOversightTargetBounds[zone] = {
-                targetMean,
-                direction: zonalSurfaceHeatFlux > 0 ? 1 : -1,
-            };
-        }
+        const nonPhaseCombinedFlux = absorbedFlux - emittedFlux - windFlux;
         const desiredDelta = T[zone] - previousMean;
+        let combinedFlux = nonPhaseCombinedFlux + zonalSurfaceHeatFlux;
+        if (
+            zonalSurfaceHeatFlux !== 0 &&
+            (
+                desiredDelta === 0 ||
+                (desiredDelta > 0 && combinedFlux < 0) ||
+                (desiredDelta < 0 && combinedFlux > 0)
+            )
+        ) {
+            combinedFlux = 0;
+        }
         baselineCombinedFluxes[zone] = combinedFlux;
 
         const baselineTemperature = !ignoreHeatCapacity && dtSeconds > 0 && capacity > 0
@@ -2157,16 +2071,6 @@ class Terraforming extends EffectableEntity{
               newTemp = targetTemp;
             }
         }
-
-        const phaseOversightTargetBound = phaseOversightTargetBounds[zone];
-        if (phaseOversightTargetBound) {
-          if (phaseOversightTargetBound.direction > 0) {
-            newTemp = Math.min(newTemp, phaseOversightTargetBound.targetMean);
-          } else {
-            newTemp = Math.max(newTemp, phaseOversightTargetBound.targetMean);
-          }
-        }
-
 
         this.temperature.zones[zone].value = newTemp;
         this.temperature.zones[zone].day = newTemp + dMean;

@@ -1127,7 +1127,7 @@ function addSettingsListeners() {
       t(
         'ui.settings.phaseChangeHeatTooltip',
         {},
-        'When enabled, melting, evaporation, boiling, and sublimation absorb planetary heat, while freezing, condensation, and deposition release it. Mega Heat Sinks use capacity remaining after core and factory heat to mitigate positive phase-change heat proportionally across heating zones. Advanced Oversight accounts for the resulting zonal heat load.'
+        'When enabled, melting, evaporation, boiling, and sublimation absorb planetary heat, while freezing, condensation, and deposition release it. Phase-change heat does not alter temperature trends or Advanced Oversight assignments. It can only speed or slow movement toward the trend, never reverse that movement or carry temperature past the trend.'
       )
     );
   }
@@ -1153,7 +1153,7 @@ function addSettingsListeners() {
       t(
         'ui.settings.factoryHeatingTooltip',
         {},
-        'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat, then positive phase-change heat.'
+        'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat; any remaining capacity accelerates cooling toward the temperature trend.'
       )
     );
   }

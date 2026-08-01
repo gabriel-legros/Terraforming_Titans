@@ -147,12 +147,7 @@ class SpaceMirrorAdvancedOversight {
           reversalMode: { ...reverse },
         };
 
-        const projectionOptions = { ignoreHeatCapacity: true };
-        if (gameSettings.phaseChangeHeat) {
-          projectionOptions.zonalSurfaceHeatFluxes =
-            terraforming.phaseChangeHeatFluxByZone;
-        }
-        terraforming.runUpdateStep(0, projectionOptions);
+        terraforming.runUpdateStep(0, { ignoreHeatCapacity: true });
         solvedSnapshot = terraforming.saveTemperatureState();
         terraforming.restoreTemperatureState(snapshot);
         settings.lastProjectedTemperatureState = solvedSnapshot;
@@ -215,18 +210,11 @@ class SpaceMirrorAdvancedOversight {
 
       const simulateFluxes = (zonalFluxes) => {
         terraforming.restoreTemperatureState(snapshot);
-        const simulationOptions = {
+        terraforming.runUpdateStep(0, {
           ignoreHeatCapacity: true,
           zonalFluxOverrides: zonalFluxes,
           disableAvailableAdvancedHeating: true,
-        };
-        if (gameSettings.phaseChangeHeat) {
-          // Solve against the same prior-tick phase flux that the real
-          // temperature update will apply.
-          simulationOptions.zonalSurfaceHeatFluxes =
-            terraforming.phaseChangeHeatFluxByZone;
-        }
-        terraforming.runUpdateStep(0, simulationOptions);
+        });
         const metrics = readCurrentMetrics();
         return {
           metrics,
@@ -858,13 +846,7 @@ class SpaceMirrorAdvancedOversight {
         reversalMode: { ...reverse },
       };
 
-      const finalProjectionOptions = { ignoreHeatCapacity: true };
-      if (gameSettings.phaseChangeHeat) {
-        // Match the displayed projection to the same prior-tick flux used by the solver.
-        finalProjectionOptions.zonalSurfaceHeatFluxes =
-          terraforming.phaseChangeHeatFluxByZone;
-      }
-      terraforming.runUpdateStep(0, finalProjectionOptions);
+      terraforming.runUpdateStep(0, { ignoreHeatCapacity: true });
       solvedSnapshot = terraforming.saveTemperatureState();
 
     } finally {
