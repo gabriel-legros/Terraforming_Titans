@@ -692,7 +692,9 @@ function diurnalAmplitude(albedo, flux, T, heatCap, rotH) {
   const omega = 2.0 * Math.PI / (Math.abs(rotH) * 3600.0);
   const num = (1 - albedo) * flux / 2.0;
   const den = Math.sqrt(heatCap * omega * 4.0 * SIGMA * Math.pow(T, 3));
-  return num / den;
+  // The linear response is invalid once it would put the night side below
+  // absolute zero. Bounding it there also keeps the zero-flux limit continuous.
+  return Math.min(num / den, 2 * T);
 }
 
 // ───────────────────────────────────────────────────────────

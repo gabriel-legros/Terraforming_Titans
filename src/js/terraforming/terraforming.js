@@ -1996,6 +1996,7 @@ class Terraforming extends EffectableEntity{
         }
     }
     const baselineCombinedFluxes = {};
+    const phaseOversightTargetBounds = {};
     const availableHeatingPowerDemands = {};
     const megaHeatSinkCoolingPowerDemands = {};
     let totalAvailableHeatingPowerDemand = 0;
@@ -2014,7 +2015,6 @@ class Terraforming extends EffectableEntity{
         const emittedFlux = greenhouseFactor > 0
             ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / greenhouseFactor
             : 0;
-        const desiredDelta = T[zone] - previousMean;
         const mixingDelta = T[zone] - z[zone].mean;
         const emittedFluxPreTarget = greenhouseFactor > 0
             ? STEFAN_BOLTZMANN * Math.pow(Math.max(z[zone].mean, 0), 4) / greenhouseFactor
@@ -2023,7 +2023,54 @@ class Terraforming extends EffectableEntity{
             ? STEFAN_BOLTZMANN * Math.pow(Math.max(T[zone], 0), 4) / greenhouseFactor
             : 0;
         const windFlux = mixingDelta !== 0 ? emittedFluxPreTarget - emittedFluxTarget : 0;
-        const combinedFlux = absorbedFlux - emittedFlux - windFlux;
+        const nonPhaseCombinedFlux =
+            absorbedFlux - zonalSurfaceHeatFlux - emittedFlux - windFlux;
+        const rawCombinedFlux = nonPhaseCombinedFlux + zonalSurfaceHeatFlux;
+        const phaseReversesTemperatureChange =
+            (nonPhaseCombinedFlux > 0 && rawCombinedFlux < 0) ||
+            (nonPhaseCombinedFlux < 0 && rawCombinedFlux > 0);
+        const oversightMode = mirrorOversightSettings.tempMode[zone] || 'average';
+        const oversightTarget = mirrorOversightSettings.targets[zone] || 0;
+        let currentOversightTemperature = previousMean;
+        if (oversightMode === 'day') {
+            currentOversightTemperature = this.temperature.zones[zone].day;
+        } else if (oversightMode === 'night') {
+            currentOversightTemperature = this.temperature.zones[zone].night;
+        }
+        const phaseMovesTowardOversightTarget =
+            phaseReversesTemperatureChange &&
+            mirrorOversightSettings.advancedOversight &&
+            oversightMode !== 'flux' &&
+            oversightTarget > 0 &&
+            ((zonalSurfaceHeatFlux > 0 && currentOversightTemperature < oversightTarget) ||
+             (zonalSurfaceHeatFlux < 0 && currentOversightTemperature > oversightTarget));
+        const combinedFlux =
+            phaseReversesTemperatureChange && !phaseMovesTowardOversightTarget
+                ? 0
+                : rawCombinedFlux;
+        if (phaseReversesTemperatureChange && !phaseMovesTowardOversightTarget) {
+            T[zone] = previousMean;
+        } else if (phaseMovesTowardOversightTarget) {
+            const dayOffset = z[zone].day - z[zone].mean;
+            let targetMean = oversightTarget;
+            if (oversightMode === 'day') {
+                targetMean = Math.max(0, oversightTarget - dayOffset);
+            } else if (oversightMode === 'night') {
+                targetMean = dayOffset <= 3 * oversightTarget
+                    ? oversightTarget + dayOffset
+                    : 4 * oversightTarget;
+            }
+            if (zonalSurfaceHeatFlux > 0) {
+                T[zone] = Math.min(T[zone], targetMean);
+            } else {
+                T[zone] = Math.max(T[zone], targetMean);
+            }
+            phaseOversightTargetBounds[zone] = {
+                targetMean,
+                direction: zonalSurfaceHeatFlux > 0 ? 1 : -1,
+            };
+        }
+        const desiredDelta = T[zone] - previousMean;
         baselineCombinedFluxes[zone] = combinedFlux;
 
         const baselineTemperature = !ignoreHeatCapacity && dtSeconds > 0 && capacity > 0
@@ -2106,6 +2153,15 @@ class Terraforming extends EffectableEntity{
             if (crossesTarget || Math.abs(newTemp - targetTemp) < 0.001) {
               newTemp = targetTemp;
             }
+        }
+
+        const phaseOversightTargetBound = phaseOversightTargetBounds[zone];
+        if (phaseOversightTargetBound) {
+          if (phaseOversightTargetBound.direction > 0) {
+            newTemp = Math.min(newTemp, phaseOversightTargetBound.targetMean);
+          } else {
+            newTemp = Math.max(newTemp, phaseOversightTargetBound.targetMean);
+          }
         }
 
 
