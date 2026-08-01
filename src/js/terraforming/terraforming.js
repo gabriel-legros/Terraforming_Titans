@@ -1911,39 +1911,6 @@ class Terraforming extends EffectableEntity{
             autoSlabOptions: slabOptions
         });
 
-        const previousMean = this.temperature.zones[zone].value;
-        const usesFlatSurfaceFlux = isRingWorld() || isAldersonDiskWorld();
-        const emittedFlux = zTemps.greenhouseFactor > 0
-            ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / zTemps.greenhouseFactor
-            : 0;
-        const localNonPhaseFlux =
-            ((1 - zTemps.albedo) * zoneFlux * (usesFlatSurfaceFlux ? 1 : 0.25))
-            + netSurfaceHeatFlux
-            - emittedFlux;
-        const localCombinedFlux = localNonPhaseFlux + zonalSurfaceHeatFlux;
-        const phaseLocallyReversesTemperatureChange =
-            (localNonPhaseFlux > 0 && localCombinedFlux < 0) ||
-            (localNonPhaseFlux < 0 && localCombinedFlux > 0);
-        const oversightMode = mirrorOversightSettings.tempMode[zone] || 'average';
-        const oversightTarget = mirrorOversightSettings.targets[zone] || 0;
-        let currentOversightTemperature = previousMean;
-        if (oversightMode === 'day') {
-            currentOversightTemperature = this.temperature.zones[zone].day;
-        } else if (oversightMode === 'night') {
-            currentOversightTemperature = this.temperature.zones[zone].night;
-        }
-        const localPhaseMovesTowardOversightTarget =
-            phaseLocallyReversesTemperatureChange &&
-            mirrorOversightSettings.advancedOversight &&
-            oversightMode !== 'flux' &&
-            oversightTarget > 0 &&
-            ((zonalSurfaceHeatFlux > 0 && currentOversightTemperature < oversightTarget) ||
-             (zonalSurfaceHeatFlux < 0 && currentOversightTemperature > oversightTarget));
-        const mixingMean =
-            phaseLocallyReversesTemperatureChange && !localPhaseMovesTowardOversightTarget
-                ? previousMean
-                : zTemps.mean;
-
         // Slab heat capacity (J/m²/K) including atmosphere + ocean/ice/soil
         const area = zoneArea; // m²
         const Cslab = zoneCapacity.Cslab;
@@ -1960,8 +1927,7 @@ class Terraforming extends EffectableEntity{
             area,
             Cslab,
             capacityPerArea,
-            netSurfaceHeatFlux,
-            mixingMean
+            netSurfaceHeatFlux
         };
 
         weightedEqTemp           += zTemps.equilibriumTemperature * pct;
@@ -2015,7 +1981,7 @@ class Terraforming extends EffectableEntity{
     const T = {};
     for (const zone of ORDER) {
         W[zone] = (z[zone].capacityPerArea || 0) * (z[zone].area || 0);
-        T[zone] = z[zone].mixingMean;
+        T[zone] = z[zone].mean;
     }
     let totalWeight = 0;
     let weightedMean = 0;
@@ -2061,8 +2027,11 @@ class Terraforming extends EffectableEntity{
             absorbedFlux - zonalSurfaceHeatFlux - emittedFlux - windFlux;
         const rawCombinedFlux = nonPhaseCombinedFlux + zonalSurfaceHeatFlux;
         const phaseReversesTemperatureChange =
-            (nonPhaseCombinedFlux > 0 && rawCombinedFlux < 0) ||
-            (nonPhaseCombinedFlux < 0 && rawCombinedFlux > 0);
+            mirrorOversightSettings.advancedOversight &&
+            (
+                (nonPhaseCombinedFlux > 0 && rawCombinedFlux < 0) ||
+                (nonPhaseCombinedFlux < 0 && rawCombinedFlux > 0)
+            );
         const oversightMode = mirrorOversightSettings.tempMode[zone] || 'average';
         const oversightTarget = mirrorOversightSettings.targets[zone] || 0;
         let currentOversightTemperature = previousMean;
