@@ -61,6 +61,8 @@
         "energyShortage": "Energia",
         "gravityStrain": "Strainità della gravità",
         "overpopulation": "Sovrappopolazione",
+        "galacticNaturalGrowth": "Crescita naturale",
+        "galacticImmigration": "Immigrazione",
         "lifeDensityDecay": "Decay di densità di vita",
         "geologicalBurial": "Seppellimento geologico",
         "surfaceBiomass": "Biomassa di superficie",
@@ -279,6 +281,7 @@
         "unknownStar": "Stella sconosciuta",
         "starDetailsTitle": "Dettagli della stella",
         "worldDetailsTitle": "Dettagli del mondo",
+        "renameWorldTitle": "Rinomina questo mondo casuale",
         "starTitle": "Stella: {value}",
         "spectral": "Spettacolo",
         "luminosity": "Luminosità",
@@ -429,6 +432,9 @@
           "abandoned": "Abbandonati"
         },
         "typeLabels": {
+          "shell": "Guscio",
+          "ring": "Anello",
+          "disk": "Disco",
           "supermassiveShellworld": "SMBH mondo-guscio"
         },
         "columns": {
@@ -444,6 +450,8 @@
         "title": "Stampa",
         "worldName": "Nome del mondo",
         "worldNamePlaceholder": "Mondo artificiale",
+        "worldNumber": "Numero",
+        "worldNumberPlaceholder": "Facoltativo",
         "framework": "Quadro",
         "core": "Nucleo",
         "stellarContext": "contesto stellare",
@@ -627,6 +635,7 @@
         "unknownFaction": "Fascismo sconosciuto"
       },
       "operationsPanel": {
+        "title": "Operazioni",
         "emptySelectSector": "Selezionare un settore contestato per assegnare la potenza della flotta.",
         "fleetPowerLabel": "Potenza della flotta",
         "fleetPowerTooltip": "Il potere delle flotte potrebbe essere assegnato a condurre operazioni sulla mappa, nel tentativo di ottenere il controllo del settore. Si possono eseguire solo operazioni su un settore che si o concorso, o è vicino a un settore che è completamente controllo. Il potere della flotta assegnato, più alto le probabilità di successo, e più basso le perdite, ma la vostra flotta sarà occupato nel frattempo.",
@@ -728,6 +737,7 @@
         "effectiveValue": "Efficace: {value}",
         "remainingValue": "Rimanente: {value}",
         "clearAll": "Non disegnare tutte le assegnazioni difensive",
+        "clearAllShort": "Rimuovi tutte le assegnazioni",
         "lastFiveAttacks": "Ultimi 5 attacchi",
         "toggleAttackHistory": "Toggle storia di attacco",
         "historyEnemy": "Nemico",
@@ -1083,6 +1093,15 @@
         "growthChemistry": "Chimica della crescita: {equation}",
         "detailed": "Dettaglio: {equation}"
       },
+      "biopigmentation": {
+        "name": "Biopigmentazione",
+        "description": "Scegli il colore della biomassa progettata.",
+        "colorLabel": "Colore della biomassa:",
+        "reset": "Reimposta",
+        "albedo": "Albedo: {value}",
+        "growthPenalty": "Penalità di crescita: -{value}%",
+        "tooltip": "L’albedo della biomassa segue il colore selezionato. I colori non più luminosi del verde di base non hanno penalità di crescita. I colori più luminosi riducono linearmente la crescita, fino a -80% per il bianco. Cambiare colore è gratuito."
+      },
       "attributes": {
         "minTemperatureTolerance": {
           "name": "Tolleranza minima della temperatura",
@@ -1204,6 +1223,7 @@
       },
       "growthTooltip": {
         "solidBiochemistry": "Biochimica solida (sostituzione su ghiaccio): x{value}",
+        "biopigmentation": "Biopigmentazione: x{value} (albedo {albedo})",
         "lowGravity": "Gravità bassa: x0.00",
         "lowGravityDisabled": "La crescita è disabilitata perché la gravità del mondo ad anello è inferiore a 0,1g, quindi l'atmosfera non può essere mantenuta.",
         "base": "Base: {value}%",
@@ -1234,6 +1254,11 @@
       "labels": {
         "productivity": "Produttività",
         "cost": "Costo:",
+        "constructed": "Costruito",
+        "provides": "Fornisce",
+        "production": "Produzione",
+        "consumption": "Consumo",
+        "maintenance": "Manutenzione",
         "heat": "Calore",
         "cooling": "Raffreddamento"
       },
@@ -1326,7 +1351,9 @@
         "productivityDemandLine": "  {source}: {amount}",
         "productivityWorkerLine": "{resource}: {available} disponibile / {required} necessario ({percent}%)",
         "productivityMaintenanceLine": "Manutenzione versata: {percent}%",
+        "productivityAdvancedOversight": "Assegnazione Supervisione avanzata: {percent}% della capacità della struttura.",
         "productivityDayNight": "Inattivo di notte",
+        "productivityAutomationDisabled": "Disabilitato dalle impostazioni di automazione.",
         "productivityNoDetails": "Nessun fattore limitante trovato."
       }
     },
@@ -1885,7 +1912,12 @@
         },
         "foodTransfer": {
           "add": "Aggiungere cibo",
+          "auto": "Auto /s",
           "available": "Cibo della colonia {value}"
+        },
+        "automation": {
+          "auto": "Auto",
+          "weight": "Peso"
         },
         "hunting": {
           "on": "Cacciare",
@@ -2229,6 +2261,7 @@
         "disposalTargetsSubheading": "Configurare fino a 15 risorse. I bersagli attivi di auto-avviamento si dividono in modo uniforme.",
         "addTarget": "+ Aggiungi obiettivo",
         "phase": "Fase",
+        "whichOne": "Quale",
         "none": "—",
         "remove": "Rimuovi",
         "waitForFullCapacity": "Attendere la piena capacità",
@@ -2319,8 +2352,7 @@
         "capStatus": "Cap: {value}",
         "capReached": "Cap raggiunto",
         "liquidHydrogenWarning": "L'idrogeno liquido impedisce ai dissipatori di calore di ridurre il flusso di calore del nucleo. I dissipatori possono ancora mitigare il calore della fabbrica e possono ancora essere costruiti.",
-        "liquidHydrogenStatus": "Bloccato: l'idrogeno liquido previene la rimozione del calore del nucleo",
-        "liquidHydrogenStatusShort": "Bloccato"
+        "liquidHydrogenStatus": "Bloccato: l'idrogeno liquido previene la rimozione del calore del nucleo"
       },
       "deeperMining": {
         "deepeningSpeedBoost": "Aumentare la velocità di ingombro",
@@ -2561,6 +2593,132 @@
     "colony": {
       "population": "Popolazione",
       "nanocolony": "Nanocolonia",
+      "followersTab": "Seguaci",
+      "title": "Colonie",
+      "unhideObsoleteBuildings": "Mostra gli edifici obsoleti",
+      "common": {
+        "unknown": "Sconosciuto",
+        "randomWorldNamed": "Mondo casuale: {name}"
+      },
+      "needs": {
+        "happiness": "Felicità",
+        "comfort": "Comfort",
+        "value": "{name}: {value}%"
+      },
+      "growthRate": {
+        "title": "Tasso di crescita",
+        "capacity": "Capacità:",
+        "capacityTooltip": "Moltiplicatore di capacità dall'equazione di crescita logistica: 1 - popolazione / capacità, quindi la crescita rallenta quando si avvicina il tappo di alloggiamento e si ferma completamente quando la popolazione è uguale capacità.\n\nSe si sente che il gioco è molto lento, c'è una probabilità molto alta che questo moltiplicatore è il motivo per cui. Cerca di tenerlo il più alto possibile costruendo più alloggiamento.",
+        "baseRate": "Tasso di base:",
+        "baseTooltip": "Tasso di crescita base derivato dalla felicità: max((felicità - 50%) / 300, 0).\n- Il cibo e l'energia ogni donano fino a +25 felicità quando soddisfatti.\n- Comfort aggiunge 20x di valutazione.\n- Elettronica e androidi ogni aggiungere fino a +10 felicità quando il cibo e l'energia sono soddisfatti.\n- Milestones pronto a rivendicare o rivendicare aggiungere +0.5 felicità ciascuno.\n- La felicità al di sotto del 50% si ferma la crescita.",
+        "otherMultipliers": "Altri moltiplicatori:",
+        "otherTooltip": "Moltiplicatori da cursori di colonia, e altri effetti.",
+        "decay": "- Cosa?",
+        "decayTooltip": "La perdita combinata della popolazione da carenze, sovrappopolazione e ad alta gravità.",
+        "growth": "Crescita:",
+        "growthTooltip": "Tasso di crescita finale dopo l'applicazione della crescita logistica meno fame, energia e decadimento della gravità.",
+        "naturalGrowth": "Crescita naturale",
+        "immigration": "Immigrazione",
+        "pilgrimFollowers": "Seguali di pellegrinaggio: {value}x",
+        "multiplierEntry": "{name}: {value}x",
+        "decayStarvation": "• Proiettore: {rate}%/s ({share} % di fame; 100% per 360 s).",
+        "decayEnergy": "• Energia: {rate}%/s ({share} % senza potenza; 100% per 90 s).",
+        "decayOverpopulation": "• Sovrappopolazione: {rate}%/s.",
+        "decayGravity": "• Gravità: {rate}%/s (gravità {gravity} m/s^2; {above} sopra 20)."
+      },
+      "constructionOffice": {
+        "title": "Ufficio delle costruzioni",
+        "autobuilder": "Autocostruttore: ",
+        "statusActive": "attivo",
+        "statusDisabled": "disabili",
+        "pause": "Pausa",
+        "resume": "Riprendi",
+        "strategicReserve": "Riserva strategica",
+        "strategicReserveTooltip": "Impedisce all'Ufficio di costruzione di utilizzare risorse da stoccaggio se spenderle avrebbe lasciato cadere qualsiasi risorsa al di sotto della percentuale specificata della sua capacità.",
+        "reserveSettingsButton": "Impostazioni di prenotazione",
+        "reserveSettingsTitle": "Riserva strategica",
+        "reserveSettingsIntro": "Impostare la percentuale di riserva dell'Ufficio di costruzione per ogni risorsa.",
+        "globalReserve": "Predefinizione globale",
+        "close": "X",
+        "done": "Fatto",
+        "guide": {
+          "title": "Guida alla costruzione",
+          "open": "Guida all'autocostruzione",
+          "close": "Guida di autocostruzione",
+          "imageAlt": "Controlli di autocostruzione con sezioni guida numerate",
+          "section1": "Questa sezione controlla se è attiva o meno l'autocostruzione per questo edificio. Il valore inserito e la modalità controlla come il vostro obiettivo è definito.",
+          "section2a": "Questo può controllare il valore in 1) senza utilizzare la tastiera. Utile per fare piccole regolazioni.",
+          "section2b": "Questo controlla la priorità di costruzione.",
+          "section3": "Questo è il vostro obiettivo di autocostruzione attuale basato sul valore definito. L'ufficio di costruzione cercherà di costruire a quel valore.",
+          "section4": "Impostare attivo per l'obiettivo è utile per garantire che gli edifici di nuova costruzione vengano attivati automaticamente quando costruito, o per cambiare rapidamente il numero di edifici attivi.",
+          "section5": "Questo è un modo per calcolare un valore in 1) che corrisponderà alla configurazione corrente.",
+          "recommendationsTitle": "Raccomandazioni",
+          "recommendation1": "Utilizzare autocostruzione su 1% di pop per l'azienda idroponica. Ogni azienda agricola potenziata può alimentare 100 persone, quindi è necessario un certo numero di aziende agricole pari all'1% del tuo pop.",
+          "recommendation2": "Utilizzare cave di sabbia come 100% di Glass Smelter + Electronics richiesta di fabbrica.",
+          "recommendation3": "La percentuale dei lavoratori e la percentuale dei lavoratori calcolano il proprio obiettivo in base al numero dei lavoratori. La percentuale dei dipendenti calcola un obiettivo basato sull'assegnazione del dato % dei lavoratori a questo edificio. Ad esempio, se hai 200 lavoratori e vuoi un deposito di stoccaggio per 100 lavoratori utilizzare l'1% dei lavoratori.  Se si desidera che il 50% dei vostri lavoratori lavorare in fabbrica componenti, è possibile utilizzare 50% di quota di lavoro.",
+          "recommendation4": "Quando si sblocca l'ufficio di costruzione per la prima volta, provare a impostare la maggior parte dei vostri edifici al % dei lavoratori o % della quota di lavoro e premere \"Imposta l’obiettivo sul valore attivo\" quindi accendere. L'autobuilder imitazione per lo più la vostra configurazione attuale.",
+          "recommendation5": "Se avete bisogno di un po 'di qualcosa di più o volete liberare un po 'i vostri lavoratori, la scatola in 2a è grande per piccole regolazioni. È possibile aumentare o diminuire il valore di destinazione autocostruzione un po 'senza completamente rompere l'economia.",
+          "starterSetupTitle": "Configurazione iniziale",
+          "starterSetupBuilding": "Nome edificio",
+          "starterSetupValue": "Valore",
+          "starterSetupMode": "Modalità",
+          "starterSetupPriority": "Priorità",
+          "starterSetupModeMax": "Max",
+          "starterSetupModeSandQuarryDemand": "% della domanda C.S.+E.F.",
+          "starterSetupModeWorkers": "% dei lavoratori",
+          "starterSetupModePopulation": "% della pop.",
+          "starterSetupModeWorkerShare": "% quota lavoratori",
+          "starterSetupApply": "Applica configurazione iniziale"
+        },
+        "guidePrompt": {
+          "title": "Guida alla costruzione",
+          "message": "Una guida per questa funzione è disponibile. Vuoi vedere la guida ora? (È anche accessibile dall'ufficio costruzioni sotto la scheda colonia)",
+          "yes": "Sì",
+          "no": "No"
+        },
+        "reserveResources": {
+          "energy": "Energia",
+          "metal": "Metallo",
+          "glass": "Vetro",
+          "water": "Acqua",
+          "components": "Componenti",
+          "electronics": "Elettronica",
+          "superconductors": "Superconduttori",
+          "superalloys": "Superleghe",
+          "land": "Terreno"
+        }
+      },
+      "sliders": {
+        "managerDescription": "Gestisce le cursori della colonia",
+        "sourceName": "Diapositive di colon",
+        "title": "Gestione delle colonie",
+        "workforceAllocation": "Altrazione delle forze di lavoro",
+        "workersValue": "Lavoratori: {value}%",
+        "scientistsValue": "Scienziati: {value}%",
+        "foodConsumption": "Consumo alimentare",
+        "luxuryWaterUse": "Uso dell'acqua di lusso",
+        "oreMineWorkers": "Lavoratori delle miniere di Ore",
+        "mechanicalAssistance": "Assistenza meccanica ",
+        "mechanicalAssistanceTooltip": "L'Assistenza Meccanica mitiga fino al 50% di decadimento ad alta gravità e impila con adattamento ad alta gravità per rimuovere il resto.",
+        "gravityDecayReduction": "Riduzione del decadimento della gravità: -{value}%",
+        "sliderValue": "Slider: {value}x.",
+        "componentsCoverage": "Copertura dei componenti: {value}%.",
+        "currentGravity": "Gravità attuale: {gravity} m/s^2 ({above} sopra 20).",
+        "effectiveMitigation": "Riduzione efficace: {value}% del decadimento della gravità.",
+        "highGravityAdaptation": "Adattamento ad alta gravità: {value}",
+        "remainingDecay": "Decadimento residuo: {value}% della perdita di gravità originale al giorno quando la gravità supera i 20 m/s^2.",
+        "warpnet": "Warpnet ",
+        "warpnetTooltip": "Imbuti Warpnet comunicazione istantanea per coordinare l'output della ricerca.",
+        "warpnetEnergyUpkeep": "Il valore sinistro moltiplica la colonia e l'involucro dell'energia dell'alloggiamento dell'androide: {value}.",
+        "warpnetResearchBoost": "Il giusto valore aggiunge una spinta di ricerca globale: +{value}%",
+        "warpnetEnergyCost": "Il costo dell'energia si ridimensiona con intensità Warpnet.",
+        "warpnetSolisNote": "Nota: Solis paga per Android di partenza.",
+        "warpnetLabelBase": "x1",
+        "warpnetLabelExp": "x1e{value}",
+        "researchEffect": "Ricerca: +{value}%",
+        "growthEffect": "Crescita: +{value}%",
+        "boostEffect": "Purezza: {value}%"
+      },
       "followers": {
         "managerDescription": "Gestione dei sistemi di follower",
         "common": {
@@ -2698,120 +2856,6 @@
             }
           }
         }
-      },
-      "title": "Colonie",
-      "unhideObsoleteBuildings": "Mostra gli edifici obsoleti",
-      "common": {
-        "unknown": "Sconosciuto",
-        "randomWorldNamed": "Mondo casuale: {name}"
-      },
-      "needs": {
-        "happiness": "Felicità",
-        "comfort": "Comfort",
-        "value": "{name}: {value}%"
-      },
-      "growthRate": {
-        "title": "Tasso di crescita",
-        "capacity": "Capacità:",
-        "capacityTooltip": "Moltiplicatore di capacità dall'equazione di crescita logistica: 1 - popolazione / capacità, quindi la crescita rallenta quando si avvicina il tappo di alloggiamento e si ferma completamente quando la popolazione è uguale capacità.\n\nSe si sente che il gioco è molto lento, c'è una probabilità molto alta che questo moltiplicatore è il motivo per cui. Cerca di tenerlo il più alto possibile costruendo più alloggiamento.",
-        "baseRate": "Tasso di base:",
-        "baseTooltip": "Tasso di crescita base derivato dalla felicità: max((felicità - 50%) / 300, 0).\n- Il cibo e l'energia ogni donano fino a +25 felicità quando soddisfatti.\n- Comfort aggiunge 20x di valutazione.\n- Elettronica e androidi ogni aggiungere fino a +10 felicità quando il cibo e l'energia sono soddisfatti.\n- Milestones pronto a rivendicare o rivendicare aggiungere +0.5 felicità ciascuno.\n- La felicità al di sotto del 50% si ferma la crescita.",
-        "otherMultipliers": "Altri moltiplicatori:",
-        "otherTooltip": "Moltiplicatori da cursori di colonia, e altri effetti.",
-        "decay": "- Cosa?",
-        "decayTooltip": "La perdita combinata della popolazione da carenze, sovrappopolazione e ad alta gravità.",
-        "growth": "Crescita:",
-        "growthTooltip": "Tasso di crescita finale dopo l'applicazione della crescita logistica meno fame, energia e decadimento della gravità.",
-        "naturalGrowth": "Crescita naturale",
-        "immigration": "Immigrazione",
-        "pilgrimFollowers": "Seguali di pellegrinaggio: {value}x",
-        "multiplierEntry": "{name}: {value}x",
-        "decayStarvation": "• Proiettore: {rate}%/s ({share} % di fame; 100% per 360 s).",
-        "decayEnergy": "• Energia: {rate}%/s ({share} % senza potenza; 100% per 90 s).",
-        "decayOverpopulation": "• Sovrappopolazione: {rate}%/s.",
-        "decayGravity": "• Gravità: {rate}%/s (gravità {gravity} m/s^2; {above} sopra 20)."
-      },
-      "constructionOffice": {
-        "title": "Ufficio delle costruzioni",
-        "autobuilder": "Autocostruttore: ",
-        "statusActive": "attivo",
-        "statusDisabled": "disabili",
-        "pause": "Pausa",
-        "resume": "Riprendi",
-        "strategicReserve": "Riserva strategica",
-        "strategicReserveTooltip": "Impedisce all'Ufficio di costruzione di utilizzare risorse da stoccaggio se spenderle avrebbe lasciato cadere qualsiasi risorsa al di sotto della percentuale specificata della sua capacità.",
-        "reserveSettingsButton": "Impostazioni di prenotazione",
-        "reserveSettingsTitle": "Riserva strategica",
-        "reserveSettingsIntro": "Impostare la percentuale di riserva dell'Ufficio di costruzione per ogni risorsa.",
-        "globalReserve": "Predefinizione globale",
-        "close": "X",
-        "done": "Fatto",
-        "guide": {
-          "title": "Guida alla costruzione",
-          "open": "Guida all'autocostruzione",
-          "close": "Guida di autocostruzione",
-          "imageAlt": "Controlli di autocostruzione con sezioni guida numerate",
-          "section1": "Questa sezione controlla se è attiva o meno l'autocostruzione per questo edificio. Il valore inserito e la modalità controlla come il vostro obiettivo è definito.",
-          "section2a": "Questo può controllare il valore in 1) senza utilizzare la tastiera. Utile per fare piccole regolazioni.",
-          "section2b": "Questo controlla la priorità di costruzione.",
-          "section3": "Questo è il vostro obiettivo di autocostruzione attuale basato sul valore definito. L'ufficio di costruzione cercherà di costruire a quel valore.",
-          "section4": "Impostare attivo per l'obiettivo è utile per garantire che gli edifici di nuova costruzione vengano attivati automaticamente quando costruito, o per cambiare rapidamente il numero di edifici attivi.",
-          "section5": "Questo è un modo per calcolare un valore in 1) che corrisponderà alla configurazione corrente.",
-          "recommendationsTitle": "Raccomandazioni",
-          "recommendation1": "Utilizzare autocostruzione su 1% di pop per l'azienda idroponica. Ogni azienda agricola potenziata può alimentare 100 persone, quindi è necessario un certo numero di aziende agricole pari all'1% del tuo pop.",
-          "recommendation2": "Utilizzare cave di sabbia come 100% di Glass Smelter + Electronics richiesta di fabbrica.",
-          "recommendation3": "La percentuale dei lavoratori e la percentuale dei lavoratori calcolano il proprio obiettivo in base al numero dei lavoratori. La percentuale dei dipendenti calcola un obiettivo basato sull'assegnazione del dato % dei lavoratori a questo edificio. Ad esempio, se hai 200 lavoratori e vuoi un deposito di stoccaggio per 100 lavoratori utilizzare l'1% dei lavoratori.  Se si desidera che il 50% dei vostri lavoratori lavorare in fabbrica componenti, è possibile utilizzare 50% di quota di lavoro.",
-          "recommendation4": "Quando si sblocca l'ufficio di costruzione per la prima volta, provare a impostare la maggior parte dei vostri edifici al % dei lavoratori o % della quota di lavoro e premere \"Imposta l’obiettivo sul valore attivo\" quindi accendere. L'autobuilder imitazione per lo più la vostra configurazione attuale.",
-          "recommendation5": "Se avete bisogno di un po 'di qualcosa di più o volete liberare un po 'i vostri lavoratori, la scatola in 2a è grande per piccole regolazioni. È possibile aumentare o diminuire il valore di destinazione autocostruzione un po 'senza completamente rompere l'economia."
-        },
-        "guidePrompt": {
-          "title": "Guida alla costruzione",
-          "message": "Una guida per questa funzione è disponibile. Vuoi vedere la guida ora? (È anche accessibile dall'ufficio costruzioni sotto la scheda colonia)",
-          "yes": "Sì",
-          "no": "No"
-        },
-        "reserveResources": {
-          "energy": "Energia",
-          "metal": "Metallo",
-          "glass": "Vetro",
-          "water": "Acqua",
-          "components": "Componenti",
-          "electronics": "Elettronica",
-          "superconductors": "Superconduttori",
-          "superalloys": "Superleghe",
-          "land": "Terreno"
-        }
-      },
-      "sliders": {
-        "managerDescription": "Gestisce le cursori della colonia",
-        "sourceName": "Diapositive di colon",
-        "title": "Gestione delle colonie",
-        "workforceAllocation": "Altrazione delle forze di lavoro",
-        "workersValue": "Lavoratori: {value}%",
-        "scientistsValue": "Scienziati: {value}%",
-        "foodConsumption": "Consumo alimentare",
-        "luxuryWaterUse": "Uso dell'acqua di lusso",
-        "oreMineWorkers": "Lavoratori delle miniere di Ore",
-        "mechanicalAssistance": "Assistenza meccanica ",
-        "mechanicalAssistanceTooltip": "L'Assistenza Meccanica mitiga fino al 50% di decadimento ad alta gravità e impila con adattamento ad alta gravità per rimuovere il resto.",
-        "gravityDecayReduction": "Riduzione del decadimento della gravità: -{value}%",
-        "sliderValue": "Slider: {value}x.",
-        "componentsCoverage": "Copertura dei componenti: {value}%.",
-        "currentGravity": "Gravità attuale: {gravity} m/s^2 ({above} sopra 20).",
-        "effectiveMitigation": "Riduzione efficace: {value}% del decadimento della gravità.",
-        "highGravityAdaptation": "Adattamento ad alta gravità: {value}",
-        "remainingDecay": "Decadimento residuo: {value}% della perdita di gravità originale al giorno quando la gravità supera i 20 m/s^2.",
-        "warpnet": "Warpnet ",
-        "warpnetTooltip": "Imbuti Warpnet comunicazione istantanea per coordinare l'output della ricerca.",
-        "warpnetEnergyUpkeep": "Il valore sinistro moltiplica la colonia e l'involucro dell'energia dell'alloggiamento dell'androide: {value}.",
-        "warpnetResearchBoost": "Il giusto valore aggiunge una spinta di ricerca globale: +{value}%",
-        "warpnetEnergyCost": "Il costo dell'energia si ridimensiona con intensità Warpnet.",
-        "warpnetSolisNote": "Nota: Solis paga per Android di partenza.",
-        "warpnetLabelBase": "x1",
-        "warpnetLabelExp": "x1e{value}",
-        "researchEffect": "Ricerca: +{value}%",
-        "growthEffect": "Crescita: +{value}%",
-        "boostEffect": "Purezza: {value}%"
       },
       "nanotech": {
         "managerDescription": "Gestisce lo sciame nanobot",
@@ -3130,11 +3174,15 @@
           "tooltip": "La temperatura è un fattore critico per la terraformazione. È determinata da una complessa interazione di fattori:\n\n- Equazioni principali: il modello usa la legge di Stefan-Boltzmann per calcolare la temperatura effettiva a partire dal flusso solare e dall'albedo. L'effetto serra viene poi aggiunto in base alla profondità ottica dell'atmosfera, mentre la variazione termica tra giorno e notte viene calcolata dalla capacità termica del pianeta e dalla velocità di rotazione.\n- Flusso solare: l'energia di base ricevuta dalla stella, che può essere aumentata da strutture come gli Specchi spaziali.\n- Albedo: la riflettività del pianeta. Un'albedo elevata dovuta a ghiaccio e nuvole riflette più luce e raffredda il pianeta. Un'albedo bassa dovuta a oceani e rocce scure assorbe più luce e lo riscalda.\n- Effetto serra: gas atmosferici come CO2, H2O e CH4 trattengono il calore. La quantità trattenuta è determinata dalla profondità ottica dell'atmosfera, che dipende dalla quantità di ciascun gas.\n- Velocità di rotazione: una rotazione più lenta produce differenze di temperatura più estreme tra giorno e notte.\n- Capacità termica: la capacità del pianeta di immagazzinare e rilasciare calore, influenzata dalla composizione della superficie e dalla densità atmosferica. Una maggiore quantità di liquidi superficiali aumenta la capacità termica e riduce quindi le differenze tra giorno e notte.\n- Venti meridionali: l'energia si sposta tra le zone tropicali, temperate e polari. La colonna della tendenza mostra la temperatura obiettivo smussata dai venti, che conserva il calore totale attenuando gli estremi.\n- Inerzia termica: la stessa capacità termica che modera le oscillazioni tra giorno e notte rallenta anche l'avvicinamento alla temperatura di tendenza. Aria densa e oceani profondi reagiscono lentamente; le atmosfere sottili raggiungono rapidamente la tendenza.\n\nLa temperatura influisce direttamente su:\n- Ciclo dell'acqua: determina evaporazione, sublimazione, fusione e congelamento.\n- Vita: ogni specie ha intervalli di temperatura specifici per la sopravvivenza e la crescita.\n- Comfort dei coloni: le temperature estreme aumentano il consumo energetico dei sistemi di supporto vitale.",
           "coreHeatTooltip": "Il calore interno planetario aggiunto direttamente alla superficie come un flusso globale piatto.\n\nI sini artificiali di crosta e di calore mega possono ridurre questo valore.\n\nSe la temperatura scende sotto {crustStart}{unit}, una crosta naturale inizierà a formare e completerà a {crustComplete}{unit}.\n\nQuesto flusso non è influenzato da albedo o giorno-notte media.",
           "factoryHeatTooltip": "Il calore dei rifiuti industriali, proveniente dall'edilizia locale e dal consumo energetico della colonia, meno il raffreddamento del pannello solare dalla loro produzione di energia. Il raffreddamento del pannello solari è ridotto da albedo di superficie. Una certa megastruttura può contribuire a ridurre questo.",
+          "factoryHeatTopContributors": "Principali contributori per impatto assoluto:",
+          "factoryHeatOtherSources": "Altre fonti",
+          "phaseChangeHeatTooltip": "Calore planetario netto scambiato dai cambiamenti di fase durante l’ultima tranche climatica. I valori positivi indicano che congelamento, condensazione o deposizione hanno rilasciato calore; i valori negativi indicano che fusione, evaporazione, ebollizione o sublimazione hanno assorbito calore. Per la stabilità numerica, questo effetto può solo accelerare o rallentare il movimento verso la tendenza, non invertirlo. Questo può causare temperature stazionarie.",
           "equilibriumTempTooltip": "La temperatura di equilibrio radiativo del corpo nero dalla luce solare assorbita, albedo e calore diretto non atmosferico. Ignora la trapping del calore a effetto serra; fisicamente, è la temperatura che irradia la stessa energia nello spazio. Il valore della Terra è di circa 255 K (-18°C).",
           "labels": {
             "globalMeanTemp": "Tempi medi globali",
             "equilibriumTemp": "Equilibrio Temp",
             "netCoreHeatFlux": "Flusso di calore del core netto",
+            "netPhaseChangeHeatFlux": "Flusso termico netto dei cambiamenti di fase",
             "netFactoryHeatFlux": "Flusso di calore della fabbrica netta",
             "zone": "Zona",
             "temperature": "T ({unit})",
@@ -3755,7 +3803,16 @@
           }
         },
         "rewards": {
-          "nuclearAlchemyThroughput": "+{value}% Potenza nucleare di alchimia"
+          "manufacturingWorldThroughput": "+{value}% produzione Mondo manifatturiero",
+          "liftersSuperchargeMax": "+{value} massimo supercarica Sollevatori",
+          "gigafoundryThroughput": "+{value}% produzione Gigafonderia",
+          "spaceChemistryThroughput": "+{value}% produzione Chimica spaziale",
+          "nuclearAlchemyThroughput": "+{value}% Potenza nucleare di alchimia",
+          "oneillSectorCap": "Moltiplicatore limite O’Neill +{value}",
+          "hephaestusYardEffectiveness": "+{value}% efficacia cantiere di Efesto",
+          "spaceStorageCapacity": "+{value}% capacità deposito spaziale",
+          "liftersSuperchargeExponent": "Esponente supercarica Sollevatori -{value}",
+          "liftersThroughput": "+{value}% produzione Sollevatori"
         }
       },
       "statisticsTitle": "Statistiche",
@@ -3787,6 +3844,7 @@
         }
       },
       "currentWorldLabel": "Mondo attuale",
+      "renameRandomWorldTitle": "Rinomina questo mondo casuale",
       "originalProperties": "Proprietà originali",
       "worldSelectionTitle": "Selezione mondiale",
       "worldSelectionSubtitle": "Finisci di terraformare per sbloccare la tua prossima destinazione.",
@@ -3831,6 +3889,7 @@
         "uniqueTooltip": "Conta ogni mondo di storia distinto e terraformato mondo casuale che hai completato. Ignora tutti gli altri bonus.",
         "effectiveTooltip": "Questo valore influenza la ricerca avanzata, premi Solis, velocità di espansione della struttura mega e cappucci di esportazione.",
         "galacticPopulationTooltip": "La popolazione galattica cresce allo 0,5% / 365 al secondo, moltiplicata per (1 - popolazione / capacità).",
+        "showGalacticPopulationInSidebar": "Mostra nella barra laterale",
         "effectiveTooltipGalaxy": "Con la galassia sbloccata, la capacità della flotta utilizza un numero di mondo adeguato (i mondi artificiali contribuiscono fino a {value} e O'Neill sono ignorati).",
         "effectiveTooltipGalaxyUncapped": "Con la galassia sbloccata, la capacità della flotta utilizza un conteggio mondiale aggiustato (i mondi artificiali contribuiscono al loro valore completo e i cilindri O'Neill sono ignorati)."
       }
@@ -4301,7 +4360,19 @@
             "autoStartConstruction": "Avvio automatico della costruzione",
             "autoOperationEnabled": "Auto Operazione abilitata",
             "spaceshipCostMultiplier": "Multiplier di costi di Spaceship",
-            "currentMass": "Messa attuale"
+            "currentMass": "Messa attuale",
+            "keratiHive": {
+              "hiveFood": "Cibo dell’alveare",
+              "honey": "Miele",
+              "spawningPools": "Vasche di schiusa",
+              "territory": "Territorio",
+              "drones": "Droni posseduti",
+              "builders": "Costruttori posseduti",
+              "hunters": "Cacciatori posseduti",
+              "princesses": "Principesse possedute",
+              "queens": "Regine possedute",
+              "empresses": "Imperatrici possedute"
+            }
           },
           "artificial": {
             "source": "Artificiale",
@@ -4398,6 +4469,8 @@
             "luminosity": {
               "solarFlux": "Flusso solare",
               "modifiedSolarFlux": "Flusso solare modificato",
+              "surfaceSolarFlux": "Flusso solare superficiale",
+              "averageFlux": "Flusso medio",
               "albedo": "Albedo",
               "opticalDepth": "Profondità ottica"
             },
@@ -4553,6 +4626,10 @@
         "lifeDeployImproveLabel": "Distribuisci soltanto se il progetto migliora di",
         "lifeDeployPointsSuffix": "punti",
         "lifeDeployInfo": "La distribuzione automatica si attiva soltanto se migliora un progetto del numero di punti indicato.",
+        "lifeBiomassColorLabel": "Colore della biomassa",
+        "lifeBiomassColorTooltip": "Questo colore viene applicato quando il preset distribuisce un progetto di vita. Cambiarlo non costa punti vita. La biomassa più luminosa del verde cresce più lentamente, fino a -80% per il bianco.",
+        "lifeBiomassAlbedo": "Albedo: {value}",
+        "lifeBiomassGrowthPenalty": "Penalità di crescita: -{value}%",
         "lifeCreateStepsFromCurrentButton": "Crea passaggi dal progetto attuale",
         "lifeSpendAtLabel": "Trascorrere",
         "lifeMaxCostLabel": "Costo massimo",
@@ -5020,6 +5097,8 @@
       "autoPauseColonists": "Quando il tasso di colonizzazione netto <",
       "immigrationPool": "Piscina per l'immigrazione",
       "immigrationPoolTooltip": "Quando è attivata, su qualsiasi mondo diverso da Marte, una grande parte della crescita della colonia diventa direttamente dipendente dalla popolazione galattica attraverso l'immigrazione. L'immigrazione cercherà di equalizzare il rapporto di riempimento del colono mondiale con il rapporto di riempimento galattico, e tutta l'immigrazione viene presa dalla piscina della popolazione galatttica.",
+      "disableColonistDecay": "Disabilita il decadimento dei coloni",
+      "disableColonistDecayTooltip": "Impedisce perdite di coloni dovute a carenze di cibo, carenze energetiche, gravità elevata e sovrappopolazione. Consigliato per il gioco inattivo.",
       "disableUnlockAlerts": "Disattivare gli avvisi di sblocco",
       "disableDayNightCycle": "Disattivare il ciclo diurno-notte",
       "dayNightTooltip": "I pannelli solari e gli arazzi di ghiaccio funzionano a metà efficienza e metà manutenzione. Conduce a un'esperienza più realistica, leggermente più facile e più rilassata.",
@@ -5076,6 +5155,8 @@
       "unfulfilledMaintenancePenaltiesTooltip": "Quando è abilitata, la manutenzione degli edifici non retribuiti riduce la produttività degli edifici colpiti oltre 900 secondi. Ogni tendenza degli edifici verso il peggior rapporto di manutenzione pagato tra le risorse di cui ha bisogno, e la produttività reale è bloccata da quel valore.",
       "earlyAdvancedOversight": "Sopravvissuta avanzata precoce",
       "earlyAdvancedOversightTooltip": "Il gioco ha un potente solutore per specchi spaziali che possono automaticamente targetzzare i valori di temperatura specificati. È destinato ad essere qualcosa che deve essere guadagnato, e di solito è disponibile su Story Mondo 5. Se si trova il deposito troppo frustrante tuttavia si sentono liberi di avere presto.",
+      "phaseChangeHeat": "Calore dei cambiamenti di fase",
+      "phaseChangeHeatTooltip": "Se abilitato, fusione, evaporazione, ebollizione e sublimazione assorbono calore planetario, mentre congelamento, condensazione e deposizione lo rilasciano. Il calore dei cambiamenti di fase non altera le tendenze di temperatura né le assegnazioni di Supervisione avanzata. Può solo accelerare o rallentare il movimento verso la tendenza, ma può facilmente causare temperature stazionarie.",
       "factoryHeating": "Riscaldamento di fabbrica",
       "factoryHeatingTooltip": "Quando è abilitata, parte dell'uso energetico locale dell'edificio e della colonia diventa calore planetario, mentre i pannelli solari raffreddano il pianeta con la loro produzione di energia ridotta da albedo di superficie. La maggior parte delle strutture convertono tutta l'energia locale in calore, mentre i processi che immagazzinano l'energia chimicamente, emettono fuori mondo, o già modellano l'uso di riscaldamento diretto coefficienti inferiori. Una certa megastruttura può contribuire a mitigare il riscaldamento di fabbrica.  \n\n Si dovrebbe utilizzare questa impostazione accanto a Realistic fabbrica consumo di energia",
       "realisticFactoryEnergyConsumption": "Realistico consumo energetico fabbrica",
@@ -5140,10 +5221,17 @@
       "fastestTerraformByTypeTitle": "Terraforma più veloce di tipo mondiale",
       "fastestTerraformByTypeEntry": "{type}: {game} ({real} in tempo reale)",
       "recentTerraformHistoryTitle": "Ultimi {count} Terreni Terraformed",
+      "recentTerraformHistoryWorld": "Mondo",
+      "recentTerraformHistoryTerraformTime": "Tempo per terraformare",
+      "recentTerraformHistoryTravelTime": "Tempo di viaggio",
       "recentTerraformHistoryAverage": "Media: {game} ({real} in tempo reale)",
+      "recentTerraformHistoryAverageLabel": "Media",
       "recentTerraformHistoryEmpty": "Non sono ancora stati registrati mondi terraformi.",
       "recentTerraformHistoryEntry": "{name} ({type}): {game} in tempo reale ({real})",
+      "recentTerraformHistoryWorldEntry": "{name} ({type})",
+      "recentTerraformHistoryUnavailable": "Non disponibile",
       "terraformWorldTypeArtificial": "Artificiale",
+      "terraformWorldTypeStory": "Storia",
       "terraformWorldTypeShell": "Mondo-guscio",
       "terraformWorldTypeRing": "Mondo ad anello",
       "terraformWorldTypeDisk": "Disco di Alderson",
@@ -6509,6 +6597,10 @@
           "name": "Bioingegneria di prossima generazione",
           "description": "Consente l'uso di una ricerca avanzata per aumentare permanentemente il potenziale di progettazione della vita"
         },
+        "biopigmentation": {
+          "name": "Biopigmentazione",
+          "description": "La vita può usare altri pigmenti. Questo può aumentare l’albedo, ma i colori luminosi subiscono penalità di crescita."
+        },
         "repeatable_ai_research": {
           "name": "Ricerca ripetibile dell'AI",
           "description": "Autorizza programmi di ricerca ripetibili focalizzati sul miglioramento della produzione con l'aiuto di HOPE."
@@ -6520,6 +6612,10 @@
         "galactic_market": {
           "name": "Mercato Galattico Concordat",
           "description": "Stabilisce legami commerciali permanenti con la galassia più ampia, sostituendo le esportazioni grezze con un mercato gestito, che sostituisce definitivamente i Cargo Rockets e l'esportazione dei metalli."
+        },
+        "automatic_surplus_trading": {
+          "name": "Commercio automatico dei surplus",
+          "description": "A questo punto, le risorse della colonia sono diventate semplici merci. Il Mercato galattico dovrebbe adattarsi ai rapidi cambiamenti della nostra offerta, permettendoci di vendere le risorse in eccesso senza dover prima trovare partner commerciali. (Le risorse coloniali in eccesso saranno vendute automaticamente sul mercato sotto la saturazione. Accade al prossimo tick.)"
         },
         "mechanical_assistance": {
           "name": "Assistenza meccanica",
@@ -6914,6 +7010,9 @@
         },
         "solisPoints": {
           "name": "Punti Solis"
+        },
+        "galacticPopulation": {
+          "name": "Popolazione galattica"
         },
         "alienArtifact": {
           "name": "Manufatto alieno"

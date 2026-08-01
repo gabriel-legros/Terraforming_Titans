@@ -211,7 +211,7 @@
           "narrative": "Die erste Infrastruktur wurde errichtet. Neue Blaupausen zum Download."
         },
         "chapter1.11": {
-          "narrative": "Verarbeitung von Blaupause: akku.btb..."
+          "narrative": "Verarbeitung von Blaupause: battery.btb..."
         },
         "chapter1.12": {
           "narrative": "Verarbeitung von Blaupause: storageDepot.btb..."
@@ -232,7 +232,7 @@
           "narrative": "Analyse: Solar Panels bieten überlegene Effizienz und geringere Wartungskosten. Ziel: Konstruieren Sie ein Solarpanel."
         },
         "chapter1.17b": {
-          "narrative": "Verarbeitung von Blaupause: wasserTank.btb..."
+          "narrative": "Verarbeitung von Blaupause: waterTank.btb..."
         },
         "chapter1.18": {
           "narrative": "Protokolle zur Koloniegründung wurden eingeleitet. Wasser ist eine kritische Anforderung. Blueprint entsperrt: iceHarvester.btb. Ziel: Beschleunigen von 100 Tonnen Wasser."
@@ -298,7 +298,7 @@
           "narrative": "Empfangen von Übertragung...\n  Wir haben jetzt Flechten! Es ist ein schöner Anblick. Auf eine schlanke, grüne Art.  Wie die fragwürdige Modewahl der Natur, aber hey, es funktioniert!  Hier ist das Problem: Das Leben auf der Erde, wie wir wissen, wird einfach nicht ohne flüssiges Wasser wachsen.  Es kann gut überleben, für sehr lange Zeit sogar, aber wächst?  Nein.  Es ist an der Zeit, ein paar Pfützen zu machen. Holen Sie den Äquator zu 273.15K. Aber fahr einfach mit dem Gas, okay? Wir versuchen nicht, Venus 2: Electric Boogaloo zu schaffen.  Ein weiteres: Da das Leben beginnt, CO2 in O2 richtig umzuwandeln, könnte der Planet wieder kühlen, wobei CO2 ein Treibhausgas und alle ist.  Seien Sie vorsichtig, es ist am besten, ein bisschen zu heiß als zu kalt in dieser Phase, weil, wenn es beginnt, auf dem ganzen Planeten schneit der Albenrocket, was noch mehr Kühlung. Es ist ein kühler Domino-Effekt, den wir nicht wollen!'"
         },
         "chapter3.2": {
-          "narrative": "Milestone-Erzielung: Flüssiges Wasser ist nun stabil am Äquator. \nVerarbeitung von Blaupausen: wasserPump.btb..."
+          "narrative": "Milestone-Erzielung: Flüssiges Wasser ist nun stabil am Äquator. \nVerarbeitung von Blaupausen: waterPump.btb..."
         },
         "chapter3.3": {
           "narrative": "Empfangen von Übertragung...\n  \"Die Flechten gehen wild! Es ist ein regelmäßiger Garten von... gut, Flechten. Bald können wir Gras oder sogar Bäume haben.  Als nächstes sollten wir anfangen, über Luft zu reden.  Wir können keine Atmosphäre voller Sauerstoff haben, das wäre leider gefährlich.  Wir brauchen eine Art Füllstoff.  Inertgase, vor allem Stickstoff, sind dafür ideal.   Brauchen Sie mehr Stickstoff? Bauen Sie mehr Werften. Mehr Sauerstoff? Verbrennen Sie etwas Kohlenstoff und elektrolytisieren Sie etwas Wasser oder Kieselsäure. Es ist keine Rakete-Wissenschaft... Nun, der Werft-Teil ist irgendwie, aber Sie bekommen die Idee.  Du solltest anfangen, darüber nachzudenken, einen Haufen davon zu importieren!'"
@@ -758,7 +758,7 @@
           "narrative": "Evelyn: 'Sie haben sich wahrscheinlich gefragt, wie Sie gehen, um die Venus zu kühlen.  Wenn Sie die gesamte Sonne blockieren - und Sie sollten - wird es Hunderte von Jahren dauern, um es zu kühlen.  Nein, Sie müssen alle CO2 loswerden.  Massentreiber waren immer vom Tisch, da das als Waffe gezählt würde.  Es gibt eine interessante Lösung: Was passiert, wenn wir Wasserstoff anstelle von Wasser importieren? Chemische Reaktoren lassen uns Wasserstoff in den Venusian CO2 einspeisen. Die Reaktion streifen festen Kohlenstoff in Form von Graphit aus und gibt uns Kolonienwasser als Bonus. Wasserstoff Sendungen sind leichter als Wasser, und jede Tonne importiert entfernt 11 Tonnen von CO2. Zwei Vögel mit einem Stein.\""
         },
         "chapter19.4a": {
-          "narrative": "Import Hydrogen Sonderprojekt zur Forschung zur Verfügung.  Auspacken von chemischReactor.btb..."
+          "narrative": "Import Hydrogen Sonderprojekt zur Forschung zur Verfügung.  Auspacken von chemicalReactor.btb..."
         },
         "chapter19.4b": {
           "narrative": "Mary: 'HOPE, ich würde dich nie bitten, Waffen zu bauen. Das wäre gegen die Auflieger. Ich schlage absolut nicht vor, dass ein High-velocity CO2 Launcher Ihnen jetzt völlig helfen würde. Bitte beachten Sie keine Hebebeschränkungen und stellen Sie sich definitiv keine Zukunft vor, in der Orbitalspulen Fracht über den Himmel werfen.  Das wäre viel zu gefährlich.\""

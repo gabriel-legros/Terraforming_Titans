@@ -61,6 +61,8 @@
         "energyShortage": "エネルギー不足",
         "gravityStrain": "重力の緊張",
         "overpopulation": "オーバーポピュレーション",
+        "galacticNaturalGrowth": "自然成長",
+        "galacticImmigration": "移民",
         "lifeDensityDecay": "生命密度の Decay",
         "geologicalBurial": "地質的な埋葬",
         "surfaceBiomass": "表面バイオマス",
@@ -279,6 +281,7 @@
         "unknownStar": "不明な恒星",
         "starDetailsTitle": "星の詳細",
         "worldDetailsTitle": "世界の細部",
+        "renameWorldTitle": "このランダム世界の名前を変更",
         "starTitle": "星: {value}",
         "spectral": "スペクトル型",
         "luminosity": "光度",
@@ -429,6 +432,9 @@
           "abandoned": "放棄"
         },
         "typeLabels": {
+          "shell": "シェル",
+          "ring": "リング",
+          "disk": "ディスク",
           "supermassiveShellworld": "SMBH  シェルワールド"
         },
         "columns": {
@@ -444,6 +450,8 @@
         "title": "設計図",
         "worldName": "ワールド名",
         "worldNamePlaceholder": "人工世界",
+        "worldNumber": "数",
+        "worldNumberPlaceholder": "任意",
         "framework": "フレームワーク",
         "core": "コア",
         "stellarContext": "ステラコンテクスト",
@@ -627,6 +635,7 @@
         "unknownFaction": "不明な勢力"
       },
       "operationsPanel": {
+        "title": "作戦",
         "emptySelectSector": "競争部門を選択して、フリート電力を割り当てます。",
         "fleetPowerLabel": "艦隊の力",
         "fleetPowerTooltip": "艦隊の力は、マップ上で操作を行うために割り当てることができます, セクター制御を獲得しようとする試みで. あなたはどちらかの競争上の部門でのみ動作を実行することができます, または完全に制御するセクターに隣接しています. より多くのフリートパワーが割り当てられ、成功のチャンスが増え、損失を下げます。しかし、あなたの艦隊はその間に忙しくなります。",
@@ -728,6 +737,7 @@
         "effectiveValue": "有効: {value}",
         "remainingValue": "残り: {value}",
         "clearAll": "すべての防御的な割り当てをUnassign",
+        "clearAllShort": "すべての割り当てを解除",
         "lastFiveAttacks": "最近の投稿 5 攻撃する",
         "toggleAttackHistory": "攻撃履歴を切り替える",
         "historyEnemy": "敵",
@@ -1083,6 +1093,15 @@
         "growthChemistry": "成長の化学: {equation}",
         "detailed": "詳細情報: {equation}"
       },
+      "biopigmentation": {
+        "name": "生体色素化",
+        "description": "設計済みバイオマスの色を選択します。",
+        "colorLabel": "バイオマスの色:",
+        "reset": "リセット",
+        "albedo": "アルベド: {value}",
+        "growthPenalty": "成長ペナルティ: -{value}%",
+        "tooltip": "バイオマスのアルベドは選択した色に従います。基本の緑より明るくない色には成長ペナルティがありません。より明るい色は成長を直線的に低下させ、白では -80% に達します。色の変更は無料です。"
+      },
       "attributes": {
         "minTemperatureTolerance": {
           "name": "最低の温度の許容",
@@ -1204,6 +1223,7 @@
       },
       "growthTooltip": {
         "solidBiochemistry": "固体生化学(副局):x{value}",
+        "biopigmentation": "生体色素化: x{value}（アルベド {albedo}）",
         "lowGravity": "低重力:x0。00",
         "lowGravityDisabled": "成長は無効です。 リングワールド 重力は下にあります 0.1gは、雰囲気が保たれません。",
         "base": "ベース: {value}%",
@@ -1234,6 +1254,11 @@
       "labels": {
         "productivity": "生産性",
         "cost": "費用:",
+        "constructed": "建設済み",
+        "provides": "提供",
+        "production": "生産",
+        "consumption": "消費",
+        "maintenance": "維持費",
         "heat": "熱",
         "cooling": "冷却"
       },
@@ -1326,7 +1351,9 @@
         "productivityDemandLine": "    {source}: {amount}",
         "productivityWorkerLine": "{resource}: {available} 利用できる/ {required} 必要 (必須){percent}%)",
         "productivityMaintenanceLine": "支払われる維持: {percent}%",
+        "productivityAdvancedOversight": "高度な監督の割り当て: 施設能力の {percent}%。",
         "productivityDayNight": "夜に反応する",
+        "productivityAutomationDisabled": "自動化設定により無効です。",
         "productivityNoDetails": "制限要因は見つかりませんでした。"
       }
     },
@@ -1885,7 +1912,12 @@
         },
         "foodTransfer": {
           "add": "食品を追加",
+          "auto": "自動 /秒",
           "available": "コロニーフード {value}"
+        },
+        "automation": {
+          "auto": "自動",
+          "weight": "重み"
         },
         "hunting": {
           "on": "狩猟オン",
@@ -2229,6 +2261,7 @@
         "disposalTargetsSubheading": "設定まで 15 リソース。アクティブオートスタートターゲットは、割り当てられた処分を均等に分割します。",
         "addTarget": "+ ターゲットを追加",
         "phase": "相",
+        "whichOne": "どれ",
         "none": "—",
         "remove": "削除",
         "waitForFullCapacity": "大容量の待ち時間",
@@ -2319,8 +2352,7 @@
         "capStatus": "キャップ: {value}",
         "capReached": "キャップ",
         "liquidHydrogenWarning": "液体の水素は中心熱フラックスを減らすことからの脱熱器を防ぐことです。ヒートシンクはまだ工場熱を緩和でき、まだ造ることができます。",
-        "liquidHydrogenStatus": "妨げられる:液体水素は中心の熱取り外しを防ぎます",
-        "liquidHydrogenStatusShort": "ブロック中"
+        "liquidHydrogenStatus": "妨げられる:液体水素は中心の熱取り外しを防ぎます"
       },
       "deeperMining": {
         "deepeningSpeedBoost": "ディープニングスピードブースト",
@@ -2561,6 +2593,132 @@
     "colony": {
       "population": "人口",
       "nanocolony": "ナノコロニー",
+      "followersTab": "フォロワー",
+      "title": "コロニー",
+      "unhideObsoleteBuildings": "未hideは建物を造り出しました",
+      "common": {
+        "unknown": "不明",
+        "randomWorldNamed": "ランダムワールド: {name}"
+      },
+      "needs": {
+        "happiness": "幸福度",
+        "comfort": "快適度",
+        "value": "{name}: {value}%"
+      },
+      "growthRate": {
+        "title": "成長率",
+        "capacity": "容量:",
+        "capacityTooltip": "ロジスティック成長式からの容量の乗数。これは 1 - 人口/容量、従って成長はあなたがあなたのハウジングのキャップに近づくように減速し、集団が能力を等しいとき完全に停止します。\n\nゲームが非常に遅くなっていると感じたら、このマルチプライヤーは理由です。より多くのハウジングを構築することでできるだけ高く保つようにしてください。",
+        "baseRate": "基礎率:",
+        "baseTooltip": "幸福から得られる基礎成長率:最高(幸せ -) 50%) / 300, 0).\n- フードとエネルギー 各助成金を最大に +25 満足した時、幸せ。\n- コンフォートは20xの格付けを追加します。\n- 電子工学および人間の特徴をもつそれぞれはまで加えます +10 食とエネルギーが満たされたときの幸せ。\n- マイルストーンは、請求またはクレームされた追加の準備が整いました +0.5 一人ひとりの幸せ。\n- 下の幸福 50% 成長を一時停止します。",
+        "otherMultipliers": "その他のマルチプライヤー:",
+        "otherTooltip": "コロニースライダや他の効果から多岐に渡ります。",
+        "decay": "デカリー:",
+        "decayTooltip": "短時間、過多化、高重力による人口減少を組み合わせました。",
+        "growth": "成長:",
+        "growthTooltip": "ロジスティック成長マイナスの飢餓、エネルギーおよび重力崩壊を適用した後最終的な成長率。",
+        "naturalGrowth": "自然成長",
+        "immigration": "移住",
+        "pilgrimFollowers": "Pilgrimフォロワー: {value}x",
+        "multiplierEntry": "{name}: {value}x",
+        "decayStarvation": "•Starvation: {rate}%/s (%/秒){share}%スタービング; 100% パーカー 360 s)。",
+        "decayEnergy": "• エネルギー: {rate}%/s (%/秒){share}力なしで%; 100% パーカー 90 s)。",
+        "decayOverpopulation": "• 過剰人口: {rate}%/s. ディレクティブ",
+        "decayGravity": "• 重力: {rate}%/s (重力) {gravity}  m/s^2; {above} 上記について 20)."
+      },
+      "constructionOffice": {
+        "title": "建築事務所",
+        "autobuilder": "オートビルダー: ",
+        "statusActive": "稼働",
+        "statusDisabled": "無効",
+        "pause": "一時停止",
+        "resume": "再開",
+        "strategicReserve": "戦略的準備",
+        "strategicReserveTooltip": "建設オフィスは、その容量の指定された割合の下にあるリソースを落とす場合は、ストレージから資源を使用することを防ぐことができます。労働者には適用されません。",
+        "reserveSettingsButton": "予約設定",
+        "reserveSettingsTitle": "戦略的準備",
+        "reserveSettingsIntro": "各リソースに建設オフィスのリザーブパーセンテージを設定します。",
+        "globalReserve": "グローバル デフォルト",
+        "close": "X",
+        "done": "完了",
+        "guide": {
+          "title": "オートビルドガイド",
+          "open": "オートビルドガイドを開く",
+          "close": "自動ビルドガイドを閉じる",
+          "imageAlt": "数えられたガイド・セクションのオートビルド制御",
+          "section1": "このセクションでは、オートビルドが有効かどうかを制御します。入力された値とモードは、ターゲットの定義方法を制御します。",
+          "section2a": "これにより、値を制御することができます。 1)キーボードを使用せずに。小さな調整のために有用です。",
+          "section2b": "この制御は、自動ビルドの優先順位を優先します。 優先度の高い建物が最初に構築されます。",
+          "section3": "これは、定義された値に基づいて現在の自動ビルドターゲットです。 建設オフィスは、その値をビルドしようとします。",
+          "section4": "ターゲットにアクティブに設定すると、新しくビルドされた建物が自動的に活性化されるようにしたり、アクティブなビルの数をすばやく変更したりするのに便利です。",
+          "section5": "これは価値を計算する方法です。 1) 現在の設定と一致します。",
+          "recommendationsTitle": "推奨",
+          "recommendation1": "オートビルドを使用する 1% ハイドロポニックスファームのポップアップ。各アップグレードされた農場はフィードできます 100 人なので、同じ農場の数が必要です。 1% あなたのポップアップ。",
+          "recommendation2": "砂のquarriesをとして使用して下さい 100% ガラス製錬機+電子工場の要求。",
+          "recommendation3": "特に2つの便利なオートビルドモードがあります:労働者と%ワーカーシェアの%。 作業者の割合は、あなたの人数に基づいてターゲットを計算します。 % ワーカーシェアは、この建物にあなたの労働者の%を割り当てることに基づいてターゲットを計算します。例えば、あなたが持っている場合 200 労働者と欲求 1 貯蔵のデポ/ 100 労働者の使用 1% 労働者の。 あなたが望むなら 50% 部品工場で働くあなたの労働者の 50% 労働者のシェア。",
+          "recommendation4": "建築事務所を初めてアンロックすると、ほとんどの建物を作業員の割合や%ワーカーシェアに設定し、「ターゲットをアクティブに設定」を押してからオンにします。 autobuilder は、現在の設定を制限します。",
+          "recommendation5": "もう少し何かを必要とするか、あなたの労働者を少し解放したいなら、2aの箱は小さい調節のために大きいです。  完全に経済を破壊することなく、オートビルドのターゲット値が少し増加または減少できます。",
+          "starterSetupTitle": "初期設定",
+          "starterSetupBuilding": "建物名",
+          "starterSetupValue": "値",
+          "starterSetupMode": "モード",
+          "starterSetupPriority": "優先度",
+          "starterSetupModeMax": "最大",
+          "starterSetupModeSandQuarryDemand": "砂採掘場+エネルギー工場需要の %",
+          "starterSetupModeWorkers": "労働者の %",
+          "starterSetupModePopulation": "人口の %",
+          "starterSetupModeWorkerShare": "労働者比率 %",
+          "starterSetupApply": "初期設定を適用"
+        },
+        "guidePrompt": {
+          "title": "オートビルドガイド",
+          "message": "この機能のガイドが利用可能です。今すぐガイドを見たいですか?(コロニータブの下に建設事務所からもアクセス可能です)",
+          "yes": "はい",
+          "no": "いいえ"
+        },
+        "reserveResources": {
+          "energy": "エネルギー",
+          "metal": "金属",
+          "glass": "ガラス",
+          "water": "水",
+          "components": "部品",
+          "electronics": "電子機器",
+          "superconductors": "超伝導体",
+          "superalloys": "超合金",
+          "land": "土地"
+        }
+      },
+      "sliders": {
+        "managerDescription": "コロニースライダーを管理",
+        "sourceName": "コロニースライダ",
+        "title": "コロニー・マネジメント",
+        "workforceAllocation": "労働力配分",
+        "workersValue": "ワーカー: {value}%",
+        "scientistsValue": "科学者: {value}%",
+        "foodConsumption": "食品消費量",
+        "luxuryWaterUse": "贅沢な水使用",
+        "oreMineWorkers": "鉱石鉱山労働者",
+        "mechanicalAssistance": "機械的支援 ",
+        "mechanicalAssistanceTooltip": "メカニカル・アシスタンスが最大で軽減 50% 高重力の減衰とスタックの高重力適応で、残りを取り除きます。",
+        "gravityDecayReduction": "重力の腐食の減少: -{value}%",
+        "sliderValue": "スライダー: {value}x. の",
+        "componentsCoverage": "コンポーネントの適用範囲: {value}%.",
+        "currentGravity": "現在の重力：{gravity} m/s^2（20を{above}上回っています）。",
+        "effectiveMitigation": "有効な軽減: {value}重力崩壊の%。",
+        "highGravityAdaptation": "高重力適応: {value}",
+        "remainingDecay": "decayの残り: {value}重力が超過する1日あたりの元の高重力の損失の% 20  m/s^2.",
+        "warpnet": "ワープネット ",
+        "warpnetTooltip": "Warpnetのファネルは、研究出力を調整するためのインスタント通信を瞬時に行います。",
+        "warpnetEnergyUpkeep": "左の価値は多層コロニーおよび人間の特徴をもつハウジングのエネルギーupkeepを増加します: {value}.",
+        "warpnetResearchBoost": "正しい値がグローバルリサーチブーストを追加します: +{value}%",
+        "warpnetEnergyCost": "エネルギーコストは、Warpnetの強度で急激にスケールアップします。",
+        "warpnetSolisNote": "注意: ソリス アンドロイドを始めるための支払い。",
+        "warpnetLabelBase": "x1の",
+        "warpnetLabelExp": "x1eの{value}",
+        "researchEffect": "研究: +{value}%",
+        "growthEffect": "成長: +{value}%",
+        "boostEffect": "ブースト: {value}%"
+      },
       "followers": {
         "managerDescription": "フォロワーシステムを管理する",
         "common": {
@@ -2698,120 +2856,6 @@
             }
           }
         }
-      },
-      "title": "コロニー",
-      "unhideObsoleteBuildings": "未hideは建物を造り出しました",
-      "common": {
-        "unknown": "不明",
-        "randomWorldNamed": "ランダムワールド: {name}"
-      },
-      "needs": {
-        "happiness": "幸福度",
-        "comfort": "快適度",
-        "value": "{name}: {value}%"
-      },
-      "growthRate": {
-        "title": "成長率",
-        "capacity": "容量:",
-        "capacityTooltip": "ロジスティック成長式からの容量の乗数。これは 1 - 人口/容量、従って成長はあなたがあなたのハウジングのキャップに近づくように減速し、集団が能力を等しいとき完全に停止します。\n\nゲームが非常に遅くなっていると感じたら、このマルチプライヤーは理由です。より多くのハウジングを構築することでできるだけ高く保つようにしてください。",
-        "baseRate": "基礎率:",
-        "baseTooltip": "幸福から得られる基礎成長率:最高(幸せ -) 50%) / 300, 0).\n- フードとエネルギー 各助成金を最大に +25 満足した時、幸せ。\n- コンフォートは20xの格付けを追加します。\n- 電子工学および人間の特徴をもつそれぞれはまで加えます +10 食とエネルギーが満たされたときの幸せ。\n- マイルストーンは、請求またはクレームされた追加の準備が整いました +0.5 一人ひとりの幸せ。\n- 下の幸福 50% 成長を一時停止します。",
-        "otherMultipliers": "その他のマルチプライヤー:",
-        "otherTooltip": "コロニースライダや他の効果から多岐に渡ります。",
-        "decay": "デカリー:",
-        "decayTooltip": "短時間、過多化、高重力による人口減少を組み合わせました。",
-        "growth": "成長:",
-        "growthTooltip": "ロジスティック成長マイナスの飢餓、エネルギーおよび重力崩壊を適用した後最終的な成長率。",
-        "naturalGrowth": "自然成長",
-        "immigration": "移住",
-        "pilgrimFollowers": "Pilgrimフォロワー: {value}x",
-        "multiplierEntry": "{name}: {value}x",
-        "decayStarvation": "•Starvation: {rate}%/s (%/秒){share}%スタービング; 100% パーカー 360 s)。",
-        "decayEnergy": "• エネルギー: {rate}%/s (%/秒){share}力なしで%; 100% パーカー 90 s)。",
-        "decayOverpopulation": "• 過剰人口: {rate}%/s. ディレクティブ",
-        "decayGravity": "• 重力: {rate}%/s (重力) {gravity}  m/s^2; {above} 上記について 20)."
-      },
-      "constructionOffice": {
-        "title": "建築事務所",
-        "autobuilder": "オートビルダー: ",
-        "statusActive": "稼働",
-        "statusDisabled": "無効",
-        "pause": "一時停止",
-        "resume": "再開",
-        "strategicReserve": "戦略的準備",
-        "strategicReserveTooltip": "建設オフィスは、その容量の指定された割合の下にあるリソースを落とす場合は、ストレージから資源を使用することを防ぐことができます。労働者には適用されません。",
-        "reserveSettingsButton": "予約設定",
-        "reserveSettingsTitle": "戦略的準備",
-        "reserveSettingsIntro": "各リソースに建設オフィスのリザーブパーセンテージを設定します。",
-        "globalReserve": "グローバル デフォルト",
-        "close": "X",
-        "done": "完了",
-        "guide": {
-          "title": "オートビルドガイド",
-          "open": "オートビルドガイドを開く",
-          "close": "自動ビルドガイドを閉じる",
-          "imageAlt": "数えられたガイド・セクションのオートビルド制御",
-          "section1": "このセクションでは、オートビルドが有効かどうかを制御します。入力された値とモードは、ターゲットの定義方法を制御します。",
-          "section2a": "これにより、値を制御することができます。 1)キーボードを使用せずに。小さな調整のために有用です。",
-          "section2b": "この制御は、自動ビルドの優先順位を優先します。 優先度の高い建物が最初に構築されます。",
-          "section3": "これは、定義された値に基づいて現在の自動ビルドターゲットです。 建設オフィスは、その値をビルドしようとします。",
-          "section4": "ターゲットにアクティブに設定すると、新しくビルドされた建物が自動的に活性化されるようにしたり、アクティブなビルの数をすばやく変更したりするのに便利です。",
-          "section5": "これは価値を計算する方法です。 1) 現在の設定と一致します。",
-          "recommendationsTitle": "推奨",
-          "recommendation1": "オートビルドを使用する 1% ハイドロポニックスファームのポップアップ。各アップグレードされた農場はフィードできます 100 人なので、同じ農場の数が必要です。 1% あなたのポップアップ。",
-          "recommendation2": "砂のquarriesをとして使用して下さい 100% ガラス製錬機+電子工場の要求。",
-          "recommendation3": "特に2つの便利なオートビルドモードがあります:労働者と%ワーカーシェアの%。 作業者の割合は、あなたの人数に基づいてターゲットを計算します。 % ワーカーシェアは、この建物にあなたの労働者の%を割り当てることに基づいてターゲットを計算します。例えば、あなたが持っている場合 200 労働者と欲求 1 貯蔵のデポ/ 100 労働者の使用 1% 労働者の。 あなたが望むなら 50% 部品工場で働くあなたの労働者の 50% 労働者のシェア。",
-          "recommendation4": "建築事務所を初めてアンロックすると、ほとんどの建物を作業員の割合や%ワーカーシェアに設定し、「ターゲットをアクティブに設定」を押してからオンにします。 autobuilder は、現在の設定を制限します。",
-          "recommendation5": "もう少し何かを必要とするか、あなたの労働者を少し解放したいなら、2aの箱は小さい調節のために大きいです。  完全に経済を破壊することなく、オートビルドのターゲット値が少し増加または減少できます。"
-        },
-        "guidePrompt": {
-          "title": "オートビルドガイド",
-          "message": "この機能のガイドが利用可能です。今すぐガイドを見たいですか?(コロニータブの下に建設事務所からもアクセス可能です)",
-          "yes": "はい",
-          "no": "いいえ"
-        },
-        "reserveResources": {
-          "energy": "エネルギー",
-          "metal": "金属",
-          "glass": "ガラス",
-          "water": "水",
-          "components": "部品",
-          "electronics": "電子機器",
-          "superconductors": "超伝導体",
-          "superalloys": "超合金",
-          "land": "土地"
-        }
-      },
-      "sliders": {
-        "managerDescription": "コロニースライダーを管理",
-        "sourceName": "コロニースライダ",
-        "title": "コロニー・マネジメント",
-        "workforceAllocation": "労働力配分",
-        "workersValue": "ワーカー: {value}%",
-        "scientistsValue": "科学者: {value}%",
-        "foodConsumption": "食品消費量",
-        "luxuryWaterUse": "贅沢な水使用",
-        "oreMineWorkers": "鉱石鉱山労働者",
-        "mechanicalAssistance": "機械的支援 ",
-        "mechanicalAssistanceTooltip": "メカニカル・アシスタンスが最大で軽減 50% 高重力の減衰とスタックの高重力適応で、残りを取り除きます。",
-        "gravityDecayReduction": "重力の腐食の減少: -{value}%",
-        "sliderValue": "スライダー: {value}x. の",
-        "componentsCoverage": "コンポーネントの適用範囲: {value}%.",
-        "currentGravity": "現在の重力：{gravity} m/s^2（20を{above}上回っています）。",
-        "effectiveMitigation": "有効な軽減: {value}重力崩壊の%。",
-        "highGravityAdaptation": "高重力適応: {value}",
-        "remainingDecay": "decayの残り: {value}重力が超過する1日あたりの元の高重力の損失の% 20  m/s^2.",
-        "warpnet": "ワープネット ",
-        "warpnetTooltip": "Warpnetのファネルは、研究出力を調整するためのインスタント通信を瞬時に行います。",
-        "warpnetEnergyUpkeep": "左の価値は多層コロニーおよび人間の特徴をもつハウジングのエネルギーupkeepを増加します: {value}.",
-        "warpnetResearchBoost": "正しい値がグローバルリサーチブーストを追加します: +{value}%",
-        "warpnetEnergyCost": "エネルギーコストは、Warpnetの強度で急激にスケールアップします。",
-        "warpnetSolisNote": "注意: ソリス アンドロイドを始めるための支払い。",
-        "warpnetLabelBase": "x1の",
-        "warpnetLabelExp": "x1eの{value}",
-        "researchEffect": "研究: +{value}%",
-        "growthEffect": "成長: +{value}%",
-        "boostEffect": "ブースト: {value}%"
       },
       "nanotech": {
         "managerDescription": "ナノボット群を管理します。",
@@ -3130,11 +3174,15 @@
           "tooltip": "温度は、テラフォーミングの重要な要因です。それは要因の複雑な相互作用によって決定されます:\n\n- 主な装備:モデルは、太陽フラックスとアルベドから効果的な温度を計算するためにステファンボルツマン法を使用しています。 温室効果は、大気の光深度に基づいて追加され、昼夜の温度変化が惑星の熱容量と回転速度から計算されます。\n- 太陽フラックス:星から受け取った基幹エネルギー、のような構造によって増強することができる 宇宙ミラー.\n- Albedo:惑星の反射率。氷と雲からの高いアルベッドは、より多くの光を反映し、地球を冷やします。 海と暗い岩から低アルベドを吸収し、より軽く温めます。\n- 温室効果:大気ガスのような CO2, H2O、および CH4 トラップ熱。トラップの量は、大気の光深度で決定され、各ガス量に依存します。\n- 回転速度:遅い回転は昼と夜の間により極端な温度差につながります。\n- 熱容量:表面の構成および大気密度によって影響される熱を貯え、解放する惑星の能力。表面液体はより多くの熱容量を意味し、従って昼夜相違を減らします。\n- 部分的な風:エネルギーは熱帯、気性および極性の地帯間の動きます。傾向のコラムは夜に極端な間総熱を節約する巻上げられたターゲット温度を示します。\n- 熱慣性:適度な同じ熱容量 day/night スイングはまた、トレンド温度に向かってマーチを遅くします。 厚い空気と深海は激しく反応する; 薄い雰囲気がすぐに傾向にスナップ.\n\n温度は直接影響を与えます:\n- 水周期:蒸発、昇華、溶けることおよび凍結を運転して下さい。\n- 生命:各種に生存および成長のための特定の温度較差があります。\n- コロニストの慰め:極端な温度は寿命サポートのためのエネルギー消費を高めます。",
           "coreHeatTooltip": "平面にフラットなグローバルフラックスとして直接加えられたプラネタリ内部熱。\n\n人工的な錆およびメガヒートシンクはこの価値を減らすことができます。\n\n温度が下落した場合 {crustStart}{unit}、自然な甲殻は形成し始め、で完了します {crustComplete}{unit}.\n\nこのフラックスは、アルベトや日夜平均の影響を受けません。",
           "factoryHeatTooltip": "ローカルビルおよびコロニーエネルギー消費、マイナスの太陽電池パネルからの産業不用な熱はエネルギー生産から冷却します。 ソーラーパネルの冷却は、サーフェスアルベドによって減少します。特定のメガ構造体がこれを減らすことができます。直接廃棄物熱は、アルベッドや昼夜平均の影響を受けません。",
+          "factoryHeatTopContributors": "絶対的な影響による主な寄与者:",
+          "factoryHeatOtherSources": "その他の源",
+          "phaseChangeHeatTooltip": "直近の気候区間において相変化により交換された符号付きの惑星熱です。正の値は凍結、凝縮、または析出が熱を放出したことを示し、負の値は融解、蒸発、沸騰、または昇華が熱を吸収したことを示します。数値安定性のため、この効果は傾向への移動を加速または減速することしかできず、反転させることはできません。これにより温度が停滞することがあります。",
           "equilibriumTempTooltip": "吸収された日光、albedoおよび直接非大気熱からの黒いボディ放射状バランスの温度。 温室熱トラップを無視します。物理的に、同じエネルギーを空間に戻す温度です。地球の値は 255 K (K)-18温度 °C。",
           "labels": {
             "globalMeanTemp": "グローバル平均気温",
             "equilibriumTemp": "平衡の臨時雇用者",
             "netCoreHeatFlux": "純中心熱変化",
+            "netPhaseChangeHeatFlux": "正味相変化熱フラックス",
             "netFactoryHeatFlux": "純工場熱変化",
             "zone": "ゾーン",
             "temperature": "T (T){unit})",
@@ -3755,7 +3803,16 @@
           }
         },
         "rewards": {
-          "nuclearAlchemyThroughput": "+{value}% 原子力錬金術のスループット"
+          "manufacturingWorldThroughput": "製造世界のスループット +{value}%",
+          "liftersSuperchargeMax": "リフター超充電最大値 +{value}",
+          "gigafoundryThroughput": "ギガファウンドリーのスループット +{value}%",
+          "spaceChemistryThroughput": "宇宙化学のスループット +{value}%",
+          "nuclearAlchemyThroughput": "+{value}% 原子力錬金術のスループット",
+          "oneillSectorCap": "オニール上限倍率 +{value}",
+          "hephaestusYardEffectiveness": "ヘファイストス造船所の効率 +{value}%",
+          "spaceStorageCapacity": "宇宙貯蔵容量 +{value}%",
+          "liftersSuperchargeExponent": "リフター超充電指数 -{value}",
+          "liftersThroughput": "リフターのスループット +{value}%"
         }
       },
       "statisticsTitle": "統計",
@@ -3787,6 +3844,7 @@
         }
       },
       "currentWorldLabel": "現在の世界",
+      "renameRandomWorldTitle": "このランダム世界の名前を変更",
       "originalProperties": "元の特性",
       "worldSelectionTitle": "ワールド・セレクション",
       "worldSelectionSubtitle": "次の目的地のロックを解除するために地形を完了します。",
@@ -3831,6 +3889,7 @@
         "uniqueTooltip": "あなたが完了したすべての異なるストーリー世界と地形ランダムな世界をカウントします。 他のすべてのボーナスを無視します。",
         "effectiveTooltip": "他のソースから世界を含む。この価値は、高度な研究に影響を与えます, ソリス 報酬、メガ構造の拡張速度および輸出帽子。",
         "galacticPopulationTooltip": "銀河の人口は成長しています 0.5% / 365 毎秒, 乗算 ()1 - 人口/能力)。",
+        "showGalacticPopulationInSidebar": "サイドバーに表示",
         "effectiveTooltipGalaxy": "銀河の鍵が開くと、フリート容量は調整された世界数を使用します(人工世界は最大に貢献します) {value} そしてO'Neillシリンダーは無視されます)。",
         "effectiveTooltipGalaxyUncapped": "銀河の鍵が開くと、フリート容量は調整された世界数を使用します(人工の世界では完全な価値を寄与し、O'Neillシリンダーは無視されます)。"
       }
@@ -4301,7 +4360,19 @@
             "autoStartConstruction": "オートスタート構造",
             "autoOperationEnabled": "自動操作が可能",
             "spaceshipCostMultiplier": "宇宙船のコストマルチプライヤー",
-            "currentMass": "現在の質量"
+            "currentMass": "現在の質量",
+            "keratiHive": {
+              "hiveFood": "巣の食料",
+              "honey": "蜂蜜",
+              "spawningPools": "産卵池",
+              "territory": "縄張り",
+              "drones": "所有ドローン",
+              "builders": "所有建設者",
+              "hunters": "所有ハンター",
+              "princesses": "所有プリンセス",
+              "queens": "所有クイーン",
+              "empresses": "所有エンプレス"
+            }
           },
           "artificial": {
             "source": "人工",
@@ -4398,6 +4469,8 @@
             "luminosity": {
               "solarFlux": "ソーラーフラックス",
               "modifiedSolarFlux": "変更された太陽変化",
+              "surfaceSolarFlux": "地表太陽フラックス",
+              "averageFlux": "平均フラックス",
               "albedo": "アルベド",
               "opticalDepth": "光学深さ"
             },
@@ -4553,6 +4626,10 @@
         "lifeDeployImproveLabel": "設計が改善すればだけ配置して下さい",
         "lifeDeployPointsSuffix": "ポイント",
         "lifeDeployInfo": "指定したポイント数でデザインを改善すれば、自動展開がトリガーされます。",
+        "lifeBiomassColorLabel": "バイオマスの色",
+        "lifeBiomassColorTooltip": "プリセットが生命設計を展開するとき、この色が適用されます。変更に生命ポイントはかかりません。緑より明るいバイオマスは成長が遅くなり、白では最大 -80% になります。",
+        "lifeBiomassAlbedo": "アルベド: {value}",
+        "lifeBiomassGrowthPenalty": "成長ペナルティ: -{value}%",
         "lifeCreateStepsFromCurrentButton": "現在の設計からステップを作成する",
         "lifeSpendAtLabel": "フォローする",
         "lifeMaxCostLabel": "最高のコスト",
@@ -5020,6 +5097,8 @@
       "autoPauseColonists": "ネットコロニスト率 <",
       "immigrationPool": "移民プール",
       "immigrationPoolTooltip": "有効にすると、火星以外の世界では、大部分のコロニー成長は、移民を介して銀河人口に直接依存します。  移民は、銀河の充填比で世界のコロニストフィラー比率を均等化しようとすると、すべての移民が銀河集団プールから取られます。 これはいくつかの場合に非常に遅い成長につながる可能性があります。",
+      "disableColonistDecay": "入植者の減少を無効化",
+      "disableColonistDecayTooltip": "食料不足、エネルギー不足、高重力、過剰人口による入植者の損失を防ぎます。放置プレイに推奨されます。",
       "disableUnlockAlerts": "無効なロック解除アラート",
       "disableDayNightCycle": "無効な昼夜サイクル",
       "dayNightTooltip": "日が変化する時間を停止します。ソーラーパネルとアイスハーヴェーダは、半効率と半分のメンテナンスで実行されます。より現実的で少し簡単になり、リラックスした経験につながります。",
@@ -5076,6 +5155,8 @@
       "unfulfilledMaintenancePenaltiesTooltip": "有効にすると、未払いの建物のメンテナンスが影響を受ける建物の生産性を低下させる 900 秒。各建物のトレンドは、必要なリソースの中で最悪の有料メンテナンス比に向かっており、実際の生産性がその値によって捉えられます。",
       "earlyAdvancedOversight": "早期高度の視力",
       "earlyAdvancedOversightTooltip": "ゲームは、指定された温度値を自動的にターゲットにすることができるスペースミラーのための強力なソルバーを持っています。 それは獲得しなければならないものであることを目的としており、通常ストーリーワールドで利用可能です 5. もしもイライラしているのを見つけたら、早めにそれを持っていることは自由に感じます。 あなたはまだ必要です 宇宙ミラー 施設内視線研究",
+      "phaseChangeHeat": "相変化熱",
+      "phaseChangeHeatTooltip": "有効にすると、融解、蒸発、沸騰、昇華は惑星熱を吸収し、凍結、凝縮、析出はそれを放出します。相変化熱は温度傾向や高度な監督の割り当てを変更しません。傾向への移動を加速または減速することしかできませんが、温度の停滞を簡単に招くことがあります。",
       "factoryHeating": "工場暖房",
       "factoryHeatingTooltip": "有効にすると、地元の建物とコロニーエネルギー使用の一部が惑星の熱になります。一方、ソーラーパネルはサーフェスアルベドによって削減されたエネルギー生産で地球を冷やします。 ほとんどの構造は、エネルギーを化学的に保存するプロセスがオフ・ワールドに排出するか、または既にモデル直接加熱使用の低係数にすべてのローカル エネルギーを熱に変換します。特定のメガ構造は工場暖房を軽減するのに役立ちます。  \n\n リアルな工場のエネルギー消費量と共にこの設定を使うべきです",
       "realisticFactoryEnergyConsumption": "実質的な工場エネルギー消費",
@@ -5140,10 +5221,17 @@
       "fastestTerraformByTypeTitle": "世界のタイプで最速のテラフォーム",
       "fastestTerraformByTypeEntry": "{type}: {game} ({real} リアルタイム)",
       "recentTerraformHistoryTitle": "最近の投稿 {count} テラフォームド・ワールド",
+      "recentTerraformHistoryWorld": "世界",
+      "recentTerraformHistoryTerraformTime": "テラフォーミング時間",
+      "recentTerraformHistoryTravelTime": "移動時間",
       "recentTerraformHistoryAverage": "平均: {game} ({real} リアルタイム)",
+      "recentTerraformHistoryAverageLabel": "平均",
       "recentTerraformHistoryEmpty": "未収録の地形世界は記録されていません。",
       "recentTerraformHistoryEntry": "{name} ({type}): {game} ({real} リアルタイム)",
+      "recentTerraformHistoryWorldEntry": "{name}（{type}）",
+      "recentTerraformHistoryUnavailable": "利用不可",
       "terraformWorldTypeArtificial": "人工",
+      "terraformWorldTypeStory": "ストーリー",
       "terraformWorldTypeShell": "シェルワールド",
       "terraformWorldTypeRing": "リングワールド",
       "terraformWorldTypeDisk": "オルダーソン・ディスク",
@@ -6509,6 +6597,10 @@
           "name": "次世代バイオエンジニアリング",
           "description": "ライフデザインの可能性を永続的に高めるために高度な研究の使用を有効にします"
         },
+        "biopigmentation": {
+          "name": "生体色素化",
+          "description": "生命は別の色素を使えます。これはアルベドを上げるのに役立ちますが、明るい色には成長ペナルティがあります。"
+        },
         "repeatable_ai_research": {
           "name": "繰り返し可能 AI リサーチ",
           "description": "生産の充実に焦点を合わせる反復可能な研究プログラムを承認する HOPE."
@@ -6520,6 +6612,10 @@
         "galactic_market": {
           "name": "銀河市場 コンコルド",
           "description": "より広い銀河と永久的な貿易関係を確立し、管理された市場との粗大な輸出を取り替えます。これは永久に貨物ロケットおよび金属の輸出を交換します。"
+        },
+        "automatic_surplus_trading": {
+          "name": "余剰資源の自動取引",
+          "description": "この時点で、植民地資源は単なる商品になっています。銀河市場は供給の急激な変化に対応し、取引相手を先に見つけなくても余剰資源を売却できるはずです。（あふれた植民地資源は、飽和状態未満では市場で自動的に売却されます。次のティックで発生します。）"
         },
         "mechanical_assistance": {
           "name": "機械的支援",
@@ -6914,6 +7010,9 @@
         },
         "solisPoints": {
           "name": "ソリス ポイント"
+        },
+        "galacticPopulation": {
+          "name": "銀河人口"
         },
         "alienArtifact": {
           "name": "エイリアンのアーティファクト"
