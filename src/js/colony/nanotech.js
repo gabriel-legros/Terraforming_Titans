@@ -536,6 +536,90 @@ class NanotechManager extends EffectableEntity {
         siliconFraction = 0;
       }
 
+      const glassRes = resources.colony?.glass;
+      const junkRes = recyclingEnabled ? resources.surface?.junk : null;
+
+      if (glassRes && accumulatedChanges?.colony) {
+        const glassRate = this.getStageOutputRate(1, this.glassSlider);
+        const glassAmount = (isArtificialWorld || !hasSandDeposits)
+          ? Math.min(glassRate * (deltaTime / 1000), siliconProvided)
+          : glassRate * (deltaTime / 1000);
+
+        // Produce glass from the remainder (what wasn't covered by junk)
+        const actualGlassProduced = glassAmount;
+        this.currentGlassProduction = deltaTime > 0 ? actualGlassProduced / (deltaTime / 1000) : 0;
+        glassProductionFraction = glassRate > 0 ? Math.max(0, Math.min(1, this.currentGlassProduction / glassRate)) : 1;
+
+        if (actualGlassProduced > 0) {
+          accumulatedChanges.colony.glass =
+            (accumulatedChanges.colony.glass || 0) + actualGlassProduced;
+          glassRes.modifyRate(
+            this.currentGlassProduction,
+            registerRateSource('nanotech:glass', getNanotechText('ui.colony.nanotech.sources.glass', 'Nanotech Glass')),
+            'nanotech'
+          );
+        }
+      }
+
+      if (stage4Enabled) {
+        const graphiteRes = resources.surface?.graphite;
+        if (graphiteRes && accumulatedChanges?.surface) {
+          const graphiteProduction = getEffectiveProductionRate(graphiteRes);
+          const graphiteLimitRate = this.graphiteLimitMode === 'absolute'
+            ? Math.max(0, this.maxGraphiteAbsolute)
+            : (this.graphiteLimitMode === 'uncapped'
+              ? Number.POSITIVE_INFINITY
+              : Math.max(0, (graphiteProduction * this.maxGraphitePercent) / 100));
+          const needed = this.optimalGraphiteConsumption * (deltaTime / 1000);
+          const limitedNeed = Math.min(needed, graphiteLimitRate * (deltaTime / 1000));
+          const graphiteAvailable = Math.max(graphiteRes.value + (accumulatedChanges.surface.graphite || 0), 0);
+          const usedGraphite = Math.min(limitedNeed, graphiteAvailable);
+
+          this.hasEnoughGraphite = limitedNeed >= needed && usedGraphite >= needed;
+          graphiteProvided = usedGraphite;
+          this.currentGraphiteConsumption = deltaTime > 0 ? usedGraphite / (deltaTime / 1000) : 0;
+
+          if (usedGraphite > 0) {
+            accumulatedChanges.surface.graphite = (accumulatedChanges.surface.graphite || 0) - usedGraphite;
+            graphiteRes.modifyRate(
+              -usedGraphite / (deltaTime / 1000),
+              registerRateSource('nanotech:graphite', getNanotechText('ui.colony.nanotech.sources.graphite', 'Nanotech Graphite')),
+              'nanotech'
+            );
+          }
+
+          graphiteFraction = this.hasEnoughGraphite ? 1 : (needed > 0 ? usedGraphite / needed : 1);
+        } else if (graphiteAllocation > 0) {
+          graphiteFraction = 0;
+          this.hasEnoughGraphite = false;
+        } else {
+          this.hasEnoughGraphite = true;
+        }
+      } else {
+        graphiteFraction = 0;
+        this.hasEnoughGraphite = true;
+      }
+
+      const grapheneRes = resources.colony?.metal;
+      if (grapheneRes && accumulatedChanges?.colony && stage4Enabled) {
+        const grapheneRate = this.getStageOutputRate(4, this.grapheneSlider);
+        const grapheneAmountBase = grapheneRate * (deltaTime / 1000);
+        const grapheneAmount = (isArtificialWorld || !hasGraphiteDeposits)
+          ? Math.min(grapheneAmountBase, graphiteProvided)
+          : grapheneAmountBase;
+        this.currentGrapheneProduction = deltaTime > 0 ? grapheneAmount / (deltaTime / 1000) : 0;
+        grapheneProductionFraction = grapheneRate > 0 ? Math.max(0, Math.min(1, this.currentGrapheneProduction / grapheneRate)) : 1;
+        if (grapheneAmount > 0) {
+          accumulatedChanges.colony.metal =
+            (accumulatedChanges.colony.metal || 0) + grapheneAmount;
+          grapheneRes.modifyRate(
+            this.currentGrapheneProduction,
+            registerRateSource('nanotech:graphene', getNanotechText('ui.colony.nanotech.sources.graphene', 'Nanotech Graphene')),
+            'nanotech'
+          );
+        }
+      }
+
       if (stage2Enabled) {
         const metalRes = resources.colony?.metal;
         const scrapRes = recyclingEnabled ? resources.surface?.scrapMetal : null;
@@ -605,6 +689,25 @@ class NanotechManager extends EffectableEntity {
       } else {
         metalFraction = 0;
         this.hasEnoughMetal = true;
+      }
+
+      const componentsRes = resources.colony?.components;
+      if (componentsRes && accumulatedChanges?.colony && stage2Enabled) {
+        const componentsRate = this.getStageOutputRate(2, this.componentsSlider);
+        const componentsAmount = (isArtificialWorld || !hasOreDeposits)
+          ? Math.min(componentsRate * (deltaTime / 1000), metalProvided)
+          : componentsRate * (deltaTime / 1000);
+        this.currentComponentsProduction = deltaTime > 0 ? componentsAmount / (deltaTime / 1000) : 0;
+        componentsProductionFraction = componentsRate > 0 ? Math.max(0, Math.min(1, this.currentComponentsProduction / componentsRate)) : 1;
+        if (componentsAmount > 0) {
+          accumulatedChanges.colony.components =
+            (accumulatedChanges.colony.components || 0) + componentsAmount;
+          componentsRes.modifyRate(
+            this.currentComponentsProduction,
+            registerRateSource('nanotech:components', getNanotechText('ui.colony.nanotech.sources.components', 'Nanotech Components')),
+            'nanotech'
+          );
+        }
       }
 
       if (stage3Enabled && stage3UsesGraphite) {
@@ -718,43 +821,24 @@ class NanotechManager extends EffectableEntity {
         this.hasEnoughBiomass = true;
       }
 
-      if (stage4Enabled) {
-        const graphiteRes = resources.surface?.graphite;
-        if (graphiteRes && accumulatedChanges?.surface) {
-          const graphiteProduction = getEffectiveProductionRate(graphiteRes);
-          const graphiteLimitRate = this.graphiteLimitMode === 'absolute'
-            ? Math.max(0, this.maxGraphiteAbsolute)
-            : (this.graphiteLimitMode === 'uncapped'
-              ? Number.POSITIVE_INFINITY
-              : Math.max(0, (graphiteProduction * this.maxGraphitePercent) / 100));
-          const needed = this.optimalGraphiteConsumption * (deltaTime / 1000);
-          const limitedNeed = Math.min(needed, graphiteLimitRate * (deltaTime / 1000));
-          const graphiteAvailable = Math.max(graphiteRes.value + (accumulatedChanges.surface.graphite || 0), 0);
-          const usedGraphite = Math.min(limitedNeed, graphiteAvailable);
-
-          this.hasEnoughGraphite = limitedNeed >= needed && usedGraphite >= needed;
-          graphiteProvided = usedGraphite;
-          this.currentGraphiteConsumption = deltaTime > 0 ? usedGraphite / (deltaTime / 1000) : 0;
-
-          if (usedGraphite > 0) {
-            accumulatedChanges.surface.graphite = (accumulatedChanges.surface.graphite || 0) - usedGraphite;
-            graphiteRes.modifyRate(
-              -usedGraphite / (deltaTime / 1000),
-              registerRateSource('nanotech:graphite', getNanotechText('ui.colony.nanotech.sources.graphite', 'Nanotech Graphite')),
-              'nanotech'
-            );
-          }
-
-          graphiteFraction = this.hasEnoughGraphite ? 1 : (needed > 0 ? usedGraphite / needed : 1);
-        } else if (graphiteAllocation > 0) {
-          graphiteFraction = 0;
-          this.hasEnoughGraphite = false;
-        } else {
-          this.hasEnoughGraphite = true;
+      const electronicsRes = resources.colony?.electronics;
+      if (electronicsRes && accumulatedChanges?.colony && stage3Enabled) {
+        const electronicsRate = this.getStageOutputRate(3, this.electronicsSlider);
+        const biomassConsumed = this.currentBiomassConsumption * (deltaTime / 1000);
+        const electronicsAmount = (isArtificialWorld || !hasSandDeposits)
+          ? Math.min(electronicsRate * (deltaTime / 1000), biomassConsumed)
+          : electronicsRate * (deltaTime / 1000);
+        this.currentElectronicsProduction = deltaTime > 0 ? electronicsAmount / (deltaTime / 1000) : 0;
+        electronicsProductionFraction = electronicsRate > 0 ? Math.max(0, Math.min(1, this.currentElectronicsProduction / electronicsRate)) : 1;
+        if (electronicsAmount > 0) {
+          accumulatedChanges.colony.electronics =
+            (accumulatedChanges.colony.electronics || 0) + electronicsAmount;
+          electronicsRes.modifyRate(
+            this.currentElectronicsProduction,
+            registerRateSource('nanotech:electronics', getNanotechText('ui.colony.nanotech.sources.electronics', 'Nanotech Electronics')),
+            'nanotech'
+          );
         }
-      } else {
-        graphiteFraction = 0;
-        this.hasEnoughGraphite = true;
       }
 
       if (stageSkullEnabled) {
@@ -781,90 +865,6 @@ class NanotechManager extends EffectableEntity {
       } else {
         hazardousBiomassFraction = 0;
         this.hasEnoughHazardousBiomass = true;
-      }
-
-      const glassRes = resources.colony?.glass;
-      const junkRes = recyclingEnabled ? resources.surface?.junk : null;
-      
-      if (glassRes && accumulatedChanges?.colony) {
-        const glassRate = this.getStageOutputRate(1, this.glassSlider);
-        const glassAmount = (isArtificialWorld || !hasSandDeposits)
-          ? Math.min(glassRate * (deltaTime / 1000), siliconProvided)
-          : glassRate * (deltaTime / 1000);
-        
-        // Produce glass from the remainder (what wasn't covered by junk)
-        const actualGlassProduced = glassAmount;
-        this.currentGlassProduction = deltaTime > 0 ? actualGlassProduced / (deltaTime / 1000) : 0;
-        glassProductionFraction = glassRate > 0 ? Math.max(0, Math.min(1, this.currentGlassProduction / glassRate)) : 1;
-        
-        if (actualGlassProduced > 0) {
-          accumulatedChanges.colony.glass =
-            (accumulatedChanges.colony.glass || 0) + actualGlassProduced;
-          glassRes.modifyRate(
-            this.currentGlassProduction,
-            registerRateSource('nanotech:glass', getNanotechText('ui.colony.nanotech.sources.glass', 'Nanotech Glass')),
-            'nanotech'
-          );
-        }
-      }
-
-      const componentsRes = resources.colony?.components;
-      if (componentsRes && accumulatedChanges?.colony && stage2Enabled) {
-        const componentsRate = this.getStageOutputRate(2, this.componentsSlider);
-        const componentsAmount = (isArtificialWorld || !hasOreDeposits)
-          ? Math.min(componentsRate * (deltaTime / 1000), metalProvided)
-          : componentsRate * (deltaTime / 1000);
-        this.currentComponentsProduction = deltaTime > 0 ? componentsAmount / (deltaTime / 1000) : 0;
-        componentsProductionFraction = componentsRate > 0 ? Math.max(0, Math.min(1, this.currentComponentsProduction / componentsRate)) : 1;
-        if (componentsAmount > 0) {
-          accumulatedChanges.colony.components =
-            (accumulatedChanges.colony.components || 0) + componentsAmount;
-          componentsRes.modifyRate(
-            this.currentComponentsProduction,
-            registerRateSource('nanotech:components', getNanotechText('ui.colony.nanotech.sources.components', 'Nanotech Components')),
-            'nanotech'
-          );
-        }
-      }
-
-      const electronicsRes = resources.colony?.electronics;
-      if (electronicsRes && accumulatedChanges?.colony && stage3Enabled) {
-        const electronicsRate = this.getStageOutputRate(3, this.electronicsSlider);
-        const biomassConsumed = this.currentBiomassConsumption * (deltaTime / 1000);
-        const electronicsAmount = (isArtificialWorld || !hasSandDeposits)
-          ? Math.min(electronicsRate * (deltaTime / 1000), biomassConsumed)
-          : electronicsRate * (deltaTime / 1000);
-        this.currentElectronicsProduction = deltaTime > 0 ? electronicsAmount / (deltaTime / 1000) : 0;
-        electronicsProductionFraction = electronicsRate > 0 ? Math.max(0, Math.min(1, this.currentElectronicsProduction / electronicsRate)) : 1;
-        if (electronicsAmount > 0) {
-          accumulatedChanges.colony.electronics =
-            (accumulatedChanges.colony.electronics || 0) + electronicsAmount;
-          electronicsRes.modifyRate(
-            this.currentElectronicsProduction,
-            registerRateSource('nanotech:electronics', getNanotechText('ui.colony.nanotech.sources.electronics', 'Nanotech Electronics')),
-            'nanotech'
-          );
-        }
-      }
-
-      const grapheneRes = resources.colony?.metal;
-      if (grapheneRes && accumulatedChanges?.colony && stage4Enabled) {
-        const grapheneRate = this.getStageOutputRate(4, this.grapheneSlider);
-        const grapheneAmountBase = grapheneRate * (deltaTime / 1000);
-        const grapheneAmount = (isArtificialWorld || !hasGraphiteDeposits)
-          ? Math.min(grapheneAmountBase, graphiteProvided)
-          : grapheneAmountBase;
-        this.currentGrapheneProduction = deltaTime > 0 ? grapheneAmount / (deltaTime / 1000) : 0;
-        grapheneProductionFraction = grapheneRate > 0 ? Math.max(0, Math.min(1, this.currentGrapheneProduction / grapheneRate)) : 1;
-        if (grapheneAmount > 0) {
-          accumulatedChanges.colony.metal =
-            (accumulatedChanges.colony.metal || 0) + grapheneAmount;
-          grapheneRes.modifyRate(
-            this.currentGrapheneProduction,
-            registerRateSource('nanotech:graphene', getNanotechText('ui.colony.nanotech.sources.graphene', 'Nanotech Graphene')),
-            'nanotech'
-          );
-        }
       }
 
       const energyRes = resources.colony?.energy;
