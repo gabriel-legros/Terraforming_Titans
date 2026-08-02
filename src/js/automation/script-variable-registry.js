@@ -736,7 +736,9 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'running') return this.resolveProjectRunning(project);
     if (ref.attribute === 'progressPercent') return this.resolveProjectProgressPercent(project);
     if (ref.attribute === 'assignedSpaceships') return this.toNumber(project.assignedSpaceships);
-    if (ref.attribute === 'durationRemaining') return this.toNumber(project.remainingTime);
+    if (ref.attribute === 'durationRemaining') {
+      return this.toNumber(ref.target === 'ringworldTerraforming' ? project.getDurationRemaining() : project.remainingTime);
+    }
     if (ref.attribute === 'repeatCount') return this.toNumber(project.repeatCount);
     if (ref.attribute === 'maxRepeatCount') return this.toNumber(project.maxRepeatCount);
     if (ref.attribute === 'autoStart') return project.autoStart ? 1 : 0;
