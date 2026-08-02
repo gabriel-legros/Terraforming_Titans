@@ -7345,7 +7345,7 @@ setLanguageData({
         requirements: {
           terraformed: 'World is fully terraformed',
           biomassDensity: 'Biomass density above 1 ton/m^2',
-          ecumenopolisCount: 'At most {value} Ecumenopolis Districts constructed (Max Land / 1M; not active)',
+          ecumenopolisCount: 'At most {value} Ecumenopolis Districts constructed (Max Land / 1M; this checks for constructed Ecumenopolis Districts, not active)',
           otherSpecialization: 'No other specialization started or completed',
         },
         shopItems: {
@@ -7534,7 +7534,7 @@ setLanguageData({
           waterCoverage: 'Liquid water coverage at least 75% ({value}%)',
           zoneTemperature: 'Every zone at least {target} {unit} (coldest: {value} {unit})',
           beachSilica: 'Available silica for beaches: {value}',
-          ecumenopolisCount: 'At most {value} Ecumenopolis Districts constructed (Max Land / 1M; not active)',
+          ecumenopolisCount: 'At most {value} Ecumenopolis Districts constructed (Max Land / 1M; this checks for constructed Ecumenopolis Districts, not activenot active)',
           otherSpecialization: 'No other specialization started or completed',
         },
         shop: {
