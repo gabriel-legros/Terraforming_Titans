@@ -497,7 +497,7 @@ const buildingsParameters = {
     recipes: {
       water: {
         shortName: '',
-        consumption: { colony: { water: 0.1 } },
+        consumption: { colony: { water: 0.4 } },
         production: { colony: { energy: 5_000_000_000 } }
       },
       hydrogen: {

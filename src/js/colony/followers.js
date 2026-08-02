@@ -1453,6 +1453,9 @@ class FollowersManager extends EffectableEntity {
   }
 
   prepareTravelState() {
+    if (isManagerEffectivelyEnabled(this, 'followersManager')) {
+      this.investFundingMax();
+    }
     const travelState = {
       lastProductionRates: { ...this.lastProductionRates },
       lastAppliedAssignments: { ...this.lastAppliedAssignments }

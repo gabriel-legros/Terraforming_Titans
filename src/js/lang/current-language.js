@@ -2806,6 +2806,7 @@ setLanguageData({
             line4: 'Funding factor is funding invested.',
             line5: 'Total Art Power = population * artifacts invested * funding invested.',
             line6: 'Happiness bonus is 0.25 * log10(Art Power)% and worker-per-colonist is multiplied by 1 + 5 * happiness bonus.',
+            line7: 'When travelling, all remaining funding is automatically invested in the gallery.',
           },
         },
         faith: {
