@@ -22,6 +22,7 @@ This folder contains classes for repeatable or generally available projects. Sto
 - **UndergroundExpansionProject** – android‑driven subterranean land growth; costs scale with initial land and progress displays total expanded land.
 
 ## Updates
+- Planetary Thrusters target caps are 10,000 days for spin and 1e10 AU for heliocentric distance.
 - The Hyperion Lantern day-night period is a nullable per-world setting. It controls the effective `dayNightPeriod` used for light and climate, while Planetary Thrusters control physical spin. Blank follows the current spin-derived cycle; numeric values remain limited to 1-1000 hours.
 - Warp Gate Command operations stop after completion unless Auto-start is enabled per team, with the toggle embedded in the Start button.
 - Lifters expansion switches to continuous progress under 1s duration and shows an Expansion/s readout.
