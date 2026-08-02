@@ -376,7 +376,7 @@ function updateScriptAutomationUI() {
     automation.scripts.forEach(item => {
       const option = document.createElement('option');
       option.value = item.id;
-      option.textContent = item.name || `Script ${item.id}`;
+      option.textContent = item.name || getAutomationCardText('scriptWithId', { id: item.id }, `Script ${item.id}`);
       automationElements.scriptNextTravelSelect.appendChild(option);
     });
     scriptNextTravelOptionsSignature = nextTravelSignature;
@@ -399,7 +399,7 @@ function updateScriptAutomationUI() {
     automation.scripts.forEach(item => {
       const option = document.createElement('option');
       option.value = item.id;
-      option.textContent = item.name || `Script ${item.id}`;
+      option.textContent = item.name || getAutomationCardText('scriptWithId', { id: item.id }, `Script ${item.id}`);
       option.selected = script && item.id === script.id;
       automationElements.scriptSelect.appendChild(option);
     });
@@ -633,7 +633,9 @@ function buildScriptLineSummary(automation, script, line, index) {
     : automation.describeCondition(line.condition);
   const linkedText = getScriptLinkedIfSummary(automation, script, line);
   const actionText = describeScriptLineActions(automation, script, line);
-  const actionSuffix = actionText ? ` → ${actionText}` : ' → No actions';
+  const actionSuffix = actionText
+    ? ` → ${actionText}`
+    : ` → ${getAutomationCardText('scriptNoActions', {}, 'No actions')}`;
   return `#${index + 1} ${getScriptLineKindLabel(line.kind)} ${linkedText}${nameText}${conditionText}${actionSuffix}`;
 }
 
@@ -647,12 +649,15 @@ function describeScriptActions(automation, script, actions) {
   return actionList.map(action => {
     if (action.kind === 'goto') {
       const target = script.lines.find(targetLine => targetLine.id === Number(action.targetLineId));
-      return target ? `GOTO ${automation.getLineLabel(script, target)}` : 'GOTO ?';
+      const gotoLabel = getAutomationCardText('scriptGoto', {}, 'GOTO');
+      return target ? `${gotoLabel} ${automation.getLineLabel(script, target)}` : `${gotoLabel} ?`;
     }
     if (action.kind === 'gotoScript') {
       const targetScript = automation.scripts.find(item => item.id === Number(automation.resolveGotoScriptTargetId(action)));
       if (!targetScript) return `${getAutomationCardText('scriptGotoScript', {}, 'GOTO Script')} ?`;
-      return `${getAutomationCardText('scriptGotoScript', {}, 'GOTO Script')} ${targetScript.name || `Script ${targetScript.id}`} #1`;
+      const scriptLabel = targetScript.name
+        || getAutomationCardText('scriptWithId', { id: targetScript.id }, `Script ${targetScript.id}`);
+      return `${getAutomationCardText('scriptGotoScript', {}, 'GOTO Script')} ${scriptLabel} #1`;
     }
     return automation.describeAction(action);
   }).join('; ');
@@ -787,7 +792,7 @@ function getScriptActionKinds() {
     { id: 'setVariable', label: getAutomationCardText('scriptSetVariable', {}, 'Set Variable') },
     { id: 'toggleAutomation', label: getAutomationCardText('scriptToggleAutomation', {}, 'Toggle Automation') },
     { id: 'togglePause', label: getAutomationCardText('scriptTogglePause', {}, 'Toggle Pause') },
-    { id: 'goto', label: 'GOTO' },
+    { id: 'goto', label: getAutomationCardText('scriptGoto', {}, 'GOTO') },
     { id: 'gotoScript', label: getAutomationCardText('scriptGotoScript', {}, 'GOTO Script') },
     { id: 'sleep', label: getAutomationCardText('scriptSleep', {}, 'Sleep') }
   ];
@@ -873,8 +878,8 @@ function renderConditionEditor(automation, line, container) {
 
     if (index > 0) {
       const join = createSelect([
-        { id: 'and', label: 'AND' },
-        { id: 'or', label: 'OR' }
+        { id: 'and', label: getAutomationCardText('scriptJoinAnd', {}, 'AND') },
+        { id: 'or', label: getAutomationCardText('scriptJoinOr', {}, 'OR') }
       ], clause.join || 'and');
       join.addEventListener('change', event => {
         clause.join = event.target.value;
@@ -884,7 +889,10 @@ function renderConditionEditor(automation, line, container) {
       clauseCard.appendChild(labeledNode(getAutomationCardText('scriptJoin', {}, 'Join'), join));
     }
 
-    const notToggle = createAutomationToggle('NOT', 'NOT Off');
+    const notToggle = createAutomationToggle(
+      getAutomationCardText('scriptNotOn', {}, 'NOT'),
+      getAutomationCardText('scriptNotOff', {}, 'NOT Off')
+    );
     setAutomationToggleState(notToggle, !!clause.not);
     notToggle.addEventListener('click', () => {
       clause.not = !clause.not;
@@ -1410,7 +1418,11 @@ function createScriptTargetOptions(automation, includeNull) {
   }
   const scripts = Array.isArray(automation.scripts) ? automation.scripts : [];
   scripts.forEach(targetScript => {
-    options.push({ id: targetScript.id, label: targetScript.name || `Script ${targetScript.id}` });
+    options.push({
+      id: targetScript.id,
+      label: targetScript.name
+        || getAutomationCardText('scriptWithId', { id: targetScript.id }, `Script ${targetScript.id}`)
+    });
   });
   return options;
 }
@@ -1435,6 +1447,10 @@ function renderActionTargetPicker(action, row) {
   }
 
   function getAutomationTypeLabel(type) {
+    if (type === 'buildings') return getAutomationCardText('scriptAutomationTypeBuildings', {}, 'Buildings');
+    if (type === 'projects') return getAutomationCardText('scriptAutomationTypeProjects', {}, 'Projects');
+    if (type === 'colony') return getAutomationCardText('scriptAutomationTypeColony', {}, 'Colony');
+    if (type === 'research') return getAutomationCardText('scriptAutomationTypeResearch', {}, 'Research');
     if (type === 'scripting') return getAutomationCardText('scriptAutomationTypeScripting', {}, 'Scripting');
     if (type === 'autoTravel') return getAutomationCardText('scriptAutomationTypeAutoTravel', {}, 'Auto Travel');
     if (type === 'ship') return getAutomationCardText('scriptAutomationTypeShip', {}, 'Ship');

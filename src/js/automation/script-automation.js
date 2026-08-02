@@ -900,7 +900,12 @@ class ScriptAutomation {
         const sleepDurationMs = treatSleepAsZero ? 0 : Math.max(0, this.registry.toNumber(action.durationMs));
         this.sleepRemainingMs = sleepDurationMs;
         sleepTriggered = this.sleepRemainingMs > 0;
-        summaries.push(`Sleep ${formatNumber(sleepDurationMs, false, 0)} ms`);
+        const duration = formatNumber(sleepDurationMs, false, 0);
+        summaries.push(t(
+          'ui.hope.automationCards.scriptSummarySleep',
+          { duration },
+          `Sleep ${duration} ms`
+        ));
         actionsUsed += 1;
         nextActionIndex = index + 1;
         if (sleepTriggered) break;
@@ -914,7 +919,12 @@ class ScriptAutomation {
           this.pcActionIndex = 0;
           gotoUsed = true;
           gotoTriggered = true;
-          summaries.push(`GOTO ${this.getLineLabel(script, target)}`);
+          const targetLabel = this.getLineLabel(script, target);
+          summaries.push(t(
+            'ui.hope.automationCards.scriptSummaryGoto',
+            { target: targetLabel },
+            `GOTO ${targetLabel}`
+          ));
         }
         actionsUsed += 1;
         nextActionIndex = 0;
@@ -932,7 +942,17 @@ class ScriptAutomation {
           this.pcActionIndex = 0;
           gotoUsed = true;
           gotoTriggered = true;
-          summaries.push(`GOTO ${targetScript.name || `Script ${targetScript.id}`} #1`);
+          const scriptLabel = targetScript.name || t(
+            'ui.hope.automationCards.scriptWithId',
+            { id: targetScript.id },
+            `Script ${targetScript.id}`
+          );
+          const targetLabel = `${scriptLabel} #1`;
+          summaries.push(t(
+            'ui.hope.automationCards.scriptSummaryGoto',
+            { target: targetLabel },
+            `GOTO ${targetLabel}`
+          ));
         }
         actionsUsed += 1;
         if (gotoTriggered) {
@@ -1131,10 +1151,13 @@ class ScriptAutomation {
 
   describeCondition(condition) {
     const clauses = Array.isArray(condition?.clauses) ? condition.clauses : [];
-    if (clauses.length === 0) return 'Always';
+    if (clauses.length === 0) return t('ui.hope.automationCards.scriptAlways', {}, 'Always');
     return clauses.map((clause, index) => {
-      const prefix = index === 0 ? '' : ` ${String(clause.join || 'and').toUpperCase()} `;
-      const notText = clause.not ? 'NOT ' : '';
+      const joinText = clause.join === 'or'
+        ? t('ui.hope.automationCards.scriptJoinOr', {}, 'OR')
+        : t('ui.hope.automationCards.scriptJoinAnd', {}, 'AND');
+      const prefix = index === 0 ? '' : ` ${joinText} `;
+      const notText = clause.not ? `${t('ui.hope.automationCards.scriptNotOn', {}, 'NOT')} ` : '';
       return `${prefix}${notText}${this.describeExpression(clause.left)} ${clause.comparator || '>'} ${this.describeExpression(clause.right)}`;
     }).join('');
   }
@@ -1149,39 +1172,120 @@ class ScriptAutomation {
   }
 
   describeAction(action) {
-    if (action.kind === 'sleep') return `Sleep ${formatNumber(this.registry.toNumber(action.durationMs), false, 0)} ms`;
+    const typeKeys = {
+      buildings: 'scriptAutomationTypeBuildings',
+      projects: 'scriptAutomationTypeProjects',
+      colony: 'scriptAutomationTypeColony',
+      research: 'scriptAutomationTypeResearch',
+      ship: 'scriptAutomationTypeShip',
+      life: 'scriptAutomationTypeLife',
+      autoTravel: 'scriptAutomationTypeAutoTravel',
+      scripting: 'scriptAutomationTypeScripting'
+    };
+    const typeFallbacks = {
+      buildings: 'Buildings',
+      projects: 'Projects',
+      colony: 'Colony',
+      research: 'Research',
+      ship: 'Ship',
+      life: 'Life',
+      autoTravel: 'Auto Travel',
+      scripting: 'Scripting'
+    };
+    const typeKey = typeKeys[action.automationType];
+    const typeLabel = typeKey
+      ? t(`ui.hope.automationCards.${typeKey}`, {}, typeFallbacks[action.automationType])
+      : action.automationType;
+    const modeKeys = {
+      on: 'scriptToggleModeOn',
+      off: 'scriptToggleModeOff',
+      toggle: 'scriptToggleModeToggle'
+    };
+    const mode = action.toggleValue || 'toggle';
+    const modeLabel = t(
+      `ui.hope.automationCards.${modeKeys[mode] || modeKeys.toggle}`,
+      {},
+      mode === 'on' ? 'On' : (mode === 'off' ? 'Off' : 'Toggle')
+    );
+
+    if (action.kind === 'sleep') {
+      const duration = formatNumber(this.registry.toNumber(action.durationMs), false, 0);
+      return t('ui.hope.automationCards.scriptSummarySleep', { duration }, `Sleep ${duration} ms`);
+    }
     if (action.kind === 'setVariable') {
       if (action.variableType === 'script') {
         const targetScript = this.scripts.find(item => item.id === Number(action.targetScriptId));
-        return `Set Script ${this.normalizeVariableId(action.variableId)} = ${targetScript?.name || targetScript?.id || 'NULL'}`;
+        const value = targetScript
+          ? targetScript.name || t('ui.hope.automationCards.scriptWithId', { id: targetScript.id }, `Script ${targetScript.id}`)
+          : t('ui.hope.automationCards.scriptNullValue', {}, 'NULL');
+        const variable = this.normalizeVariableId(action.variableId);
+        return t(
+          'ui.hope.automationCards.scriptSummarySetScriptVariable',
+          { variable, value },
+          `Set Script ${variable} = ${value}`
+        );
       }
-      return `Set ${this.normalizeVariableId(action.variableId)} = ${this.describeExpression(action.valueExpression)}`;
+      const variable = this.normalizeVariableId(action.variableId);
+      const value = this.describeExpression(action.valueExpression);
+      return t(
+        'ui.hope.automationCards.scriptSummarySetVariable',
+        { variable, value },
+        `Set ${variable} = ${value}`
+      );
     }
     if (action.kind === 'gotoScript') {
       const targetScript = this.scripts.find(item => item.id === Number(this.resolveGotoScriptTargetId(action)));
-      if (!targetScript) return 'GOTO Script ?';
-      return `GOTO ${targetScript.name || `Script ${targetScript.id}`} #1`;
+      if (!targetScript) return `${t('ui.hope.automationCards.scriptGotoScript', {}, 'GOTO Script')} ?`;
+      const scriptLabel = targetScript.name || t(
+        'ui.hope.automationCards.scriptWithId',
+        { id: targetScript.id },
+        `Script ${targetScript.id}`
+      );
+      const target = `${scriptLabel} #1`;
+      return t('ui.hope.automationCards.scriptSummaryGoto', { target }, `GOTO ${target}`);
     }
     if (action.kind === 'toggleAutomation') {
-      return `Set ${action.automationType} automation ${action.toggleValue || 'toggle'}`;
+      return t(
+        'ui.hope.automationCards.scriptSummarySetAutomation',
+        { type: typeLabel, mode: modeLabel },
+        `Set ${typeLabel} automation ${modeLabel}`
+      );
     }
     if (action.kind === 'togglePause') {
-      return `Set pause ${action.toggleValue || 'toggle'}`;
+      return t(
+        'ui.hope.automationCards.scriptSummarySetPause',
+        { mode: modeLabel },
+        `Set pause ${modeLabel}`
+      );
     }
     const target = this.getAutomationTarget(action.automationType);
-    if (!target) return 'Action';
+    if (!target) return t('ui.hope.automationCards.scriptSummaryAction', {}, 'Action');
     if (action.kind === 'applyPreset') {
       const preset = target.getPresetById?.(Number(action.presetId));
       const parameterText = preset && target.isParameterizedPreset && target.isParameterizedPreset(preset)
-        ? ` with ${this.normalizeVariableId(action.parameterVariableId)}`
+        ? t(
+          'ui.hope.automationCards.scriptSummaryParameter',
+          { variable: this.normalizeVariableId(action.parameterVariableId) },
+          ` with ${this.normalizeVariableId(action.parameterVariableId)}`
+        )
         : '';
-      return `Apply ${action.automationType} preset ${preset?.name || action.presetId}${parameterText}`;
+      const name = preset?.name || action.presetId;
+      return t(
+        'ui.hope.automationCards.scriptSummaryApplyPreset',
+        { type: typeLabel, name, parameter: parameterText },
+        `Apply ${typeLabel} preset ${name}${parameterText}`
+      );
     }
     if (action.kind === 'applyCombination') {
       const combo = target.getCombinationById?.(Number(action.combinationId));
-      return `Apply ${action.automationType} combination ${combo?.name || action.combinationId}`;
+      const name = combo?.name || action.combinationId;
+      return t(
+        'ui.hope.automationCards.scriptSummaryApplyCombination',
+        { type: typeLabel, name },
+        `Apply ${typeLabel} combination ${name}`
+      );
     }
-    return 'Action';
+    return t('ui.hope.automationCards.scriptSummaryAction', {}, 'Action');
   }
 
   getLineLabel(script, line) {

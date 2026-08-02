@@ -252,7 +252,8 @@ function formatAutoThresholdDisplay(value) {
 }
 
 function formatSectorResourceLabel(resourceKey) {
-    return SECTOR_RESOURCE_LABELS[resourceKey] || resourceKey || 'Unknown';
+    const fallback = SECTOR_RESOURCE_LABELS[resourceKey] || resourceKey || 'Unknown';
+    return getGalaxyText(`sector.resources.${resourceKey || 'unknown'}`, fallback);
 }
 
 function getSectorUhfControl(sector) {
