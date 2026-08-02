@@ -317,6 +317,14 @@
     color: red;
 }
 
+.productivity-occupancy-low {
+    color: green;
+}
+
+.productivity-occupancy-medium {
+    color: #b58900;
+}
+
 .productivity-day-night-inactive {
     color: #1f4fbf;
 }

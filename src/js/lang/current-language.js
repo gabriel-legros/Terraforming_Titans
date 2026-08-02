@@ -2661,6 +2661,7 @@ setLanguageData({
         title: 'Growth Rate',
         capacity: 'Capacity:',
         capacityTooltip: 'Capacity multiplier from the logistic growth equation. This is 1 - population / capacity, so growth slows as you approach your housing cap and stops entirely when population equals capacity.\n\nIf you feel that the game is very slow, there is a very high chance that this multiplier is the reason why. Try to keep it as high as possible by building more housing.',
+        capacityWarningTooltip: 'Housing capacity is low, slowing population growth.  Try building more housing!',
         baseRate: 'Base rate:',
         baseTooltip: 'Base growth rate derived from happiness: max((happiness - 50%) / 300, 0).\n- Food and energy each grant up to +25 happiness when satisfied.\n- Comfort adds 20x its rating.\n- Electronics and androids each add up to +10 happiness when food and energy are met.\n- Milestones ready to claim or claimed add +0.5 happiness each.\n- Happiness below 50% pauses growth.',
         otherMultipliers: 'Other multipliers:',

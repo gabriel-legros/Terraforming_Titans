@@ -3135,12 +3135,27 @@ function updateDecreaseButtonText(button, buildCount) {
         if (structure.dayNightActivity && dayNightCycle.isNight() && !(typeof gameSettings !== 'undefined' && gameSettings.disableDayNightCycle)) {
           productivityElement.classList.add('productivity-day-night-inactive');
           productivityElement.classList.remove('productivity-low');
+          productivityElement.classList.remove('productivity-occupancy-low', 'productivity-occupancy-medium');
         } else if (productivityValue < 100) {
-          productivityElement.classList.add('productivity-low');
           productivityElement.classList.remove('productivity-day-night-inactive');
+          const limitingFactors = structure.productivityLimitInfo.factors;
+          const occupancyOnly = isColony &&
+            limitingFactors.length === 1 &&
+            limitingFactors[0].category === 'colony' &&
+            limitingFactors[0].resource === 'colonists';
+          if (occupancyOnly && limitingFactors[0].ratio <= 0.5) {
+            productivityElement.classList.add('productivity-occupancy-low');
+            productivityElement.classList.remove('productivity-low', 'productivity-occupancy-medium');
+          } else if (occupancyOnly && limitingFactors[0].ratio <= 0.75) {
+            productivityElement.classList.add('productivity-occupancy-medium');
+            productivityElement.classList.remove('productivity-low', 'productivity-occupancy-low');
+          } else {
+            productivityElement.classList.add('productivity-low');
+            productivityElement.classList.remove('productivity-occupancy-low', 'productivity-occupancy-medium');
+          }
         } else {
           productivityElement.classList.remove('productivity-day-night-inactive');
-          productivityElement.classList.remove('productivity-low');
+          productivityElement.classList.remove('productivity-low', 'productivity-occupancy-low', 'productivity-occupancy-medium');
         }
       }
 

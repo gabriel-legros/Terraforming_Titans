@@ -45,7 +45,16 @@ function createGrowthRateDisplay(){
   capValue.textContent = '0%';
   const capWarning = document.createElement('span');
   capWarning.id = 'growth-capacity-warning';
-  capWarning.classList.add('optical-depth-warning');
+  capWarning.classList.add('optical-depth-warning', 'info-tooltip-icon');
+  capWarning.textContent = '\u26A0';
+  capWarning.style.display = 'none';
+  growthRateDisplayCache.tooltips.capacityWarning = attachDynamicInfoTooltip(
+    capWarning,
+    getColonyUIText(
+      'ui.colony.growthRate.capacityWarningTooltip',
+      'Housing capacity is low, slowing population growth.  Try building more housing!'
+    )
+  );
   capLine.appendChild(capLabel);
   capLine.appendChild(capValue);
   capLine.appendChild(capWarning);
@@ -232,7 +241,7 @@ function updateGrowthRateDisplay(){
   }
   capEl.textContent = `${formatNumber(capMult * 100, false, 1)}%`;
   if (capWarningEl) {
-    capWarningEl.textContent = capMult <= 0.5 ? '\u26A0' : '';
+    capWarningEl.style.display = capMult <= 0.5 ? '' : 'none';
   }
 
   if (decayEl) {
