@@ -174,7 +174,14 @@ function closeConstructionOfficeGuide(overlay) {
 
 function getConstructionOfficeStarterSetupPresetId() {
     const buildingsAutomation = automationManager.buildingsAutomation;
-    if (buildingsAutomation.getPresetById(constructionOfficeState.starterSetupPresetId)) {
+    const existingPreset = buildingsAutomation.getPresetById(constructionOfficeState.starterSetupPresetId);
+    if (existingPreset) {
+        CONSTRUCTION_OFFICE_GUIDE_STARTER_SETUP.forEach(entry => {
+            const automation = existingPreset.buildings[entry.buildingKey]?.automation;
+            if (automation && !Object.prototype.hasOwnProperty.call(automation, 'autoActiveEnabled')) {
+                automation.autoActiveEnabled = true;
+            }
+        });
         return constructionOfficeState.starterSetupPresetId;
     }
 
@@ -186,6 +193,7 @@ function getConstructionOfficeStarterSetupPresetId() {
                 autoBuildPriority: entry.priority,
                 autoBuildBasis: entry.basis,
                 autoBuildPercent: Number(entry.value),
+                autoActiveEnabled: true,
             },
         };
     });
