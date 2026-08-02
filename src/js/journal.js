@@ -514,7 +514,7 @@ function journalEntryHasObjective(source) {
     return false;
   }
   const chapter = progressData.chapters.find(config => config.id === source.id);
-  return chapter.objectives.length > 0;
+  return chapter && chapter.objectives.length > 0;
 }
 
 function renderJournalEntries(entries, entrySources) {
