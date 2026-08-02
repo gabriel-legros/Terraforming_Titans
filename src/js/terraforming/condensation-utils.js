@@ -5,17 +5,13 @@ function calculateCondensationPressureState({
   temp,
   atmPressure,
   saturationFn,
-  freezePoint,
-  boilingPoint,
   criticalTemperature,
   liftPressureFraction,
   kappa
 }) {
-  const useIceBranch = !Number.isFinite(boilingPoint);
-  const effectiveTemp = useIceBranch ? Math.min(temp, freezePoint) : temp;
-  const surfaceCap = Number.isFinite(criticalTemperature) && effectiveTemp >= criticalTemperature
+  const surfaceCap = Number.isFinite(criticalTemperature) && temp >= criticalTemperature
     ? Infinity
-    : saturationFn(effectiveTemp);
+    : saturationFn(temp);
   const humidityScale = Math.min(surfaceCap, atmPressure);
 
   let upliftCap = Infinity;
@@ -23,9 +19,8 @@ function calculateCondensationPressureState({
     && liftPressureFraction > 0 && liftPressureFraction < 1
     && kappa > 0) {
     const liftedTemp = temp * Math.pow(liftPressureFraction, kappa);
-    const effectiveLiftedTemp = useIceBranch ? Math.min(liftedTemp, freezePoint) : liftedTemp;
-    if (!(Number.isFinite(criticalTemperature) && effectiveLiftedTemp >= criticalTemperature)) {
-      upliftCap = saturationFn(effectiveLiftedTemp) / liftPressureFraction;
+    if (!(Number.isFinite(criticalTemperature) && liftedTemp >= criticalTemperature)) {
+      upliftCap = saturationFn(liftedTemp) / liftPressureFraction;
     }
   }
 
