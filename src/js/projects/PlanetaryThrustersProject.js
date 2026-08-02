@@ -7,7 +7,7 @@ const SOLAR_MASS   = 1.989e30;
 const AU_IN_METERS = 1.496e11;
 const ROGUE_DISTANCE_AU = 10000;
 const THRUSTER_MAX_SPIN_DAYS = 10000;
-const THRUSTER_MAX_DISTANCE_AU = 1e10;
+const THRUSTER_MAX_DISTANCE_AU = 10000;
 const FUSION_VE    = 1.0e5;               // 100 km s‑1
 const BASE_TP_RATIO = 2 / FUSION_VE;
 const ESCAPE_L1_FACTOR = 1.0;             // scale of Hill-radius target for escape
@@ -423,7 +423,15 @@ class PlanetaryThrustersProject extends Project{
 
     /* listeners */
     this.el.rotTarget.oninput = ()=>this.calcSpinCost();
+    this.el.rotTarget.onchange = ()=>{
+      this.calcSpinCost();
+      this.el.rotTarget.value = this.tgtDays;
+    };
     this.el.distTarget.oninput= ()=>this.calcMotionCost();
+    this.el.distTarget.onchange = ()=>{
+      this.calcMotionCost();
+      this.syncMotionTargetInput(true);
+    };
     this.el.distTargetMode.onchange = ()=>{
       this.motionTargetMode = this.el.distTargetMode.value === THRUSTER_MOTION_TARGET_FLUX
         ? THRUSTER_MOTION_TARGET_FLUX
@@ -765,10 +773,10 @@ class PlanetaryThrustersProject extends Project{
         const n=parseFloat(v);
         if(!isNaN(n)) tgtDays=n;
       }catch(e){ tgtDays=1; }
-      this.tgtDays = tgtDays;
+      this.tgtDays = Math.min(THRUSTER_MAX_SPIN_DAYS, Math.max(0.1, tgtDays));
       if(p && p.radius){
-        const dv=spinDeltaV(p.radius,getSpinPeriodHours(p),tgtDays*24);
-        const energyRem = spinEnergyRemaining(p,p.radius,tgtDays,this.getThrustPowerRatio());
+        const dv=spinDeltaV(p.radius,getSpinPeriodHours(p),this.tgtDays*24);
+        const energyRem = spinEnergyRemaining(p,p.radius,this.tgtDays,this.getThrustPowerRatio());
         this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
         this.el.rotE.textContent=formatEnergy(energyRem);
         this.setBurnTime(this.el.rotBurn, energyRem);
