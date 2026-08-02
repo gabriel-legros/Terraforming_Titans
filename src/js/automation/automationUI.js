@@ -23,6 +23,8 @@ const automationElements = {
   autoTravelPanelBody: null,
   autoTravelMasterToggle: null,
   autoTravelPresetSelect: null,
+  autoTravelPresetMoveUpButton: null,
+  autoTravelPresetMoveDownButton: null,
   autoTravelPresetUsage: null,
   autoTravelPresetNameInput: null,
   autoTravelNewPresetButton: null,

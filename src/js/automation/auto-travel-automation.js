@@ -159,6 +159,18 @@ class AutoTravelAutomation {
     return preset;
   }
 
+  movePreset(id, direction) {
+    const numericId = Number(id);
+    const index = this.presets.findIndex(preset => preset.id === numericId);
+    const nextIndex = index + direction;
+    if (index < 0 || nextIndex < 0 || nextIndex >= this.presets.length) {
+      return false;
+    }
+    const moved = this.presets.splice(index, 1)[0];
+    this.presets.splice(nextIndex, 0, moved);
+    return true;
+  }
+
   deletePreset(id) {
     if (this.presets.length <= 1) {
       return false;

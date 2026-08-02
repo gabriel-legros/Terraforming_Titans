@@ -204,11 +204,22 @@ function buildAutoTravelUI() {
   presetRow.classList.add('script-automation-script-row', 'auto-travel-row', 'auto-travel-preset-row');
   const presetSelect = document.createElement('select');
   presetSelect.classList.add('auto-travel-preset-select');
+  const presetOrderButtons = document.createElement('div');
+  presetOrderButtons.classList.add('automation-order-buttons');
+  const presetMoveUpButton = document.createElement('button');
+  presetMoveUpButton.textContent = '↑';
+  presetMoveUpButton.title = getAutomationCardText('movePresetUp', {}, 'Move preset up');
+  presetMoveUpButton.classList.add('auto-travel-preset-move-up');
+  const presetMoveDownButton = document.createElement('button');
+  presetMoveDownButton.textContent = '↓';
+  presetMoveDownButton.title = getAutomationCardText('movePresetDown', {}, 'Move preset down');
+  presetMoveDownButton.classList.add('auto-travel-preset-move-down');
+  presetOrderButtons.append(presetMoveUpButton, presetMoveDownButton);
   const presetNameInput = document.createElement('input');
   presetNameInput.type = 'text';
   presetNameInput.classList.add('auto-travel-preset-name');
   presetNameInput.placeholder = getAutomationCardText('presetNamePlaceholder', {}, 'Preset name');
-  presetRow.append(presetSelect, presetNameInput);
+  presetRow.append(presetSelect, presetOrderButtons, presetNameInput);
   const transferButtons = document.createElement('div');
   transferButtons.classList.add('automation-preset-buttons');
   const newPresetButton = document.createElement('button');
@@ -343,6 +354,8 @@ function buildAutoTravelUI() {
   automationElements.autoTravelPanelBody = body;
   automationElements.autoTravelMasterToggle = toggle;
   automationElements.autoTravelPresetSelect = presetSelect;
+  automationElements.autoTravelPresetMoveUpButton = presetMoveUpButton;
+  automationElements.autoTravelPresetMoveDownButton = presetMoveDownButton;
   automationElements.autoTravelPresetUsage = presetUsage;
   automationElements.autoTravelPresetNameInput = presetNameInput;
   automationElements.autoTravelNewPresetButton = newPresetButton;
@@ -387,6 +400,22 @@ function wireAutoTravelEvents() {
     const automation = getAutoTravelAutomation();
     if (!automation) return;
     automation.setSelectedPresetId(Number(event.target.value));
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  els.autoTravelPresetMoveUpButton.addEventListener('click', () => {
+    const automation = getAutoTravelAutomation();
+    const preset = automation.getSelectedPreset();
+    automation.movePreset(preset.id, -1);
+    queueAutomationUIRefresh();
+    updateAutomationUI();
+  });
+
+  els.autoTravelPresetMoveDownButton.addEventListener('click', () => {
+    const automation = getAutoTravelAutomation();
+    const preset = automation.getSelectedPreset();
+    automation.movePreset(preset.id, 1);
     queueAutomationUIRefresh();
     updateAutomationUI();
   });
@@ -712,6 +741,9 @@ function updateAutoTravelUI() {
     });
   }
   if (preset) {
+    const selectedPresetIndex = automation.presets.findIndex(entry => entry.id === preset.id);
+    automationElements.autoTravelPresetMoveUpButton.disabled = disabled || selectedPresetIndex <= 0;
+    automationElements.autoTravelPresetMoveDownButton.disabled = disabled || selectedPresetIndex >= automation.presets.length - 1;
     const storedOnlyTarget = (preset.target === 'storedArtificial');
     if (document.activeElement !== automationElements.autoTravelPresetSelect) {
       automationElements.autoTravelPresetSelect.value = String(preset.id);

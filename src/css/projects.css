@@ -1473,7 +1473,7 @@
 }
 
 .hephaestus-yards-assignment-list .hephaestus-assignment-row {
-    grid-template-columns: minmax(130px, 0.9fr) minmax(55px, 0.3fr) 470px minmax(0, 0.45fr);
+    grid-template-columns: minmax(130px, 0.9fr) minmax(70px, 0.35fr) minmax(55px, 0.3fr) 470px minmax(0, 0.45fr);
 }
 
 .assignment-divider-row {
