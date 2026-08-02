@@ -88,4 +88,36 @@ function createSaveCatalog(userDataPath) {
   };
 }
 
-module.exports = { createSaveCatalog };
+function createTemporarySave(saveData, label) {
+  const gameState = JSON.parse(saveData);
+  if (!gameState || gameState.constructor !== Object) {
+    throw new Error('Save data must be a JSON object.');
+  }
+  const savedSpace = gameState.spaceManager || gameState.spaceState || {};
+  return {
+    selectionId: 'temporary',
+    slot: '',
+    label,
+    timestamp: Number(gameState.savedAt) || Date.now(),
+    world: String(
+      savedSpace.currentRandomName
+      || savedSpace.currentArtificialKey
+      || savedSpace.currentPlanetKey
+      || gameState.defaultPlanet
+      || 'Mars'
+    ),
+    gameCompleted: gameState.gameCompleted === true,
+    playTimeSeconds: Number(
+      gameState.totalRealPlayTimeSeconds
+      || gameState.totalPlayTimeSeconds
+      || gameState.playTimeSeconds
+      || 0
+    ),
+    size: Buffer.byteLength(saveData, 'utf8'),
+    valid: true,
+    temporary: true,
+    error: ''
+  };
+}
+
+module.exports = { createSaveCatalog, createTemporarySave };

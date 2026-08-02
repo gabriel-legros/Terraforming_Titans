@@ -6,7 +6,7 @@ const { createModCatalog, createModService } = require('./mods/mod-service.cjs')
 const { readModLoadout, reconcileModLoadout, writeModLoadout } = require('./mods/mod-loadout.cjs');
 const { resolveSubscribedWorkshopMods } = require('./mods/workshop-service.cjs');
 const { createWorkshopPublisher } = require('./mods/workshop-publisher.cjs');
-const { createSaveCatalog } = require('./mod-launcher/save-catalog.cjs');
+const { createSaveCatalog, createTemporarySave } = require('./mod-launcher/save-catalog.cjs');
 
 const appDisplayName = 'Terraforming Titans';
 const defaultSteamAppId = 4864000;
@@ -38,6 +38,8 @@ let launcherWorkshopResult = {
 let launcherRefreshing = false;
 let launcherStartupError = '';
 let launcherSelectedSave = '';
+let launcherTemporarySave = null;
+let launcherTemporarySaveData = '';
 let startupSelection = { mode: 'latest', slot: '' };
 let gameLaunchStarted = false;
 
@@ -496,7 +498,9 @@ function getLauncherState() {
       ...publicById.get(entry.instanceId),
       enabled: enabledById.get(entry.instanceId)
     })),
-    saves: launcherSaveCatalog.saves,
+    saves: launcherTemporarySave
+      ? [launcherTemporarySave, ...launcherSaveCatalog.saves]
+      : launcherSaveCatalog.saves,
     selectedSave: launcherSelectedSave,
     workshop: launcherWorkshopResult.status,
     refreshing: launcherRefreshing,
@@ -546,6 +550,7 @@ function refreshLauncherCatalog() {
     launcherLoadout = readModLoadout(app.getPath('userData'));
     launcherSaveCatalog = createSaveCatalog(app.getPath('userData'));
     const selectionAvailable = launcherSelectedSave === 'new'
+      || (launcherSelectedSave === 'temporary' && launcherTemporarySave)
       || launcherSaveCatalog.saves.some(save => save.selectionId === launcherSelectedSave && save.valid);
     if (!selectionAvailable) {
       launcherSelectedSave = launcherSaveCatalog.defaultSelection;
@@ -559,6 +564,13 @@ function refreshLauncherCatalog() {
     sendLauncherState();
     return false;
   });
+}
+
+function selectTemporarySave(saveData, label) {
+  launcherTemporarySave = createTemporarySave(saveData, label);
+  launcherTemporarySaveData = saveData;
+  launcherSelectedSave = launcherTemporarySave.selectionId;
+  return launcherTemporarySave;
 }
 
 function createLauncherWindow() {
@@ -784,6 +796,45 @@ function registerModLauncherHandlers() {
     createCreatorWindow();
     return true;
   });
+  ipcMain.handle('mod-launcher:import-save-file', async event => {
+    if (!isLauncherFrame(event.senderFrame) || launcherRefreshing || gameLaunchStarted) {
+      return { success: false, error: 'The launcher is not ready.' };
+    }
+    const result = await dialog.showOpenDialog(launcherWindow, {
+      title: 'Import save from file',
+      buttonLabel: 'Import',
+      filters: [{ name: 'JSON save files', extensions: ['json'] }],
+      properties: ['openFile']
+    });
+    if (result.canceled || !result.filePaths.length) {
+      return { success: false, canceled: true };
+    }
+    try {
+      const filePath = result.filePaths[0];
+      const saveData = fs.readFileSync(filePath, 'utf8');
+      const label = `Imported: ${path.basename(filePath)}`;
+      return { success: true, save: selectTemporarySave(saveData, label) };
+    } catch (error) {
+      return { success: false, error: `Could not import that save: ${error.message}` };
+    }
+  });
+  ipcMain.handle('mod-launcher:import-save-clipboard', event => {
+    if (!isLauncherFrame(event.senderFrame) || launcherRefreshing || gameLaunchStarted) {
+      return { success: false, error: 'The launcher is not ready.' };
+    }
+    try {
+      const saveData = clipboard.readText().trim();
+      if (!saveData) {
+        return { success: false, error: 'The clipboard does not contain save data.' };
+      }
+      return {
+        success: true,
+        save: selectTemporarySave(saveData, 'Imported from Clipboard')
+      };
+    } catch (error) {
+      return { success: false, error: `Could not import that save: ${error.message}` };
+    }
+  });
   ipcMain.handle('mod-launcher:launch', (event, options) => {
     if (!isLauncherFrame(event.senderFrame) || launcherRefreshing || workshopPublisher.isBusy() || gameLaunchStarted) {
       return { success: false, error: 'The launcher is not ready.' };
@@ -824,6 +875,8 @@ function launchGame(options) {
 
   if (saveSelection === 'new') {
     startupSelection = { mode: 'new', slot: '' };
+  } else if (saveSelection === 'temporary' && launcherTemporarySave && launcherTemporarySaveData) {
+    startupSelection = { mode: 'temporary', saveData: launcherTemporarySaveData };
   } else {
     const selectedSave = launcherSaveCatalog.saves.find(save => save.selectionId === saveSelection && save.valid);
     if (!selectedSave) {

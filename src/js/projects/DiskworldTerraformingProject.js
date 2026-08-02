@@ -9,6 +9,8 @@ const DISKWORLD_PUMP_TEMPERATURE_K = 293.15;
 const DISKWORLD_WATT_DAY_SECONDS = 86400;
 const DISKWORLD_RATE_STEP_MIN = 1;
 const DISKWORLD_RATE_STEP_MAX = 1e100;
+const DISKWORLD_PUMP_MODE_ABSOLUTE = 'absolute';
+const DISKWORLD_PUMP_MODE_PERCENT = 'percent';
 const DISKWORLD_MIN_GRAVITY_RATIO = 0.1;
 const DISKWORLD_SHIP_ENERGY_PENALTY_PER_TON_PER_RADIUS = 25_000;
 
@@ -82,6 +84,8 @@ class DiskworldTerraformingProject extends Project {
     super(config, name);
     this.hydrogenFilledTons = 0;
     this.pumpRate = config.attributes?.pumpRate || 0;
+    this.pumpMode = DISKWORLD_PUMP_MODE_ABSOLUTE;
+    this.pumpPercent = 10;
     this.step = config.attributes?.pumpStep || DISKWORLD_RATE_STEP_MIN;
     this.uncappedPumpRate = config.attributes?.uncappedPumpRate === true;
     this.useLiquidHydrogen = config.attributes?.useLiquidHydrogen !== false;
@@ -329,15 +333,35 @@ class DiskworldTerraformingProject extends Project {
     pumpContainer.appendChild(pumpLabel);
     controls.appendChild(pumpContainer);
 
+    const rateInputsStack = document.createElement('div');
+    rateInputsStack.className = 'ringworld-terraforming-power-stack';
+
+    const rateModeRow = document.createElement('div');
+    rateModeRow.className = 'ringworld-terraforming-power';
+    const rateModeLabel = document.createElement('span');
+    rateModeLabel.className = 'ringworld-terraforming-power-label';
+    rateModeLabel.textContent = getDiskworldText('rateMode', null, 'Rate Mode:');
+    const rateModeSelect = document.createElement('select');
+    const absoluteOption = document.createElement('option');
+    absoluteOption.value = DISKWORLD_PUMP_MODE_ABSOLUTE;
+    absoluteOption.textContent = getDiskworldText('absolute', null, 'Absolute');
+    const percentOption = document.createElement('option');
+    percentOption.value = DISKWORLD_PUMP_MODE_PERCENT;
+    percentOption.textContent = getDiskworldText('percentHydrogenProduction', null, '% of H₂ production');
+    rateModeSelect.append(absoluteOption, percentOption);
+    rateModeRow.append(rateModeLabel, rateModeSelect);
+
     const rateReadout = document.createElement('div');
     rateReadout.className = 'ringworld-terraforming-power';
     const rateLabel = document.createElement('span');
     rateLabel.className = 'ringworld-terraforming-power-label';
     rateLabel.textContent = getDiskworldText('targetRate', null, 'Target rate:');
-    const rateValue = document.createElement('span');
-    rateValue.className = 'stat-value ringworld-terraforming-power-value';
-    rateReadout.append(rateLabel, rateValue);
-    controls.appendChild(rateReadout);
+    const rateInput = document.createElement('input');
+    rateInput.type = 'text';
+    rateInput.className = 'ringworld-terraforming-power-value';
+    rateReadout.append(rateLabel, rateInput);
+    rateInputsStack.append(rateModeRow, rateReadout);
+    controls.appendChild(rateInputsStack);
 
     const rateControls = document.createElement('div');
     rateControls.className = 'thruster-power-controls ringworld-terraforming-power-controls';
@@ -444,7 +468,8 @@ class DiskworldTerraformingProject extends Project {
       progressLabel,
       progressFill,
       pumpToggle,
-      rateValue,
+      rateModeSelect,
+      rateInput,
       rateZero,
       rateMinus,
       ratePlus,
@@ -457,6 +482,40 @@ class DiskworldTerraformingProject extends Project {
     pumpToggle.addEventListener('change', () => {
       this.setPumping(pumpToggle.checked);
       this.updateUI();
+    });
+    rateModeSelect.addEventListener('change', () => {
+      this.pumpMode = rateModeSelect.value === DISKWORLD_PUMP_MODE_PERCENT
+        ? DISKWORLD_PUMP_MODE_PERCENT
+        : DISKWORLD_PUMP_MODE_ABSOLUTE;
+      this.updateUI();
+    });
+    wireStringNumberInput(rateInput, {
+      datasetKey: 'diskworldPumpValue',
+      parseValue: (value) => {
+        const text = String(value).trim().toLowerCase();
+        if (this.pumpMode === DISKWORLD_PUMP_MODE_ABSOLUTE && (text === '∞' || text === 'infinity')) {
+          return Infinity;
+        }
+        const parsed = parseFlexibleNumber(value);
+        return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+      },
+      formatValue: (parsed) => {
+        if (parsed === Infinity) {
+          return '∞';
+        }
+        if (this.pumpMode === DISKWORLD_PUMP_MODE_PERCENT) {
+          return String(parsed);
+        }
+        return parsed >= 1e6 ? formatNumber(parsed, true, 3) : String(parsed);
+      },
+      onValue: (parsed) => {
+        if (parsed === Infinity) {
+          this.setUncappedPumpRate(true);
+        } else {
+          this.setPumpRate(parsed);
+        }
+        this.updateUI();
+      },
     });
     rateZero.addEventListener('click', () => {
       this.setPumpRate(0);
@@ -525,13 +584,25 @@ class DiskworldTerraformingProject extends Project {
     this.el.progressEta.textContent = getDiskworldText('to100', { value: etaText }, `To 100%: ${etaText}`);
     this.el.progressLabel.textContent = `${formatNumber(progressPercent, true, 1)}%`;
     this.el.progressFill.style.width = `${progressPercent}%`;
-    this.el.rateValue.textContent = this.uncappedPumpRate ? '∞ t/s' : `${formatNumber(this.pumpRate, true)} t/s`;
+    this.el.rateModeSelect.value = this.pumpMode;
+    const displayRateValue = this.pumpMode === DISKWORLD_PUMP_MODE_PERCENT
+      ? this.pumpPercent
+      : (this.uncappedPumpRate ? Infinity : this.pumpRate);
+    if (document.activeElement !== this.el.rateInput) {
+      this.el.rateInput.value = displayRateValue === Infinity
+        ? '∞'
+        : (this.pumpMode === DISKWORLD_PUMP_MODE_PERCENT
+          ? `${displayRateValue}`
+          : formatNumber(displayRateValue, true));
+    }
     this.el.pumpToggle.checked = this.pumping;
     this.el.pumpToggle.disabled = this.isCompleted;
+    this.el.rateModeSelect.disabled = this.isCompleted;
+    this.el.rateInput.disabled = this.isCompleted;
     this.el.rateZero.disabled = this.isCompleted;
     this.el.rateMinus.disabled = this.isCompleted;
     this.el.ratePlus.disabled = this.isCompleted;
-    this.el.rateInfinity.disabled = this.isCompleted;
+    this.el.rateInfinity.disabled = this.isCompleted || this.pumpMode === DISKWORLD_PUMP_MODE_PERCENT;
     this.el.stepDown.disabled = this.isCompleted;
     this.el.stepUp.disabled = this.isCompleted;
     this.el.sourceLiquidCheckbox.checked = this.useLiquidHydrogen;
@@ -550,8 +621,12 @@ class DiskworldTerraformingProject extends Project {
   }
 
   setPumpRate(value) {
-    this.uncappedPumpRate = false;
-    this.pumpRate = Math.max(0, value);
+    if (this.pumpMode === DISKWORLD_PUMP_MODE_PERCENT) {
+      this.pumpPercent = Math.max(0, value);
+    } else {
+      this.uncappedPumpRate = false;
+      this.pumpRate = Math.max(0, value);
+    }
   }
 
   setUncappedPumpRate(enabled) {
@@ -559,7 +634,18 @@ class DiskworldTerraformingProject extends Project {
   }
 
   adjustPumpRate(delta) {
-    this.setPumpRate(this.pumpRate + delta);
+    const currentRate = this.pumpMode === DISKWORLD_PUMP_MODE_PERCENT
+      ? this.pumpPercent
+      : (this.uncappedPumpRate ? 0 : this.pumpRate);
+    this.setPumpRate(currentRate + delta);
+  }
+
+  getTargetPumpRate() {
+    if (this.pumpMode === DISKWORLD_PUMP_MODE_PERCENT) {
+      const productionRate = resources.colony.colonyHydrogen.productionRate || 0;
+      return Math.max(0, productionRate * this.pumpPercent / 100);
+    }
+    return this.uncappedPumpRate ? Infinity : Math.max(0, this.pumpRate);
   }
 
   adjustStep(multiplier) {
@@ -569,7 +655,8 @@ class DiskworldTerraformingProject extends Project {
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1) {
     const totals = { cost: {}, gain: {} };
-    if (!this.unlocked || !this.pumping || this.isCompleted || (!this.uncappedPumpRate && this.pumpRate <= 0)) {
+    const targetPumpRate = this.getTargetPumpRate();
+    if (!this.unlocked || !this.pumping || this.isCompleted || targetPumpRate <= 0) {
       return totals;
     }
     const seconds = deltaTime / 1000;
@@ -583,12 +670,12 @@ class DiskworldTerraformingProject extends Project {
     const liquidAvailable = this.useLiquidHydrogen ? Math.max(getDiskworldLiquidHydrogenAvailable(), 0) : 0;
     const colonyAvailable = this.useColonyHydrogen ? Math.max(resources.colony.colonyHydrogen.value, 0) : 0;
     const availableHydrogen = atmosphericAvailable + liquidAvailable + colonyAvailable;
-    if (this.uncappedPumpRate) {
+    if (targetPumpRate === Infinity) {
       const availableEnergy = Math.max(resources.colony.energy.value, 0);
       const hydrogenByEnergy = this.currentEnergyPerTon > 0 ? availableEnergy / this.currentEnergyPerTon : remainingHydrogen;
       hydrogenAmount = Math.min(remainingHydrogen, availableHydrogen, hydrogenByEnergy);
     } else {
-      const requestedHydrogen = this.pumpRate * seconds * productivity;
+      const requestedHydrogen = targetPumpRate * seconds * productivity;
       hydrogenAmount = Math.min(requestedHydrogen, remainingHydrogen);
     }
     const hydrogenRate = seconds > 0 ? hydrogenAmount / seconds : 0;
@@ -618,7 +705,8 @@ class DiskworldTerraformingProject extends Project {
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
-    if (!this.unlocked || !this.pumping || this.isCompleted || (!this.uncappedPumpRate && this.pumpRate <= 0)) {
+    const targetPumpRate = this.getTargetPumpRate();
+    if (!this.unlocked || !this.pumping || this.isCompleted || targetPumpRate <= 0) {
       this.shortfallLastTick = false;
       this.actualPumpRate = 0;
       this.currentEnergyConsumptionRate = 0;
@@ -633,9 +721,9 @@ class DiskworldTerraformingProject extends Project {
       this.currentEnergyConsumptionRate = 0;
       return;
     }
-    const requestedHydrogen = this.uncappedPumpRate
+    const requestedHydrogen = targetPumpRate === Infinity
       ? remainingHydrogen
-      : Math.min(this.pumpRate * seconds * productivity, remainingHydrogen);
+      : Math.min(targetPumpRate * seconds * productivity, remainingHydrogen);
     const requestedEnergy = requestedHydrogen * this.currentEnergyPerTon;
     const pendingHydrogen = accumulatedChanges.atmospheric.hydrogen || 0;
     const pendingLiquidHydrogen = accumulatedChanges.surface.liquidHydrogen || 0;
@@ -710,6 +798,8 @@ class DiskworldTerraformingProject extends Project {
     return {
       ...super.saveAutomationSettings(),
       pumpRate: this.pumpRate,
+      pumpMode: this.pumpMode,
+      pumpPercent: this.pumpPercent,
       step: this.step,
       uncappedPumpRate: this.uncappedPumpRate === true,
       pumping: this.pumping === true,
@@ -723,6 +813,14 @@ class DiskworldTerraformingProject extends Project {
     super.loadAutomationSettings(settings);
     if (Object.prototype.hasOwnProperty.call(settings, 'pumpRate')) {
       this.pumpRate = settings.pumpRate || 0;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'pumpMode')) {
+      this.pumpMode = settings.pumpMode === DISKWORLD_PUMP_MODE_PERCENT
+        ? DISKWORLD_PUMP_MODE_PERCENT
+        : DISKWORLD_PUMP_MODE_ABSOLUTE;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'pumpPercent')) {
+      this.pumpPercent = Math.max(0, settings.pumpPercent || 0);
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'step')) {
       this.step = settings.step || DISKWORLD_RATE_STEP_MIN;
@@ -751,6 +849,8 @@ class DiskworldTerraformingProject extends Project {
       ...super.saveState(),
       hydrogenFilledTons: this.hydrogenFilledTons,
       pumpRate: this.pumpRate,
+      pumpMode: this.pumpMode,
+      pumpPercent: this.pumpPercent,
       step: this.step,
       uncappedPumpRate: this.uncappedPumpRate === true,
       pumping: this.pumping,
@@ -765,6 +865,10 @@ class DiskworldTerraformingProject extends Project {
     super.loadState(state);
     this.hydrogenFilledTons = state.hydrogenFilledTons || 0;
     this.pumpRate = state.pumpRate || 0;
+    this.pumpMode = state.pumpMode === DISKWORLD_PUMP_MODE_PERCENT
+      ? DISKWORLD_PUMP_MODE_PERCENT
+      : DISKWORLD_PUMP_MODE_ABSOLUTE;
+    this.pumpPercent = Math.max(0, state.pumpPercent ?? this.pumpPercent);
     this.step = state.step || DISKWORLD_RATE_STEP_MIN;
     this.uncappedPumpRate = state.uncappedPumpRate === true;
     this.pumping = state.pumping === true;

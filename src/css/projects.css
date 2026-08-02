@@ -1100,6 +1100,16 @@
     margin-top: 0;
 }
 
+.diskworld-terraforming-controls .ringworld-terraforming-power select,
+.diskworld-terraforming-controls .ringworld-terraforming-power input {
+    box-sizing: border-box;
+    width: 140px;
+}
+
+.diskworld-terraforming-controls .ringworld-terraforming-power-controls {
+    margin-left: 0;
+}
+
 .diskworld-source-controls {
     display: flex;
     align-items: center;

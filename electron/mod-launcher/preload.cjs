@@ -19,6 +19,12 @@ contextBridge.exposeInMainWorld('modLauncher', {
   openCreatorTools() {
     return ipcRenderer.invoke('mod-launcher:open-creator-tools');
   },
+  importSaveFile() {
+    return ipcRenderer.invoke('mod-launcher:import-save-file');
+  },
+  importSaveClipboard() {
+    return ipcRenderer.invoke('mod-launcher:import-save-clipboard');
+  },
   onStateChanged(callback) {
     ipcRenderer.on('mod-launcher:state-changed', (_event, state) => callback(state));
   },

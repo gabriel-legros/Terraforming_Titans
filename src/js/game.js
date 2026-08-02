@@ -100,6 +100,8 @@ function create() {
   let startupSaveLoaded = false;
   if (startupSelection.mode === 'slot') {
     startupSaveLoaded = loadGame(`gameState_${startupSelection.slot}`, false);
+  } else if (startupSelection.mode === 'temporary') {
+    startupSaveLoaded = loadGame(startupSelection.saveData, false);
   } else if (startupSelection.mode === 'latest') {
     startupSaveLoaded = loadMostRecentSave();
   }
