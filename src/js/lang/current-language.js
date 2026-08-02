@@ -4888,6 +4888,8 @@ setLanguageData({
         colonyApplyHintEmpty: 'Save a preset above to enable the Apply list.',
         colonyApplyHintRule: 'Lower presets override higher presets when they target the same colony setting.',
         scriptOnNextTravelLabel: 'Script on Next Travel',
+        moveScriptUp: 'Move script up',
+        moveScriptDown: 'Move script down',
         movePresetUp: 'Move preset up',
         movePresetDown: 'Move preset down',
         moveCombinationUp: 'Move combination up',

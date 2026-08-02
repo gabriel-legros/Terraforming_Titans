@@ -177,6 +177,18 @@ class ScriptAutomation {
     return script;
   }
 
+  moveScript(id, direction) {
+    const numericId = Number(id);
+    const index = this.scripts.findIndex(script => script.id === numericId);
+    const nextIndex = index + direction;
+    if (index < 0 || nextIndex < 0 || nextIndex >= this.scripts.length) {
+      return false;
+    }
+    const moved = this.scripts.splice(index, 1)[0];
+    this.scripts.splice(nextIndex, 0, moved);
+    return true;
+  }
+
   addScript(name = '') {
     const line = this.createLine('if');
     const script = {

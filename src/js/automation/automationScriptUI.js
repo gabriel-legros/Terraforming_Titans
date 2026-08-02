@@ -123,6 +123,18 @@ function buildScriptAutomationUI() {
   const scriptSelect = document.createElement('select');
   scriptSelect.classList.add('script-automation-select');
 
+  const scriptOrderButtons = document.createElement('div');
+  scriptOrderButtons.classList.add('automation-order-buttons');
+  const scriptMoveUpButton = document.createElement('button');
+  scriptMoveUpButton.textContent = '↑';
+  scriptMoveUpButton.title = getAutomationCardText('moveScriptUp', {}, 'Move script up');
+  scriptMoveUpButton.classList.add('script-automation-move-up');
+  const scriptMoveDownButton = document.createElement('button');
+  scriptMoveDownButton.textContent = '↓';
+  scriptMoveDownButton.title = getAutomationCardText('moveScriptDown', {}, 'Move script down');
+  scriptMoveDownButton.classList.add('script-automation-move-down');
+  scriptOrderButtons.append(scriptMoveUpButton, scriptMoveDownButton);
+
   const scriptName = document.createElement('input');
   scriptName.type = 'text';
   scriptName.placeholder = getAutomationCardText('scriptNamePlaceholder', {}, 'Script name');
@@ -141,7 +153,7 @@ function buildScriptAutomationUI() {
   deleteButton.textContent = getAutomationCardText('scriptDelete', {}, 'Delete');
 
   const scriptTransferButtons = createAutomationPresetTransferButtons('script-automation-script');
-  scriptRow.append(scriptSelect, scriptName, newButton, duplicateButton, deleteButton, scriptTransferButtons.importButton, scriptTransferButtons.exportButton);
+  scriptRow.append(scriptSelect, scriptOrderButtons, scriptName, newButton, duplicateButton, deleteButton, scriptTransferButtons.importButton, scriptTransferButtons.exportButton);
   body.appendChild(scriptRow);
 
   const linesContainer = document.createElement('div');
@@ -169,6 +181,8 @@ function buildScriptAutomationUI() {
   automationElements.scriptStatusCurrent = statusCurrent;
   automationElements.scriptStatusHistory = statusHistory;
   automationElements.scriptSelect = scriptSelect;
+  automationElements.scriptMoveUpButton = scriptMoveUpButton;
+  automationElements.scriptMoveDownButton = scriptMoveDownButton;
   automationElements.scriptNameInput = scriptName;
   automationElements.scriptNewButton = newButton;
   automationElements.scriptDuplicateButton = duplicateButton;
@@ -257,6 +271,22 @@ function wireScriptAutomationEvents() {
     const automation = getScriptAutomation();
     if (!automation) return;
     automation.setSelectedScriptId(Number(event.target.value));
+    forceScriptAutomationRefresh = true;
+    queueAutomationUIRefresh();
+  });
+
+  els.scriptMoveUpButton.addEventListener('click', () => {
+    const automation = getScriptAutomation();
+    const script = automation.getSelectedScript();
+    automation.moveScript(script.id, -1);
+    forceScriptAutomationRefresh = true;
+    queueAutomationUIRefresh();
+  });
+
+  els.scriptMoveDownButton.addEventListener('click', () => {
+    const automation = getScriptAutomation();
+    const script = automation.getSelectedScript();
+    automation.moveScript(script.id, 1);
     forceScriptAutomationRefresh = true;
     queueAutomationUIRefresh();
   });
@@ -411,6 +441,9 @@ function updateScriptAutomationUI() {
   if (script && document.activeElement !== automationElements.scriptNameInput) {
     automationElements.scriptNameInput.value = script.name || '';
   }
+  const selectedScriptIndex = automation.scripts.findIndex(item => item.id === script.id);
+  automationElements.scriptMoveUpButton.disabled = selectedScriptIndex <= 0;
+  automationElements.scriptMoveDownButton.disabled = selectedScriptIndex < 0 || selectedScriptIndex >= automation.scripts.length - 1;
   automationElements.scriptDeleteButton.disabled = automation.scripts.length <= 1;
   automationElements.scriptRunButton.disabled = !automation.enabled || !script;
   automationElements.scriptPauseButton.disabled = !automation.running;
