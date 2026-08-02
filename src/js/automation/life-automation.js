@@ -751,26 +751,50 @@ class LifeAutomation {
       if (!settings.enabled) {
         continue;
       }
-      const cost = lifeDesigner.getTotalPointCost(category.name, 1);
-      const threshold = this.normalizePurchaseThreshold(settings.threshold);
-      const maxCost = Number(settings.maxCost) || 0;
-      if (threshold <= 0) {
+      const quantity = this.getAutoPurchaseQuantity(category.name, settings);
+      if (quantity <= 0) {
         continue;
       }
-      const required = cost * (100 / threshold);
-      if (maxCost > 0 && cost > maxCost) {
-        continue;
-      }
-      if (!lifeDesigner.canAfford(category.name, 1)) {
-        continue;
-      }
-      if (resources.colony[category.name].value < required) {
-        continue;
-      }
-      lifeDesigner.buyPoint(category.name, 1);
+      lifeDesigner.buyPoint(category.name, quantity);
       changed = true;
     }
     return changed;
+  }
+
+  getAutoPurchaseQuantity(categoryName, settings) {
+    const threshold = this.normalizePurchaseThreshold(settings.threshold);
+    if (threshold <= 0) {
+      return 0;
+    }
+    const available = resources.colony[categoryName].value;
+    const maxCost = Number(settings.maxCost) || 0;
+    const canPurchase = quantity => {
+      const nextCost = lifeDesigner.getPointCost(categoryName, quantity - 1);
+      const priorCost = quantity === 1 ? 0 : lifeDesigner.getTotalPointCost(categoryName, quantity - 1);
+      return Number.isFinite(nextCost)
+        && (maxCost <= 0 || nextCost <= maxCost)
+        && priorCost + nextCost * (100 / threshold) <= available
+        && lifeDesigner.canAfford(categoryName, quantity);
+    };
+    if (!canPurchase(1)) {
+      return 0;
+    }
+
+    let affordable = 1;
+    let unaffordable = 2;
+    while (canPurchase(unaffordable)) {
+      affordable = unaffordable;
+      unaffordable *= 2;
+    }
+    while (affordable + 1 < unaffordable) {
+      const quantity = Math.floor((affordable + unaffordable) / 2);
+      if (canPurchase(quantity)) {
+        affordable = quantity;
+      } else {
+        unaffordable = quantity;
+      }
+    }
+    return affordable;
   }
 
   getEntryCapTarget(entry, candidate) {

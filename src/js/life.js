@@ -1069,11 +1069,12 @@ class LifeDesigner extends EffectableEntity {
     return this.getAdvancedResearchTotalCostFromZero(end) - this.getAdvancedResearchTotalCostFromZero(start);
   }
 
-  getPointCost(category){
+  getPointCost(category, purchaseOffset = 0){
+    const purchaseIndex = this.getPurchaseCount(category) + Math.max(0, Math.floor(purchaseOffset));
     if (category === 'advancedResearch') {
-      return this.getAdvancedResearchPointCost(this.getPurchaseCount(category));
+      return this.getAdvancedResearchPointCost(purchaseIndex);
     }
-    return this.basePointCost * Math.pow(this.pointCostMultiplier, this.getPurchaseCount(category));
+    return this.basePointCost * Math.pow(this.pointCostMultiplier, purchaseIndex);
   }
 
   getTotalPointCost(category, quantity = 1) {
