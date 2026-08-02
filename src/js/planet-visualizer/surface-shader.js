@@ -49,8 +49,7 @@
   function getSurfaceShaderStaticKey(context) {
     const size = context.getSurfaceTextureSize();
     const seed = context.hashSeedFromPlanet();
-    const dust = context.hexToRgb(context.normalizeHexColor(context.dustTintColor) || context.viz.baseColor);
-    const dustKey = [dust.r, dust.g, dust.b].map(value => Math.round(value / 4)).join('_');
+    const dustKey = context.getDustTintColorKey();
     const features = context.viz.surfaceFeatures;
     const baseColor = context.normalizeHexColor(context.viz.baseColor);
     const archetype = context.resolveSurfaceArchetype(baseColor);

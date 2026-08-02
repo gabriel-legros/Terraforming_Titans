@@ -2170,9 +2170,9 @@ class Terraforming extends EffectableEntity{
       this.orbitalRadiation = orbitalDose.total + (radiationBoost.orbitalBoost || 0);
     }
 
-    calculateGroundAlbedo() {
+    calculateZonalGroundAlbedo(zone) {
         const baseAlbedo = this.celestialParameters.albedo;
-        const blackAlbedo = dustFactorySettings.dustColorAlbedo; // black dust
+        const dustAlbedo = DustFactory.getDustZoneAlbedo(zone);
         const surfaceArea = this.celestialParameters.surfaceArea || 0;
         const dustFactory = buildings.dustFactory;
 
@@ -2183,10 +2183,11 @@ class Terraforming extends EffectableEntity{
         const totalApplied = Math.min(bRatioRaw, 1);
         const shareBlack = totalApplied;
         const untouched = Math.max(0, 1 - totalApplied);
-        const blended = (blackAlbedo * shareBlack) + (baseAlbedo * untouched);
+        const blended = (dustAlbedo * shareBlack) + (baseAlbedo * untouched);
 
         if (dustFactory.dustAlbedoTransitionActive) {
-            const start = dustFactory.dustAlbedoStart ?? baseAlbedo;
+            const starts = dustFactory.dustAlbedoStarts;
+            const start = starts ? starts[zone] : (dustFactory.dustAlbedoStart ?? baseAlbedo);
             const transitioned = (start * (1 - totalApplied)) + (blended * totalApplied);
             return transitioned;
         }
@@ -2194,8 +2195,16 @@ class Terraforming extends EffectableEntity{
         return blended;
     }
 
+    calculateGroundAlbedo() {
+        let weighted = 0;
+        for (const zone of getZones()) {
+            weighted += this.calculateZonalGroundAlbedo(zone) * this.getZoneWeight(zone);
+        }
+        return weighted;
+    }
+
     calculateZonalSurfaceAlbedo(zone) {
-        const groundAlbedo = this.calculateGroundAlbedo();
+        const groundAlbedo = this.calculateZonalGroundAlbedo(zone);
         const fractions = (typeof calculateZonalSurfaceFractions === 'function')
             ? calculateZonalSurfaceFractions(this, zone)
             : { ocean: 0, ice: 0, hydrocarbon: 0, hydrocarbonIce: 0, co2_ice: 0, ammonia: 0, ammoniaIce: 0, oxygen: 0, oxygenIce: 0, nitrogen: 0, nitrogenIce: 0, fineSand: 0, biomass: 0 };

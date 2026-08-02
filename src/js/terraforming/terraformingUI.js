@@ -3353,9 +3353,19 @@ function updateLifeBox() {
       const blackAlbedo = dustFactorySettings.dustColorAlbedo;
       const lines = [
         getTerraformingSummaryText('luminosity.groundTooltip.base', 'Base: {value}', { value: base.toFixed(3) }),
-        getTerraformingSummaryText('luminosity.groundTooltip.blackDustAlbedo', 'Black dust albedo: {value}', { value: blackAlbedo.toFixed(3) }),
-        getTerraformingSummaryText('luminosity.groundTooltip.blackDustColor', 'Black dust color: {value}', { value: dustFactorySettings.dustColor.toUpperCase() }),
+        getTerraformingSummaryText('luminosity.groundTooltip.dustAverageAlbedo', 'Average dust albedo: {value}', { value: blackAlbedo.toFixed(3) }),
+        getTerraformingSummaryText('luminosity.groundTooltip.dustAverageColor', 'Average dust color: {value}', { value: dustFactorySettings.dustColor.toUpperCase() }),
       ];
+      for (const zone of getZones()) {
+        lines.push(getTerraformingSummaryText(
+          'luminosity.groundTooltip.dustZoneAlbedo',
+          '{name} dust albedo: {value}',
+          {
+            name: getTerraformingZoneLabel(zone),
+            value: DustFactory.getDustZoneAlbedo(zone).toFixed(3),
+          }
+        ));
+      }
       if (shareBlack > 0) {
         lines.push(getTerraformingSummaryText('luminosity.groundTooltip.blackDustCoverage', 'Black dust coverage: {value}%', { value: (shareBlack * 100).toFixed(1) }));
       }

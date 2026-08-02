@@ -951,6 +951,22 @@ body.dark-grey-mode {
     color: #f8f9fa;
 }
 
+.dark-grey-mode .dust-settings-window {
+    background: #292929;
+    color: #ededed;
+}
+
+.dark-grey-mode .dust-settings-intro {
+    color: #c2c2c2;
+}
+
+.dark-grey-mode .dust-settings-close,
+.dark-grey-mode .dust-advanced-settings-button {
+    background: #3b3b3b;
+    border-color: #606060;
+    color: #ededed;
+}
+
 .dark-grey-mode .construction-office-reserve-default-row {
     border-bottom-color: #374151;
 }

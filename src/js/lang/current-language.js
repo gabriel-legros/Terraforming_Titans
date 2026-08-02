@@ -994,6 +994,20 @@ setLanguageData({
       dustFactory: {
         dustColor: 'Dust color:',
         albedoValue: 'Albedo: {albedo}',
+        averageAlbedoValue: 'Average albedo: {albedo}',
+        advancedSettings: {
+          button: 'Advanced dust settings',
+          title: 'Zonal Dust Colors',
+          close: 'Close',
+          intro: 'Each climate zone uses the average albedo of its north and south colors.',
+          north: 'North',
+          south: 'South',
+          zones: {
+            tropical: 'Tropical',
+            temperate: 'Temperate',
+            polar: 'Polar',
+          },
+        },
         resourceNames: {
           customDust: 'Custom Dust',
           blackDust: 'Black Dust',
@@ -3463,6 +3477,9 @@ setLanguageData({
             blackDustAlbedo: 'Black dust albedo: {value}',
             blackDustColor: 'Black dust color: {value}',
             blackDustCoverage: 'Black dust coverage: {value}%',
+            dustAverageAlbedo: 'Average dust albedo: {value}',
+            dustAverageColor: 'Average dust color: {value}',
+            dustZoneAlbedo: '{name} dust albedo: {value}',
           },
           surfaceTooltip: {
             compositionByZone: 'Surface composition by zone',

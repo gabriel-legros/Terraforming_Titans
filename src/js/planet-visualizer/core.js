@@ -146,6 +146,9 @@
       this.dustTintStartColor = '';
       this.lastDustTintColor = '';
       this.dustTintColor = '';
+      this.dustTintStartColors = null;
+      this.lastDustTintColors = null;
+      this.dustTintColors = null;
 
     }
 
@@ -319,6 +322,35 @@
       return surfaceArea > 0 ? Math.max(0, Math.min(1, dustAmount / surfaceArea)) : 0;
     }
 
+    getDustTintColorKey() {
+      const colors = this.dustTintColors;
+      if (!colors) return this.normalizeHexColor(this.dustTintColor) || this.viz.baseColor;
+      return ['north', 'south']
+        .flatMap(hemisphere => ['tropical', 'temperate', 'polar'].map(zone => colors[hemisphere][zone]))
+        .map(color => {
+          const rgb = this.hexToRgb(color);
+          return [rgb.r, rgb.g, rgb.b].map(value => Math.round(value / 4)).join('_');
+        })
+        .join('|');
+    }
+
+    averageDustTintColors(colors) {
+      let red = 0;
+      let green = 0;
+      let blue = 0;
+      let count = 0;
+      for (const hemisphere of ['north', 'south']) {
+        for (const zone of ['tropical', 'temperate', 'polar']) {
+          const rgb = this.hexToRgb(colors[hemisphere][zone]);
+          red += rgb.r;
+          green += rgb.g;
+          blue += rgb.b;
+          count++;
+        }
+      }
+      return this.rgbToHex({ r: red / count, g: green / count, b: blue / count });
+    }
+
     updateDustTint() {
       const surface = this.surfaceMesh;
       if (!surface || !surface.material || !surface.material.color) return;
@@ -327,19 +359,39 @@
       if (dustFactory.dustColorChanged) {
         const currentTint = this.lastDustTintColor || this.dustTintColor || base;
         this.dustTintStartColor = currentTint || base;
+        const currentColors = this.lastDustTintColors || this.dustTintColors;
+        this.dustTintStartColors = currentColors
+          ? {
+              north: { ...currentColors.north },
+              south: { ...currentColors.south },
+            }
+          : {
+              north: { tropical: currentTint, temperate: currentTint, polar: currentTint },
+              south: { tropical: currentTint, temperate: currentTint, polar: currentTint },
+            };
         dustFactory.dustColorChanged = false;
       }
-      const customColor = dustFactorySettings.dustColor;
       const ratio = this.getDustTintRatio();
-      const targetTint = this.mixHexColors(base, customColor, ratio);
-      const finalTint = this.dustTintStartColor
-        ? this.mixHexColors(this.dustTintStartColor, targetTint, ratio)
-        : targetTint;
-      this.dustTintColor = finalTint;
+      const colors = { north: {}, south: {} };
+      for (const hemisphere of ['north', 'south']) {
+        for (const zone of ['tropical', 'temperate', 'polar']) {
+          const targetTint = this.mixHexColors(base, dustFactorySettings.dustColors[hemisphere][zone], ratio);
+          colors[hemisphere][zone] = this.dustTintStartColors
+            ? this.mixHexColors(this.dustTintStartColors[hemisphere][zone], targetTint, ratio)
+            : targetTint;
+        }
+      }
+      this.dustTintColors = colors;
+      this.dustTintColor = this.averageDustTintColors(colors);
       surface.material.color.setRGB(1, 1, 1);
-      this.lastDustTintColor = finalTint;
+      this.lastDustTintColor = this.dustTintColor;
+      this.lastDustTintColors = {
+        north: { ...colors.north },
+        south: { ...colors.south },
+      };
       if (ratio >= 1) {
         this.dustTintStartColor = '';
+        this.dustTintStartColors = null;
       }
     }
 
