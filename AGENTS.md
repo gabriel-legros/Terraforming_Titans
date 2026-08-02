@@ -403,7 +403,8 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Silica/metal allocation supports production percent or absolute caps.
 - Recycling supports junk/scrap filtering and uncapped selector.
 - Output requires same-tick material input (prevents free output).
-- Numbered nanotech stages process in dependency order `I, IV, II, III`, so Stage IV graphene-as-metal production is available to Stage II in the same tick.
+- `src/js/colony/nanotech-parameters.js` owns numbered-stage inputs, outputs, maintenance coverage, controls, limits, recycling, localization paths/UI ids, and both display and processing metadata. `nanotech.js` owns parameter-driven simulation/state, while `nanotechUI.js` owns parameter-driven rendering and interaction; keep their ordered `index.html` includes in that order. Nanotech copy must resolve from `current-language.js`; do not add inline localization fallbacks or fallback fields to its parameters.
+- Numbered nanotech stages display in numeric order but process in dependency order `I, IV, II, III`, so Stage IV graphene-as-metal production is available to Stage II in the same tick. Keep `__tests__/nanotech-characterization.test.js` green when changing stage parameters or shared engines.
 - Input-limited nanocolony production scales its matching growth penalty by actual output fraction; the UI shows the reduced penalty in orange.
 - Nanotechnology Stage IV is a `30B` advanced research after Stage III; it adds graphite allocation, additive standard-material maintenance reduction, and graphene-as-metal production, with a no-deposits warning when graphite fabrication is capped by graphite input.
 - Nanocolony growth, production, consumption, and maintenance effects fully shut down when global average temperature exceeds `700°C` (`973.15 K`), and the colony card shows a red warning using the current temperature unit.
