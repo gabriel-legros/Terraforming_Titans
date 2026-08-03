@@ -17,7 +17,25 @@ const launcherPath = path.join(__dirname, 'mod-launcher', 'index.html');
 const launcherPreloadPath = path.join(__dirname, 'mod-launcher', 'preload.cjs');
 const creatorPath = path.join(__dirname, 'mod-creator', 'index.html');
 const creatorPreloadPath = path.join(__dirname, 'mod-creator', 'preload.cjs');
-const saveSlotNames = new Set(['autosave', 'exitsave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5']);
+const saveSlotNames = new Set([
+  'autosave',
+  'autosave1',
+  'autosave2',
+  'autosave3',
+  'autosave4',
+  'autosave5',
+  'autosave6',
+  'autosave7',
+  'autosave8',
+  'autosave9',
+  'exitsave',
+  'pretravel',
+  'slot1',
+  'slot2',
+  'slot3',
+  'slot4',
+  'slot5'
+]);
 let fullscreenKeybindCode = 'F11';
 const fullscreenKeybindCaptureResolvers = new Map();
 const recentCrashSignatures = new Map();

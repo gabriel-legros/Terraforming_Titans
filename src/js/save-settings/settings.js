@@ -1,6 +1,7 @@
 let settingsSubtabManager = null;
 
 const LEGACY_GAME_SETTING_DEFAULTS = {
+  autosaveCount: 3,
   showSpaceStorageResources: false,
   enableTerraformingSubsteps: true,
   showSpaceStorageInDefaultPanel: false,
@@ -57,6 +58,7 @@ function loadGameSettings(savedSettings) {
   }
 
   setAutosaveIntervalSeconds(gameSettings.autosaveIntervalSeconds);
+  setAutosaveCount(gameSettings.autosaveCount);
   applyGameFramerateSetting();
   delete gameSettings.disableAutosave;
   normalizeDifficultySettings();
@@ -74,6 +76,7 @@ function loadGameSettings(savedSettings) {
 
   const cachedSettings = cacheSettingsElements();
   cachedSettings.autosaveIntervalSelect.value = String(getAutosaveIntervalSeconds());
+  cachedSettings.autosaveCountSelect.value = String(getAutosaveCount());
   cachedSettings.framerateSelect.value = String(getGameFramerate());
   if (!GAME_FEATURES.whiteNoiseKeepAlive) {
     gameSettings.keepTabRunningAudio = false;

@@ -401,6 +401,15 @@
     background-color: #d32f2f;
   }
 
+  .save-slots .autosave-primary-actions {
+    display: block;
+  }
+
+  .save-slots #load-older-autosaves-button {
+    display: block;
+    margin: 3px auto;
+  }
+
   .save-slot-name-cell {
     white-space: nowrap;
   }
@@ -559,4 +568,39 @@
 
   .load-string-dialog-confirm:hover {
     background: #45a049;
+  }
+
+  .autosave-history-dialog-window {
+    width: min(620px, 100%);
+  }
+
+  .autosave-history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: min(55vh, 520px);
+    overflow-y: auto;
+  }
+
+  .autosave-history-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+  }
+
+  .autosave-history-date {
+    min-width: 0;
+  }
+
+  .autosave-history-row .load-string-dialog-confirm {
+    flex: 0 0 auto;
+    padding: 7px 13px;
+    border: none;
+    border-radius: 4px;
+    color: white;
+    cursor: pointer;
   }

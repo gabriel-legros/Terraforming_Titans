@@ -1137,6 +1137,10 @@ body.dark-mode {
 .dark-mode .load-string-dialog-confirm:hover {
     background: #1d4ed8;
 }
+
+.dark-mode .autosave-history-row {
+    border-color: #4b5563;
+}
 .dark-mode .terraforming-box {
     background-color: #111827;
     border-color: #2d3a50;

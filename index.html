@@ -928,10 +928,13 @@
                                 <span data-i18n="ui.settings.autosave">Autosave</span>
                             </td>
                             <td id="autosave-date" data-i18n="ui.common.empty">Empty</td>
-                            <td>
-                                <button class="save-button" data-slot="autosave" data-i18n="ui.common.save">Save</button>
-                                <button class="load-button" data-slot="autosave" data-i18n="ui.common.load">Load</button>
-                                <button class="delete-button" data-slot="autosave" data-i18n="ui.common.delete">Delete</button>
+                            <td class="autosave-actions-cell">
+                                <div class="autosave-primary-actions">
+                                  <button class="save-button" data-slot="autosave" data-i18n="ui.common.save">Save</button>
+                                  <button class="load-button" data-slot="autosave" data-i18n="ui.common.load">Load</button>
+                                  <button class="delete-button" data-slot="autosave" data-i18n="ui.common.delete">Delete</button>
+                                </div>
+                                <button id="load-older-autosaves-button" type="button" data-i18n="ui.settings.loadOlderAutosaves">Load older</button>
                             </td>
                         </tr>
                         <tr id="exitsave-row" class="build-target-hidden" hidden>
@@ -1087,6 +1090,21 @@
                     <option value="1800" data-i18n="ui.settings.autosaveIntervals.m30">30 minutes</option>
                     <option value="3600" data-i18n="ui.settings.autosaveIntervals.h1">1 hour</option>
                     <option value="0" data-i18n="ui.settings.autosaveIntervals.never">Never</option>
+                  </select>
+                </label>
+                <label class="settings-option">
+                  <span data-i18n="ui.settings.autosaveCount">Autosaves kept</span>
+                  <select id="autosave-count-select">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3" selected>3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
                   </select>
                 </label>
                 <label class="settings-option">

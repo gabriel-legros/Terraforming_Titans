@@ -5,10 +5,15 @@ let loadingOverlayElement = null;
 let loadingOverlayIsVisible = true;
 let pendingAutomationSafetyRestoreState = null;
 let loadStringDialog = null;
+let autosaveHistoryDialog = null;
+let loadOlderAutosavesButton = null;
 let exitSaveHandlerRegistered = false;
 const SAVE_SLOTS = ['autosave', 'exitsave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
-const SAVE_FALLBACK_LOAD_ORDER = ['autosave', 'exitsave', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5', 'pretravel'];
+const AUTOSAVE_HISTORY_SLOTS = ['autosave1', 'autosave2', 'autosave3', 'autosave4', 'autosave5', 'autosave6', 'autosave7', 'autosave8', 'autosave9'];
+const SAVE_FALLBACK_LOAD_ORDER = ['autosave', ...AUTOSAVE_HISTORY_SLOTS, 'exitsave', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5', 'pretravel'];
 const RENAMABLE_SAVE_SLOTS = ['slot1', 'slot2', 'slot3', 'slot4', 'slot5'];
+const DEFAULT_AUTOSAVE_COUNT = 3;
+const MAX_AUTOSAVE_COUNT = 10;
 
 function cacheLoadingOverlayElement() {
   if (loadingOverlayElement || typeof document === 'undefined') {
@@ -1017,12 +1022,95 @@ function getSaveSlotTimestamp(slot, saveSlotDates) {
   return Number.isFinite(metadataTimestamp) && metadataTimestamp > 0 ? metadataTimestamp : null;
 }
 
+function normalizeAutosaveCount(value) {
+  return Math.max(1, Math.min(MAX_AUTOSAVE_COUNT, Math.round(Number(value) || DEFAULT_AUTOSAVE_COUNT)));
+}
+
+function getAutosaveCount() {
+  return normalizeAutosaveCount(gameSettings.autosaveCount);
+}
+
+function getAutosaveHistoryEntries(limit = getAutosaveCount() - 1) {
+  const saveSlotDates = readSaveSlotDates();
+  const entries = [];
+  for (const slot of AUTOSAVE_HISTORY_SLOTS) {
+    const savedState = getSavedStateForSlot(slot);
+    if (!savedState) {
+      continue;
+    }
+    entries.push({
+      slot,
+      savedState,
+      timestamp: getSaveSlotTimestamp(slot, saveSlotDates) || 0,
+      gameCompleted: getGameCompletedFromSavedState(savedState)
+    });
+  }
+  entries.sort((a, b) => b.timestamp - a.timestamp);
+  return entries.slice(0, limit);
+}
+
+function updateLoadOlderAutosavesButton() {
+  if (!loadOlderAutosavesButton) {
+    return;
+  }
+  loadOlderAutosavesButton.disabled = getAutosaveHistoryEntries().length === 0;
+}
+
+function removeAutosaveHistorySlots(slots) {
+  for (const slot of slots) {
+    try {
+      removeSaveStorageItem(`gameState_${slot}`);
+    } catch (e) {
+      console.warn(`Unable to access save storage for slot ${slot}:`, e);
+    }
+  }
+  const saveSlotDates = readSaveSlotDates();
+  for (const slot of slots) {
+    delete saveSlotDates[slot];
+  }
+  writeSaveSlotDates(saveSlotDates);
+}
+
+function pruneAutosaveHistory() {
+  const entries = getAutosaveHistoryEntries(AUTOSAVE_HISTORY_SLOTS.length);
+  const slotsToRemove = entries.slice(getAutosaveCount() - 1).map(entry => entry.slot);
+  removeAutosaveHistorySlots(slotsToRemove);
+  updateLoadOlderAutosavesButton();
+}
+
+function setAutosaveCount(value) {
+  gameSettings.autosaveCount = normalizeAutosaveCount(value);
+  pruneAutosaveHistory();
+}
+
+function preserveCurrentAutosave() {
+  const currentAutosave = getSavedStateForSlot('autosave');
+  const historyCapacity = getAutosaveCount() - 1;
+  if (!currentAutosave || historyCapacity === 0) {
+    return;
+  }
+
+  const entries = getAutosaveHistoryEntries(AUTOSAVE_HISTORY_SLOTS.length);
+  const emptySlot = AUTOSAVE_HISTORY_SLOTS.find(slot => !getSavedStateForSlot(slot));
+  const targetSlot = entries.length < historyCapacity
+    ? emptySlot
+    : entries[entries.length - 1].slot;
+  writeSaveStorageItem(`gameState_${targetSlot}`, currentAutosave);
+
+  const saveSlotDates = readSaveSlotDates();
+  saveSlotDates[targetSlot] = getSaveSlotTimestamp('autosave', saveSlotDates) || Date.now();
+  writeSaveSlotDates(saveSlotDates);
+}
+
 function saveGameToSlot(slot) {
   const saveDate = new Date();
   const gameState = getGameState(saveDate);
   const genericFailure = t('ui.settings.saveFailedLocalStorage', null, 'SAVE FAILED: Unable to write save storage.');
   let saveFailedReason = '';
   try {
+    if (slot === 'autosave') {
+      preserveCurrentAutosave();
+    }
     writeSaveStorageItem(`gameState_${slot}`, JSON.stringify(gameState));
     console.log(`Game saved successfully to slot ${slot}.`);
   } catch (e) {
@@ -1046,6 +1134,10 @@ function saveGameToSlot(slot) {
   if (slot === 'pretravel') {
     const row = document.getElementById('pretravel-row');
     if (row) row.classList.remove('hidden');
+  }
+
+  if (slot === 'autosave') {
+    updateLoadOlderAutosavesButton();
   }
 
   return { success: true };
@@ -1225,8 +1317,120 @@ function loadGameFromString() {
   dialog.textarea.focus();
 }
 
+function closeAutosaveHistoryDialog() {
+  if (autosaveHistoryDialog) {
+    autosaveHistoryDialog.overlay.classList.remove('is-visible');
+  }
+}
+
+function ensureAutosaveHistoryDialog() {
+  if (autosaveHistoryDialog) {
+    return autosaveHistoryDialog;
+  }
+
+  const overlay = document.createElement('div');
+  overlay.classList.add('load-string-dialog-overlay');
+
+  const windowEl = document.createElement('div');
+  windowEl.classList.add('load-string-dialog-window', 'autosave-history-dialog-window');
+  windowEl.setAttribute('role', 'dialog');
+  windowEl.setAttribute('aria-modal', 'true');
+  windowEl.setAttribute('aria-labelledby', 'autosave-history-dialog-title');
+
+  const title = document.createElement('h3');
+  title.id = 'autosave-history-dialog-title';
+  title.classList.add('load-string-dialog-title');
+
+  const description = document.createElement('p');
+  description.classList.add('load-string-dialog-description');
+
+  const list = document.createElement('div');
+  list.classList.add('autosave-history-list');
+
+  const actions = document.createElement('div');
+  actions.classList.add('load-string-dialog-actions');
+
+  const closeButton = document.createElement('button');
+  closeButton.classList.add('load-string-dialog-cancel');
+  actions.appendChild(closeButton);
+
+  windowEl.append(title, description, list, actions);
+  overlay.appendChild(windowEl);
+  document.body.appendChild(overlay);
+
+  autosaveHistoryDialog = { overlay, title, description, list, closeButton };
+
+  closeButton.addEventListener('click', closeAutosaveHistoryDialog);
+  overlay.addEventListener('click', (event) => {
+    if (event.target === overlay) {
+      closeAutosaveHistoryDialog();
+    }
+  });
+  overlay.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') {
+      closeAutosaveHistoryDialog();
+    }
+  });
+
+  return autosaveHistoryDialog;
+}
+
+function openAutosaveHistoryDialog() {
+  const dialog = ensureAutosaveHistoryDialog();
+  const entries = getAutosaveHistoryEntries();
+  dialog.title.textContent = t('ui.settings.olderAutosavesTitle', null, 'Older autosaves');
+  dialog.description.textContent = entries.length > 0
+    ? t('ui.settings.olderAutosavesDescription', null, 'Choose an older autosave to load. Newest saves are shown first.')
+    : t('ui.settings.noOlderAutosaves', null, 'No older autosaves are available.');
+  dialog.closeButton.textContent = t('ui.common.cancel', null, 'Cancel');
+  dialog.list.replaceChildren();
+
+  entries.forEach(entry => {
+    const row = document.createElement('div');
+    row.classList.add('autosave-history-row');
+
+    const date = document.createElement('span');
+    date.classList.add('autosave-history-date');
+    date.textContent = entry.timestamp > 0
+      ? formatDate(new Date(entry.timestamp))
+      : t('ui.common.unknown', null, 'Unknown');
+    if (entry.gameCompleted) {
+      const completedStar = document.createElement('span');
+      completedStar.classList.add('save-slot-completed-star');
+      completedStar.setAttribute('aria-hidden', 'true');
+      completedStar.textContent = '\u2605';
+      date.prepend(completedStar);
+    }
+
+    const loadButton = document.createElement('button');
+    loadButton.classList.add('load-string-dialog-confirm');
+    loadButton.textContent = t('ui.common.load', null, 'Load');
+    loadButton.addEventListener('click', () => {
+      if (loadGame(`gameState_${entry.slot}`)) {
+        closeAutosaveHistoryDialog();
+      }
+    });
+
+    row.append(date, loadButton);
+    dialog.list.appendChild(row);
+  });
+
+  dialog.overlay.classList.add('is-visible');
+  const firstLoadButton = dialog.list.querySelector('button');
+  (firstLoadButton || dialog.closeButton).focus();
+}
+
+function initializeAutosaveHistoryUI() {
+  loadOlderAutosavesButton = document.getElementById('load-older-autosaves-button');
+  loadOlderAutosavesButton.addEventListener('click', openAutosaveHistoryDialog);
+  updateLoadOlderAutosavesButton();
+}
+
 // Delete save file from a specific slot
 function deleteSaveFileFromSlot(slot) {
+  if (slot === 'autosave') {
+    removeAutosaveHistorySlots(AUTOSAVE_HISTORY_SLOTS);
+  }
   try {
     removeSaveStorageItem(`gameState_${slot}`);
     console.log(`Save file deleted successfully from slot ${slot}.`);
@@ -1244,6 +1448,11 @@ function deleteSaveFileFromSlot(slot) {
   if (slot === 'pretravel') {
     const row = document.getElementById('pretravel-row');
     if (row) row.classList.add('hidden');
+  }
+
+  if (slot === 'autosave') {
+    closeAutosaveHistoryDialog();
+    updateLoadOlderAutosavesButton();
   }
 }
 
@@ -1291,6 +1500,7 @@ function loadSaveSlotDates() {
       preRow.classList.add('hidden');
     }
   }
+  updateLoadOlderAutosavesButton();
 }
 
 // Format the date in a user-friendly way
@@ -1322,7 +1532,7 @@ function loadMostRecentSave() {
   const candidates = [];
   const candidateSlots = new Set();
 
-  for (const slot of SAVE_SLOTS) {
+  for (const slot of SAVE_SLOTS.concat(AUTOSAVE_HISTORY_SLOTS)) {
     const timestamp = getSaveSlotTimestamp(slot, saveSlotDates);
     if (timestamp === null) {
       continue;

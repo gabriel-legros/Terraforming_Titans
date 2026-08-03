@@ -10,6 +10,7 @@ function cacheSettingsElements() {
 
   settingsElements = {
     autosaveIntervalSelect: document.getElementById('autosave-interval-select'),
+    autosaveCountSelect: document.getElementById('autosave-count-select'),
     framerateSelect: document.getElementById('framerate-select'),
     whiteNoiseOption: document.getElementById('white-noise-settings-option'),
     keepTabRunningAudioToggle: document.getElementById('keep-tab-running-audio-toggle'),
@@ -515,6 +516,12 @@ function addSettingsListeners() {
       updateAutosaveText();
     });
   }
+
+  cached.autosaveCountSelect.value = String(getAutosaveCount());
+  cached.autosaveCountSelect.addEventListener('change', () => {
+    setAutosaveCount(cached.autosaveCountSelect.value);
+    cached.autosaveCountSelect.value = String(getAutosaveCount());
+  });
 
   if (cached.framerateSelect) {
     applyGameFramerateSetting();
