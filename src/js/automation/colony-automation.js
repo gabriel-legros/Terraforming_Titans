@@ -226,7 +226,11 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     if (!colony) {
       return null;
     }
-    return this.captureStructureAutomationSettings(colony);
+    const automation = this.captureStructureAutomationSettings(colony);
+    if (colony.name === 'aerostat_colony') {
+      automation.capActiveToSupported = colony.capActiveToSupported === true;
+    }
+    return automation;
   }
 
   captureNanocolonyControlSettings() {
@@ -377,7 +381,15 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     if (!colony) {
       return false;
     }
-    return this.applyStructureAutomationSettings(colony, automation);
+    let changed = this.applyStructureAutomationSettings(colony, automation);
+    if (
+      'capActiveToSupported' in automation &&
+      colony.capActiveToSupported !== automation.capActiveToSupported
+    ) {
+      colony.capActiveToSupported = automation.capActiveToSupported === true;
+      changed = true;
+    }
+    return changed;
   }
 
   applyNanocolonyControlSettings(control) {
