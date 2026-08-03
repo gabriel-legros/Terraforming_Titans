@@ -443,7 +443,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Advanced oversight runs after each woven climate-resource slice and immediately before that fixed terraforming physics step. Its solver warm-starts from the current assignments, and must not be moved back to the later project update where its projected trends would be stale.
 - Space Mirror Facility full project state restore must preserve explicit mirror/lantern assignments even when advanced oversight is enabled; presets/travel setting restores should keep the advanced-oversight assignment guard unless explicitly opting into assignment restore. Signed mirror assignment counts encode reverse/cooling mode.
 - Starless worlds support day-night period control when lanterns are unlocked.
-- Focused melting, advanced auto-assignment, and quick-build integration are supported.
+- Focused melting distributes each update's melt across all zones with surface ice in proportion to their ice amounts, so each icy zone loses the same fraction. Advanced auto-assignment and quick-build integration are supported.
 - Ringworlds disable Space Mirror Facility and Planetary Thrusters and hide related research/UI.
 
 ### Random World Generator

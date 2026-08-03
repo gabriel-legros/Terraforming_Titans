@@ -2093,7 +2093,7 @@ setLanguageData({
             temperate: 'Temp.:',
             polar: 'Polar:',
           },
-          focusingTooltip: 'Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. With Phase Change Heat enabled, the calculation includes warming the resulting meltwater to the local zone temperature.',
+          focusingTooltip: 'Concentrate mirror and lantern energy to melt surface ice into liquid water. Melt is spread between zones in proportion to the surface ice in each zone. With Phase Change Heat enabled, the calculation includes warming the resulting meltwater to each local zone temperature.',
           applyToLantern: 'Apply Oversight to Hyperion Lantern',
           applyToLanternTooltip: 'Lets mirror oversight assign Hyperion Lanterns alongside mirrors. Lanterns only add heat and cannot cool zones.  Mandatory when using finer controls.',
         },

@@ -646,17 +646,14 @@ class SpaceMirrorAdvancedOversight {
           return (dailyMeltTarget * 1000 / 86400) * energyPerKg;
         }
 
-        let remaining = dailyMeltTarget;
         let requiredEnergy = 0;
+        const meltFraction = dailyMeltTarget / availableSurfaceIce;
         const iceZones = ZONES.map((zone) => ({
           zone,
           temperature: snapshot.temperature.zones[zone].value,
           ice: Math.max(0, terraforming.zonalSurface[zone].ice || 0),
-        })).filter((entry) => entry.ice > 0)
-          .sort((a, b) => b.temperature - a.temperature);
+        })).filter((entry) => entry.ice > 0);
         for (const entry of iceZones) {
-          if (!(remaining > 0)) break;
-          const amount = Math.min(remaining, entry.ice);
           const energyPerKg = calculatePhaseTransitionEnergyPerKg(
             'solid',
             'liquid',
@@ -664,8 +661,7 @@ class SpaceMirrorAdvancedOversight {
             terraformingParameters.phaseChange.water
           );
           requiredEnergy +=
-            amount * terraformingParameters.physical.kgPerTon * energyPerKg;
-          remaining -= amount;
+            entry.ice * meltFraction * terraformingParameters.physical.kgPerTon * energyPerKg;
         }
         return requiredEnergy / 86400;
       };
