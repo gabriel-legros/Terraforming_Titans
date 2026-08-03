@@ -110,6 +110,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Game-setting save migration, runtime application, and settings UI synchronization are owned by `src/js/save-settings/settings.js`; `save.js` only passes the saved settings payload to it.
 - Core simulation: `terraforming.js`, `physics.js`, cycle modules.
 - Temperature trends, meridional mixing, and Advanced Oversight projections exclude phase-change heat. During finite-capacity updates, the prior tick's zonal phase heat can speed or slow movement toward the phase-free trend, but its combined effect is capped so it cannot reverse that movement or carry temperature past the trend. Mega Heat Sinks operate independently and do not directly mitigate phase-change heat.
+- Advanced Oversight retains its last unconstrained ideal zonal fluxes and validates them before running another solver refinement. Resource-constrained targets therefore reuse the converged ideal demand while still reallocating against current mirror and Hyperion Lantern capacity every terraforming substep.
 - Economy/colony: `resource.js`, `building.js`, `colony.js`, related UI modules.
 - Story progression: `StoryManager` in `progress.js`.
 - Story-only project classes live under `src/js/story/`; keep their `index.html` script tags after required project base classes.

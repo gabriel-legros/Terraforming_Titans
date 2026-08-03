@@ -583,10 +583,13 @@ class SpaceMirrorAdvancedOversight {
       }
 
       const idealFluxes = { ...currentFluxes };
+      const previousIdealFluxes = settings.lastSolution?.idealFluxes;
       for (const zone of ZONES) {
         if (!(targets[zone] > 0)) continue;
         if (getZoneMode(zone) === 'flux') {
           idealFluxes[zone] = Math.max(MIN_ZONE_FLUX, (targets[zone] || 0) * fluxDisplayDivisor);
+        } else if ((previousIdealFluxes?.[zone] || 0) > 0) {
+          idealFluxes[zone] = Math.max(MIN_ZONE_FLUX, previousIdealFluxes[zone]);
         }
       }
 
@@ -841,6 +844,7 @@ class SpaceMirrorAdvancedOversight {
       settings.lastSolution = {
         mirrors: { ...assignM },
         lanterns: { ...assignL },
+        idealFluxes: { ...idealFluxes },
         availableHeating: { ...availableHeating },
         availableHeatingPowerTarget,
         reversalMode: { ...reverse },
