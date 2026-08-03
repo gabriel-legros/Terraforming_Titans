@@ -793,7 +793,10 @@ function updateAutoTravelUI() {
     automationElements.autoTravelWaitSpecializationToggle.checked = !!preset.waitForSpecialization;
     automationElements.autoTravelBlockIfNoStoredToggle.checked = preset.blockIfNoStoredFromArtificial !== false;
     automationElements.autoTravelTurnOffAfterTravelToggle.checked = !!preset.turnOffAfterTravel;
-    const canSkipEquilibration = Number(fastestTerraformRealSeconds) > 0 && Number(fastestTerraformRealSeconds) < 60;
+    const canSkipEquilibration = automation.canSkipEquilibration();
+    if (!canSkipEquilibration && !globalGameIsLoadingFromSave) {
+      preset.skipEquilibration = false;
+    }
     automationElements.autoTravelSkipEquilibrationToggle.checked = !!preset.skipEquilibration;
     automationElements.autoTravelSkipEquilibrationToggle.disabled = !canSkipEquilibration;
     setTooltipText(

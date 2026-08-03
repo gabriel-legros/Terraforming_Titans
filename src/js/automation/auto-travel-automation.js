@@ -289,7 +289,7 @@ class AutoTravelAutomation {
     return candidates;
   }
 
-  _getSkipEquilibrationUnlocked() {
+  canSkipEquilibration() {
     return Number(fastestTerraformRealSeconds) > 0 && Number(fastestTerraformRealSeconds) < 60;
   }
 
@@ -423,9 +423,9 @@ class AutoTravelAutomation {
   }
 
   _travelToRandomWorldPreset(preset) {
-    const canSkipEquilibration = this._getSkipEquilibrationUnlocked();
+    const canSkipEquilibration = this.canSkipEquilibration();
     if (preset.skipEquilibration && !canSkipEquilibration) {
-      return false;
+      preset.skipEquilibration = false;
     }
     const res = this._buildRandomWorldResult(preset);
     if (!res) {
