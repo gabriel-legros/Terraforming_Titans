@@ -296,7 +296,7 @@ class KeratiHiveProject extends Project {
   }
 
   getCompletionTolerance(initialLand = this.getInitialLand()) {
-    return Math.max(1e-6, Math.abs(initialLand) * 1e-12);
+    return Math.max(0.5, Math.abs(initialLand) * 1e-12);
   }
 
   isComplete() {
@@ -309,7 +309,7 @@ class KeratiHiveProject extends Project {
       this.isCompleted = false;
       return false;
     }
-    this.territory = initialLand;
+    this.territory = Math.min(initialLand, this.getMaxTerritoryForGrowth());
     this.isCompleted = true;
     return true;
   }
