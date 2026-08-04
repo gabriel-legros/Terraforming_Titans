@@ -564,7 +564,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Kessler Skies gained richer failure/debris modeling, warnings/tooltips, and capped Solis storage bonuses.
 - Kessler debris bins store/display altitude relative to the world's initial radius, while drag density and decay on dynamic-mass worlds adjust those bins by the current radius change before sampling the atmosphere.
 - Kessler Skies does not affect `Artificial Crust` or `Aerostat Structural Net`; those spaceship projects do not show Kessler failure warnings and have no Kessler failure chance.
-- Kessler cost multipliers and decay behaviors were tuned; hazard charts and bin diagnostics expanded.
+- Kessler cost multipliers and decay behaviors were tuned; hazard charts and bin diagnostics expanded. Kessler Skies automatically clears and clamps orbital debris to zero below `0.01` tons.
 - Advanced research now includes `High-agility freighters` (200B), adding per-project checkboxes during uncleared Kessler Skies that make spaceship activities pay `100 research x current large-debris cost multiplier` per ship activity in exchange for no Kessler debris generation or failure; checkboxes save in project presets, auto-disable when Kessler is cleared, and exclude Resource Disposal Mass Drivers.
 - While Kessler Skies is active, Followers Orbitals are limited to `research`; non-research orbital outputs are disabled and the Orbitals card shows a warning banner.
 - Followers Orbitals can optionally cap available orbitals to the current world geometric land value through the Post-World 11 Orbital cap difficulty setting; manual and weight assignments normalize against that capped availability.

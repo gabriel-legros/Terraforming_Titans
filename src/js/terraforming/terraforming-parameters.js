@@ -484,6 +484,7 @@ var terraformingParameters = {
       hideWhenSmallThreshold: 1e-4
     },
     kessler: {
+      clearThresholdTons: 0.01,
       solisResourceCap: 1000,
       solisWaterKeep: 1000,
       solisCappedResources: ['food', 'components', 'electronics', 'glass', 'androids'],
