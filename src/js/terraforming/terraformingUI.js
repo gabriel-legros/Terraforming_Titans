@@ -53,10 +53,6 @@ function getTerraformingSummaryResourceLabel(key, fallback) {
   return getTerraformingSummaryText(`resources.${key}`, fallback || formatTerraformingSummaryLabel(key, key));
 }
 
-function getLuminositySurfaceFluxDisplayFactor() {
-  return isAldersonDiskWorld() ? 4 : 1;
-}
-
 const LIQUID_COVERAGE_LABEL_TYPES = {
   liquidWater: true,
   liquidCO2: true,
@@ -2841,7 +2837,9 @@ function updateLifeBox() {
     if (els.coverageOverall) els.coverageOverall.textContent = (avgBiomassCoverage * 100).toFixed(2);
     zones.forEach(zone => {
       els.coverageByZone[zone].textContent = (zoneCoverage[zone] * 100).toFixed(2);
-      els.photoByZone[zone].textContent = (terraforming.calculateZonalSolarPanelMultiplier(zone) * 100).toFixed(2);
+      const baseSurfaceSolarFlux = terraformingParameters.gameplay.solar.solarPanelBaseLuminosity;
+      const photosynthesisMultiplier = terraforming.calculateZonalSurfaceSolarFlux(zone) / baseSurfaceSolarFlux;
+      els.photoByZone[zone].textContent = (photosynthesisMultiplier * 100).toFixed(2);
     });
   }
 
@@ -3196,7 +3194,7 @@ function updateLifeBox() {
           </tr>
           <tr>
             <td>${getTerraformingSummaryText('luminosity.labels.surfaceSolarFlux', 'Surface Solar Flux (W/m²)')}</td>
-            <td><span id="modified-solar-flux">${(terraforming.luminosity.modifiedSolarFlux * getLuminositySurfaceFluxDisplayFactor()).toFixed(1)}</span><span id="solar-flux-info" class="info-tooltip-icon">&#9432;<span id="solar-flux-tooltip" class="resource-tooltip"></span></span></td>
+            <td><span id="modified-solar-flux">${terraforming.calculateSurfaceSolarFlux().toFixed(1)}</span><span id="solar-flux-info" class="info-tooltip-icon">&#9432;<span id="solar-flux-tooltip" class="resource-tooltip"></span></span></td>
             <td><span id="solar-flux-delta"></span></td>
           </tr>
         </tbody>
@@ -3457,15 +3455,13 @@ function updateLifeBox() {
     setCloudHazeTooltipCompact();
 
     if (els.modifiedSolarFlux) {
-      const fluxDisplayFactor = getLuminositySurfaceFluxDisplayFactor();
-      els.modifiedSolarFlux.textContent = (terraforming.luminosity.modifiedSolarFlux * fluxDisplayFactor).toFixed(1);
+      els.modifiedSolarFlux.textContent = terraforming.calculateSurfaceSolarFlux().toFixed(1);
     }
     if (els.solarFluxDelta) {
-      const fluxDisplayFactor = getLuminositySurfaceFluxDisplayFactor();
       const baseFlux = (terraforming.luminosity.initialSolarFlux !== undefined)
         ? terraforming.luminosity.initialSolarFlux
-        : terraforming.luminosity.solarFlux;
-      const deltaF = (terraforming.luminosity.modifiedSolarFlux - baseFlux) * fluxDisplayFactor;
+        : terraforming.calculateSurfaceSolarFlux();
+      const deltaF = terraforming.calculateSurfaceSolarFlux() - baseFlux;
       els.solarFluxDelta.textContent = `${deltaF >= 0 ? '+' : ''}${formatNumber(deltaF, false, 2)}`;
     }
 

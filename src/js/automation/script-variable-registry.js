@@ -821,7 +821,7 @@ class ScriptVariableRegistry {
     if (attribute === 'geometricLand') return resolveWorldGeometricLand(terraforming, resources.surface.land);
     if (attribute === 'solarFlux') return this.toNumber(terraforming.luminosity.solarFlux);
     if (attribute === 'modifiedSolarFlux') return this.toNumber(terraforming.luminosity.modifiedSolarFlux);
-    if (attribute === 'surfaceSolarFlux') return this.toNumber(terraforming.luminosity.modifiedSolarFlux * (isAldersonDiskWorld() ? 4 : 1));
+    if (attribute === 'surfaceSolarFlux') return this.toNumber(terraforming.calculateSurfaceSolarFlux());
     if (attribute === 'averageFlux') {
       let averageFlux = 0;
       for (const zone of getZones()) averageFlux += terraforming.luminosity.zonalFluxes[zone] * terraforming.getZoneWeight(zone);

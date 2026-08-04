@@ -1584,10 +1584,11 @@ function updateLifeStatusTable() {
             const baseRate = designToCheck.photosynthesisEfficiency.getEffectiveValue() * requirements.photosynthesisRatePerPoint;
             const metabolismProcess = getActiveLifeMetabolismProcessForUI();
             const usesLuminosity = metabolismProcess?.growth?.usesLuminosity === true;
+            const baseSurfaceSolarFlux = terraformingParameters.gameplay.solar.solarPanelBaseLuminosity;
             const lumMult = usesLuminosity
                 ? (zone === 'global'
-                    ? (terraforming.calculateSolarPanelMultiplier ? terraforming.calculateSolarPanelMultiplier() : 1)
-                    : (terraforming.calculateZonalSolarPanelMultiplier ? terraforming.calculateZonalSolarPanelMultiplier(zone) : 1))
+                    ? terraforming.calculateSurfaceSolarFlux()
+                    : terraforming.calculateZonalSurfaceSolarFlux(zone)) / baseSurfaceSolarFlux
                 : 1;
             const tempMult = growthTempResults[zone]?.multiplier || 0;
             let radPenalty = designToCheck.getRadiationGrowthPenalty();

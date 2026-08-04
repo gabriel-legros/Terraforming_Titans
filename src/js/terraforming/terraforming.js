@@ -909,9 +909,7 @@ class Terraforming extends EffectableEntity{
   }
 
   getLuminosityStatus() {
-    const objectiveFlux = isAldersonDiskWorld()
-      ? (this.luminosity.modifiedSolarFlux * 4)
-      : this.luminosity.modifiedSolarFlux;
+    const objectiveFlux = this.calculateSurfaceSolarFlux();
     return ((objectiveFlux >= this.luminosity.targetMin) && (objectiveFlux <= this.luminosity.targetMax));
   }
 
@@ -1185,7 +1183,7 @@ class Terraforming extends EffectableEntity{
       this.luminosity.initialActualAlbedo = this.luminosity.actualAlbedo;
       this.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
 
-      this.luminosity.initialSolarFlux = this.luminosity.modifiedSolarFlux;
+      this.luminosity.initialSolarFlux = this.calculateSurfaceSolarFlux();
 
       if (hasZonalTemperatureDefaults && (!planetParameters.classification || !planetParameters.classification?.archetype == 'artificial')) {
           let weightedTemperature = 0;
@@ -2719,26 +2717,31 @@ class Terraforming extends EffectableEntity{
       return this.luminosity.solarFlux * ratio;
     }
 
-    calculateSolarPanelMultiplier(){
-      return this.luminosity.modifiedSolarFlux / SOLAR_PANEL_BASE_LUMINOSITY;
+    calculateSurfaceSolarFlux() {
+      const fluxScale = isAldersonDiskWorld() ? 4 : 1;
+      return this.luminosity.modifiedSolarFlux * fluxScale;
     }
 
-    calculateZonalSolarPanelMultiplier(zone){
-      if (isRingWorld && isRingWorld()) {
+    calculateZonalSurfaceSolarFlux(zone) {
+      if (isRingWorld()) {
         const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
         const baseFlux = this.luminosity.zonalFluxes?.tropical ?? this.luminosity.solarFlux;
-        return (baseFlux * 4 * (1 - penalty)) / SOLAR_PANEL_BASE_LUMINOSITY;
-      }
-      if (isAldersonDiskWorld()) {
-        const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
-        const baseFlux = this.luminosity.zonalFluxes?.[zone] ?? this.calculateZoneSolarFlux(zone);
-        return (baseFlux * (1 - penalty)) / SOLAR_PANEL_BASE_LUMINOSITY;
+        return baseFlux * 4 * (1 - penalty);
       }
       if (this.luminosity.zonalFluxes && Number.isFinite(this.luminosity.zonalFluxes[zone])) {
         const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
-        return (this.luminosity.zonalFluxes[zone] * (1 - penalty)) / SOLAR_PANEL_BASE_LUMINOSITY;
+        const fluxScale = isAldersonDiskWorld() ? 4 : 1;
+        return this.luminosity.zonalFluxes[zone] * (1 - penalty) * fluxScale;
       }
-      return this.calculateSolarPanelMultiplier();
+      return this.calculateSurfaceSolarFlux();
+    }
+
+    calculateSolarPanelMultiplier(){
+      return this.calculateSurfaceSolarFlux() / SOLAR_PANEL_BASE_LUMINOSITY;
+    }
+
+    calculateZonalSolarPanelMultiplier(zone){
+      return this.calculateZonalSurfaceSolarFlux(zone) / SOLAR_PANEL_BASE_LUMINOSITY;
     }
 
     calculateWindTurbineMultiplier(){

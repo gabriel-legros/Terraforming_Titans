@@ -105,6 +105,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 ## Project Overview
 - Browser incremental game with script entry via `index.html`.
 - Solar panel cooling conserves its planet-wide power while distributing the cooling flux among climate zones in proportion to each zone's mirror-modified sunlight after local surface albedo. Ordinary factory heat remains uniform across zones.
+- `Terraforming.calculateSurfaceSolarFlux()` and `calculateZonalSurfaceSolarFlux(zone)` are the canonical cloud/haze-adjusted surface-light APIs. Luminosity requirements, solar panels, photosynthetic growth, UI displays, and scripting must consume these APIs rather than interpreting `modifiedSolarFlux` or world geometry themselves.
 - English localization is split between `src/js/lang/current-language.js` for shared game/UI text and `src/js/lang/story-language.js` for chapter titles, narratives, prompts, story-project content, and story-project-specific UI.
 - Shared building summaries, trading/disposal controls, colony tabs, garbage hazards, artificial-world history, Galaxy sector/operation labels, invasion rewards, and scripting labels/summaries resolve through `src/js/lang/current-language.js`; keep dynamic refresh paths localized as well as initial element creation.
 - Game-setting save migration, runtime application, and settings UI synchronization are owned by `src/js/save-settings/settings.js`; `save.js` only passes the saved settings payload to it.
