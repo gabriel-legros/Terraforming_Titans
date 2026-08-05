@@ -5209,6 +5209,7 @@ setLanguageData({
       saveToClipboard: 'Save to Clipboard',
       loadFromString: 'Load from string',
       exitGame: 'Exit Game',
+      exitToLauncher: 'Exit to Launcher',
       discord: 'Discord',
       gameVersion: 'Version {version}',
       whiteNoiseLabel: 'Use white noise to keep tab active',

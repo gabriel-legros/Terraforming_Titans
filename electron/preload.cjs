@@ -61,6 +61,9 @@ contextBridge.exposeInMainWorld('electronWindowControls', {
   exitGame() {
     ipcRenderer.send('window:exit-game');
   },
+  exitToLauncher() {
+    ipcRenderer.send('window:exit-to-launcher');
+  },
   onFullscreenChanged(callback) {
     ipcRenderer.on('window:fullscreen-changed', (_event, enabled) => {
       callback(enabled === true);

@@ -484,6 +484,13 @@ function registerWindowControlHandlers() {
     const win = BrowserWindow.fromWebContents(event.sender);
     win.close();
   });
+  ipcMain.on('window:exit-to-launcher', event => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    gameLaunchStarted = false;
+    createLauncherWindow();
+    refreshLauncherCatalog();
+    win.close();
+  });
 }
 
 function registerModProtocol() {

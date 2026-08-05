@@ -116,6 +116,7 @@ function cacheSettingsElements() {
     startBackgroundSilenceButton: document.getElementById('start-background-silence-button'),
     pauseButton: document.getElementById('pause-button'),
     electronExitGameButton: document.getElementById('electron-exit-game-button'),
+    electronExitToLauncherButton: document.getElementById('electron-exit-to-launcher-button'),
     pauseKeybindCaptureButton: document.getElementById('pause-keybind-capture-button'),
     dialogueSkipKeybindCaptureButton: document.getElementById('dialogue-skip-keybind-capture-button'),
     fullscreenKeybindCaptureButton: document.getElementById('fullscreen-keybind-capture-button'),
@@ -573,6 +574,8 @@ function addSettingsListeners() {
   cached.electronFullscreenKeybindOption.classList.toggle('build-target-hidden', !GAME_FEATURES.electronWindowControls);
   cached.electronExitGameButton.hidden = !GAME_FEATURES.electronWindowControls;
   cached.electronExitGameButton.classList.toggle('build-target-hidden', !GAME_FEATURES.electronWindowControls);
+  cached.electronExitToLauncherButton.hidden = !GAME_FEATURES.electronWindowControls;
+  cached.electronExitToLauncherButton.classList.toggle('build-target-hidden', !GAME_FEATURES.electronWindowControls);
   if (GAME_FEATURES.electronWindowControls) {
     window.electronWindowControls.isFullscreen().then(enabled => {
       cached.electronFullscreenToggle.checked = enabled;
@@ -587,6 +590,9 @@ function addSettingsListeners() {
     });
     cached.electronExitGameButton.addEventListener('click', () => {
       window.electronWindowControls.exitGame();
+    });
+    cached.electronExitToLauncherButton.addEventListener('click', () => {
+      window.electronWindowControls.exitToLauncher();
     });
   }
 

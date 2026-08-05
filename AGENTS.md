@@ -145,6 +145,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - The browser local-storage warning on the Save subtab is controlled by `GAME_FEATURES.browserStorageWarning`; Steam/Electron hides it.
 - Steam/Electron builds expose an `Exit Save` slot between Autosave and Pre-travel, backed by the same save-slot storage as other local slots and written on window exit. Browser builds hide the slot.
 - Steam/Electron builds expose native window controls through `electron/preload.cjs`: F11 toggles fullscreen, Escape exits fullscreen, Settings has a fullscreen checkbox, and Save & Settings has an Exit Game button beside Pause. Browser builds hide these controls.
+- Steam/Electron Save & Settings also provides an Exit to Launcher button beside Exit Game; it closes the game window and reopens the mod launcher. Browser builds hide it.
 - Steam/Electron saves record the normal window bounds and fullscreen mode; launching a selected save restores them, except Steam Deck still forces its primary-display fullscreen launch.
 - Steam/Electron builds expose a UI scale setting through `electron/preload.cjs` / Electron zoom factor; Settings offers 75%, 80%, 90%, 100%, 110%, 125%, and 150% scales, while browser builds hide the dropdown.
 - Steam/Electron builds replace native `<select>` popups with the DOM-rendered menu in `src/js/streamed-select-menu.js`, controlled by `GAME_FEATURES.streamedSelectMenus`, so dropdowns remain visible and touch-operable through Steam Link. Browser builds keep native select popups.
