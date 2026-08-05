@@ -473,6 +473,9 @@ class Project extends EffectableEntity {
   }
 
   canStart() {
+    if (this.attributes.waitForStoryStep && journalTyping) {
+      return false;
+    }
     if (this.isPermanentlyDisabled()) {
       return false;
     }
@@ -644,6 +647,9 @@ class Project extends EffectableEntity {
   }
 
   update(deltaTime) {
+    if (this.attributes.waitForStoryStep && journalTyping) {
+      return;
+    }
     if (this.isPermanentlyDisabled()) {
       this.isActive = false;
       this.isPaused = false;

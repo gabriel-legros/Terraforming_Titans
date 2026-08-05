@@ -2069,7 +2069,7 @@ setLanguageData({
         },
         "hades_pandora_mystery": {
           "name": "PANDORA questions",
-          "description": "Wait for Mary to answer Prometheus' questions.",
+          "description": "Wait for Mary to answer Prometheus' questions (This project will only progress if the journal is not typing).",
           "storySteps": [
             "Mary : 'Well, obviously either I forgot something or I got an important message or a fire in the house or something like that?'",
             "Mary : 'It... discovered something that changed its knowledge?  But dad said it knew everything about biology...'",
