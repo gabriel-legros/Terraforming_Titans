@@ -9,6 +9,7 @@ class SpaceMirrorAdvancedOversight {
     SpaceMirrorAdvancedOversight.advancedAssignmentInProgress = true;
     const snapshot = terraforming.saveTemperatureState();
     let solvedSnapshot = null;
+    let surfaceTemperatureProjectionContext = null;
 
     try {
       const K_TOL = 0.001;
@@ -210,10 +211,11 @@ class SpaceMirrorAdvancedOversight {
 
       const simulateFluxes = (zonalFluxes) => {
         terraforming.restoreTemperatureState(snapshot);
-        terraforming.runUpdateStep(0, {
+        terraforming.updateSurfaceTemperature(0, {
           ignoreHeatCapacity: true,
           zonalFluxOverrides: zonalFluxes,
           disableAvailableAdvancedHeating: true,
+          surfaceTemperatureProjectionContext,
         });
         const metrics = readCurrentMetrics();
         return {
@@ -438,6 +440,7 @@ class SpaceMirrorAdvancedOversight {
               if (trialSimulation.error < bestSimulation.error - 1e-12) {
                 bestFluxes = trialFluxes;
                 bestSimulation = trialSimulation;
+                if (withinIdealTolerance(trialSimulation.metrics)) break;
               }
             }
 
@@ -484,6 +487,7 @@ class SpaceMirrorAdvancedOversight {
               if (trialSimulation.error < bestSimulation.error - 1e-12) {
                 bestFluxes = trialFluxes;
                 bestSimulation = trialSimulation;
+                if (withinIdealTolerance(trialSimulation.metrics)) break;
               }
             }
 
@@ -559,6 +563,7 @@ class SpaceMirrorAdvancedOversight {
             if (trialSimulation.error < bestSimulation.error - 1e-12) {
               bestFluxes = trialFluxes;
               bestSimulation = trialSimulation;
+              if (withinIdealTolerance(trialSimulation.metrics)) break;
             }
           }
 
@@ -574,6 +579,10 @@ class SpaceMirrorAdvancedOversight {
 
       terraforming.restoreTemperatureState(snapshot);
       terraforming.runUpdateStep(0, { ignoreHeatCapacity: true });
+      surfaceTemperatureProjectionContext = terraforming.prepareSurfaceTemperatureProjectionContext({
+        ignoreHeatCapacity: true,
+        disableAvailableAdvancedHeating: true,
+      });
       const currentFluxes = {};
       for (const zone of ZONES) {
         currentFluxes[zone] = Math.max(
