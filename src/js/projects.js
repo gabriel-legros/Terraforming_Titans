@@ -473,13 +473,13 @@ class Project extends EffectableEntity {
   }
 
   canStart() {
-    if (this.attributes.waitForStoryStep && journalTyping) {
-      return false;
-    }
     if (this.isPermanentlyDisabled()) {
       return false;
     }
     if (!this.unlocked){
+      return false;
+    }
+    if (this.attributes.waitForStoryStep && journalTyping) {
       return false;
     }
     if (this.requireStar && !projectManager.currentWorldHasStar()) {
