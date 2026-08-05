@@ -254,6 +254,9 @@ class ScriptVariableRegistry {
     if (targetId === 'ringworldTerraforming') {
       attributes.push({ id: 'currentMass', label: this.getScriptVariableText('projects.currentMass', 'Current Mass'), valueType: 'number' });
     }
+    if (targetId === 'orbitalRing') {
+      attributes.push({ id: 'presentOnWorld', label: this.getScriptVariableText('projects.presentOnWorld', 'Present on World'), valueType: 'boolean' });
+    }
     if (targetId === 'keratiHive') {
       attributes.push(
         { id: 'hiveFood', label: this.getScriptVariableText('projects.keratiHive.hiveFood', 'Hive Food'), valueType: 'number' },
@@ -746,6 +749,9 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'spaceshipCostMultiplier') return this.resolveProjectSpaceshipCostMultiplier(project);
     if (ref.attribute === 'currentMass' && ref.target === 'ringworldTerraforming') {
       return this.toNumber(project.getTotalRingworldMassTons());
+    }
+    if (ref.attribute === 'presentOnWorld' && ref.target === 'orbitalRing') {
+      return spaceManager.currentWorldHasOrbitalRing() ? 1 : 0;
     }
     if (ref.target === 'keratiHive') {
       if (ref.attribute === 'hiveFood') return this.toNumber(project.hiveFood);

@@ -4501,6 +4501,7 @@ setLanguageData({
             autoOperationEnabled: 'Auto Operation Enabled',
             spaceshipCostMultiplier: 'Spaceship Cost Multiplier',
             currentMass: 'Current Mass',
+            presentOnWorld: 'Present on World',
             keratiHive: {
               hiveFood: 'Hive Food',
               honey: 'Honey',
