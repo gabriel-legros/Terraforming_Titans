@@ -4,7 +4,9 @@ function isNearlyWhole(value, epsilon = 1e-9) {
 
 function floorToPrecision(value, precision) {
   const factor = Math.pow(10, precision);
-  return Math.floor(value * factor) / factor;
+  const scaled = value * factor;
+  const roundingTolerance = Math.max(1, Math.abs(scaled)) * Number.EPSILON;
+  return Math.floor(scaled + roundingTolerance) / factor;
 }
 
 function formatWithRounding(value, precision, roundDown) {
