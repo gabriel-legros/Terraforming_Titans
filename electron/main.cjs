@@ -75,7 +75,8 @@ function getSavedWindowState(saveData) {
     return {
       width: Math.min(savedWindowState.width, workAreaSize.width),
       height: Math.min(savedWindowState.height, workAreaSize.height),
-      fullscreen: savedWindowState.fullscreen === true
+      fullscreen: savedWindowState.fullscreen === true,
+      maximized: savedWindowState.maximized === true
     };
   } catch (_error) {
     return null;
@@ -455,7 +456,8 @@ function registerWindowControlHandlers() {
     event.returnValue = {
       width: bounds.width,
       height: bounds.height,
-      fullscreen: win.isFullScreen()
+      fullscreen: win.isFullScreen(),
+      maximized: win.isMaximized()
     };
   });
   ipcMain.handle('window:is-fullscreen', event => {
@@ -1024,6 +1026,9 @@ function createWindow() {
   });
 
   win.once('ready-to-show', () => {
+    if (savedWindowState && savedWindowState.maximized && !launchFullscreen) {
+      win.maximize();
+    }
     win.show();
     if (launcherWindow && !launcherWindow.isDestroyed()) {
       launcherWindow.close();
