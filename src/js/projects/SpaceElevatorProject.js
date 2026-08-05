@@ -1,6 +1,8 @@
 (function () {
   const SPACE_ELEVATOR_MODE = 'elevator';
   const SKYHOOK_MODE = 'skyhook';
+  const CAPACITY_TARGET_FIXED = 'fixed';
+  const CAPACITY_TARGET_WORKERS = 'workers';
 
   function calculateTetherGeometry(
     gravity,
@@ -69,6 +71,7 @@
       this.expansionProgress = 0;
       this.capacityTargetEnabled = false;
       this.capacityTarget = this.spaceAccessParameters.elevatorCapacity;
+      this.capacityTargetMode = CAPACITY_TARGET_FIXED;
       this.continuousThreshold = this.spaceAccessParameters.continuousThresholdMs;
       this.elevatorEngineeringCache = null;
       this.spaceAccessUI = null;
@@ -289,14 +292,21 @@
     hasReachedCapacityTarget() {
       return gameSettings.spaceAccessCapacity
         && this.capacityTargetEnabled
-        && this.getSpaceAccessCapacity() >= this.capacityTarget;
+        && this.getSpaceAccessCapacity() >= this.getCapacityTarget();
+    }
+
+    getCapacityTarget() {
+      if (this.capacityTargetMode === CAPACITY_TARGET_WORKERS) {
+        return this.capacityTarget * Math.max(0, resources.colony.workers.potential);
+      }
+      return this.capacityTarget;
     }
 
     getRemainingTargetProgress(mode = this.getConstructionMode()) {
       if (!this.capacityTargetEnabled) {
         return Infinity;
       }
-      const remainingCapacity = this.capacityTarget - this.getSpaceAccessCapacity();
+      const remainingCapacity = this.getCapacityTarget() - this.getSpaceAccessCapacity();
       if (!(remainingCapacity > 0)) {
         return 0;
       }
@@ -594,11 +604,24 @@
       const targetInput = document.createElement('input');
       targetInput.type = 'text';
       targetInput.className = 'automation-input space-access-target-input';
+      const targetModeSelect = document.createElement('select');
+      targetModeSelect.className = 'automation-select space-access-target-mode-select';
+      targetModeSelect.setAttribute(
+        'aria-label',
+        t('ui.projects.spaceElevator.capacityTargetMode', null, 'Capacity target mode')
+      );
+      const fixedTargetOption = document.createElement('option');
+      fixedTargetOption.value = CAPACITY_TARGET_FIXED;
+      fixedTargetOption.textContent = t('ui.projects.spaceElevator.capacityTargetFixed', null, 'fixed');
+      const workersTargetOption = document.createElement('option');
+      workersTargetOption.value = CAPACITY_TARGET_WORKERS;
+      workersTargetOption.textContent = t('ui.projects.spaceElevator.capacityTargetWorkers', null, 'x workers');
+      targetModeSelect.append(fixedTargetOption, workersTargetOption);
       const targetUnit = document.createElement('span');
       targetUnit.className = 'space-access-target-unit';
       targetUnit.textContent = t('ui.projects.spaceElevator.capacityUnit', null, 't/s');
       targetToggle.append(targetCheckbox, targetLabel);
-      targetValue.append(targetInput, targetUnit);
+      targetValue.append(targetInput, targetModeSelect, targetUnit);
       targetRow.append(targetToggle, targetValue);
       body.appendChild(targetRow);
 
@@ -636,6 +659,15 @@
           updateProjectUI(this.name);
         }
       });
+      targetModeSelect.addEventListener('change', () => {
+        this.capacityTargetMode = targetModeSelect.value === CAPACITY_TARGET_WORKERS
+          ? CAPACITY_TARGET_WORKERS
+          : CAPACITY_TARGET_FIXED;
+        if (this.hasReachedCapacityTarget()) {
+          this.isActive = false;
+        }
+        updateProjectUI(this.name);
+      });
 
       this.spaceAccessUI = {
         card,
@@ -651,6 +683,7 @@
         targetRow,
         targetCheckbox,
         targetInput,
+        targetModeSelect,
       };
       this.updateUI();
     }
@@ -693,8 +726,41 @@
         )
         : t('ui.projects.spaceElevator.skyhookOnly', null, 'Skyhook only');
       ui.targetCheckbox.checked = this.capacityTargetEnabled;
+      ui.targetModeSelect.value = this.capacityTargetMode;
       if (document.activeElement !== ui.targetInput) {
         ui.targetInput.value = formatNumber(this.capacityTarget, false, 2);
+      }
+    }
+
+    saveAutomationSettings() {
+      return {
+        ...super.saveAutomationSettings(),
+        constructionMode: this.constructionMode,
+        capacityTargetEnabled: this.capacityTargetEnabled === true,
+        capacityTarget: this.capacityTarget,
+        capacityTargetMode: this.capacityTargetMode,
+      };
+    }
+
+    loadAutomationSettings(settings = {}) {
+      super.loadAutomationSettings(settings);
+      if (Object.prototype.hasOwnProperty.call(settings, 'constructionMode')) {
+        this.setConstructionMode(settings.constructionMode);
+      }
+      if (Object.prototype.hasOwnProperty.call(settings, 'capacityTargetEnabled')) {
+        this.capacityTargetEnabled = settings.capacityTargetEnabled === true;
+      }
+      if (Object.prototype.hasOwnProperty.call(settings, 'capacityTarget')) {
+        this.capacityTarget = Math.max(0, Number(settings.capacityTarget) || 0);
+      }
+      if (Object.prototype.hasOwnProperty.call(settings, 'capacityTargetMode')) {
+        this.capacityTargetMode = settings.capacityTargetMode === CAPACITY_TARGET_WORKERS
+          ? CAPACITY_TARGET_WORKERS
+          : CAPACITY_TARGET_FIXED;
+      }
+      if (this.hasReachedCapacityTarget()) {
+        this.isActive = false;
+        this.manualContinuousRun = false;
       }
     }
 
@@ -709,6 +775,7 @@
         expansionProgress: this.expansionProgress,
         capacityTargetEnabled: this.capacityTargetEnabled,
         capacityTarget: this.capacityTarget,
+        capacityTargetMode: this.capacityTargetMode,
       };
     }
 
@@ -727,6 +794,9 @@
       this.expansionProgress = Math.max(0, state.expansionProgress || 0);
       this.capacityTargetEnabled = state.capacityTargetEnabled === true;
       this.capacityTarget = Math.max(0, state.capacityTarget ?? this.spaceAccessParameters.elevatorCapacity);
+      this.capacityTargetMode = state.capacityTargetMode === CAPACITY_TARGET_WORKERS
+        ? CAPACITY_TARGET_WORKERS
+        : CAPACITY_TARGET_FIXED;
     }
   }
 

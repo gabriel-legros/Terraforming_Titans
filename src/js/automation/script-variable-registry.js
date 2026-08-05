@@ -257,6 +257,15 @@ class ScriptVariableRegistry {
     if (targetId === 'orbitalRing') {
       attributes.push({ id: 'presentOnWorld', label: this.getScriptVariableText('projects.presentOnWorld', 'Present on World'), valueType: 'boolean' });
     }
+    if (targetId === 'spaceElevator') {
+      attributes.push(
+        { id: 'elevatorLanesBuilt', label: this.getScriptVariableText('projects.spaceElevator.elevatorLanesBuilt', 'Elevator Lanes Built'), valueType: 'number' },
+        { id: 'skyhooksBuilt', label: this.getScriptVariableText('projects.spaceElevator.skyhooksBuilt', 'Skyhooks Built'), valueType: 'number' },
+        { id: 'totalSpaceAccessCapacity', label: this.getScriptVariableText('projects.spaceElevator.totalCapacity', 'Total Space Access Capacity'), valueType: 'number' },
+        { id: 'activeSpaceAccessThroughput', label: this.getScriptVariableText('projects.spaceElevator.activeThroughput', 'Active Space Access Throughput'), valueType: 'number' },
+        { id: 'spaceAccessBenefitCoveragePercent', label: this.getScriptVariableText('projects.spaceElevator.benefitCoveragePercent', 'Space Access Benefit Coverage %'), valueType: 'number' }
+      );
+    }
     if (targetId === 'keratiHive') {
       attributes.push(
         { id: 'hiveFood', label: this.getScriptVariableText('projects.keratiHive.hiveFood', 'Hive Food'), valueType: 'number' },
@@ -752,6 +761,13 @@ class ScriptVariableRegistry {
     }
     if (ref.attribute === 'presentOnWorld' && ref.target === 'orbitalRing') {
       return spaceManager.currentWorldHasOrbitalRing() ? 1 : 0;
+    }
+    if (ref.target === 'spaceElevator') {
+      if (ref.attribute === 'elevatorLanesBuilt') return this.toNumber(project.elevatorCount);
+      if (ref.attribute === 'skyhooksBuilt') return this.toNumber(project.skyhookCount);
+      if (ref.attribute === 'totalSpaceAccessCapacity') return this.toNumber(getTotalSpaceAccessCapacity());
+      if (ref.attribute === 'activeSpaceAccessThroughput') return this.toNumber(getTotalContinuousSpaceAccessDemand());
+      if (ref.attribute === 'spaceAccessBenefitCoveragePercent') return this.toNumber(getSpaceAccessCoverage() * 100);
     }
     if (ref.target === 'keratiHive') {
       if (ref.attribute === 'hiveFood') return this.toNumber(project.hiveFood);

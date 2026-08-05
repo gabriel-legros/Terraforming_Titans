@@ -3117,6 +3117,10 @@
     width: 150px;
 }
 
+.space-access-target-mode-select {
+    width: 105px;
+}
+
 .space-access-explanation {
     margin: 0;
     padding: 10px 12px;
@@ -3152,6 +3156,10 @@
     .space-access-target-panel,
     .space-access-target-value {
         align-items: flex-start;
+    }
+
+    .space-access-target-value {
+        flex-wrap: wrap;
     }
 }
 

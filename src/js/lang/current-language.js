@@ -2402,6 +2402,9 @@ setLanguageData({
         coverage: 'Benefit Coverage',
         engineering: 'Engineering',
         stopAtCapacity: 'Stop at total capacity',
+        capacityTargetMode: 'Capacity target mode',
+        capacityTargetFixed: 'fixed',
+        capacityTargetWorkers: 'x workers',
         capacityUnit: 't/s',
         unlimited: 'Unlimited',
         traditionalEngineering: 'Traditional tether, taper {taper}',
@@ -4526,6 +4529,13 @@ setLanguageData({
             spaceshipCostMultiplier: 'Spaceship Cost Multiplier',
             currentMass: 'Current Mass',
             presentOnWorld: 'Present on World',
+            spaceElevator: {
+              elevatorLanesBuilt: 'Elevator Lanes Built',
+              skyhooksBuilt: 'Skyhooks Built',
+              totalCapacity: 'Total Space Access Capacity',
+              activeThroughput: 'Active Space Access Throughput',
+              benefitCoveragePercent: 'Space Access Benefit Coverage %',
+            },
             keratiHive: {
               hiveFood: 'Hive Food',
               honey: 'Honey',
