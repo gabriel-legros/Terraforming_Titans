@@ -474,31 +474,6 @@ class KeratiHiveProject extends Project {
     };
   }
 
-  getAutoHatchDistributionError(counts = this.getAutoHatchCounts()) {
-    const enabled = KERATI_HIVE_ACTION_ORDER.filter((actionId) => this.autoHatchEnabled[actionId]);
-    const totalWeight = enabled.reduce((sum, actionId) => sum + this.getAutoHatchWeight(actionId), 0);
-    const totalCount = enabled.reduce((sum, actionId) => sum + counts[actionId], 0);
-    if (!(totalWeight > 0) || !(totalCount > 0)) {
-      return 0;
-    }
-    return enabled.reduce((error, actionId) => {
-      const actualShare = counts[actionId] / totalCount;
-      const targetShare = this.getAutoHatchWeight(actionId) / totalWeight;
-      return error + Math.abs(actualShare - targetShare);
-    }, 0);
-  }
-
-  simulateAutoHatchAction(counts, actionId, amount) {
-    const next = { ...counts };
-    next[actionId] += amount;
-    if (actionId === 'queenUpgrade') {
-      next.princess -= amount;
-    } else if (actionId === 'empressUpgrade') {
-      next.queenUpgrade -= amount;
-    }
-    return next;
-  }
-
   getMaxAffordableAutoHatch(actionId) {
     if (actionId === 'queenUpgrade' || actionId === 'empressUpgrade') {
       return Math.floor(this.getMaxAffordablePromotion(actionId));
@@ -512,10 +487,18 @@ class KeratiHiveProject extends Project {
       if (!this.autoHatchEnabled[actionId] || !this.canEventuallyAutoHatchAction(actionId, counts)) {
         return;
       }
-      const nextCounts = this.simulateAutoHatchAction(counts, actionId, 1);
-      const error = this.getAutoHatchDistributionError(nextCounts);
-      if (!best || error < best.error - 1e-12) {
-        best = { actionId, amount: 1, error };
+      const level = counts[actionId] / this.getAutoHatchWeight(actionId);
+      const sourceId = actionId === 'queenUpgrade'
+        ? 'princess'
+        : (actionId === 'empressUpgrade' ? 'queenUpgrade' : null);
+      if (sourceId && this.autoHatchEnabled[sourceId]) {
+        const sourceLevel = counts[sourceId] / this.getAutoHatchWeight(sourceId);
+        if (level >= sourceLevel - 1e-12) {
+          return;
+        }
+      }
+      if (!best || level < best.level - 1e-12) {
+        best = { actionId, amount: 1, level };
       }
     });
     return best;
@@ -534,32 +517,66 @@ class KeratiHiveProject extends Project {
     return true;
   }
 
-  buildAutoHatchPlanForLevel(targetLevel, counts, enabled) {
-    const desired = { ...counts };
-    enabled.forEach((actionId) => {
-      const target = Math.floor((targetLevel * this.getAutoHatchWeight(actionId)) + 0.5);
-      const canPromoteAway = (actionId === 'princess' && enabled.includes('queenUpgrade'))
-        || (actionId === 'queenUpgrade' && enabled.includes('empressUpgrade'));
-      desired[actionId] = canPromoteAway ? target : Math.max(counts[actionId], target);
+  buildAutoHatchCatchUpStep() {
+    const counts = this.getAutoHatchCounts();
+    const enabled = KERATI_HIVE_ACTION_ORDER.filter((actionId) => this.autoHatchEnabled[actionId]);
+    if (enabled.length <= 1) {
+      return null;
+    }
+    const levels = enabled.map((actionId) => ({
+      actionId,
+      level: counts[actionId] / this.getAutoHatchWeight(actionId),
+    })).sort((left, right) => left.level - right.level);
+    const lowestLevel = levels[0].level;
+    const sameLevel = (level) => Math.abs(level - lowestLevel)
+      <= Math.max(1, Math.abs(lowestLevel)) * 1e-12;
+    const lowest = levels.filter((entry) => sameLevel(entry.level));
+    const next = levels.find((entry) => !sameLevel(entry.level));
+    if (!next) {
+      return null;
+    }
+
+    const additions = {};
+    lowest.forEach((entry) => {
+      additions[entry.actionId] = Math.max(
+        1,
+        Math.ceil((next.level * this.getAutoHatchWeight(entry.actionId)) - counts[entry.actionId] - 1e-12)
+      );
     });
     const plan = {
-      drone: enabled.includes('drone') ? desired.drone - counts.drone : 0,
-      builder: enabled.includes('builder') ? desired.builder - counts.builder : 0,
-      hunter: enabled.includes('hunter') ? desired.hunter - counts.hunter : 0,
-      empressUpgrade: enabled.includes('empressUpgrade')
-        ? desired.empressUpgrade - counts.empressUpgrade
+      drone: additions.drone || 0,
+      builder: additions.builder || 0,
+      hunter: additions.hunter || 0,
+      empressUpgrade: additions.empressUpgrade || 0,
+    };
+    plan.queenUpgrade = (additions.queenUpgrade || 0)
+      + (additions.queenUpgrade && additions.empressUpgrade ? plan.empressUpgrade : 0);
+    plan.princess = (additions.princess || 0)
+      + (additions.princess && additions.queenUpgrade ? plan.queenUpgrade : 0);
+    return { plan, lowest: lowest.map((entry) => entry.actionId) };
+  }
+
+  buildAutoHatchGrowthVector() {
+    const plan = {
+      drone: this.autoHatchEnabled.drone ? this.getAutoHatchWeight('drone') : 0,
+      builder: this.autoHatchEnabled.builder ? this.getAutoHatchWeight('builder') : 0,
+      hunter: this.autoHatchEnabled.hunter ? this.getAutoHatchWeight('hunter') : 0,
+      princess: 0,
+      queenUpgrade: 0,
+      empressUpgrade: this.autoHatchEnabled.empressUpgrade
+        ? this.getAutoHatchWeight('empressUpgrade')
         : 0,
     };
-    plan.queenUpgrade = enabled.includes('queenUpgrade')
-      ? Math.max(0, desired.queenUpgrade - counts.queenUpgrade + plan.empressUpgrade)
+    plan.queenUpgrade = this.autoHatchEnabled.queenUpgrade
+      ? this.getAutoHatchWeight('queenUpgrade') + plan.empressUpgrade
       : 0;
-    plan.princess = enabled.includes('princess')
-      ? Math.max(0, desired.princess - counts.princess + plan.queenUpgrade)
+    plan.princess = this.autoHatchEnabled.princess
+      ? this.getAutoHatchWeight('princess') + plan.queenUpgrade
       : 0;
     return plan;
   }
 
-  isAutoHatchPlanAffordable(plan) {
+  getAutoHatchPlanScale(plan) {
     const costs = this.tuning.costs;
     const larvaCost =
       (plan.drone * costs.droneLarva)
@@ -573,81 +590,33 @@ class KeratiHiveProject extends Project {
       + (plan.princess * costs.princessHoney)
       + (plan.queenUpgrade * costs.queenHoney)
       + (plan.empressUpgrade * costs.empressHoney);
-    if (larvaCost > this.larva || honeyCost > this.honey) {
-      return false;
+    let scale = Infinity;
+    if (larvaCost > 0) {
+      scale = Math.min(scale, this.larva / larvaCost);
     }
-    if (plan.princess > this.getAvailableSpawnerSlots()) {
-      return false;
+    if (honeyCost > 0) {
+      scale = Math.min(scale, this.honey / honeyCost);
     }
-    if (plan.queenUpgrade > this.princesses + plan.princess) {
-      return false;
+    if (plan.princess > 0) {
+      scale = Math.min(scale, this.getAvailableSpawnerSlots() / plan.princess);
     }
-    if (plan.empressUpgrade > this.queens + plan.queenUpgrade) {
-      return false;
+    if (plan.queenUpgrade > plan.princess) {
+      scale = Math.min(scale, this.princesses / (plan.queenUpgrade - plan.princess));
     }
-    return true;
+    if (plan.empressUpgrade > plan.queenUpgrade) {
+      scale = Math.min(scale, this.queens / (plan.empressUpgrade - plan.queenUpgrade));
+    }
+    return Math.max(0, scale);
   }
 
-  findLargestAffordableAutoHatchPlan() {
-    const counts = this.getAutoHatchCounts();
-    const enabled = KERATI_HIVE_ACTION_ORDER.filter((actionId) => this.autoHatchEnabled[actionId]);
-    if (enabled.length === 0) {
-      return null;
-    }
-
-    let low = Math.min(...enabled.map((actionId) => counts[actionId] / this.getAutoHatchWeight(actionId)));
-    let step = Math.max(
-      1 / Math.max(...enabled.map((actionId) => this.getAutoHatchWeight(actionId))),
-      Math.abs(low) * Number.EPSILON * 4
-    );
-    let high = low + step;
-    for (let expansion = 0; expansion < 64; expansion += 1) {
-      const plan = this.buildAutoHatchPlanForLevel(high, counts, enabled);
-      if (!this.isAutoHatchPlanAffordable(plan)) {
-        break;
-      }
-      low = high;
-      step *= 2;
-      high = low + step;
-    }
-
-    for (let refinement = 0; refinement < 64; refinement += 1) {
-      const middle = (low + high) / 2;
-      const plan = this.buildAutoHatchPlanForLevel(middle, counts, enabled);
-      if (this.isAutoHatchPlanAffordable(plan)) {
-        low = middle;
-      } else {
-        high = middle;
-      }
-    }
-
-    const plan = this.buildAutoHatchPlanForLevel(low, counts, enabled);
-    return KERATI_HIVE_ACTION_ORDER.some((actionId) => plan[actionId] > 0) ? plan : null;
-  }
-
-  getPreferredAutoHatchBatchAmount(actionId, maximum) {
-    if (maximum <= 1) {
-      return maximum;
-    }
-    const counts = this.getAutoHatchCounts();
-    const remainsPreferred = (amount) => {
-      const projected = this.simulateAutoHatchAction(counts, actionId, amount);
-      return this.findBestIncrementalAutoHatchAction(projected)?.actionId === actionId;
-    };
-    if (remainsPreferred(maximum - 1)) {
-      return maximum;
-    }
-    let low = 0;
-    let high = maximum - 1;
-    while (high - low > 1) {
-      const middle = Math.floor((low + high) / 2);
-      if (remainsPreferred(middle)) {
-        low = middle;
-      } else {
-        high = middle;
-      }
-    }
-    return high;
+  scaleAutoHatchPlan(plan, scale) {
+    const scaled = {};
+    KERATI_HIVE_ACTION_ORDER.forEach((actionId) => {
+      scaled[actionId] = Math.floor((plan[actionId] * scale) + 1e-12);
+    });
+    scaled.queenUpgrade = Math.min(scaled.queenUpgrade, this.princesses + scaled.princess);
+    scaled.empressUpgrade = Math.min(scaled.empressUpgrade, this.queens + scaled.queenUpgrade);
+    return scaled;
   }
 
   executeAutoHatchAction(actionId, amount) {
@@ -658,27 +627,76 @@ class KeratiHiveProject extends Project {
   }
 
   runAutomaticHatching() {
-    const action = this.findBestIncrementalAutoHatchAction();
-    if (!action) {
+    const enabledCount = KERATI_HIVE_ACTION_ORDER.filter((actionId) => this.autoHatchEnabled[actionId]).length;
+    if (enabledCount === 0) {
       return;
     }
-    const maximum = this.getMaxAffordableAutoHatch(action.actionId);
-    if (maximum < 1) {
-      return;
-    }
-    const plan = this.findLargestAffordableAutoHatchPlan();
-    if (plan) {
+    for (let pass = 0; pass < enabledCount; pass += 1) {
+      const step = this.buildAutoHatchCatchUpStep();
+      if (!step) {
+        break;
+      }
+      const scale = Math.min(1, this.getAutoHatchPlanScale(step.plan));
+      if (!(scale > 0)) {
+        return;
+      }
+      const plan = this.scaleAutoHatchPlan(step.plan, scale);
+      const hasActions = KERATI_HIVE_ACTION_ORDER.some((actionId) => plan[actionId] > 0);
+      if (!hasActions) {
+        const actionId = step.lowest[0];
+        if (this.getMaxAffordableAutoHatch(actionId) < 1) {
+          return;
+        }
+        this.executeAutoHatchAction(actionId, 1);
+        return;
+      }
       KERATI_HIVE_ACTION_ORDER.forEach((actionId) => {
         if (plan[actionId] > 0) {
           this.executeAutoHatchAction(actionId, plan[actionId]);
         }
       });
+      if (scale < 1) {
+        for (let remainder = 0; remainder < enabledCount; remainder += 1) {
+          const remainderStep = this.buildAutoHatchCatchUpStep();
+          if (!remainderStep) {
+            return;
+          }
+          const actionId = remainderStep.lowest[0];
+          if (this.getMaxAffordableAutoHatch(actionId) < 1) {
+            return;
+          }
+          this.executeAutoHatchAction(actionId, 1);
+        }
+        return;
+      }
+    }
+
+    const vector = this.buildAutoHatchGrowthVector();
+    const scale = this.getAutoHatchPlanScale(vector);
+    if (!(scale > 0)) {
       return;
     }
-    this.executeAutoHatchAction(
-      action.actionId,
-      this.getPreferredAutoHatchBatchAmount(action.actionId, maximum)
-    );
+    const plan = this.scaleAutoHatchPlan(vector, scale);
+    KERATI_HIVE_ACTION_ORDER.forEach((actionId) => {
+      if (plan[actionId] > 0) {
+        this.executeAutoHatchAction(actionId, plan[actionId]);
+      }
+    });
+
+    for (let pass = 0; pass < enabledCount; pass += 1) {
+      const action = this.findBestIncrementalAutoHatchAction();
+      if (!action) {
+        return;
+      }
+      const maximum = this.getMaxAffordableAutoHatch(action.actionId);
+      if (maximum < 1) {
+        return;
+      }
+      this.executeAutoHatchAction(
+        action.actionId,
+        1
+      );
+    }
   }
 
   recoverLand() {
