@@ -70,6 +70,7 @@ const DIFFICULTY_SETTING_DEFAULTS = {
   phaseChangeHeat: false,
   factoryHeating: false,
   realisticFactoryEnergyConsumption: false,
+  spaceAccessCapacity: false,
   infinitePatience: false,
   liftersStrippingCap: false,
   orbitalCap: false,

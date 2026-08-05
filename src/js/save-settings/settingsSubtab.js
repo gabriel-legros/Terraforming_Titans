@@ -75,6 +75,8 @@ function cacheSettingsElements() {
     factoryHeatingTooltip: document.getElementById('factory-heating-tooltip'),
     realisticFactoryEnergyConsumptionToggle: document.getElementById('realistic-factory-energy-consumption-toggle'),
     realisticFactoryEnergyConsumptionTooltip: document.getElementById('realistic-factory-energy-consumption-tooltip'),
+    spaceAccessCapacityToggle: document.getElementById('space-access-capacity-toggle'),
+    spaceAccessCapacityTooltip: document.getElementById('space-access-capacity-tooltip'),
     infinitePatienceToggle: document.getElementById('infinite-patience-toggle'),
     liftersStrippingCapToggle: document.getElementById('lifters-stripping-cap-toggle'),
     liftersStrippingCapTooltip: document.getElementById('lifters-stripping-cap-tooltip'),
@@ -304,6 +306,7 @@ function updateDifficultyLockUI() {
     cached.phaseChangeHeatToggle,
     cached.factoryHeatingToggle,
     cached.realisticFactoryEnergyConsumptionToggle,
+    cached.spaceAccessCapacityToggle,
     cached.infinitePatienceToggle,
     cached.liftersStrippingCapToggle,
     cached.orbitalCapToggle,
@@ -456,6 +459,7 @@ function updateDifficultySettingInputs() {
     phaseChangeHeat: cached.phaseChangeHeatToggle,
     factoryHeating: cached.factoryHeatingToggle,
     realisticFactoryEnergyConsumption: cached.realisticFactoryEnergyConsumptionToggle,
+    spaceAccessCapacity: cached.spaceAccessCapacityToggle,
     infinitePatience: cached.infinitePatienceToggle,
     liftersStrippingCap: cached.liftersStrippingCapToggle,
     orbitalCap: cached.orbitalCapToggle,
@@ -1191,6 +1195,32 @@ function addSettingsListeners() {
         'ui.settings.realisticFactoryEnergyConsumptionTooltip',
         {},
         'When enabled, buildings use plausible industrial energy demands based on their workers and material throughput instead of the legacy balance values.'
+      )
+    );
+  }
+
+  if (cached.spaceAccessCapacityToggle) {
+    cached.spaceAccessCapacityToggle.checked = gameSettings.spaceAccessCapacity;
+    cached.spaceAccessCapacityToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.spaceAccessCapacityToggle.checked = gameSettings.spaceAccessCapacity;
+        return;
+      }
+      gameSettings.spaceAccessCapacity = cached.spaceAccessCapacityToggle.checked;
+      projectManager.projects.spaceElevator.refreshSpaceAccessRules();
+      applyDifficultySettingEffects();
+      updateProjectUI('spaceElevator');
+      updateProjectUI('spaceStorage');
+    });
+  }
+
+  if (cached.spaceAccessCapacityTooltip) {
+    attachDynamicInfoTooltip(
+      cached.spaceAccessCapacityTooltip,
+      t(
+        'ui.settings.spaceAccessCapacityTooltip',
+        {},
+        'Reworks Space Elevator into repeatable Space Access infrastructure. Continuous spaceship logistics share limited cargo capacity, while discrete operations receive full benefits after any Elevator or Skyhook is complete. Orbital Rings, Ringworlds, and Alderson Disks provide unlimited capacity.'
       )
     );
   }

@@ -3049,6 +3049,112 @@
     margin: 0;
 }
 
+.space-access-status {
+  grid-column: 1 / -1;
+}
+
+.space-access-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-bottom: 12px;
+}
+
+.space-access-mode-panel,
+.space-access-target-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 12px;
+}
+
+.space-access-control-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.space-access-control-help,
+.space-access-explanation,
+.space-access-target-unit {
+    color: inherit;
+    opacity: 0.72;
+}
+
+.space-access-control-help {
+    line-height: 1.35;
+}
+
+.space-access-mode-select {
+    flex: 0 0 220px;
+    min-width: 220px;
+}
+
+.space-access-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 0;
+}
+
+.space-access-summary-grid .project-summary-box {
+    min-width: 0;
+    padding: 10px;
+}
+
+.space-access-target-toggle,
+.space-access-target-value {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.space-access-target-toggle {
+    margin: 0;
+}
+
+.space-access-target-input {
+    width: 150px;
+}
+
+.space-access-explanation {
+    margin: 0;
+    padding: 10px 12px;
+    border-left: 3px solid #6f8fb3;
+    background: rgba(111, 143, 179, 0.08);
+    line-height: 1.45;
+}
+
+@media (max-width: 900px) {
+    .space-access-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .space-access-mode-panel,
+    .space-access-target-panel {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .space-access-mode-select {
+        flex-basis: auto;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .space-access-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .space-access-target-panel,
+    .space-access-target-value {
+        align-items: flex-start;
+    }
+}
+
 .mega-heat-sink-cap-row {
     display: flex;
     align-items: center;

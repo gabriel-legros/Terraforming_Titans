@@ -1499,6 +1499,9 @@ setLanguageData({
         costPerShipmentValue: 'Cost per Shipment: {value}',
         gainPerShipmentValue: 'Gain per Shipment: {value}',
         controlledByAutomation: 'Controlled by automation',
+        spaceAccessContinuous: 'Space access benefit: {benefit} (project {project}/s; shared {demand}/{capacity}/s)',
+        spaceAccessDiscrete: 'Space access benefit: {benefit} (discrete shipment)',
+        spaceAccessUnlimited: 'Unlimited',
         rateSources: {
           mining: 'Spaceship Mining',
           export: 'Spaceship Export',
@@ -2385,6 +2388,27 @@ setLanguageData({
         continuousOff: 'Continuous (Off)',
         deploying: 'Deploying ({time}s)',
         deployCollector: 'Deploy Collector ({time}s)',
+      },
+      spaceElevator: {
+        summaryTitle: 'Space Access',
+        constructionMode: 'Construction mode',
+        constructionModeHelp: 'Elevators add {elevatorCapacity} t/s with world-scaled tether costs. Skyhook Networks add {skyhookCapacity} t/s at a fixed cost.',
+        elevatorMode: 'Space Elevator',
+        skyhookMode: 'Skyhook Network',
+        elevatorsBuilt: 'Elevator Lanes Built',
+        skyhooksBuilt: 'Skyhooks Built',
+        totalCapacity: 'Total Capacity',
+        activeThroughput: 'Active Throughput',
+        coverage: 'Benefit Coverage',
+        engineering: 'Engineering',
+        stopAtCapacity: 'Stop at total capacity',
+        capacityUnit: 't/s',
+        unlimited: 'Unlimited',
+        traditionalEngineering: 'Traditional tether, taper {taper}',
+        superalloyEngineering: 'Superalloy tether, taper {taper}',
+        skyhookOnly: 'Skyhook only',
+        elevatorImpossible: 'A stationary Space Elevator is impossible with available materials and this world spin. Select Skyhook Network.',
+        capacityTooltip: 'Continuous spaceship cargo shares total access capacity. Metal savings and the before/after Space Elevator energy settings scale with coverage.',
       },
       megaHeatSink: {
         speedBoost: 'Speed Boost',
@@ -5334,6 +5358,8 @@ setLanguageData({
       factoryHeatingTooltip: 'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat; any remaining capacity accelerates cooling toward the temperature trend.\n\nYou should use this setting alongside Realistic factory energy consumption.',
       realisticFactoryEnergyConsumption: 'Realistic factory energy consumption',
       realisticFactoryEnergyConsumptionTooltip: 'When enabled, buildings use plausible industrial energy demands based on their workers and material throughput instead of the defaults.  This can make the game a lot easier.  This setting may one day become the new default once the game is rebalanced around it.',
+      spaceAccessCapacity: 'Space Access Capacity',
+      spaceAccessCapacityTooltip: 'Reworks Space Elevator into repeatable Space Access infrastructure. Continuous spaceship operations share limited cargo capacity.',
       infinitePatience: 'Infinite patience',
       liftersStrippingCap: 'Lifters stripping cap',
       liftersStrippingCapTooltip: 'When enabled, Strip Atmosphere cannot have more lifters assigned than the current world geometric land value.',
@@ -5919,7 +5945,7 @@ setLanguageData({
       },
       spaceElevator: {
         name: 'Space Elevator',
-        description: 'This cable eliminates all metal costs from multiple space activities.',
+        description: 'Build space-access infrastructure. With Space Access Capacity enabled, repeatable Elevators and Skyhook Networks provide shared throughput for continuous spaceship logistics.',
       },
       magneticShield: {
         name: 'Magnetic Shield',
@@ -6019,7 +6045,7 @@ setLanguageData({
       },
       orbitalRing: {
         name: 'Orbital Ring',
-        description: 'Orbital rings act as additional terraformed worlds. As HOPE is not responsible for them they do not grant skill points or RWG bonuses. Rings can only be built on worlds that are terraformed, meaning they can be built on previous worlds and on your current one if it is terraformed.  A ring on your current world will increase land by its initial value. ',
+        description: 'Orbital rings act as additional terraformed worlds and provide unlimited Space Access Capacity. As HOPE is not responsible for them they do not grant skill points or RWG bonuses. Rings can only be built on worlds that are terraformed, meaning they can be built on previous worlds and on your current one if it is terraformed.  A ring on your current world will increase land by its initial value. ',
       },
       birchWorld: {
         name: 'Birch World',
@@ -6435,7 +6461,7 @@ setLanguageData({
         },
         space_elevator: {
           name: 'Space Elevator',
-          description: 'Enables a special project for the space elevator, which eliminates the metal cost of many space activities.',
+          description: 'Enables the Space Elevator project. With Space Access Capacity enabled, it can repeatedly build physics-scaled Elevators or fixed-cost Skyhook Networks for spaceship logistics.',
         },
         robotics_4: {
           name: 'Direct AI integration.',

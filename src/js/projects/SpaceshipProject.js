@@ -441,8 +441,14 @@ class SpaceshipProject extends Project {
       totalCost[category] = {};
       for (const resource in costPerShip[category]) {
         const baseCost = costPerShip[category][resource];
-        const multiplier = this.getEffectiveCostMultiplier(category, resource) *
+        let multiplier = this.getEffectiveCostMultiplier(category, resource) *
           this.getEffectiveSpaceshipCostMultiplier(category, resource);
+        if (gameSettings.spaceAccessCapacity && category === 'colony' && resource === 'metal') {
+          multiplier *= getSpaceAccessMetalCostMultiplier(this);
+        }
+        if (gameSettings.spaceAccessCapacity && category === 'colony' && resource === 'energy') {
+          multiplier *= getSpaceAccessEnergyCostMultiplier(this);
+        }
         const efficiencyMultiplier = resource === 'energy' ? shipEfficiency : 1;
         let adjustedCost = baseCost * multiplier * efficiencyMultiplier;
         if (resource === 'energy') {
@@ -499,6 +505,27 @@ class SpaceshipProject extends Project {
   getShipCapacity(baseAmount = this.attributes.disposalAmount || 0) {
     const efficiency = typeof shipEfficiency !== 'undefined' ? shipEfficiency : 1;
     return baseAmount * efficiency * this.shipCapacityMultiplier;
+  }
+
+  getSpaceAccessDemand() {
+    if (
+      !gameSettings.spaceAccessCapacity ||
+      !this.isActive ||
+      this.isPaused ||
+      !this.isContinuous() ||
+      this.isBlockedByPulsarStorm()
+    ) {
+      return 0;
+    }
+    const shipCount = Math.max(0, this.assignedSpaceships || 0);
+    if (!(shipCount > 0)) {
+      return 0;
+    }
+    const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration()) / 1000;
+    if (!(duration > 0)) {
+      return 0;
+    }
+    return shipCount * this.getSpaceshipEnergyCostTonnage() / duration;
   }
 
   updateCostAndGains(elements) {
@@ -566,6 +593,40 @@ class SpaceshipProject extends Project {
         }
       }
     }
+    this.updateSpaceAccessStatus(elements);
+  }
+
+  updateSpaceAccessStatus(elements) {
+    if (!elements.spaceAccessStatusElement) {
+      return;
+    }
+    elements.spaceAccessStatusElement.hidden = !gameSettings.spaceAccessCapacity;
+    if (!gameSettings.spaceAccessCapacity) {
+      return;
+    }
+    const benefit = getSpaceAccessBenefitFraction(this);
+    if (!this.isContinuous()) {
+      elements.spaceAccessStatusElement.textContent = getSpaceshipProjectText(
+        'ui.projects.spaceship.spaceAccessDiscrete',
+        'Space access benefit: {benefit} (discrete shipment)',
+        { benefit: benefit > 0 ? '100%' : '0%' }
+      );
+      return;
+    }
+    const capacity = getTotalSpaceAccessCapacity();
+    const demand = getTotalContinuousSpaceAccessDemand();
+    elements.spaceAccessStatusElement.textContent = getSpaceshipProjectText(
+      'ui.projects.spaceship.spaceAccessContinuous',
+      'Space access benefit: {benefit} (project {project}/s; shared {demand}/{capacity}/s)',
+      {
+        benefit: `${formatNumber(benefit * 100, false, 2)}%`,
+        project: formatNumber(this.getSpaceAccessDemand(), true),
+        demand: formatNumber(demand, true),
+        capacity: capacity === Infinity
+          ? getSpaceshipProjectText('ui.projects.spaceship.spaceAccessUnlimited', 'Unlimited')
+          : formatNumber(capacity, true),
+      }
+    );
   }
 
   createSpaceshipAssignmentUI(container) {
@@ -683,8 +744,13 @@ class SpaceshipProject extends Project {
     const totalGain = document.createElement('div');
     totalGain.id = `${this.name}-total-resource-gain`;
     projectElements[this.name].totalGainElement = totalGain;
+
+    const spaceAccessStatus = document.createElement('div');
+    spaceAccessStatus.id = `${this.name}-space-access-status`;
+    spaceAccessStatus.classList.add('space-access-status');
+    projectElements[this.name].spaceAccessStatusElement = spaceAccessStatus;
     
-    grid.append(costPerShip, totalCost, gainPerShip, totalGain);
+    grid.append(costPerShip, totalCost, gainPerShip, totalGain, spaceAccessStatus);
     sectionContainer.appendChild(grid);
     container.appendChild(sectionContainer);
   }
