@@ -40,6 +40,9 @@ contextBridge.exposeInMainWorld('steamAchievements', {
 });
 
 contextBridge.exposeInMainWorld('electronWindowControls', {
+  getWindowState() {
+    return ipcRenderer.sendSync('window:get-state');
+  },
   isFullscreen() {
     return ipcRenderer.invoke('window:is-fullscreen');
   },

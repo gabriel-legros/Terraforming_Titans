@@ -61,6 +61,27 @@ let launcherTemporarySaveData = '';
 let startupSelection = { mode: 'latest', slot: '' };
 let gameLaunchStarted = false;
 
+function getSavedWindowState(saveData) {
+  try {
+    const savedWindowState = JSON.parse(saveData).electronWindowState;
+    if (!savedWindowState
+      || !Number.isInteger(savedWindowState.width)
+      || !Number.isInteger(savedWindowState.height)
+      || savedWindowState.width < 1024
+      || savedWindowState.height < 700) {
+      return null;
+    }
+    const workAreaSize = screen.getPrimaryDisplay().workAreaSize;
+    return {
+      width: Math.min(savedWindowState.width, workAreaSize.width),
+      height: Math.min(savedWindowState.height, workAreaSize.height),
+      fullscreen: savedWindowState.fullscreen === true
+    };
+  } catch (_error) {
+    return null;
+  }
+}
+
 protocol.registerSchemesAsPrivileged([
   {
     scheme: 'tt-game',
@@ -428,6 +449,15 @@ function registerSteamAchievementHandlers() {
 
 function registerWindowControlHandlers() {
   const { ipcMain } = require('electron');
+  ipcMain.on('window:get-state', event => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const bounds = win.getNormalBounds();
+    event.returnValue = {
+      width: bounds.width,
+      height: bounds.height,
+      fullscreen: win.isFullScreen()
+    };
+  });
   ipcMain.handle('window:is-fullscreen', event => {
     const win = BrowserWindow.fromWebContents(event.sender);
     return win.isFullScreen();
@@ -894,13 +924,21 @@ function launchGame(options) {
   if (saveSelection === 'new') {
     startupSelection = { mode: 'new', slot: '' };
   } else if (saveSelection === 'temporary' && launcherTemporarySave && launcherTemporarySaveData) {
-    startupSelection = { mode: 'temporary', saveData: launcherTemporarySaveData };
+    startupSelection = {
+      mode: 'temporary',
+      saveData: launcherTemporarySaveData,
+      windowState: getSavedWindowState(launcherTemporarySaveData)
+    };
   } else {
     const selectedSave = launcherSaveCatalog.saves.find(save => save.selectionId === saveSelection && save.valid);
     if (!selectedSave) {
       throw new Error('The selected save is no longer available. Refresh the launcher.');
     }
-    startupSelection = { mode: 'slot', slot: selectedSave.slot };
+    startupSelection = {
+      mode: 'slot',
+      slot: selectedSave.slot,
+      windowState: getSavedWindowState(readSaveStorageItem(`gameState_${selectedSave.slot}`))
+    };
   }
 
   launcherLoadout = writeModLoadout(
@@ -955,11 +993,13 @@ function openExternalUrl(url) {
 }
 
 function createWindow() {
-  const launchFullscreen = shouldLaunchSteamDeckFullscreen();
+  const steamDeckFullscreen = shouldLaunchSteamDeckFullscreen();
+  const savedWindowState = steamDeckFullscreen ? null : startupSelection.windowState;
+  const launchFullscreen = steamDeckFullscreen || (savedWindowState ? savedWindowState.fullscreen : false);
   const displaySize = launchFullscreen ? screen.getPrimaryDisplay().bounds : null;
   const win = new BrowserWindow({
-    width: launchFullscreen ? displaySize.width : 1400,
-    height: launchFullscreen ? displaySize.height : 950,
+    width: launchFullscreen ? displaySize.width : (savedWindowState ? savedWindowState.width : 1400),
+    height: launchFullscreen ? displaySize.height : (savedWindowState ? savedWindowState.height : 950),
     minWidth: 1024,
     minHeight: 700,
     fullscreen: launchFullscreen,

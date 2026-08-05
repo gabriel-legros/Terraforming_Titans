@@ -227,6 +227,9 @@ function recalculateLandUsage() {
 function getGameState(saveDate = new Date()) {
   return {
     savedAt: new Date(saveDate).getTime(),
+    electronWindowState: GAME_FEATURES.electronWindowControls
+      ? window.electronWindowControls.getWindowState()
+      : undefined,
     dayNightCycle: (typeof dayNightCycle !== 'undefined' && typeof dayNightCycle.saveState === 'function') ? dayNightCycle.saveState() : undefined,
     resources: typeof resources !== 'undefined'
       ? Object.fromEntries(
