@@ -128,7 +128,7 @@ class AutoTravelAutomation {
 
   getSelectedPresetTravelScriptOverrideId() {
     const preset = this.getSelectedPreset();
-    if (!preset || !preset.runScriptAfterTravelEnabled) {
+    if (!this.enabled || !preset || !preset.runScriptAfterTravelEnabled) {
       return null;
     }
     const scriptId = Number(preset.runScriptAfterTravelScriptId);
