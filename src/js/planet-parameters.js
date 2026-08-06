@@ -1600,7 +1600,7 @@ const tartarusOverrides = {
     rotationPeriod: 29.4,
     spinPeriod: 29.4,
     starLuminosity: 0.42,
-    sector: 'R6-04'
+    sector: 'R4-05'
   },
   hazards: {
     kessler: {
