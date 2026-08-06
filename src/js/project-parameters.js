@@ -919,7 +919,7 @@ const projectParameters = {
       colony: {
         components: 1_000_000_000_000_000,
         glass: 100_000_000_000_000,
-        electronics: 500_000_000_000_000
+        electronics: 50_000_000_000_000
       }
     },
     duration: 144_000_000,
