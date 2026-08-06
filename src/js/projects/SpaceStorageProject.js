@@ -3045,9 +3045,6 @@ class SpaceStorageProject extends SpaceshipProject {
       this.resourceTransferModes = {};
       this.lastUniformTransferMode = this.shipTransferMode;
     }
-    if (this.megaProjectSpaceOnlyOnTravel) {
-      this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY;
-    }
     this.sanitizeTransferModes();
     this.getExpansionRecipeKey();
   }
