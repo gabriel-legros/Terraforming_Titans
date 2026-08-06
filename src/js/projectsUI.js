@@ -743,6 +743,10 @@ function createProjectItem(project) {
   descriptionElement.textContent = project.description;
   descriptionElement.classList.add('project-description');
   cardBody.appendChild(descriptionElement);
+  projectElements[project.name] = {
+    ...projectElements[project.name],
+    descriptionElement
+  };
 
   if (project.attributes?.projectGroup === 'specializedWorlds') {
     const requirementsElement = document.createElement('div');

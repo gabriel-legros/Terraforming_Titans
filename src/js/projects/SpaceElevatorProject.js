@@ -693,6 +693,17 @@
       if (!ui) {
         return;
       }
+      projectElements[this.name].descriptionElement.textContent = gameSettings.spaceAccessCapacity
+        ? t(
+          'ui.projects.spaceElevator.descriptionCapacity',
+          null,
+          'Build repeatable, worker-accelerated Elevator lanes or Skyhook Networks. Any completed installation eliminates Space Mirror metal costs. Shared capacity scales the metal savings and before/after Space Elevator energy benefit of continuous spaceship logistics.'
+        )
+        : t(
+          'ui.projects.spaceElevator.descriptionStandard',
+          null,
+          'Build a planetary tether that eliminates metal costs for Space Mirrors, space mining, resource disposal and export, and spaceship-based Space Storage transfers. It also switches spaceship projects from the before-elevator energy multiplier to the after-elevator multiplier.'
+        );
       const enabled = gameSettings.spaceAccessCapacity;
       ui.card.style.display = enabled ? '' : 'none';
       if (!enabled) {

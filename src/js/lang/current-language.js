@@ -2391,6 +2391,8 @@ setLanguageData({
       },
       spaceElevator: {
         summaryTitle: 'Space Access',
+        descriptionStandard: 'Build a planetary tether that eliminates metal costs for Space Mirrors and spaceship projects.',
+        descriptionCapacity: 'Build repeatable, worker-accelerated Elevator lanes or Skyhook Networks. Any completed installation eliminates Space Mirror metal costs. Shared capacity scales the metal savings and before/after Space Elevator energy benefit of continuous spaceship projects.',
         constructionMode: 'Construction mode',
         constructionModeHelp: 'Elevators add {elevatorCapacity} t/s with world-scaled tether costs. Skyhook Networks add {skyhookCapacity} t/s at a fixed cost.',
         elevatorMode: 'Space Elevator',
@@ -5955,7 +5957,7 @@ setLanguageData({
       },
       spaceElevator: {
         name: 'Space Elevator',
-        description: 'Build space-access infrastructure. With Space Access Capacity enabled, repeatable Elevators and Skyhook Networks provide shared throughput for continuous spaceship logistics.',
+        description: 'Build a planetary tether that eliminates the metal cost of many space activities.',
       },
       magneticShield: {
         name: 'Magnetic Shield',
