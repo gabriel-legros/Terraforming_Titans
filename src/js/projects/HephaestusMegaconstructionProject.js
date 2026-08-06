@@ -60,7 +60,7 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     const dummyButton = { textContent: '', disabled: false };
     const dummyWrapper = { style: { display: '' } };
     const rowElements = {};
-    [HEPHAESTUS_UNASSIGNED_KEY, 'dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars', name].forEach((key) => {
+    [HEPHAESTUS_UNASSIGNED_KEY, 'dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars', name].forEach((key) => {
       rowElements[key] = {
         wrapper: dummyWrapper,
         complexity: dummyText,
@@ -158,7 +158,7 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
   }
 
   getAllAssignableKeys() {
-    return ['dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars'];
+    return ['dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars'];
   }
 
   shouldShowSpaceChemistryTarget() {
@@ -179,6 +179,14 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
 
   shouldShowSuperalloyGigafoundryTarget() {
     const project = projectManager?.projects?.superalloyGigafoundry;
+    if (!project) {
+      return false;
+    }
+    return project.unlocked || project.isActive || project.repeatCount > 0;
+  }
+
+  shouldShowGraphenePrinterTarget() {
+    const project = projectManager?.projects?.graphenePrinter;
     if (!project) {
       return false;
     }
@@ -224,6 +232,9 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     }
     if (this.shouldShowSuperalloyGigafoundryTarget()) {
       keys.push('superalloyGigafoundry');
+    }
+    if (this.shouldShowGraphenePrinterTarget()) {
+      keys.push('graphenePrinter');
     }
     if (this.shouldShowArtificialStarsTarget()) {
       keys.push('artificialStars');
@@ -697,7 +708,7 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
       getHephaestusText('ui.projects.common.idleUnassigned', 'Idle/Unassigned')
     );
 
-    const assignmentKeys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars'];
+    const assignmentKeys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars'];
     assignmentKeys.forEach((key) => {
       const project = projectManager.projects[key];
       const labelText = project?.displayName || key;
@@ -751,7 +762,7 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     }
 
     const activeDyson = this.getActiveDysonKey();
-    const keys = [this.getUnassignedAssignmentKey(), 'dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars'];
+    const keys = [this.getUnassignedAssignmentKey(), 'dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars'];
     keys.forEach((key) => {
       const row = elements.rowElements[key];
       const storedCurrent = this.getStoredAssignmentAmount(key);
@@ -785,6 +796,8 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
         display = this.shouldShowNuclearAlchemyTarget() ? '' : 'none';
       } else if (key === 'superalloyGigafoundry') {
         display = this.shouldShowSuperalloyGigafoundryTarget() ? '' : 'none';
+      } else if (key === 'graphenePrinter') {
+        display = this.shouldShowGraphenePrinterTarget() ? '' : 'none';
       } else if (key === 'artificialStars') {
         display = this.shouldShowArtificialStarsTarget() ? '' : 'none';
       } else if (key === 'planetCrackers') {

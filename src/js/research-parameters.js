@@ -2781,6 +2781,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'graphene_printing',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 5_000_000_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'graphenePrinter',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'hyperlane',
         name: '',
         description: '',

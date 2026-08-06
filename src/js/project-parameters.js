@@ -911,6 +911,29 @@ const projectParameters = {
       spaceBuildingProductivity: true
     }
   },
+  graphenePrinter: {
+    type: 'GraphenePrinterProject',
+    name: '',
+    category: 'giga',
+    cost: {
+      colony: {
+        components: 1_000_000_000_000_000,
+        glass: 100_000_000_000_000,
+        electronics: 500_000_000_000_000
+      }
+    },
+    duration: 144_000_000,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      alchemyParameter: 1,
+      spaceBuilding: true,
+      spaceBuildingProductivity: true
+    }
+  },
   artificialStars: {
     type: 'ArtificialStarsProject',
     name: '',

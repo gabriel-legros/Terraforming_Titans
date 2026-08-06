@@ -2474,6 +2474,28 @@ setLanguageData({
           running: 'Running',
         },
       },
+      graphenePrinter: {
+        recipeLabel: 'Metal (Graphene)',
+        output: 'Output',
+        title: 'Graphene Printer Controls',
+        totalPrinters: 'Total Printers',
+        runPrinters: 'Run printers',
+        inputUse: 'Input Use',
+        expansionRate: '{value} printers/s',
+        operationNote: 'Runs graphene batches at Assigned x {parameter}/s. Each batch consumes {spaceGraphite} space graphite and {spaceEnergy} space energy for {output} space metal.',
+        status: {
+          noSpaceMetalOrEnergy: 'No space graphite or energy',
+          noSpaceMetal: 'No space graphite',
+          noSpaceEnergy: 'No space energy',
+          insufficientSpaceInput: 'Insufficient space input',
+          idle: 'Idle',
+          completeAtLeastOne: 'Complete at least one printer',
+          runDisabled: 'Run disabled',
+          noAssignments: 'No assignments',
+          buildSpaceStorage: 'Build space storage',
+          running: 'Running',
+        },
+      },
       planetCrackers: {
         target: 'Target',
         title: 'Planet Cracker Controls',
@@ -6019,6 +6041,10 @@ setLanguageData({
         name: 'Superalloy Gigafoundry',
         description: 'Build giga-scale foundries that convert metal and space energy into vast amounts of superalloys. Expansion scales with terraformed worlds.',
       },
+      graphenePrinter: {
+        name: 'Graphene Printer',
+        description: 'Build giga-scale printers that convert graphite and space energy into vast amounts of metal (graphene). Expansion scales with terraformed worlds.',
+      },
       artificialStars: {
         name: 'Artificial Stars',
         description: 'Build contained artificial stars that produces vast amount of energy from hydrogen.  The focus is on energy production from simple fusion pathways instead of resource production.',
@@ -6904,6 +6930,10 @@ setLanguageData({
         gigafoundries: {
           name: 'Gigafoundries',
           description: 'Enables a new gigastructure for mass superalloy production.',
+        },
+        graphene_printing: {
+          name: 'Graphene Printing',
+          description: 'While we have already mastered producing graphene... you can always scale things up further.  Enables a new gigastructure.',
         },
         core_surgery: {
           name: 'Core Surgery',

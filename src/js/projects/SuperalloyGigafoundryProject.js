@@ -25,7 +25,7 @@ try {
 class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
   constructor(config, name) {
     super(config, name);
-    this.lastMetalPerSecond = 0;
+    this.lastInputPerSecond = 0;
     this.lastSpaceEnergyPerSecond = 0;
   }
 
@@ -38,7 +38,15 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
   }
 
   getAssignmentKeys() {
-    return ['superalloys'];
+    return [this.getOutputResourceKey()];
+  }
+
+  getInputResourceKey() {
+    return 'metal';
+  }
+
+  getOutputResourceKey() {
+    return 'superalloys';
   }
 
   getRecipe() {
@@ -71,7 +79,7 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
   }
 
   getPrimaryRateText() {
-    return `${formatNumber(this.lastSpaceEnergyPerSecond, true, 3)} space energy/s, ${formatNumber(this.lastMetalPerSecond, true, 3)} space metal/s`;
+    return `${formatNumber(this.lastSpaceEnergyPerSecond, true, 3)} space energy/s, ${formatNumber(this.lastInputPerSecond, true, 3)} space metal/s`;
   }
 
   getExpansionRateText(rate) {
@@ -105,10 +113,10 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     );
   }
 
-  setLastRunStats(spaceEnergyRate = 0, outputRates = {}, metalRate = 0) {
+  setLastRunStats(spaceEnergyRate = 0, outputRates = {}, inputRate = 0) {
     super.setLastRunStats(spaceEnergyRate, outputRates);
     this.lastSpaceEnergyPerSecond = spaceEnergyRate;
-    this.lastMetalPerSecond = metalRate;
+    this.lastInputPerSecond = inputRate;
   }
 
   getPendingResourceDelta(accumulatedChanges, category, resourceKey) {
@@ -151,22 +159,24 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
   buildOperationPlan(seconds, productivity = 1, accumulatedChanges = null) {
     const plan = {
       desiredBatches: 0,
-      desiredMetal: 0,
+      desiredInput: 0,
       desiredSpaceEnergy: 0,
       desiredOutput: 0,
-      finalMetal: 0,
+      finalInput: 0,
       finalSpaceEnergy: 0,
       finalOutput: 0,
       ratio: 1,
       hasAssignments: false,
       reasons: {
         noStorage: false,
-        noMetal: false,
+        noInput: false,
         noSpaceEnergy: false
       }
     };
 
-    const assigned = Number(this.furnaceAssignments.superalloys || 0n);
+    const inputKey = this.getInputResourceKey();
+    const outputKey = this.getOutputResourceKey();
+    const assigned = Number(this.furnaceAssignments[outputKey] || 0n);
     if (!(assigned > 0)) {
       return plan;
     }
@@ -179,7 +189,7 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
 
     const desiredBatches = batchesPerSecond * seconds * productivity;
     const wgcMultiplier = this.getRecipeWgcMultiplier();
-    const desiredMetal = desiredBatches * recipe.inputs.spaceStorage.metal;
+    const desiredInput = desiredBatches * recipe.inputs.spaceStorage[inputKey];
     const desiredSpaceEnergy = desiredBatches * recipe.inputs.space.energy;
     const desiredOutput = desiredBatches * recipe.baseOutput * wgcMultiplier;
     const storage = this.getSpaceStorageProject();
@@ -190,10 +200,10 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     }
 
     plan.desiredBatches = desiredBatches;
-    plan.desiredMetal = desiredMetal;
+    plan.desiredInput = desiredInput;
     plan.desiredSpaceEnergy = desiredSpaceEnergy;
     plan.desiredOutput = desiredOutput;
-    plan.finalMetal = desiredMetal;
+    plan.finalInput = desiredInput;
     plan.finalSpaceEnergy = desiredSpaceEnergy;
     plan.finalOutput = desiredOutput;
     plan.ratio = 1;
@@ -207,24 +217,24 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
   }
 
   getOperationShortfallStatus(productivity = 1) {
-    const metalRatio = Math.max(
+    const inputRatio = Math.max(
       0,
-      Math.min(1, Number(resources?.spaceStorage?.metal?.availabilityRatio) || 0)
+      Math.min(1, Number(resources?.spaceStorage?.[this.getInputResourceKey()]?.availabilityRatio) || 0)
     );
     const energyRatio = Math.max(
       0,
       Math.min(1, Number(resources?.space?.energy?.availabilityRatio) || 0)
     );
-    if (metalRatio <= 0 && energyRatio <= 0) {
+    if (inputRatio <= 0 && energyRatio <= 0) {
       return this.getText('status.noSpaceMetalOrEnergy', null, 'No space metal or energy');
     }
-    if (metalRatio <= 0) {
+    if (inputRatio <= 0) {
       return this.getText('status.noSpaceMetal', null, 'No space metal');
     }
     if (energyRatio <= 0) {
       return this.getText('status.noSpaceEnergy', null, 'No space energy');
     }
-    if (metalRatio < 1 || energyRatio < 1 || productivity < 1) {
+    if (inputRatio < 1 || energyRatio < 1 || productivity < 1) {
       return this.getText('status.insufficientSpaceInput', null, 'Insufficient space input');
     }
     return this.getText('status.idle', null, 'Idle');
@@ -280,23 +290,25 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
       return;
     }
 
-    this.applySpaceStorageDeltaForTick('metal', -plan.finalMetal, accumulatedChanges);
+    const inputKey = this.getInputResourceKey();
+    const outputKey = this.getOutputResourceKey();
+    this.applySpaceStorageDeltaForTick(inputKey, -plan.finalInput, accumulatedChanges);
     this.applyResourceDeltaForTick('space', 'energy', -plan.finalSpaceEnergy, accumulatedChanges);
-    this.applySpaceStorageDeltaForTick('superalloys', plan.finalOutput, accumulatedChanges);
+    this.applySpaceStorageDeltaForTick(outputKey, plan.finalOutput, accumulatedChanges);
 
     if (!accumulatedChanges) {
       storage.reconcileUsedStorage();
     }
 
     const outputRate = plan.finalOutput / seconds;
-    const metalRate = plan.finalMetal / seconds;
+    const inputRate = plan.finalInput / seconds;
     const spaceEnergyRate = plan.finalSpaceEnergy / seconds;
 
-    resources?.spaceStorage?.metal?.modifyRate?.(-metalRate, this.getRateSource(), 'project');
+    resources?.spaceStorage?.[inputKey]?.modifyRate?.(-inputRate, this.getRateSource(), 'project');
     resources?.space?.energy?.modifyRate?.(-spaceEnergyRate, this.getRateSource(), 'project');
-    resources?.spaceStorage?.superalloys?.modifyRate?.(outputRate, this.getRateSource(), 'project');
+    resources?.spaceStorage?.[outputKey]?.modifyRate?.(outputRate, this.getRateSource(), 'project');
 
-    this.setLastRunStats(spaceEnergyRate, { superalloys: outputRate }, metalRate);
+    this.setLastRunStats(spaceEnergyRate, { [outputKey]: outputRate }, inputRate);
     this.updateStatus(this.getText('status.running', null, 'Running'));
     this.shortfallLastTick = false;
   }
@@ -319,19 +331,23 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     }
 
     if (applyRates) {
-      resources?.spaceStorage?.metal?.modifyRate?.(-(plan.finalMetal / seconds), this.getRateSource(), 'project');
+      const inputKey = this.getInputResourceKey();
+      const outputKey = this.getOutputResourceKey();
+      resources?.spaceStorage?.[inputKey]?.modifyRate?.(-(plan.finalInput / seconds), this.getRateSource(), 'project');
       resources?.space?.energy?.modifyRate?.(-(plan.finalSpaceEnergy / seconds), this.getRateSource(), 'project');
-      resources?.spaceStorage?.superalloys?.modifyRate?.(plan.finalOutput / seconds, this.getRateSource(), 'project');
+      resources?.spaceStorage?.[outputKey]?.modifyRate?.(plan.finalOutput / seconds, this.getRateSource(), 'project');
     }
 
+    const inputKey = this.getInputResourceKey();
+    const outputKey = this.getOutputResourceKey();
     totals.cost.spaceStorage ||= {};
-    totals.cost.spaceStorage.metal = (totals.cost.spaceStorage.metal || 0) + plan.finalMetal;
+    totals.cost.spaceStorage[inputKey] = (totals.cost.spaceStorage[inputKey] || 0) + plan.finalInput;
 
     totals.cost.space ||= {};
     totals.cost.space.energy = (totals.cost.space.energy || 0) + plan.finalSpaceEnergy;
 
     totals.gain.spaceStorage ||= {};
-    totals.gain.spaceStorage.superalloys = (totals.gain.spaceStorage.superalloys || 0) + plan.finalOutput;
+    totals.gain.spaceStorage[outputKey] = (totals.gain.spaceStorage[outputKey] || 0) + plan.finalOutput;
 
     return totals;
   }
@@ -348,7 +364,8 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     }
 
     this.normalizeAssignments();
-    const assigned = Number(this.furnaceAssignments.superalloys || 0n);
+    const inputKey = this.getInputResourceKey();
+    const assigned = Number(this.furnaceAssignments[this.getOutputResourceKey()] || 0n);
     if (!(assigned > 0)) {
       return totals;
     }
@@ -360,7 +377,7 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     }
 
     totals.cost.spaceStorage = {
-      metal: desiredBatches * recipe.inputs.spaceStorage.metal
+      [inputKey]: desiredBatches * recipe.inputs.spaceStorage[inputKey]
     };
     totals.cost.space = {
       energy: desiredBatches * recipe.inputs.space.energy
