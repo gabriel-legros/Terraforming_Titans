@@ -757,6 +757,23 @@ const projectParameters = {
       showInResourcesRate: false
     }
   },
+  vanadoBiosphereBuoyancy: {
+    type: 'VanadoBiosphereBuoyancyProject',
+    name: '',
+    category: 'infrastructure',
+    cost: {},
+    duration: 0,
+    description: '',
+    repeatable: false,
+    unlocked: true,
+    attributes: {
+      biomassPerAerostat: 100_000,
+      minimumSupport: 100,
+      maximumSupport: 10_000_000,
+      hideAutoStart: true,
+      showInResourcesRate: false
+    }
+  },
   planetaryThruster: {
     type: 'PlanetaryThrustersProject',
     name: '',

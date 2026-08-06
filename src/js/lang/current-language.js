@@ -1068,14 +1068,15 @@ setLanguageData({
         collisionAvoidanceMaintenance: 'This extra research maintenance ignores maintenance multipliers.',
         aboveBaseCap: 'Aerostats above base cap: {value}.',
         currentSurcharge: 'Current surcharge per new aerostat: {value} research.',
-        maximumAerostatsWithStructuralNetSuffix: ', +{value} net',
+        maximumAerostatsWithSupportSuffix: ', +{value} support',
         researchMaximumAerostats: 'Research self-funding cap: {value}.',
         researchOutputPerAerostat: 'Per-aerostat research output at 100% productivity: {value}.',
         nextResearchMaintenancePerAerostat: 'Per-aerostat research maintenance for the next aerostat: {value}.',
         capacityBreakdown: 'Each active aerostat currently provides {colonists} colonist housing and {androids} android housing before storage multipliers.',
         structuralNetBonusCap: 'Aerostat Structural Net bonus cap: +{value}.',
-        structuralNetFreeCap: 'Free aerostat cap before collision-avoidance surcharges: {value}.',
-        structuralNetFreeCapEffect: 'Aerostats occupying structural-net bonus slots ignore collision-avoidance research costs and powered-flight energy.',
+        biosphereBuoyancyBonusCap: 'Vanado Biosphere Buoyancy bonus cap: +{value}.',
+        supportFreeCap: 'Free aerostat cap before collision-avoidance surcharges: {value}.',
+        supportFreeCapEffect: 'Aerostats occupying bonus support slots ignore collision-avoidance research costs and powered-flight energy.',
       },
     },
     life: {
@@ -2293,6 +2294,9 @@ setLanguageData({
       },
       aerostatStructuralNet: {
         costRateLabel: 'Aerostat Structural Net',
+      },
+      vanadoBiosphereBuoyancy: {
+        supportLabel: 'Aerostat support:',
       },
       spaceDisposal: {
         resourceDisposal: 'Resource Disposal',
@@ -6012,6 +6016,10 @@ setLanguageData({
       aerostatStructuralNet: {
         name: 'Aerostat Structural Net',
         description: 'Deploy a segmented structural net across the planet suitable for aerostats anchoring. This project is only available on gas giants. Each completed segment adds 1 extra aerostat cap above the normal land limit; aerostats occupying that extra cap pay no collision-avoidance research surcharge and no powered-flight energy.  Limited by initial world size.',
+      },
+      vanadoBiosphereBuoyancy: {
+        name: 'Vanado Biosphere Buoyancy',
+        description: 'Vanado biomass forms living buoyant webs in ammonia clouds. Provides support for 1 aerostat per 100,000 tons of biomass, with a minimum of 100 and a maximum of 10 million. Supported aerostats receive the same cap, collision-avoidance, and powered-flight benefits as Aerostat Structural Net support.',
       },
       planetaryThruster: {
         name: 'Planetary Thrusters',
