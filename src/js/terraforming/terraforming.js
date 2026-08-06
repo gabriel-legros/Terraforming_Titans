@@ -1921,6 +1921,13 @@ class Terraforming extends EffectableEntity{
         const greenhouseModel = projectionContext
           ? projectionContext.greenhouseModel
           : this.celestialParameters.greenhouseModel || {};
+        const rawGreenhouse = projectionContext
+          ? projectionContext.rawGreenhouse
+          : opticalDepth(
+              effectiveComposition,
+              effectiveSurfacePressureBar,
+              gSurface
+            );
 
         const aerosolsSW = projectionContext ? projectionContext.aerosolsSW : {};
         if (!projectionContext && !suppressAtmosphere && this.resources?.atmospheric?.calciteAerosol) {
@@ -2042,7 +2049,7 @@ class Terraforming extends EffectableEntity{
             resolvedAlbedo: projectionContext
               ? projectionContext.zoneContexts[zone].resolvedAlbedo
               : null,
-            rawGreenhouse: projectionContext ? projectionContext.rawGreenhouse : null
+            rawGreenhouse
         });
 
         // Slab heat capacity (J/m²/K) including atmosphere + ocean/ice/soil
@@ -2143,6 +2150,7 @@ class Terraforming extends EffectableEntity{
         const previousMean = this.temperature.zones[zone].value;
         const capacity = z[zone].capacityPerArea;
         const greenhouseFactor = z[zone].greenhouseFactor || 1;
+        const desiredDelta = T[zone] - previousMean;
         const zoneFlux = this.luminosity.zonalFluxes[zone];
         const usesFlatSurfaceFlux = isRingWorld() || isAldersonDiskWorld();
         const zonalSurfaceHeatFlux = zonalSurfaceHeatFluxes?.[zone] || 0;
@@ -2152,6 +2160,22 @@ class Terraforming extends EffectableEntity{
         const emittedFlux = greenhouseFactor > 0
             ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / greenhouseFactor
             : 0;
+        let nearIrCoolingFlux = 0;
+        if (!ignoreHeatCapacity && dtSeconds > 0 && desiredDelta < 0) {
+            const currentGreenhouse = calculateEffectiveGreenhouseOpticalDepth(
+                effectiveComposition,
+                effectiveSurfacePressureBar,
+                gSurface,
+                previousMean,
+                greenhouseModel,
+                rawGreenhouse
+            );
+            const currentGreenhouseFactor = 1 + (0.75 * currentGreenhouse.tau);
+            const currentTemperatureEmission = currentGreenhouseFactor > 0
+                ? STEFAN_BOLTZMANN * Math.pow(Math.max(previousMean, 0), 4) / currentGreenhouseFactor
+                : 0;
+            nearIrCoolingFlux = Math.max(0, currentTemperatureEmission - emittedFlux);
+        }
         const mixingDelta = T[zone] - z[zone].mean;
         const emittedFluxPreTarget = greenhouseFactor > 0
             ? STEFAN_BOLTZMANN * Math.pow(Math.max(z[zone].mean, 0), 4) / greenhouseFactor
@@ -2160,8 +2184,7 @@ class Terraforming extends EffectableEntity{
             ? STEFAN_BOLTZMANN * Math.pow(Math.max(T[zone], 0), 4) / greenhouseFactor
             : 0;
         const windFlux = mixingDelta !== 0 ? emittedFluxPreTarget - emittedFluxTarget : 0;
-        const nonPhaseCombinedFlux = absorbedFlux - emittedFlux - windFlux;
-        const desiredDelta = T[zone] - previousMean;
+        const nonPhaseCombinedFlux = absorbedFlux - emittedFlux - windFlux - nearIrCoolingFlux;
         let combinedFlux = nonPhaseCombinedFlux + zonalSurfaceHeatFlux;
         if (
             zonalSurfaceHeatFlux !== 0 &&
