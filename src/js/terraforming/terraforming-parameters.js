@@ -25,10 +25,10 @@ var terraformingParameters = {
       N2: 28.0134,
       O2: 31.9988,
       Ar: 39.948,
-      CO2: 44.01,
-      CH4: 16.04,
-      NH3: 17.031,
-      H2: 2.016,
+      CO2: 44.0095,
+      CH4: 16.04246,
+      NH3: 17.03052,
+      H2: 2.01588,
       He: 4.0026,
       H2O: 18.01528,
       SF6: 146.06,
@@ -91,9 +91,56 @@ var terraformingParameters = {
       diffusionLimitAtomsM2Second: 2.5e17
     },
     chemistry: {
-      methaneCombustionRateCoefficient: 1e-15,
-      oxygenCombustionThresholdPa: 12000,
-      methaneCombustionThresholdPa: 100,
+      oxidation: {
+        // Spark activity is an expected planet-wide ignition rate, not a random roll.
+        maximumArrheniusMultiplier: 1e6,
+        backgroundSparkActivity: 0.02,
+        waterCloudSparkActivity: 0.5,
+        deflagrationTimescaleSeconds: 1,
+        climateHeatDepositionFraction: 1,
+        maximumCombustionTemperatureK: 3000,
+        sparkReferenceTemperatureK: 298.15,
+        minimumReactiveAtmosphereFraction: 0.2,
+        fullReactiveAtmosphereFraction: 0.4,
+        localMixingLogStandardDeviation: 0.55,
+        localMixingSamples: [-2.5, -2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5],
+        flammabilityTemperatureCoefficientPerK: 0.0005,
+        minimumFlammabilityTemperatureScale: 0.6,
+        maximumFlammabilityTemperatureScale: 2,
+        // Fuel/O2 molar limits reproduce the standard-air flammability ranges.
+        reactions: {
+          methane: {
+            thermalRateCoefficient: 1e-15,
+            heatReleaseJPerKg: 5.001e7,
+            referenceTemperatureK: 813,
+            activationTemperatureK: 18000,
+            flammabilityPressureScalePa: 20000,
+            leanFuelOxygenRatio: 0.2506,
+            stoichiometricFuelOxygenRatio: 0.5,
+            richFuelOxygenRatio: 0.8403
+          },
+          ammonia: {
+            thermalRateCoefficient: 3e-16,
+            heatReleaseJPerKg: 1.86e7,
+            referenceTemperatureK: 923,
+            activationTemperatureK: 16000,
+            flammabilityPressureScalePa: 30000,
+            leanFuelOxygenRatio: 0.8273,
+            stoichiometricFuelOxygenRatio: 4 / 3,
+            richFuelOxygenRatio: 2.399
+          },
+          hydrogen: {
+            thermalRateCoefficient: 3e-15,
+            heatReleaseJPerKg: 1.1996e8,
+            referenceTemperatureK: 858,
+            activationTemperatureK: 15000,
+            flammabilityPressureScalePa: 10000,
+            leanFuelOxygenRatio: 0.1984,
+            stoichiometricFuelOxygenRatio: 2,
+            richFuelOxygenRatio: 14.2857
+          }
+        }
+      },
       calciteHalfLifeSeconds: 240,
       sulfuricAcidRainThresholdK: 570,
       sulfuricAcidReferenceTemperatureK: 300,

@@ -674,7 +674,17 @@ function calculateActualAlbedoPhysics(surfaceAlbedo, pressureBar, composition = 
 
   const layerReflectivity = Math.max(0, Math.min(1, contribs.layerReflectivity || diagnostics.layerReflectivity || 0));
 
-  return { albedo: A, cfCloud, cfHaze, layerReflectivity, components, diagnostics, maxCap: MAX_BOND_ALBEDO, softCapThreshold: ALBEDO_SOFTCAP_THRESHOLD };
+  return {
+    albedo: A,
+    cfCloud,
+    cfHaze,
+    cloudByGas: contribs.cloudByGas,
+    layerReflectivity,
+    components,
+    diagnostics,
+    maxCap: MAX_BOND_ALBEDO,
+    softCapThreshold: ALBEDO_SOFTCAP_THRESHOLD
+  };
 }
 
 

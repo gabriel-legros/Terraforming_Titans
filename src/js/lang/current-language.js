@@ -3121,6 +3121,12 @@ setLanguageData({
       life: 'Life',
       hazards: 'Hazards',
       milestones: 'Milestones',
+      rateSources: {
+        atmosphericOxidation: 'Atmospheric Oxidation',
+        calciteDecay: 'Calcite Decay',
+        acidRain: 'Acid rain',
+        hydrogenEscape: 'Hydrogen Escape',
+      },
       playTimeDefault: '0 seconds',
       playTimeLabel: 'Time since awakening :',
       coreNames: {

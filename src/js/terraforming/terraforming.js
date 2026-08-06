@@ -3,6 +3,7 @@ const TERRAFORMING_SOLAR_PARAMETERS = TERRAFORMING_GAMEPLAY_PARAMETERS.solar;
 const TERRAFORMING_TEMPERATURE_PARAMETERS = TERRAFORMING_GAMEPLAY_PARAMETERS.temperature;
 const TERRAFORMING_SURFACE_HEAT_PARAMETERS = TERRAFORMING_GAMEPLAY_PARAMETERS.surfaceHeat;
 const TERRAFORMING_SIMULATION_PARAMETERS = TERRAFORMING_GAMEPLAY_PARAMETERS.simulation;
+const TERRAFORMING_OXIDATION_PARAMETERS = terraformingParameters.atmosphere.chemistry.oxidation;
 const SOLAR_LUMINOSITY_W = terraformingParameters.physical.solarLuminosityW;
 let starLuminosityMultiplier = 1; // Multiplier relative to Sol
 function setStarLuminosity(multiplier) {
@@ -614,6 +615,7 @@ class Terraforming extends EffectableEntity{
       surfaceAlbedo: 0,
       actualAlbedo: 0,
       cloudFraction: 0,
+      waterCloudActivity: 0,
       hazeFraction: 0,
       initialSurfaceAlbedo: undefined,
       initialActualAlbedo: undefined,
@@ -872,6 +874,38 @@ class Terraforming extends EffectableEntity{
       this.temperature.zones[zone].night = trend;
     });
     this.temperature.value = globalTrend;
+  }
+
+  applyAtmosphericChemistryHeat(energyJ) {
+    if (energyJ <= 0) return 0;
+
+    const heatCapacity = this.getHeatCapacity();
+    const heatPerAreaJ = energyJ / this.celestialParameters.surfaceArea;
+    let depositedEnergyJ = 0;
+    let weightedTemperature = 0;
+    for (const zone of getZones()) {
+      const zoneWeight = this.getZoneWeight(zone);
+      if (zoneWeight <= 0) continue;
+      const zoneCapacity = heatCapacity.zones[zone];
+      const temperature = this.temperature.zones[zone];
+      const unconstrainedIncrease = heatPerAreaJ / zoneCapacity.capacityPerArea;
+      const temperatureIncrease = Math.min(
+        unconstrainedIncrease,
+        Math.max(
+          0,
+          TERRAFORMING_OXIDATION_PARAMETERS.maximumCombustionTemperatureK - temperature.value
+        )
+      );
+      temperature.value += temperatureIncrease;
+      temperature.day += temperatureIncrease;
+      temperature.night += temperatureIncrease;
+      depositedEnergyJ += temperatureIncrease
+        * zoneCapacity.capacityPerArea
+        * zoneCapacity.zoneArea;
+      weightedTemperature += temperature.value * zoneWeight;
+    }
+    this.temperature.value = weightedTemperature;
+    return depositedEnergyJ;
   }
 
   getAtmosphereStatus() {
@@ -1337,7 +1371,7 @@ class Terraforming extends EffectableEntity{
                 durationSeconds,
                 realSeconds,
                 cycleResults: [],
-                chemTotals: { changes: {} },
+                chemTotals: { changes: {}, processChanges: {} },
             };
         }
 
@@ -1345,15 +1379,10 @@ class Terraforming extends EffectableEntity{
         const zones = getZones();
         const gravity = this.celestialParameters.gravity;
         const {
-            totalPressure: globalTotalPressurePa,
-            pressureByKey,
-            availableByKey,
+          totalPressure: globalTotalPressurePa,
+            pressureByKey: cyclePressureByKey,
+            availableByKey: cycleAvailableByKey,
         } = this.atmosphericPressureCache;
-        const globalMethanePressurePa = pressureByKey.atmosphericMethane || 0;
-        const globalOxygenPressurePa = pressureByKey.oxygen || 0;
-        const availableGlobalMethaneGas = availableByKey.atmosphericMethane || 0;
-        const availableGlobalOxygenGas = availableByKey.oxygen || 0;
-
         if (!this.cycles) {
             this.cycles = [waterCycleInstance, hydrogenCycleInstance, methaneCycleInstance, co2CycleInstance, ammoniaCycleInstance, oxygenCycleInstance, nitrogenCycleInstance];
         }
@@ -1369,8 +1398,8 @@ class Terraforming extends EffectableEntity{
         for (const cycle of this.cycles) {
             const params = {
                 atmPressure: globalTotalPressurePa,
-                vaporPressure: pressureByKey[cycle.atmKey] || 0,
-                available: availableByKey[cycle.atmKey] || 0,
+                vaporPressure: cyclePressureByKey[cycle.atmKey] || 0,
+                available: cycleAvailableByKey[cycle.atmKey] || 0,
                 durationSeconds,
                 phaseChangeHeatEnabled: gameSettings.phaseChangeHeat,
                 phaseStartingTemperatures,
@@ -1396,18 +1425,23 @@ class Terraforming extends EffectableEntity{
             }
             cycleResults.push({ cycle, totals });
         }
+        const chemistryAtmosphereContext = buildAtmosphereContext(
+            this.resources.atmospheric,
+            gravity,
+            this.celestialParameters.radius,
+            this.celestialParameters.surfaceArea
+        );
         const chemTotals = runAtmosphericChemistry(this.resources, {
-            globalOxygenPressurePa,
-            globalMethanePressurePa,
-            availableGlobalMethaneGas,
-            availableGlobalOxygenGas,
+            pressureByKey: chemistryAtmosphereContext.pressureByKey,
+            availableByKey: chemistryAtmosphereContext.availableByKey,
             realSeconds,
             durationSeconds,
             surfaceArea: this.celestialParameters.surfaceArea,
             surfaceTemperatureK: this.temperature.value,
+            waterCloudActivity: this.luminosity.waterCloudActivity,
             gravity,
             solarFlux: this.luminosity.modifiedSolarFlux,
-            atmosphericPressurePa : this.atmosphericPressureCache.totalPressure,
+            atmosphericPressurePa: chemistryAtmosphereContext.totalPressure,
             hydrogenEscapeMultiplier: projectManager?.projects?.artificialSky?.isCompleted ? 0 : 1,
             applyRates: false
         });
@@ -1426,6 +1460,9 @@ class Terraforming extends EffectableEntity{
             }
         }
         this.distributeSurfaceChangesToZones(chemSurfaceChanges);
+        chemTotals.climateHeatDepositedJ = this.applyAtmosphericChemistryHeat(
+            chemTotals.climateHeatEnergyJ
+        );
 
         this.synchronizeGlobalResources();
         this.refreshDynamicWorldGeometry();
@@ -1477,6 +1514,7 @@ class Terraforming extends EffectableEntity{
 
         const combinedCycleTotals = [];
         const combinedChemChanges = {};
+        const combinedChemProcessChanges = {};
         let totalDurationSeconds = 0;
         let totalRealSeconds = 0;
         let appliedFraction = 0;
@@ -1551,6 +1589,15 @@ class Terraforming extends EffectableEntity{
             for (const key in chemChanges) {
                 combinedChemChanges[key] = (combinedChemChanges[key] || 0) + chemChanges[key];
             }
+            const chemProcessChanges = stepResult.chemTotals.processChanges;
+            for (const processId in chemProcessChanges) {
+                const processChanges = chemProcessChanges[processId];
+                const combinedProcess = combinedChemProcessChanges[processId]
+                    || (combinedChemProcessChanges[processId] = {});
+                for (const key in processChanges) {
+                    combinedProcess[key] = (combinedProcess[key] || 0) + processChanges[key];
+                }
+            }
         }
 
         this.finalizePhaseChangeHeatTick(totalDurationSeconds);
@@ -1567,7 +1614,12 @@ class Terraforming extends EffectableEntity{
             }
         }
 
-        applyAtmosphericChemistryRates(this.resources, combinedChemChanges, totalRealSeconds);
+        applyAtmosphericChemistryRates(
+            this.resources,
+            combinedChemChanges,
+            totalRealSeconds,
+            combinedChemProcessChanges
+        );
         if (options.refreshStandaloneRates) {
             this.recalculateResourceRateTotals();
         }
@@ -1591,6 +1643,7 @@ class Terraforming extends EffectableEntity{
       const albRes = this.calculateActualAlbedo();
       this.luminosity.actualAlbedo = albRes.albedo;
       this.luminosity.cloudFraction = albRes.cloudFraction;
+      this.luminosity.waterCloudActivity = albRes.waterCloudActivity;
       this.luminosity.hazeFraction = albRes.hazeFraction;
       this.luminosity.cloudHazePenalty = albRes.penalty;
       this.luminosity.cloudHazeRaw = Number.isFinite(albRes.cloudHazeRaw)
@@ -2462,11 +2515,13 @@ class Terraforming extends EffectableEntity{
         const penalty = rawCloudHaze;
         const cloudFraction = Number.isFinite(result.cfCloud) ? result.cfCloud : 0;
         const hazeFraction = Number.isFinite(result.cfHaze) ? result.cfHaze : 0;
+        const waterCloudActivity = result.cloudByGas.h2o || 0;
         return {
             albedo: actual,
             penalty,
             cloudHazeRaw: rawCloudHaze,
             cloudFraction,
+            waterCloudActivity,
             hazeFraction
         };
     }
