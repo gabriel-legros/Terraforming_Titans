@@ -2497,6 +2497,7 @@ const researchParameters = {
         description: '',
         cost: { advancedResearch: 12_000_000 },
         prerequisites: [],
+        disabled: true,
         effects: [
           { target: 'project', targetId: 'spaceAntimatter', type: 'enable' },
           { target: 'researchManager', type: 'booleanFlag', flagId: 'spaceAntimatterSynchronization', value: true }

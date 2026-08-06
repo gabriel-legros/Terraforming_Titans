@@ -713,6 +713,11 @@ progressVenus.chapters.push(
         target: 'researchManager',
         type: 'enableResearch',
         targetId: 'antimatter_containment'
+      },
+      {
+        target: 'researchManager',
+        type: 'enableResearch',
+        targetId: 'space_antimatter_safety_regulations'
       }
     ]
   },
