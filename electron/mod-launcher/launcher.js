@@ -12,6 +12,7 @@ const creatorToolsButton = document.getElementById('creator-tools-button');
 const workshopButton = document.getElementById('workshop-button');
 const importFileButton = document.getElementById('import-file-button');
 const importClipboardButton = document.getElementById('import-clipboard-button');
+const runScriptsOnStartToggle = document.getElementById('run-scripts-on-start-toggle');
 
 let launcherState = null;
 let orderedMods = [];
@@ -299,6 +300,7 @@ function applyState(state) {
   orderedMods = state.mods.slice();
   enabledMods = new Set(state.mods.filter(mod => mod.enabled).map(mod => mod.instanceId));
   selectedSave = state.selectedSave;
+  runScriptsOnStartToggle.checked = state.runScriptsOnStart;
   const statusText = state.error
     || (state.creatorBusy ? 'A Workshop upload is in progress…' : '')
     || (state.refreshing ? 'Checking Steam Workshop and validating mods…' : '');
@@ -360,7 +362,8 @@ async function launch() {
     const result = await window.modLauncher.launch({
       order: orderedMods.map(mod => mod.instanceId),
       disabled: orderedMods.filter(mod => !enabledMods.has(mod.instanceId)).map(mod => mod.instanceId),
-      saveSelection: selectedSave
+      saveSelection: selectedSave,
+      runScriptsOnStart: runScriptsOnStartToggle.checked
     });
     if (!result.success) {
       globalStatus.textContent = result.error;
@@ -382,6 +385,16 @@ creatorToolsButton.addEventListener('click', () => window.modLauncher.openCreato
 workshopButton.addEventListener('click', () => window.modLauncher.openWorkshop());
 importFileButton.addEventListener('click', () => importSave(() => window.modLauncher.importSaveFile()));
 importClipboardButton.addEventListener('click', () => importSave(() => window.modLauncher.importSaveClipboard()));
+runScriptsOnStartToggle.addEventListener('change', async () => {
+  const enabled = runScriptsOnStartToggle.checked;
+  const result = await window.modLauncher.setRunScriptsOnStart(enabled);
+  if (!result.success) {
+    runScriptsOnStartToggle.checked = !enabled;
+    globalStatus.textContent = result.error;
+    globalStatus.hidden = false;
+    globalStatus.classList.add('is-error');
+  }
+});
 resetOrderButton.addEventListener('click', () => {
   orderedMods.sort((a, b) => a.loadOrder - b.loadOrder || a.id.localeCompare(b.id));
   renderMods();

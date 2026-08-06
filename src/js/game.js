@@ -97,6 +97,7 @@ function create() {
   const startupSelection = window.electronStartup
     ? window.electronStartup.getSelection()
     : { mode: 'latest', slot: '' };
+  restoreAutomationOnStartupWithoutPrompt = startupSelection.runScriptsOnStart === true;
   let startupSaveLoaded = false;
   if (startupSelection.mode === 'slot') {
     startupSaveLoaded = loadGame(`gameState_${startupSelection.slot}`, false);
@@ -105,6 +106,7 @@ function create() {
   } else if (startupSelection.mode === 'latest') {
     startupSaveLoaded = loadMostRecentSave();
   }
+  restoreAutomationOnStartupWithoutPrompt = false;
 
   if (!startupSaveLoaded) {  // Handle initial game state (building counts, etc.)
       initializeGameState();

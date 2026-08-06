@@ -4,6 +4,7 @@ globalGameIsTraveling = false;
 let loadingOverlayElement = null;
 let loadingOverlayIsVisible = true;
 let pendingAutomationSafetyRestoreState = null;
+let restoreAutomationOnStartupWithoutPrompt = false;
 let loadStringDialog = null;
 let autosaveHistoryDialog = null;
 let loadOlderAutosavesButton = null;
@@ -107,6 +108,10 @@ function showAutomationSafetyRestorePromptIfNeeded() {
   const restoreState = pendingAutomationSafetyRestoreState;
   pendingAutomationSafetyRestoreState = null;
   if (!restoreState) {
+    return;
+  }
+  if (restoreAutomationOnStartupWithoutPrompt) {
+    applyAutomationSafetyRestoreState(restoreState, true);
     return;
   }
   if (gameSettings.alwaysDisableAutomationOnLoad) {

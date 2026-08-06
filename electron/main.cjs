@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
 const { createModCatalog, createModService } = require('./mods/mod-service.cjs');
-const { readModLoadout, reconcileModLoadout, writeModLoadout } = require('./mods/mod-loadout.cjs');
+const { readModLoadout, reconcileModLoadout, writeModLoadout, writeRunScriptsOnStart } = require('./mods/mod-loadout.cjs');
 const { resolveSubscribedWorkshopMods } = require('./mods/workshop-service.cjs');
 const { createWorkshopPublisher } = require('./mods/workshop-publisher.cjs');
 const { createSaveCatalog, createTemporarySave } = require('./mod-launcher/save-catalog.cjs');
@@ -58,7 +58,7 @@ let launcherStartupError = '';
 let launcherSelectedSave = '';
 let launcherTemporarySave = null;
 let launcherTemporarySaveData = '';
-let startupSelection = { mode: 'latest', slot: '' };
+let startupSelection = { mode: 'latest', slot: '', runScriptsOnStart: true };
 let gameLaunchStarted = false;
 
 function getSavedWindowState(saveData) {
@@ -562,6 +562,7 @@ function getLauncherState() {
     workshop: launcherWorkshopResult.status,
     refreshing: launcherRefreshing,
     creatorBusy: workshopPublisher ? workshopPublisher.isBusy() : false,
+    runScriptsOnStart: launcherLoadout.runScriptsOnStart,
     error: launcherStartupError || launcherLoadout.error || ''
   };
 }
@@ -903,6 +904,17 @@ function registerModLauncherHandlers() {
       return { success: false, error: error.message };
     }
   });
+  ipcMain.handle('mod-launcher:set-run-scripts-on-start', (event, enabled) => {
+    if (!isLauncherFrame(event.senderFrame) || gameLaunchStarted) {
+      return { success: false, error: 'The launcher is not ready.' };
+    }
+    try {
+      launcherLoadout = writeRunScriptsOnStart(app.getPath('userData'), launcherLoadout, enabled);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
 }
 
 function launchGame(options) {
@@ -910,6 +922,9 @@ function launchGame(options) {
   const requestedOrder = options.order.map(value => String(value));
   const requestedDisabled = options.disabled.map(value => String(value));
   const saveSelection = String(options.saveSelection);
+  const runScriptsOnStart = options.runScriptsOnStart === undefined
+    ? launcherLoadout.runScriptsOnStart
+    : options.runScriptsOnStart === true;
   const entriesById = new Map(launcherCatalog.entries.map(entry => [entry.instanceId, entry]));
   if (requestedOrder.length !== availableIds.length
       || new Set(requestedOrder).size !== availableIds.length
@@ -931,12 +946,13 @@ function launchGame(options) {
   });
 
   if (saveSelection === 'new') {
-    startupSelection = { mode: 'new', slot: '' };
+    startupSelection = { mode: 'new', slot: '', runScriptsOnStart };
   } else if (saveSelection === 'temporary' && launcherTemporarySave && launcherTemporarySaveData) {
     startupSelection = {
       mode: 'temporary',
       saveData: launcherTemporarySaveData,
-      windowState: getSavedWindowState(launcherTemporarySaveData)
+      windowState: getSavedWindowState(launcherTemporarySaveData),
+      runScriptsOnStart
     };
   } else {
     const selectedSave = launcherSaveCatalog.saves.find(save => save.selectionId === saveSelection && save.valid);
@@ -946,7 +962,8 @@ function launchGame(options) {
     startupSelection = {
       mode: 'slot',
       slot: selectedSave.slot,
-      windowState: getSavedWindowState(readSaveStorageItem(`gameState_${selectedSave.slot}`))
+      windowState: getSavedWindowState(readSaveStorageItem(`gameState_${selectedSave.slot}`)),
+      runScriptsOnStart
     };
   }
 
@@ -955,7 +972,8 @@ function launchGame(options) {
     launcherLoadout,
     availableIds,
     requestedOrder,
-    requestedDisabled
+    requestedDisabled,
+    runScriptsOnStart
   );
   modService = createModService({
     appRoot: path.join(__dirname, '..'),
@@ -987,7 +1005,8 @@ function launchLatestSaveFromCommandLine() {
     disabled: reconciled.ordered
       .filter(entry => reconciled.disabled.has(entry.instanceId))
       .map(entry => entry.instanceId),
-    saveSelection: launcherSaveCatalog.defaultSelection
+    saveSelection: launcherSaveCatalog.defaultSelection,
+    runScriptsOnStart: launcherLoadout.runScriptsOnStart
   });
 }
 

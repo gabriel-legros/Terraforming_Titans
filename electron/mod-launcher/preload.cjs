@@ -7,6 +7,9 @@ contextBridge.exposeInMainWorld('modLauncher', {
   launch(options) {
     return ipcRenderer.invoke('mod-launcher:launch', options);
   },
+  setRunScriptsOnStart(enabled) {
+    return ipcRenderer.invoke('mod-launcher:set-run-scripts-on-start', enabled === true);
+  },
   refresh() {
     return ipcRenderer.invoke('mod-launcher:refresh');
   },

@@ -171,6 +171,16 @@ h2 { font-size: 19px; }
 .save-detail { color: var(--muted); font-size: 12px; line-height: 1.4; }
 .save-error { color: var(--bad); }
 
+.save-start-options {
+  flex: none;
+  padding: 13px 18px;
+  border-top: 1px solid var(--line);
+  background: #0b1829;
+}
+
+.save-start-option { display: flex; align-items: center; gap: 9px; font-weight: 600; cursor: pointer; }
+.save-start-option input { width: 17px; height: 17px; margin: 0; accent-color: var(--accent-strong); }
+
 .empty-state { padding: 28px; color: var(--muted); text-align: center; }
 
 .launcher-footer {
