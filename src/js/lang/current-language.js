@@ -7647,6 +7647,7 @@ setLanguageData({
           ready: 'Ready for vacation.',
           prep: 'Vacation: {time}s.',
           effect: 'Glow Period: {time}s.',
+          glowEffectSource: 'Resort World Glow Period',
           cooldown: 'Vacation cooldown: {time}s.',
           fundingSource: 'Resort Vacation',
           fundingRate: '{value} / colonist / s',
