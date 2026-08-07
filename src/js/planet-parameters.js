@@ -124,7 +124,7 @@ const defaultPlanetParameters = {
     starLuminosity: 1, // Multiplier relative to Sol
     coreHeatFlux: 0, // W/m^2, added directly to the surface energy budget
     greenhouseModel: {
-      ...terraformingParameters.climate.defaultPlanetGreenhouseTemperatureModel
+      ...terraformingParameters.climate.greenhouseTemperatureModel
     },
     sector: 'R5-07',
   },

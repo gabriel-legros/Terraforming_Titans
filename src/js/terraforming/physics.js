@@ -25,7 +25,7 @@ const GREENHOUSE_TEMPERATURE_MODEL_DEFAULTS = {
   attenuationStartK: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.attenuationStartK,
   attenuationScaleK: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.attenuationScaleK,
   attenuationExponent: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.attenuationExponent,
-  minTauFraction: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.minimumTauFraction,
+  minTauFraction: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.minTauFraction,
   coldTauCap: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.coldTauCap,
   hotTauCap: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.hotTauCap,
   tauCapTransitionK: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.tauCapTransitionK,

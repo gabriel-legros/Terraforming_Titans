@@ -372,16 +372,6 @@ var terraformingParameters = {
     greenhouseTemperatureModel: {
       attenuationStartK: 360,
       attenuationScaleK: 100,
-      attenuationExponent: 2,
-      minimumTauFraction: 0.01,
-      coldTauCap: 5000,
-      hotTauCap: 20,
-      tauCapTransitionK: 300,
-      tauCapExponent: 4
-    },
-    defaultPlanetGreenhouseTemperatureModel: {
-      attenuationStartK: 360,
-      attenuationScaleK: 100,
       attenuationExponent: 5,
       minTauFraction: 0.01,
       coldTauCap: 5000,
@@ -423,7 +413,7 @@ var terraformingParameters = {
       referenceColumnMassKgM2: 5e4,
       pressureExponent: 0.55,
       pressureExponentByGas: { h2o: 0.45 },
-      strength: { h2o: 27.8, co2: 10, ch4: 22, greenhousegas: 2500 },
+      strength: { h2o: 20, co2: 10, ch4: 22, greenhousegas: 100 },
       saturationColumnKgM2: { ch4: 3 },
       saturationExponent: { ch4: 1 }
     },
