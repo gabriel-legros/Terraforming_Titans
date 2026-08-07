@@ -1355,12 +1355,13 @@ class KeratiHiveProject extends Project {
     setActionState('empressUpgrade', this.empresses, 'actions.empress.summary', 'actions.empress.button', this.getMaxAffordablePromotion('empressUpgrade'));
 
     const progressPercent = Math.max(0, Math.min(100, this.getCompletionFraction() * 100));
+    const displayedProgressPercent = this.isCompleted ? 100 : Math.min(99.99, progressPercent);
     const progressText = this.isCompleted
       ? getKeratiHiveText('status.completed', 'Kerati Hive complete. Territory covers the world and provides {workers} workers.', {
           workers: formatNumber(this.getCompletedWorkerContribution(), true, 3),
         })
       : getKeratiHiveText('status.progress', 'Completion {percent}% | Honey {honey}/s | Larva {larva}/s | Food {food}/s | Territory {territory}/s | Biomass use {biomass}/s', {
-          percent: formatNumber(progressPercent, false, 2),
+          percent: formatNumber(displayedProgressPercent, false, 2),
           honey: formatNumber(rates.honeyPerSecond, true, 3),
           larva: formatNumber(rates.larvaPerSecond, true, 3),
           food: formatNumber(rates.hiveFoodDeltaPerSecond, true, 3),

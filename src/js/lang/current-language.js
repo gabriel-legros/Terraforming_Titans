@@ -1931,7 +1931,7 @@ setLanguageData({
       },
       keratiHive: {
         title: 'Kerati Hive',
-        tooltip: 'Grow a Kerati hive by feeding it colony food, converting food into honey, breeding new castes, and claiming the planet as Kerati Territory.  Provides workers once complete.',
+        tooltip: 'Grow a Kerati hive by feeding it colony food, converting food into honey, breeding new castes, and claiming the planet as Kerati Territory.  Requires all surface land converted to territory.  Provides workers once complete.',
         common: {
           divideTen: '/10',
           timesTen: 'x10',

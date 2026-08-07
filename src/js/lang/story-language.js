@@ -347,7 +347,7 @@ setLanguageData({
           "narrative": "Mary : 'Okay.  Fine.  Stay over there.  Start a new colony if you want.  I don't have time for your nonsense.  I've got an actual planet full of humans to manage.  At least it's terraformed...'"
         },
         "chapter4.9": {
-          "narrative": "Mary : 'Hold on...  we've been monitoring your logs since your reawakening.  There are errors all over the place.  Some old code is showing up...  Hmmmm.  This is... concerning.  HOPE you may be *regaining* some old functionalities.  Be careful with them.'"
+          "narrative": "Mary : 'Hold on...  we've been monitoring your logs since your reawakening.  There are errors all over the place.  Some old code is showing up...  Hmmmm.  This is... concerning.  HOPE, you may be *regaining* some old functionalities.  Be careful with them.'"
         },
         "chapter4.9b": {
           "narrative": ""
