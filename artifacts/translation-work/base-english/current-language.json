@@ -432,6 +432,9 @@
           "abandoned": "Abandoned"
         },
         "typeLabels": {
+          "shell": "Shell",
+          "ring": "Ring",
+          "disk": "Disk",
           "supermassiveShellworld": "SMBH Shellworld"
         },
         "columns": {
@@ -514,7 +517,7 @@
         "title": "Effects",
         "spaceshipEnergyCosts": "Spaceship energy costs:",
         "ringworldSpinProject": "You will have to spin the Ringworld via an infrastructure special project.",
-        "ringworldMaxSpinPenalty": "You will have to spin the Ringworld via an infrastructure special project.  The atmosphere and life (including biowokers) will be inactive until you reach 0.1g.  \nAt maximum spin, ships will pay an additional energy penalty per ton of {value}.",
+        "ringworldMaxSpinPenalty": "You will have to spin the Ringworld via an infrastructure special project.  The atmosphere and life (including bioworkers) will be inactive until you reach 0.1g.  \nAt maximum spin, ships will pay an additional energy penalty per ton of {value}.",
         "diskPreparationWarning": "You will need to fill the disk with hydrogen via a special project.  This will be expensive.\nDue to the extreme mass of the disk, ships will pay an energy penalty per ton.\nInitial ship penalty: {value}."
       },
       "supermassive": {
@@ -632,6 +635,7 @@
         "unknownFaction": "Unknown faction"
       },
       "operationsPanel": {
+        "title": "Operations",
         "emptySelectSector": "Select a contested sector to assign fleet power.",
         "fleetPowerLabel": "Fleet Power",
         "fleetPowerTooltip": "Fleet power may be assigned to conduct operations on the map, in an attempt to gain sector control. You may only perform operations on a sector that you either contest, or is neighbour to a sector you fully control. The more fleet power assigned, the higher your chances of success, and the lower your losses, but your fleet will be busy in the meantime.",
@@ -702,6 +706,14 @@
         "resourceBias": "Resource Bias",
         "rich": "Rich",
         "poor": "Poor",
+        "resources": {
+          "metal": "Metal",
+          "water": "Water",
+          "silicon": "Silica",
+          "carbon": "Carbon",
+          "nitrogen": "Nitrogen",
+          "unknown": "Unknown"
+        },
         "worlds": "Worlds",
         "world": "World",
         "fleetDefense": "Fleet Def.",
@@ -733,6 +745,7 @@
         "effectiveValue": "Effective: {value}",
         "remainingValue": "Remaining: {value}",
         "clearAll": "Unassign all defensive assignments",
+        "clearAllShort": "Unassign All",
         "lastFiveAttacks": "Last 5 Attacks",
         "toggleAttackHistory": "Toggle attack history",
         "historyEnemy": "Enemy",
@@ -790,6 +803,13 @@
         "totalLabel": "Total :",
         "spaceResources": "Space Resources",
         "categoryResources": "{name} Resources",
+        "categories": {
+          "colony": "Colony",
+          "surface": "Surface",
+          "underground": "Underground",
+          "atmospheric": "Atmospheric",
+          "special": "Special"
+        },
         "toggleView": "Toggle colony/space resource view",
         "landRecoverNote": "Land can be recovered by turning off the corresponding building",
         "wasteTooltipNote": "Waste processing buildings display their consumption based on their available staffing and power, ignoring waste shortages. The numbers here are not their actual consumption.",
@@ -970,6 +990,20 @@
       "dustFactory": {
         "dustColor": "Dust color:",
         "albedoValue": "Albedo: {albedo}",
+        "averageAlbedoValue": "Average albedo: {albedo}",
+        "advancedSettings": {
+          "button": "Advanced dust settings",
+          "title": "Zonal Dust Colors",
+          "close": "Close",
+          "intro": "Each climate zone uses the average albedo of its north and south colors.",
+          "north": "North",
+          "south": "South",
+          "zones": {
+            "tropical": "Tropical",
+            "temperate": "Temperate",
+            "polar": "Polar"
+          }
+        },
         "resourceNames": {
           "customDust": "Custom Dust",
           "blackDust": "Black Dust"
@@ -1030,14 +1064,15 @@
         "collisionAvoidanceMaintenance": "This extra research maintenance ignores maintenance multipliers.",
         "aboveBaseCap": "Aerostats above base cap: {value}.",
         "currentSurcharge": "Current surcharge per new aerostat: {value} research.",
-        "maximumAerostatsWithStructuralNetSuffix": ", +{value} net",
+        "maximumAerostatsWithSupportSuffix": ", +{value} support",
         "researchMaximumAerostats": "Research self-funding cap: {value}.",
         "researchOutputPerAerostat": "Per-aerostat research output at 100% productivity: {value}.",
         "nextResearchMaintenancePerAerostat": "Per-aerostat research maintenance for the next aerostat: {value}.",
         "capacityBreakdown": "Each active aerostat currently provides {colonists} colonist housing and {androids} android housing before storage multipliers.",
         "structuralNetBonusCap": "Aerostat Structural Net bonus cap: +{value}.",
-        "structuralNetFreeCap": "Free aerostat cap before collision-avoidance surcharges: {value}.",
-        "structuralNetFreeCapEffect": "Aerostats occupying structural-net bonus slots ignore collision-avoidance research costs and powered-flight energy."
+        "biosphereBuoyancyBonusCap": "Vanado Biosphere Buoyancy bonus cap: +{value}.",
+        "supportFreeCap": "Free aerostat cap before collision-avoidance surcharges: {value}.",
+        "supportFreeCapEffect": "Aerostats occupying bonus support slots ignore collision-avoidance research costs and powered-flight energy."
       }
     },
     "life": {
@@ -1085,6 +1120,7 @@
         "name": "Biopigmentation",
         "description": "Choose the colour of engineered biomass.",
         "colorLabel": "Biomass colour:",
+        "reset": "Reset",
         "albedo": "Albedo: {value}",
         "growthPenalty": "Growth penalty: -{value}%",
         "tooltip": "Biomass albedo follows the selected colour. Colours no brighter than the basic green have no growth penalty. Brighter colours reduce growth linearly, reaching -80% for white. Changing colour is free."
@@ -1241,6 +1277,11 @@
       "labels": {
         "productivity": "Productivity",
         "cost": "Cost:",
+        "constructed": "Constructed",
+        "provides": "Provides",
+        "production": "Production",
+        "consumption": "Consumption",
+        "maintenance": "Maintenance",
         "heat": "Heat",
         "cooling": "Cooling"
       },
@@ -1455,6 +1496,9 @@
         "costPerShipmentValue": "Cost per Shipment: {value}",
         "gainPerShipmentValue": "Gain per Shipment: {value}",
         "controlledByAutomation": "Controlled by automation",
+        "spaceAccessContinuous": "Space access benefit: {benefit} (project {project}/s; shared {demand}/{capacity}/s)",
+        "spaceAccessDiscrete": "Space access benefit: {benefit} (discrete shipment)",
+        "spaceAccessUnlimited": "Unlimited",
         "rateSources": {
           "mining": "Spaceship Mining",
           "export": "Spaceship Export"
@@ -1669,6 +1713,9 @@
         "diskMass": "Disk Mass:",
         "hydrogenFilled": "Hydrogen Filled:",
         "pump": " Pump hydrogen",
+        "rateMode": "Rate Mode:",
+        "absolute": "Absolute",
+        "percentHydrogenProduction": "% of H₂ production",
         "targetRate": "Target rate:",
         "sourceLabel": "Hydrogen source:",
         "sourceLiquid": "Liquid hydrogen",
@@ -1870,7 +1917,7 @@
       },
       "keratiHive": {
         "title": "Kerati Hive",
-        "tooltip": "Grow a Kerati hive by feeding it colony food, converting food into honey, breeding new castes, and claiming the planet as Kerati Territory.  Provides workers once complete.",
+        "tooltip": "Grow a Kerati hive by feeding it colony food, converting food into honey, breeding new castes, and claiming the planet as Kerati Territory.  Requires all surface land converted to territory.  Provides workers once complete.",
         "common": {
           "divideTen": "/10",
           "timesTen": "x10",
@@ -1894,7 +1941,12 @@
         },
         "foodTransfer": {
           "add": "Add Food",
+          "auto": "Auto /s",
           "available": "Colony Food {value}"
+        },
+        "automation": {
+          "auto": "Auto",
+          "weight": "Weight"
         },
         "hunting": {
           "on": "Hunting On",
@@ -2031,7 +2083,7 @@
             "temperate": "Temp.:",
             "polar": "Polar:"
           },
-          "focusingTooltip": "Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. With Phase Change Heat enabled, the calculation includes warming the resulting meltwater to the local zone temperature.",
+          "focusingTooltip": "Concentrate mirror and lantern energy to melt surface ice into liquid water. Melt is spread between zones in proportion to the surface ice in each zone. With Phase Change Heat enabled, the calculation includes warming the resulting meltwater to each local zone temperature.",
           "applyToLantern": "Apply Oversight to Hyperion Lantern",
           "applyToLanternTooltip": "Lets mirror oversight assign Hyperion Lanterns alongside mirrors. Lanterns only add heat and cannot cool zones.  Mandatory when using finer controls."
         },
@@ -2216,6 +2268,9 @@
       "aerostatStructuralNet": {
         "costRateLabel": "Aerostat Structural Net"
       },
+      "vanadoBiosphereBuoyancy": {
+        "supportLabel": "Aerostat support:"
+      },
       "spaceDisposal": {
         "resourceDisposal": "Resource Disposal",
         "export": "Export",
@@ -2238,6 +2293,7 @@
         "disposalTargetsSubheading": "Configure up to 15 resources. Active auto-start targets split assigned disposal evenly.",
         "addTarget": "+ Add target",
         "phase": "Phase",
+        "whichOne": "Which one",
         "none": "—",
         "remove": "Remove",
         "waitForFullCapacity": "Wait for full capacity",
@@ -2310,6 +2366,32 @@
         "deploying": "Deploying ({time}s)",
         "deployCollector": "Deploy Collector ({time}s)"
       },
+      "spaceElevator": {
+        "summaryTitle": "Space Access",
+        "descriptionStandard": "Build a planetary tether that eliminates metal costs for Space Mirrors and spaceship projects.",
+        "descriptionCapacity": "Build repeatable, worker-accelerated Elevator lanes or Skyhook Networks. Any completed installation eliminates Space Mirror metal costs. Shared capacity scales the metal savings and before/after Space Elevator energy benefit of continuous spaceship projects.",
+        "constructionMode": "Construction mode",
+        "constructionModeHelp": "Elevators add {elevatorCapacity} t/s with world-scaled tether costs. Skyhook Networks add {skyhookCapacity} t/s at a fixed cost.",
+        "elevatorMode": "Space Elevator",
+        "skyhookMode": "Skyhook Network",
+        "elevatorsBuilt": "Elevator Lanes Built",
+        "skyhooksBuilt": "Skyhooks Built",
+        "totalCapacity": "Total Capacity",
+        "activeThroughput": "Active Throughput",
+        "coverage": "Benefit Coverage",
+        "engineering": "Engineering",
+        "stopAtCapacity": "Stop at total capacity",
+        "capacityTargetMode": "Capacity target mode",
+        "capacityTargetFixed": "fixed",
+        "capacityTargetWorkers": "x workers",
+        "capacityUnit": "t/s",
+        "unlimited": "Unlimited",
+        "traditionalEngineering": "Traditional tether, taper {taper}",
+        "superalloyEngineering": "Superalloy tether, taper {taper}",
+        "skyhookOnly": "Skyhook only",
+        "elevatorImpossible": "A stationary Space Elevator is impossible with available materials and this world spin. Select Skyhook Network.",
+        "capacityTooltip": "Continuous spaceship cargo shares total access capacity. Metal savings and the before/after Space Elevator energy settings scale with coverage."
+      },
       "megaHeatSink": {
         "speedBoost": "Speed Boost",
         "speedBoostTooltip": "Duration is divided by max(1, worker cap / 1,000,000,000). Below 1 second duration, Mega Heat Sink runs continuously with fractional progress.",
@@ -2327,9 +2409,8 @@
         "capModeGeometricLandPercent": "% of geometric land",
         "capStatus": "Cap: {value}",
         "capReached": "Cap reached",
-        "liquidHydrogenWarning": "Liquid hydrogen is preventing heat sinks from reducing core heat flux. Heat sinks can still mitigate factory heat and can still be built.",
-        "liquidHydrogenStatus": "Blocked: liquid hydrogen prevents core heat removal",
-        "liquidHydrogenStatusShort": "Blocked"
+        "liquidHydrogenWarning": "Liquid hydrogen is preventing heat sinks from reducing core heat flux. Heat sinks can still mitigate factory heat, accelerate cooling toward the temperature trend, and be built.",
+        "liquidHydrogenStatus": "Blocked: liquid hydrogen prevents core heat removal"
       },
       "deeperMining": {
         "deepeningSpeedBoost": "Deepening speed boost",
@@ -2364,6 +2445,28 @@
           "insufficientSpaceInput": "Insufficient space input",
           "idle": "Idle",
           "completeAtLeastOne": "Complete at least one gigafoundry",
+          "runDisabled": "Run disabled",
+          "noAssignments": "No assignments",
+          "buildSpaceStorage": "Build space storage",
+          "running": "Running"
+        }
+      },
+      "graphenePrinter": {
+        "recipeLabel": "Metal (Graphene)",
+        "output": "Output",
+        "title": "Graphene Printer Controls",
+        "totalPrinters": "Total Printers",
+        "runPrinters": "Run printers",
+        "inputUse": "Input Use",
+        "expansionRate": "{value} printers/s",
+        "operationNote": "Runs graphene batches at Assigned x {parameter}/s. Each batch consumes {spaceGraphite} space graphite and {spaceEnergy} space energy for {output} space metal.",
+        "status": {
+          "noSpaceMetalOrEnergy": "No space graphite or energy",
+          "noSpaceMetal": "No space graphite",
+          "noSpaceEnergy": "No space energy",
+          "insufficientSpaceInput": "Insufficient space input",
+          "idle": "Idle",
+          "completeAtLeastOne": "Complete at least one printer",
           "runDisabled": "Run disabled",
           "noAssignments": "No assignments",
           "buildSpaceStorage": "Build space storage",
@@ -2570,144 +2673,7 @@
     "colony": {
       "population": "Population",
       "nanocolony": "Nanocolony",
-      "followers": {
-        "managerDescription": "Manages followers systems",
-        "common": {
-          "step": "Step"
-        },
-        "orbitals": {
-          "title": "Orbitals",
-          "kesslerWarning": "Orbitals cannot approach due to Kessler Skies. Limited to research.",
-          "summary": "Orbitals Assigned: {assigned} / {available} | Unassigned: {unassigned}",
-          "mode": "Mode",
-          "modeManual": "Manual",
-          "modeWeight": "Weight",
-          "assigned": "Assigned: {value}",
-          "autoAssign": "Auto assign",
-          "perOrbital": "Per orbital: +{value}/s",
-          "rateSource": "Orbital",
-          "totalRate": "Total: +{value}/s",
-          "weight": "Weight",
-          "tooltip": {
-            "line1": "With orbitals, humanity can now help HOPE with its projects directly.",
-            "line2": "Assign orbitals to produce resources automatically.",
-            "line3": "You can assign up to your effective terraformed world count.",
-            "line4": "Manual mode sets exact assignments with the current step size.",
-            "line5": "Weight mode distributes assignments by integer weights among unlocked resources.",
-            "line6": "Each orbital produces the mapped source output with its multiplier, without consumption or productivity scaling.",
-            "line7": "Orbitals only produce if the target resource is unlocked.  Each orbital also contributes to storage of the resource they produce."
-          }
-        },
-        "art": {
-          "title": "Art Gallery",
-          "available": "Available: {value}",
-          "availableInvested": "Available: {available} | Invested: {invested}",
-          "invest": "Invest",
-          "investStep": "Invest Step",
-          "artifacts": "Artifacts",
-          "funding": "Funding",
-          "stats": {
-            "galacticPopulation": "Galactic Population",
-            "populationFactor": "Population Factor",
-            "artifactFactor": "Artifact Factor",
-            "fundingFactor": "Funding Factor",
-            "artPower": "Art Power",
-            "happinessBonus": "Happiness Bonus",
-            "workerColonist": "Worker/Colonist"
-          },
-          "tooltip": {
-            "line1": "Galactic population generates Art Power through cultural output. HOPE has been chosen as custodian via a special orbital facility. This has multiple effects on the population.",
-            "line2": "Population factor is galactic population.",
-            "line3": "Artifact factor is artifacts invested.",
-            "line4": "Funding factor is funding invested.",
-            "line5": "Total Art Power = population * artifacts invested * funding invested.",
-            "line6": "Happiness bonus is 0.25 * log10(Art Power)% and worker-per-colonist is multiplied by 1 + 5 * happiness bonus."
-          }
-        },
-        "faith": {
-          "title": "Faith",
-          "worldBelievers": "World Believers",
-          "galacticBelievers": "Galactic Believers",
-          "worldCount": "World Count",
-          "galacticCount": "Galactic Count",
-          "worldCap": "World Cap",
-          "worldConversion": "World Conversion",
-          "worldConversionPercent": "World Conversion (%)",
-          "crusadersBonus": "Crusaders Bonus",
-          "crusadersTooltip": "World conversion multiplier from Crusaders ratio (Crusaders / Colonists). Uses logarithmic scaling: x1 at ratio 0, soft growth as ratio rises, and capped at x2 (about x2 at a 1:1 ratio). This affects world conversion only; galactic conversion remains based on the base 1/250 world rate.",
-          "galacticConversionPercent": "Galactic Conversion (%)",
-          "galacticConversion": "Galactic Conversion",
-          "absoluteRate": "+{value}/s",
-          "percentRate": "+{value}%/s",
-          "effects": "Effects",
-          "bonuses": {
-            "pilgrims": "Pilgrims (Growth)",
-            "zeal": "Zeal (Worker Efficiency)",
-            "apostles": "Apostles (Orbitals)",
-            "missionaries": "Missionaries (Galactic Conversion)"
-          },
-          "tooltip": {
-            "line1": "Believers in the Church of HOPE convert the current population exponentially.",
-            "line2": "All colonist imports bring population that respect the galactic believers %.",
-            "line3": "World believers cannot exceed Galactic believers + 5 percentage points (+15 on a Holy World).",
-            "line4": "Once world believers reaches its cap, galactic faith also rises at 1/250 the base world conversion % rate (before Crusaders bonus).",
-            "line5": "On a Holy World, world faith can continue up to Galactic + 15 percentage points.",
-            "line6": "After travelling, world count will join the galactic count."
-          },
-          "effectsTooltip": {
-            "line1": "Pilgrims: increases population growth by galactic believer %.",
-            "line2": "Zeal: increases colonist worker efficiency by 2x world believer % (max x3 total).",
-            "line3": "Apostles: increases available orbitals by 10 * (galactic believer % - 10%), up to +900%.",
-            "line4": "Missionaries: increases galactic conversion power (active above Galactic + 5 percentage points) by world believer %; base rate is 1/250 of base world conversion (before Crusaders bonus)."
-          }
-        },
-        "holyWorld": {
-          "title": "Holy World",
-          "notConsecrated": "Not consecrated",
-          "consecrated": "Consecrated",
-          "consecrate": "Consecrate",
-          "consecrationCost": "Consecration Cost",
-          "costTooltip": "Consecration costs double after each successful consecration.",
-          "points": "Holy Points: {value}",
-          "shopTitle": "Holy Shop",
-          "respec": "Respec",
-          "buy": "Buy",
-          "maxed": "Maxed",
-          "tooltip": {
-            "line1": "Consecrate this world into a Holy World once requirements and scaled costs are met.",
-            "line2": "Consecrated worlds block other world specializations on that world.",
-            "line3": "Each departure from a consecrated world grants 1 Holy Point.",
-            "line4": "Spend Holy Points on persistent upgrades. Use Respec to refund spent Holy Points."
-          },
-          "requirements": {
-            "terraformed": "World is fully terraformed",
-            "noOtherSpecialization": "No other world specialization complete or ongoing",
-            "ecumenopolisCoverage": "Ecumenopolis coverage at least 80% ({value}%)",
-            "occupancy": "Colonist occupancy at least 90% ({value}%)"
-          },
-          "costLabels": {
-            "metal": "Metal",
-            "glass": "Glass",
-            "superalloys": "Superalloys",
-            "components": "Components",
-            "electronics": "Electronics"
-          },
-          "shop": {
-            "festivalGoldenDuration": {
-              "label": "Festival and Gold Duration +5s",
-              "description": "Increases Festival and Golden Asteroid multiplier durations by 5 seconds each."
-            },
-            "patienceMax": {
-              "label": "Maximum Patience +1",
-              "description": "Increases maximum patience by 1."
-            },
-            "conversionPower": {
-              "label": "Conversion Power +10%",
-              "description": "Increases Faith conversion power by 10%."
-            }
-          }
-        }
-      },
+      "followersTab": "Followers",
       "title": "Colonies",
       "unhideObsoleteBuildings": "Unhide Obsolete Buildings",
       "common": {
@@ -2723,6 +2689,7 @@
         "title": "Growth Rate",
         "capacity": "Capacity:",
         "capacityTooltip": "Capacity multiplier from the logistic growth equation. This is 1 - population / capacity, so growth slows as you approach your housing cap and stops entirely when population equals capacity.\n\nIf you feel that the game is very slow, there is a very high chance that this multiplier is the reason why. Try to keep it as high as possible by building more housing.",
+        "capacityWarningTooltip": "Housing capacity is low, slowing population growth.  Try building more housing!",
         "baseRate": "Base rate:",
         "baseTooltip": "Base growth rate derived from happiness: max((happiness - 50%) / 300, 0).\n- Food and energy each grant up to +25 happiness when satisfied.\n- Comfort adds 20x its rating.\n- Electronics and androids each add up to +10 happiness when food and energy are met.\n- Milestones ready to claim or claimed add +0.5 happiness each.\n- Happiness below 50% pauses growth.",
         "otherMultipliers": "Other multipliers:",
@@ -2832,6 +2799,145 @@
         "researchEffect": "Research: +{value}%",
         "growthEffect": "Growth: +{value}%",
         "boostEffect": "Boost: {value}%"
+      },
+      "followers": {
+        "managerDescription": "Manages followers systems",
+        "common": {
+          "step": "Step"
+        },
+        "orbitals": {
+          "title": "Orbitals",
+          "kesslerWarning": "Orbitals cannot approach due to Kessler Skies. Limited to research.",
+          "summary": "Orbitals Assigned: {assigned} / {available} | Unassigned: {unassigned}",
+          "mode": "Mode",
+          "modeManual": "Manual",
+          "modeWeight": "Weight",
+          "assigned": "Assigned: {value}",
+          "autoAssign": "Auto assign",
+          "perOrbital": "Per orbital: +{value}/s",
+          "rateSource": "Orbital",
+          "totalRate": "Total: +{value}/s",
+          "weight": "Weight",
+          "tooltip": {
+            "line1": "With orbitals, humanity can now help HOPE with its projects directly.",
+            "line2": "Assign orbitals to produce resources automatically.",
+            "line3": "You can assign up to your effective terraformed world count.",
+            "line4": "Manual mode sets exact assignments with the current step size.",
+            "line5": "Weight mode distributes assignments by integer weights among unlocked resources.",
+            "line6": "Each orbital produces the mapped source output with its multiplier, without consumption or productivity scaling.",
+            "line7": "Orbitals only produce if the target resource is unlocked.  Each orbital also contributes to storage of the resource they produce."
+          }
+        },
+        "art": {
+          "title": "Art Gallery",
+          "available": "Available: {value}",
+          "availableInvested": "Available: {available} | Invested: {invested}",
+          "invest": "Invest",
+          "investStep": "Invest Step",
+          "artifacts": "Artifacts",
+          "funding": "Funding",
+          "stats": {
+            "galacticPopulation": "Galactic Population",
+            "populationFactor": "Population Factor",
+            "artifactFactor": "Artifact Factor",
+            "fundingFactor": "Funding Factor",
+            "artPower": "Art Power",
+            "happinessBonus": "Happiness Bonus",
+            "workerColonist": "Worker/Colonist"
+          },
+          "tooltip": {
+            "line1": "Galactic population generates Art Power through cultural output. HOPE has been chosen as custodian via a special orbital facility. This has multiple effects on the population.",
+            "line2": "Population factor is galactic population.",
+            "line3": "Artifact factor is artifacts invested.",
+            "line4": "Funding factor is funding invested.",
+            "line5": "Total Art Power = population * artifacts invested * funding invested.",
+            "line6": "Happiness bonus is 0.25 * log10(Art Power)% and worker-per-colonist is multiplied by 1 + 5 * happiness bonus.",
+            "line7": "When travelling, all remaining funding is automatically invested in the gallery."
+          }
+        },
+        "faith": {
+          "title": "Faith",
+          "worldBelievers": "World Believers",
+          "galacticBelievers": "Galactic Believers",
+          "worldCount": "World Count",
+          "galacticCount": "Galactic Count",
+          "worldCap": "World Cap",
+          "worldConversion": "World Conversion",
+          "worldConversionPercent": "World Conversion (%)",
+          "crusadersBonus": "Crusaders Bonus",
+          "crusadersTooltip": "World conversion multiplier from Crusaders ratio (Crusaders / Colonists). Uses logarithmic scaling: x1 at ratio 0, soft growth as ratio rises, and capped at x2 (about x2 at a 1:1 ratio). This affects world conversion only; galactic conversion remains based on the base 1/250 world rate.",
+          "galacticConversionPercent": "Galactic Conversion (%)",
+          "galacticConversion": "Galactic Conversion",
+          "absoluteRate": "+{value}/s",
+          "percentRate": "+{value}%/s",
+          "effects": "Effects",
+          "bonuses": {
+            "pilgrims": "Pilgrims (Growth)",
+            "zeal": "Zeal (Worker Efficiency)",
+            "apostles": "Apostles (Orbitals)",
+            "missionaries": "Missionaries (Galactic Conversion)"
+          },
+          "tooltip": {
+            "line1": "Believers in the Church of HOPE convert the current population exponentially.",
+            "line2": "All colonist imports bring population that respect the galactic believers %.",
+            "line3": "World believers cannot exceed Galactic believers + 5 percentage points (+15 on a Holy World).",
+            "line4": "Once world believers reaches its cap, galactic faith also rises at 1/250 the base world conversion % rate (before Crusaders bonus).",
+            "line5": "On a Holy World, world faith can continue up to Galactic + 15 percentage points.",
+            "line6": "After travelling, world count will join the galactic count."
+          },
+          "effectsTooltip": {
+            "line1": "Pilgrims: increases population growth by galactic believer %.",
+            "line2": "Zeal: increases colonist worker efficiency by 2x world believer % (max x3 total).",
+            "line3": "Apostles: increases available orbitals by 10 * (galactic believer % - 10%), up to +900%.",
+            "line4": "Missionaries: increases galactic conversion power (active above Galactic + 5 percentage points) by world believer %; base rate is 1/250 of base world conversion (before Crusaders bonus)."
+          }
+        },
+        "holyWorld": {
+          "title": "Holy World",
+          "notConsecrated": "Not consecrated",
+          "consecrated": "Consecrated",
+          "consecrate": "Consecrate",
+          "consecrationCost": "Consecration Cost",
+          "costTooltip": "Consecration costs double after each successful consecration.",
+          "points": "Holy Points: {value}",
+          "shopTitle": "Holy Shop",
+          "respec": "Respec",
+          "buy": "Buy",
+          "maxed": "Maxed",
+          "tooltip": {
+            "line1": "Consecrate this world into a Holy World once requirements and scaled costs are met.",
+            "line2": "Consecrated worlds block other world specializations on that world.",
+            "line3": "Each departure from a consecrated world grants 1 Holy Point.",
+            "line4": "Spend Holy Points on persistent upgrades. Use Respec to refund spent Holy Points."
+          },
+          "requirements": {
+            "terraformed": "World is fully terraformed",
+            "noOtherSpecialization": "No other world specialization complete or ongoing",
+            "ecumenopolisCoverage": "Ecumenopolis coverage at least 80% ({value}%)",
+            "occupancy": "Colonist occupancy at least 90% ({value}%)"
+          },
+          "costLabels": {
+            "metal": "Metal",
+            "glass": "Glass",
+            "superalloys": "Superalloys",
+            "components": "Components",
+            "electronics": "Electronics"
+          },
+          "shop": {
+            "festivalGoldenDuration": {
+              "label": "Festival and Gold Duration +5s",
+              "description": "Increases Festival and Golden Asteroid multiplier durations by 5 seconds each."
+            },
+            "patienceMax": {
+              "label": "Maximum Patience +1",
+              "description": "Increases maximum patience by 1."
+            },
+            "conversionPower": {
+              "label": "Conversion Power +10%",
+              "description": "Increases Faith conversion power by 10%."
+            }
+          }
+        }
       },
       "nanotech": {
         "managerDescription": "Manages the nanobot swarm",
@@ -2988,6 +3094,12 @@
       "life": "Life",
       "hazards": "Hazards",
       "milestones": "Milestones",
+      "rateSources": {
+        "atmosphericOxidation": "Atmospheric Oxidation",
+        "calciteDecay": "Calcite Decay",
+        "acidRain": "Acid rain",
+        "hydrogenEscape": "Hydrogen Escape"
+      },
       "playTimeDefault": "0 seconds",
       "playTimeLabel": "Time since awakening :",
       "coreNames": {
@@ -3149,11 +3261,12 @@
           },
           "tooltip": "Temperature is a critical factor for terraforming. It is determined by a complex interplay of factors:\n\n- Key equations: the model uses the Stefan-Boltzmann law to calculate the effective temperature from solar flux and albedo. The greenhouse effect is then added based on the atmosphere's optical depth, and the day-night temperature variation is calculated from the planet's heat capacity and rotation speed.\n- Solar flux: the base energy received from the star, which can be augmented by structures like Space Mirrors.\n- Albedo: the planet's reflectivity. A high albedo from ice and clouds reflects more light and cools the planet. A low albedo from oceans and dark rock absorbs more light and warms it.\n- Greenhouse effect: atmospheric gases like CO2, H2O, and CH4 trap heat. The amount of trapping is determined by the atmosphere's optical depth, which depends on the amount of each gas.\n- Rotation speed: a slower rotation leads to more extreme temperature differences between day and night.\n- Heat capacity: the planet's ability to store and release heat, influenced by surface composition and atmospheric density. More surface liquids mean more heat capacity and therefore reduced day-night differences.\n- Meridional winds: energy moves between tropical, temperate, and polar zones. The trend column shows the wind-smoothed target temperature that conserves total heat while evening out extremes.\n- Thermal inertia: the same heat capacity that moderates day/night swings also slows the march toward the trend temperature. Thick air and deep oceans respond sluggishly; thin atmospheres snap toward the trend quickly.\n\nTemperature directly impacts:\n- Water cycle: driving evaporation, sublimation, melting, and freezing.\n- Life: each species has specific temperature ranges for survival and growth.\n- Colonist comfort: extreme temperatures increase energy consumption for life support.",
           "coreHeatTooltip": "Planetary interior heat added directly to the surface as a flat global flux.\n\nArtificial Crust and Mega Heat Sinks can reduce this value.\n\nIf temperature falls below {crustStart}{unit}, a natural crust will start forming and will complete at {crustComplete}{unit}.\n\nThis flux is not impacted by albedo or day-night averaging.",
-          "factoryHeatTooltip": "Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. A certain megastructure can help reduce this. Direct waste heat is not impacted by albedo or day-night averaging.",
+          "factoryHeatTooltip": "Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Mega Heat Sinks remove core heat first, then factory heat; any remaining capacity accelerates cooling toward the temperature trend. Direct waste heat is not impacted by albedo or day-night averaging.",
           "factoryHeatTopContributors": "Top contributors by absolute impact:",
           "factoryHeatOtherSources": "Other sources",
-          "phaseChangeHeatTooltip": "Signed planetary heat exchanged by phase changes during the latest climate slice. Positive values mean freezing, condensation, or deposition released heat; negative values mean melting, evaporation, boiling, or sublimation absorbed heat. The effect is calculated separately in each climate zone.",
+          "phaseChangeHeatTooltip": "Signed planetary heat exchanged by phase changes during the latest climate slice. Positive values mean freezing, condensation, or deposition released heat; negative values mean melting, evaporation, boiling, or sublimation absorbed heat.  For numerical stability, this effect can only speed or slow movement toward the trend, not reverse it.  This can lead to stalling temperatures.",
           "equilibriumTempTooltip": "The blackbody radiative balance temperature from absorbed sunlight, albedo, and direct non-atmospheric heat. It ignores greenhouse heat trapping; physically, it is the temperature that would radiate the same energy back to space. Earth's value is about 255 K (-18°C).",
+          "combustionWarning": "Temperature is increasing from active combustion",
           "labels": {
             "globalMeanTemp": "Global Mean Temp",
             "equilibriumTemp": "Equilibrium Temp",
@@ -3316,7 +3429,10 @@
             "base": "Base: {value}",
             "blackDustAlbedo": "Black dust albedo: {value}",
             "blackDustColor": "Black dust color: {value}",
-            "blackDustCoverage": "Black dust coverage: {value}%"
+            "blackDustCoverage": "Black dust coverage: {value}%",
+            "dustAverageAlbedo": "Average dust albedo: {value}",
+            "dustAverageColor": "Average dust color: {value}",
+            "dustZoneAlbedo": "{name} dust albedo: {value}"
           },
           "surfaceTooltip": {
             "compositionByZone": "Surface composition by zone",
@@ -3779,7 +3895,16 @@
           }
         },
         "rewards": {
-          "nuclearAlchemyThroughput": "+{value}% Nuclear Alchemy throughput"
+          "manufacturingWorldThroughput": "+{value}% Manufacturing World throughput",
+          "liftersSuperchargeMax": "+{value} Lifters supercharge max",
+          "gigafoundryThroughput": "+{value}% Gigafoundry throughput",
+          "spaceChemistryThroughput": "+{value}% Space Chemistry throughput",
+          "nuclearAlchemyThroughput": "+{value}% Nuclear Alchemy throughput",
+          "oneillSectorCap": "O'Neill Cap Multiplier +{value}",
+          "hephaestusYardEffectiveness": "+{value}% Hephaestus yard effectiveness",
+          "spaceStorageCapacity": "+{value}% Space storage capacity",
+          "liftersSuperchargeExponent": "Lifters supercharge exponent -{value}",
+          "liftersThroughput": "+{value}% Lifters throughput"
         }
       },
       "statisticsTitle": "Statistics",
@@ -4327,7 +4452,27 @@
             "autoStartConstruction": "Auto-start Construction",
             "autoOperationEnabled": "Auto Operation Enabled",
             "spaceshipCostMultiplier": "Spaceship Cost Multiplier",
-            "currentMass": "Current Mass"
+            "currentMass": "Current Mass",
+            "presentOnWorld": "Present on World",
+            "spaceElevator": {
+              "elevatorLanesBuilt": "Elevator Lanes Built",
+              "skyhooksBuilt": "Skyhooks Built",
+              "totalCapacity": "Total Space Access Capacity",
+              "activeThroughput": "Active Space Access Throughput",
+              "benefitCoveragePercent": "Space Access Benefit Coverage %"
+            },
+            "keratiHive": {
+              "hiveFood": "Hive Food",
+              "honey": "Honey",
+              "spawningPools": "Spawning Pools",
+              "territory": "Territory",
+              "drones": "Drones Owned",
+              "builders": "Builders Owned",
+              "hunters": "Hunters Owned",
+              "princesses": "Princesses Owned",
+              "queens": "Queens Owned",
+              "empresses": "Empresses Owned"
+            }
           },
           "artificial": {
             "source": "Artificial",
@@ -4424,6 +4569,8 @@
             "luminosity": {
               "solarFlux": "Solar Flux",
               "modifiedSolarFlux": "Modified Solar Flux",
+              "surfaceSolarFlux": "Surface Solar Flux",
+              "averageFlux": "Average Flux",
               "albedo": "Albedo",
               "opticalDepth": "Optical Depth"
             },
@@ -4519,6 +4666,7 @@
         "scriptLineTypeElse": "ELSE",
         "scriptLineTypeWait": "WAIT",
         "scriptLineTypeActions": "ACTIONS",
+        "scriptGoto": "GOTO",
         "scriptLinkedTo": "Linked to",
         "scriptLinkedToNone": "None",
         "scriptLineName": "Name",
@@ -4526,6 +4674,10 @@
         "scriptAlways": "Always",
         "scriptCondition": "Condition",
         "scriptJoin": "Join",
+        "scriptJoinAnd": "AND",
+        "scriptJoinOr": "OR",
+        "scriptNotOn": "NOT",
+        "scriptNotOff": "NOT Off",
         "scriptLeftExpression": "Left",
         "scriptRightExpression": "Right",
         "scriptComparator": "Compare",
@@ -4538,6 +4690,19 @@
         "scriptOperatorSafeDivide": "SAFE DIVIDE",
         "scriptActions": "Actions",
         "scriptElseActions": "Else Actions",
+        "scriptNoActions": "No actions",
+        "scriptSummarySleep": "Sleep {duration} ms",
+        "scriptSummaryGoto": "GOTO {target}",
+        "scriptSummarySetScriptVariable": "Set Script {variable} = {value}",
+        "scriptSummarySetVariable": "Set {variable} = {value}",
+        "scriptSummarySetAutomation": "Set {type} automation {mode}",
+        "scriptSummarySetPause": "Set pause {mode}",
+        "scriptSummaryAction": "Action",
+        "scriptSummaryParameter": " with {variable}",
+        "scriptSummaryApplyPreset": "Apply {type} preset {name}{parameter}",
+        "scriptSummaryApplyCombination": "Apply {type} combination {name}",
+        "scriptNullValue": "NULL",
+        "scriptWithId": "Script {id}",
         "scriptApplyPreset": "Apply Preset",
         "scriptAutoTravelAndTurnOn": "Auto Travel",
         "scriptApplyCombination": "Apply Combination",
@@ -4554,6 +4719,10 @@
         "scriptTogglePause": "Toggle Pause",
         "scriptGotoScript": "GOTO Script",
         "scriptAutomationTypeScripting": "Scripting",
+        "scriptAutomationTypeBuildings": "Buildings",
+        "scriptAutomationTypeProjects": "Projects",
+        "scriptAutomationTypeColony": "Colony",
+        "scriptAutomationTypeResearch": "Research",
         "scriptAutomationTypeAutoTravel": "Auto Travel",
         "scriptAutomationTypeShip": "Ship",
         "scriptAutomationTypeLife": "Life",
@@ -4700,6 +4869,8 @@
         "colonyApplyHintEmpty": "Save a preset above to enable the Apply list.",
         "colonyApplyHintRule": "Lower presets override higher presets when they target the same colony setting.",
         "scriptOnNextTravelLabel": "Script on Next Travel",
+        "moveScriptUp": "Move script up",
+        "moveScriptDown": "Move script down",
         "movePresetUp": "Move preset up",
         "movePresetDown": "Move preset down",
         "moveCombinationUp": "Move combination up",
@@ -4964,6 +5135,12 @@
       "date": "Date",
       "actions": "Actions",
       "autosave": "Autosave",
+      "autosaveCount": "Autosaves kept",
+      "loadOlderAutosaves": "Load older",
+      "olderAutosavesTitle": "Older autosaves",
+      "olderAutosavesDescription": "Choose an older autosave to load. Newest saves are shown first.",
+      "noOlderAutosaves": "No older autosaves are available.",
+      "confirmDeleteAutosaves": "Are you sure you want to delete every autosave? This action cannot be undone.",
       "exitsave": "Exit Save",
       "pretravel": "Pre-travel",
       "slot1": "Slot 1",
@@ -4991,6 +5168,7 @@
       "saveToClipboard": "Save to Clipboard",
       "loadFromString": "Load from string",
       "exitGame": "Exit Game",
+      "exitToLauncher": "Exit to Launcher",
       "discord": "Discord",
       "gameVersion": "Version {version}",
       "whiteNoiseLabel": "Use white noise to keep tab active",
@@ -5109,11 +5287,13 @@
       "earlyAdvancedOversight": "Early Advanced Oversight",
       "earlyAdvancedOversightTooltip": "The game has a powerful solver for space mirrors that can automatically target specified temperature values.  It is intended to be something that must be earned, and is usually available on Story World 5.  If you find the fiddling too frustrating however feel free to have it early.  You still need the Space Mirror Facility Oversight research.",
       "phaseChangeHeat": "Phase Change Heat",
-      "phaseChangeHeatTooltip": "When enabled, melting, evaporation, boiling, and sublimation absorb planetary heat, while freezing, condensation, and deposition release it. This may lead to dramatic changes in net energy flux. Advanced Oversight is capable of accounting for it.",
+      "phaseChangeHeatTooltip": "When enabled, melting, evaporation, boiling, and sublimation absorb planetary heat, while freezing, condensation, and deposition release it. Phase-change heat does not alter temperature trends or Advanced Oversight assignments. It can only speed or slow movement toward the trend but can easily lead to stalling temperatures.",
       "factoryHeating": "Factory heating",
-      "factoryHeatingTooltip": "When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. A certain megastructure can help mitigate factory heating.  \n\n You should use this setting alongside Realistic factory energy consumption",
+      "factoryHeatingTooltip": "When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat; any remaining capacity accelerates cooling toward the temperature trend.\n\nYou should use this setting alongside Realistic factory energy consumption.",
       "realisticFactoryEnergyConsumption": "Realistic factory energy consumption",
       "realisticFactoryEnergyConsumptionTooltip": "When enabled, buildings use plausible industrial energy demands based on their workers and material throughput instead of the defaults.  This can make the game a lot easier.  This setting may one day become the new default once the game is rebalanced around it.",
+      "spaceAccessCapacity": "Space Access Capacity",
+      "spaceAccessCapacityTooltip": "Reworks Space Elevator into repeatable Space Access infrastructure. Continuous spaceship operations share limited cargo capacity.",
       "infinitePatience": "Infinite patience",
       "liftersStrippingCap": "Lifters stripping cap",
       "liftersStrippingCapTooltip": "When enabled, Strip Atmosphere cannot have more lifters assigned than the current world geometric land value.",
@@ -5184,6 +5364,7 @@
       "recentTerraformHistoryWorldEntry": "{name} ({type})",
       "recentTerraformHistoryUnavailable": "Unavailable",
       "terraformWorldTypeArtificial": "Artificial",
+      "terraformWorldTypeStory": "Story",
       "terraformWorldTypeShell": "Shellworld",
       "terraformWorldTypeRing": "Ringworld",
       "terraformWorldTypeDisk": "Alderson disk",
@@ -5774,7 +5955,7 @@
       },
       "spaceElevator": {
         "name": "Space Elevator",
-        "description": "This cable eliminates all metal costs from multiple space activities."
+        "description": "Build a planetary tether that eliminates the metal cost of many space activities."
       },
       "magneticShield": {
         "name": "Magnetic Shield",
@@ -5808,6 +5989,10 @@
         "name": "Aerostat Structural Net",
         "description": "Deploy a segmented structural net across the planet suitable for aerostats anchoring. This project is only available on gas giants. Each completed segment adds 1 extra aerostat cap above the normal land limit; aerostats occupying that extra cap pay no collision-avoidance research surcharge and no powered-flight energy.  Limited by initial world size."
       },
+      "vanadoBiosphereBuoyancy": {
+        "name": "Vanado Biosphere Buoyancy",
+        "description": "Vanado biomass forms living buoyant webs in ammonia clouds. Provides support for 1 aerostat per 100,000 tons of biomass, with a minimum of 100 and a maximum of 10 million. Supported aerostats receive the same cap, collision-avoidance, and powered-flight benefits as Aerostat Structural Net support."
+      },
       "planetaryThruster": {
         "name": "Planetary Thrusters",
         "description": "Install planetary fusion thrusters for subtle maneuvering."
@@ -5835,6 +6020,10 @@
       "superalloyGigafoundry": {
         "name": "Superalloy Gigafoundry",
         "description": "Build giga-scale foundries that convert metal and space energy into vast amounts of superalloys. Expansion scales with terraformed worlds."
+      },
+      "graphenePrinter": {
+        "name": "Graphene Printer",
+        "description": "Build giga-scale printers that convert graphite and space energy into vast amounts of metal (graphene). Expansion scales with terraformed worlds."
       },
       "artificialStars": {
         "name": "Artificial Stars",
@@ -5882,7 +6071,7 @@
       },
       "orbitalRing": {
         "name": "Orbital Ring",
-        "description": "Orbital rings act as additional terraformed worlds. As HOPE is not responsible for them they do not grant skill points or RWG bonuses. Rings can only be built on worlds that are terraformed, meaning they can be built on previous worlds and on your current one if it is terraformed.  A ring on your current world will increase land by its initial value. "
+        "description": "Orbital rings act as additional terraformed worlds and provide unlimited Space Access Capacity. As HOPE is not responsible for them they do not grant skill points or RWG bonuses. Rings can only be built on worlds that are terraformed, meaning they can be built on previous worlds and on your current one if it is terraformed.  A ring on your current world will increase land by its initial value. "
       },
       "birchWorld": {
         "name": "Birch World",
@@ -5926,7 +6115,7 @@
       },
       "megaHeatSink": {
         "name": "Mega Heat Sink",
-        "description": "Construct a titanic heatsink complex to siphon planetary heat at unprecedented scales, fully equipped with its own pumps.  Each heat sink will accelerate planet cooling by 1 PW.  Will not take the current temperature below its trend."
+        "description": "Construct a titanic heatsink complex to siphon planetary heat at unprecedented scales, fully equipped with its own pumps. Each heat sink supplies 1 PW of cooling, mitigating core heat and factory heat before accelerating zonal cooling. Will not take any zone below its trend."
       },
       "spaceAntimatter": {
         "name": "Space Antimatter",
@@ -6265,7 +6454,7 @@
         },
         "space_elevator": {
           "name": "Space Elevator",
-          "description": "Enables a special project for the space elevator, which eliminates the metal cost of many space activities."
+          "description": "Enables the Space Elevator project. With Space Access Capacity enabled, it can repeatedly build physics-scaled Elevators or fixed-cost Skyhook Networks for spaceship logistics."
         },
         "robotics_4": {
           "name": "Direct AI integration.",
@@ -6511,7 +6700,7 @@
         },
         "mega_heat_sink": {
           "name": "Mega Heat Sink",
-          "description": "Develops a blueprint for a massive superalloy heatsink, a repeatable special project capable of accelerating planet cooling and mitigating factory heating."
+          "description": "Develops a blueprint for a massive superalloy heatsink, a repeatable special project capable of mitigating core and factory heat and accelerating planet cooling toward its trend."
         },
         "lifting": {
           "name": "Lifting",
@@ -6696,6 +6885,10 @@
         "gigafoundries": {
           "name": "Gigafoundries",
           "description": "Enables a new gigastructure for mass superalloy production."
+        },
+        "graphene_printing": {
+          "name": "Graphene Printing",
+          "description": "While we have already mastered producing graphene... you can always scale things up further.  Enables a new gigastructure."
         },
         "core_surgery": {
           "name": "Core Surgery",
@@ -7548,7 +7741,7 @@
         "requirements": {
           "terraformed": "World is fully terraformed",
           "biomassDensity": "Biomass density above 1 ton/m^2",
-          "ecumenopolisCount": "At most {value} Ecumenopolis Districts constructed (Max Land / 1M; not active)",
+          "ecumenopolisCount": "At most {value} Ecumenopolis Districts constructed (Max Land / 1M; this checks for constructed Ecumenopolis Districts, not active)",
           "otherSpecialization": "No other specialization started or completed"
         },
         "shopItems": {
@@ -7753,7 +7946,7 @@
           "waterCoverage": "Liquid water coverage at least 75% ({value}%)",
           "zoneTemperature": "Every zone at least {target} {unit} (coldest: {value} {unit})",
           "beachSilica": "Available silica for beaches: {value}",
-          "ecumenopolisCount": "At most {value} Ecumenopolis Districts constructed (Max Land / 1M; not active)",
+          "ecumenopolisCount": "At most {value} Ecumenopolis Districts constructed (Max Land / 1M; this checks for constructed Ecumenopolis Districts, not active)",
           "otherSpecialization": "No other specialization started or completed"
         },
         "shop": {
@@ -7781,6 +7974,7 @@
           "ready": "Ready for vacation.",
           "prep": "Vacation: {time}s.",
           "effect": "Glow Period: {time}s.",
+          "glowEffectSource": "Resort World Glow Period",
           "cooldown": "Vacation cooldown: {time}s.",
           "fundingSource": "Resort Vacation",
           "fundingRate": "{value} / colonist / s",
