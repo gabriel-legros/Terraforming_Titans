@@ -3317,6 +3317,7 @@ setLanguageData({
           factoryHeatOtherSources: 'Other sources',
           phaseChangeHeatTooltip: 'Signed planetary heat exchanged by phase changes during the latest climate slice. Positive values mean freezing, condensation, or deposition released heat; negative values mean melting, evaporation, boiling, or sublimation absorbed heat.  For numerical stability, this effect can only speed or slow movement toward the trend, not reverse it.  This can lead to stalling temperatures.',
           equilibriumTempTooltip: 'The blackbody radiative balance temperature from absorbed sunlight, albedo, and direct non-atmospheric heat. It ignores greenhouse heat trapping; physically, it is the temperature that would radiate the same energy back to space. Earth\'s value is about 255 K (-18°C).',
+          combustionWarning: 'Temperature is increasing from active combustion',
           labels: {
             globalMeanTemp: 'Global Mean Temp',
             equilibriumTemp: 'Equilibrium Temp',

@@ -195,11 +195,19 @@ function calculateAtmosphericOxidation(params) {
       atmosphericPressurePa,
       surfaceTemperatureK
     );
-    const deflagrationFraction = 1 - Math.exp(
-      -sparkActivity
-        * sparkFlammability
+    const springCompression = Math.pow(
+      sparkFlammability,
+      OXIDATION_PARAMETERS.combustionSpringExponent
+    );
+    const maximumSpringDecayPerDay = -Math.log(
+      1 - OXIDATION_PARAMETERS.combustionSpringMaximumFractionPerDay
+    );
+    const springCombustionFraction = 1 - Math.exp(
+      -maximumSpringDecayPerDay
+        * sparkActivity
+        * springCompression
         * durationSeconds
-        / OXIDATION_PARAMETERS.deflagrationTimescaleSeconds
+        / OXIDATION_PARAMETERS.combustionSpringSecondsPerDay
     );
 
     for (const entry of fuelEntries) {
@@ -214,7 +222,7 @@ function calculateAtmosphericOxidation(params) {
         * durationSeconds;
       const requestedFuel = Math.min(
         availableFuel,
-        thermalFuelAmount + availableFuel * deflagrationFraction
+        thermalFuelAmount + availableFuel * springCombustionFraction
       );
       const oxygenMassRatio = (
         reaction.oxygenMolesPerFuelMole * ATMOSPHERIC_MOLECULAR_WEIGHTS.O2

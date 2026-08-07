@@ -576,6 +576,7 @@ class Terraforming extends EffectableEntity{
       emissivity: 0,
       opticalDepth: 0,
       opticalDepthContributions: {},
+      combustionWarmingRateKPerDay: 0,
       unlocked: false,
       zones: {
         tropical: {
@@ -1460,9 +1461,19 @@ class Terraforming extends EffectableEntity{
             }
         }
         this.distributeSurfaceChangesToZones(chemSurfaceChanges);
+        const temperatureBeforeCombustionK = this.temperature.value;
         chemTotals.climateHeatDepositedJ = this.applyAtmosphericChemistryHeat(
             chemTotals.climateHeatEnergyJ
         );
+        const combustionTemperatureIncreaseK = Math.max(
+            0,
+            this.temperature.value - temperatureBeforeCombustionK
+        );
+        this.temperature.combustionWarmingRateKPerDay = durationSeconds > 0
+            ? combustionTemperatureIncreaseK
+                * TERRAFORMING_OXIDATION_PARAMETERS.combustionSpringSecondsPerDay
+                / durationSeconds
+            : 0;
 
         this.synchronizeGlobalResources();
         this.refreshDynamicWorldGeometry();

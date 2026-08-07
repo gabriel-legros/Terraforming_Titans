@@ -92,11 +92,14 @@ var terraformingParameters = {
     },
     chemistry: {
       oxidation: {
-        // Spark activity is an expected planet-wide ignition rate, not a random roll.
+        // Background sparks are always present; water clouds add lightning activity.
         maximumArrheniusMultiplier: 1e6,
-        backgroundSparkActivity: 0.02,
-        waterCloudSparkActivity: 0.5,
-        deflagrationTimescaleSeconds: 1,
+        backgroundSparkActivity: 1,
+        waterCloudSparkActivity: 2,
+        combustionSpringMaximumFractionPerDay: 0.6,
+        combustionSpringExponent: 2,
+        combustionSpringSecondsPerDay: 86400,
+        combustionWarningTemperatureRateKPerDay: 0.01,
         climateHeatDepositionFraction: 1,
         maximumCombustionTemperatureK: 3000,
         sparkReferenceTemperatureK: 298.15,
