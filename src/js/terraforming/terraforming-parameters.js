@@ -99,7 +99,7 @@ var terraformingParameters = {
         combustionSpringMaximumFractionPerDay: 0.6,
         combustionSpringExponent: 2,
         combustionSpringSecondsPerDay: 86400,
-        combustionWarningTemperatureRateKPerDay: 0.01,
+        combustionWarningTemperatureRateKPerDay: 0.001,
         climateHeatDepositionFraction: 1,
         maximumCombustionTemperatureK: 3000,
         sparkReferenceTemperatureK: 298.15,
