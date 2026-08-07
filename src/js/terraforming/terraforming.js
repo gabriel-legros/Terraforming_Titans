@@ -1503,6 +1503,12 @@ class Terraforming extends EffectableEntity{
         const accumulatedChanges = options.accumulatedChanges;
         const wovenAtmosphericChanges = {};
         const wovenSurfaceChanges = {};
+        const zonalSurfaceTransfers = options.accumulatedSpecialChanges?.zonalSurfaceTransfers || [];
+        for (const transfer of zonalSurfaceTransfers) {
+            transfer.surfaceKeys = this.zonalSurfaceResourceConfigs.find(
+                config => config.name === transfer.input.resource
+            ).keys;
+        }
         let wovenAlbedoChange = 0;
         if (accumulatedChanges) {
             for (const resourceName in this.resources.atmospheric) {
@@ -1559,6 +1565,19 @@ class Terraforming extends EffectableEntity{
                 surfaceStepChanges[resourceName] = wovenSurfaceChanges[resourceName] * fraction;
             }
             this.distributeSurfaceChangesToZones(surfaceStepChanges);
+            for (const transfer of zonalSurfaceTransfers) {
+                const requestedStepInput = transfer.requestedInput * fraction;
+                const changesByZone = this.distributeSurfaceChangesToZones({
+                    [transfer.input.resource]: -requestedStepInput,
+                });
+                let actualStepInput = 0;
+                for (const zone in changesByZone) {
+                    for (const surfaceKey of transfer.surfaceKeys) {
+                        actualStepInput -= changesByZone[zone][surfaceKey] || 0;
+                    }
+                }
+                transfer.actualInput += actualStepInput;
+            }
             const albedoResource = this.resources.special.albedoUpgrades;
             const albedoStepChange = wovenAlbedoChange * fraction;
             if (albedoStepChange > 0) {
@@ -1631,6 +1650,9 @@ class Terraforming extends EffectableEntity{
             totalRealSeconds,
             combinedChemProcessChanges
         );
+        if (zonalSurfaceTransfers.length > 0) {
+            this.synchronizeGlobalResources();
+        }
         if (options.refreshStandaloneRates) {
             this.recalculateResourceRateTotals();
         }
@@ -3550,6 +3572,7 @@ distributeSurfaceChangesToZones(surfaceChanges = {}) {
             this.zonalSurface[zone][resourceKey] += changesByZone[zone][resourceKey];
         }
     }
+    return changesByZone;
 }
 
 distributeGlobalChangesToZones(deltaTime) {

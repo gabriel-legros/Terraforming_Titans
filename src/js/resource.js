@@ -80,8 +80,30 @@ function initializeAccumulatedSpecialChanges() {
     colonyMetalOverflowToSpaceStorage: 0,
     colonySiliconOverflowToSpaceStorage: 0,
     colonyHydrogenOverflowToSpaceStorage: 0,
-    colonyHydrogenNoOverflow: 0
+    colonyHydrogenNoOverflow: 0,
+    zonalSurfaceTransfers: []
   };
+}
+
+function settleZonalSurfaceTransfers(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
+  const seconds = deltaTime / 1000;
+  for (const transfer of accumulatedSpecialChanges.zonalSurfaceTransfers) {
+    const inputRatio = transfer.requestedInput > 0
+      ? Math.max(0, Math.min(transfer.actualInput / transfer.requestedInput, 1))
+      : 0;
+    const actualOutput = transfer.requestedOutput * inputRatio;
+    const inputResource = resources[transfer.input.category][transfer.input.resource];
+    const outputResource = resources[transfer.output.category][transfer.output.resource];
+
+    accumulatedChanges[transfer.output.category][transfer.output.resource] += actualOutput;
+    transfer.structure.currentConsumption[transfer.input.category][transfer.input.resource] = transfer.actualInput;
+    transfer.structure.currentProduction[transfer.output.category][transfer.output.resource] = actualOutput;
+
+    if (seconds > 0) {
+      inputResource.modifyRate(-transfer.actualInput / seconds, transfer.source, transfer.rateType);
+      outputResource.modifyRate(actualOutput / seconds, transfer.source, transfer.rateType);
+    }
+  }
 }
 
 function collectWasteCleanupSlackByResource(buildings) {
@@ -2387,6 +2409,7 @@ function produceResources(deltaTime, buildings) {
       accumulatedChanges,
       accumulatedSpecialChanges
     });
+    settleZonalSurfaceTransfers(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
   }
 
   if(researchManager && typeof researchManager.update === 'function'){
