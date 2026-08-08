@@ -596,6 +596,7 @@ function addSettingsListeners() {
       window.electronWindowControls.exitGame();
     });
     cached.electronExitToLauncherButton.addEventListener('click', () => {
+      saveGameToSlot('exitsave');
       window.electronWindowControls.exitToLauncher();
     });
   }

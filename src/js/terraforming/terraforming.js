@@ -74,6 +74,27 @@ function createEmptyZonalSurface() {
   return zonalSurface;
 }
 
+function applyCompensatedZonalSurfaceChange(zonalSurface, remainders, zone, resourceKey, amount) {
+  const currentValue = zonalSurface[zone][resourceKey] || 0;
+  const currentRemainder = remainders[zone][resourceKey] || 0;
+  let actualChange = amount;
+  if (amount < 0 && -amount >= currentValue) {
+    actualChange = -Math.min(-amount, Math.max(0, currentValue + currentRemainder));
+  }
+
+  const combinedChange = currentRemainder + actualChange;
+  const nextValue = Math.max(0, currentValue + combinedChange);
+  const representedChange = nextValue - currentValue;
+  let nextRemainder = combinedChange - representedChange;
+  if (nextValue === 0 && nextRemainder < 0) {
+    nextRemainder = 0;
+  }
+
+  zonalSurface[zone][resourceKey] = nextValue;
+  remainders[zone][resourceKey] = nextRemainder;
+  return actualChange;
+}
+
 function applyLegacyZonalSurface(target, source, mapping) {
   const data = source || {};
   const zones = getZones();
@@ -545,6 +566,7 @@ class Terraforming extends EffectableEntity{
 
     // Zonal Surface Data
     this.zonalSurface = createEmptyZonalSurface();
+    this.zonalSurfaceRemainders = createEmptyZonalSurface();
 
     // Global liquid targets (supports multi-liquid terraforming requirements)
     this.liquidCoverageTargets = buildLiquidCoverageTargets(this.requirements);
@@ -3431,17 +3453,22 @@ calculateZonalSurfaceChanges(surfaceChanges = {}) {
     const zones = getZones();
     const configs = this.zonalSurfaceResourceConfigs;
     const projectedSurface = {};
+    const projectedRemainders = {};
     const changesByZone = {};
     for (const zone of zones) {
         projectedSurface[zone] = { ...this.zonalSurface[zone] };
+        projectedRemainders[zone] = { ...this.zonalSurfaceRemainders[zone] };
         changesByZone[zone] = {};
     }
 
     const applyProjectedChange = (zone, resourceKey, amount) => {
-        const currentValue = projectedSurface[zone][resourceKey] || 0;
-        const nextValue = Math.max(0, currentValue + amount);
-        const actualChange = nextValue - currentValue;
-        projectedSurface[zone][resourceKey] = nextValue;
+        const actualChange = applyCompensatedZonalSurfaceChange(
+            projectedSurface,
+            projectedRemainders,
+            zone,
+            resourceKey,
+            amount
+        );
         changesByZone[zone][resourceKey] =
             (changesByZone[zone][resourceKey] || 0) + actualChange;
     };
@@ -3569,10 +3596,20 @@ distributeSurfaceChangesToZones(surfaceChanges = {}) {
     const changesByZone = this.calculateZonalSurfaceChanges(surfaceChanges);
     for (const zone in changesByZone) {
         for (const resourceKey in changesByZone[zone]) {
-            this.zonalSurface[zone][resourceKey] += changesByZone[zone][resourceKey];
+            this.applyZonalSurfaceChange(zone, resourceKey, changesByZone[zone][resourceKey]);
         }
     }
     return changesByZone;
+}
+
+applyZonalSurfaceChange(zone, resourceKey, amount) {
+    return applyCompensatedZonalSurfaceChange(
+        this.zonalSurface,
+        this.zonalSurfaceRemainders,
+        zone,
+        resourceKey,
+        amount
+    );
 }
 
 distributeGlobalChangesToZones(deltaTime) {
@@ -3625,6 +3662,7 @@ synchronizeGlobalResources() {
             let zoneTotal = 0;
             for (const key of config.keys) {
                 zoneTotal += this.zonalSurface[zone][key] || 0;
+                zoneTotal += this.zonalSurfaceRemainders[zone][key] || 0;
             }
             totals[config.name] += zoneTotal;
         }
@@ -3649,6 +3687,7 @@ synchronizeGlobalResources() {
       completed: this.completed,
       // zonalAtmosphere: this.zonalAtmosphere, // REMOVED - No longer saving internal zonal atmosphere state
       zonalSurface: this.zonalSurface,
+      zonalSurfaceRemainders: this.zonalSurfaceRemainders,
       // zonalBiomass: this.zonalBiomass, // REMOVED - Biomass is stored in zonalSurface
       };
   }
@@ -3721,6 +3760,11 @@ synchronizeGlobalResources() {
       // Load Zonal Surface resources (keep defaults if not in save)
       this.zonalSurface = createEmptyZonalSurface();
       applyZonalSurfaceFromLegacy(this.zonalSurface, terraformingState);
+      this.zonalSurfaceRemainders = createEmptyZonalSurface();
+      applyZonalSurfaceOverrides(
+          this.zonalSurfaceRemainders,
+          terraformingState.zonalSurfaceRemainders
+      );
 
       // If loading a save where initial values weren't calculated, run calculateInitialValues.
       // This will correctly initialize global resource amounts based on parameters

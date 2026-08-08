@@ -85,7 +85,10 @@ class ScriptVariableRegistry {
       const category = building.category || 'other';
       if (!seen.has(category)) {
         seen.add(category);
-        categories.push({ id: category, label: this.formatIdLabel(category) });
+        categories.push({
+          id: category,
+          label: t(`ui.buildings.categories.${category}`, null, this.formatIdLabel(category))
+        });
       }
     }
     return categories;
@@ -214,7 +217,10 @@ class ScriptVariableRegistry {
       const category = project.category || 'other';
       if (!seen.has(category)) {
         seen.add(category);
-        categories.push({ id: category, label: this.formatIdLabel(category) });
+        categories.push({
+          id: category,
+          label: t(`ui.specialProjects.${category}`, null, this.formatIdLabel(category))
+        });
       }
     }
     return categories;
@@ -512,7 +518,10 @@ class ScriptVariableRegistry {
   getResearchCategories() {
     const categories = [];
     for (const category in researchManager.researches) {
-      categories.push({ id: category, label: this.formatIdLabel(category) });
+      categories.push({
+        id: category,
+        label: t(`ui.research.${category}`, null, this.formatIdLabel(category))
+      });
     }
     return categories;
   }

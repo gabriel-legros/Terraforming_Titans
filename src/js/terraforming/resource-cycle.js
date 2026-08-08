@@ -874,13 +874,17 @@ class ResourceCycle {
     for (const zone in zonalChanges) {
       const change = zonalChanges[zone];
       if (!change || !change[surfaceBucket]) continue;
-      const zoneStore = container[zone] || (container[zone] = {});
       for (const [state, amount] of Object.entries(change[surfaceBucket])) {
-        const before = zoneStore[state] || 0;
-        let after = before + amount;
-        if (after < 0) after = 0;
-        zoneStore[state] = after;
-        totals[state] = (totals[state] || 0) + (after - before);
+        let actualChange;
+        if (zonalKey === 'zonalSurface') {
+          actualChange = terraforming.applyZonalSurfaceChange(zone, state, amount);
+        } else {
+          const zoneStore = container[zone] || (container[zone] = {});
+          const before = zoneStore[state] || 0;
+          zoneStore[state] = Math.max(0, before + amount);
+          actualChange = zoneStore[state] - before;
+        }
+        totals[state] = (totals[state] || 0) + actualChange;
       }
     }
     return totals;
