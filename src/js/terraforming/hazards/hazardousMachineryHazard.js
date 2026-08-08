@@ -959,7 +959,6 @@ class HazardousMachineryHazard {
   }
 
   load(data) {
-    this.pendingTravelTuning = false;
     this.setHackBatchSize(data?.hackBatchSize || 1);
     this.setAutoSpendIfClear(data?.autoSpendIfClear === true);
   }
