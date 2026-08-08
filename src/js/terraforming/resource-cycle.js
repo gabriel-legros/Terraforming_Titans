@@ -172,7 +172,7 @@ class ResourceCycle {
     dayTemp,
     nightTemp,
     transitionRange,
-    statisticalHumidityMean,
+    vaporPressure,
     dayPressureState,
     nightPressureState
   }) {
@@ -183,7 +183,7 @@ class ResourceCycle {
       nightTemp,
       freezePoint: this.freezePoint,
       transitionRange,
-      statisticalHumidityMean,
+      vaporPressure,
       dayPressureState,
       nightPressureState,
       homogeneousHumidity: this.homogeneousHumidity,
@@ -230,22 +230,19 @@ class ResourceCycle {
     }
 
     const meanHumidityScale = totalArea > 0 ? weightedHumidityScale / totalArea : 0;
-    const meanHumidity = meanHumidityScale > 0 ? vaporPressure / meanHumidityScale : 0;
     const horizontalMixingFraction =
       terraformingParameters.phaseChange.statisticalHumidity.horizontalMixingFraction;
     for (const zone of zones) {
-      const saturationFollowingPressure = byZone[zone].humidityScale * meanHumidity;
+      const saturationFollowingPressure = meanHumidityScale > 0
+        ? vaporPressure * (byZone[zone].humidityScale / meanHumidityScale)
+        : 0;
       const zonalVaporPressure =
         saturationFollowingPressure * (1 - horizontalMixingFraction) +
         vaporPressure * horizontalMixingFraction;
       byZone[zone].vaporPressure = zonalVaporPressure;
-      byZone[zone].meanHumidity =
-        byZone[zone].humidityScale > 0
-          ? zonalVaporPressure / byZone[zone].humidityScale
-          : 0;
     }
 
-    return { meanHumidity, boilingPoint, byZone };
+    return { boilingPoint, byZone };
   }
 
   meltingFreezingRates(args) {
@@ -289,7 +286,6 @@ class ResourceCycle {
       durationSeconds = 1,
       gravity = 1,
       condensationParameter = 1,
-      statisticalHumidityMean,
       dayPressureState,
       nightPressureState,
       availableLiquid = 0,
@@ -390,7 +386,7 @@ class ResourceCycle {
         dayTemp: dayTemperature,
         nightTemp: nightTemperature,
         transitionRange: this.transitionRange,
-        statisticalHumidityMean,
+        vaporPressure,
         dayPressureState,
         nightPressureState,
       });
@@ -710,7 +706,6 @@ class ResourceCycle {
         atmPressure,
         boilingPoint: statisticalHumidity.boilingPoint,
         vaporPressure: statisticalHumidity.byZone[zone].vaporPressure,
-        statisticalHumidityMean: statisticalHumidity.byZone[zone].meanHumidity,
         dayPressureState: statisticalHumidity.byZone[zone].dayPressureState,
         nightPressureState: statisticalHumidity.byZone[zone].nightPressureState,
         zonalSolarFlux: terraforming.calculateZoneSolarFlux(zone) / zonalFluxDivisor,

@@ -1000,6 +1000,22 @@ body.dark-mode {
     color: #f8f9fa;
 }
 
+.dark-mode .dust-settings-window {
+    background: #1d2630;
+    color: #e6edf3;
+}
+
+.dark-mode .dust-settings-intro {
+    color: #b8c2cc;
+}
+
+.dark-mode .dust-settings-close,
+.dark-mode .dust-advanced-settings-button {
+    background: #303b46;
+    border-color: #52606d;
+    color: #e6edf3;
+}
+
 .dark-mode .space-storage-settings-input,
 .dark-mode .space-storage-settings-select {
     background: #111827;
@@ -1120,6 +1136,10 @@ body.dark-mode {
 
 .dark-mode .load-string-dialog-confirm:hover {
     background: #1d4ed8;
+}
+
+.dark-mode .autosave-history-row {
+    border-color: #4b5563;
 }
 .dark-mode .terraforming-box {
     background-color: #111827;

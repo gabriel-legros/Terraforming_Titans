@@ -22,6 +22,7 @@ let projectsBuilderProjectSignature = '';
 let projectAutomationPresetController;
 
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID = 'spaceStorage';
+const PROJECT_AUTOMATION_UI_SPACE_ELEVATOR_PROJECT_ID = 'spaceElevator';
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID = 'spaceStorageCapsReserve';
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID = 'spaceStorageExpansion';
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_OPERATIONS_ID = 'spaceStorageOperations';
@@ -163,6 +164,24 @@ function getProjectPresetJsonFieldOptions(fieldPath, value, preset) {
     return null;
   }
   const presetSection = fieldPath[2];
+  if (projectId === PROJECT_AUTOMATION_UI_SPACE_ELEVATOR_PROJECT_ID && presetSection === 'expansion') {
+    if (fieldPath[3] === 'constructionMode') {
+      return {
+        selectOptions: [
+          { value: 'elevator', label: t('ui.projects.spaceElevator.elevatorMode', null, 'Space Elevator') },
+          { value: 'skyhook', label: t('ui.projects.spaceElevator.skyhookMode', null, 'Skyhook Network') }
+        ]
+      };
+    }
+    if (fieldPath[3] === 'capacityTargetMode') {
+      return {
+        selectOptions: [
+          { value: 'fixed', label: t('ui.projects.spaceElevator.capacityTargetFixed', null, 'fixed') },
+          { value: 'workers', label: t('ui.projects.spaceElevator.capacityTargetWorkers', null, 'x workers') }
+        ]
+      };
+    }
+  }
   const isDisposalTargetSelectionPath = presetSection === 'operations'
     && fieldPath[3] === 'disposalTargets'
     && Number.isInteger(fieldPath[4])

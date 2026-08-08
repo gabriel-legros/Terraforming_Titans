@@ -394,7 +394,7 @@ const projectParameters = {
     }
   },
   spaceElevator: {
-    type: 'Project',
+    type: 'SpaceElevatorProject',
     name: '',
     category :"infrastructure",
     cost: {
@@ -406,11 +406,46 @@ const projectParameters = {
     },
     duration: 360000,
     description: '',
-    repeatable: false,
+    repeatable: true,
+    maxRepeatCount: Infinity,
     unlocked : false,
     attributes : {
       disableWhenHazard: ['kessler', 'pulsar'],
       landCostScaling: true,
+      spaceAccess: {
+        elevatorCapacity: 50_000_000,
+        skyhookCapacity: 10_000_000,
+        workersPerCompletion: 100_000_000,
+        continuousThresholdMs: 1000,
+        skyhookCost: {
+          colony: {
+            metal: 50_000_000,
+            electronics: 1_000_000,
+            components: 1_000_000,
+          },
+        },
+        elevatorCost: {
+          colony: {
+            baseMetal: 10_000_000,
+            metalPerReferenceTether: 40_000_000,
+            electronics: 1_000_000,
+            components: 1_000_000,
+            superalloysPerReferenceTether: 4_000_000,
+          },
+        },
+        tether: {
+          traditionalSpecificStrength: 5_000_000,
+          superalloySpecificStrength: 5_000_000_000_000,
+          maximumTaper: 10,
+          integrationSteps: 512,
+          geometryCacheRelativeTolerance: 0.001,
+          referenceWorld: {
+            gravity: 3.711,
+            radiusMeters: 3_389_500,
+            spinSeconds: 24.6 * 3600,
+          },
+        },
+      },
       completionEffect: [
         {
           target : 'building',
@@ -722,6 +757,23 @@ const projectParameters = {
       showInResourcesRate: false
     }
   },
+  vanadoBiosphereBuoyancy: {
+    type: 'VanadoBiosphereBuoyancyProject',
+    name: '',
+    category: 'infrastructure',
+    cost: {},
+    duration: 0,
+    description: '',
+    repeatable: false,
+    unlocked: true,
+    attributes: {
+      biomassPerAerostat: 100_000,
+      minimumSupport: 100,
+      maximumSupport: 10_000_000,
+      hideAutoStart: true,
+      showInResourcesRate: false
+    }
+  },
   planetaryThruster: {
     type: 'PlanetaryThrustersProject',
     name: '',
@@ -860,6 +912,29 @@ const projectParameters = {
         superalloys: 1_000_000_000_000_000,
         components: 100_000_000_000_000,
         superconductors: 100_000_000_000_000,
+        glass: 100_000_000_000_000,
+        electronics: 50_000_000_000_000
+      }
+    },
+    duration: 144_000_000,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      alchemyParameter: 1,
+      spaceBuilding: true,
+      spaceBuildingProductivity: true
+    }
+  },
+  graphenePrinter: {
+    type: 'GraphenePrinterProject',
+    name: '',
+    category: 'giga',
+    cost: {
+      colony: {
+        components: 1_000_000_000_000_000,
         glass: 100_000_000_000_000,
         electronics: 50_000_000_000_000
       }

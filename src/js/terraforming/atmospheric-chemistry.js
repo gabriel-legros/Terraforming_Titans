@@ -2,9 +2,10 @@ const isNodeChem = typeof module !== 'undefined' && module.exports;
 
 const ATMOSPHERIC_CHEMISTRY_PARAMETERS = terraformingParameters.atmosphere.chemistry;
 const EXOSPHERE_PARAMETERS = terraformingParameters.atmosphere.exosphere;
-const METHANE_COMBUSTION_PARAMETER = ATMOSPHERIC_CHEMISTRY_PARAMETERS.methaneCombustionRateCoefficient;
-const OXYGEN_COMBUSTION_THRESHOLD = ATMOSPHERIC_CHEMISTRY_PARAMETERS.oxygenCombustionThresholdPa;
-const METHANE_COMBUSTION_THRESHOLD = ATMOSPHERIC_CHEMISTRY_PARAMETERS.methaneCombustionThresholdPa;
+const OXIDATION_PARAMETERS = ATMOSPHERIC_CHEMISTRY_PARAMETERS.oxidation;
+const OXIDATION_REACTION_PARAMETERS = OXIDATION_PARAMETERS.reactions;
+const ATMOSPHERIC_MOLECULAR_WEIGHTS = terraformingParameters.atmosphere.molecularWeightGPerMol;
+const METHANE_COMBUSTION_PARAMETER = OXIDATION_REACTION_PARAMETERS.methane.thermalRateCoefficient;
 const CALCITE_HALF_LIFE_SECONDS = ATMOSPHERIC_CHEMISTRY_PARAMETERS.calciteHalfLifeSeconds;
 const CALCITE_DECAY_CONSTANT = Math.log(2) / CALCITE_HALF_LIFE_SECONDS;
 const SULFURIC_ACID_RAIN_THRESHOLD_K = ATMOSPHERIC_CHEMISTRY_PARAMETERS.sulfuricAcidRainThresholdK;
@@ -12,6 +13,252 @@ const SULFURIC_ACID_REFERENCE_TEMPERATURE_K = ATMOSPHERIC_CHEMISTRY_PARAMETERS.s
 const SULFURIC_ACID_REFERENCE_DECAY_CONSTANT = Math.log(2) / ATMOSPHERIC_CHEMISTRY_PARAMETERS.sulfuricAcidReferenceHalfLifeSeconds;
 const SULFURIC_ACID_RAIN_WATER_CONVERSION_FRACTION = ATMOSPHERIC_CHEMISTRY_PARAMETERS.sulfuricAcidRainWaterConversionFraction;
 const H2SO4_TO_H2O_MASS_RATIO = ATMOSPHERIC_CHEMISTRY_PARAMETERS.sulfuricAcidToWaterMassRatio;
+
+const OXIDATION_REACTIONS = [
+  {
+    id: 'methane',
+    fuelKey: 'atmosphericMethane',
+    fuelMolecularWeight: ATMOSPHERIC_MOLECULAR_WEIGHTS.CH4,
+    oxygenMolesPerFuelMole: 2,
+    products: {
+      carbonDioxide: { moles: 1, molecularWeight: ATMOSPHERIC_MOLECULAR_WEIGHTS.CO2 },
+      atmosphericWater: { moles: 2, molecularWeight: ATMOSPHERIC_MOLECULAR_WEIGHTS.H2O }
+    }
+  },
+  {
+    id: 'ammonia',
+    fuelKey: 'atmosphericAmmonia',
+    fuelMolecularWeight: ATMOSPHERIC_MOLECULAR_WEIGHTS.NH3,
+    oxygenMolesPerFuelMole: 0.75,
+    products: {
+      inertGas: { moles: 0.5, molecularWeight: ATMOSPHERIC_MOLECULAR_WEIGHTS.N2 },
+      atmosphericWater: { moles: 1.5, molecularWeight: ATMOSPHERIC_MOLECULAR_WEIGHTS.H2O }
+    }
+  },
+  {
+    id: 'hydrogen',
+    fuelKey: 'hydrogen',
+    fuelMolecularWeight: ATMOSPHERIC_MOLECULAR_WEIGHTS.H2,
+    oxygenMolesPerFuelMole: 0.5,
+    products: {
+      atmosphericWater: { moles: 1, molecularWeight: ATMOSPHERIC_MOLECULAR_WEIGHTS.H2O }
+    }
+  }
+];
+// Fixed normal-density samples approximate unresolved local fuel plumes without
+// introducing save-dependent random rolls. Renormalization preserves mean fuel.
+const LOCAL_MIXING_DISTRIBUTION = [];
+let localMixingWeightTotal = 0;
+let localMixingMultiplierTotal = 0;
+for (const standardScore of OXIDATION_PARAMETERS.localMixingSamples) {
+  const weight = Math.exp(-0.5 * standardScore * standardScore);
+  const multiplier = Math.exp(
+    OXIDATION_PARAMETERS.localMixingLogStandardDeviation * standardScore
+      - 0.5 * OXIDATION_PARAMETERS.localMixingLogStandardDeviation
+        * OXIDATION_PARAMETERS.localMixingLogStandardDeviation
+  );
+  LOCAL_MIXING_DISTRIBUTION.push({ weight, multiplier });
+  localMixingWeightTotal += weight;
+  localMixingMultiplierTotal += weight * multiplier;
+}
+const localMixingMeanMultiplier = localMixingMultiplierTotal / localMixingWeightTotal;
+for (const sample of LOCAL_MIXING_DISTRIBUTION) {
+  sample.weight /= localMixingWeightTotal;
+  sample.multiplier /= localMixingMeanMultiplier;
+}
+
+function smoothReactionRange(edge0, edge1, value) {
+  const progress = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)));
+  return progress * progress * (3 - 2 * progress);
+}
+
+function calculateArrheniusMultiplier(temperatureK, parameters) {
+  const exponent = parameters.activationTemperatureK * (
+    (1 / parameters.referenceTemperatureK) - (1 / Math.max(1, temperatureK))
+  );
+  return Math.exp(Math.min(Math.log(OXIDATION_PARAMETERS.maximumArrheniusMultiplier), exponent));
+}
+
+function calculateSparkFlammability(
+  fuelEntries,
+  oxygenPressurePa,
+  totalPressurePa,
+  temperatureK
+) {
+  const temperatureScale = Math.max(
+    OXIDATION_PARAMETERS.minimumFlammabilityTemperatureScale,
+    Math.min(
+      OXIDATION_PARAMETERS.maximumFlammabilityTemperatureScale,
+      1 + (
+        temperatureK - OXIDATION_PARAMETERS.sparkReferenceTemperatureK
+      ) * OXIDATION_PARAMETERS.flammabilityTemperatureCoefficientPerK
+    )
+  );
+  let globalFuelPressurePa = 0;
+  for (const entry of fuelEntries) {
+    globalFuelPressurePa += entry.fuelPressurePa;
+  }
+
+  let flammability = 0;
+  for (const sample of LOCAL_MIXING_DISTRIBUTION) {
+    const localFuelPressurePa = globalFuelPressurePa * sample.multiplier;
+    const reactivePressurePa = localFuelPressurePa + oxygenPressurePa;
+    let equivalenceRatio = 0;
+    let leanEquivalenceRatio = 0;
+    let richEquivalenceRatio = 0;
+
+    for (const entry of fuelEntries) {
+      const parameters = entry.parameters;
+      const fuelFraction = entry.fuelPressurePa / globalFuelPressurePa;
+      const localFuelComponentPressurePa = entry.fuelPressurePa * sample.multiplier;
+      equivalenceRatio += (
+        localFuelComponentPressurePa / parameters.stoichiometricFuelOxygenRatio
+      ) / oxygenPressurePa;
+      const pressureScale = 1 - Math.exp(
+        -reactivePressurePa / parameters.flammabilityPressureScalePa
+      );
+      const rangeScale = pressureScale * temperatureScale;
+      const leanRatio = Math.max(
+        0,
+        parameters.stoichiometricFuelOxygenRatio - (
+          parameters.stoichiometricFuelOxygenRatio - parameters.leanFuelOxygenRatio
+        ) * rangeScale
+      );
+      const richRatio = parameters.stoichiometricFuelOxygenRatio + (
+        parameters.richFuelOxygenRatio - parameters.stoichiometricFuelOxygenRatio
+      ) * rangeScale;
+      leanEquivalenceRatio += fuelFraction * (
+        leanRatio / parameters.stoichiometricFuelOxygenRatio
+      );
+      richEquivalenceRatio += fuelFraction * (
+        richRatio / parameters.stoichiometricFuelOxygenRatio
+      );
+    }
+
+    if (
+      equivalenceRatio <= leanEquivalenceRatio
+      || equivalenceRatio >= richEquivalenceRatio
+    ) continue;
+
+    const ratioFactor = equivalenceRatio <= 1
+      ? smoothReactionRange(leanEquivalenceRatio, 1, equivalenceRatio)
+      : 1 - smoothReactionRange(1, richEquivalenceRatio, equivalenceRatio);
+    const localTotalPressurePa = Math.max(
+      reactivePressurePa,
+      totalPressurePa - globalFuelPressurePa + localFuelPressurePa
+    );
+    const reactiveFraction = reactivePressurePa / localTotalPressurePa;
+    const atmosphereFactor = smoothReactionRange(
+      OXIDATION_PARAMETERS.minimumReactiveAtmosphereFraction,
+      OXIDATION_PARAMETERS.fullReactiveAtmosphereFraction,
+      reactiveFraction
+    );
+    flammability += sample.weight * ratioFactor * atmosphereFactor;
+  }
+
+  return flammability;
+}
+
+function calculateAtmosphericOxidation(params) {
+  const {
+    pressureByKey,
+    availableByKey,
+    durationSeconds,
+    surfaceArea,
+    surfaceTemperatureK,
+    atmosphericPressurePa,
+    waterCloudActivity
+  } = params;
+  const oxygenPressurePa = pressureByKey.oxygen || 0;
+  const availableOxygen = availableByKey.oxygen || 0;
+  const sparkActivity = OXIDATION_PARAMETERS.backgroundSparkActivity
+    + OXIDATION_PARAMETERS.waterCloudSparkActivity * waterCloudActivity;
+  const requestedReactions = [];
+
+  if (oxygenPressurePa > 0 && availableOxygen > 0) {
+    const fuelEntries = [];
+    for (const reaction of OXIDATION_REACTIONS) {
+      const fuelPressurePa = pressureByKey[reaction.fuelKey] || 0;
+      const availableFuel = availableByKey[reaction.fuelKey] || 0;
+      if (fuelPressurePa <= 0 || availableFuel <= 0) continue;
+
+      fuelEntries.push({
+        reaction,
+        parameters: OXIDATION_REACTION_PARAMETERS[reaction.id],
+        fuelPressurePa,
+        availableFuel
+      });
+    }
+    const sparkFlammability = calculateSparkFlammability(
+      fuelEntries,
+      oxygenPressurePa,
+      atmosphericPressurePa,
+      surfaceTemperatureK
+    );
+    const springCompression = Math.pow(
+      sparkFlammability,
+      OXIDATION_PARAMETERS.combustionSpringExponent
+    );
+    const maximumSpringDecayPerDay = -Math.log(
+      1 - OXIDATION_PARAMETERS.combustionSpringMaximumFractionPerDay
+    );
+    const springCombustionFraction = 1 - Math.exp(
+      -maximumSpringDecayPerDay
+        * sparkActivity
+        * springCompression
+        * durationSeconds
+        / OXIDATION_PARAMETERS.combustionSpringSecondsPerDay
+    );
+
+    for (const entry of fuelEntries) {
+      const { reaction, parameters, fuelPressurePa, availableFuel } = entry;
+
+      const thermalCoefficient = parameters.thermalRateCoefficient
+        * calculateArrheniusMultiplier(surfaceTemperatureK, parameters);
+      const thermalFuelAmount = thermalCoefficient
+        * fuelPressurePa
+        * oxygenPressurePa
+        * surfaceArea
+        * durationSeconds;
+      const requestedFuel = Math.min(
+        availableFuel,
+        thermalFuelAmount + availableFuel * springCombustionFraction
+      );
+      const oxygenMassRatio = (
+        reaction.oxygenMolesPerFuelMole * ATMOSPHERIC_MOLECULAR_WEIGHTS.O2
+      ) / reaction.fuelMolecularWeight;
+      requestedReactions.push({ reaction, requestedFuel, oxygenMassRatio });
+    }
+  }
+
+  let requestedOxygen = 0;
+  for (const requested of requestedReactions) {
+    requestedOxygen += requested.requestedFuel * requested.oxygenMassRatio;
+  }
+  const oxygenScale = requestedOxygen > availableOxygen
+    ? availableOxygen / requestedOxygen
+    : 1;
+  const changes = {};
+  let heatReleasedJ = 0;
+
+  for (const requested of requestedReactions) {
+    const fuelAmount = requested.requestedFuel * oxygenScale;
+    const reaction = requested.reaction;
+    const parameters = OXIDATION_REACTION_PARAMETERS[reaction.id];
+    changes[reaction.fuelKey] = (changes[reaction.fuelKey] || 0) - fuelAmount;
+    changes.oxygen = (changes.oxygen || 0) - fuelAmount * requested.oxygenMassRatio;
+    heatReleasedJ += fuelAmount * KG_PER_TON * parameters.heatReleaseJPerKg;
+    for (const productKey in reaction.products) {
+      const product = reaction.products[productKey];
+      const productMassRatio = (
+        product.moles * product.molecularWeight
+      ) / reaction.fuelMolecularWeight;
+      changes[productKey] = (changes[productKey] || 0) + fuelAmount * productMassRatio;
+    }
+  }
+
+  return { changes, heatReleasedJ };
+}
 
 // ------------------------------
 // Physically-motivated H escape
@@ -182,45 +429,29 @@ function computeHydrogenEscapeTons(params) {
 
 function runAtmosphericChemistry(resources, params = {}) {
   const {
-    globalOxygenPressurePa = 0,
-    globalMethanePressurePa = 0,
-    availableGlobalMethaneGas = 0,
-    availableGlobalOxygenGas = 0,
+    pressureByKey = {},
+    availableByKey = {},
     realSeconds = 0,
     durationSeconds = 0,
     surfaceArea = 1,
     surfaceTemperatureK = SULFURIC_ACID_RAIN_THRESHOLD_K,
+    waterCloudActivity = 0,
     gravity = 0,
     solarFlux = 0,
     atmosphericPressurePa = 0,
     hydrogenEscapeMultiplier = 1,
     applyRates = true
   } = params;
-
-  let combustionMethaneAmount = 0;
-  let combustionOxygenAmount = 0;
-  let combustionWaterAmount = 0;
-  let combustionCO2Amount = 0;
-
-  if (
-    globalOxygenPressurePa > OXYGEN_COMBUSTION_THRESHOLD &&
-    globalMethanePressurePa > METHANE_COMBUSTION_THRESHOLD
-  ) {
-    const rate =
-      METHANE_COMBUSTION_PARAMETER *
-      (globalOxygenPressurePa - OXYGEN_COMBUSTION_THRESHOLD) *
-      (globalMethanePressurePa - METHANE_COMBUSTION_THRESHOLD) *
-      surfaceArea;
-
-    combustionMethaneAmount = Math.min(
-      rate * durationSeconds,
-      availableGlobalMethaneGas,
-      availableGlobalOxygenGas / 4
-    );
-    combustionOxygenAmount = combustionMethaneAmount * 4;
-    combustionWaterAmount = combustionMethaneAmount * 2.25;
-    combustionCO2Amount = combustionMethaneAmount * 2.75;
-  }
+  const oxidationResult = calculateAtmosphericOxidation({
+    pressureByKey,
+    availableByKey,
+    durationSeconds,
+    surfaceArea,
+    surfaceTemperatureK,
+    atmosphericPressurePa,
+    waterCloudActivity
+  });
+  const oxidationChanges = oxidationResult.changes;
 
   let calciteDecayAmount = 0;
   const currentCalcite = resources?.atmospheric?.calciteAerosol?.value || 0;
@@ -247,7 +478,10 @@ function runAtmosphericChemistry(resources, params = {}) {
   }
 
   let hydrogenDecayAmount = 0;
-  const currentHydrogen = resources?.atmospheric?.hydrogen?.value || 0;
+  const currentHydrogen = Math.max(
+    0,
+    (resources?.atmospheric?.hydrogen?.value || 0) + (oxidationChanges.hydrogen || 0)
+  );
 
   if (realSeconds > 0 && currentHydrogen > 0) {
     hydrogenDecayAmount = computeHydrogenEscapeTons({
@@ -256,54 +490,68 @@ function runAtmosphericChemistry(resources, params = {}) {
       gravity:gravity,              // m/s^2
       solarFlux:solarFlux,            // your heating proxy
       surfaceArea:surfaceArea,        // you said you can compute this easily
-      atmosphericPressurePa:atmosphericPressurePa,    // OPTIONAL: pass if you want diffusion-limit behavior
+      totalPressurePa: atmosphericPressurePa,
       escapeMultiplier: hydrogenEscapeMultiplier,
     });
   }
 
-  const methaneRate = durationSeconds > 0 ? (combustionMethaneAmount / durationSeconds) * 86400 : 0;
-  const oxygenRate = durationSeconds > 0 ? (combustionOxygenAmount / durationSeconds) * 86400 : 0;
-  const waterRate = durationSeconds > 0 ? (combustionWaterAmount / durationSeconds) * 86400 : 0;
   const acidRainWaterAmount =
     sulfuricAcidDecayAmount *
     SULFURIC_ACID_RAIN_WATER_CONVERSION_FRACTION *
     H2SO4_TO_H2O_MASS_RATIO;
   const acidRainWaterRate = realSeconds > 0 ? acidRainWaterAmount / realSeconds : 0;
-  const co2Rate = durationSeconds > 0 ? (combustionCO2Amount / durationSeconds) * 86400 : 0;
   const calciteRate = realSeconds > 0 ? calciteDecayAmount / realSeconds : 0;
   const acidRainRate = realSeconds > 0 ? sulfuricAcidDecayAmount / realSeconds : 0;
   const hydrogenRate = realSeconds > 0 ? hydrogenDecayAmount / realSeconds : 0;
 
-  if (applyRates) {
-    applyAtmosphericChemistryRates(resources, {
-      atmosphericMethane: -combustionMethaneAmount,
-      oxygen: -combustionOxygenAmount,
-      atmosphericWater: combustionWaterAmount,
-      liquidWater: acidRainWaterAmount,
-      carbonDioxide: combustionCO2Amount,
-      calciteAerosol: -calciteDecayAmount,
+  const changes = { ...oxidationChanges };
+  changes.liquidWater = (changes.liquidWater || 0) + acidRainWaterAmount;
+  changes.calciteAerosol = (changes.calciteAerosol || 0) - calciteDecayAmount;
+  changes.sulfuricAcid = (changes.sulfuricAcid || 0) - sulfuricAcidDecayAmount;
+  changes.hydrogen = (changes.hydrogen || 0) - hydrogenDecayAmount;
+  const processChanges = {
+    oxidation: oxidationChanges,
+    calciteDecay: { calciteAerosol: -calciteDecayAmount },
+    acidRain: {
       sulfuricAcid: -sulfuricAcidDecayAmount,
-      hydrogen: -hydrogenDecayAmount,
-    }, realSeconds);
+      liquidWater: acidRainWaterAmount
+    },
+    hydrogenEscape: { hydrogen: -hydrogenDecayAmount }
+  };
+
+  if (applyRates) {
+    applyAtmosphericChemistryRates(resources, changes, realSeconds, processChanges);
   }
 
   return {
-    changes: {
-      atmosphericMethane: -combustionMethaneAmount,
-      oxygen: -combustionOxygenAmount,
-      atmosphericWater: combustionWaterAmount,
-      liquidWater: acidRainWaterAmount,
-      carbonDioxide: combustionCO2Amount,
-      calciteAerosol: -calciteDecayAmount,
-      sulfuricAcid: -sulfuricAcidDecayAmount,
-      hydrogen: -hydrogenDecayAmount,
-    },
+    changes,
+    processChanges,
+    heatReleasedJ: oxidationResult.heatReleasedJ,
+    climateHeatEnergyJ: oxidationResult.heatReleasedJ
+      * OXIDATION_PARAMETERS.climateHeatDepositionFraction,
     rates: {
-      methane: methaneRate,
-      oxygen: oxygenRate,
-      water: waterRate,
+      methane: durationSeconds > 0
+        ? -(oxidationChanges.atmosphericMethane || 0) / durationSeconds * 86400
+        : 0,
+      ammonia: durationSeconds > 0
+        ? -(oxidationChanges.atmosphericAmmonia || 0) / durationSeconds * 86400
+        : 0,
+      hydrogenCombustion: durationSeconds > 0
+        ? -(oxidationChanges.hydrogen || 0) / durationSeconds * 86400
+        : 0,
+      oxygen: durationSeconds > 0
+        ? -(oxidationChanges.oxygen || 0) / durationSeconds * 86400
+        : 0,
+      water: durationSeconds > 0
+        ? (oxidationChanges.atmosphericWater || 0) / durationSeconds * 86400
+        : 0,
       acidRainWater: acidRainWaterRate,
-      co2: co2Rate,
+      co2: durationSeconds > 0
+        ? (oxidationChanges.carbonDioxide || 0) / durationSeconds * 86400
+        : 0,
+      nitrogen: durationSeconds > 0
+        ? (oxidationChanges.inertGas || 0) / durationSeconds * 86400
+        : 0,
       calcite: calciteRate,
       acidRain: acidRainRate,
       hydrogen: hydrogenRate,
@@ -311,71 +559,58 @@ function runAtmosphericChemistry(resources, params = {}) {
   };
 }
 
-function applyAtmosphericChemistryRates(resources, changes = {}, realSeconds = 0) {
+function applyAtmosphericChemistryRates(resources, changes = {}, realSeconds = 0, processChanges = {}) {
   const seconds = realSeconds > 0 ? realSeconds : 0;
-  const methaneAmount = -(changes.atmosphericMethane || 0);
-  const oxygenAmount = -(changes.oxygen || 0);
-  const waterAmount = changes.atmosphericWater || 0;
-  const acidRainWaterAmount = changes.liquidWater || 0;
-  const co2Amount = changes.carbonDioxide || 0;
-  const calciteAmount = -(changes.calciteAerosol || 0);
-  const acidRainAmount = -(changes.sulfuricAcid || 0);
-  const hydrogenAmount = -(changes.hydrogen || 0);
-
-  const methaneRate = seconds > 0 ? methaneAmount / seconds : 0;
-  const oxygenRate = seconds > 0 ? oxygenAmount / seconds : 0;
-  const waterRate = seconds > 0 ? waterAmount / seconds : 0;
-  const acidRainWaterRate = seconds > 0 ? acidRainWaterAmount / seconds : 0;
-  const co2Rate = seconds > 0 ? co2Amount / seconds : 0;
-  const calciteRate = seconds > 0 ? calciteAmount / seconds : 0;
-  const acidRainRate = seconds > 0 ? acidRainAmount / seconds : 0;
-  const hydrogenRate = seconds > 0 ? hydrogenAmount / seconds : 0;
+  const oxidation = processChanges.oxidation || {};
+  const calciteDecay = processChanges.calciteDecay || {};
+  const acidRain = processChanges.acidRain || {};
+  const hydrogenEscape = processChanges.hydrogenEscape || {};
   const rateType = 'terraforming';
-  const methaneCombustionSource = registerRateSource(
-    'terraforming:methaneCombustion',
-    'Methane Combustion'
+  const atmosphericOxidationSource = getLocalizedRateSource(
+    'terraforming:atmosphericOxidation',
+    'ui.terraforming.rateSources.atmosphericOxidation',
+    'Atmospheric Oxidation'
   );
-  const calciteDecaySource = registerRateSource('terraforming:calciteDecay', 'Calcite Decay');
-  const acidRainSource = registerRateSource('terraforming:acidRain', 'Acid rain');
-  const hydrogenEscapeSource = registerRateSource('terraforming:hydrogenEscape', 'Hydrogen Escape');
+  const calciteDecaySource = getLocalizedRateSource(
+    'terraforming:calciteDecay',
+    'ui.terraforming.rateSources.calciteDecay',
+    'Calcite Decay'
+  );
+  const acidRainSource = getLocalizedRateSource(
+    'terraforming:acidRain',
+    'ui.terraforming.rateSources.acidRain',
+    'Acid rain'
+  );
+  const hydrogenEscapeSource = getLocalizedRateSource(
+    'terraforming:hydrogenEscape',
+    'ui.terraforming.rateSources.hydrogenEscape',
+    'Hydrogen Escape'
+  );
 
-  resources?.atmospheric?.atmosphericWater?.modifyRate?.(
-    waterRate,
-    methaneCombustionSource,
-    rateType
-  );
-  resources?.atmospheric?.carbonDioxide?.modifyRate?.(
-    co2Rate,
-    methaneCombustionSource,
-    rateType
-  );
-  resources?.atmospheric?.atmosphericMethane?.modifyRate?.(
-    -methaneRate,
-    methaneCombustionSource,
-    rateType
-  );
-  resources?.atmospheric?.oxygen?.modifyRate?.(
-    -oxygenRate,
-    methaneCombustionSource,
-    rateType
-  );
+  for (const key in oxidation) {
+    resources.atmospheric[key].modifyRate(
+      seconds > 0 ? oxidation[key] / seconds : 0,
+      atmosphericOxidationSource,
+      rateType
+    );
+  }
   resources?.atmospheric?.calciteAerosol?.modifyRate?.(
-    -calciteRate,
+    seconds > 0 ? (calciteDecay.calciteAerosol || 0) / seconds : 0,
     calciteDecaySource,
     rateType
   );
   resources?.atmospheric?.sulfuricAcid?.modifyRate?.(
-    -acidRainRate,
+    seconds > 0 ? (acidRain.sulfuricAcid || 0) / seconds : 0,
     acidRainSource,
     rateType
   );
   resources?.surface?.liquidWater?.modifyRate?.(
-    acidRainWaterRate,
+    seconds > 0 ? (acidRain.liquidWater || 0) / seconds : 0,
     acidRainSource,
     rateType
   );
   resources?.atmospheric?.hydrogen?.modifyRate?.(
-    -hydrogenRate,
+    seconds > 0 ? (hydrogenEscape.hydrogen || 0) / seconds : 0,
     hydrogenEscapeSource,
     rateType
   );
@@ -385,9 +620,8 @@ if (isNodeChem) {
   module.exports = {
     runAtmosphericChemistry,
     applyAtmosphericChemistryRates,
+    calculateAtmosphericOxidation,
     METHANE_COMBUSTION_PARAMETER,
-    OXYGEN_COMBUSTION_THRESHOLD,
-    METHANE_COMBUSTION_THRESHOLD,
     CALCITE_HALF_LIFE_SECONDS,
     SULFURIC_ACID_RAIN_THRESHOLD_K,
     SULFURIC_ACID_REFERENCE_TEMPERATURE_K,
@@ -403,8 +637,6 @@ if (isNodeChem) {
   window.runAtmosphericChemistry = runAtmosphericChemistry;
   window.applyAtmosphericChemistryRates = applyAtmosphericChemistryRates;
   window.METHANE_COMBUSTION_PARAMETER = METHANE_COMBUSTION_PARAMETER;
-  window.OXYGEN_COMBUSTION_THRESHOLD = OXYGEN_COMBUSTION_THRESHOLD;
-  window.METHANE_COMBUSTION_THRESHOLD = METHANE_COMBUSTION_THRESHOLD;
   window.CALCITE_HALF_LIFE_SECONDS = CALCITE_HALF_LIFE_SECONDS;
   window.SULFURIC_ACID_RAIN_THRESHOLD_K = SULFURIC_ACID_RAIN_THRESHOLD_K;
   window.SULFURIC_ACID_REFERENCE_TEMPERATURE_K = SULFURIC_ACID_REFERENCE_TEMPERATURE_K;

@@ -310,7 +310,7 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     }
     if (control.dustFactory && building instanceof DustFactoryClass) {
       if (!this.areSettingsEqual(DustFactoryClass.saveAutomationSettings(), control.dustFactory)) {
-        DustFactoryClass.loadAutomationSettings(control.dustFactory);
+        building.applyDustAutomationSettings(control.dustFactory, true);
         changed = true;
       }
     }

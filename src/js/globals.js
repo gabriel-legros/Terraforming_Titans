@@ -70,6 +70,7 @@ const DIFFICULTY_SETTING_DEFAULTS = {
   phaseChangeHeat: false,
   factoryHeating: false,
   realisticFactoryEnergyConsumption: false,
+  spaceAccessCapacity: false,
   infinitePatience: false,
   liftersStrippingCap: false,
   orbitalCap: false,
@@ -102,6 +103,7 @@ const DIFFICULTY_SETTING_DEFAULTS = {
 
 let gameSettings = {
   autosaveIntervalSeconds: 300,
+  autosaveCount: 3,
   framerate: 30,
   uiScale: 1,
   useCelsius: false,

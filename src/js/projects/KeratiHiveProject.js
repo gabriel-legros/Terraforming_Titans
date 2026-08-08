@@ -23,10 +23,15 @@ class KeratiHiveProject extends Project {
     this.uiElements = null;
     this.hasInitializedHive = false;
     this.huntingEnabled = true;
+    this.autoFoodEnabled = false;
     this.foodTransferAmount = this.tuning.foodTransfer.defaultAmount;
     this.batchAmounts = {};
+    this.autoHatchEnabled = {};
+    this.autoHatchWeights = {};
     KERATI_HIVE_ACTION_ORDER.forEach((actionId) => {
       this.batchAmounts[actionId] = this.tuning.batch.defaultAmount;
+      this.autoHatchEnabled[actionId] = false;
+      this.autoHatchWeights[actionId] = 1;
     });
     this.resetHiveState();
   }
@@ -124,9 +129,12 @@ class KeratiHiveProject extends Project {
     this.resetHiveState();
     this.hasInitializedHive = true;
     this.huntingEnabled = true;
+    this.autoFoodEnabled = false;
     this.foodTransferAmount = this.tuning.foodTransfer.defaultAmount;
     KERATI_HIVE_ACTION_ORDER.forEach((actionId) => {
       this.batchAmounts[actionId] = this.tuning.batch.defaultAmount;
+      this.autoHatchEnabled[actionId] = false;
+      this.autoHatchWeights[actionId] = 1;
     });
     this.syncLandReservation();
     this.updateUI();
@@ -288,7 +296,7 @@ class KeratiHiveProject extends Project {
   }
 
   getCompletionTolerance(initialLand = this.getInitialLand()) {
-    return Math.max(1e-6, Math.abs(initialLand) * 1e-12);
+    return Math.max(0.5, Math.abs(initialLand) * 1e-12);
   }
 
   isComplete() {
@@ -301,7 +309,7 @@ class KeratiHiveProject extends Project {
       this.isCompleted = false;
       return false;
     }
-    this.territory = initialLand;
+    this.territory = Math.min(initialLand, this.getMaxTerritoryForGrowth());
     this.isCompleted = true;
     return true;
   }
@@ -326,11 +334,23 @@ class KeratiHiveProject extends Project {
       return;
     }
 
+    this.runAutomaticFoodTransfer(seconds);
     this.runLarvaProduction(seconds);
     this.runDrones(seconds);
     this.runBuilders(seconds);
     this.runHunters(seconds);
+    this.runAutomaticHatching();
     this.checkCompletion();
+  }
+
+  runAutomaticFoodTransfer(seconds) {
+    if (!this.autoFoodEnabled) {
+      return;
+    }
+    const transferred = this.addFoodToHive(this.getFoodTransferAmount() * seconds);
+    if (transferred > 0) {
+      resources.colony.food.modifyRate(-(transferred / seconds), this.getRateSource(), 'project');
+    }
   }
 
   runLarvaProduction(seconds) {
@@ -433,6 +453,250 @@ class KeratiHiveProject extends Project {
     resources.colony.food.decrease(actual);
     this.hiveFood += actual;
     return actual;
+  }
+
+  setAutoHatchWeight(actionId, value) {
+    this.autoHatchWeights[actionId] = Math.max(0.000001, value || 1);
+  }
+
+  getAutoHatchWeight(actionId) {
+    return Math.max(0.000001, this.autoHatchWeights[actionId] || 1);
+  }
+
+  getAutoHatchCounts() {
+    return {
+      drone: this.drones,
+      builder: this.builders,
+      hunter: this.hunters,
+      princess: this.princesses,
+      queenUpgrade: this.queens,
+      empressUpgrade: this.empresses,
+    };
+  }
+
+  getMaxAffordableAutoHatch(actionId) {
+    if (actionId === 'queenUpgrade' || actionId === 'empressUpgrade') {
+      return Math.floor(this.getMaxAffordablePromotion(actionId));
+    }
+    return Math.floor(this.getMaxAffordableHatch(actionId));
+  }
+
+  findBestIncrementalAutoHatchAction(counts = this.getAutoHatchCounts()) {
+    let best = null;
+    KERATI_HIVE_ACTION_ORDER.forEach((actionId) => {
+      if (!this.autoHatchEnabled[actionId] || !this.canEventuallyAutoHatchAction(actionId, counts)) {
+        return;
+      }
+      const level = counts[actionId] / this.getAutoHatchWeight(actionId);
+      const sourceId = actionId === 'queenUpgrade'
+        ? 'princess'
+        : (actionId === 'empressUpgrade' ? 'queenUpgrade' : null);
+      if (sourceId && this.autoHatchEnabled[sourceId]) {
+        const sourceLevel = counts[sourceId] / this.getAutoHatchWeight(sourceId);
+        if (level >= sourceLevel - 1e-12) {
+          return;
+        }
+      }
+      if (!best || level < best.level - 1e-12) {
+        best = { actionId, amount: 1, level };
+      }
+    });
+    return best;
+  }
+
+  canEventuallyAutoHatchAction(actionId, counts = this.getAutoHatchCounts()) {
+    if (actionId === 'princess') {
+      return this.spawningPools - counts.princess - counts.queenUpgrade - counts.empressUpgrade >= 1;
+    }
+    if (actionId === 'queenUpgrade') {
+      return counts.princess >= 1;
+    }
+    if (actionId === 'empressUpgrade') {
+      return counts.queenUpgrade >= 1;
+    }
+    return true;
+  }
+
+  buildAutoHatchCatchUpStep() {
+    const counts = this.getAutoHatchCounts();
+    const enabled = KERATI_HIVE_ACTION_ORDER.filter((actionId) => this.autoHatchEnabled[actionId]);
+    if (enabled.length <= 1) {
+      return null;
+    }
+    const levels = enabled.map((actionId) => ({
+      actionId,
+      level: counts[actionId] / this.getAutoHatchWeight(actionId),
+    })).sort((left, right) => left.level - right.level);
+    const lowestLevel = levels[0].level;
+    const sameLevel = (level) => Math.abs(level - lowestLevel)
+      <= Math.max(1, Math.abs(lowestLevel)) * 1e-12;
+    const lowest = levels.filter((entry) => sameLevel(entry.level));
+    const next = levels.find((entry) => !sameLevel(entry.level));
+    if (!next) {
+      return null;
+    }
+
+    const additions = {};
+    lowest.forEach((entry) => {
+      additions[entry.actionId] = Math.max(
+        1,
+        Math.ceil((next.level * this.getAutoHatchWeight(entry.actionId)) - counts[entry.actionId] - 1e-12)
+      );
+    });
+    const plan = {
+      drone: additions.drone || 0,
+      builder: additions.builder || 0,
+      hunter: additions.hunter || 0,
+      empressUpgrade: additions.empressUpgrade || 0,
+    };
+    plan.queenUpgrade = (additions.queenUpgrade || 0)
+      + (additions.queenUpgrade && additions.empressUpgrade ? plan.empressUpgrade : 0);
+    plan.princess = (additions.princess || 0)
+      + (additions.princess && additions.queenUpgrade ? plan.queenUpgrade : 0);
+    return { plan, lowest: lowest.map((entry) => entry.actionId) };
+  }
+
+  buildAutoHatchGrowthVector() {
+    const plan = {
+      drone: this.autoHatchEnabled.drone ? this.getAutoHatchWeight('drone') : 0,
+      builder: this.autoHatchEnabled.builder ? this.getAutoHatchWeight('builder') : 0,
+      hunter: this.autoHatchEnabled.hunter ? this.getAutoHatchWeight('hunter') : 0,
+      princess: 0,
+      queenUpgrade: 0,
+      empressUpgrade: this.autoHatchEnabled.empressUpgrade
+        ? this.getAutoHatchWeight('empressUpgrade')
+        : 0,
+    };
+    plan.queenUpgrade = this.autoHatchEnabled.queenUpgrade
+      ? this.getAutoHatchWeight('queenUpgrade') + plan.empressUpgrade
+      : 0;
+    plan.princess = this.autoHatchEnabled.princess
+      ? this.getAutoHatchWeight('princess') + plan.queenUpgrade
+      : 0;
+    return plan;
+  }
+
+  getAutoHatchPlanScale(plan) {
+    const costs = this.tuning.costs;
+    const larvaCost =
+      (plan.drone * costs.droneLarva)
+      + (plan.builder * costs.builderLarva)
+      + (plan.hunter * costs.hunterLarva)
+      + (plan.princess * costs.princessLarva);
+    const honeyCost =
+      (plan.drone * costs.droneHoney)
+      + (plan.builder * costs.builderHoney)
+      + (plan.hunter * costs.hunterHoney)
+      + (plan.princess * costs.princessHoney)
+      + (plan.queenUpgrade * costs.queenHoney)
+      + (plan.empressUpgrade * costs.empressHoney);
+    let scale = Infinity;
+    if (larvaCost > 0) {
+      scale = Math.min(scale, this.larva / larvaCost);
+    }
+    if (honeyCost > 0) {
+      scale = Math.min(scale, this.honey / honeyCost);
+    }
+    if (plan.princess > 0) {
+      scale = Math.min(scale, this.getAvailableSpawnerSlots() / plan.princess);
+    }
+    if (plan.queenUpgrade > plan.princess) {
+      scale = Math.min(scale, this.princesses / (plan.queenUpgrade - plan.princess));
+    }
+    if (plan.empressUpgrade > plan.queenUpgrade) {
+      scale = Math.min(scale, this.queens / (plan.empressUpgrade - plan.queenUpgrade));
+    }
+    return Math.max(0, scale);
+  }
+
+  scaleAutoHatchPlan(plan, scale) {
+    const scaled = {};
+    KERATI_HIVE_ACTION_ORDER.forEach((actionId) => {
+      scaled[actionId] = Math.floor((plan[actionId] * scale) + 1e-12);
+    });
+    scaled.queenUpgrade = Math.min(scaled.queenUpgrade, this.princesses + scaled.princess);
+    scaled.empressUpgrade = Math.min(scaled.empressUpgrade, this.queens + scaled.queenUpgrade);
+    return scaled;
+  }
+
+  executeAutoHatchAction(actionId, amount) {
+    if (actionId === 'queenUpgrade' || actionId === 'empressUpgrade') {
+      return this.promote(actionId, amount);
+    }
+    return this.hatch(actionId, amount);
+  }
+
+  runAutomaticHatching() {
+    const enabledCount = KERATI_HIVE_ACTION_ORDER.filter((actionId) => this.autoHatchEnabled[actionId]).length;
+    if (enabledCount === 0) {
+      return;
+    }
+    for (let pass = 0; pass < enabledCount; pass += 1) {
+      const step = this.buildAutoHatchCatchUpStep();
+      if (!step) {
+        break;
+      }
+      const scale = Math.min(1, this.getAutoHatchPlanScale(step.plan));
+      if (!(scale > 0)) {
+        return;
+      }
+      const plan = this.scaleAutoHatchPlan(step.plan, scale);
+      const hasActions = KERATI_HIVE_ACTION_ORDER.some((actionId) => plan[actionId] > 0);
+      if (!hasActions) {
+        const actionId = step.lowest[0];
+        if (this.getMaxAffordableAutoHatch(actionId) < 1) {
+          return;
+        }
+        this.executeAutoHatchAction(actionId, 1);
+        return;
+      }
+      KERATI_HIVE_ACTION_ORDER.forEach((actionId) => {
+        if (plan[actionId] > 0) {
+          this.executeAutoHatchAction(actionId, plan[actionId]);
+        }
+      });
+      if (scale < 1) {
+        for (let remainder = 0; remainder < enabledCount; remainder += 1) {
+          const remainderStep = this.buildAutoHatchCatchUpStep();
+          if (!remainderStep) {
+            return;
+          }
+          const actionId = remainderStep.lowest[0];
+          if (this.getMaxAffordableAutoHatch(actionId) < 1) {
+            return;
+          }
+          this.executeAutoHatchAction(actionId, 1);
+        }
+        return;
+      }
+    }
+
+    const vector = this.buildAutoHatchGrowthVector();
+    const scale = this.getAutoHatchPlanScale(vector);
+    if (!(scale > 0)) {
+      return;
+    }
+    const plan = this.scaleAutoHatchPlan(vector, scale);
+    KERATI_HIVE_ACTION_ORDER.forEach((actionId) => {
+      if (plan[actionId] > 0) {
+        this.executeAutoHatchAction(actionId, plan[actionId]);
+      }
+    });
+
+    for (let pass = 0; pass < enabledCount; pass += 1) {
+      const action = this.findBestIncrementalAutoHatchAction();
+      if (!action) {
+        return;
+      }
+      const maximum = this.getMaxAffordableAutoHatch(action.actionId);
+      if (maximum < 1) {
+        return;
+      }
+      this.executeAutoHatchAction(
+        action.actionId,
+        1
+      );
+    }
   }
 
   recoverLand() {
@@ -550,6 +814,9 @@ class KeratiHiveProject extends Project {
 
   getNetRates() {
     const rates = this.tuning.rates;
+    const automaticFoodPerSecond = this.autoFoodEnabled
+      ? Math.min(this.getFoodTransferAmount(), Math.max(0, resources.colony.food.value || 0))
+      : 0;
     const droneRatio = this.drones > 0 && rates.droneFoodPerSecond > 0
       ? Math.min(1, this.hiveFood / Math.max(this.drones * rates.droneFoodPerSecond, 1e-9))
       : 0;
@@ -562,7 +829,10 @@ class KeratiHiveProject extends Project {
       : 0;
     return {
       honeyPerSecond: this.drones * rates.droneHoneyPerSecond * droneRatio,
-      hiveFoodDeltaPerSecond: (this.hunters * rates.hunterFoodPerSecond * hunterFoodRatio) - (this.drones * rates.droneFoodPerSecond * droneRatio),
+      hiveFoodDeltaPerSecond:
+        automaticFoodPerSecond
+        + (this.hunters * rates.hunterFoodPerSecond * hunterFoodRatio)
+        - (this.drones * rates.droneFoodPerSecond * droneRatio),
       larvaPerSecond:
         (this.princesses * rates.princessLarvaPerSecond)
         + (this.queens * rates.queenLarvaPerSecond)
@@ -650,12 +920,54 @@ class KeratiHiveProject extends Project {
       this.syncLandReservation();
       this.updateUI();
     });
+    const automationControls = document.createElement('div');
+    automationControls.classList.add('kerati-hive-action-card__automation');
+    const autoLabel = document.createElement('label');
+    autoLabel.classList.add('kerati-hive-auto-label');
+    const autoCheckbox = document.createElement('input');
+    autoCheckbox.type = 'checkbox';
+    autoCheckbox.addEventListener('change', () => {
+      this.autoHatchEnabled[options.actionId] = autoCheckbox.checked;
+      this.updateUI();
+    });
+    const autoText = document.createElement('span');
+    autoText.textContent = getKeratiHiveText('automation.auto', 'Auto');
+    autoLabel.append(autoCheckbox, autoText);
+    const weightLabel = document.createElement('label');
+    weightLabel.classList.add('kerati-hive-weight-label');
+    const weightText = document.createElement('span');
+    weightText.textContent = getKeratiHiveText('automation.weight', 'Weight');
+    const weightInput = document.createElement('input');
+    weightInput.type = 'text';
+    weightInput.inputMode = 'decimal';
+    weightInput.classList.add('kerati-hive-weight-input');
+    wireStringNumberInput(weightInput, {
+      parseValue: (inputValue) => Math.max(0.000001, parseFlexibleNumber(inputValue) || 1),
+      formatValue: (inputValue) => formatNumber(inputValue, true),
+      onValue: (inputValue) => {
+        this.setAutoHatchWeight(options.actionId, inputValue);
+        this.updateUI();
+      },
+    });
+    weightLabel.append(weightText, weightInput);
+    automationControls.append(autoLabel, weightLabel);
     batchControls.append(downButton, upButton);
-    controls.append(batchControls, actionButton);
+    controls.append(batchControls, actionButton, automationControls);
 
     row.append(info, controls);
     container.appendChild(row);
-    return { row, value, availability, metaCost, metaEach, actionButton, downButton, upButton };
+    return {
+      row,
+      value,
+      availability,
+      metaCost,
+      metaEach,
+      actionButton,
+      downButton,
+      upButton,
+      autoCheckbox,
+      weightInput,
+    };
   }
 
   getActionMeta(actionId) {
@@ -840,6 +1152,17 @@ class KeratiHiveProject extends Project {
       this.addFoodToHive();
       this.updateUI();
     });
+    const autoFoodLabel = document.createElement('label');
+    autoFoodLabel.classList.add('kerati-hive-auto-label', 'kerati-hive-auto-food-label');
+    const autoFoodCheckbox = document.createElement('input');
+    autoFoodCheckbox.type = 'checkbox';
+    autoFoodCheckbox.addEventListener('change', () => {
+      this.autoFoodEnabled = autoFoodCheckbox.checked;
+      this.updateUI();
+    });
+    const autoFoodText = document.createElement('span');
+    autoFoodText.textContent = getKeratiHiveText('foodTransfer.auto', 'Auto /s');
+    autoFoodLabel.append(autoFoodCheckbox, autoFoodText);
     const maxFoodButton = document.createElement('button');
     maxFoodButton.type = 'button';
     maxFoodButton.classList.add('kerati-hive-transfer-button');
@@ -848,7 +1171,7 @@ class KeratiHiveProject extends Project {
       this.addFoodToHive(resources.colony.food.value || 0);
       this.updateUI();
     });
-    transferControls.append(transferInput, addFoodButton, maxFoodButton);
+    transferControls.append(transferInput, autoFoodLabel, addFoodButton, maxFoodButton);
     hivePanel.appendChild(transferControls);
 
     summaryLayout.append(territoryPanel, hivePanel);
@@ -950,6 +1273,7 @@ class KeratiHiveProject extends Project {
       progressLine,
       colonyFoodValue,
       transferInput,
+      autoFoodCheckbox,
       addFoodButton,
       maxFoodButton,
       huntingToggle,
@@ -988,6 +1312,8 @@ class KeratiHiveProject extends Project {
       value: formatNumber(resources.colony.food.value || 0, true, 3),
     });
     this.uiElements.addFoodButton.textContent = getKeratiHiveText('foodTransfer.add', 'Add Food');
+    this.uiElements.autoFoodCheckbox.checked = this.autoFoodEnabled;
+    this.uiElements.autoFoodCheckbox.disabled = this.isCompleted;
 
     if (document.activeElement !== this.uiElements.transferInput) {
       this.uiElements.transferInput.dataset.keratiHiveFood = String(this.getFoodTransferAmount());
@@ -1013,6 +1339,12 @@ class KeratiHiveProject extends Project {
       action.actionButton.disabled = this.isCompleted || maxCount <= 0;
       action.downButton.disabled = this.isCompleted;
       action.upButton.disabled = this.isCompleted;
+      action.autoCheckbox.checked = this.autoHatchEnabled[actionId] === true;
+      action.autoCheckbox.disabled = this.isCompleted;
+      if (document.activeElement !== action.weightInput) {
+        action.weightInput.value = formatNumber(this.getAutoHatchWeight(actionId), true);
+      }
+      action.weightInput.disabled = this.isCompleted;
     };
 
     setActionState('drone', this.drones, 'actions.drone.summary', 'actions.drone.button', this.getMaxAffordableHatch('drone'));
@@ -1023,12 +1355,13 @@ class KeratiHiveProject extends Project {
     setActionState('empressUpgrade', this.empresses, 'actions.empress.summary', 'actions.empress.button', this.getMaxAffordablePromotion('empressUpgrade'));
 
     const progressPercent = Math.max(0, Math.min(100, this.getCompletionFraction() * 100));
+    const displayedProgressPercent = this.isCompleted ? 100 : Math.min(99.99, progressPercent);
     const progressText = this.isCompleted
       ? getKeratiHiveText('status.completed', 'Kerati Hive complete. Territory covers the world and provides {workers} workers.', {
           workers: formatNumber(this.getCompletedWorkerContribution(), true, 3),
         })
       : getKeratiHiveText('status.progress', 'Completion {percent}% | Honey {honey}/s | Larva {larva}/s | Food {food}/s | Territory {territory}/s | Biomass use {biomass}/s', {
-          percent: formatNumber(progressPercent, false, 2),
+          percent: formatNumber(displayedProgressPercent, false, 2),
           honey: formatNumber(rates.honeyPerSecond, true, 3),
           larva: formatNumber(rates.larvaPerSecond, true, 3),
           food: formatNumber(rates.hiveFoodDeltaPerSecond, true, 3),
@@ -1048,8 +1381,11 @@ class KeratiHiveProject extends Project {
     state.keratiHive = {
       hasInitializedHive: this.hasInitializedHive === true,
       huntingEnabled: this.huntingEnabled === true,
+      autoFoodEnabled: this.autoFoodEnabled === true,
       foodTransferAmount: this.foodTransferAmount,
       batchAmounts: { ...this.batchAmounts },
+      autoHatchEnabled: { ...this.autoHatchEnabled },
+      autoHatchWeights: { ...this.autoHatchWeights },
       territory: this.territory,
       spawningPools: this.spawningPools,
       poolProgress: this.poolProgress,
@@ -1072,10 +1408,15 @@ class KeratiHiveProject extends Project {
     const saved = state.keratiHive || {};
     this.hasInitializedHive = saved.hasInitializedHive === true;
     this.huntingEnabled = saved.huntingEnabled !== false;
+    this.autoFoodEnabled = saved.autoFoodEnabled === true;
     this.foodTransferAmount = Math.max(1, saved.foodTransferAmount || this.tuning.foodTransfer.defaultAmount);
     this.batchAmounts = {};
+    this.autoHatchEnabled = {};
+    this.autoHatchWeights = {};
     KERATI_HIVE_ACTION_ORDER.forEach((actionId) => {
       this.batchAmounts[actionId] = Math.max(1, saved.batchAmounts?.[actionId] || this.tuning.batch.defaultAmount);
+      this.autoHatchEnabled[actionId] = saved.autoHatchEnabled?.[actionId] === true;
+      this.autoHatchWeights[actionId] = Math.max(0.000001, saved.autoHatchWeights?.[actionId] || 1);
     });
     this.territory = saved.territory ?? this.tuning.initialState.territory;
     this.spawningPools = saved.spawningPools ?? this.tuning.initialState.spawningPools;
@@ -1090,6 +1431,37 @@ class KeratiHiveProject extends Project {
     this.queens = saved.queens ?? this.tuning.initialState.queens;
     this.empresses = saved.empresses ?? this.tuning.initialState.empresses;
     this.syncLandReservation();
+  }
+
+  saveAutomationSettings() {
+    return {
+      ...super.saveAutomationSettings(),
+      autoFoodEnabled: this.autoFoodEnabled === true,
+      autoFoodRate: this.getFoodTransferAmount(),
+      autoHatchEnabled: { ...this.autoHatchEnabled },
+      autoHatchWeights: { ...this.autoHatchWeights },
+    };
+  }
+
+  loadAutomationSettings(settings = {}) {
+    super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoFoodEnabled')) {
+      this.autoFoodEnabled = settings.autoFoodEnabled === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'autoFoodRate')) {
+      this.setFoodTransferAmount(settings.autoFoodRate);
+    }
+    const enabled = settings.autoHatchEnabled || {};
+    const weights = settings.autoHatchWeights || {};
+    KERATI_HIVE_ACTION_ORDER.forEach((actionId) => {
+      if (Object.prototype.hasOwnProperty.call(enabled, actionId)) {
+        this.autoHatchEnabled[actionId] = enabled[actionId] === true;
+      }
+      if (Object.prototype.hasOwnProperty.call(weights, actionId)) {
+        this.setAutoHatchWeight(actionId, weights[actionId]);
+      }
+    });
+    this.updateUI();
   }
 }
 

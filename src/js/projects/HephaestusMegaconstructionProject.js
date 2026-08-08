@@ -60,9 +60,10 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     const dummyButton = { textContent: '', disabled: false };
     const dummyWrapper = { style: { display: '' } };
     const rowElements = {};
-    [HEPHAESTUS_UNASSIGNED_KEY, 'dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars', name].forEach((key) => {
+    [HEPHAESTUS_UNASSIGNED_KEY, 'dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars', name].forEach((key) => {
       rowElements[key] = {
         wrapper: dummyWrapper,
+        complexity: dummyText,
         value: dummyText,
         minusButton: dummyButton,
         plusButton: dummyButton,
@@ -109,6 +110,7 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
       const key = rowNode.dataset.hephaestusAssignmentKey;
       rowElements[key] = {
         wrapper: rowNode,
+        complexity: rowNode.querySelector('[data-hephaestus-role="complexity"]'),
         value: rowNode.querySelector('[data-hephaestus-role="value"]'),
         minusButton: rowNode.querySelector('[data-hephaestus-role="minusButton"]'),
         plusButton: rowNode.querySelector('[data-hephaestus-role="plusButton"]'),
@@ -156,7 +158,7 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
   }
 
   getAllAssignableKeys() {
-    return ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars'];
+    return ['dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars'];
   }
 
   shouldShowSpaceChemistryTarget() {
@@ -177,6 +179,14 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
 
   shouldShowSuperalloyGigafoundryTarget() {
     const project = projectManager?.projects?.superalloyGigafoundry;
+    if (!project) {
+      return false;
+    }
+    return project.unlocked || project.isActive || project.repeatCount > 0;
+  }
+
+  shouldShowGraphenePrinterTarget() {
+    const project = projectManager?.projects?.graphenePrinter;
     if (!project) {
       return false;
     }
@@ -217,14 +227,14 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
 
   getOptionalAssignmentKeys() {
     const keys = [];
-    if (this.shouldShowSpaceChemistryTarget()) {
-      keys.push('spaceChemistry');
-    }
     if (this.shouldShowNuclearAlchemyTarget()) {
       keys.push('nuclearAlchemyFurnace');
     }
     if (this.shouldShowSuperalloyGigafoundryTarget()) {
       keys.push('superalloyGigafoundry');
+    }
+    if (this.shouldShowGraphenePrinterTarget()) {
+      keys.push('graphenePrinter');
     }
     if (this.shouldShowArtificialStarsTarget()) {
       keys.push('artificialStars');
@@ -242,7 +252,22 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
   }
 
   getAssignmentKeys() {
-    return [this.getActiveDysonKey(), 'spaceStorage', 'lifters'].concat(this.getOptionalAssignmentKeys());
+    const keys = [this.getActiveDysonKey()];
+    if (this.shouldShowSpaceChemistryTarget()) {
+      keys.push('spaceChemistry');
+    }
+    return keys.concat(['spaceStorage', 'lifters'], this.getOptionalAssignmentKeys());
+  }
+
+  getAssignmentComplexity(key) {
+    if (this.isUnassignedAssignmentKey(key)) {
+      return null;
+    }
+    const project = projectManager.projects[key];
+    const baseDuration = key === 'dysonSwarmReceiver' || key === 'dysonSphere'
+      ? project.baseCollectorDuration
+      : project.duration;
+    return baseDuration / projectManager.projects.dysonSwarmReceiver.baseCollectorDuration;
   }
 
   getUnassignedAssignmentKey() {
@@ -587,6 +612,9 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     const headerName = document.createElement('span');
     headerName.classList.add('stat-label');
     headerName.textContent = getHephaestusText('ui.projects.hephaestus.project', 'Project');
+    const headerComplexity = document.createElement('span');
+    headerComplexity.classList.add('stat-label');
+    headerComplexity.textContent = getHephaestusText('ui.projects.common.complexity', 'Complexity');
     const headerValue = document.createElement('span');
     headerValue.classList.add('stat-label');
     headerValue.textContent = getHephaestusText('ui.projects.common.assigned', 'Assigned');
@@ -601,7 +629,7 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     headerControls.append(headerButtons, weightHeader);
     const headerSpacer = document.createElement('div');
     headerSpacer.classList.add('hephaestus-row-spacer');
-    headerRow.append(headerName, headerValue, headerControls, headerSpacer);
+    headerRow.append(headerName, headerComplexity, headerValue, headerControls, headerSpacer);
     assignmentGrid.appendChild(headerRow);
     const headerDivider = document.createElement('div');
     headerDivider.classList.add('hephaestus-header-divider');
@@ -620,6 +648,10 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
       const nameEl = document.createElement('span');
       nameEl.classList.add('stat-label');
       nameEl.textContent = labelText;
+
+      const complexityEl = document.createElement('span');
+      complexityEl.classList.add('stat-value');
+      complexityEl.dataset.hephaestusRole = 'complexity';
 
       const amountEl = document.createElement('span');
       amountEl.classList.add('stat-value');
@@ -654,11 +686,12 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
       assignmentControls.controlButtons.appendChild(releaseIfDisabledContainer);
       const rowSpacer = document.createElement('div');
       rowSpacer.classList.add('hephaestus-row-spacer');
-      row.append(nameEl, amountEl, assignmentControls.controls, rowSpacer);
+      row.append(nameEl, complexityEl, amountEl, assignmentControls.controls, rowSpacer);
       assignmentGrid.appendChild(row);
 
       rowElements[key] = {
         wrapper: row,
+        complexity: complexityEl,
         value: amountEl,
         zeroButton: assignmentControls.zeroButton,
         maxButton: assignmentControls.maxButton,
@@ -675,7 +708,7 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
       getHephaestusText('ui.projects.common.idleUnassigned', 'Idle/Unassigned')
     );
 
-    const assignmentKeys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars'];
+    const assignmentKeys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars'];
     assignmentKeys.forEach((key) => {
       const project = projectManager.projects[key];
       const labelText = project?.displayName || key;
@@ -729,13 +762,18 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     }
 
     const activeDyson = this.getActiveDysonKey();
-    const keys = [this.getUnassignedAssignmentKey(), 'dysonSwarmReceiver', 'dysonSphere', 'spaceStorage', 'lifters', 'spaceChemistry', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars'];
+    const keys = [this.getUnassignedAssignmentKey(), 'dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars'];
     keys.forEach((key) => {
       const row = elements.rowElements[key];
       const storedCurrent = this.getStoredAssignmentAmount(key);
       const displayedCurrent = this.getDisplayedAssignmentAmount(key);
       const maxForKey = this.getAssignmentMaxTarget(key);
 
+      const complexity = this.getAssignmentComplexity(key);
+      const complexityText = complexity === null ? '—' : formatNumber(complexity, true, 2);
+      if (row.complexity.textContent !== complexityText) {
+        row.complexity.textContent = complexityText;
+      }
       const valueText = formatNumber(displayedCurrent, true, 2);
       if (row.value.textContent !== valueText) {
         row.value.textContent = valueText;
@@ -758,6 +796,8 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
         display = this.shouldShowNuclearAlchemyTarget() ? '' : 'none';
       } else if (key === 'superalloyGigafoundry') {
         display = this.shouldShowSuperalloyGigafoundryTarget() ? '' : 'none';
+      } else if (key === 'graphenePrinter') {
+        display = this.shouldShowGraphenePrinterTarget() ? '' : 'none';
       } else if (key === 'artificialStars') {
         display = this.shouldShowArtificialStarsTarget() ? '' : 'none';
       } else if (key === 'planetCrackers') {

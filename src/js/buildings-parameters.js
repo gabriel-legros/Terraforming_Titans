@@ -87,6 +87,10 @@ const buildingsParameters = {
     consumption: { colony : {energy : 10000}, surface: {liquidWater: 1000 } },
     realisticEnergyConsumption: 20_000,
     production: { colony: { water: 1000 } },
+    zonalSurfaceTransfer: {
+      input: { category: 'surface', resource: 'liquidWater' },
+      output: { category: 'colony', resource: 'water' }
+    },
     storage: {},
     factoryHeatCoefficient: 1,
     dayNightActivity: false,
@@ -497,7 +501,7 @@ const buildingsParameters = {
     recipes: {
       water: {
         shortName: '',
-        consumption: { colony: { water: 0.1 } },
+        consumption: { colony: { water: 0.4 } },
         production: { colony: { energy: 5_000_000_000 } }
       },
       hydrogen: {

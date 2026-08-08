@@ -53,10 +53,6 @@ function getTerraformingSummaryResourceLabel(key, fallback) {
   return getTerraformingSummaryText(`resources.${key}`, fallback || formatTerraformingSummaryLabel(key, key));
 }
 
-function getLuminositySurfaceFluxDisplayFactor() {
-  return isAldersonDiskWorld() ? 4 : 1;
-}
-
 const LIQUID_COVERAGE_LABEL_TYPES = {
   liquidWater: true,
   liquidCO2: true,
@@ -87,7 +83,7 @@ function getFactoryHeatTooltipText(contributors = terraforming.getFactoryHeatBre
   const lines = [
     getTerraformingSummaryText(
       'temperature.factoryHeatTooltip',
-      'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat. Direct waste heat is not impacted by albedo or day-night averaging.'
+      'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Each structure uses a coefficient for how much consumed energy becomes surface heat. Mega Heat Sinks remove core heat first, then factory heat; any remaining capacity accelerates cooling toward the temperature trend. Direct waste heat is not impacted by albedo or day-night averaging.'
     ),
   ];
   contributors.sort((a, b) => Math.abs(b.flux) - Math.abs(a.flux));
@@ -119,13 +115,14 @@ function getPhaseChangeHeatTooltipText() {
   const lines = [
     getTerraformingSummaryText(
       'temperature.phaseChangeHeatTooltip',
-      'Signed planetary heat exchanged by phase changes during the latest climate slice. Positive values mean freezing, condensation, or deposition released heat; negative values mean melting, evaporation, boiling, or sublimation absorbed heat. The effect is calculated separately in each climate zone.'
+      'Signed planetary heat exchanged by phase changes during the latest climate slice. Positive values mean freezing, condensation, or deposition released heat; negative values mean melting, evaporation, boiling, or sublimation absorbed heat. Phase-change heat does not alter the temperature trend or Advanced Oversight assignments. It can speed or slow movement toward the trend, but cannot reverse that movement or carry temperature past the trend.'
     ),
   ];
+  lines.push('');
   for (const zone of getZones()) {
     const flux = terraforming.phaseChangeHeatFluxByZone[zone] || 0;
-    const signedFlux = `${flux > 0 ? '+' : ''}${formatNumber(flux, false, 2)}`;
-    lines.push(`${getTerraformingZoneLabel(zone)}: ${signedFlux} W/m²`);
+    const fluxText = `${flux > 0 ? '+' : ''}${formatNumber(flux, false, 2)}`;
+    lines.push(`${getTerraformingZoneLabel(zone)}: ${fluxText} W/m²`);
   }
   return lines.join('\n');
 }
@@ -1364,6 +1361,7 @@ function createTemperatureBox(row) {
     tempInfographicButton.appendChild(tempInfographicIcon);
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
+      <p id="temperature-combustion-warning" class="temperature-combustion-warning" style="display: none;" role="status" aria-live="polite"><span aria-hidden="true">&#9888;</span> ${getTerraformingSummaryText('temperature.combustionWarning', 'Temperature is increasing from active combustion')} <span aria-hidden="true">&#9888;</span></p>
       <p>${getTerraformingSummaryText('temperature.labels.globalMeanTemp', 'Global Mean Temp')}: <span id="temperature-current"></span><span class="temp-unit"></span></p>
       <p>${getTerraformingSummaryText('temperature.labels.equilibriumTemp', 'Equilibrium Temp')}: <span id="equilibrium-temp"></span> <span class="temp-unit"></span> <span id="equilibrium-temp-info" class="info-tooltip-icon">&#9432;</span></p>
       <p id="temperature-core-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netCoreHeatFlux', 'Net Core Heat Flux')}: <span id="temperature-core-heat"></span> W/m^2</p>
@@ -1530,6 +1528,7 @@ function createTemperatureBox(row) {
       box: temperatureBox,
       tempUnits: temperatureBox.querySelectorAll('.temp-unit'),
       target: temperatureBox.querySelector('#temperature-target'),
+      combustionWarning: temperatureBox.querySelector('#temperature-combustion-warning'),
       current: temperatureBox.querySelector('#temperature-current'),
       equilibrium: temperatureBox.querySelector('#equilibrium-temp'),
       equilibriumTooltip: equilibriumTempTooltip,
@@ -1582,6 +1581,14 @@ function createTemperatureBox(row) {
     const temperatureBox = els.box;
     if (!temperatureBox) return;
     const frameDelta = deltaSeconds > 0 ? Math.min(1, deltaSeconds) : 0;
+
+    const showCombustionWarning = terraforming.temperature.combustionWarmingRateKPerDay
+      >= terraformingParameters.atmosphere.chemistry.oxidation
+        .combustionWarningTemperatureRateKPerDay;
+    const combustionWarningDisplay = showCombustionWarning ? '' : 'none';
+    if (els.combustionWarning.style.display !== combustionWarningDisplay) {
+      els.combustionWarning.style.display = combustionWarningDisplay;
+    }
 
     const zoneKeys = getZones();
     const showTemperate = zoneKeys.includes('temperate');
@@ -1683,7 +1690,10 @@ function createTemperatureBox(row) {
       }
     }
     if (els.phaseChangeHeat) {
-      const flux = terraforming.phaseChangeHeatFlux || 0;
+      let flux = 0;
+      for (const zone of getZones()) {
+        flux += terraforming.phaseChangeHeatFluxByZone[zone] * terraforming.getZoneWeight(zone);
+      }
       const phaseChangeHeatText = `${flux > 0 ? '+' : ''}${formatNumber(flux, false, 2)}`;
       if (els.phaseChangeHeat.textContent !== phaseChangeHeatText) {
         els.phaseChangeHeat.textContent = phaseChangeHeatText;
@@ -2837,7 +2847,9 @@ function updateLifeBox() {
     if (els.coverageOverall) els.coverageOverall.textContent = (avgBiomassCoverage * 100).toFixed(2);
     zones.forEach(zone => {
       els.coverageByZone[zone].textContent = (zoneCoverage[zone] * 100).toFixed(2);
-      els.photoByZone[zone].textContent = (terraforming.calculateZonalSolarPanelMultiplier(zone) * 100).toFixed(2);
+      const baseSurfaceSolarFlux = terraformingParameters.gameplay.solar.solarPanelBaseLuminosity;
+      const photosynthesisMultiplier = terraforming.calculateZonalSurfaceSolarFlux(zone) / baseSurfaceSolarFlux;
+      els.photoByZone[zone].textContent = (photosynthesisMultiplier * 100).toFixed(2);
     });
   }
 
@@ -3192,7 +3204,7 @@ function updateLifeBox() {
           </tr>
           <tr>
             <td>${getTerraformingSummaryText('luminosity.labels.surfaceSolarFlux', 'Surface Solar Flux (W/m²)')}</td>
-            <td><span id="modified-solar-flux">${(terraforming.luminosity.modifiedSolarFlux * getLuminositySurfaceFluxDisplayFactor()).toFixed(1)}</span><span id="solar-flux-info" class="info-tooltip-icon">&#9432;<span id="solar-flux-tooltip" class="resource-tooltip"></span></span></td>
+            <td><span id="modified-solar-flux">${terraforming.calculateSurfaceSolarFlux().toFixed(1)}</span><span id="solar-flux-info" class="info-tooltip-icon">&#9432;<span id="solar-flux-tooltip" class="resource-tooltip"></span></span></td>
             <td><span id="solar-flux-delta"></span></td>
           </tr>
         </tbody>
@@ -3349,9 +3361,19 @@ function updateLifeBox() {
       const blackAlbedo = dustFactorySettings.dustColorAlbedo;
       const lines = [
         getTerraformingSummaryText('luminosity.groundTooltip.base', 'Base: {value}', { value: base.toFixed(3) }),
-        getTerraformingSummaryText('luminosity.groundTooltip.blackDustAlbedo', 'Black dust albedo: {value}', { value: blackAlbedo.toFixed(3) }),
-        getTerraformingSummaryText('luminosity.groundTooltip.blackDustColor', 'Black dust color: {value}', { value: dustFactorySettings.dustColor.toUpperCase() }),
+        getTerraformingSummaryText('luminosity.groundTooltip.dustAverageAlbedo', 'Average dust albedo: {value}', { value: blackAlbedo.toFixed(3) }),
+        getTerraformingSummaryText('luminosity.groundTooltip.dustAverageColor', 'Average dust color: {value}', { value: dustFactorySettings.dustColor.toUpperCase() }),
       ];
+      for (const zone of getZones()) {
+        lines.push(getTerraformingSummaryText(
+          'luminosity.groundTooltip.dustZoneAlbedo',
+          '{name} dust albedo: {value}',
+          {
+            name: getTerraformingZoneLabel(zone),
+            value: DustFactory.getDustZoneAlbedo(zone).toFixed(3),
+          }
+        ));
+      }
       if (shareBlack > 0) {
         lines.push(getTerraformingSummaryText('luminosity.groundTooltip.blackDustCoverage', 'Black dust coverage: {value}%', { value: (shareBlack * 100).toFixed(1) }));
       }
@@ -3443,15 +3465,13 @@ function updateLifeBox() {
     setCloudHazeTooltipCompact();
 
     if (els.modifiedSolarFlux) {
-      const fluxDisplayFactor = getLuminositySurfaceFluxDisplayFactor();
-      els.modifiedSolarFlux.textContent = (terraforming.luminosity.modifiedSolarFlux * fluxDisplayFactor).toFixed(1);
+      els.modifiedSolarFlux.textContent = terraforming.calculateSurfaceSolarFlux().toFixed(1);
     }
     if (els.solarFluxDelta) {
-      const fluxDisplayFactor = getLuminositySurfaceFluxDisplayFactor();
       const baseFlux = (terraforming.luminosity.initialSolarFlux !== undefined)
         ? terraforming.luminosity.initialSolarFlux
-        : terraforming.luminosity.solarFlux;
-      const deltaF = (terraforming.luminosity.modifiedSolarFlux - baseFlux) * fluxDisplayFactor;
+        : terraforming.calculateSurfaceSolarFlux();
+      const deltaF = terraforming.calculateSurfaceSolarFlux() - baseFlux;
       els.solarFluxDelta.textContent = `${deltaF >= 0 ? '+' : ''}${formatNumber(deltaF, false, 2)}`;
     }
 

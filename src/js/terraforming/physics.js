@@ -25,7 +25,7 @@ const GREENHOUSE_TEMPERATURE_MODEL_DEFAULTS = {
   attenuationStartK: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.attenuationStartK,
   attenuationScaleK: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.attenuationScaleK,
   attenuationExponent: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.attenuationExponent,
-  minTauFraction: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.minimumTauFraction,
+  minTauFraction: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.minTauFraction,
   coldTauCap: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.coldTauCap,
   hotTauCap: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.hotTauCap,
   tauCapTransitionK: PHYSICS_CLIMATE_PARAMETERS.greenhouseTemperatureModel.tauCapTransitionK,
@@ -165,10 +165,11 @@ function calculateEffectiveGreenhouseOpticalDepth(
   surfacePressureBar,
   gSurface,
   equilibriumTemperature,
-  greenhouseModel = {}
+  greenhouseModel = {},
+  rawGreenhouse = null
 ) {
   const { total: rawTau, contributions: rawContributions } =
-    opticalDepth(composition, surfacePressureBar, gSurface);
+    rawGreenhouse || opticalDepth(composition, surfacePressureBar, gSurface);
   const attenuation =
     calculateGreenhouseTauAttenuation(equilibriumTemperature, greenhouseModel);
   const attenuatedTau = rawTau * attenuation;
@@ -201,7 +202,8 @@ function calculateEmissivity(
   surfacePressureBar,
   gSurface,
   equilibriumTemperature,
-  greenhouseModel = {}
+  greenhouseModel = {},
+  rawGreenhouse = null
 ) {
   const {
     tau,
@@ -214,7 +216,8 @@ function calculateEmissivity(
     surfacePressureBar,
     gSurface,
     equilibriumTemperature,
-    greenhouseModel
+    greenhouseModel,
+    rawGreenhouse
   );
   return { emissivity: 1 - Math.exp(-tau), tau, rawTau, contributions, rawContributions, attenuation };
 }
@@ -671,7 +674,17 @@ function calculateActualAlbedoPhysics(surfaceAlbedo, pressureBar, composition = 
 
   const layerReflectivity = Math.max(0, Math.min(1, contribs.layerReflectivity || diagnostics.layerReflectivity || 0));
 
-  return { albedo: A, cfCloud, cfHaze, layerReflectivity, components, diagnostics, maxCap: MAX_BOND_ALBEDO, softCapThreshold: ALBEDO_SOFTCAP_THRESHOLD };
+  return {
+    albedo: A,
+    cfCloud,
+    cfHaze,
+    cloudByGas: contribs.cloudByGas,
+    layerReflectivity,
+    components,
+    diagnostics,
+    maxCap: MAX_BOND_ALBEDO,
+    softCapThreshold: ALBEDO_SOFTCAP_THRESHOLD
+  };
 }
 
 
@@ -692,7 +705,9 @@ function diurnalAmplitude(albedo, flux, T, heatCap, rotH) {
   const omega = 2.0 * Math.PI / (Math.abs(rotH) * 3600.0);
   const num = (1 - albedo) * flux / 2.0;
   const den = Math.sqrt(heatCap * omega * 4.0 * SIGMA * Math.pow(T, 3));
-  return num / den;
+  // The linear response is invalid once it would put the night side below
+  // absolute zero. Bounding it there also keeps the zero-flux limit continuous.
+  return Math.min(num / den, 2 * T);
 }
 
 // ───────────────────────────────────────────────────────────
@@ -711,7 +726,9 @@ function dayNightTemperaturesModel({
   gSurface = 9.81,
   aerosolsSW = {},
   autoSlabOptions = null,
-  greenhouseModel = {}
+  greenhouseModel = {},
+  resolvedAlbedo = null,
+  rawGreenhouse = null
 }) {
   if (slabHeatCapacity == null) {
     slabHeatCapacity = autoSlabHeatCapacity(
@@ -725,15 +742,17 @@ function dayNightTemperaturesModel({
     );
   }
 
-  const aSurf = surfaceAlbedoMix(groundAlbedo, surfaceFractions, surfaceAlbedos);
-
-  const { albedo: A } = albedoAdditive({
-    surfaceAlbedo: aSurf,
-    pressureBar: surfacePressureBar,
-    composition,
-    gSurface,
-    aerosolsSW
-  });
+  let A = resolvedAlbedo;
+  if (A == null) {
+    const aSurf = surfaceAlbedoMix(groundAlbedo, surfaceFractions, surfaceAlbedos);
+    A = albedoAdditive({
+      surfaceAlbedo: aSurf,
+      pressureBar: surfacePressureBar,
+      composition,
+      gSurface,
+      aerosolsSW
+    }).albedo;
+  }
 
   const T_eff  = effectiveTemp(A, flux, { addedFlux: addedSurfaceFlux });
   const greenhouse = calculateEffectiveGreenhouseOpticalDepth(
@@ -741,7 +760,8 @@ function dayNightTemperaturesModel({
     surfacePressureBar,
     gSurface,
     T_eff,
-    greenhouseModel
+    greenhouseModel,
+    rawGreenhouse
   );
   const tauGHG = greenhouse.tau;
   const greenhouseFactor = 1 + (0.75 * tauGHG);

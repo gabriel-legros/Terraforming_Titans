@@ -38,6 +38,12 @@
     color: #666;
   }
 
+  #temperature-box .temperature-combustion-warning {
+    color: var(--status-failure-color, #d00000);
+    font-weight: bold;
+    line-height: 1.3;
+  }
+
   .terraforming-box table {
     width: 100%;
     table-layout: fixed;

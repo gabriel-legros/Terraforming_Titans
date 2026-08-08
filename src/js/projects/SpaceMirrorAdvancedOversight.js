@@ -9,6 +9,7 @@ class SpaceMirrorAdvancedOversight {
     SpaceMirrorAdvancedOversight.advancedAssignmentInProgress = true;
     const snapshot = terraforming.saveTemperatureState();
     let solvedSnapshot = null;
+    let surfaceTemperatureProjectionContext = null;
 
     try {
       const K_TOL = 0.001;
@@ -147,12 +148,7 @@ class SpaceMirrorAdvancedOversight {
           reversalMode: { ...reverse },
         };
 
-        const projectionOptions = { ignoreHeatCapacity: true };
-        if (gameSettings.phaseChangeHeat) {
-          projectionOptions.zonalSurfaceHeatFluxes =
-            terraforming.phaseChangeHeatFluxByZone;
-        }
-        terraforming.runUpdateStep(0, projectionOptions);
+        terraforming.runUpdateStep(0, { ignoreHeatCapacity: true });
         solvedSnapshot = terraforming.saveTemperatureState();
         terraforming.restoreTemperatureState(snapshot);
         settings.lastProjectedTemperatureState = solvedSnapshot;
@@ -215,18 +211,12 @@ class SpaceMirrorAdvancedOversight {
 
       const simulateFluxes = (zonalFluxes) => {
         terraforming.restoreTemperatureState(snapshot);
-        const simulationOptions = {
+        terraforming.updateSurfaceTemperature(0, {
           ignoreHeatCapacity: true,
           zonalFluxOverrides: zonalFluxes,
           disableAvailableAdvancedHeating: true,
-        };
-        if (gameSettings.phaseChangeHeat) {
-          // Solve against the same prior-tick phase flux that the real
-          // temperature update will apply.
-          simulationOptions.zonalSurfaceHeatFluxes =
-            terraforming.phaseChangeHeatFluxByZone;
-        }
-        terraforming.runUpdateStep(0, simulationOptions);
+          surfaceTemperatureProjectionContext,
+        });
         const metrics = readCurrentMetrics();
         return {
           metrics,
@@ -450,6 +440,7 @@ class SpaceMirrorAdvancedOversight {
               if (trialSimulation.error < bestSimulation.error - 1e-12) {
                 bestFluxes = trialFluxes;
                 bestSimulation = trialSimulation;
+                if (withinIdealTolerance(trialSimulation.metrics)) break;
               }
             }
 
@@ -496,6 +487,7 @@ class SpaceMirrorAdvancedOversight {
               if (trialSimulation.error < bestSimulation.error - 1e-12) {
                 bestFluxes = trialFluxes;
                 bestSimulation = trialSimulation;
+                if (withinIdealTolerance(trialSimulation.metrics)) break;
               }
             }
 
@@ -571,6 +563,7 @@ class SpaceMirrorAdvancedOversight {
             if (trialSimulation.error < bestSimulation.error - 1e-12) {
               bestFluxes = trialFluxes;
               bestSimulation = trialSimulation;
+              if (withinIdealTolerance(trialSimulation.metrics)) break;
             }
           }
 
@@ -586,6 +579,10 @@ class SpaceMirrorAdvancedOversight {
 
       terraforming.restoreTemperatureState(snapshot);
       terraforming.runUpdateStep(0, { ignoreHeatCapacity: true });
+      surfaceTemperatureProjectionContext = terraforming.prepareSurfaceTemperatureProjectionContext({
+        ignoreHeatCapacity: true,
+        disableAvailableAdvancedHeating: true,
+      });
       const currentFluxes = {};
       for (const zone of ZONES) {
         currentFluxes[zone] = Math.max(
@@ -595,10 +592,13 @@ class SpaceMirrorAdvancedOversight {
       }
 
       const idealFluxes = { ...currentFluxes };
+      const previousIdealFluxes = settings.lastSolution?.idealFluxes;
       for (const zone of ZONES) {
         if (!(targets[zone] > 0)) continue;
         if (getZoneMode(zone) === 'flux') {
           idealFluxes[zone] = Math.max(MIN_ZONE_FLUX, (targets[zone] || 0) * fluxDisplayDivisor);
+        } else if ((previousIdealFluxes?.[zone] || 0) > 0) {
+          idealFluxes[zone] = Math.max(MIN_ZONE_FLUX, previousIdealFluxes[zone]);
         }
       }
 
@@ -655,17 +655,14 @@ class SpaceMirrorAdvancedOversight {
           return (dailyMeltTarget * 1000 / 86400) * energyPerKg;
         }
 
-        let remaining = dailyMeltTarget;
         let requiredEnergy = 0;
+        const meltFraction = dailyMeltTarget / availableSurfaceIce;
         const iceZones = ZONES.map((zone) => ({
           zone,
           temperature: snapshot.temperature.zones[zone].value,
           ice: Math.max(0, terraforming.zonalSurface[zone].ice || 0),
-        })).filter((entry) => entry.ice > 0)
-          .sort((a, b) => b.temperature - a.temperature);
+        })).filter((entry) => entry.ice > 0);
         for (const entry of iceZones) {
-          if (!(remaining > 0)) break;
-          const amount = Math.min(remaining, entry.ice);
           const energyPerKg = calculatePhaseTransitionEnergyPerKg(
             'solid',
             'liquid',
@@ -673,8 +670,7 @@ class SpaceMirrorAdvancedOversight {
             terraformingParameters.phaseChange.water
           );
           requiredEnergy +=
-            amount * terraformingParameters.physical.kgPerTon * energyPerKg;
-          remaining -= amount;
+            entry.ice * meltFraction * terraformingParameters.physical.kgPerTon * energyPerKg;
         }
         return requiredEnergy / 86400;
       };
@@ -853,18 +849,13 @@ class SpaceMirrorAdvancedOversight {
       settings.lastSolution = {
         mirrors: { ...assignM },
         lanterns: { ...assignL },
+        idealFluxes: { ...idealFluxes },
         availableHeating: { ...availableHeating },
         availableHeatingPowerTarget,
         reversalMode: { ...reverse },
       };
 
-      const finalProjectionOptions = { ignoreHeatCapacity: true };
-      if (gameSettings.phaseChangeHeat) {
-        // Match the displayed projection to the same prior-tick flux used by the solver.
-        finalProjectionOptions.zonalSurfaceHeatFluxes =
-          terraforming.phaseChangeHeatFluxByZone;
-      }
-      terraforming.runUpdateStep(0, finalProjectionOptions);
+      terraforming.runUpdateStep(0, { ignoreHeatCapacity: true });
       solvedSnapshot = terraforming.saveTemperatureState();
 
     } finally {

@@ -61,6 +61,8 @@
         "energyShortage": "에너지 부족",
         "gravityStrain": "중력 부담",
         "overpopulation": "인구 과잉",
+        "galacticNaturalGrowth": "자연 성장",
+        "galacticImmigration": "이민",
         "lifeDensityDecay": "생명체 밀도 감소",
         "geologicalBurial": "지질 매몰",
         "surfaceBiomass": "표면 바이오매스",
@@ -279,6 +281,7 @@
         "unknownStar": "알 수 없는 항성",
         "starDetailsTitle": "항성 상세",
         "worldDetailsTitle": "세계 상세",
+        "renameWorldTitle": "이 무작위 세계 이름 바꾸기",
         "starTitle": "항성: {value}",
         "spectral": "분광형",
         "luminosity": "광도",
@@ -429,6 +432,9 @@
           "abandoned": "포기"
         },
         "typeLabels": {
+          "shell": "셸",
+          "ring": "고리",
+          "disk": "원반",
           "supermassiveShellworld": "초대질량 블랙홀 셸 월드"
         },
         "columns": {
@@ -444,6 +450,8 @@
         "title": "설계도",
         "worldName": "세계 이름",
         "worldNamePlaceholder": "인공 세계",
+        "worldNumber": "수량",
+        "worldNumberPlaceholder": "선택 사항",
         "framework": "구조",
         "core": "핵",
         "stellarContext": "항성 환경",
@@ -537,7 +545,7 @@
       "stash": {
         "title": "시작 비축량",
         "recommendation": "각 자원을 최소 1.00B씩 미리 배치하는 것이 좋습니다.",
-        "capTitle": "비축량 상한은 헥타르당 1톤({land} ha)을 기준으로 {cap}입니다.",
+        "capTitle": "비축량 상한은 {cap}이며, 헥타르당 1톤({land} ha)을 기준으로 합니다.",
         "startConstruction": "자원을 미리 배치하려면 건설을 시작하세요.",
         "capValue": "상한: {value}",
         "beginConstruction": "자원을 미리 배치할 건설 시작",
@@ -627,6 +635,7 @@
         "unknownFaction": "알 수 없는 세력"
       },
       "operationsPanel": {
+        "title": "작전",
         "emptySelectSector": "함대 전력을 배정할 분쟁 구역을 선택하세요.",
         "fleetPowerLabel": "함대 전력",
         "fleetPowerTooltip": "지도에서 작전을 수행해 구역 지배권을 얻기 위해 함대 전력을 배정할 수 있습니다. 분쟁 중인 구역 또는 완전히 지배 중인 구역과 인접한 구역에서만 작전을 수행할 수 있습니다. 더 많은 함대 전력을 배정할수록 성공 확률은 높아지고 손실은 줄지만, 그동안 함대는 다른 임무에 사용할 수 없습니다.",
@@ -697,6 +706,14 @@
         "resourceBias": "자원 편향",
         "rich": "풍부",
         "poor": "빈약",
+        "resources": {
+          "metal": "금속",
+          "water": "물",
+          "silicon": "실리카",
+          "carbon": "탄소",
+          "nitrogen": "질소",
+          "unknown": "알 수 없음"
+        },
         "worlds": "세계",
         "world": "세계",
         "fleetDefense": "함대 방어력",
@@ -728,6 +745,7 @@
         "effectiveValue": "유효: {value}",
         "remainingValue": "남음: {value}",
         "clearAll": "모든 방어 배정 해제",
+        "clearAllShort": "모두 할당 해제",
         "lastFiveAttacks": "최근 공격 5회",
         "toggleAttackHistory": "공격 기록 표시 전환",
         "historyEnemy": "적",
@@ -785,6 +803,13 @@
         "totalLabel": "합계:",
         "spaceResources": "우주 자원",
         "categoryResources": "{name} 자원",
+        "categories": {
+          "colony": "식민지",
+          "surface": "지표",
+          "underground": "지하",
+          "atmospheric": "대기",
+          "special": "특수"
+        },
         "toggleView": "식민지/우주 자원 보기 전환",
         "landRecoverNote": "해당 건물을 끄면 육지를 회수할 수 있습니다",
         "wasteTooltipNote": "폐기물 처리 건물은 폐기물 부족을 무시하고 사용 가능한 인력과 전력을 기준으로 소비량을 표시합니다. 여기에 표시되는 수치는 실제 소비량이 아닙니다.",
@@ -1017,7 +1042,7 @@
         "mitigationMaxed": "현재 모든 유인 건물은 1기압 유지비 하한 범위 안에서 표면 온도 페널티를 가능한 만큼 최대한 줄이고 있습니다.",
         "perBuildingSupport": "건물별 지원은 그다음 적용됩니다. 남은 페널티 비율에 해당 건물의 미지원 비율을 곱합니다.",
         "supportedBuildingsHeader": "에어로스타트 지원 건물:",
-        "supportedBuildingEntry": "{name}: 활성 {active}개 중 {supported}개 지원(최대 {capacity}개 지원 가능, 에어로스타트당 {perAerostat}개).",
+        "supportedBuildingEntry": "{name}: 활성 건물 {supported}/{active}개 지원(최대 {capacity}개, 에어로스타트당 {perAerostat}개).",
         "noSupportedBuildings": "현재 에어로스타트 지원 값이 지정된 건물이 없습니다.",
         "baseMaximumAerostats": "기본 육지 상한: {value}.",
         "remainingCapacity": "남은 에어로스타트 수용력: {value}.",
@@ -1076,6 +1101,15 @@
         "growthChemistry": "성장 화학반응: {equation}",
         "detailed": "상세: {equation}"
       },
+      "biopigmentation": {
+        "name": "생체 색소화",
+        "description": "설계된 생물량의 색상을 선택합니다.",
+        "colorLabel": "생물량 색상:",
+        "reset": "초기화",
+        "albedo": "알베도: {value}",
+        "growthPenalty": "성장 불이익: -{value}%",
+        "tooltip": "생물량의 알베도는 선택한 색상을 따릅니다. 기본 녹색보다 밝지 않은 색상에는 성장 불이익이 없습니다. 더 밝은 색상은 성장을 선형으로 낮추며, 흰색에서는 -80%에 이릅니다. 색상 변경은 무료입니다."
+      },
       "attributes": {
         "minTemperatureTolerance": {
           "name": "최저 온도 내성",
@@ -1125,8 +1159,8 @@
         }
       },
       "shop": {
-        "buyWithLabel": "{label}로 {quantity} 구매",
-        "buyWithCost": "{cost} {label}로 {quantity} 구매",
+        "buyWithLabel": "{quantity} 구매 ({label} 사용)",
+        "buyWithCost": "{quantity} 구매 (비용: {cost} {label})",
         "research": {
           "label": "연구",
           "description": "과학자들의 노력을 집중합니다"
@@ -1197,6 +1231,7 @@
       },
       "growthTooltip": {
         "solidBiochemistry": "고체 생화학(얼음 대체): x{value}",
+        "biopigmentation": "생체 색소화: x{value} (알베도 {albedo})",
         "lowGravity": "저중력: x0.00",
         "lowGravityDisabled": "링 월드 중력이 0.1g 미만이라 대기를 유지할 수 없으므로 성장이 비활성화됩니다.",
         "base": "기본: {value}%",
@@ -1227,6 +1262,11 @@
       "labels": {
         "productivity": "생산성",
         "cost": "비용:",
+        "constructed": "건설됨",
+        "provides": "제공",
+        "production": "생산",
+        "consumption": "소비",
+        "maintenance": "유지비",
         "heat": "열",
         "cooling": "냉각"
       },
@@ -1319,7 +1359,9 @@
         "productivityDemandLine": "  {source}: {amount}",
         "productivityWorkerLine": "{resource}: 사용 가능 {available} / 필요 {required} ({percent}%)",
         "productivityMaintenanceLine": "지불된 유지비: {percent}%",
+        "productivityAdvancedOversight": "고급 감독 할당: 시설 용량의 {percent}%.",
         "productivityDayNight": "밤에는 비활성",
+        "productivityAutomationDisabled": "자동화 설정으로 비활성화되었습니다.",
         "productivityNoDetails": "제한 요인을 찾지 못했습니다."
       }
     },
@@ -1878,7 +1920,12 @@
         },
         "foodTransfer": {
           "add": "식량 추가",
+          "auto": "자동 /초",
           "available": "식민지 식량 {value}"
+        },
+        "automation": {
+          "auto": "자동",
+          "weight": "가중치"
         },
         "hunting": {
           "on": "사냥 켜짐",
@@ -1992,7 +2039,7 @@
         },
         "quickBuild": {
           "label": "빠른 건설:",
-          "build": "{name} {count}개 건설"
+          "build": "{count}개의 {name} 건설"
         },
         "zones": {
           "tropical": "열대",
@@ -2210,7 +2257,7 @@
         "assignment": "배정:",
         "quickBuild": {
           "label": "빠른 건설:",
-          "build": "{name} {count}개 건설"
+          "build": "{count}개의 {name} 건설"
         },
         "setActiveToTarget": "활성 수를 목표로 설정",
         "massDriverNote": "전자기 발사 레일은 로켓 없이 화물을 쏘아 보냅니다. 매스 드라이버 하나는 우주선 10대로 계산됩니다.",
@@ -2222,6 +2269,7 @@
         "disposalTargetsSubheading": "최대 15개 자원을 설정할 수 있습니다. 자동 시작이 활성화된 목표는 배정된 폐기 능력을 균등하게 나눕니다.",
         "addTarget": "+ 목표 추가",
         "phase": "상태",
+        "whichOne": "어느 것",
         "none": "—",
         "remove": "제거",
         "waitForFullCapacity": "최대 용량까지 대기",
@@ -2312,8 +2360,7 @@
         "capStatus": "상한: {value}",
         "capReached": "상한 도달",
         "liquidHydrogenWarning": "액체 수소로 인해 방열판이 핵 열복사량을 줄이지 못하고 있습니다. 방열판은 여전히 공장 열을 완화할 수 있고 건설도 가능합니다.",
-        "liquidHydrogenStatus": "차단됨: 액체 수소가 핵 열 제거를 막습니다",
-        "liquidHydrogenStatusShort": "차단됨"
+        "liquidHydrogenStatus": "차단됨: 액체 수소가 핵 열 제거를 막습니다"
       },
       "deeperMining": {
         "deepeningSpeedBoost": "심도 증가 속도 보너스",
@@ -2554,6 +2601,132 @@
     "colony": {
       "population": "인구",
       "nanocolony": "나노 식민지",
+      "followersTab": "추종자",
+      "title": "식민지",
+      "unhideObsoleteBuildings": "구식 건물 숨김 해제",
+      "common": {
+        "unknown": "알 수 없음",
+        "randomWorldNamed": "랜덤 월드: {name}"
+      },
+      "needs": {
+        "happiness": "행복도",
+        "comfort": "쾌적도",
+        "value": "{name}: {value}%"
+      },
+      "growthRate": {
+        "title": "성장률",
+        "capacity": "수용력:",
+        "capacityTooltip": "로지스틱 성장 방정식의 수용력 배율입니다. 값은 1 - 인구 / 수용력이므로 주거 상한에 가까워질수록 성장이 느려지고 인구가 수용력과 같아지면 완전히 멈춥니다.\n\n게임이 매우 느리다고 느껴진다면 이 배율이 원인일 가능성이 매우 높습니다. 주거를 더 건설해 가능한 한 높은 값을 유지하세요.",
+        "baseRate": "기본 속도:",
+        "baseTooltip": "행복도에서 계산되는 기본 성장률: max((행복도 - 50%) / 300, 0).\n- 식량과 에너지는 충족 시 각각 행복도를 최대 +25 제공합니다.\n- 쾌적도는 등급의 20배를 더합니다.\n- 식량과 에너지가 충족되면 전자제품과 안드로이드는 각각 행복도를 최대 +10 제공합니다.\n- 수령 가능하거나 수령한 이정표마다 행복도 +0.5를 제공합니다.\n- 행복도가 50% 미만이면 성장이 멈춥니다.",
+        "otherMultipliers": "기타 배율:",
+        "otherTooltip": "식민지 슬라이더 및 기타 효과에서 오는 배율입니다.",
+        "decay": "감소:",
+        "decayTooltip": "부족, 과잉 인구, 고중력으로 인한 인구 손실의 합계입니다.",
+        "growth": "성장:",
+        "growthTooltip": "로지스틱 성장에서 기아, 에너지 및 중력 감소를 뺀 최종 성장률입니다.",
+        "naturalGrowth": "자연 성장",
+        "immigration": "이민",
+        "pilgrimFollowers": "순례자 추종자: {value}x",
+        "multiplierEntry": "{name}: {value}x",
+        "decayStarvation": "• 기아: {rate}%/초({share}%가 굶주림, 360초당 100%).",
+        "decayEnergy": "• 에너지: {rate}%/초({share}%가 전력 없음, 90초당 100%).",
+        "decayOverpopulation": "• 과잉 인구: {rate}%/초.",
+        "decayGravity": "• 중력: {rate}%/초(중력 {gravity} m/s^2, 20 초과분 {above})."
+      },
+      "constructionOffice": {
+        "title": "건설 사무소",
+        "autobuilder": "자동 건설기: ",
+        "statusActive": "활성",
+        "statusDisabled": "비활성",
+        "pause": "일시정지",
+        "resume": "재개",
+        "strategicReserve": "전략 비축량",
+        "strategicReserveTooltip": "자원을 소비했을 때 어느 자원이든 지정된 저장 용량 비율 아래로 떨어진다면 건설 사무소가 저장소의 해당 자원을 사용하지 못하게 합니다. 노동자에는 적용되지 않습니다.",
+        "reserveSettingsButton": "비축량 설정",
+        "reserveSettingsTitle": "전략 비축량",
+        "reserveSettingsIntro": "각 자원에 대한 건설 사무소의 비축 비율을 설정합니다.",
+        "globalReserve": "전체 기본값",
+        "close": "X",
+        "done": "완료",
+        "guide": {
+          "title": "자동 건설 안내",
+          "open": "자동 건설 안내 열기",
+          "close": "자동 건설 안내 닫기",
+          "imageAlt": "번호가 매겨진 안내 구역이 표시된 자동 건설 제어",
+          "section1": "이 구역은 이 건물의 자동 건설 활성화 여부를 제어합니다. 입력한 값과 모드가 목표 정의 방식을 결정합니다.",
+          "section2a": "키보드를 사용하지 않고 1)의 값을 조정할 수 있습니다. 작은 조정에 유용합니다.",
+          "section2b": "자동 건설 우선순위를 제어합니다. 우선순위가 높은 건물을 먼저 건설합니다.",
+          "section3": "정의된 값을 기준으로 한 현재 자동 건설 목표입니다. 건설 사무소는 이 값까지 건설하려고 시도합니다.",
+          "section4": "'활성 수량을 목표로 설정'은 새로 건설된 건물을 자동으로 활성화하거나 활성 건물 수를 빠르게 변경할 때 유용합니다.",
+          "section5": "현재 설정과 일치하도록 1)의 값을 계산하는 방법입니다.",
+          "recommendationsTitle": "권장 사항",
+          "recommendation1": "수경 재배 농장은 인구의 1%로 자동 건설하세요. 업그레이드된 농장 하나가 100명을 먹일 수 있으므로 인구의 1%와 같은 수의 농장이 필요합니다.",
+          "recommendation2": "모래 채석장은 유리 제련소 + 전자제품 공장 수요의 100%로 설정하세요.",
+          "recommendation3": "특히 유용한 자동 건설 모드는 '% 노동자 수'와 '% 노동자 점유율' 두 가지입니다. '% 노동자 수'는 노동자 수를 기준으로 목표를 계산합니다. '% 노동자 점유율'은 주어진 비율의 노동자를 이 건물에 배정하는 목표를 계산합니다. 예를 들어 노동자가 200명이고 노동자 100명당 저장 창고 하나를 원한다면 노동자 수의 1%를 사용하세요. 노동자의 50%를 부품 공장에 배정하려면 노동자 점유율 50%를 사용할 수 있습니다.",
+          "recommendation4": "건설 사무소를 처음 해제하면 대부분의 건물을 '% 노동자 수' 또는 '% 노동자 점유율'로 설정하고 '활성 수량을 목표로 설정'을 누른 뒤 켜 보세요. 자동 건설기가 현재 설정을 대체로 모방합니다.",
+          "recommendation5": "무언가를 조금 더 생산하거나 노동자를 약간 확보해야 할 때 2a의 상자는 미세 조정에 좋습니다. 경제를 완전히 무너뜨리지 않고 자동 건설 목표값을 조금 늘리거나 줄일 수 있습니다.",
+          "starterSetupTitle": "시작 설정",
+          "starterSetupBuilding": "건물 이름",
+          "starterSetupValue": "값",
+          "starterSetupMode": "모드",
+          "starterSetupPriority": "우선순위",
+          "starterSetupModeMax": "최대",
+          "starterSetupModeSandQuarryDemand": "모래 채석장+에너지 공장 수요의 %",
+          "starterSetupModeWorkers": "노동자의 %",
+          "starterSetupModePopulation": "인구의 %",
+          "starterSetupModeWorkerShare": "노동자 비율 %",
+          "starterSetupApply": "시작 설정 적용"
+        },
+        "guidePrompt": {
+          "title": "자동 건설 안내",
+          "message": "이 기능의 안내가 준비되어 있습니다. 지금 안내를 보시겠습니까? (식민지 탭의 건설 사무소에서도 열 수 있습니다.)",
+          "yes": "예",
+          "no": "아니요"
+        },
+        "reserveResources": {
+          "energy": "에너지",
+          "metal": "금속",
+          "glass": "유리",
+          "water": "물",
+          "components": "부품",
+          "electronics": "전자제품",
+          "superconductors": "초전도체",
+          "superalloys": "초합금",
+          "land": "육지"
+        }
+      },
+      "sliders": {
+        "managerDescription": "식민지 슬라이더를 관리합니다",
+        "sourceName": "식민지 슬라이더",
+        "title": "식민지 관리",
+        "workforceAllocation": "노동력 배분",
+        "workersValue": "노동자: {value}%",
+        "scientistsValue": "과학자: {value}%",
+        "foodConsumption": "식량 소비",
+        "luxuryWaterUse": "사치용 물 사용량",
+        "oreMineWorkers": "광석 광산 노동자",
+        "mechanicalAssistance": "기계 보조 ",
+        "mechanicalAssistanceTooltip": "기계 보조는 고중력 감소를 최대 50% 완화하며, 고중력 적응과 중첩되어 나머지를 제거합니다.",
+        "gravityDecayReduction": "중력 감소 완화: -{value}%",
+        "sliderValue": "슬라이더: {value}x.",
+        "componentsCoverage": "부품 충족률: {value}%.",
+        "currentGravity": "현재 중력: {gravity} m/s^2(20 초과분 {above}).",
+        "effectiveMitigation": "유효 완화율: 중력 감소의 {value}%.",
+        "highGravityAdaptation": "고중력 적응: {value}",
+        "remainingDecay": "중력이 20 m/s^2를 넘을 때 남는 감소량: 기존 일일 고중력 손실의 {value}%.",
+        "warpnet": "워프넷 ",
+        "warpnetTooltip": "워프넷은 즉시 통신을 집중시켜 연구 출력을 조정합니다.",
+        "warpnetEnergyUpkeep": "왼쪽 값은 식민지 및 안드로이드 주거의 에너지 유지비에 다음 배율을 적용합니다: {value}.",
+        "warpnetResearchBoost": "오른쪽 값은 전역 연구 보너스를 추가합니다: +{value}%",
+        "warpnetEnergyCost": "에너지 비용은 워프넷 강도에 따라 급격하게 증가합니다.",
+        "warpnetSolisNote": "참고: 시작 안드로이드의 비용은 솔리스가 부담합니다.",
+        "warpnetLabelBase": "x1",
+        "warpnetLabelExp": "x1e{value}",
+        "researchEffect": "연구: +{value}%",
+        "growthEffect": "성장: +{value}%",
+        "boostEffect": "보너스: {value}%"
+      },
       "followers": {
         "managerDescription": "추종자 시스템을 관리합니다",
         "common": {
@@ -2691,120 +2864,6 @@
             }
           }
         }
-      },
-      "title": "식민지",
-      "unhideObsoleteBuildings": "구식 건물 숨김 해제",
-      "common": {
-        "unknown": "알 수 없음",
-        "randomWorldNamed": "랜덤 월드: {name}"
-      },
-      "needs": {
-        "happiness": "행복도",
-        "comfort": "쾌적도",
-        "value": "{name}: {value}%"
-      },
-      "growthRate": {
-        "title": "성장률",
-        "capacity": "수용력:",
-        "capacityTooltip": "로지스틱 성장 방정식의 수용력 배율입니다. 값은 1 - 인구 / 수용력이므로 주거 상한에 가까워질수록 성장이 느려지고 인구가 수용력과 같아지면 완전히 멈춥니다.\n\n게임이 매우 느리다고 느껴진다면 이 배율이 원인일 가능성이 매우 높습니다. 주거를 더 건설해 가능한 한 높은 값을 유지하세요.",
-        "baseRate": "기본 속도:",
-        "baseTooltip": "행복도에서 계산되는 기본 성장률: max((행복도 - 50%) / 300, 0).\n- 식량과 에너지는 충족 시 각각 행복도를 최대 +25 제공합니다.\n- 쾌적도는 등급의 20배를 더합니다.\n- 식량과 에너지가 충족되면 전자제품과 안드로이드는 각각 행복도를 최대 +10 제공합니다.\n- 수령 가능하거나 수령한 이정표마다 행복도 +0.5를 제공합니다.\n- 행복도가 50% 미만이면 성장이 멈춥니다.",
-        "otherMultipliers": "기타 배율:",
-        "otherTooltip": "식민지 슬라이더 및 기타 효과에서 오는 배율입니다.",
-        "decay": "감소:",
-        "decayTooltip": "부족, 과잉 인구, 고중력으로 인한 인구 손실의 합계입니다.",
-        "growth": "성장:",
-        "growthTooltip": "로지스틱 성장에서 기아, 에너지 및 중력 감소를 뺀 최종 성장률입니다.",
-        "naturalGrowth": "자연 성장",
-        "immigration": "이민",
-        "pilgrimFollowers": "순례자 추종자: {value}x",
-        "multiplierEntry": "{name}: {value}x",
-        "decayStarvation": "• 기아: {rate}%/초({share}%가 굶주림, 360초당 100%).",
-        "decayEnergy": "• 에너지: {rate}%/초({share}%가 전력 없음, 90초당 100%).",
-        "decayOverpopulation": "• 과잉 인구: {rate}%/초.",
-        "decayGravity": "• 중력: {rate}%/초(중력 {gravity} m/s^2, 20 초과분 {above})."
-      },
-      "constructionOffice": {
-        "title": "건설 사무소",
-        "autobuilder": "자동 건설기: ",
-        "statusActive": "활성",
-        "statusDisabled": "비활성",
-        "pause": "일시정지",
-        "resume": "재개",
-        "strategicReserve": "전략 비축량",
-        "strategicReserveTooltip": "자원을 소비했을 때 어느 자원이든 지정된 저장 용량 비율 아래로 떨어진다면 건설 사무소가 저장소의 해당 자원을 사용하지 못하게 합니다. 노동자에는 적용되지 않습니다.",
-        "reserveSettingsButton": "비축량 설정",
-        "reserveSettingsTitle": "전략 비축량",
-        "reserveSettingsIntro": "각 자원에 대한 건설 사무소의 비축 비율을 설정합니다.",
-        "globalReserve": "전체 기본값",
-        "close": "X",
-        "done": "완료",
-        "guide": {
-          "title": "자동 건설 안내",
-          "open": "자동 건설 안내 열기",
-          "close": "자동 건설 안내 닫기",
-          "imageAlt": "번호가 매겨진 안내 구역이 표시된 자동 건설 제어",
-          "section1": "이 구역은 이 건물의 자동 건설 활성화 여부를 제어합니다. 입력한 값과 모드가 목표 정의 방식을 결정합니다.",
-          "section2a": "키보드를 사용하지 않고 1)의 값을 조정할 수 있습니다. 작은 조정에 유용합니다.",
-          "section2b": "자동 건설 우선순위를 제어합니다. 우선순위가 높은 건물을 먼저 건설합니다.",
-          "section3": "정의된 값을 기준으로 한 현재 자동 건설 목표입니다. 건설 사무소는 이 값까지 건설하려고 시도합니다.",
-          "section4": "'활성 수량을 목표로 설정'은 새로 건설된 건물을 자동으로 활성화하거나 활성 건물 수를 빠르게 변경할 때 유용합니다.",
-          "section5": "현재 설정과 일치하도록 1)의 값을 계산하는 방법입니다.",
-          "recommendationsTitle": "권장 사항",
-          "recommendation1": "수경 재배 농장은 인구의 1%로 자동 건설하세요. 업그레이드된 농장 하나가 100명을 먹일 수 있으므로 인구의 1%와 같은 수의 농장이 필요합니다.",
-          "recommendation2": "모래 채석장은 유리 제련소 + 전자제품 공장 수요의 100%로 설정하세요.",
-          "recommendation3": "특히 유용한 자동 건설 모드는 '% 노동자 수'와 '% 노동자 점유율' 두 가지입니다. '% 노동자 수'는 노동자 수를 기준으로 목표를 계산합니다. '% 노동자 점유율'은 주어진 비율의 노동자를 이 건물에 배정하는 목표를 계산합니다. 예를 들어 노동자가 200명이고 노동자 100명당 저장 창고 하나를 원한다면 노동자 수의 1%를 사용하세요. 노동자의 50%를 부품 공장에 배정하려면 노동자 점유율 50%를 사용할 수 있습니다.",
-          "recommendation4": "건설 사무소를 처음 해제하면 대부분의 건물을 '% 노동자 수' 또는 '% 노동자 점유율'로 설정하고 '활성 수량을 목표로 설정'을 누른 뒤 켜 보세요. 자동 건설기가 현재 설정을 대체로 모방합니다.",
-          "recommendation5": "무언가를 조금 더 생산하거나 노동자를 약간 확보해야 할 때 2a의 상자는 미세 조정에 좋습니다. 경제를 완전히 무너뜨리지 않고 자동 건설 목표값을 조금 늘리거나 줄일 수 있습니다."
-        },
-        "guidePrompt": {
-          "title": "자동 건설 안내",
-          "message": "이 기능의 안내가 준비되어 있습니다. 지금 안내를 보시겠습니까? (식민지 탭의 건설 사무소에서도 열 수 있습니다.)",
-          "yes": "예",
-          "no": "아니요"
-        },
-        "reserveResources": {
-          "energy": "에너지",
-          "metal": "금속",
-          "glass": "유리",
-          "water": "물",
-          "components": "부품",
-          "electronics": "전자제품",
-          "superconductors": "초전도체",
-          "superalloys": "초합금",
-          "land": "육지"
-        }
-      },
-      "sliders": {
-        "managerDescription": "식민지 슬라이더를 관리합니다",
-        "sourceName": "식민지 슬라이더",
-        "title": "식민지 관리",
-        "workforceAllocation": "노동력 배분",
-        "workersValue": "노동자: {value}%",
-        "scientistsValue": "과학자: {value}%",
-        "foodConsumption": "식량 소비",
-        "luxuryWaterUse": "사치용 물 사용량",
-        "oreMineWorkers": "광석 광산 노동자",
-        "mechanicalAssistance": "기계 보조 ",
-        "mechanicalAssistanceTooltip": "기계 보조는 고중력 감소를 최대 50% 완화하며, 고중력 적응과 중첩되어 나머지를 제거합니다.",
-        "gravityDecayReduction": "중력 감소 완화: -{value}%",
-        "sliderValue": "슬라이더: {value}x.",
-        "componentsCoverage": "부품 충족률: {value}%.",
-        "currentGravity": "현재 중력: {gravity} m/s^2(20 초과분 {above}).",
-        "effectiveMitigation": "유효 완화율: 중력 감소의 {value}%.",
-        "highGravityAdaptation": "고중력 적응: {value}",
-        "remainingDecay": "중력이 20 m/s^2를 넘을 때 남는 감소량: 기존 일일 고중력 손실의 {value}%.",
-        "warpnet": "워프넷 ",
-        "warpnetTooltip": "워프넷은 즉시 통신을 집중시켜 연구 출력을 조정합니다.",
-        "warpnetEnergyUpkeep": "왼쪽 값은 식민지 및 안드로이드 주거의 에너지 유지비에 다음 배율을 적용합니다: {value}.",
-        "warpnetResearchBoost": "오른쪽 값은 전역 연구 보너스를 추가합니다: +{value}%",
-        "warpnetEnergyCost": "에너지 비용은 워프넷 강도에 따라 급격하게 증가합니다.",
-        "warpnetSolisNote": "참고: 시작 안드로이드의 비용은 솔리스가 부담합니다.",
-        "warpnetLabelBase": "x1",
-        "warpnetLabelExp": "x1e{value}",
-        "researchEffect": "연구: +{value}%",
-        "growthEffect": "성장: +{value}%",
-        "boostEffect": "보너스: {value}%"
       },
       "nanotech": {
         "managerDescription": "나노봇 군집을 관리합니다",
@@ -3123,11 +3182,15 @@
           "tooltip": "온도는 테라포밍의 핵심 요소입니다. 온도는 여러 요인이 복잡하게 상호작용하여 결정됩니다:\n\n- 주요 방정식: 이 모델은 스테판-볼츠만 법칙을 사용해 태양 복사 플럭스와 알베도로부터 유효 온도를 계산합니다. 그다음 대기의 광학 깊이에 따른 온실 효과를 더하고, 행성의 열용량과 자전 속도를 바탕으로 주야간 온도 차를 계산합니다.\n- 태양 복사 플럭스: 항성으로부터 받는 기본 에너지이며, 우주 거울 같은 구조물로 늘릴 수 있습니다.\n- 알베도: 행성의 반사율입니다. 얼음과 구름으로 알베도가 높아지면 빛을 더 많이 반사해 행성이 식습니다. 바다와 어두운 암석으로 알베도가 낮아지면 빛을 더 많이 흡수해 따뜻해집니다.\n- 온실 효과: CO2, H2O, CH4 같은 대기 기체는 열을 가둡니다. 가두는 정도는 각 기체의 양에 따라 달라지는 대기의 광학 깊이로 결정됩니다.\n- 자전 속도: 자전이 느릴수록 낮과 밤의 온도 차가 더 극단적으로 벌어집니다.\n- 열용량: 표면 조성과 대기 밀도의 영향을 받는, 행성이 열을 저장하고 방출하는 능력입니다. 표면 액체가 많을수록 열용량이 커져 주야간 온도 차가 줄어듭니다.\n- 자오선풍: 에너지가 열대, 온대, 극지 구역 사이를 이동합니다. 추세 열에는 전체 열량을 보존하면서 극단적인 온도를 완화한 바람 보정 목표 온도가 표시됩니다.\n- 열관성: 주야간 변동을 완화하는 동일한 열용량이 추세 온도로 변화하는 속도도 늦춥니다. 두꺼운 대기와 깊은 바다는 느리게 반응하지만, 얇은 대기는 추세를 빠르게 따라갑니다.\n\n온도는 다음 항목에 직접 영향을 줍니다:\n- 물 순환: 증발, 승화, 융해, 결빙을 일으킵니다.\n- 생명체: 종마다 생존과 성장에 필요한 고유한 온도 범위가 있습니다.\n- 식민자 쾌적도: 극단적인 온도에서는 생명 유지에 필요한 에너지 소비가 증가합니다.",
           "coreHeatTooltip": "행성 내부의 열이 평탄한 전 지구적 플럭스로 표면에 직접 추가됩니다.\n\n인공 지각과 메가 방열판으로 이 값을 줄일 수 있습니다.\n\n온도가 {crustStart}{unit} 아래로 떨어지면 자연 지각이 형성되기 시작하며, {crustComplete}{unit}에서 완성됩니다.\n\n이 플럭스는 알베도나 주야간 평균의 영향을 받지 않습니다.",
           "factoryHeatTooltip": "지역 건물과 식민지의 에너지 소비에서 발생하는 산업 폐열에서 태양 전지판의 에너지 생산에 따른 냉각을 뺀 값입니다. 태양 전지판 냉각 효과는 표면 알베도에 의해 감소합니다. 특정 거대 구조물로 이 값을 줄일 수 있습니다. 직접 폐열은 알베도나 주야간 평균의 영향을 받지 않습니다.",
+          "factoryHeatTopContributors": "절대 영향 기준 주요 기여자:",
+          "factoryHeatOtherSources": "기타 원천",
+          "phaseChangeHeatTooltip": "가장 최근 기후 구간 동안 상 변화로 교환된 부호 있는 행성 열량입니다. 양수 값은 동결, 응결 또는 증착이 열을 방출했음을 뜻하며, 음수 값은 융해, 증발, 끓음 또는 승화가 열을 흡수했음을 뜻합니다. 수치적 안정성을 위해 이 효과는 추세를 향한 이동을 가속하거나 늦출 수만 있고, 뒤집을 수는 없습니다. 이로 인해 온도가 정체될 수 있습니다.",
           "equilibriumTempTooltip": "흡수된 햇빛, 알베도, 대기 외부의 직접 열을 바탕으로 계산한 흑체 복사 평형 온도입니다. 온실 기체의 열 포획은 무시하며, 물리적으로는 같은 양의 에너지를 우주로 다시 복사하는 온도입니다. 지구의 값은 약 255 K(-18°C)입니다.",
           "labels": {
             "globalMeanTemp": "전 지구 평균 온도",
             "equilibriumTemp": "평형 온도",
             "netCoreHeatFlux": "순 코어 열 플럭스",
+            "netPhaseChangeHeatFlux": "순 상 변화 열 플럭스",
             "netFactoryHeatFlux": "순 공장 열 플럭스",
             "zone": "구역",
             "temperature": "T ({unit})",
@@ -3748,7 +3811,16 @@
           }
         },
         "rewards": {
-          "nuclearAlchemyThroughput": "핵연금 처리량 +{value}%"
+          "manufacturingWorldThroughput": "제조 세계 처리량 +{value}%",
+          "liftersSuperchargeMax": "리프터 초과 충전 최대치 +{value}",
+          "gigafoundryThroughput": "기가파운드리 처리량 +{value}%",
+          "spaceChemistryThroughput": "우주 화학 처리량 +{value}%",
+          "nuclearAlchemyThroughput": "핵연금 처리량 +{value}%",
+          "oneillSectorCap": "오닐 한도 배수 +{value}",
+          "hephaestusYardEffectiveness": "헤파이스토스 조선소 효율 +{value}%",
+          "spaceStorageCapacity": "우주 저장소 용량 +{value}%",
+          "liftersSuperchargeExponent": "리프터 초과 충전 지수 -{value}",
+          "liftersThroughput": "리프터 처리량 +{value}%"
         }
       },
       "statisticsTitle": "통계",
@@ -3780,6 +3852,7 @@
         }
       },
       "currentWorldLabel": "현재 세계",
+      "renameRandomWorldTitle": "이 무작위 세계 이름 바꾸기",
       "originalProperties": "원래 특성",
       "worldSelectionTitle": "세계 선택",
       "worldSelectionSubtitle": "테라포밍을 완료하여 다음 목적지를 해제하십시오.",
@@ -3824,6 +3897,7 @@
         "uniqueTooltip": "완료한 서로 다른 모든 스토리 세계와 테라포밍한 랜덤 월드를 계산합니다. 다른 모든 보너스는 무시합니다.",
         "effectiveTooltip": "다른 출처의 세계도 포함합니다. 이 값은 고급 연구, 솔리스 보상, 거대 구조물 확장 속도, 수출 상한에 영향을 줍니다.",
         "galacticPopulationTooltip": "은하 인구는 초당 0.5% / 365의 비율로 성장하며, (1 - 인구 / 수용력)을 곱합니다.",
+        "showGalacticPopulationInSidebar": "사이드바에 표시",
         "effectiveTooltipGalaxy": "은하를 해제하면 함대 수용력은 조정된 세계 수를 사용합니다(인공 세계는 최대 {value}까지 기여하며 오닐 원통은 무시됨).",
         "effectiveTooltipGalaxyUncapped": "은하를 해제하면 함대 수용력은 조정된 세계 수를 사용합니다(인공 세계는 전체 가치만큼 기여하며 오닐 원통은 무시됨)."
       }
@@ -3963,7 +4037,7 @@
         "researchUpgradesTitle": "연구 업그레이드",
         "automationUpgradesTitle": "자동화 업그레이드",
         "noQuestAvailableNow": "현재 이용 가능한 새 퀘스트가 없습니다.",
-        "deliverQuest": "{resource} {quantity}개 납품",
+        "deliverQuest": "{quantity}개의 {resource} 납품",
         "refreshWithSeconds": "새로고침 ({value}s)",
         "nextQuestIn": "다음 퀘스트까지 {value}s"
       },
@@ -4029,7 +4103,7 @@
           "highestDifficultyArtifact": "{team} 팀 - 최고 난이도 {difficulty} 도달, 유물 +{count}",
           "highestDifficultyArtifacts": "{team} 팀 - 최고 난이도 {difficulty} 도달, 유물 +{count}",
           "teamRecalled": "{team} 팀 - 귀환",
-          "injuryRecallJournal": "{name}이(가) 부상하여 {team} 팀이 귀환했습니다.",
+          "injuryRecallJournal": "{team} 팀이 {name}의 부상으로 귀환했습니다.",
           "events": {
             "individualPower": "개인 힘 도전",
             "teamAthletics": "팀 운동 능력 도전",
@@ -4294,7 +4368,19 @@
             "autoStartConstruction": "건설 자동 시작",
             "autoOperationEnabled": "자동 작동 활성화",
             "spaceshipCostMultiplier": "우주선 비용 배율",
-            "currentMass": "현재 질량"
+            "currentMass": "현재 질량",
+            "keratiHive": {
+              "hiveFood": "벌집 식량",
+              "honey": "꿀",
+              "spawningPools": "산란 연못",
+              "territory": "영토",
+              "drones": "보유 드론",
+              "builders": "보유 건설자",
+              "hunters": "보유 사냥꾼",
+              "princesses": "보유 공주",
+              "queens": "보유 여왕",
+              "empresses": "보유 여제"
+            }
           },
           "artificial": {
             "source": "인공",
@@ -4391,6 +4477,8 @@
             "luminosity": {
               "solarFlux": "태양 플럭스",
               "modifiedSolarFlux": "보정된 태양 플럭스",
+              "surfaceSolarFlux": "지표 태양 플럭스",
+              "averageFlux": "평균 플럭스",
               "albedo": "반사율",
               "opticalDepth": "광학 깊이"
             },
@@ -4486,6 +4574,7 @@
         "scriptLineTypeElse": "ELSE",
         "scriptLineTypeWait": "WAIT",
         "scriptLineTypeActions": "ACTIONS",
+        "scriptGoto": "이동",
         "scriptLinkedTo": "연결 대상",
         "scriptLinkedToNone": "없음",
         "scriptLineName": "이름",
@@ -4493,6 +4582,10 @@
         "scriptAlways": "항상",
         "scriptCondition": "조건",
         "scriptJoin": "연결",
+        "scriptJoinAnd": "그리고",
+        "scriptJoinOr": "또는",
+        "scriptNotOn": "부정",
+        "scriptNotOff": "부정 끔",
         "scriptLeftExpression": "왼쪽",
         "scriptRightExpression": "오른쪽",
         "scriptComparator": "비교",
@@ -4505,6 +4598,19 @@
         "scriptOperatorSafeDivide": "안전 나누기",
         "scriptActions": "동작",
         "scriptElseActions": "Else 동작",
+        "scriptNoActions": "동작 없음",
+        "scriptSummarySleep": "{duration}ms 대기",
+        "scriptSummaryGoto": "{target}로 이동",
+        "scriptSummarySetScriptVariable": "스크립트 변수 {variable} = {value} 설정",
+        "scriptSummarySetVariable": "{variable} = {value} 설정",
+        "scriptSummarySetAutomation": "{type} 자동화를 {mode} 상태로 설정",
+        "scriptSummarySetPause": "일시 정지를 {mode} 상태로 설정",
+        "scriptSummaryAction": "동작",
+        "scriptSummaryParameter": " ({variable} 사용)",
+        "scriptSummaryApplyPreset": "{type} 프리셋 {name}{parameter} 적용",
+        "scriptSummaryApplyCombination": "{type} 조합 {name} 적용",
+        "scriptNullValue": "NULL",
+        "scriptWithId": "스크립트 {id}",
         "scriptApplyPreset": "프리셋 적용",
         "scriptAutoTravelAndTurnOn": "자동 이동",
         "scriptApplyCombination": "조합 적용",
@@ -4521,6 +4627,10 @@
         "scriptTogglePause": "일시 정지 전환",
         "scriptGotoScript": "GOTO 스크립트",
         "scriptAutomationTypeScripting": "스크립팅",
+        "scriptAutomationTypeBuildings": "건물",
+        "scriptAutomationTypeProjects": "프로젝트",
+        "scriptAutomationTypeColony": "콜로니",
+        "scriptAutomationTypeResearch": "연구",
         "scriptAutomationTypeAutoTravel": "자동 이동",
         "scriptAutomationTypeShip": "함선",
         "scriptAutomationTypeLife": "생명체",
@@ -4546,6 +4656,10 @@
         "lifeDeployImproveLabel": "설계가 다음만큼 개선될 때만 배치",
         "lifeDeployPointsSuffix": "포인트",
         "lifeDeployInfo": "자동 배치는 설계가 지정한 포인트만큼 개선될 때만 실행됩니다.",
+        "lifeBiomassColorLabel": "생물량 색상",
+        "lifeBiomassColorTooltip": "프리셋이 생명 설계를 배치할 때 이 색상이 적용됩니다. 변경해도 생명 포인트가 들지 않습니다. 녹색보다 밝은 생물량은 더 천천히 자라며, 흰색에서는 최대 -80%입니다.",
+        "lifeBiomassAlbedo": "알베도: {value}",
+        "lifeBiomassGrowthPenalty": "성장 불이익: -{value}%",
         "lifeCreateStepsFromCurrentButton": "현재 설계에서 단계 생성",
         "lifeSpendAtLabel": "소비 시점",
         "lifeMaxCostLabel": "최대 비용",
@@ -5013,6 +5127,8 @@
       "autoPauseColonists": "순 이주민 변화율 <",
       "immigrationPool": "이민 대기 인구",
       "immigrationPoolTooltip": "활성화하면 화성을 제외한 모든 세계에서 식민지 성장의 상당 부분이 이민을 통해 은하 인구에 직접 의존하게 됩니다. 이민은 세계의 이주민 충원 비율을 은하의 충원 비율과 같게 만들려고 하며, 모든 이민 인구는 은하 인구 풀에서 빠져나갑니다. 경우에 따라 성장 속도가 매우 느려질 수 있습니다.",
+      "disableColonistDecay": "식민지 주민 감소 비활성화",
+      "disableColonistDecayTooltip": "식량 부족, 에너지 부족, 높은 중력 및 과잉 인구로 인한 식민지 주민 손실을 방지합니다. 방치형 플레이에 권장됩니다.",
       "disableUnlockAlerts": "해제 알림 비활성화",
       "disableDayNightCycle": "주야 주기 비활성화",
       "dayNightTooltip": "시간대 변화를 멈춥니다. 태양 전지판과 얼음 수확기는 효율과 유지비가 절반이 됩니다. 더 현실적이고 약간 더 쉬우며 여유로운 경험을 제공합니다.",
@@ -5069,6 +5185,8 @@
       "unfulfilledMaintenancePenaltiesTooltip": "활성화하면 지급되지 않은 건물 유지비가 900초에 걸쳐 해당 건물의 생산성을 낮춥니다. 각 건물은 필요한 자원 중 가장 낮은 유지비 지급 비율을 향해 변화하며, 실제 생산성은 그 값으로 제한됩니다.",
       "earlyAdvancedOversight": "고급 감독 조기 사용",
       "earlyAdvancedOversightTooltip": "게임에는 우주 거울이 지정한 온도 값을 자동으로 목표로 삼을 수 있는 강력한 솔버가 있습니다. 원래 획득해야 하는 기능이며 보통 스토리 세계 5에서 사용할 수 있습니다. 미세 조정이 너무 답답하다면 조기에 사용할 수 있습니다. 그래도 우주 거울 시설 감독 연구는 필요합니다.",
+      "phaseChangeHeat": "상 변화 열",
+      "phaseChangeHeatTooltip": "활성화하면 융해, 증발, 끓음 및 승화는 행성 열을 흡수하고, 동결, 응결 및 증착은 이를 방출합니다. 상 변화 열은 온도 추세나 고급 감독 할당을 바꾸지 않습니다. 추세를 향한 이동을 가속하거나 늦출 수만 있지만, 쉽게 온도를 정체시킬 수 있습니다.",
       "factoryHeating": "공장 발열",
       "factoryHeatingTooltip": "활성화하면 현지 건물과 식민지 에너지 사용량의 일부가 행성 열로 변하고, 태양 전지판은 지표 알베도로 감소한 에너지 생산량만큼 행성을 냉각합니다. 대부분의 구조물은 현지 에너지를 모두 열로 바꾸지만, 에너지를 화학적으로 저장하거나 외부 세계로 방출하거나 이미 직접 가열을 모델링하는 과정에는 더 낮은 계수가 적용됩니다. 특정 거대 구조물은 공장 발열을 완화하는 데 도움을 줍니다.\n\n이 설정은 현실적인 공장 에너지 소비와 함께 사용해야 합니다.",
       "realisticFactoryEnergyConsumption": "현실적인 공장 에너지 소비",
@@ -5133,10 +5251,17 @@
       "fastestTerraformByTypeTitle": "세계 유형별 최단 테라포밍",
       "fastestTerraformByTypeEntry": "{type}: {game} (실시간 {real})",
       "recentTerraformHistoryTitle": "최근 테라포밍한 세계 {count}개",
+      "recentTerraformHistoryWorld": "세계",
+      "recentTerraformHistoryTerraformTime": "테라포밍 시간",
+      "recentTerraformHistoryTravelTime": "여행 시간",
       "recentTerraformHistoryAverage": "평균: {game} (실시간 {real})",
+      "recentTerraformHistoryAverageLabel": "평균",
       "recentTerraformHistoryEmpty": "아직 기록된 테라포밍 세계가 없습니다.",
       "recentTerraformHistoryEntry": "{name} ({type}): {game} (실시간 {real})",
+      "recentTerraformHistoryWorldEntry": "{name} ({type})",
+      "recentTerraformHistoryUnavailable": "사용 불가",
       "terraformWorldTypeArtificial": "인공",
+      "terraformWorldTypeStory": "스토리",
       "terraformWorldTypeShell": "셸 월드",
       "terraformWorldTypeRing": "링 월드",
       "terraformWorldTypeDisk": "앨더슨 디스크",
@@ -6502,6 +6627,10 @@
           "name": "차세대 생명공학",
           "description": "고급 연구를 사용해 생명체 설계 잠재력을 영구적으로 높일 수 있게 합니다."
         },
+        "biopigmentation": {
+          "name": "생체 색소화",
+          "description": "생명체는 다른 색소를 사용할 수 있습니다. 이는 알베도를 높이는 데 도움이 되지만 밝은 색상에는 성장 불이익이 있습니다."
+        },
         "repeatable_ai_research": {
           "name": "반복형 AI 연구",
           "description": "HOPE의 도움으로 생산을 강화하는 반복 가능한 연구 프로그램을 승인합니다."
@@ -6513,6 +6642,10 @@
         "galactic_market": {
           "name": "은하 시장 협약",
           "description": "더 넓은 은하와 영구적인 교역 관계를 맺고, 단순 수출을 관리형 시장으로 대체합니다. 화물 로켓과 금속 수출을 영구적으로 대체합니다."
+        },
+        "automatic_surplus_trading": {
+          "name": "자동 잉여 거래",
+          "description": "이 시점에서 식민지 자원은 단순한 상품이 되었습니다. 은하 시장은 공급의 급격한 변화에 적응하여, 먼저 거래 파트너를 찾지 않고도 잉여 자원을 판매할 수 있어야 합니다. (넘치는 식민지 자원은 포화도 미만일 때 시장에서 자동으로 판매됩니다. 다음 틱에 발생합니다.)"
         },
         "mechanical_assistance": {
           "name": "기계 보조",
@@ -6907,6 +7040,9 @@
         },
         "solisPoints": {
           "name": "솔리스 포인트"
+        },
+        "galacticPopulation": {
+          "name": "은하 인구"
         },
         "alienArtifact": {
           "name": "외계 유물"

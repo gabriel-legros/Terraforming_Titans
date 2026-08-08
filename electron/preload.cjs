@@ -40,6 +40,9 @@ contextBridge.exposeInMainWorld('steamAchievements', {
 });
 
 contextBridge.exposeInMainWorld('electronWindowControls', {
+  getWindowState() {
+    return ipcRenderer.sendSync('window:get-state');
+  },
   isFullscreen() {
     return ipcRenderer.invoke('window:is-fullscreen');
   },
@@ -57,6 +60,9 @@ contextBridge.exposeInMainWorld('electronWindowControls', {
   },
   exitGame() {
     ipcRenderer.send('window:exit-game');
+  },
+  exitToLauncher() {
+    ipcRenderer.send('window:exit-to-launcher');
   },
   onFullscreenChanged(callback) {
     ipcRenderer.on('window:fullscreen-changed', (_event, enabled) => {

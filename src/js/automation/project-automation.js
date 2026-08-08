@@ -90,7 +90,13 @@ const PROJECT_AUTOMATION_DISPOSAL_LEGACY_SETTING_KEYS = new Set([
 
 const PROJECT_AUTOMATION_PROJECT_EXPANSION_KEYS = {
   satellite: new Set(['step']),
-  geo_satellite: new Set(['step'])
+  geo_satellite: new Set(['step']),
+  spaceElevator: new Set([
+    'constructionMode',
+    'capacityTargetEnabled',
+    'capacityTarget',
+    'capacityTargetMode'
+  ])
 };
 let ProjectAutomationPresetManagerBaseRef;
 try {

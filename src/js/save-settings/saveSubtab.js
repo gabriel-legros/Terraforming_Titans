@@ -64,7 +64,10 @@ function addSaveSlotListeners() {
     loadButton.addEventListener('click', () => loadGame(`gameState_${slot}`));
 
     deleteButton.addEventListener('click', () => {
-      if (confirm(t('ui.settings.confirmDeleteSlot', { slot: getSaveSlotLabel(slot) }, `Are you sure you want to delete the save file in ${getSaveSlotLabel(slot)}? This action cannot be undone.`))) {
+      const confirmation = slot === 'autosave'
+        ? t('ui.settings.confirmDeleteAutosaves', null, 'Are you sure you want to delete every autosave? This action cannot be undone.')
+        : t('ui.settings.confirmDeleteSlot', { slot: getSaveSlotLabel(slot) }, `Are you sure you want to delete the save file in ${getSaveSlotLabel(slot)}? This action cannot be undone.`);
+      if (confirm(confirmation)) {
         deleteSaveFileFromSlot(slot);
       }
     });
@@ -111,6 +114,7 @@ function initializeSaveSubtab() {
     `Version ${GAME_VERSION}`
   );
   initializeExitSaveSlot();
+  initializeAutosaveHistoryUI();
   loadSaveSlotNames();
   loadSaveSlotDates();
   addSaveSlotRenameListeners();

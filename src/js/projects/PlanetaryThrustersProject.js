@@ -6,6 +6,8 @@ const G  = 6.67430e-11;
 const SOLAR_MASS   = 1.989e30;
 const AU_IN_METERS = 1.496e11;
 const ROGUE_DISTANCE_AU = 10000;
+const THRUSTER_MAX_SPIN_DAYS = 10000;
+const THRUSTER_MAX_DISTANCE_AU = 10000;
 const FUSION_VE    = 1.0e5;               // 100 km s‑1
 const BASE_TP_RATIO = 2 / FUSION_VE;
 const ESCAPE_L1_FACTOR = 1.0;             // scale of Hill-radius target for escape
@@ -125,7 +127,7 @@ function getStarLuminositySolar(){
 function orbitAUFromStellarFlux(fluxWm2){
   if (!Number.isFinite(fluxWm2) || fluxWm2 <= 0) return ROGUE_DISTANCE_AU;
   return Math.min(
-    ROGUE_DISTANCE_AU,
+    THRUSTER_MAX_DISTANCE_AU,
     Math.sqrt((getStarLuminositySolar() * THRUSTER_SOLAR_CONSTANT_WM2) / fluxWm2)
   );
 }
@@ -277,7 +279,7 @@ class PlanetaryThrustersProject extends Project{
       <div class="stats-grid six-col">
         <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.spin.rotation', 'Rotation:')}</span><span id="rotNow" class="stat-value">—</span></div>
         <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.target', 'Target:')}</span>
-             <input id="rotTarget" type="number" min="0.1" step="0.1" value="1"><span>${getPlanetaryThrustersText('ui.projects.planetaryThrusters.spin.day', 'day')}</span></div>
+             <input id="rotTarget" type="number" min="0.1" max="${THRUSTER_MAX_SPIN_DAYS}" step="0.1" value="1"><span>${getPlanetaryThrustersText('ui.projects.planetaryThrusters.spin.day', 'day')}</span></div>
         <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.spin.equivDv', 'Equiv. Δv:')}</span><span id="rotDv" class="stat-value">—</span></div>
         <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.energyCost', 'Energy Cost:')}</span><span id="rotE" class="stat-value">—</span></div>
         <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.energySpent', 'Energy Spent:')}</span><span id="rotSpent" class="stat-value">0</span></div>
@@ -421,7 +423,15 @@ class PlanetaryThrustersProject extends Project{
 
     /* listeners */
     this.el.rotTarget.oninput = ()=>this.calcSpinCost();
+    this.el.rotTarget.onchange = ()=>{
+      this.calcSpinCost();
+      this.el.rotTarget.value = this.tgtDays;
+    };
     this.el.distTarget.oninput= ()=>this.calcMotionCost();
+    this.el.distTarget.onchange = ()=>{
+      this.calcMotionCost();
+      this.syncMotionTargetInput(true);
+    };
     this.el.distTargetMode.onchange = ()=>{
       this.motionTargetMode = this.el.distTargetMode.value === THRUSTER_MOTION_TARGET_FLUX
         ? THRUSTER_MOTION_TARGET_FLUX
@@ -515,6 +525,7 @@ class PlanetaryThrustersProject extends Project{
       const n=parseFloat(v);
       if(!isNaN(n)) tgt=n;
     }catch(e){ tgt=1; }
+    tgt = Math.min(THRUSTER_MAX_SPIN_DAYS, Math.max(0.1, tgt));
     const changed = tgt !== this.tgtDays;
     this.tgtDays=tgt;
     const dv=spinDeltaV(p.radius,getSpinHours(p),this.tgtDays*24);
@@ -538,7 +549,7 @@ class PlanetaryThrustersProject extends Project{
     if(this.motionTargetMode === THRUSTER_MOTION_TARGET_FLUX){
       return Math.max(0.1, orbitAUFromStellarFlux(targetValue));
     }
-    return Math.max(0.1, targetValue);
+    return Math.min(THRUSTER_MAX_DISTANCE_AU, Math.max(0.1, targetValue));
   }
 
   syncMotionTargetInput(force=false){
@@ -762,10 +773,10 @@ class PlanetaryThrustersProject extends Project{
         const n=parseFloat(v);
         if(!isNaN(n)) tgtDays=n;
       }catch(e){ tgtDays=1; }
-      this.tgtDays = tgtDays;
+      this.tgtDays = Math.min(THRUSTER_MAX_SPIN_DAYS, Math.max(0.1, tgtDays));
       if(p && p.radius){
-        const dv=spinDeltaV(p.radius,getSpinPeriodHours(p),tgtDays*24);
-        const energyRem = spinEnergyRemaining(p,p.radius,tgtDays,this.getThrustPowerRatio());
+        const dv=spinDeltaV(p.radius,getSpinPeriodHours(p),this.tgtDays*24);
+        const energyRem = spinEnergyRemaining(p,p.radius,this.tgtDays,this.getThrustPowerRatio());
         this.el.rotDv.textContent=fmt(dv,false,3)+" m/s";
         this.el.rotE.textContent=formatEnergy(energyRem);
         this.setBurnTime(this.el.rotBurn, energyRem);
@@ -1084,7 +1095,7 @@ class PlanetaryThrustersProject extends Project{
       this.autoGoRogue = settings.autoGoRogue === true;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'tgtDays')) {
-      this.tgtDays = Math.max(0.1, settings.tgtDays || 1);
+      this.tgtDays = Math.min(THRUSTER_MAX_SPIN_DAYS, Math.max(0.1, settings.tgtDays || 1));
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'motionTargetMode')) {
       this.motionTargetMode = settings.motionTargetMode === THRUSTER_MOTION_TARGET_FLUX
@@ -1093,9 +1104,9 @@ class PlanetaryThrustersProject extends Project{
     }
     if (this.motionTargetMode === THRUSTER_MOTION_TARGET_FLUX
       && Object.prototype.hasOwnProperty.call(settings, 'tgtFlux')) {
-      this.tgtAU = Math.max(0.1, orbitAUFromStellarFlux(settings.tgtFlux));
+      this.tgtAU = Math.min(THRUSTER_MAX_DISTANCE_AU, Math.max(0.1, orbitAUFromStellarFlux(settings.tgtFlux)));
     } else if (Object.prototype.hasOwnProperty.call(settings, 'tgtAU')) {
-      this.tgtAU = Math.max(0.1, settings.tgtAU || 0.1);
+      this.tgtAU = Math.min(THRUSTER_MAX_DISTANCE_AU, Math.max(0.1, settings.tgtAU || 0.1));
     }
     const spinTargetChanged = this.tgtDays !== previousTargetDays;
     const motionTargetChanged = this.tgtAU !== previousTargetAU;
@@ -1193,8 +1204,8 @@ class PlanetaryThrustersProject extends Project{
     this.spinInvest = state.spinInvest || false;
     this.motionInvest = state.motionInvest || false;
     this.autoGoRogue = state.autoGoRogue === true;
-    this.tgtDays = state.tgtDays || 1;
-    this.tgtAU = state.tgtAU || 1;
+    this.tgtDays = Math.min(THRUSTER_MAX_SPIN_DAYS, Math.max(0.1, state.tgtDays || 1));
+    this.tgtAU = Math.min(THRUSTER_MAX_DISTANCE_AU, Math.max(0.1, state.tgtAU || 1));
     this.motionTargetMode = state.motionTargetMode === THRUSTER_MOTION_TARGET_FLUX
       ? THRUSTER_MOTION_TARGET_FLUX
       : THRUSTER_MOTION_TARGET_AU;

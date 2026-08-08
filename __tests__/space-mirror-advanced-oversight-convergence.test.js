@@ -67,30 +67,21 @@ function computeOversightMetric(window) {
     const focusPower = mirrors * mirrorPowerPer + lanterns * lanternPowerPer;
     let melt = 0;
     if (getGlobal(window, 'gameSettings.phaseChangeHeat')) {
-      let remainingPower = focusPower;
       const phaseParameters = getGlobal(window, 'terraformingParameters.phaseChange.water');
       const calculateTransitionEnergy = getGlobal(window, 'calculatePhaseTransitionEnergyPerKg');
-      zones.map(zone => ({
+      const iceZones = zones.map(zone => ({
         zone,
         temperature: terraforming.temperature.zones[zone].value,
         ice: Math.max(0, terraforming.zonalSurface[zone].ice || 0),
-      })).filter(entry => entry.ice > 0)
-        .sort((a, b) => b.temperature - a.temperature)
-        .forEach(entry => {
-          if (!(remainingPower > 0)) return;
-          const energyPerKg = calculateTransitionEnergy(
+      })).filter(entry => entry.ice > 0);
+      const powerToMeltAllIce = iceZones.reduce((total, entry) => total +
+        entry.ice * 1000 / 86400 * calculateTransitionEnergy(
             'solid',
             'liquid',
             entry.temperature,
             phaseParameters
-          );
-          const zonalMelt = Math.min(
-            entry.ice,
-            remainingPower / energyPerKg / 1000 * 86400
-          );
-          melt += zonalMelt;
-          remainingPower -= zonalMelt * 1000 / 86400 * energyPerKg;
-        });
+          ), 0);
+      melt = availableSurfaceIce * Math.min(1, focusPower / powerToMeltAllIce);
     } else {
       const deltaT = Math.max(0, 273.15 - (terraforming.temperature.value || 0));
       const energyPerKg = 2100 * deltaT + 334000;

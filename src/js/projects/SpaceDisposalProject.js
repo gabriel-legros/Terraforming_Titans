@@ -1324,7 +1324,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       this.syncSelectOptions(row.phaseSelect, phaseOptions);
 
       row.phaseSelect.value = selectionKey || '';
-      row.phaseLabel.textContent = group && group.key === 'storageDepotResource' ? 'Which one' : 'Phase';
+      row.phaseLabel.textContent = group && group.key === 'storageDepotResource'
+        ? this.getSpaceDisposalText('ui.projects.spaceDisposal.whichOne', 'Which one')
+        : this.getSpaceDisposalText('ui.projects.spaceDisposal.phase', 'Phase');
       row.phaseContainer.style.display = group && group.options.length > 1 ? 'flex' : 'none';
       row.removeButton.disabled = this.disposalTargets.length <= 1;
       const isFirst = i === 0;

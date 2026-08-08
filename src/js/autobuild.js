@@ -135,10 +135,10 @@ const CONSTRUCTION_OFFICE_GUIDE_STARTER_SETUP = [
     { buildingKey: 'iceHarvester', fallbackName: 'Ice Harvester', value: '16', basis: 'workers', modeKey: 'workers', fallbackMode: '% of workers', priority: 0 },
     { buildingKey: 'glassSmelter', fallbackName: 'Glass Smelter', value: '5', basis: 'workers', modeKey: 'workers', fallbackMode: '% of workers', priority: 0 },
     { buildingKey: 'hydroponicFarm', fallbackName: 'Hydroponic Farm', value: '1', basis: 'population', modeKey: 'population', fallbackMode: '% of pop', priority: 0 },
-    { buildingKey: 'componentFactory', fallbackName: 'Component Factory', value: '50', basis: 'workerShare', modeKey: 'workerShare', fallbackMode: '% worker share', priority: 0 },
-    { buildingKey: 'electronicsFactory', fallbackName: 'Electronics Factory', value: '35', basis: 'workerShare', modeKey: 'workerShare', fallbackMode: '% worker share', priority: 0 },
+    { buildingKey: 'componentFactory', fallbackName: 'Component Factory', value: '50', basis: 'workerShare', modeKey: 'workerShare', fallbackMode: '% worker share', priority: 1 },
+    { buildingKey: 'electronicsFactory', fallbackName: 'Electronics Factory', value: '37', basis: 'workerShare', modeKey: 'workerShare', fallbackMode: '% worker share', priority: 1 },
     { buildingKey: 'geothermalGenerator', fallbackName: 'Geothermal Generator', value: '0.1', basis: 'max', modeKey: 'max', fallbackMode: 'Max', priority: 2 },
-    { buildingKey: 'nuclearPowerPlant', fallbackName: 'Nuclear Power Plant', value: '0.04', basis: 'workers', modeKey: 'workers', fallbackMode: '% of workers', priority: 1 },
+    { buildingKey: 'nuclearPowerPlant', fallbackName: 'Nuclear Power Plant', value: '0.04', basis: 'workers', modeKey: 'workers', fallbackMode: '% of workers', priority: 2 },
     { buildingKey: 'storageDepot', fallbackName: 'Storage Depot', value: '1', basis: 'workers', modeKey: 'workers', fallbackMode: '% of workers', priority: 0 },
     { buildingKey: 'waterTank', fallbackName: 'Water Tank', value: '0.5', basis: 'workers', modeKey: 'workers', fallbackMode: '% of workers', priority: 0 },
 ];
@@ -174,7 +174,14 @@ function closeConstructionOfficeGuide(overlay) {
 
 function getConstructionOfficeStarterSetupPresetId() {
     const buildingsAutomation = automationManager.buildingsAutomation;
-    if (buildingsAutomation.getPresetById(constructionOfficeState.starterSetupPresetId)) {
+    const existingPreset = buildingsAutomation.getPresetById(constructionOfficeState.starterSetupPresetId);
+    if (existingPreset) {
+        CONSTRUCTION_OFFICE_GUIDE_STARTER_SETUP.forEach(entry => {
+            const automation = existingPreset.buildings[entry.buildingKey]?.automation;
+            if (automation && !Object.prototype.hasOwnProperty.call(automation, 'autoActiveEnabled')) {
+                automation.autoActiveEnabled = true;
+            }
+        });
         return constructionOfficeState.starterSetupPresetId;
     }
 
@@ -186,6 +193,7 @@ function getConstructionOfficeStarterSetupPresetId() {
                 autoBuildPriority: entry.priority,
                 autoBuildBasis: entry.basis,
                 autoBuildPercent: Number(entry.value),
+                autoActiveEnabled: true,
             },
         };
     });

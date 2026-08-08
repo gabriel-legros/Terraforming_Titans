@@ -185,7 +185,9 @@
     <script src="src/js/colony/colonySubtabUI.js"></script>
     <script src="src/js/colony/colonySliders.js"></script>
     <script src="src/js/colony/colonySlidersUI.js"></script>
+    <script src="src/js/colony/nanotech-parameters.js"></script>
     <script src="src/js/colony/nanotech.js"></script>
+    <script src="src/js/colony/nanotechUI.js"></script>
     <script src="src/js/colony/followers.js"></script>
     <script src="src/js/colony/followersUI.js"></script>
     <script src="src/js/automation/spaceship-automation.js"></script>
@@ -201,12 +203,14 @@
     <script src="src/js/automation/auto-travel-automation.js"></script>
     <script src="src/js/automation/automation.js"></script>
     <script src="src/js/projects.js"></script>
+    <script src="src/js/projects/space-access.js"></script>
     <script src="src/js/projects/SpaceshipProject.js"></script>
     <script src="src/js/projects/TerraformingDurationProject.js"></script>
     <script src="src/js/projects/ContinuousExpansionProject.js"></script>
     <script src="src/js/projects/ProjectAssignmentBase.js"></script>
     <script src="src/js/projects/HephaestusMegaconstructionProject.js"></script>
     <script src="src/js/projects/WorkerCapacityBatchProject.js"></script>
+    <script src="src/js/projects/SpaceElevatorProject.js"></script>
     <script src="src/js/projects/ScannerProject.js"></script>
     <script src="src/js/projects/SpaceMiningProject.js"></script>
     <script src="src/js/projects/SpaceMirrorAdvancedOversight.js"></script>
@@ -223,6 +227,7 @@
     <script src="src/js/story/StellarEngineProject.js"></script>
     <script src="src/js/projects/ArtificialCrustProject.js"></script>
     <script src="src/js/projects/AerostatStructuralNetProject.js"></script>
+    <script src="src/js/projects/VanadoBiosphereBuoyancyProject.js"></script>
     <script src="src/js/projects/PlanetaryThrustersProject.js"></script>
     <script src="src/js/projects/RingworldTerraformingProject.js"></script>
     <script src="src/js/projects/DiskworldTerraformingProject.js"></script>
@@ -252,6 +257,7 @@
     <script src="src/js/projects/NuclearAlchemyFurnaceProject.js"></script>
     <script src="src/js/projects/SpaceChemistryProject.js"></script>
     <script src="src/js/projects/SuperalloyGigafoundryProject.js"></script>
+    <script src="src/js/projects/GraphenePrinterProject.js"></script>
     <script src="src/js/projects/ArtificialStarsProject.js"></script>
     <script src="src/js/projects/ApolloCoreSurgeryPlatformProject.js"></script>
     <script src="src/js/projects/PlanetCrackersProject.js"></script>
@@ -493,7 +499,7 @@
         <div class="colonies-subtabs">
           <div id="population-colonies-tab" class="colony-subtab active" data-subtab="population-colonies" data-i18n="ui.colony.population">Population</div>
           <div id="nanocolony-colonies-tab" class="colony-subtab hidden" data-subtab="nanocolony-colonies" data-i18n="ui.colony.nanocolony">Nanocolony</div>
-          <div id="followers-colonies-tab" class="colony-subtab hidden" data-subtab="followers-colonies" data-i18n="ui.colony.followers">Followers</div>
+          <div id="followers-colonies-tab" class="colony-subtab hidden" data-subtab="followers-colonies" data-i18n="ui.colony.followersTab">Followers</div>
         </div>
         <div class="colony-subtab-content-wrapper">
           <div id="population-colonies" class="colony-subtab-content active">
@@ -926,10 +932,13 @@
                                 <span data-i18n="ui.settings.autosave">Autosave</span>
                             </td>
                             <td id="autosave-date" data-i18n="ui.common.empty">Empty</td>
-                            <td>
-                                <button class="save-button" data-slot="autosave" data-i18n="ui.common.save">Save</button>
-                                <button class="load-button" data-slot="autosave" data-i18n="ui.common.load">Load</button>
-                                <button class="delete-button" data-slot="autosave" data-i18n="ui.common.delete">Delete</button>
+                            <td class="autosave-actions-cell">
+                                <div class="autosave-primary-actions">
+                                  <button class="save-button" data-slot="autosave" data-i18n="ui.common.save">Save</button>
+                                  <button class="load-button" data-slot="autosave" data-i18n="ui.common.load">Load</button>
+                                  <button class="delete-button" data-slot="autosave" data-i18n="ui.common.delete">Delete</button>
+                                </div>
+                                <button id="load-older-autosaves-button" type="button" data-i18n="ui.settings.loadOlderAutosaves">Load older</button>
                             </td>
                         </tr>
                         <tr id="exitsave-row" class="build-target-hidden" hidden>
@@ -1041,6 +1050,7 @@
                               <td colspan="3">
                                 <button id="pause-button" data-i18n="ui.common.pause">Pause</button>
                                 <button id="electron-exit-game-button" class="build-target-hidden" hidden data-i18n="ui.settings.exitGame">Exit Game</button>
+                                <button id="electron-exit-to-launcher-button" class="build-target-hidden" hidden data-i18n="ui.settings.exitToLauncher">Exit to Launcher</button>
                               </td>
                             </tr>
                             <tr>
@@ -1085,6 +1095,21 @@
                     <option value="1800" data-i18n="ui.settings.autosaveIntervals.m30">30 minutes</option>
                     <option value="3600" data-i18n="ui.settings.autosaveIntervals.h1">1 hour</option>
                     <option value="0" data-i18n="ui.settings.autosaveIntervals.never">Never</option>
+                  </select>
+                </label>
+                <label class="settings-option">
+                  <span data-i18n="ui.settings.autosaveCount">Autosaves kept</span>
+                  <select id="autosave-count-select">
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3" selected>3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
                   </select>
                 </label>
                 <label class="settings-option">
@@ -1246,6 +1271,9 @@
                 </label>
                 <label class="settings-option difficulty-toggle-option">
                   <input type="checkbox" id="realistic-factory-energy-consumption-toggle"> <span data-i18n="ui.settings.realisticFactoryEnergyConsumption">Realistic factory energy consumption</span> <span id="realistic-factory-energy-consumption-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+                <label class="settings-option difficulty-toggle-option">
+                  <input type="checkbox" id="space-access-capacity-toggle"> <span data-i18n="ui.settings.spaceAccessCapacity">Space Access Capacity</span> <span id="space-access-capacity-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
               </div>
               <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-inputs">

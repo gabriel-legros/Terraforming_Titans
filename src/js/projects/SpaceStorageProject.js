@@ -743,6 +743,24 @@ class SpaceStorageProject extends SpaceshipProject {
     return this.isTeleporterTransferActive() || this.assignedSpaceships > 100;
   }
 
+  getSpaceAccessDemand() {
+    if (
+      !gameSettings.spaceAccessCapacity ||
+      !this.shipOperationIsActive ||
+      this.shipOperationIsPaused ||
+      !this.isShipOperationContinuous() ||
+      this.isTeleporterTransferActive()
+    ) {
+      return 0;
+    }
+    const duration = this.getShipOperationDuration() / 1000;
+    if (!(duration > 0)) {
+      return 0;
+    }
+    const cargoPerShip = this.getShipCapacity(this.attributes.transportPerShip || 0);
+    return Math.max(0, this.assignedSpaceships || 0) * cargoPerShip / duration;
+  }
+
   isTeleporterTransferUnlocked() {
     const research = researchManager.getResearchById('teleporters');
     return this.isBooleanFlagSet('teleporters') && !research.disabled;
@@ -2820,6 +2838,7 @@ class SpaceStorageProject extends SpaceshipProject {
         `Transfer Rate: ${formatNumber(rate, true)}/s`
       );
     }
+    this.updateSpaceAccessStatus(elements);
   }
 
   renderUI(container) {
@@ -3025,9 +3044,6 @@ class SpaceStorageProject extends SpaceshipProject {
     if (this.shipTransferMode === 'store' || this.shipTransferMode === 'withdraw') {
       this.resourceTransferModes = {};
       this.lastUniformTransferMode = this.shipTransferMode;
-    }
-    if (this.megaProjectSpaceOnlyOnTravel) {
-      this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_ONLY;
     }
     this.sanitizeTransferModes();
     this.getExpansionRecipeKey();

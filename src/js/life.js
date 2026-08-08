@@ -1069,11 +1069,12 @@ class LifeDesigner extends EffectableEntity {
     return this.getAdvancedResearchTotalCostFromZero(end) - this.getAdvancedResearchTotalCostFromZero(start);
   }
 
-  getPointCost(category){
+  getPointCost(category, purchaseOffset = 0){
+    const purchaseIndex = this.getPurchaseCount(category) + Math.max(0, Math.floor(purchaseOffset));
     if (category === 'advancedResearch') {
-      return this.getAdvancedResearchPointCost(this.getPurchaseCount(category));
+      return this.getAdvancedResearchPointCost(purchaseIndex);
     }
-    return this.basePointCost * Math.pow(this.pointCostMultiplier, this.getPurchaseCount(category));
+    return this.basePointCost * Math.pow(this.pointCostMultiplier, purchaseIndex);
   }
 
   getTotalPointCost(category, quantity = 1) {
@@ -1481,8 +1482,11 @@ class LifeManager extends EffectableEntity {
     let radPenalty = design.getRadiationGrowthPenalty();
     if (radPenalty < 0.0001) radPenalty = 0;
     const radMult = 1 - radPenalty;
+    const baseSurfaceSolarFlux = terraformingParameters.gameplay.solar.solarPanelBaseLuminosity;
     zones.forEach(zoneName => {
-      const lumMult = usesLuminosity ? terraforming.calculateZonalSolarPanelMultiplier(zoneName) : 1;
+      const lumMult = usesLuminosity
+        ? terraforming.calculateZonalSurfaceSolarFlux(zoneName) / baseSurfaceSolarFlux
+        : 1;
       const tempMult = design.temperatureGrowthMultiplierZone(zoneName);
       const hasRequiredMoisture = requirements.requiresLiquidWaterForGrowth === false
         || (liquidByZone[zoneName].liquidWater || 0) > 1e-9
@@ -1531,7 +1535,9 @@ class LifeManager extends EffectableEntity {
 
       let zonalMaxGrowthRate = baseGrowthRate;
       zonalMaxGrowthRate *= radMult;
-      zonalMaxGrowthRate *= usesLuminosity ? terraforming.calculateZonalSolarPanelMultiplier(zoneName) : 1;
+      zonalMaxGrowthRate *= usesLuminosity
+        ? terraforming.calculateZonalSurfaceSolarFlux(zoneName) / baseSurfaceSolarFlux
+        : 1;
       zonalMaxGrowthRate *= effectiveGrowthMultiplier;
       if (usesIceForWaterByZone[zoneName]) {
         zonalMaxGrowthRate *= 0.5;

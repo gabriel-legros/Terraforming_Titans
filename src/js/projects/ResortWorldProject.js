@@ -435,6 +435,7 @@
             value: multiplier,
             effectId: `resortWorld-${id}-production`,
             sourceId: RESORT_VACATION_SOURCE_ID,
+            name: getResortWorldText('catalogs.specializations.resort.vacation.glowEffectSource'),
           });
           building.addAndReplace({
             target: 'building',
@@ -443,6 +444,7 @@
             value: multiplier,
             effectId: `resortWorld-${id}-consumption`,
             sourceId: RESORT_VACATION_SOURCE_ID,
+            name: getResortWorldText('catalogs.specializations.resort.vacation.glowEffectSource'),
           });
         }
       }
@@ -466,6 +468,7 @@
             value: multiplier,
             effectId: `resortWorld-${id}-research-production`,
             sourceId: RESORT_VACATION_RESEARCH_SOURCE_ID,
+            name: getResortWorldText('catalogs.specializations.resort.vacation.glowEffectSource'),
           });
         }
       }
@@ -475,6 +478,7 @@
         value: multiplier,
         effectId: 'resortWorld-android-research-production',
         sourceId: RESORT_VACATION_RESEARCH_SOURCE_ID,
+        name: getResortWorldText('catalogs.specializations.resort.vacation.glowEffectSource'),
       });
       this.researchEffectsApplied = true;
       this.lastResearchMultiplier = multiplier;

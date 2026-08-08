@@ -23,6 +23,9 @@ function printHelp() {
     '  --ecumenopolis <percent>        Ecumenopolis coverage override (enables its Steam visual)',
     '  --nanoworld                     Enable the completed Nanoworld surface',
     '  --base-color <#rrggbb>          Surface base-colour override',
+    '  --dust-colors <nT,nM,nP,sT,sM,sP>',
+    '                                   North then south tropical/temperate/polar colors',
+    '  --dust-coverage <percent>        Dust coverage for --dust-colors. Default: 100',
     '  --illumination <value>          Visualizer illumination override',
     '  --rotation <0..1>               Fixed day-cycle rotation. Default: 0.08',
     '  --size <pixels>                 Square image size. Default: 768',
@@ -48,6 +51,14 @@ function parseNumber(value, flag, min, max) {
   return number;
 }
 
+function parseDustColors(value) {
+  const colors = String(value).split(',').map(part => part.trim().toLowerCase());
+  if (colors.length !== 6 || colors.some(color => !/^#[0-9a-f]{6}$/.test(color))) {
+    throw new Error('--dust-colors requires six comma-separated #rrggbb colors');
+  }
+  return colors;
+}
+
 function parseArgs(argv) {
   const options = {
     output: defaultOutput,
@@ -61,6 +72,8 @@ function parseArgs(argv) {
     ecumenopolis: null,
     nanoworld: null,
     baseColor: null,
+    dustColors: null,
+    dustCoverage: 100,
     illumination: null,
     rotation: 0.08,
     size: 768,
@@ -98,7 +111,9 @@ function parseArgs(argv) {
     else if (arg === '--base-color') {
       if (!/^#[0-9a-f]{6}$/i.test(next)) throw new Error('--base-color must use #rrggbb format');
       options.baseColor = next;
-    } else if (arg === '--illumination') options.illumination = parseNumber(next, arg, 0, 3);
+    } else if (arg === '--dust-colors') options.dustColors = parseDustColors(next);
+    else if (arg === '--dust-coverage') options.dustCoverage = parseNumber(next, arg, 0, 100);
+    else if (arg === '--illumination') options.illumination = parseNumber(next, arg, 0, 3);
     else if (arg === '--rotation') options.rotation = parseNumber(next, arg, 0, 1);
     else if (arg === '--size') options.size = Math.round(parseNumber(next, arg, 128, 2048));
     else if (arg === '--settle') options.settleMs = Math.round(parseNumber(next, arg, 0, 10000));
@@ -214,6 +229,25 @@ async function configureVisualizer(page, options) {
 
     if (scene.baseColor) {
       visualizer.setBaseColor(scene.baseColor, { force: true });
+    }
+    if (scene.dustColors) {
+      DustFactory.loadAutomationSettings({
+        dustColors: {
+          north: {
+            tropical: scene.dustColors[0],
+            temperate: scene.dustColors[1],
+            polar: scene.dustColors[2],
+          },
+          south: {
+            tropical: scene.dustColors[3],
+            temperate: scene.dustColors[4],
+            polar: scene.dustColors[5],
+          },
+        },
+      });
+      resources.special.albedoUpgrades.value = terraforming.celestialParameters.surfaceArea * scene.dustCoverage / 100;
+      buildings.dustFactory.dustColorChanged = true;
+      visualizer.updateDustTint();
     }
 
     const container = document.getElementById('planet-visualizer');

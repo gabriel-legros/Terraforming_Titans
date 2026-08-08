@@ -461,8 +461,12 @@ function createResourceContainers(resourcesData) {
       if (category === 'spaceStorage') {
         label.textContent = getResourceUICommonText('spaceResources', 'Space Resources');
       } else {
+        const categoryName = getResourceUICommonText(
+          `categories.${category}`,
+          capitalizeFirstLetter(category)
+        );
         label.textContent = getResourceUICommonText('categoryResources', '{name} Resources', {
-          name: capitalizeFirstLetter(category),
+          name: categoryName,
         });
       }
       collapseTarget.appendChild(label);

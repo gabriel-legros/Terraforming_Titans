@@ -377,6 +377,7 @@ progressVenus.chapters.push(
     chapter: 19,
     narrative: "Evelyn: 'You have probably been wondering how you are going to cool Venus.  If you block the entire Sun - and you should - it will take hundreds of years to cool it.  No, you need to get rid of all the CO2.  Mass drivers have always been off the table since that would count as a weapon.  There is an interesting solution : what happens if we import hydrogen instead of water? Chemical reactors let us feed hydrogen into Venusian CO2. The reaction strips out solid carbon in the form of graphite, and gives us colony water as a bonus. Hydrogen shipments are lighter than water, and each tonne imported removes 11 tons of CO2. Two birds with one stone.'",
     prerequisites: ["chapter19.3"],
+    objectives: [],
     reward: [
       {
         target: 'researchManager',
@@ -712,6 +713,11 @@ progressVenus.chapters.push(
         target: 'researchManager',
         type: 'enableResearch',
         targetId: 'antimatter_containment'
+      },
+      {
+        target: 'researchManager',
+        type: 'enableResearch',
+        targetId: 'space_antimatter_safety_regulations'
       }
     ]
   },

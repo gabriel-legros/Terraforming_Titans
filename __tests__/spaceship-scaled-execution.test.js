@@ -104,6 +104,7 @@ function createHarness() {
   setGlobal('RESOURCE_RATE_SOURCE_IDS', RESOURCE_RATE_SOURCE_IDS, originalGlobals);
   setGlobal('registerRateSource', registerRateSource, originalGlobals);
   setGlobal('shipEfficiency', 1, originalGlobals);
+  setGlobal('gameSettings', { spaceAccessCapacity: false }, originalGlobals);
   setGlobal('projectElements', {}, originalGlobals);
   setGlobal('projectManager', {
     projects: {},

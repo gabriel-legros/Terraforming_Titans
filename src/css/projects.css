@@ -1100,6 +1100,16 @@
     margin-top: 0;
 }
 
+.diskworld-terraforming-controls .ringworld-terraforming-power select,
+.diskworld-terraforming-controls .ringworld-terraforming-power input {
+    box-sizing: border-box;
+    width: 140px;
+}
+
+.diskworld-terraforming-controls .ringworld-terraforming-power-controls {
+    margin-left: 0;
+}
+
 .diskworld-source-controls {
     display: flex;
     align-items: center;
@@ -1291,7 +1301,7 @@
 
 .kerati-hive-transfer-controls {
     display: grid;
-    grid-template-columns: minmax(120px, 180px) auto auto;
+    grid-template-columns: minmax(80px, 1fr) auto minmax(70px, 1fr) minmax(70px, 1fr);
     gap: 8px;
     align-items: center;
     width: 100%;
@@ -1303,7 +1313,7 @@
 }
 
 .kerati-hive-transfer-button {
-    min-width: 84px;
+    min-width: 70px;
 }
 
 .kerati-hive-action-grid {
@@ -1377,6 +1387,34 @@
     white-space: nowrap;
 }
 
+.kerati-hive-action-card__automation {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.kerati-hive-auto-label,
+.kerati-hive-weight-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    font-size: 0.82em;
+    white-space: nowrap;
+}
+
+.kerati-hive-auto-food-label {
+    justify-self: end;
+}
+
+.kerati-hive-weight-input {
+    width: 64px;
+    min-width: 0;
+    padding: 3px 5px;
+}
+
 @media (max-width: 720px) {
     .kerati-hive-summary-layout {
         grid-template-columns: 1fr;
@@ -1399,6 +1437,10 @@
     }
 
     .kerati-hive-action-card__batch {
+        justify-content: flex-start;
+    }
+
+    .kerati-hive-action-card__automation {
         justify-content: flex-start;
     }
 
@@ -1431,7 +1473,7 @@
 }
 
 .hephaestus-yards-assignment-list .hephaestus-assignment-row {
-    grid-template-columns: minmax(130px, 0.9fr) minmax(55px, 0.3fr) 470px minmax(0, 0.45fr);
+    grid-template-columns: minmax(130px, 0.9fr) minmax(70px, 0.35fr) minmax(55px, 0.3fr) 470px minmax(0, 0.45fr);
 }
 
 .assignment-divider-row {
@@ -3005,6 +3047,120 @@
 
 .mega-heat-sink-top-section .mega-heat-sink-metric-section .project-cost {
     margin: 0;
+}
+
+.space-access-status {
+  grid-column: 1 / -1;
+}
+
+.space-access-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-bottom: 12px;
+}
+
+.space-access-mode-panel,
+.space-access-target-panel {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 12px;
+}
+
+.space-access-control-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+
+.space-access-control-help,
+.space-access-explanation,
+.space-access-target-unit {
+    color: inherit;
+    opacity: 0.72;
+}
+
+.space-access-control-help {
+    line-height: 1.35;
+}
+
+.space-access-mode-select {
+    flex: 0 0 220px;
+    min-width: 220px;
+}
+
+.space-access-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 0;
+}
+
+.space-access-summary-grid .project-summary-box {
+    min-width: 0;
+    padding: 10px;
+}
+
+.space-access-target-toggle,
+.space-access-target-value {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.space-access-target-toggle {
+    margin: 0;
+}
+
+.space-access-target-input {
+    width: 150px;
+}
+
+.space-access-target-mode-select {
+    width: 105px;
+}
+
+.space-access-explanation {
+    margin: 0;
+    padding: 10px 12px;
+    border-left: 3px solid #6f8fb3;
+    background: rgba(111, 143, 179, 0.08);
+    line-height: 1.45;
+}
+
+@media (max-width: 900px) {
+    .space-access-summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .space-access-mode-panel,
+    .space-access-target-panel {
+        align-items: stretch;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .space-access-mode-select {
+        flex-basis: auto;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .space-access-summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .space-access-target-panel,
+    .space-access-target-value {
+        align-items: flex-start;
+    }
+
+    .space-access-target-value {
+        flex-wrap: wrap;
+    }
 }
 
 .mega-heat-sink-cap-row {

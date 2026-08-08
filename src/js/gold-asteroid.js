@@ -192,13 +192,18 @@ class GoldenAsteroid {
       }
     }
 
+    hideChaosWarning() {
+      this.cacheElements();
+      if (this.chaosWarningElement) {
+        this.chaosWarningElement.style.display = 'none';
+      }
+      this.chaosWarningVisible = false;
+    }
+
     updateChaosWarning() {
       const active = this.isChaosActive();
       if (!active) {
-        if (this.chaosWarningVisible && this.chaosWarningElement) {
-          this.chaosWarningElement.style.display = 'none';
-          this.chaosWarningVisible = false;
-        }
+        this.hideChaosWarning();
         return;
       }
       this.ensureChaosWarningElement();
@@ -355,7 +360,7 @@ class GoldenAsteroid {
       this.despawn();
       this.countdownActive = false;
       this.countdownRemainingTime = 0;
-      this.updateChaosWarning();
+      this.hideChaosWarning();
       this.celebrationActive = false;
       this.celebrationRemainingTime = 0;
       this.stopConfetti();

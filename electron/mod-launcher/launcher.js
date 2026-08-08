@@ -10,6 +10,9 @@ const playButton = document.getElementById('play-button');
 const localModsButton = document.getElementById('local-mods-button');
 const creatorToolsButton = document.getElementById('creator-tools-button');
 const workshopButton = document.getElementById('workshop-button');
+const importFileButton = document.getElementById('import-file-button');
+const importClipboardButton = document.getElementById('import-clipboard-button');
+const runScriptsOnStartToggle = document.getElementById('run-scripts-on-start-toggle');
 
 let launcherState = null;
 let orderedMods = [];
@@ -251,8 +254,9 @@ function renderSaves() {
     refs.input.disabled = !save.valid || launcherState.refreshing;
     refs.title.textContent = save.label;
     const timestamp = new Date(save.timestamp).toLocaleString();
+    const temporary = save.temporary ? 'Temporary · ' : '';
     refs.detail.textContent = save.valid
-      ? `${timestamp} · ${save.world} · ${formatDuration(save.playTimeSeconds)} · ${formatBytes(save.size)}${save.gameCompleted ? ' · Completed' : ''}`
+      ? `${temporary}${timestamp} · ${save.world} · ${formatDuration(save.playTimeSeconds)} · ${formatBytes(save.size)}${save.gameCompleted ? ' · Completed' : ''}`
       : `${timestamp} · ${save.error}`;
     refs.detail.classList.toggle('save-error', !save.valid);
     const expected = saveList.children[index + 1];
@@ -296,6 +300,7 @@ function applyState(state) {
   orderedMods = state.mods.slice();
   enabledMods = new Set(state.mods.filter(mod => mod.enabled).map(mod => mod.instanceId));
   selectedSave = state.selectedSave;
+  runScriptsOnStartToggle.checked = state.runScriptsOnStart;
   const statusText = state.error
     || (state.creatorBusy ? 'A Workshop upload is in progress…' : '')
     || (state.refreshing ? 'Checking Steam Workshop and validating mods…' : '');
@@ -304,9 +309,49 @@ function applyState(state) {
   globalStatus.classList.toggle('is-error', !!state.error);
   refreshButton.disabled = state.refreshing;
   creatorToolsButton.disabled = state.refreshing;
+  importFileButton.disabled = state.refreshing || state.creatorBusy;
+  importClipboardButton.disabled = state.refreshing || state.creatorBusy;
   renderWorkshop(state.workshop);
   renderSaves();
   renderMods();
+}
+
+async function importSave(importAction) {
+  importFileButton.disabled = true;
+  importClipboardButton.disabled = true;
+  globalStatus.textContent = 'Importing save…';
+  globalStatus.hidden = false;
+  globalStatus.classList.remove('is-error');
+  try {
+    const result = await importAction();
+    if (result.success) {
+      launcherState.saves = [
+        result.save,
+        ...launcherState.saves.filter(save => save.selectionId !== result.save.selectionId)
+      ];
+      launcherState.selectedSave = result.save.selectionId;
+      selectedSave = result.save.selectionId;
+      globalStatus.hidden = true;
+      importFileButton.disabled = false;
+      importClipboardButton.disabled = false;
+      renderSaves();
+      renderMods();
+      return;
+    }
+    if (!result.canceled) {
+      globalStatus.textContent = result.error;
+      globalStatus.hidden = false;
+      globalStatus.classList.add('is-error');
+    } else {
+      globalStatus.hidden = true;
+    }
+  } catch (error) {
+    globalStatus.textContent = error.message;
+    globalStatus.hidden = false;
+    globalStatus.classList.add('is-error');
+  }
+  importFileButton.disabled = launcherState.refreshing || launcherState.creatorBusy;
+  importClipboardButton.disabled = launcherState.refreshing || launcherState.creatorBusy;
 }
 
 async function launch() {
@@ -317,7 +362,8 @@ async function launch() {
     const result = await window.modLauncher.launch({
       order: orderedMods.map(mod => mod.instanceId),
       disabled: orderedMods.filter(mod => !enabledMods.has(mod.instanceId)).map(mod => mod.instanceId),
-      saveSelection: selectedSave
+      saveSelection: selectedSave,
+      runScriptsOnStart: runScriptsOnStartToggle.checked
     });
     if (!result.success) {
       globalStatus.textContent = result.error;
@@ -337,6 +383,18 @@ refreshButton.addEventListener('click', () => window.modLauncher.refresh());
 localModsButton.addEventListener('click', () => window.modLauncher.openLocalMods());
 creatorToolsButton.addEventListener('click', () => window.modLauncher.openCreatorTools());
 workshopButton.addEventListener('click', () => window.modLauncher.openWorkshop());
+importFileButton.addEventListener('click', () => importSave(() => window.modLauncher.importSaveFile()));
+importClipboardButton.addEventListener('click', () => importSave(() => window.modLauncher.importSaveClipboard()));
+runScriptsOnStartToggle.addEventListener('change', async () => {
+  const enabled = runScriptsOnStartToggle.checked;
+  const result = await window.modLauncher.setRunScriptsOnStart(enabled);
+  if (!result.success) {
+    runScriptsOnStartToggle.checked = !enabled;
+    globalStatus.textContent = result.error;
+    globalStatus.hidden = false;
+    globalStatus.classList.add('is-error');
+  }
+});
 resetOrderButton.addEventListener('click', () => {
   orderedMods.sort((a, b) => a.loadOrder - b.loadOrder || a.id.localeCompare(b.id));
   renderMods();

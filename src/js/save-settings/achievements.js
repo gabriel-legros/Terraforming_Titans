@@ -281,9 +281,6 @@ class AchievementManager {
     if (key === 'solarPanel' || key === 'windTurbine') {
       return true;
     }
-    if (Number(building?.powerPerBuilding) > 0) {
-      return true;
-    }
     return Number(building?.production?.colony?.energy) > 0;
   }
 

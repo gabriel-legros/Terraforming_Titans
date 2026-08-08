@@ -5,6 +5,7 @@ const path = require('path');
 const vm = require('vm');
 
 const repositoryRoot = path.resolve(__dirname, '..');
+const gameVersion = JSON.parse(fs.readFileSync(path.join(repositoryRoot, 'package.json'), 'utf8')).version;
 const workRoot = path.join(repositoryRoot, 'artifacts', 'translation-work');
 const localizationPath = path.join(repositoryRoot, 'src', 'js', 'lang', 'localization.js');
 const sourceDefinitions = [
@@ -123,7 +124,7 @@ function writeLanguageMod(language, languageData, sourceParts) {
     schemaVersion: 1,
     id: language.id,
     name: language.name,
-    version: '1.0.0',
+    version: gameVersion,
     loadOrder: 1000,
     generatedFrom: 'src/js/lang/current-language.js + src/js/lang/story-language.js',
     generatedStringCount: entries.length,

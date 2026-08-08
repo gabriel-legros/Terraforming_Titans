@@ -686,10 +686,7 @@
       .join('|');
     const baseColorKey = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
     const dustBaseColor = this.normalizeHexColor(this.dustTintColor) || baseColorKey;
-    const dustRgb = this.hexToRgb(dustBaseColor);
-    const dustKey = [dustRgb.r, dustRgb.g, dustRgb.b]
-      .map(v => Math.round(v / 4))
-      .join('_');
+    const dustKey = this.getDustTintColorKey();
     const biomassColorKey = getActiveBiomassColor();
     // Include planet type in cache key so palette changes (archetype) update texture
     let typeKey = 'default';
@@ -943,10 +940,11 @@
     const terrainReveal = smoothstep(0, 1, getEarthReconstructionShapeRatio(this));
 
     let gradientBase = baseHex;
+    let tintAmt = 0;
     if (palette.tint) {
       const min = clamp01(palette.tint.min ?? 0);
       const max = clamp01(palette.tint.max ?? min);
-      const tintAmt = clamp01(min + (max - min) * rand());
+      tintAmt = clamp01(min + (max - min) * rand());
       if (tintAmt > 0) {
         gradientBase = mixHexColors(baseHex, palette.tint.color, tintAmt);
       }
@@ -963,11 +961,52 @@
     const topCol = mixHexColors(gradientBase, topTarget, topMix);
     const botCol = mixHexColors(gradientBase, bottomTarget, bottomMix);
 
-    const base = ctx.createLinearGradient(0, 0, 0, h);
-    base.addColorStop(0, topCol);
-    base.addColorStop(1, botCol);
-    ctx.fillStyle = base;
-    ctx.fillRect(0, 0, w, h);
+    const dustTints = this.dustTintColors;
+    const distinctDustTints = dustTints && new Set([
+      dustTints.north.tropical,
+      dustTints.north.temperate,
+      dustTints.north.polar,
+      dustTints.south.tropical,
+      dustTints.south.temperate,
+      dustTints.south.polar,
+    ]).size > 1;
+    if (distinctDustTints) {
+      const zonalGradients = { north: {}, south: {} };
+      for (const hemisphere of ['north', 'south']) {
+        for (const zone of ['tropical', 'temperate', 'polar']) {
+          let zonalBase = dustTints[hemisphere][zone];
+          if (palette.tint && tintAmt > 0) {
+            zonalBase = mixHexColors(zonalBase, palette.tint.color, tintAmt);
+          }
+          zonalGradients[hemisphere][zone] = {
+            top: this.hexToRgb(mixHexColors(zonalBase, topTarget, topMix)),
+            bottom: this.hexToRgb(mixHexColors(zonalBase, bottomTarget, bottomMix)),
+          };
+        }
+      }
+      const zonalBaseImage = ctx.createImageData(w, h);
+      const zonalBaseData = zonalBaseImage.data;
+      for (let y = 0; y < h; y++) {
+        const hemisphere = y < h / 2 ? 'north' : 'south';
+        const vertical = y / Math.max(1, h - 1);
+        for (let x = 0; x < w; x++) {
+          const zone = ['tropical', 'temperate', 'polar'][this.getTextureZoneIndex(x, y, w, h)];
+          const gradient = zonalGradients[hemisphere][zone];
+          const idx = (y * w + x) * 4;
+          zonalBaseData[idx] = Math.round(gradient.top.r + (gradient.bottom.r - gradient.top.r) * vertical);
+          zonalBaseData[idx + 1] = Math.round(gradient.top.g + (gradient.bottom.g - gradient.top.g) * vertical);
+          zonalBaseData[idx + 2] = Math.round(gradient.top.b + (gradient.bottom.b - gradient.top.b) * vertical);
+          zonalBaseData[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(zonalBaseImage, 0, 0);
+    } else {
+      const base = ctx.createLinearGradient(0, 0, 0, h);
+      base.addColorStop(0, topCol);
+      base.addColorStop(1, botCol);
+      ctx.fillStyle = base;
+      ctx.fillRect(0, 0, w, h);
+    }
 
     const baseHeightScale = palette.heightScale ?? 1;
     const heightJitter = palette.heightJitter || 0;

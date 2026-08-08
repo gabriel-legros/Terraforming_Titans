@@ -61,6 +61,8 @@
         "energyShortage": "Energy Shortage",
         "gravityStrain": "Gravity Strain",
         "overpopulation": "Overpopulation",
+        "galacticNaturalGrowth": "Natural growth",
+        "galacticImmigration": "Immigration",
         "lifeDensityDecay": "Life Density Decay",
         "geologicalBurial": "Geological Burial",
         "surfaceBiomass": "Surface Biomass",
@@ -279,6 +281,7 @@
         "unknownStar": "Unknown Star",
         "starDetailsTitle": "Star Details",
         "worldDetailsTitle": "World Details",
+        "renameWorldTitle": "Rename this random world",
         "starTitle": "Star: {value}",
         "spectral": "Spectral",
         "luminosity": "Luminosity",
@@ -429,6 +432,9 @@
           "abandoned": "Abandoned"
         },
         "typeLabels": {
+          "shell": "Shell",
+          "ring": "Ring",
+          "disk": "Disk",
           "supermassiveShellworld": "SMBH Shellworld"
         },
         "columns": {
@@ -442,8 +448,10 @@
       },
       "blueprint": {
         "title": "Blueprint",
-        "worldName": "World name",
+        "worldName": "Name",
         "worldNamePlaceholder": "Artificial world",
+        "worldNumber": "Number",
+        "worldNumberPlaceholder": "Optional",
         "framework": "Framework",
         "core": "Core",
         "stellarContext": "Stellar context",
@@ -457,7 +465,7 @@
         "orbitalRadius": "Orbital radius (AU)",
         "orbitTooltip": "Ring orbital distance from the system star.",
         "orbitAutoTitle": "Set a just-under-5h ringworld build by maximizing width at minimum orbit, then solving orbit radius.",
-        "diskOuterAutoTitle": "Set the outer radius for a just-under-5h disk build using the current inner radius.",
+        "diskOuterAutoTitle": "Set the largest just-under-5h disk by maximizing outer radius, then minimizing inner radius if time remains.",
         "diskOuterRadius": "Outer radius (AU)",
         "diskOuterRadiusTooltip": "Outer edge of the usable disk annulus.",
         "diskInnerRadius": "Inner radius (AU)",
@@ -627,6 +635,7 @@
         "unknownFaction": "Unknown faction"
       },
       "operationsPanel": {
+        "title": "Operations",
         "emptySelectSector": "Select a contested sector to assign fleet power.",
         "fleetPowerLabel": "Fleet Power",
         "fleetPowerTooltip": "Fleet power may be assigned to conduct operations on the map, in an attempt to gain sector control. You may only perform operations on a sector that you either contest, or is neighbour to a sector you fully control. The more fleet power assigned, the higher your chances of success, and the lower your losses, but your fleet will be busy in the meantime.",
@@ -697,6 +706,14 @@
         "resourceBias": "Resource Bias",
         "rich": "Rich",
         "poor": "Poor",
+        "resources": {
+          "metal": "Metal",
+          "water": "Water",
+          "silicon": "Silica",
+          "carbon": "Carbon",
+          "nitrogen": "Nitrogen",
+          "unknown": "Unknown"
+        },
         "worlds": "Worlds",
         "world": "World",
         "fleetDefense": "Fleet Def.",
@@ -728,6 +745,7 @@
         "effectiveValue": "Effective: {value}",
         "remainingValue": "Remaining: {value}",
         "clearAll": "Unassign all defensive assignments",
+        "clearAllShort": "Unassign All",
         "lastFiveAttacks": "Last 5 Attacks",
         "toggleAttackHistory": "Toggle attack history",
         "historyEnemy": "Enemy",
@@ -785,6 +803,13 @@
         "totalLabel": "Total :",
         "spaceResources": "Space Resources",
         "categoryResources": "{name} Resources",
+        "categories": {
+          "colony": "Colony",
+          "surface": "Surface",
+          "underground": "Underground",
+          "atmospheric": "Atmospheric",
+          "special": "Special"
+        },
         "toggleView": "Toggle colony/space resource view",
         "landRecoverNote": "Land can be recovered by turning off the corresponding building",
         "wasteTooltipNote": "Waste processing buildings display their consumption based on their available staffing and power, ignoring waste shortages. The numbers here are not their actual consumption.",
@@ -975,8 +1000,8 @@
         "capToDysonCapacity": "Cap to Dyson Capacity"
       },
       "aerostat": {
-        "buoyancyNotes": "Aerostats ignore normal pressure colony penalties and use the dry-adiabatic 1 atm temperature floor for their own upkeep. They need enough lift to stay airborne. If lift fails, active aerostats can land as Research Outposts if enough land remains.  If total atmospheric pressure is too low, aerostats may be forced to fly near the ground, providing little to no mitigation if temperature is high at their 1 atm estimate.",
-        "buoyancyNotesPoweredFlight": "Aerostats ignore normal pressure colony penalties and use the dry-adiabatic 1 atm temperature floor for their own upkeep. They need enough lift to stay airborne. On worlds with poor buoyancy, powered flight can keep them aloft for extra energy. If flight fails, active aerostats can land as Research Outposts if enough land remains.  If total atmospheric pressure is too low, aerostats may be forced to fly near the ground, providing little to no mitigation if temperature is high at their 1 atm estimate.",
+        "buoyancyNotes": "Aerostats ignore normal pressure colony penalties and use a 1 atm temperature estimate for their own upkeep. They need enough lift to stay airborne. If lift fails, active aerostats can land as Research Outposts as long as enough land remains.  If total atmospheric pressure is too low, aerostats may be forced to fly near the ground, providing little to no mitigation if temperature is high at their 1 atm estimate.",
+        "buoyancyNotesPoweredFlight": "Aerostats ignore normal pressure colony penalties and use a 1 atm temperature estimate for their own upkeep. They need enough lift to stay airborne. On worlds with poor buoyancy, powered flight can keep them aloft for extra energy. If flight fails, active aerostats can land as Research Outposts as long as enough land remains.  If total atmospheric pressure is too low, aerostats may be forced to fly near the ground, providing little to no mitigation if temperature is high at their 1 atm estimate.",
         "landLimitTooltip": "At most 25% of the planet's starting land can host aerostat colonies to minimize collision risk.",
         "temperatureTooltipIntro": "Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their total housing capacity. Eligible staffed worker requirement is calculated from current active buildings, effective worker needs, current worker capacity, and worker priority allocation. Some buildings also have an Aerostat Support value; active aerostats cover up to active aerostats x support structures for that building, and any uncovered share keeps that portion of the penalty. This mitigation cannot reduce buildings below the dry-adiabatic 1 atm maintenance floor.",
         "androidSpaceTooltip": "Reserve part of each aerostat for android housing instead of colonists. The slider value is android capacity per aerostat out of 10 total housing slots.",
@@ -1075,6 +1100,15 @@
         "tooltipBase": "{name} determines the base growth rate.",
         "growthChemistry": "Growth chemistry: {equation}",
         "detailed": "Detailed: {equation}"
+      },
+      "biopigmentation": {
+        "name": "Biopigmentation",
+        "description": "Choose the colour of engineered biomass.",
+        "colorLabel": "Biomass colour:",
+        "reset": "Reset",
+        "albedo": "Albedo: {value}",
+        "growthPenalty": "Growth penalty: -{value}%",
+        "tooltip": "Biomass albedo follows the selected colour. Colours no brighter than the basic green have no growth penalty. Brighter colours reduce growth linearly, reaching -80% for white. Changing colour is free."
       },
       "attributes": {
         "minTemperatureTolerance": {
@@ -1197,6 +1231,7 @@
       },
       "growthTooltip": {
         "solidBiochemistry": "Solid Biochemistry (ice substitution): x{value}",
+        "biopigmentation": "Biopigmentation: x{value} (albedo {albedo})",
         "lowGravity": "Low Gravity: x0.00",
         "lowGravityDisabled": "Growth is disabled because Ringworld gravity is below 0.1g, so atmosphere cannot be retained.",
         "base": "Base: {value}%",
@@ -1227,6 +1262,11 @@
       "labels": {
         "productivity": "Productivity",
         "cost": "Cost:",
+        "constructed": "Constructed",
+        "provides": "Provides",
+        "production": "Production",
+        "consumption": "Consumption",
+        "maintenance": "Maintenance",
         "heat": "Heat",
         "cooling": "Cooling"
       },
@@ -1319,7 +1359,9 @@
         "productivityDemandLine": "  {source}: {amount}",
         "productivityWorkerLine": "{resource}: {available} available / {required} needed ({percent}%)",
         "productivityMaintenanceLine": "Maintenance paid: {percent}%",
+        "productivityAdvancedOversight": "Advanced Oversight allocation: {percent}% of facility capacity.",
         "productivityDayNight": "Inactive at night",
+        "productivityAutomationDisabled": "Disabled by automation settings.",
         "productivityNoDetails": "No limiting factor found."
       }
     },
@@ -1878,7 +1920,12 @@
         },
         "foodTransfer": {
           "add": "Add Food",
+          "auto": "Auto /s",
           "available": "Colony Food {value}"
+        },
+        "automation": {
+          "auto": "Auto",
+          "weight": "Weight"
         },
         "hunting": {
           "on": "Hunting On",
@@ -2015,7 +2062,7 @@
             "temperate": "Temp.:",
             "polar": "Polar:"
           },
-          "focusingTooltip": "Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. Uses the heat required to warm the ice to 0°C plus the energy of fusion and melting.",
+          "focusingTooltip": "Concentrate mirror and lantern energy on a single point to melt surface ice into liquid water. Only surface ice melts and the warmest zone with ice is targeted first. With Phase Change Heat enabled, the calculation includes warming the resulting meltwater to the local zone temperature.",
           "applyToLantern": "Apply Oversight to Hyperion Lantern",
           "applyToLanternTooltip": "Lets mirror oversight assign Hyperion Lanterns alongside mirrors. Lanterns only add heat and cannot cool zones.  Mandatory when using finer controls."
         },
@@ -2222,6 +2269,7 @@
         "disposalTargetsSubheading": "Configure up to 15 resources. Active auto-start targets split assigned disposal evenly.",
         "addTarget": "+ Add target",
         "phase": "Phase",
+        "whichOne": "Which one",
         "none": "—",
         "remove": "Remove",
         "waitForFullCapacity": "Wait for full capacity",
@@ -2311,9 +2359,8 @@
         "capModeGeometricLandPercent": "% of geometric land",
         "capStatus": "Cap: {value}",
         "capReached": "Cap reached",
-        "liquidHydrogenWarning": "Liquid hydrogen is preventing heat sinks from reducing core heat flux. Heat sinks can still mitigate factory heat and can still be built.",
-        "liquidHydrogenStatus": "Blocked: liquid hydrogen prevents core heat removal",
-        "liquidHydrogenStatusShort": "Blocked"
+        "liquidHydrogenWarning": "Liquid hydrogen is preventing heat sinks from reducing core heat flux. Heat sinks can still mitigate factory heat, accelerate cooling toward the temperature trend, and be built.",
+        "liquidHydrogenStatus": "Blocked: liquid hydrogen prevents core heat removal"
       },
       "deeperMining": {
         "deepeningSpeedBoost": "Deepening speed boost",
@@ -2554,6 +2601,132 @@
     "colony": {
       "population": "Population",
       "nanocolony": "Nanocolony",
+      "followersTab": "Followers",
+      "title": "Colonies",
+      "unhideObsoleteBuildings": "Unhide Obsolete Buildings",
+      "common": {
+        "unknown": "Unknown",
+        "randomWorldNamed": "Random World: {name}"
+      },
+      "needs": {
+        "happiness": "Happiness",
+        "comfort": "Comfort",
+        "value": "{name}: {value}%"
+      },
+      "growthRate": {
+        "title": "Growth Rate",
+        "capacity": "Capacity:",
+        "capacityTooltip": "Capacity multiplier from the logistic growth equation. This is 1 - population / capacity, so growth slows as you approach your housing cap and stops entirely when population equals capacity.\n\nIf you feel that the game is very slow, there is a very high chance that this multiplier is the reason why. Try to keep it as high as possible by building more housing.",
+        "baseRate": "Base rate:",
+        "baseTooltip": "Base growth rate derived from happiness: max((happiness - 50%) / 300, 0).\n- Food and energy each grant up to +25 happiness when satisfied.\n- Comfort adds 20x its rating.\n- Electronics and androids each add up to +10 happiness when food and energy are met.\n- Milestones ready to claim or claimed add +0.5 happiness each.\n- Happiness below 50% pauses growth.",
+        "otherMultipliers": "Other multipliers:",
+        "otherTooltip": "Multipliers from colony sliders, and other effects.",
+        "decay": "Decay:",
+        "decayTooltip": "Combined population loss from shortages, overpopulation, and high gravity.",
+        "growth": "Growth:",
+        "growthTooltip": "Final growth rate after applying logistic growth minus starvation, energy, and gravity decay.",
+        "naturalGrowth": "Natural growth",
+        "immigration": "Immigration",
+        "pilgrimFollowers": "Pilgrim Followers: {value}x",
+        "multiplierEntry": "{name}: {value}x",
+        "decayStarvation": "• Starvation: {rate}%/s ({share}% starving; 100% per 360 s).",
+        "decayEnergy": "• Energy: {rate}%/s ({share}% without power; 100% per 90 s).",
+        "decayOverpopulation": "• Overpopulation: {rate}%/s.",
+        "decayGravity": "• Gravity: {rate}%/s (gravity {gravity} m/s^2; {above} above 20)."
+      },
+      "constructionOffice": {
+        "title": "Construction Office",
+        "autobuilder": "Autobuilder: ",
+        "statusActive": "active",
+        "statusDisabled": "disabled",
+        "pause": "Pause",
+        "resume": "Resume",
+        "strategicReserve": "Strategic reserve",
+        "strategicReserveTooltip": "Prevents the Construction Office from using resources from storage if spending them would drop any resource below the specified percentage of its capacity. Does not apply to workers.",
+        "reserveSettingsButton": "Reserve settings",
+        "reserveSettingsTitle": "Strategic Reserve",
+        "reserveSettingsIntro": "Set the Construction Office reserve percentage for each resource.",
+        "globalReserve": "Global default",
+        "close": "X",
+        "done": "Done",
+        "guide": {
+          "title": "Autobuild Guide",
+          "open": "Open autobuild guide",
+          "close": "Close autobuild guide",
+          "imageAlt": "Autobuild controls with numbered guide sections",
+          "section1": "This section controls whether or not autobuild is active for this building. The value entered and mode controls how your target is defined.",
+          "section2a": "This can control the value in 1) without using the keyboard. Useful for making small adjustments.",
+          "section2b": "This controls autobuild priority. Higher priorities buildings are built first.",
+          "section3": "This is your current autobuild target based on defined value. The construction office will attempt to build to that value.",
+          "section4": "Set active to target is useful to ensure newly built buildings are automatically activated when built, or to quickly change your number of active buildings.",
+          "section5": "This is a way to calculate a value in 1) that will match your current setup.",
+          "recommendationsTitle": "Recommendations",
+          "recommendation1": "Use autobuild on 1% of pop for hydroponics farm. Each upgraded farm can feed 100 people, so you need a number of farms equal to 1% of your pop.",
+          "recommendation2": "Use sand quarries as 100% of Glass Smelter + Electronics Factory demand.",
+          "recommendation3": "There are two particularly useful autobuild mode : % of workers and % worker share.  % of workers calculates your target based on your number of workers. % worker share calculates a target based on assigning the given % of your workers to this building. For example, if you have 200 workers and want 1 storage depot per 100 workers use 1% of workers.  If you want 50% of your workers to work in components factory, you can use 50% worker share.",
+          "recommendation4": "When you unlock the construction office for the first time, try setting most of your buildings to % of workers or % worker share and press \"Set Target to Active\" then turn it on. The autobuilder will mostly imitate your current setup.",
+          "recommendation5": "If you need a bit more of something or want to free up your workers a little, the box in 2a is great for small adjustments.  You can increase or decrease your autobuild target value a little bit without completely breaking the economy.",
+          "starterSetupTitle": "Starter setup",
+          "starterSetupBuilding": "Building name",
+          "starterSetupValue": "Value",
+          "starterSetupMode": "Mode",
+          "starterSetupPriority": "Priority",
+          "starterSetupModeMax": "Max",
+          "starterSetupModeSandQuarryDemand": "% of G.S.+E.F. Demand",
+          "starterSetupModeWorkers": "% of workers",
+          "starterSetupModePopulation": "% of pop",
+          "starterSetupModeWorkerShare": "% worker share",
+          "starterSetupApply": "Apply Starter setup"
+        },
+        "guidePrompt": {
+          "title": "Autobuild Guide",
+          "message": "A guide for this feature is available.  Would you like to see the guide now?  (It is also accessible from the construction office under the colony tab)",
+          "yes": "Yes",
+          "no": "No"
+        },
+        "reserveResources": {
+          "energy": "Energy",
+          "metal": "Metal",
+          "glass": "Glass",
+          "water": "Water",
+          "components": "Components",
+          "electronics": "Electronics",
+          "superconductors": "Superconductors",
+          "superalloys": "Superalloys",
+          "land": "Land"
+        }
+      },
+      "sliders": {
+        "managerDescription": "Manages colony sliders",
+        "sourceName": "Colony sliders",
+        "title": "Colony Management",
+        "workforceAllocation": "Workforce Allocation",
+        "workersValue": "Workers: {value}%",
+        "scientistsValue": "Scientists: {value}%",
+        "foodConsumption": "Food Consumption",
+        "luxuryWaterUse": "Luxury Water Use",
+        "oreMineWorkers": "Ore Mine Workers",
+        "mechanicalAssistance": "Mechanical Assistance ",
+        "mechanicalAssistanceTooltip": "Mechanical Assistance mitigates up to 50% of high-gravity decay and stacks with High-gravity adaptation to remove the rest.",
+        "gravityDecayReduction": "Gravity decay reduction: -{value}%",
+        "sliderValue": "Slider: {value}x.",
+        "componentsCoverage": "Components coverage: {value}%.",
+        "currentGravity": "Current gravity: {gravity} m/s^2 ({above} above 20).",
+        "effectiveMitigation": "Effective mitigation: {value}% of gravity decay.",
+        "highGravityAdaptation": "High-gravity adaptation: {value}",
+        "remainingDecay": "Remaining decay: {value}% of the original high-gravity loss per day when gravity exceeds 20 m/s^2.",
+        "warpnet": "Warpnet ",
+        "warpnetTooltip": "Warpnet funnels instant communication to coordinate research output.",
+        "warpnetEnergyUpkeep": "Left value multiplies colony and android housing energy upkeep: {value}.",
+        "warpnetResearchBoost": "Right value adds a global research boost: +{value}%",
+        "warpnetEnergyCost": "Energy cost scales steeply with Warpnet intensity.",
+        "warpnetSolisNote": "Note: Solis pays for starting androids.",
+        "warpnetLabelBase": "x1",
+        "warpnetLabelExp": "x1e{value}",
+        "researchEffect": "Research: +{value}%",
+        "growthEffect": "Growth: +{value}%",
+        "boostEffect": "Boost: {value}%"
+      },
       "followers": {
         "managerDescription": "Manages followers systems",
         "common": {
@@ -2691,120 +2864,6 @@
             }
           }
         }
-      },
-      "title": "Colonies",
-      "unhideObsoleteBuildings": "Unhide Obsolete Buildings",
-      "common": {
-        "unknown": "Unknown",
-        "randomWorldNamed": "Random World: {name}"
-      },
-      "needs": {
-        "happiness": "Happiness",
-        "comfort": "Comfort",
-        "value": "{name}: {value}%"
-      },
-      "growthRate": {
-        "title": "Growth Rate",
-        "capacity": "Capacity:",
-        "capacityTooltip": "Capacity multiplier from the logistic growth equation. This is 1 - population / capacity, so growth slows as you approach your housing cap and stops entirely when population equals capacity.\n\nIf you feel that the game is very slow, there is a very high chance that this multiplier is the reason why. Try to keep it as high as possible by building more housing.",
-        "baseRate": "Base rate:",
-        "baseTooltip": "Base growth rate derived from happiness: max((happiness - 50%) / 300, 0).\n- Food and energy each grant up to +25 happiness when satisfied.\n- Comfort adds 20x its rating.\n- Electronics and androids each add up to +10 happiness when food and energy are met.\n- Milestones ready to claim or claimed add +0.5 happiness each.\n- Happiness below 50% pauses growth.",
-        "otherMultipliers": "Other multipliers:",
-        "otherTooltip": "Multipliers from colony sliders, and other effects.",
-        "decay": "Decay:",
-        "decayTooltip": "Combined population loss from shortages, overpopulation, and high gravity.",
-        "growth": "Growth:",
-        "growthTooltip": "Final growth rate after applying logistic growth minus starvation, energy, and gravity decay.",
-        "naturalGrowth": "Natural growth",
-        "immigration": "Immigration",
-        "pilgrimFollowers": "Pilgrim Followers: {value}x",
-        "multiplierEntry": "{name}: {value}x",
-        "decayStarvation": "• Starvation: {rate}%/s ({share}% starving; 100% per 360 s).",
-        "decayEnergy": "• Energy: {rate}%/s ({share}% without power; 100% per 90 s).",
-        "decayOverpopulation": "• Overpopulation: {rate}%/s.",
-        "decayGravity": "• Gravity: {rate}%/s (gravity {gravity} m/s^2; {above} above 20)."
-      },
-      "constructionOffice": {
-        "title": "Construction Office",
-        "autobuilder": "Autobuilder: ",
-        "statusActive": "active",
-        "statusDisabled": "disabled",
-        "pause": "Pause",
-        "resume": "Resume",
-        "strategicReserve": "Strategic reserve",
-        "strategicReserveTooltip": "Prevents the Construction Office from using resources from storage if spending them would drop any resource below the specified percentage of its capacity. Does not apply to workers.",
-        "reserveSettingsButton": "Reserve settings",
-        "reserveSettingsTitle": "Strategic Reserve",
-        "reserveSettingsIntro": "Set the Construction Office reserve percentage for each resource.",
-        "globalReserve": "Global default",
-        "close": "X",
-        "done": "Done",
-        "guide": {
-          "title": "Autobuild Guide",
-          "open": "Open autobuild guide",
-          "close": "Close autobuild guide",
-          "imageAlt": "Autobuild controls with numbered guide sections",
-          "section1": "This section controls whether or not autobuild is active for this building. The value entered and mode controls how your target is defined.",
-          "section2a": "This can control the value in 1) without using the keyboard. Useful for making small adjustments.",
-          "section2b": "This controls autobuild priority. Higher priorities buildings are built first.",
-          "section3": "This is your current autobuild target based on defined value. The construction office will attempt to build to that value.",
-          "section4": "Set active to target is useful to ensure newly built buildings are automatically activated when built, or to quickly change your number of active buildings.",
-          "section5": "This is a way to calculate a value in 1) that will match your current setup.",
-          "recommendationsTitle": "Recommendations",
-          "recommendation1": "Use autobuild on 1% of pop for hydroponics farm. Each upgraded farm can feed 100 people, so you need a number of farms equal to 1% of your pop.",
-          "recommendation2": "Use sand quarries as 100% of Glass Smelter + Electronics Factory demand.",
-          "recommendation3": "There are two particularly useful autobuild mode : % of workers and % worker share.  % of workers calculates your target based on your number of workers. % worker share calculates a target based on assigning the given % of your workers to this building. For example, if you have 200 workers and want 1 storage depot per 100 workers use 1% of workers.  If you want 50% of your workers to work in components factory, you can use 50% worker share.",
-          "recommendation4": "When you unlock the construction office for the first time, try setting most of your buildings to % of workers or % worker share and press \"Set Target to Active\" then turn it on. The autobuilder will mostly imitate your current setup.",
-          "recommendation5": "If you need a bit more of something or want to free up your workers a little, the box in 2a is great for small adjustments.  You can increase or decrease your autobuild target value a little bit without completely breaking the economy."
-        },
-        "guidePrompt": {
-          "title": "Autobuild Guide",
-          "message": "A guide for this feature is available.  Would you like to see the guide now?  (It is also accessible from the construction office under the colony tab)",
-          "yes": "Yes",
-          "no": "No"
-        },
-        "reserveResources": {
-          "energy": "Energy",
-          "metal": "Metal",
-          "glass": "Glass",
-          "water": "Water",
-          "components": "Components",
-          "electronics": "Electronics",
-          "superconductors": "Superconductors",
-          "superalloys": "Superalloys",
-          "land": "Land"
-        }
-      },
-      "sliders": {
-        "managerDescription": "Manages colony sliders",
-        "sourceName": "Colony sliders",
-        "title": "Colony Management",
-        "workforceAllocation": "Workforce Allocation",
-        "workersValue": "Workers: {value}%",
-        "scientistsValue": "Scientists: {value}%",
-        "foodConsumption": "Food Consumption",
-        "luxuryWaterUse": "Luxury Water Use",
-        "oreMineWorkers": "Ore Mine Workers",
-        "mechanicalAssistance": "Mechanical Assistance ",
-        "mechanicalAssistanceTooltip": "Mechanical Assistance mitigates up to 50% of high-gravity decay and stacks with High-gravity adaptation to remove the rest.",
-        "gravityDecayReduction": "Gravity decay reduction: -{value}%",
-        "sliderValue": "Slider: {value}x.",
-        "componentsCoverage": "Components coverage: {value}%.",
-        "currentGravity": "Current gravity: {gravity} m/s^2 ({above} above 20).",
-        "effectiveMitigation": "Effective mitigation: {value}% of gravity decay.",
-        "highGravityAdaptation": "High-gravity adaptation: {value}",
-        "remainingDecay": "Remaining decay: {value}% of the original high-gravity loss per day when gravity exceeds 20 m/s^2.",
-        "warpnet": "Warpnet ",
-        "warpnetTooltip": "Warpnet funnels instant communication to coordinate research output.",
-        "warpnetEnergyUpkeep": "Left value multiplies colony and android housing energy upkeep: {value}.",
-        "warpnetResearchBoost": "Right value adds a global research boost: +{value}%",
-        "warpnetEnergyCost": "Energy cost scales steeply with Warpnet intensity.",
-        "warpnetSolisNote": "Note: Solis pays for starting androids.",
-        "warpnetLabelBase": "x1",
-        "warpnetLabelExp": "x1e{value}",
-        "researchEffect": "Research: +{value}%",
-        "growthEffect": "Growth: +{value}%",
-        "boostEffect": "Boost: {value}%"
       },
       "nanotech": {
         "managerDescription": "Manages the nanobot swarm",
@@ -3122,12 +3181,16 @@
           },
           "tooltip": "Temperature is a critical factor for terraforming. It is determined by a complex interplay of factors:\n\n- Key equations: the model uses the Stefan-Boltzmann law to calculate the effective temperature from solar flux and albedo. The greenhouse effect is then added based on the atmosphere's optical depth, and the day-night temperature variation is calculated from the planet's heat capacity and rotation speed.\n- Solar flux: the base energy received from the star, which can be augmented by structures like Space Mirrors.\n- Albedo: the planet's reflectivity. A high albedo from ice and clouds reflects more light and cools the planet. A low albedo from oceans and dark rock absorbs more light and warms it.\n- Greenhouse effect: atmospheric gases like CO2, H2O, and CH4 trap heat. The amount of trapping is determined by the atmosphere's optical depth, which depends on the amount of each gas.\n- Rotation speed: a slower rotation leads to more extreme temperature differences between day and night.\n- Heat capacity: the planet's ability to store and release heat, influenced by surface composition and atmospheric density. More surface liquids mean more heat capacity and therefore reduced day-night differences.\n- Meridional winds: energy moves between tropical, temperate, and polar zones. The trend column shows the wind-smoothed target temperature that conserves total heat while evening out extremes.\n- Thermal inertia: the same heat capacity that moderates day/night swings also slows the march toward the trend temperature. Thick air and deep oceans respond sluggishly; thin atmospheres snap toward the trend quickly.\n\nTemperature directly impacts:\n- Water cycle: driving evaporation, sublimation, melting, and freezing.\n- Life: each species has specific temperature ranges for survival and growth.\n- Colonist comfort: extreme temperatures increase energy consumption for life support.",
           "coreHeatTooltip": "Planetary interior heat added directly to the surface as a flat global flux.\n\nArtificial Crust and Mega Heat Sinks can reduce this value.\n\nIf temperature falls below {crustStart}{unit}, a natural crust will start forming and will complete at {crustComplete}{unit}.\n\nThis flux is not impacted by albedo or day-night averaging.",
-          "factoryHeatTooltip": "Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is reduced by surface albedo. A certain megastructure can help reduce this. Direct waste heat is not impacted by albedo or day-night averaging.",
+          "factoryHeatTooltip": "Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Mega Heat Sinks remove core heat first, then factory heat; any remaining capacity accelerates cooling toward the temperature trend. Direct waste heat is not impacted by albedo or day-night averaging.",
+          "factoryHeatTopContributors": "Top contributors by absolute impact:",
+          "factoryHeatOtherSources": "Other sources",
+          "phaseChangeHeatTooltip": "Signed planetary heat exchanged by phase changes during the latest climate slice. Positive values mean freezing, condensation, or deposition released heat; negative values mean melting, evaporation, boiling, or sublimation absorbed heat.  For numerical stability, this effect can only speed or slow movement toward the trend, not reverse it.  This can lead to stalling temperatures.",
           "equilibriumTempTooltip": "The blackbody radiative balance temperature from absorbed sunlight, albedo, and direct non-atmospheric heat. It ignores greenhouse heat trapping; physically, it is the temperature that would radiate the same energy back to space. Earth's value is about 255 K (-18°C).",
           "labels": {
             "globalMeanTemp": "Global Mean Temp",
             "equilibriumTemp": "Equilibrium Temp",
             "netCoreHeatFlux": "Net Core Heat Flux",
+            "netPhaseChangeHeatFlux": "Net Phase Change Heat Flux",
             "netFactoryHeatFlux": "Net Factory Heat Flux",
             "zone": "Zone",
             "temperature": "T ({unit})",
@@ -3748,7 +3811,16 @@
           }
         },
         "rewards": {
-          "nuclearAlchemyThroughput": "+{value}% Nuclear Alchemy throughput"
+          "manufacturingWorldThroughput": "+{value}% Manufacturing World throughput",
+          "liftersSuperchargeMax": "+{value} Lifters supercharge max",
+          "gigafoundryThroughput": "+{value}% Gigafoundry throughput",
+          "spaceChemistryThroughput": "+{value}% Space Chemistry throughput",
+          "nuclearAlchemyThroughput": "+{value}% Nuclear Alchemy throughput",
+          "oneillSectorCap": "O'Neill Cap Multiplier +{value}",
+          "hephaestusYardEffectiveness": "+{value}% Hephaestus yard effectiveness",
+          "spaceStorageCapacity": "+{value}% Space storage capacity",
+          "liftersSuperchargeExponent": "Lifters supercharge exponent -{value}",
+          "liftersThroughput": "+{value}% Lifters throughput"
         }
       },
       "statisticsTitle": "Statistics",
@@ -3780,6 +3852,7 @@
         }
       },
       "currentWorldLabel": "Current World",
+      "renameRandomWorldTitle": "Rename this random world",
       "originalProperties": "Original Properties",
       "worldSelectionTitle": "World Selection",
       "worldSelectionSubtitle": "Finish terraforming to unlock your next destination.",
@@ -3824,6 +3897,7 @@
         "uniqueTooltip": "Counts every distinct story world and terraformed random world you have completed. Ignores all other bonuses.",
         "effectiveTooltip": "Includes worlds from other sources. This value influences advanced research, Solis rewards, mega structure expansion speed, and export caps.",
         "galacticPopulationTooltip": "Galactic population grows at 0.5% / 365 per second, multiplied by (1 - population / capacity).",
+        "showGalacticPopulationInSidebar": "Show in sidebar",
         "effectiveTooltipGalaxy": "With galaxy unlocked, fleet capacity uses an adjusted world count (artificial worlds contribute up to {value} and O'Neill cylinders are ignored).",
         "effectiveTooltipGalaxyUncapped": "With galaxy unlocked, fleet capacity uses an adjusted world count (artificial worlds contribute their full value and O'Neill cylinders are ignored)."
       }
@@ -4294,7 +4368,19 @@
             "autoStartConstruction": "Auto-start Construction",
             "autoOperationEnabled": "Auto Operation Enabled",
             "spaceshipCostMultiplier": "Spaceship Cost Multiplier",
-            "currentMass": "Current Mass"
+            "currentMass": "Current Mass",
+            "keratiHive": {
+              "hiveFood": "Hive Food",
+              "honey": "Honey",
+              "spawningPools": "Spawning Pools",
+              "territory": "Territory",
+              "drones": "Drones Owned",
+              "builders": "Builders Owned",
+              "hunters": "Hunters Owned",
+              "princesses": "Princesses Owned",
+              "queens": "Queens Owned",
+              "empresses": "Empresses Owned"
+            }
           },
           "artificial": {
             "source": "Artificial",
@@ -4391,6 +4477,8 @@
             "luminosity": {
               "solarFlux": "Solar Flux",
               "modifiedSolarFlux": "Modified Solar Flux",
+              "surfaceSolarFlux": "Surface Solar Flux",
+              "averageFlux": "Average Flux",
               "albedo": "Albedo",
               "opticalDepth": "Optical Depth"
             },
@@ -4486,6 +4574,7 @@
         "scriptLineTypeElse": "ELSE",
         "scriptLineTypeWait": "WAIT",
         "scriptLineTypeActions": "ACTIONS",
+        "scriptGoto": "GOTO",
         "scriptLinkedTo": "Linked to",
         "scriptLinkedToNone": "None",
         "scriptLineName": "Name",
@@ -4493,6 +4582,10 @@
         "scriptAlways": "Always",
         "scriptCondition": "Condition",
         "scriptJoin": "Join",
+        "scriptJoinAnd": "AND",
+        "scriptJoinOr": "OR",
+        "scriptNotOn": "NOT",
+        "scriptNotOff": "NOT Off",
         "scriptLeftExpression": "Left",
         "scriptRightExpression": "Right",
         "scriptComparator": "Compare",
@@ -4505,6 +4598,19 @@
         "scriptOperatorSafeDivide": "SAFE DIVIDE",
         "scriptActions": "Actions",
         "scriptElseActions": "Else Actions",
+        "scriptNoActions": "No actions",
+        "scriptSummarySleep": "Sleep {duration} ms",
+        "scriptSummaryGoto": "GOTO {target}",
+        "scriptSummarySetScriptVariable": "Set Script {variable} = {value}",
+        "scriptSummarySetVariable": "Set {variable} = {value}",
+        "scriptSummarySetAutomation": "Set {type} automation {mode}",
+        "scriptSummarySetPause": "Set pause {mode}",
+        "scriptSummaryAction": "Action",
+        "scriptSummaryParameter": " with {variable}",
+        "scriptSummaryApplyPreset": "Apply {type} preset {name}{parameter}",
+        "scriptSummaryApplyCombination": "Apply {type} combination {name}",
+        "scriptNullValue": "NULL",
+        "scriptWithId": "Script {id}",
         "scriptApplyPreset": "Apply Preset",
         "scriptAutoTravelAndTurnOn": "Auto Travel",
         "scriptApplyCombination": "Apply Combination",
@@ -4521,6 +4627,10 @@
         "scriptTogglePause": "Toggle Pause",
         "scriptGotoScript": "GOTO Script",
         "scriptAutomationTypeScripting": "Scripting",
+        "scriptAutomationTypeBuildings": "Buildings",
+        "scriptAutomationTypeProjects": "Projects",
+        "scriptAutomationTypeColony": "Colony",
+        "scriptAutomationTypeResearch": "Research",
         "scriptAutomationTypeAutoTravel": "Auto Travel",
         "scriptAutomationTypeShip": "Ship",
         "scriptAutomationTypeLife": "Life",
@@ -4546,6 +4656,10 @@
         "lifeDeployImproveLabel": "Deploy only if design improves by",
         "lifeDeployPointsSuffix": "points",
         "lifeDeployInfo": "Auto deployment will only trigger if it improves a design by the given number of points.",
+        "lifeBiomassColorLabel": "Biomass colour",
+        "lifeBiomassColorTooltip": "This color is applied when the preset deploys a life design. Changing it costs no life points. Brighter-than-green biomass grows more slowly, up to -80% for white.",
+        "lifeBiomassAlbedo": "Albedo: {value}",
+        "lifeBiomassGrowthPenalty": "Growth penalty: -{value}%",
         "lifeCreateStepsFromCurrentButton": "Create steps from current design",
         "lifeSpendAtLabel": "Spend at",
         "lifeMaxCostLabel": "Max cost",
@@ -4852,7 +4966,7 @@
         },
         "yoDawgTerraforming": {
           "title": "Yo dawg, I heard you liked terraforming",
-          "requirement": "Have all your terraforming times in the past 10 terraformed worlds be faster than the previous one."
+          "requirement": "Have all your terraforming times in the past 10 terraformed worlds be faster than the previous one. (game time)"
         },
         "coruscant": {
           "title": "Coruscant",
@@ -5013,6 +5127,8 @@
       "autoPauseColonists": "When net colonist rate <",
       "immigrationPool": "Immigration pool",
       "immigrationPoolTooltip": "When enabled, on any world other than Mars, a large portion of colony growth becomes directly dependent on galactic population via immigration.  Immigration will attempt to equalize the world colonist fill ratio with the galactic fill ratio, and all immigration is taken from the galactic population pool.  This may lead to very slow growth in some cases.",
+      "disableColonistDecay": "Disable colonist decay",
+      "disableColonistDecayTooltip": "Prevents colonist losses from food shortages, energy shortages, high gravity, and overpopulation.  Recommended for idle play.",
       "disableUnlockAlerts": "Disable unlock alerts",
       "disableDayNightCycle": "Disable day-night cycle",
       "dayNightTooltip": "Stops time of day changes. Solar Panels and Ice Harvesters run at half efficiency and half maintenance. Leads to a more realistic, slightly easier and more relaxed experience.",
@@ -5069,8 +5185,10 @@
       "unfulfilledMaintenancePenaltiesTooltip": "When enabled, unpaid building maintenance lowers the productivity of affected buildings over 900 seconds. Each building trends toward the worst paid maintenance ratio among the resources it needs, and actual productivity is capped by that value.",
       "earlyAdvancedOversight": "Early Advanced Oversight",
       "earlyAdvancedOversightTooltip": "The game has a powerful solver for space mirrors that can automatically target specified temperature values.  It is intended to be something that must be earned, and is usually available on Story World 5.  If you find the fiddling too frustrating however feel free to have it early.  You still need the Space Mirror Facility Oversight research.",
+      "phaseChangeHeat": "Phase Change Heat",
+      "phaseChangeHeatTooltip": "When enabled, melting, evaporation, boiling, and sublimation absorb planetary heat, while freezing, condensation, and deposition release it. Phase-change heat does not alter temperature trends or Advanced Oversight assignments. It can only speed or slow movement toward the trend but can easily lead to stalling temperatures.",
       "factoryHeating": "Factory heating",
-      "factoryHeatingTooltip": "When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production reduced by surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. A certain megastructure can help mitigate factory heating.  \n\n You should use this setting alongside Realistic factory energy consumption",
+      "factoryHeatingTooltip": "When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat; any remaining capacity accelerates cooling toward the temperature trend.\n\nYou should use this setting alongside Realistic factory energy consumption.",
       "realisticFactoryEnergyConsumption": "Realistic factory energy consumption",
       "realisticFactoryEnergyConsumptionTooltip": "When enabled, buildings use plausible industrial energy demands based on their workers and material throughput instead of the defaults.  This can make the game a lot easier.  This setting may one day become the new default once the game is rebalanced around it.",
       "infinitePatience": "Infinite patience",
@@ -5133,10 +5251,17 @@
       "fastestTerraformByTypeTitle": "Fastest Terraform by World Type",
       "fastestTerraformByTypeEntry": "{type}: {game} ({real} real time)",
       "recentTerraformHistoryTitle": "Last {count} Terraformed Worlds",
+      "recentTerraformHistoryWorld": "World",
+      "recentTerraformHistoryTerraformTime": "Time to Terraform",
+      "recentTerraformHistoryTravelTime": "Time to Travel",
       "recentTerraformHistoryAverage": "Average: {game} ({real} real time)",
+      "recentTerraformHistoryAverageLabel": "Average",
       "recentTerraformHistoryEmpty": "No terraformed worlds recorded yet.",
       "recentTerraformHistoryEntry": "{name} ({type}): {game} ({real} real time)",
+      "recentTerraformHistoryWorldEntry": "{name} ({type})",
+      "recentTerraformHistoryUnavailable": "Unavailable",
       "terraformWorldTypeArtificial": "Artificial",
+      "terraformWorldTypeStory": "Story",
       "terraformWorldTypeShell": "Shellworld",
       "terraformWorldTypeRing": "Ringworld",
       "terraformWorldTypeDisk": "Alderson disk",
@@ -5271,7 +5396,7 @@
           "allFiveHazards": "All five hazard systems are active on this world.",
           "allSixHazards": "Features all hazards and even a new horrible one.",
           "teleportersDisabled": "The 100Q advanced research is disabled.",
-          "startingResearchWarning": "You may need at least 1M starting research from Solis to acquire some critical researches.",
+          "startingResearchWarning": "You may need at least 1M starting research from Solis to acquire some critical researches.  Chemical reactor research also enables pyrolyzers.",
           "powerfulFeaturesLimited": "Many other powerful features are disabled or limited."
         },
         "rewards": {
@@ -5542,7 +5667,7 @@
       },
       "oxygenFactory": {
         "name": "Oxygen Factory",
-        "description": "Extracts oxygen from liquid water via electrolysis or uses a lot of energy to liberate oxygen from rocks.",
+        "description": "Extracts oxygen from liquid water via electrolysis or uses a lot of energy to liberate oxygen from rocks.  Releases hydrogen as byproduct.",
         "recipes": {
           "water": {
             "shortName": "Water -> Oxygen"
@@ -5879,7 +6004,7 @@
       },
       "megaHeatSink": {
         "name": "Mega Heat Sink",
-        "description": "Construct a titanic heatsink complex to siphon planetary heat at unprecedented scales, fully equipped with its own pumps.  Each heat sink will accelerate planet cooling by 1 PW.  Will not take the current temperature below its trend."
+        "description": "Construct a titanic heatsink complex to siphon planetary heat at unprecedented scales, fully equipped with its own pumps. Each heat sink supplies 1 PW of cooling, mitigating core heat and factory heat before accelerating zonal cooling. Will not take any zone below its trend."
       },
       "spaceAntimatter": {
         "name": "Space Antimatter",
@@ -5962,7 +6087,7 @@
       },
       "ammonia": {
         "displayName": "Fritizian",
-        "lore": "The Fritizians arose on the moon Fritiz, shaped by an environment unusually rich in ammonia. Over evolutionary time, ammonia ceased to be merely a background chemical and became a direct pillar of Fritizian metabolism.\n\nThey still rely on carbon dioxide and water, but their core biochemical pathways assume ammonia-derived chemistry in ways that are deeply integrated and difficult to substitute. This specialization comes with a severe constraint: oxygen is lethally toxic to them. Even modest oxygen levels can damage their proteins, destabilize membranes, and crash key metabolic reactions.\n\nThey prefer aquatic or sealed habitats where chemistry can be buffered and tightly regulated, keeping oxygen extremely low while maintaining the precise mix of dissolved compounds their bodies require.\n\nFritizian civilization is defined by environmental mastery. Their technology focuses on stability: controlled oceans, sealed atmospheres, and habitat systems designed to hold narrow conditions for centuries. That same precision makes expansion difficult; few worlds naturally match their requirements, and transforming a world to fit them demands vast, careful engineering.\n\nSo the Fritizians remain mostly bound to Fritiz—safe, technologically advanced, and strategically vulnerable. Their dependence on a narrow ecological niche leaves them “protected” by the Empire in the way a cage protects a rare animal: kept stable, kept useful, and kept contained.",
+        "lore": "The Fritizians arose on the moon Fritiz, shaped by an environment unusually rich in ammonia. Over evolutionary time, ammonia ceased to be merely a background chemical and became a direct pillar of Fritizian metabolism.\n\nThey still rely on carbon dioxide and water, but their core biochemical pathways assume ammonia-derived chemistry in ways that are deeply integrated and difficult to substitute. This specialization comes with a severe constraint: oxygen is lethally toxic to them. Even modest oxygen levels can damage their proteins, destabilize membranes, and crash key metabolic reactions.\n\nThey prefer aquatic or sealed habitats where chemistry can be buffered and tightly regulated, keeping oxygen extremely low while maintaining the precise mix of dissolved compounds their bodies require.\n\nFritizian civilization is defined by environmental mastery. Their technology focuses on stability: controlled oceans, sealed atmospheres, and habitat systems designed to hold narrow conditions for centuries. That same precision makes expansion difficult; few worlds naturally match their requirements, and transforming a world to fit them demands vast, careful engineering.\n\nSo the Fritizians remain mostly bound to Fritiz; safe, technologically advanced, and strategically vulnerable. Their dependence on a narrow ecological niche leaves them “protected” by the Empire in the way a cage protects a rare animal: kept stable, kept useful, and kept contained.",
         "lifeDesign": {
           "processes": {
             "ammoniaPhotosynthesis": {
@@ -5973,7 +6098,7 @@
       },
       "oommaa": {
         "displayName": "Oommaa",
-        "lore": "The Oommaa are an aquatic carbon-water dominion with one major twist: on their homeworld, extreme pressure and low light make carbon dioxide readily available in liquid form. Instead of being mostly an atmospheric gas, CO2 collects in dense layers and pools within the global ocean, creating habitats where liquid CO2 and liquid water meet.\n\nOommaa biology is adapted to these mixed environments—regions with roughly comparable amounts of CO2 and water, often in stratified basins or along turbulent boundaries where the two fluids interact. Their light-harvesting metabolism is a pressure-adapted form of photosynthesis designed for dim conditions, and it does not vent oxygen as waste. Any free oxygen is treated as a useful reagent rather than something to release.\n\nA defining feature of the Oommaa is how they turn oxygen into armor. They use oxygen together with calcium to grow thick shells that serve as both protection and structural support. Shell growth is responsive: it thickens under threat and can develop layered patterns that reflect an individual’s age and life history.\n\nOommaa are extremely long-lived, with slow metabolisms and long memories. Many individuals alive today were already adults during the era of the Early Empire, and their resentment toward it is personal and enduring. Culturally, they favor patience: long, unhurried conversations, careful deliberation, and extended periods of sleep are all considered normal—signs of maturity.",
+        "lore": "The Oommaa are an aquatic carbon-water dominion with one major twist: on their homeworld, extreme pressure and low light make carbon dioxide readily available in liquid form. Instead of being mostly an atmospheric gas, CO2 collects in dense layers and pools within the global ocean, creating habitats where liquid CO2 and liquid water meet.\n\nOommaa biology is adapted to these mixed environments; regions with roughly comparable amounts of CO2 and water, often in stratified basins or along turbulent boundaries where the two fluids interact. Their light-harvesting metabolism is a pressure-adapted form of photosynthesis designed for dim conditions, and it does not vent oxygen as waste. Any free oxygen is treated as a useful reagent rather than something to release.\n\nA defining feature of the Oommaa is how they turn oxygen into armor. They use oxygen together with calcium to grow thick shells that serve as both protection and structural support. Shell growth is responsive: it thickens under threat and can develop layered patterns that reflect an individual’s age and life history.\n\nOommaa are extremely long-lived, with slow metabolisms and long memories. Many individuals alive today were already adults during the era of the Early Empire, and their resentment toward it is personal and enduring. Culturally, they favor patience: long, unhurried conversations, careful deliberation, and extended periods of sleep are all considered normal—signs of maturity.",
         "lifeDesign": {
           "processes": {
             "carbonateShellPhotosynthesis": {
@@ -6464,7 +6589,7 @@
         },
         "mega_heat_sink": {
           "name": "Mega Heat Sink",
-          "description": "Develops a blueprint for a massive superalloy heatsink, a repeatable special project capable of accelerating planet cooling and mitigating factory heating."
+          "description": "Develops a blueprint for a massive superalloy heatsink, a repeatable special project capable of mitigating core and factory heat and accelerating planet cooling toward its trend."
         },
         "lifting": {
           "name": "Lifting",
@@ -6502,6 +6627,10 @@
           "name": "Next-generation bio-engineering",
           "description": "Enables the use of advanced research to permanently increase life design potential"
         },
+        "biopigmentation": {
+          "name": "Biopigmentation",
+          "description": "Life can use other pigments.  This can help raise albedo, but bright colours suffer growth penalties."
+        },
         "repeatable_ai_research": {
           "name": "Repeatable AI Researches",
           "description": "Authorizes repeatable research programs focused on enhancing production with the help of HOPE."
@@ -6513,6 +6642,10 @@
         "galactic_market": {
           "name": "Galactic Market Concordat",
           "description": "Establishes permanent trade ties with the wider galaxy, replacing crude exports with a managed market.  This permanently replaces Cargo Rockets and Metal Exportation."
+        },
+        "automatic_surplus_trading": {
+          "name": "Automatic Surplus Trading",
+          "description": "At this point, colony resources have become merely commodities.  The Galactic Market should be able to adapt to rapid changes in our supply, allowing us to sell our surplus resources without having to find business partners first.  (Overflowing colony resources will be automatically sold on the market below saturation.  Happens on the next tick.)"
         },
         "mechanical_assistance": {
           "name": "Mechanical Assistance",
@@ -6907,6 +7040,9 @@
         },
         "solisPoints": {
           "name": "Solis Points"
+        },
+        "galacticPopulation": {
+          "name": "Galactic Population"
         },
         "alienArtifact": {
           "name": "Alien artifact"

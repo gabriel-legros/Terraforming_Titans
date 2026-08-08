@@ -348,7 +348,8 @@ function buildFollowersUI() {
     getFollowersText('ui.colony.followers.art.tooltip.line3', 'Artifact factor is artifacts invested.'),
     getFollowersText('ui.colony.followers.art.tooltip.line4', 'Funding factor is funding invested.'),
     getFollowersText('ui.colony.followers.art.tooltip.line5', 'Total Art Power = population * artifacts invested * funding invested.'),
-    getFollowersText('ui.colony.followers.art.tooltip.line6', 'Happiness bonus is 0.25 * log10(Art Power)% and worker-per-colonist is multiplied by 1 + 5 * happiness bonus.')
+    getFollowersText('ui.colony.followers.art.tooltip.line6', 'Happiness bonus is 0.25 * log10(Art Power)% and worker-per-colonist is multiplied by 1 + 5 * happiness bonus.'),
+    getFollowersText('ui.colony.followers.art.tooltip.line7', 'When travelling, all remaining funding is automatically invested in the gallery.')
   ].join('\n');
   const artGallery = document.createElement('div');
   artGallery.classList.add('followers-art-gallery');

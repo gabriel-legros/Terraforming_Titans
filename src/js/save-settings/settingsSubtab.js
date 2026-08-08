@@ -10,6 +10,7 @@ function cacheSettingsElements() {
 
   settingsElements = {
     autosaveIntervalSelect: document.getElementById('autosave-interval-select'),
+    autosaveCountSelect: document.getElementById('autosave-count-select'),
     framerateSelect: document.getElementById('framerate-select'),
     whiteNoiseOption: document.getElementById('white-noise-settings-option'),
     keepTabRunningAudioToggle: document.getElementById('keep-tab-running-audio-toggle'),
@@ -74,6 +75,8 @@ function cacheSettingsElements() {
     factoryHeatingTooltip: document.getElementById('factory-heating-tooltip'),
     realisticFactoryEnergyConsumptionToggle: document.getElementById('realistic-factory-energy-consumption-toggle'),
     realisticFactoryEnergyConsumptionTooltip: document.getElementById('realistic-factory-energy-consumption-tooltip'),
+    spaceAccessCapacityToggle: document.getElementById('space-access-capacity-toggle'),
+    spaceAccessCapacityTooltip: document.getElementById('space-access-capacity-tooltip'),
     infinitePatienceToggle: document.getElementById('infinite-patience-toggle'),
     liftersStrippingCapToggle: document.getElementById('lifters-stripping-cap-toggle'),
     liftersStrippingCapTooltip: document.getElementById('lifters-stripping-cap-tooltip'),
@@ -115,6 +118,7 @@ function cacheSettingsElements() {
     startBackgroundSilenceButton: document.getElementById('start-background-silence-button'),
     pauseButton: document.getElementById('pause-button'),
     electronExitGameButton: document.getElementById('electron-exit-game-button'),
+    electronExitToLauncherButton: document.getElementById('electron-exit-to-launcher-button'),
     pauseKeybindCaptureButton: document.getElementById('pause-keybind-capture-button'),
     dialogueSkipKeybindCaptureButton: document.getElementById('dialogue-skip-keybind-capture-button'),
     fullscreenKeybindCaptureButton: document.getElementById('fullscreen-keybind-capture-button'),
@@ -302,6 +306,7 @@ function updateDifficultyLockUI() {
     cached.phaseChangeHeatToggle,
     cached.factoryHeatingToggle,
     cached.realisticFactoryEnergyConsumptionToggle,
+    cached.spaceAccessCapacityToggle,
     cached.infinitePatienceToggle,
     cached.liftersStrippingCapToggle,
     cached.orbitalCapToggle,
@@ -454,6 +459,7 @@ function updateDifficultySettingInputs() {
     phaseChangeHeat: cached.phaseChangeHeatToggle,
     factoryHeating: cached.factoryHeatingToggle,
     realisticFactoryEnergyConsumption: cached.realisticFactoryEnergyConsumptionToggle,
+    spaceAccessCapacity: cached.spaceAccessCapacityToggle,
     infinitePatience: cached.infinitePatienceToggle,
     liftersStrippingCap: cached.liftersStrippingCapToggle,
     orbitalCap: cached.orbitalCapToggle,
@@ -516,6 +522,12 @@ function addSettingsListeners() {
     });
   }
 
+  cached.autosaveCountSelect.value = String(getAutosaveCount());
+  cached.autosaveCountSelect.addEventListener('change', () => {
+    setAutosaveCount(cached.autosaveCountSelect.value);
+    cached.autosaveCountSelect.value = String(getAutosaveCount());
+  });
+
   if (cached.framerateSelect) {
     applyGameFramerateSetting();
     cached.framerateSelect.value = String(getGameFramerate());
@@ -566,6 +578,8 @@ function addSettingsListeners() {
   cached.electronFullscreenKeybindOption.classList.toggle('build-target-hidden', !GAME_FEATURES.electronWindowControls);
   cached.electronExitGameButton.hidden = !GAME_FEATURES.electronWindowControls;
   cached.electronExitGameButton.classList.toggle('build-target-hidden', !GAME_FEATURES.electronWindowControls);
+  cached.electronExitToLauncherButton.hidden = !GAME_FEATURES.electronWindowControls;
+  cached.electronExitToLauncherButton.classList.toggle('build-target-hidden', !GAME_FEATURES.electronWindowControls);
   if (GAME_FEATURES.electronWindowControls) {
     window.electronWindowControls.isFullscreen().then(enabled => {
       cached.electronFullscreenToggle.checked = enabled;
@@ -580,6 +594,9 @@ function addSettingsListeners() {
     });
     cached.electronExitGameButton.addEventListener('click', () => {
       window.electronWindowControls.exitGame();
+    });
+    cached.electronExitToLauncherButton.addEventListener('click', () => {
+      window.electronWindowControls.exitToLauncher();
     });
   }
 
@@ -1127,7 +1144,7 @@ function addSettingsListeners() {
       t(
         'ui.settings.phaseChangeHeatTooltip',
         {},
-        'When enabled, melting, evaporation, boiling, and sublimation absorb planetary heat, while freezing, condensation, and deposition release it. Phase changes are limited by available zonal energy and may hold a zone near a transition temperature. Advanced Oversight accounts for this zonal heat load.'
+        'When enabled, melting, evaporation, boiling, and sublimation absorb planetary heat, while freezing, condensation, and deposition release it. Phase-change heat does not alter temperature trends or Advanced Oversight assignments. It can only speed or slow movement toward the trend, never reverse that movement or carry temperature past the trend.'
       )
     );
   }
@@ -1153,7 +1170,7 @@ function addSettingsListeners() {
       t(
         'ui.settings.factoryHeatingTooltip',
         {},
-        'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat.'
+        'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat; any remaining capacity accelerates cooling toward the temperature trend.'
       )
     );
   }
@@ -1178,6 +1195,32 @@ function addSettingsListeners() {
         'ui.settings.realisticFactoryEnergyConsumptionTooltip',
         {},
         'When enabled, buildings use plausible industrial energy demands based on their workers and material throughput instead of the legacy balance values.'
+      )
+    );
+  }
+
+  if (cached.spaceAccessCapacityToggle) {
+    cached.spaceAccessCapacityToggle.checked = gameSettings.spaceAccessCapacity;
+    cached.spaceAccessCapacityToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.spaceAccessCapacityToggle.checked = gameSettings.spaceAccessCapacity;
+        return;
+      }
+      gameSettings.spaceAccessCapacity = cached.spaceAccessCapacityToggle.checked;
+      projectManager.projects.spaceElevator.refreshSpaceAccessRules();
+      applyDifficultySettingEffects();
+      updateProjectUI('spaceElevator');
+      updateProjectUI('spaceStorage');
+    });
+  }
+
+  if (cached.spaceAccessCapacityTooltip) {
+    attachDynamicInfoTooltip(
+      cached.spaceAccessCapacityTooltip,
+      t(
+        'ui.settings.spaceAccessCapacityTooltip',
+        {},
+        'Reworks Space Elevator into repeatable Space Access infrastructure. Continuous spaceship logistics share limited cargo capacity, while discrete operations receive full benefits after any Elevator or Skyhook is complete. Orbital Rings, Ringworlds, and Alderson Disks provide unlimited capacity.'
       )
     );
   }

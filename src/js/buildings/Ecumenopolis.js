@@ -52,12 +52,26 @@ class Ecumenopolis extends Colony {
       this.setAutomationActivityMultiplier(0);
       this.productivity = 0;
       this.displayProductivity = 0;
+      this.setProductivityLimitInfo(0, 0, []);
       return;
     }
 
     const colonistRatio = this.getEcumenopolisColonistFillRatio();
 
     const targetProductivity = Math.max(0, Math.min(1, colonistRatio));
+    const factors = targetProductivity < 0.9995
+      ? [{
+          type: 'resource',
+          category: 'colony',
+          resource: 'colonists',
+          label: resources.colony.colonists.displayName,
+          ratio: targetProductivity,
+          availableAmount: resources.colony.colonists.value,
+          requiredAmount: this.getEcumenopolisCapacity('colonists'),
+          largestDemands: [],
+        }]
+      : [];
+    this.setProductivityLimitInfo(targetProductivity, targetProductivity, factors);
 
     if (this.snapProductivity) {
       this.productivity = targetProductivity;

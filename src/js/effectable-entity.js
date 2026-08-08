@@ -930,6 +930,12 @@ class EffectableEntity {
     }
 
     shouldSkipSpaceshipCostEffect(effect) {
+      if (
+        gameSettings.spaceAccessCapacity &&
+        (effect.appliesBeforeSpaceElevator === true || effect.appliesAfterSpaceElevator === true)
+      ) {
+        return true;
+      }
       if (effect.appliesBeforeSpaceElevator === true && isSpaceElevatorCostProfileActiveForEffects()) {
         return true;
       }

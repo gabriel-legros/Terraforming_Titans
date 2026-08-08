@@ -10,7 +10,7 @@ function getLoadoutPath(userDataPath) {
 function readModLoadout(userDataPath) {
   const loadoutPath = getLoadoutPath(userDataPath);
   if (!fs.existsSync(loadoutPath)) {
-    return { schemaVersion: LOADOUT_SCHEMA_VERSION, order: [], disabled: [] };
+    return { schemaVersion: LOADOUT_SCHEMA_VERSION, order: [], disabled: [], runScriptsOnStart: true };
   }
   try {
     const data = JSON.parse(fs.readFileSync(loadoutPath, 'utf8'));
@@ -20,16 +20,27 @@ function readModLoadout(userDataPath) {
     return {
       schemaVersion: LOADOUT_SCHEMA_VERSION,
       order: [...new Set(data.order.map(value => String(value)))],
-      disabled: [...new Set(data.disabled.map(value => String(value)))]
+      disabled: [...new Set(data.disabled.map(value => String(value)))],
+      runScriptsOnStart: data.runScriptsOnStart !== false
     };
   } catch (error) {
     return {
       schemaVersion: LOADOUT_SCHEMA_VERSION,
       order: [],
       disabled: [],
+      runScriptsOnStart: true,
       error: error.message
     };
   }
+}
+
+function persistModLoadout(userDataPath, data) {
+  const loadoutPath = getLoadoutPath(userDataPath);
+  fs.mkdirSync(path.dirname(loadoutPath), { recursive: true });
+  const temporaryPath = `${loadoutPath}.tmp`;
+  fs.writeFileSync(temporaryPath, JSON.stringify(data, null, 2), 'utf8');
+  fs.renameSync(temporaryPath, loadoutPath);
+  return data;
 }
 
 function reconcileModLoadout(entries, loadout) {
@@ -59,7 +70,7 @@ function reconcileModLoadout(entries, loadout) {
   };
 }
 
-function writeModLoadout(userDataPath, previousLoadout, availableIds, order, disabledIds) {
+function writeModLoadout(userDataPath, previousLoadout, availableIds, order, disabledIds, runScriptsOnStart) {
   const available = new Set(availableIds);
   if (order.length !== available.size || new Set(order).size !== order.length || order.some(id => !available.has(id))) {
     throw new Error('The submitted mod order does not match the available mod catalog.');
@@ -84,14 +95,21 @@ function writeModLoadout(userDataPath, previousLoadout, availableIds, order, dis
   const data = {
     schemaVersion: LOADOUT_SCHEMA_VERSION,
     order: [...new Set(mergedOrder)],
-    disabled: [...disabled]
+    disabled: [...disabled],
+    runScriptsOnStart: runScriptsOnStart === undefined
+      ? previousLoadout.runScriptsOnStart !== false
+      : runScriptsOnStart === true
   };
-  const loadoutPath = getLoadoutPath(userDataPath);
-  fs.mkdirSync(path.dirname(loadoutPath), { recursive: true });
-  const temporaryPath = `${loadoutPath}.tmp`;
-  fs.writeFileSync(temporaryPath, JSON.stringify(data, null, 2), 'utf8');
-  fs.renameSync(temporaryPath, loadoutPath);
-  return data;
+  return persistModLoadout(userDataPath, data);
 }
 
-module.exports = { readModLoadout, reconcileModLoadout, writeModLoadout };
+function writeRunScriptsOnStart(userDataPath, previousLoadout, enabled) {
+  return persistModLoadout(userDataPath, {
+    schemaVersion: LOADOUT_SCHEMA_VERSION,
+    order: previousLoadout.order,
+    disabled: previousLoadout.disabled,
+    runScriptsOnStart: enabled === true
+  });
+}
+
+module.exports = { readModLoadout, reconcileModLoadout, writeModLoadout, writeRunScriptsOnStart };

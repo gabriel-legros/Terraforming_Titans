@@ -474,7 +474,7 @@
         dayTemp,
         nightTemp,
         transitionRange: 2,
-        statisticalHumidityMean: waterHumidity.byZone[zone].meanHumidity,
+        vaporPressure: waterHumidity.byZone[zone].vaporPressure,
         dayPressureState: waterHumidity.byZone[zone].dayPressureState,
         nightPressureState: waterHumidity.byZone[zone].nightPressureState
       });
@@ -486,7 +486,7 @@
         dayTemp,
         nightTemp,
         transitionRange: 2,
-        statisticalHumidityMean: co2Humidity.byZone[zone].meanHumidity,
+        vaporPressure: co2Humidity.byZone[zone].vaporPressure,
         dayPressureState: co2Humidity.byZone[zone].dayPressureState,
         nightPressureState: co2Humidity.byZone[zone].nightPressureState
       });
@@ -524,7 +524,7 @@
         dayTemp,
         nightTemp,
         transitionRange: 2,
-        statisticalHumidityMean: methaneHumidity.byZone[zone].meanHumidity,
+        vaporPressure: methaneHumidity.byZone[zone].vaporPressure,
         dayPressureState: methaneHumidity.byZone[zone].dayPressureState,
         nightPressureState: methaneHumidity.byZone[zone].nightPressureState
       });

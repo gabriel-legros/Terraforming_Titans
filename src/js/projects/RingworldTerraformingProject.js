@@ -186,6 +186,13 @@ class RingworldTerraformingProject extends Project {
     return this.energyRequired > 0 ? Math.min(this.energyInvested / this.energyRequired, 1) : 0;
   }
 
+  getDurationRemaining() {
+    if (this.isCompleted) return 0;
+    const remainingEnergy = Math.max(this.energyRequired - Math.min(this.energyInvested, this.energyRequired), 0);
+    const rate = this.investing ? this.actualInvestRate : 0;
+    return rate > 0 ? remainingEnergy / rate : Infinity;
+  }
+
   getShipSpinEnergyPerTon() {
     const gravityRatio = this.getSurfaceGravityRatio();
     const radiusMeters = this.getRingOrbitRadiusAU() * RINGWORLD_AU_METERS;
@@ -528,8 +535,7 @@ class RingworldTerraformingProject extends Project {
 
     this.el.surfaceGravity.textContent = `${formatNumber(surfaceGravity, true, 3)}g`;
     const displayRate = this.investing ? this.actualInvestRate : 0;
-    const remainingEnergy = Math.max(this.energyRequired - investedValue, 0);
-    const etaSeconds = displayRate > 0 ? (remainingEnergy / displayRate) : Infinity;
+    const etaSeconds = this.getDurationRemaining();
     const etaText = this.isCompleted
       ? getRingworldText('completed', null, 'Completed')
       : (Number.isFinite(etaSeconds) ? formatDuration(etaSeconds) : getRingworldText('noProgress', null, 'No progress'));

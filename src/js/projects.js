@@ -479,6 +479,9 @@ class Project extends EffectableEntity {
     if (!this.unlocked){
       return false;
     }
+    if (this.attributes.waitForStoryStep && journalTyping) {
+      return false;
+    }
     if (this.requireStar && !projectManager.currentWorldHasStar()) {
       return false;
     }
@@ -644,6 +647,9 @@ class Project extends EffectableEntity {
   }
 
   update(deltaTime) {
+    if (this.attributes.waitForStoryStep && journalTyping) {
+      return;
+    }
     if (this.isPermanentlyDisabled()) {
       this.isActive = false;
       this.isPaused = false;

@@ -1,4 +1,5 @@
 const KESSLER_PARAMETERS = terraformingParameters.hazards.kessler;
+const KESSLER_CLEAR_THRESHOLD_TONS = KESSLER_PARAMETERS.clearThresholdTons;
 const SOLIS_RESOURCE_CAP = KESSLER_PARAMETERS.solisResourceCap;
 const SOLIS_WATER_KEEP = KESSLER_PARAMETERS.solisWaterKeep;
 const SOLIS_CAPPED_RESOURCES = KESSLER_PARAMETERS.solisCappedResources;
@@ -212,7 +213,19 @@ class KesslerHazard {
   isCleared() {
     const debris = resources.special.orbitalDebris;
     const currentValue = debris.value || 0;
-    this.permanentlyCleared = this.permanentlyCleared || currentValue <= 0;
+    if (currentValue < KESSLER_CLEAR_THRESHOLD_TONS) {
+      debris.value = 0;
+      this.periapsisDistribution = [];
+      this.decaySummary = {
+        dragThresholdDensity: DEBRIS_DECAY_DENSITY_REFERENCE,
+        dragThresholdHeightMeters: 0,
+        dragFraction: 0,
+        decayTonsPerSecond: 0,
+        densityMin: 0,
+        densityMax: 0
+      };
+      this.permanentlyCleared = true;
+    }
     return this.permanentlyCleared;
   }
 
@@ -582,16 +595,8 @@ class KesslerHazard {
     const resource = resources.special.orbitalDebris;
     const totalMass = resource.value || 0;
     const densityModel = resolveDensityModel(terraforming);
-    if (!totalMass) {
-      this.periapsisDistribution = [];
-      this.decaySummary = {
-        dragThresholdDensity: DEBRIS_DECAY_DENSITY_REFERENCE,
-        dragThresholdHeightMeters: 0,
-        dragFraction: 0,
-        decayTonsPerSecond: 0,
-        densityMin: 0,
-        densityMax: 0
-      };
+    if (totalMass < KESSLER_CLEAR_THRESHOLD_TONS) {
+      this.isCleared();
       return;
     }
 
@@ -649,6 +654,11 @@ class KesslerHazard {
       updatedTotal += entry.massTons;
     });
     resource.value = Math.max(0, updatedTotal);
+    if (resource.value < KESSLER_CLEAR_THRESHOLD_TONS) {
+      decayedTons += resource.value;
+      updatedTotal = 0;
+      this.isCleared();
+    }
     const decayRate = deltaSeconds ? decayedTons / deltaSeconds : 0;
     resource.modifyRate(
       -decayRate,

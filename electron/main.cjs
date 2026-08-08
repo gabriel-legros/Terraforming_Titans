@@ -3,10 +3,10 @@ const fs = require('fs');
 const path = require('path');
 const { pathToFileURL } = require('url');
 const { createModCatalog, createModService } = require('./mods/mod-service.cjs');
-const { readModLoadout, reconcileModLoadout, writeModLoadout } = require('./mods/mod-loadout.cjs');
+const { readModLoadout, reconcileModLoadout, writeModLoadout, writeRunScriptsOnStart } = require('./mods/mod-loadout.cjs');
 const { resolveSubscribedWorkshopMods } = require('./mods/workshop-service.cjs');
 const { createWorkshopPublisher } = require('./mods/workshop-publisher.cjs');
-const { createSaveCatalog } = require('./mod-launcher/save-catalog.cjs');
+const { createSaveCatalog, createTemporarySave } = require('./mod-launcher/save-catalog.cjs');
 
 const appDisplayName = 'Terraforming Titans';
 const defaultSteamAppId = 4864000;
@@ -17,7 +17,25 @@ const launcherPath = path.join(__dirname, 'mod-launcher', 'index.html');
 const launcherPreloadPath = path.join(__dirname, 'mod-launcher', 'preload.cjs');
 const creatorPath = path.join(__dirname, 'mod-creator', 'index.html');
 const creatorPreloadPath = path.join(__dirname, 'mod-creator', 'preload.cjs');
-const saveSlotNames = new Set(['autosave', 'exitsave', 'pretravel', 'slot1', 'slot2', 'slot3', 'slot4', 'slot5']);
+const saveSlotNames = new Set([
+  'autosave',
+  'autosave1',
+  'autosave2',
+  'autosave3',
+  'autosave4',
+  'autosave5',
+  'autosave6',
+  'autosave7',
+  'autosave8',
+  'autosave9',
+  'exitsave',
+  'pretravel',
+  'slot1',
+  'slot2',
+  'slot3',
+  'slot4',
+  'slot5'
+]);
 let fullscreenKeybindCode = 'F11';
 const fullscreenKeybindCaptureResolvers = new Map();
 const recentCrashSignatures = new Map();
@@ -38,8 +56,32 @@ let launcherWorkshopResult = {
 let launcherRefreshing = false;
 let launcherStartupError = '';
 let launcherSelectedSave = '';
-let startupSelection = { mode: 'latest', slot: '' };
+let launcherTemporarySave = null;
+let launcherTemporarySaveData = '';
+let startupSelection = { mode: 'latest', slot: '', runScriptsOnStart: true };
 let gameLaunchStarted = false;
+
+function getSavedWindowState(saveData) {
+  try {
+    const savedWindowState = JSON.parse(saveData).electronWindowState;
+    if (!savedWindowState
+      || !Number.isInteger(savedWindowState.width)
+      || !Number.isInteger(savedWindowState.height)
+      || savedWindowState.width < 1024
+      || savedWindowState.height < 700) {
+      return null;
+    }
+    const workAreaSize = screen.getPrimaryDisplay().workAreaSize;
+    return {
+      width: Math.min(savedWindowState.width, workAreaSize.width),
+      height: Math.min(savedWindowState.height, workAreaSize.height),
+      fullscreen: savedWindowState.fullscreen === true,
+      maximized: savedWindowState.maximized === true
+    };
+  } catch (_error) {
+    return null;
+  }
+}
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -408,6 +450,16 @@ function registerSteamAchievementHandlers() {
 
 function registerWindowControlHandlers() {
   const { ipcMain } = require('electron');
+  ipcMain.on('window:get-state', event => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const bounds = win.getNormalBounds();
+    event.returnValue = {
+      width: bounds.width,
+      height: bounds.height,
+      fullscreen: win.isFullScreen(),
+      maximized: win.isMaximized()
+    };
+  });
   ipcMain.handle('window:is-fullscreen', event => {
     const win = BrowserWindow.fromWebContents(event.sender);
     return win.isFullScreen();
@@ -432,6 +484,13 @@ function registerWindowControlHandlers() {
   });
   ipcMain.on('window:exit-game', event => {
     const win = BrowserWindow.fromWebContents(event.sender);
+    win.close();
+  });
+  ipcMain.on('window:exit-to-launcher', event => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    gameLaunchStarted = false;
+    createLauncherWindow();
+    refreshLauncherCatalog();
     win.close();
   });
 }
@@ -496,11 +555,14 @@ function getLauncherState() {
       ...publicById.get(entry.instanceId),
       enabled: enabledById.get(entry.instanceId)
     })),
-    saves: launcherSaveCatalog.saves,
+    saves: launcherTemporarySave
+      ? [launcherTemporarySave, ...launcherSaveCatalog.saves]
+      : launcherSaveCatalog.saves,
     selectedSave: launcherSelectedSave,
     workshop: launcherWorkshopResult.status,
     refreshing: launcherRefreshing,
     creatorBusy: workshopPublisher ? workshopPublisher.isBusy() : false,
+    runScriptsOnStart: launcherLoadout.runScriptsOnStart,
     error: launcherStartupError || launcherLoadout.error || ''
   };
 }
@@ -546,6 +608,7 @@ function refreshLauncherCatalog() {
     launcherLoadout = readModLoadout(app.getPath('userData'));
     launcherSaveCatalog = createSaveCatalog(app.getPath('userData'));
     const selectionAvailable = launcherSelectedSave === 'new'
+      || (launcherSelectedSave === 'temporary' && launcherTemporarySave)
       || launcherSaveCatalog.saves.some(save => save.selectionId === launcherSelectedSave && save.valid);
     if (!selectionAvailable) {
       launcherSelectedSave = launcherSaveCatalog.defaultSelection;
@@ -559,6 +622,13 @@ function refreshLauncherCatalog() {
     sendLauncherState();
     return false;
   });
+}
+
+function selectTemporarySave(saveData, label) {
+  launcherTemporarySave = createTemporarySave(saveData, label);
+  launcherTemporarySaveData = saveData;
+  launcherSelectedSave = launcherTemporarySave.selectionId;
+  return launcherTemporarySave;
 }
 
 function createLauncherWindow() {
@@ -784,12 +854,62 @@ function registerModLauncherHandlers() {
     createCreatorWindow();
     return true;
   });
+  ipcMain.handle('mod-launcher:import-save-file', async event => {
+    if (!isLauncherFrame(event.senderFrame) || launcherRefreshing || gameLaunchStarted) {
+      return { success: false, error: 'The launcher is not ready.' };
+    }
+    const result = await dialog.showOpenDialog(launcherWindow, {
+      title: 'Import save from file',
+      buttonLabel: 'Import',
+      filters: [{ name: 'JSON save files', extensions: ['json'] }],
+      properties: ['openFile']
+    });
+    if (result.canceled || !result.filePaths.length) {
+      return { success: false, canceled: true };
+    }
+    try {
+      const filePath = result.filePaths[0];
+      const saveData = fs.readFileSync(filePath, 'utf8');
+      const label = `Imported: ${path.basename(filePath)}`;
+      return { success: true, save: selectTemporarySave(saveData, label) };
+    } catch (error) {
+      return { success: false, error: `Could not import that save: ${error.message}` };
+    }
+  });
+  ipcMain.handle('mod-launcher:import-save-clipboard', event => {
+    if (!isLauncherFrame(event.senderFrame) || launcherRefreshing || gameLaunchStarted) {
+      return { success: false, error: 'The launcher is not ready.' };
+    }
+    try {
+      const saveData = clipboard.readText().trim();
+      if (!saveData) {
+        return { success: false, error: 'The clipboard does not contain save data.' };
+      }
+      return {
+        success: true,
+        save: selectTemporarySave(saveData, 'Imported from Clipboard')
+      };
+    } catch (error) {
+      return { success: false, error: `Could not import that save: ${error.message}` };
+    }
+  });
   ipcMain.handle('mod-launcher:launch', (event, options) => {
     if (!isLauncherFrame(event.senderFrame) || launcherRefreshing || workshopPublisher.isBusy() || gameLaunchStarted) {
       return { success: false, error: 'The launcher is not ready.' };
     }
     try {
       launchGame(options);
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
+  ipcMain.handle('mod-launcher:set-run-scripts-on-start', (event, enabled) => {
+    if (!isLauncherFrame(event.senderFrame) || gameLaunchStarted) {
+      return { success: false, error: 'The launcher is not ready.' };
+    }
+    try {
+      launcherLoadout = writeRunScriptsOnStart(app.getPath('userData'), launcherLoadout, enabled);
       return { success: true };
     } catch (error) {
       return { success: false, error: error.message };
@@ -802,6 +922,9 @@ function launchGame(options) {
   const requestedOrder = options.order.map(value => String(value));
   const requestedDisabled = options.disabled.map(value => String(value));
   const saveSelection = String(options.saveSelection);
+  const runScriptsOnStart = options.runScriptsOnStart === undefined
+    ? launcherLoadout.runScriptsOnStart
+    : options.runScriptsOnStart === true;
   const entriesById = new Map(launcherCatalog.entries.map(entry => [entry.instanceId, entry]));
   if (requestedOrder.length !== availableIds.length
       || new Set(requestedOrder).size !== availableIds.length
@@ -823,13 +946,25 @@ function launchGame(options) {
   });
 
   if (saveSelection === 'new') {
-    startupSelection = { mode: 'new', slot: '' };
+    startupSelection = { mode: 'new', slot: '', runScriptsOnStart };
+  } else if (saveSelection === 'temporary' && launcherTemporarySave && launcherTemporarySaveData) {
+    startupSelection = {
+      mode: 'temporary',
+      saveData: launcherTemporarySaveData,
+      windowState: getSavedWindowState(launcherTemporarySaveData),
+      runScriptsOnStart
+    };
   } else {
     const selectedSave = launcherSaveCatalog.saves.find(save => save.selectionId === saveSelection && save.valid);
     if (!selectedSave) {
       throw new Error('The selected save is no longer available. Refresh the launcher.');
     }
-    startupSelection = { mode: 'slot', slot: selectedSave.slot };
+    startupSelection = {
+      mode: 'slot',
+      slot: selectedSave.slot,
+      windowState: getSavedWindowState(readSaveStorageItem(`gameState_${selectedSave.slot}`)),
+      runScriptsOnStart
+    };
   }
 
   launcherLoadout = writeModLoadout(
@@ -837,7 +972,8 @@ function launchGame(options) {
     launcherLoadout,
     availableIds,
     requestedOrder,
-    requestedDisabled
+    requestedDisabled,
+    runScriptsOnStart
   );
   modService = createModService({
     appRoot: path.join(__dirname, '..'),
@@ -869,7 +1005,8 @@ function launchLatestSaveFromCommandLine() {
     disabled: reconciled.ordered
       .filter(entry => reconciled.disabled.has(entry.instanceId))
       .map(entry => entry.instanceId),
-    saveSelection: launcherSaveCatalog.defaultSelection
+    saveSelection: launcherSaveCatalog.defaultSelection,
+    runScriptsOnStart: launcherLoadout.runScriptsOnStart
   });
 }
 
@@ -884,11 +1021,13 @@ function openExternalUrl(url) {
 }
 
 function createWindow() {
-  const launchFullscreen = shouldLaunchSteamDeckFullscreen();
+  const steamDeckFullscreen = shouldLaunchSteamDeckFullscreen();
+  const savedWindowState = steamDeckFullscreen ? null : startupSelection.windowState;
+  const launchFullscreen = steamDeckFullscreen || (savedWindowState ? savedWindowState.fullscreen : false);
   const displaySize = launchFullscreen ? screen.getPrimaryDisplay().bounds : null;
   const win = new BrowserWindow({
-    width: launchFullscreen ? displaySize.width : 1400,
-    height: launchFullscreen ? displaySize.height : 950,
+    width: launchFullscreen ? displaySize.width : (savedWindowState ? savedWindowState.width : 1400),
+    height: launchFullscreen ? displaySize.height : (savedWindowState ? savedWindowState.height : 950),
     minWidth: 1024,
     minHeight: 700,
     fullscreen: launchFullscreen,
@@ -906,6 +1045,9 @@ function createWindow() {
   });
 
   win.once('ready-to-show', () => {
+    if (savedWindowState && savedWindowState.maximized && !launchFullscreen) {
+      win.maximize();
+    }
     win.show();
     if (launcherWindow && !launcherWindow.isDestroyed()) {
       launcherWindow.close();

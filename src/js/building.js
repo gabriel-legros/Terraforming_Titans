@@ -203,7 +203,8 @@ class Building extends EffectableEntity {
         factoryCoolingCoefficient,
         kesslerDebrisSize,
         disableWhenHazard,
-        automationRequiresEverEnabled
+        automationRequiresEverEnabled,
+        zonalSurfaceTransfer
       } = config;
   
       this.name = buildingName;
@@ -243,6 +244,7 @@ class Building extends EffectableEntity {
         ? disableWhenHazard.slice()
         : [];
       this.automationRequiresEverEnabled = automationRequiresEverEnabled === true;
+      this.zonalSurfaceTransfer = zonalSurfaceTransfer || null;
       this.aerostatReduction = Math.max(
         0,
         Number.isFinite(aerostatReduction) ? aerostatReduction : 0
@@ -1850,6 +1852,9 @@ class Building extends EffectableEntity {
 
   // Updated produce function to track production rates
   produce(accumulatedChanges, deltaTime) {
+    if (this.zonalSurfaceTransfer) {
+      this.zonalSurfaceTransferRequestedOutput = 0;
+    }
     // If reversal is enabled, this building should not produce its recipe output; it is consuming instead
     if (this.reversalAvailable && this.reverseEnabled) {
       return; // Skip normal production entirely while reversed
@@ -1875,6 +1880,16 @@ class Building extends EffectableEntity {
           this.currentProduction[productionTarget.category] = {};
         }
         this.currentProduction[productionTarget.category][productionTarget.resource] = productionTarget.amount;
+
+        const transferOutput = this.zonalSurfaceTransfer?.output;
+        if (
+          transferOutput
+          && productionTarget.category === transferOutput.category
+          && productionTarget.resource === transferOutput.resource
+        ) {
+          this.zonalSurfaceTransferRequestedOutput = productionTarget.amount;
+          continue;
+        }
 
         // Accumulate production changes
         accumulatedChanges[productionTarget.category][productionTarget.resource] = (accumulatedChanges[productionTarget.category][productionTarget.resource] || 0) + productionTarget.amount;
@@ -1952,6 +1967,25 @@ class Building extends EffectableEntity {
 
         // Track actual consumption in the building
         this.currentConsumption[category][resource] = scaledConsumption;
+
+        const transferInput = this.zonalSurfaceTransfer?.input;
+        if (
+          transferInput
+          && category === transferInput.category
+          && resource === transferInput.resource
+        ) {
+          accumulatedSpecialChanges.zonalSurfaceTransfers.push({
+            structure: this,
+            source: this.getRateSource(),
+            rateType: 'building',
+            input: transferInput,
+            output: this.zonalSurfaceTransfer.output,
+            requestedInput: scaledConsumption,
+            requestedOutput: this.zonalSurfaceTransferRequestedOutput || 0,
+            actualInput: 0,
+          });
+          continue;
+        }
 
         if (this.category === 'waste' && category === 'surface') {
           const cleanupSlack = Math.max(0, displayConsumption - scaledConsumption);

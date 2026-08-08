@@ -1769,27 +1769,57 @@ const earthOverrunOverrides = {
     }
   ],
   resources: {
-    surface: {
-      land: { initialValue: 51007200000 },
-      ice: { initialValue: 110884454796651650, unlocked: true },
-      liquidWater: { initialValue: 647956509460296000, unlocked: true },
-      dryIce: { initialValue: 0 },
-      liquidMethane: { initialValue: 0 },
-      hydrocarbonIce: { initialValue: 0 }
-    },
     underground: {
       ore: { initialValue: 15_000, maxDeposits: 150_000, areaTotal: 200_000_000 },
       geothermal: { initialValue: 10_000, maxDeposits: 20_000, areaTotal: 20_000_000 }
     },
+    "surface": {
+      "ice": {
+        "initialValue": 110418338812865860
+      },
+      "liquidWater": {
+        "initialValue": 648425372630241300
+      },
+      "dryIce": {
+        "initialValue": 0
+      },
+      "liquidCO2": {
+        "initialValue": 0
+      },
+      "liquidHydrogen": {
+        "initialValue": 0
+      },
+      "liquidMethane": {
+        "initialValue": 0
+      },
+      "hydrocarbonIce": {
+        "initialValue": 0
+      },
+      "liquidOxygen": {
+        "initialValue": 0
+      },
+      "oxygenIce": {
+        "initialValue": 0
+      },
+      "liquidNitrogen": {
+        "initialValue": 0
+      },
+      "nitrogenIce": {
+        "initialValue": 0
+      },
+      "land": {
+        "initialValue": 51006447190.97883
+      }
+    },
     "atmospheric": {
       "carbonDioxide": {
-        "initialValue": 2056831169131.2002
+        "initialValue": 2262514286044.3203
       },
       "atmosphericWater": {
-        "initialValue": 12708638934290.695
+        "initialValue": 9961452682367.697
       },
       "atmosphericMethane": {
-        "initialValue": 9882092383
+        "initialValue": 10376197002.15
       },
       "atmosphericAmmonia": {
         "initialValue": 0
@@ -1810,7 +1840,7 @@ const earthOverrunOverrides = {
   },
   "zonalSurface": {
     "tropical": {
-      "liquidWater": 281738964743358700,
+      "liquidWater": 281942921354214800,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
@@ -1830,7 +1860,7 @@ const earthOverrunOverrides = {
       "buriedNitrogenIce": 0
     },
     "temperate": {
-      "liquidWater": 366217544660080500,
+      "liquidWater": 366482451264064500,
       "ice": 0,
       "buriedIce": 0,
       "dryIce": 0,
@@ -1850,15 +1880,15 @@ const earthOverrunOverrides = {
       "buriedNitrogenIce": 0
     },
     "polar": {
-      "liquidWater": 56856657.49533704,
-      "ice": 110884454796651650,
+      "liquidWater": 11962035.83235736,
+      "ice": 110418338812865860,
       "buriedIce": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
       "liquidCO2": 0,
       "liquidHydrogen": 0,
       "biomass": 0,
-      "hazardousBiomass": 423047093171.4065,
+      "hazardousBiomass": 423047093155.0452,
       "liquidMethane": 0,
       "hydrocarbonIce": 0,
       "buriedHydrocarbonIce": 0,
@@ -1872,19 +1902,19 @@ const earthOverrunOverrides = {
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 295.37904495805066,
-      "day": 295.5493858354907,
-      "night": 295.20870408061063
+      "value": 291.10748922208865,
+      "day": 291.2980913623577,
+      "night": 290.9168870818196
     },
     "temperate": {
-      "value": 288.6719635448537,
-      "day": 288.8136146050626,
-      "night": 288.53031248464487
+      "value": 284.4989785630553,
+      "day": 284.65747856933,
+      "night": 284.34047855678057
     },
     "polar": {
-      "value": 254.41537683209293,
-      "day": 255.50709176369892,
-      "night": 253.32366190048694
+      "value": 250.74608981244054,
+      "day": 251.96868537690705,
+      "night": 249.52349424797404
     }
   },
   hazards: {
@@ -1919,7 +1949,7 @@ const earthOverrunOverrides = {
     albedo: 0.05,
     rotationPeriod: 24,
     spinPeriod: 24,
-    starLuminosity: 1,
+    starLuminosity: 1.004,
     surfaceArea: 510072000000000
   },
   star: {

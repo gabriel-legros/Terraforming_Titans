@@ -2497,6 +2497,7 @@ const researchParameters = {
         description: '',
         cost: { advancedResearch: 12_000_000 },
         prerequisites: [],
+        disabled: true,
         effects: [
           { target: 'project', targetId: 'spaceAntimatter', type: 'enable' },
           { target: 'researchManager', type: 'booleanFlag', flagId: 'spaceAntimatterSynchronization', value: true }
@@ -2776,6 +2777,20 @@ const researchParameters = {
           {
             target: 'project',
             targetId: 'superalloyGigafoundry',
+            type: 'enable'
+          }
+        ]
+      },
+      {
+        id: 'graphene_printing',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 5_000_000_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'graphenePrinter',
             type: 'enable'
           }
         ]

@@ -61,6 +61,8 @@
         "energyShortage": "Energiemangel",
         "gravityStrain": "Gravitationsbelastung",
         "overpopulation": "Überbevölkerung",
+        "galacticNaturalGrowth": "Natürliches Wachstum",
+        "galacticImmigration": "Einwanderung",
         "lifeDensityDecay": "Abnahme der Lebensdichte",
         "geologicalBurial": "Geologische Einlagerung",
         "surfaceBiomass": "Oberflächenbiomasse",
@@ -279,6 +281,7 @@
         "unknownStar": "Unbekannter Stern",
         "starDetailsTitle": "Details zum Artikel",
         "worldDetailsTitle": "Welt Details",
+        "renameWorldTitle": "Diese zufällige Welt umbenennen",
         "starTitle": "Stern: {value}",
         "spectral": "Spektralklasse",
         "luminosity": "Leuchtkraft",
@@ -429,6 +432,9 @@
           "abandoned": "Aufgegeben"
         },
         "typeLabels": {
+          "shell": "Hülle",
+          "ring": "Ring",
+          "disk": "Scheibe",
           "supermassiveShellworld": "SMBH-Schalenwelt"
         },
         "columns": {
@@ -444,6 +450,8 @@
         "title": "Blaupause",
         "worldName": "Weltenname",
         "worldNamePlaceholder": "Künstliche Welt",
+        "worldNumber": "Anzahl",
+        "worldNumberPlaceholder": "Optional",
         "framework": "Grundstruktur",
         "core": "Kern",
         "stellarContext": "Stellarer Kontext",
@@ -627,6 +635,7 @@
         "unknownFaction": "Unbekannte Fraktion"
       },
       "operationsPanel": {
+        "title": "Operationen",
         "emptySelectSector": "Wähle einen umkämpften Sektor aus, um Flottenstärke zuzuweisen.",
         "fleetPowerLabel": "Flottenstärke",
         "fleetPowerTooltip": "Die Flottenleistung kann zur Durchführung von Operationen auf der Karte zugewiesen werden, um die Sektorkontrolle zu gewinnen. Sie können nur Operationen auf einem Sektor durchführen, den Sie entweder bestreiten, oder ist Nachbar zu einem Sektor, den Sie voll kontrollieren. Je mehr Flottenmacht zugewiesen, desto höher Ihre Erfolgschancen, und desto niedriger Ihre Verluste, aber Ihre Flotte wird in der Zwischenzeit beschäftigt sein.",
@@ -697,6 +706,14 @@
         "resourceBias": "Ressourcenschwerpunkt",
         "rich": "Reich",
         "poor": "Arm",
+        "resources": {
+          "metal": "Metall",
+          "water": "Wasser",
+          "silicon": "Siliziumdioxid",
+          "carbon": "Kohlenstoff",
+          "nitrogen": "Stickstoff",
+          "unknown": "Unbekannt"
+        },
         "worlds": "Welten",
         "world": "Welt",
         "fleetDefense": "Flottenvert.",
@@ -728,6 +745,7 @@
         "effectiveValue": "Effektiv: {value}",
         "remainingValue": "Rest: {value}",
         "clearAll": "Alle defensiven Aufgaben zuordnen",
+        "clearAllShort": "Alle Zuweisungen aufheben",
         "lastFiveAttacks": "Letzte 5 Angriffe",
         "toggleAttackHistory": "Die Geschichte des Angriffs",
         "historyEnemy": "Feind",
@@ -785,6 +803,13 @@
         "totalLabel": "Insgesamt",
         "spaceResources": "Weltraumressourcen",
         "categoryResources": "{name} Ressourcen",
+        "categories": {
+          "colony": "Kolonie",
+          "surface": "Oberfläche",
+          "underground": "Untergrund",
+          "atmospheric": "Atmosphäre",
+          "special": "Spezial"
+        },
         "toggleView": "Kolonie/Raum Ressourcenansicht",
         "landRecoverNote": "Land kann durch Abschalten des entsprechenden Gebäudes wiederhergestellt werden",
         "wasteTooltipNote": "Abfallverarbeitungsgebäude zeigen ihren Verbrauch auf Basis ihrer verfügbaren Personal- und Stromversorgung, ohne Abfallmangel. Die Zahlen hier sind nicht ihr tatsächlicher Verbrauch.",
@@ -1076,6 +1101,15 @@
         "growthChemistry": "Wachstumschemie: {equation}",
         "detailed": "Detail: {equation}"
       },
+      "biopigmentation": {
+        "name": "Biopigmentierung",
+        "description": "Wähle die Farbe der konstruierten Biomasse.",
+        "colorLabel": "Biomassefarbe:",
+        "reset": "Zurücksetzen",
+        "albedo": "Albedo: {value}",
+        "growthPenalty": "Wachstumsstrafe: -{value}%",
+        "tooltip": "Die Albedo der Biomasse folgt der gewählten Farbe. Farben, die nicht heller als das Grundgrün sind, haben keine Wachstumsstrafe. Hellere Farben verringern das Wachstum linear und erreichen bei Weiß -80 %. Das Ändern der Farbe ist kostenlos."
+      },
       "attributes": {
         "minTemperatureTolerance": {
           "name": "Minimale Temperaturtoleranz",
@@ -1197,6 +1231,7 @@
       },
       "growthTooltip": {
         "solidBiochemistry": "Solid Biochemistry (Eissubstitution): x{value}",
+        "biopigmentation": "Biopigmentierung: x{value} (Albedo {albedo})",
         "lowGravity": "Niedrige Gravität: x0.00",
         "lowGravityDisabled": "Das Wachstum ist behindert, weil Ringwelt Schwerkraft unter 0.1g liegt, so dass Atmosphäre nicht erhalten bleiben kann.",
         "base": "Basis: {value}%",
@@ -1227,6 +1262,11 @@
       "labels": {
         "productivity": "Produktivität",
         "cost": "Kosten:",
+        "constructed": "Errichtet",
+        "provides": "Stellt bereit",
+        "production": "Produktion",
+        "consumption": "Verbrauch",
+        "maintenance": "Wartung",
         "heat": "Wärme",
         "cooling": "Kühlung"
       },
@@ -1319,7 +1359,9 @@
         "productivityDemandLine": "  {source}: {amount}",
         "productivityWorkerLine": "{resource}: {available} verfügbar / {required} erforderlich ({percent}%)",
         "productivityMaintenanceLine": "Wartung bezahlt: {percent}%",
+        "productivityAdvancedOversight": "Zuweisung der erweiterten Aufsicht: {percent}% der Anlagenkapazität.",
         "productivityDayNight": "Inaktiv in der Nacht",
+        "productivityAutomationDisabled": "Durch Automatisierungseinstellungen deaktiviert.",
         "productivityNoDetails": "Kein limitierender Faktor gefunden."
       }
     },
@@ -1878,7 +1920,12 @@
         },
         "foodTransfer": {
           "add": "Nahrungsergänzungsmittel",
+          "auto": "Auto /s",
           "available": "Kolonie Essen {value}"
+        },
+        "automation": {
+          "auto": "Auto",
+          "weight": "Gewichtung"
         },
         "hunting": {
           "on": "Auf der Jagd",
@@ -2222,6 +2269,7 @@
         "disposalTargetsSubheading": "Konfigurieren Sie bis zu 15 Ressourcen. Aktive auto-start-Ziele teilen die zugewiesene Entsorgung gleichmäßig.",
         "addTarget": "+ Ziel hinzufügen",
         "phase": "Phase",
+        "whichOne": "Welche",
         "none": "—",
         "remove": "Entfernen",
         "waitForFullCapacity": "Warten Sie auf volle Kapazität",
@@ -2312,8 +2360,7 @@
         "capStatus": "Obergrenze: {value}",
         "capReached": "Obergrenze erreicht",
         "liquidHydrogenWarning": "Flüssiger Wasserstoff verhindert, dass Wärmesenken den Kernwärmefluss reduzieren. Kühlkörper können noch Fabrikwärme mildern und können noch gebaut werden.",
-        "liquidHydrogenStatus": "Blockiert: flüssiger Wasserstoff verhindert Kernwärmeentnahme",
-        "liquidHydrogenStatusShort": "Blockiert"
+        "liquidHydrogenStatus": "Blockiert: flüssiger Wasserstoff verhindert Kernwärmeentnahme"
       },
       "deeperMining": {
         "deepeningSpeedBoost": "Vertiefungsgeschwindigkeitssteigerung",
@@ -2554,6 +2601,132 @@
     "colony": {
       "population": "Bevölkerung",
       "nanocolony": "Nanokolonie",
+      "followersTab": "Anhänger",
+      "title": "Kolonien",
+      "unhideObsoleteBuildings": "Unhide Obsolete Gebäude",
+      "common": {
+        "unknown": "Unbekannt",
+        "randomWorldNamed": "Zufallswelt: {name}"
+      },
+      "needs": {
+        "happiness": "Glück",
+        "comfort": "Komfort",
+        "value": "{name}: {value}%"
+      },
+      "growthRate": {
+        "title": "Veränderungsrate",
+        "capacity": "Kapazität:",
+        "capacityTooltip": "Kapazitätsmultiplikator aus der logistischen Wachstumsgleichung. Dies ist 1 - Bevölkerung / Kapazität, so dass Wachstum langsam, wenn Sie Ihre Wohnung Obergrenze nähern und hält ganz, wenn die Bevölkerung gleich Kapazität.\n\nWenn Sie das Gefühl, dass das Spiel sehr langsam ist, gibt es eine sehr hohe Chance, dass dieser Multiplikator der Grund ist. Versuchen Sie, es so hoch wie möglich zu halten, indem Sie mehr Gehäuse bauen.",
+        "baseRate": "Basissatz:",
+        "baseTooltip": "Basiswachstumsrate abgeleitet von Glück: max((Frühstück - 50%) / 300, 0).\n- Essen und Energie gewähren jeweils bis zu +25 Glück, wenn zufrieden.\n- Komfort fügt 20x seine Bewertung hinzu.\n- Elektronik und Androiden ergänzen sich bei der Erfüllung von Nahrung und Energie zu +10 Glück.\n- Milestones bereit zu behaupten oder behauptet, addieren +0.5 Glück jeder.\n- Glück unter 50% hält Wachstum.",
+        "otherMultipliers": "Andere Multiplikatoren:",
+        "otherTooltip": "Multiplikatoren von Kolonien-Slidern und anderen Effekten.",
+        "decay": "Zerfall:",
+        "decayTooltip": "Kombinierter Bevölkerungsverlust von Mangel, Überbevölkerung und hoher Schwerkraft.",
+        "growth": "Wachstum:",
+        "growthTooltip": "Letzte Wachstumsrate nach logistischem Wachstum minus Hunger, Energie und Schwerkraft Zerfall.",
+        "naturalGrowth": "Natürliches Wachstum",
+        "immigration": "Einwanderung",
+        "pilgrimFollowers": "Pilgrim Follower: {value}x",
+        "multiplierEntry": "{name}: {value}x",
+        "decayStarvation": "• Starvation: {rate}%/s ({share}% Hunger; 100% pro 360 s).",
+        "decayEnergy": "• Energie: {rate}%/s ({share}% ohne Strom; 100% pro 90 s).",
+        "decayOverpopulation": "• Überbevölkerung: {rate}%/s.",
+        "decayGravity": "• Gravity: {rate}%/s (Größe {gravity} m/s^2; {above} über 20)."
+      },
+      "constructionOffice": {
+        "title": "Büro für Bauwesen",
+        "autobuilder": "Autobauer: ",
+        "statusActive": "aktiv",
+        "statusDisabled": "Behinderte",
+        "pause": "Pause",
+        "resume": "Fortsetzen",
+        "strategicReserve": "Strategische Reserve",
+        "strategicReserveTooltip": "Verhindert die Baustelle, Ressourcen aus der Speicherung zu verwenden, wenn sie eine Ressource unter den angegebenen Prozentsatz ihrer Kapazität fallen würde. Gilt nicht für Arbeiter.",
+        "reserveSettingsButton": "Einstellungen für die Reserve",
+        "reserveSettingsTitle": "Strategische Reserve",
+        "reserveSettingsIntro": "Richten Sie die Reserveprozentsätze für das Bauamt für jede Ressource ein.",
+        "globalReserve": "Global Standard",
+        "close": "X",
+        "done": "Geschehen zu Brüssel am 11. Dezember 2014.",
+        "guide": {
+          "title": "Auto-Building Anleitung",
+          "open": "Autobau Anleitung öffnen",
+          "close": "Autobau Anleitung schließen",
+          "imageAlt": "Autobau-Steuerungen mit nummerierten Führungsabschnitten",
+          "section1": "Dieser Abschnitt steuert, ob Autobau für dieses Gebäude aktiv ist oder nicht. Der eingegebene Wert und Modus steuert, wie Ihr Ziel definiert ist.",
+          "section2a": "Dies kann den Wert in 1 steuern, ohne die Tastatur zu verwenden. Nützlich für kleine Anpassungen.",
+          "section2b": "Dies steuert Autobau Priorität. Höhere Prioritäten Gebäude werden zuerst gebaut.",
+          "section3": "Dies ist Ihr aktuelles Autobau-Ziel basierend auf definierten Wert. Die Baustelle wird versuchen, auf diesen Wert zu bauen.",
+          "section4": "Aktiv auf Ziel gesetzt ist nützlich, um sicherzustellen, dass neu gebaute Gebäude automatisch aktiviert werden, wenn gebaut, oder um schnell Ihre Anzahl von aktiven Gebäuden zu ändern.",
+          "section5": "Dies ist ein Weg, um einen Wert in 1 zu berechnen, der Ihrem aktuellen Setup entspricht.",
+          "recommendationsTitle": "Empfehlungen",
+          "recommendation1": "Verwenden Sie Autobau auf 1% des Pop für Hydroponics Farm. Jeder aufgerüstete Bauernhof kann 100 Menschen füttern, so dass Sie eine Anzahl von Farmen benötigen, die dem 1% Ihres Pop entsprechen.",
+          "recommendation2": "Verwenden Sie Sandquarries als 100% von Glas Smelter + Electronics Fabrik Nachfrage.",
+          "recommendation3": "Der Anteil der Arbeiter an der Zahl der Arbeiter berechnet Ihr Ziel auf der Grundlage Ihrer Zahl der Arbeiter. % der Arbeitnehmeranteil berechnet ein Ziel, das auf der Zuordnung der angegebenen % der Arbeiter zu diesem Gebäude beruht. Zum Beispiel, wenn Sie 200 Arbeiter und wollen 1 Speicherdepot pro 100 Arbeiter verwenden 1% der Arbeiter.  Wenn Sie möchten, dass 50% Ihrer Arbeiter in der Komponentenfabrik arbeiten, können Sie 50% Arbeiter Share verwenden.",
+          "recommendation4": "Wenn Sie die Baustelle zum ersten Mal entsperren, versuchen Sie, die meisten Ihrer Gebäude auf % der Arbeiter oder % Arbeiteranteil und drücken Sie \"Set Target to Active\" dann aktivieren. Der Autobuilder imitiert meistens Ihre aktuelle Einrichtung.",
+          "recommendation5": "Wenn Sie etwas mehr von etwas brauchen oder Ihre Arbeiter ein wenig befreien möchten, ist die Box in 2a für kleine Anpassungen großartig.  Sie können Ihren Autobau-Zielwert ein wenig erhöhen oder verringern, ohne die Wirtschaft vollständig zu brechen.",
+          "starterSetupTitle": "Startkonfiguration",
+          "starterSetupBuilding": "Gebäudename",
+          "starterSetupValue": "Wert",
+          "starterSetupMode": "Modus",
+          "starterSetupPriority": "Priorität",
+          "starterSetupModeMax": "Max.",
+          "starterSetupModeSandQuarryDemand": "% des S.S.+E.W.-Bedarfs",
+          "starterSetupModeWorkers": "% der Arbeiter",
+          "starterSetupModePopulation": "% der Bev.",
+          "starterSetupModeWorkerShare": "% Arbeiteranteil",
+          "starterSetupApply": "Startkonfiguration anwenden"
+        },
+        "guidePrompt": {
+          "title": "Auto-Building Anleitung",
+          "message": "Ein Leitfaden für diese Funktion ist verfügbar.  Möchten Sie den Führer jetzt sehen?  (Es ist auch von der Baustelle unter der Kolonie Registerkarte zugänglich)",
+          "yes": "Ja",
+          "no": "Nein"
+        },
+        "reserveResources": {
+          "energy": "Energie",
+          "metal": "Metall",
+          "glass": "Glas",
+          "water": "Wasser",
+          "components": "Komponenten",
+          "electronics": "Elektronik",
+          "superconductors": "Supraleiter",
+          "superalloys": "Superlegierungen",
+          "land": "Land"
+        }
+      },
+      "sliders": {
+        "managerDescription": "Verwalten Kolonienschieber",
+        "sourceName": "Kolonien-Slider",
+        "title": "Kolonialmanagement",
+        "workforceAllocation": "Verleihung von Arbeitskräften",
+        "workersValue": "Arbeiter: {value}%",
+        "scientistsValue": "Wissenschaftler: {value}%",
+        "foodConsumption": "Lebensmittelverbrauch",
+        "luxuryWaterUse": "Luxus-Wassernutzung",
+        "oreMineWorkers": "Erzminenarbeiter",
+        "mechanicalAssistance": "Mechanische Hilfe ",
+        "mechanicalAssistanceTooltip": "Mechanische Assistenz mildert bis zu 50% der Schwerkraft-Abfall und Stapel mit hoher Schwerkraft-Adaption, um den Rest zu entfernen.",
+        "gravityDecayReduction": "Schwere Zerfallreduzierung: -{value}%",
+        "sliderValue": "Slider: {value}x.",
+        "componentsCoverage": "Komponentenabdeckung: {value}%.",
+        "currentGravity": "Aktuelle Schwerkraft: {gravity} m/s^2 ({above} über 20).",
+        "effectiveMitigation": "Effektive Minderung: {value}% der Schwerkraft-Verfall.",
+        "highGravityAdaptation": "Schwerkraftanpassung: {value}",
+        "remainingDecay": "Restverfall: {value}% des ursprünglichen Schwerkraftverlustes pro Tag, wenn die Schwerkraft 20 m/s^2 überschreitet.",
+        "warpnet": "Warpnet ",
+        "warpnetTooltip": "Warpnet trichtert sofortige Kommunikation, um die Forschungsleistung zu koordinieren.",
+        "warpnetEnergyUpkeep": "Der linke Wert multipliziert die Kolonie und die Android-Gehäuse-Energie-Unterhalt: {value}.",
+        "warpnetResearchBoost": "Der richtige Wert fügt einen globalen Forschungsschub hinzu: +{value}%",
+        "warpnetEnergyCost": "Energiekosten skalieren steil mit Warpnet-Intensität.",
+        "warpnetSolisNote": "Hinweis: Solis zahlt für Start Androiden.",
+        "warpnetLabelBase": "x1",
+        "warpnetLabelExp": "x1e{value}",
+        "researchEffect": "Forschung: +{value}%",
+        "growthEffect": "Wachstum: +{value}%",
+        "boostEffect": "Boost: {value}%"
+      },
       "followers": {
         "managerDescription": "Verwalten von Followersystemen",
         "common": {
@@ -2691,120 +2864,6 @@
             }
           }
         }
-      },
-      "title": "Kolonien",
-      "unhideObsoleteBuildings": "Unhide Obsolete Gebäude",
-      "common": {
-        "unknown": "Unbekannt",
-        "randomWorldNamed": "Zufallswelt: {name}"
-      },
-      "needs": {
-        "happiness": "Glück",
-        "comfort": "Komfort",
-        "value": "{name}: {value}%"
-      },
-      "growthRate": {
-        "title": "Veränderungsrate",
-        "capacity": "Kapazität:",
-        "capacityTooltip": "Kapazitätsmultiplikator aus der logistischen Wachstumsgleichung. Dies ist 1 - Bevölkerung / Kapazität, so dass Wachstum langsam, wenn Sie Ihre Wohnung Obergrenze nähern und hält ganz, wenn die Bevölkerung gleich Kapazität.\n\nWenn Sie das Gefühl, dass das Spiel sehr langsam ist, gibt es eine sehr hohe Chance, dass dieser Multiplikator der Grund ist. Versuchen Sie, es so hoch wie möglich zu halten, indem Sie mehr Gehäuse bauen.",
-        "baseRate": "Basissatz:",
-        "baseTooltip": "Basiswachstumsrate abgeleitet von Glück: max((Frühstück - 50%) / 300, 0).\n- Essen und Energie gewähren jeweils bis zu +25 Glück, wenn zufrieden.\n- Komfort fügt 20x seine Bewertung hinzu.\n- Elektronik und Androiden ergänzen sich bei der Erfüllung von Nahrung und Energie zu +10 Glück.\n- Milestones bereit zu behaupten oder behauptet, addieren +0.5 Glück jeder.\n- Glück unter 50% hält Wachstum.",
-        "otherMultipliers": "Andere Multiplikatoren:",
-        "otherTooltip": "Multiplikatoren von Kolonien-Slidern und anderen Effekten.",
-        "decay": "Zerfall:",
-        "decayTooltip": "Kombinierter Bevölkerungsverlust von Mangel, Überbevölkerung und hoher Schwerkraft.",
-        "growth": "Wachstum:",
-        "growthTooltip": "Letzte Wachstumsrate nach logistischem Wachstum minus Hunger, Energie und Schwerkraft Zerfall.",
-        "naturalGrowth": "Natürliches Wachstum",
-        "immigration": "Einwanderung",
-        "pilgrimFollowers": "Pilgrim Follower: {value}x",
-        "multiplierEntry": "{name}: {value}x",
-        "decayStarvation": "• Starvation: {rate}%/s ({share}% Hunger; 100% pro 360 s).",
-        "decayEnergy": "• Energie: {rate}%/s ({share}% ohne Strom; 100% pro 90 s).",
-        "decayOverpopulation": "• Überbevölkerung: {rate}%/s.",
-        "decayGravity": "• Gravity: {rate}%/s (Größe {gravity} m/s^2; {above} über 20)."
-      },
-      "constructionOffice": {
-        "title": "Büro für Bauwesen",
-        "autobuilder": "Autobauer: ",
-        "statusActive": "aktiv",
-        "statusDisabled": "Behinderte",
-        "pause": "Pause",
-        "resume": "Fortsetzen",
-        "strategicReserve": "Strategische Reserve",
-        "strategicReserveTooltip": "Verhindert die Baustelle, Ressourcen aus der Speicherung zu verwenden, wenn sie eine Ressource unter den angegebenen Prozentsatz ihrer Kapazität fallen würde. Gilt nicht für Arbeiter.",
-        "reserveSettingsButton": "Einstellungen für die Reserve",
-        "reserveSettingsTitle": "Strategische Reserve",
-        "reserveSettingsIntro": "Richten Sie die Reserveprozentsätze für das Bauamt für jede Ressource ein.",
-        "globalReserve": "Global Standard",
-        "close": "X",
-        "done": "Geschehen zu Brüssel am 11. Dezember 2014.",
-        "guide": {
-          "title": "Auto-Building Anleitung",
-          "open": "Autobau Anleitung öffnen",
-          "close": "Autobau Anleitung schließen",
-          "imageAlt": "Autobau-Steuerungen mit nummerierten Führungsabschnitten",
-          "section1": "Dieser Abschnitt steuert, ob Autobau für dieses Gebäude aktiv ist oder nicht. Der eingegebene Wert und Modus steuert, wie Ihr Ziel definiert ist.",
-          "section2a": "Dies kann den Wert in 1 steuern, ohne die Tastatur zu verwenden. Nützlich für kleine Anpassungen.",
-          "section2b": "Dies steuert Autobau Priorität. Höhere Prioritäten Gebäude werden zuerst gebaut.",
-          "section3": "Dies ist Ihr aktuelles Autobau-Ziel basierend auf definierten Wert. Die Baustelle wird versuchen, auf diesen Wert zu bauen.",
-          "section4": "Aktiv auf Ziel gesetzt ist nützlich, um sicherzustellen, dass neu gebaute Gebäude automatisch aktiviert werden, wenn gebaut, oder um schnell Ihre Anzahl von aktiven Gebäuden zu ändern.",
-          "section5": "Dies ist ein Weg, um einen Wert in 1 zu berechnen, der Ihrem aktuellen Setup entspricht.",
-          "recommendationsTitle": "Empfehlungen",
-          "recommendation1": "Verwenden Sie Autobau auf 1% des Pop für Hydroponics Farm. Jeder aufgerüstete Bauernhof kann 100 Menschen füttern, so dass Sie eine Anzahl von Farmen benötigen, die dem 1% Ihres Pop entsprechen.",
-          "recommendation2": "Verwenden Sie Sandquarries als 100% von Glas Smelter + Electronics Fabrik Nachfrage.",
-          "recommendation3": "Der Anteil der Arbeiter an der Zahl der Arbeiter berechnet Ihr Ziel auf der Grundlage Ihrer Zahl der Arbeiter. % der Arbeitnehmeranteil berechnet ein Ziel, das auf der Zuordnung der angegebenen % der Arbeiter zu diesem Gebäude beruht. Zum Beispiel, wenn Sie 200 Arbeiter und wollen 1 Speicherdepot pro 100 Arbeiter verwenden 1% der Arbeiter.  Wenn Sie möchten, dass 50% Ihrer Arbeiter in der Komponentenfabrik arbeiten, können Sie 50% Arbeiter Share verwenden.",
-          "recommendation4": "Wenn Sie die Baustelle zum ersten Mal entsperren, versuchen Sie, die meisten Ihrer Gebäude auf % der Arbeiter oder % Arbeiteranteil und drücken Sie \"Set Target to Active\" dann aktivieren. Der Autobuilder imitiert meistens Ihre aktuelle Einrichtung.",
-          "recommendation5": "Wenn Sie etwas mehr von etwas brauchen oder Ihre Arbeiter ein wenig befreien möchten, ist die Box in 2a für kleine Anpassungen großartig.  Sie können Ihren Autobau-Zielwert ein wenig erhöhen oder verringern, ohne die Wirtschaft vollständig zu brechen."
-        },
-        "guidePrompt": {
-          "title": "Auto-Building Anleitung",
-          "message": "Ein Leitfaden für diese Funktion ist verfügbar.  Möchten Sie den Führer jetzt sehen?  (Es ist auch von der Baustelle unter der Kolonie Registerkarte zugänglich)",
-          "yes": "Ja",
-          "no": "Nein"
-        },
-        "reserveResources": {
-          "energy": "Energie",
-          "metal": "Metall",
-          "glass": "Glas",
-          "water": "Wasser",
-          "components": "Komponenten",
-          "electronics": "Elektronik",
-          "superconductors": "Supraleiter",
-          "superalloys": "Superlegierungen",
-          "land": "Land"
-        }
-      },
-      "sliders": {
-        "managerDescription": "Verwalten Kolonienschieber",
-        "sourceName": "Kolonien-Slider",
-        "title": "Kolonialmanagement",
-        "workforceAllocation": "Verleihung von Arbeitskräften",
-        "workersValue": "Arbeiter: {value}%",
-        "scientistsValue": "Wissenschaftler: {value}%",
-        "foodConsumption": "Lebensmittelverbrauch",
-        "luxuryWaterUse": "Luxus-Wassernutzung",
-        "oreMineWorkers": "Erzminenarbeiter",
-        "mechanicalAssistance": "Mechanische Hilfe ",
-        "mechanicalAssistanceTooltip": "Mechanische Assistenz mildert bis zu 50% der Schwerkraft-Abfall und Stapel mit hoher Schwerkraft-Adaption, um den Rest zu entfernen.",
-        "gravityDecayReduction": "Schwere Zerfallreduzierung: -{value}%",
-        "sliderValue": "Slider: {value}x.",
-        "componentsCoverage": "Komponentenabdeckung: {value}%.",
-        "currentGravity": "Aktuelle Schwerkraft: {gravity} m/s^2 ({above} über 20).",
-        "effectiveMitigation": "Effektive Minderung: {value}% der Schwerkraft-Verfall.",
-        "highGravityAdaptation": "Schwerkraftanpassung: {value}",
-        "remainingDecay": "Restverfall: {value}% des ursprünglichen Schwerkraftverlustes pro Tag, wenn die Schwerkraft 20 m/s^2 überschreitet.",
-        "warpnet": "Warpnet ",
-        "warpnetTooltip": "Warpnet trichtert sofortige Kommunikation, um die Forschungsleistung zu koordinieren.",
-        "warpnetEnergyUpkeep": "Der linke Wert multipliziert die Kolonie und die Android-Gehäuse-Energie-Unterhalt: {value}.",
-        "warpnetResearchBoost": "Der richtige Wert fügt einen globalen Forschungsschub hinzu: +{value}%",
-        "warpnetEnergyCost": "Energiekosten skalieren steil mit Warpnet-Intensität.",
-        "warpnetSolisNote": "Hinweis: Solis zahlt für Start Androiden.",
-        "warpnetLabelBase": "x1",
-        "warpnetLabelExp": "x1e{value}",
-        "researchEffect": "Forschung: +{value}%",
-        "growthEffect": "Wachstum: +{value}%",
-        "boostEffect": "Boost: {value}%"
       },
       "nanotech": {
         "managerDescription": "Verwaltet den Nanoboter-Schwarm",
@@ -3123,11 +3182,15 @@
           "tooltip": "Die Temperatur ist ein entscheidender Faktor für die Terraforming. Es wird durch ein komplexes Zusammenspiel von Faktoren bestimmt:\n\n- Schlüsselgleichungen: Das Modell verwendet das Stefan-Boltzmann-Gesetz, um die effektive Temperatur aus Solarstrom und Albedo zu berechnen. Der Gewächshauseffekt wird dann basierend auf der optischen Tiefe der Atmosphäre zugegeben und die Temperaturvariation der Tagesnacht aus der Wärmekapazität und der Drehzahl des Planeten berechnet.\n- Solarstrom: die vom Stern empfangene Grundenergie, die durch Strukturen wie Weltraumspiegel erweitert werden kann.\n- Albedo: die Reflexion des Planeten. Ein hoher Albedo aus Eis und Wolken reflektiert mehr Licht und kühlt den Planeten. Ein niedriger Albedo aus Ozeanen und dunklem Felsen absorbiert mehr Licht und wärmt ihn.\n- Greenhouse-Effekt: atmosphärische Gase wie CO2, H2O und CH4 Fallwärme. Die Menge des Fangs wird durch die optische Tiefe der Atmosphäre bestimmt, die von der Menge jedes Gases abhängt.\n- Drehzahl: Eine langsamere Rotation führt zu extremen Temperaturunterschieden zwischen Tag und Nacht.\n- Wärmekapazität: die Fähigkeit des Planeten, Wärme zu speichern und freizugeben, beeinflusst durch Oberflächenzusammensetzung und atmosphärische Dichte. Mehr Oberflächenflüssigkeiten bedeuten mehr Wärmekapazität und somit reduzierte Tages-Nacht-Differenzen.\n- Meridionalwinde: Energie bewegt sich zwischen tropischen, gemäßigten und polaren Zonen. Die Trendspalte zeigt die windgedämpfte Zieltemperatur, die die Gesamtwärme während des abendlichen Extrems bewahrt.\n- Thermische Trägheit: die gleiche Wärmekapazität, die Tag/Nacht schwingt, verlangsamt auch den Marsch auf die Trendtemperatur. Dicke Luft und tiefe Ozeane reagieren träge; dünne Atmosphären schnappen sich schnell in Richtung Trend.\n\nTemperatur unmittelbare Auswirkungen:\n- Wasserkreislauf: Fahrverdunstung, Sublimation, Schmelzen und Einfrieren.\n- Leben: Jede Art hat spezifische Temperaturbereiche für Überleben und Wachstum.\n- Kolonistischer Komfort: extreme Temperaturen erhöhen den Energieverbrauch für die Lebenserhaltung.",
           "coreHeatTooltip": "Die Wärme aus dem Planeteninneren wird der Oberfläche direkt als gleichmäßiger globaler Fluss zugeführt.\n\nKünstliche Kruste und Mega-Wärmesenken können diesen Wert verringern.\n\nWenn die Temperatur unter {crustStart}{unit} fällt, beginnt sich eine natürliche Kruste zu bilden; bei {crustComplete}{unit} ist sie vollständig ausgebildet.\n\nDieser Fluss wird weder von der Albedo noch von der Tag-Nacht-Mittelung beeinflusst.",
           "factoryHeatTooltip": "Industrielle Abwärme aus lokalem Gebäude- und Kolonienenergieverbrauch, abzüglich der Solarpanelkühlung aus ihrer Energieproduktion. Die Solarpaneelkühlung wird durch die Oberfläche Albedo reduziert. Eine bestimmte Megastruktur kann dazu beitragen, dies zu reduzieren. Direkte Abwärme wird nicht durch Albedo oder Tages-Nacht-Aging beeinflusst.",
+          "factoryHeatTopContributors": "Größte Beiträge nach absoluter Auswirkung:",
+          "factoryHeatOtherSources": "Andere Quellen",
+          "phaseChangeHeatTooltip": "Signierte planetare Wärme, die während des letzten Klimaabschnitts durch Phasenänderungen ausgetauscht wurde. Positive Werte bedeuten, dass Gefrieren, Kondensation oder Deposition Wärme freigesetzt haben; negative Werte bedeuten, dass Schmelzen, Verdampfen, Sieden oder Sublimation Wärme aufgenommen haben. Zur numerischen Stabilität kann dieser Effekt die Bewegung zum Trend nur beschleunigen oder verlangsamen, nicht umkehren. Dies kann zu stagnierenden Temperaturen führen.",
           "equilibriumTempTooltip": "Die schwarze Körper strahlende Gleichgewichtstemperatur von absorbiertem Sonnenlicht, Albedo und direkte nicht atmosphärische Hitze. Es ignoriert Gewächshaus-Wärmefall; physisch ist es die Temperatur, die die gleiche Energie zurück in den Raum strahlen würde. Der Wert der Erde liegt über 255 K (-18°C).",
           "labels": {
             "globalMeanTemp": "Globale Mitteltemperatur",
             "equilibriumTemp": "Gleichgewichtstemperatur",
             "netCoreHeatFlux": "Netzkernwärme Flux",
+            "netPhaseChangeHeatFlux": "Netto-Wärmestrom durch Phasenänderungen",
             "netFactoryHeatFlux": "Netto-Fabrik-Heizung Flux",
             "zone": "Gebiet",
             "temperature": "T ({unit})",
@@ -3748,7 +3811,16 @@
           }
         },
         "rewards": {
-          "nuclearAlchemyThroughput": "+{value}% Nukleare Alchemie Durchsatz"
+          "manufacturingWorldThroughput": "+{value}% Durchsatz der Fertigungswelt",
+          "liftersSuperchargeMax": "+{value} maximales Aufladen der Lifter",
+          "gigafoundryThroughput": "+{value}% Gigafabrik-Durchsatz",
+          "spaceChemistryThroughput": "+{value}% Durchsatz der Weltraumchemie",
+          "nuclearAlchemyThroughput": "+{value}% Nukleare Alchemie Durchsatz",
+          "oneillSectorCap": "O’Neill-Limitmultiplikator +{value}",
+          "hephaestusYardEffectiveness": "+{value}% Effektivität der Hephaistos-Werft",
+          "spaceStorageCapacity": "+{value}% Weltraumlagerkapazität",
+          "liftersSuperchargeExponent": "Lifter-Aufladeexponent -{value}",
+          "liftersThroughput": "+{value}% Lifter-Durchsatz"
         }
       },
       "statisticsTitle": "Statistik",
@@ -3780,6 +3852,7 @@
         }
       },
       "currentWorldLabel": "Aktuelle Welt",
+      "renameRandomWorldTitle": "Diese zufällige Welt umbenennen",
       "originalProperties": "Original Eigenschaften",
       "worldSelectionTitle": "Weltauswahl",
       "worldSelectionSubtitle": "Beenden Sie Terraforming, um Ihr nächstes Ziel zu entsperren.",
@@ -3824,6 +3897,7 @@
         "uniqueTooltip": "Zählt jede einzelne Geschichte Welt und terraformiert zufällige Welt, die Sie abgeschlossen haben. Ignoriert alle anderen Boni.",
         "effectiveTooltip": "Enthält Welten aus anderen Quellen. Dieser Wert beeinflusst fortgeschrittene Forschung, Solis Belohnungen, Mega Struktur Expansion Geschwindigkeit und Export-Obergrenzen.",
         "galacticPopulationTooltip": "Galaktische Bevölkerung wächst bei 0.5% / 365 pro Sekunde, multipliziert mit (1 - Bevölkerung / Kapazität).",
+        "showGalacticPopulationInSidebar": "In Seitenleiste anzeigen",
         "effectiveTooltipGalaxy": "Mit entriegelter Galaxie nutzt die Flottenkapazität eine angepasste Weltzahl (künstliche Welten tragen bis zu {value} und O'Neill Zylinder werden ignoriert).",
         "effectiveTooltipGalaxyUncapped": "Mit entriegelter Galaxie nutzt die Flottenkapazität eine angepasste Weltzahl (künstliche Welten tragen ihren vollen Wert bei und O'Neill Zylinder werden ignoriert)."
       }
@@ -4294,7 +4368,19 @@
             "autoStartConstruction": "Autostart-Bauweise",
             "autoOperationEnabled": "Autobetrieb aktiviert",
             "spaceshipCostMultiplier": "Raumbedarf Multiplikator",
-            "currentMass": "Aktuelle Messe"
+            "currentMass": "Aktuelle Messe",
+            "keratiHive": {
+              "hiveFood": "Stockfutter",
+              "honey": "Honig",
+              "spawningPools": "Brutbecken",
+              "territory": "Gebiet",
+              "drones": "Besessene Drohnen",
+              "builders": "Besessene Baumeister",
+              "hunters": "Besessene Jäger",
+              "princesses": "Besessene Prinzessinnen",
+              "queens": "Besessene Königinnen",
+              "empresses": "Besessene Kaiserinnen"
+            }
           },
           "artificial": {
             "source": "Kunstgewerbe",
@@ -4391,6 +4477,8 @@
             "luminosity": {
               "solarFlux": "Solarstrom",
               "modifiedSolarFlux": "Modifizierte Solar Flux",
+              "surfaceSolarFlux": "Solarfluss an der Oberfläche",
+              "averageFlux": "Durchschnittlicher Fluss",
               "albedo": "Albedo",
               "opticalDepth": "Optisches Depth"
             },
@@ -4486,6 +4574,7 @@
         "scriptLineTypeElse": "ELSE",
         "scriptLineTypeWait": "WAIT",
         "scriptLineTypeActions": "ACTIONS",
+        "scriptGoto": "SPRINGE ZU",
         "scriptLinkedTo": "Verknüpft mit",
         "scriptLinkedToNone": "Keine",
         "scriptLineName": "Name",
@@ -4493,6 +4582,10 @@
         "scriptAlways": "Immer",
         "scriptCondition": "Zustand",
         "scriptJoin": "Mitglied",
+        "scriptJoinAnd": "UND",
+        "scriptJoinOr": "ODER",
+        "scriptNotOn": "NICHT",
+        "scriptNotOff": "NICHT aus",
         "scriptLeftExpression": "Links",
         "scriptRightExpression": "Richtig.",
         "scriptComparator": "Vergleich",
@@ -4505,6 +4598,19 @@
         "scriptOperatorSafeDivide": "SAFE DIVIDE",
         "scriptActions": "Aktionen",
         "scriptElseActions": "Else Aktionen",
+        "scriptNoActions": "Keine Aktionen",
+        "scriptSummarySleep": "Warte {duration} ms",
+        "scriptSummaryGoto": "SPRINGE ZU {target}",
+        "scriptSummarySetScriptVariable": "Setze Skriptvariable {variable} = {value}",
+        "scriptSummarySetVariable": "Setze {variable} = {value}",
+        "scriptSummarySetAutomation": "Setze {type}-Automatisierung auf {mode}",
+        "scriptSummarySetPause": "Setze Pause auf {mode}",
+        "scriptSummaryAction": "Aktion",
+        "scriptSummaryParameter": " mit {variable}",
+        "scriptSummaryApplyPreset": "Wende {type}-Preset {name}{parameter} an",
+        "scriptSummaryApplyCombination": "Wende {type}-Kombination {name} an",
+        "scriptNullValue": "NULL",
+        "scriptWithId": "Skript {id}",
         "scriptApplyPreset": "Anwenden von Preset",
         "scriptAutoTravelAndTurnOn": "Autofahrt",
         "scriptApplyCombination": "Kombinieren anwenden",
@@ -4521,6 +4627,10 @@
         "scriptTogglePause": "Wie kann man sich entscheiden?",
         "scriptGotoScript": "GOTO Script",
         "scriptAutomationTypeScripting": "Schrift",
+        "scriptAutomationTypeBuildings": "Gebäude",
+        "scriptAutomationTypeProjects": "Projekte",
+        "scriptAutomationTypeColony": "Kolonie",
+        "scriptAutomationTypeResearch": "Forschung",
         "scriptAutomationTypeAutoTravel": "Autofahrt",
         "scriptAutomationTypeShip": "Schiff",
         "scriptAutomationTypeLife": "Leben",
@@ -4546,6 +4656,10 @@
         "lifeDeployImproveLabel": "Bereitstellung nur, wenn Design verbessert durch",
         "lifeDeployPointsSuffix": "Punkte",
         "lifeDeployInfo": "Die Auto-Bereitstellung wird nur ausgelöst, wenn sie ein Design durch die angegebene Anzahl von Punkten verbessert.",
+        "lifeBiomassColorLabel": "Biomassefarbe",
+        "lifeBiomassColorTooltip": "Diese Farbe wird angewendet, wenn die Voreinstellung ein Lebensdesign einsetzt. Das Ändern kostet keine Lebenspunkte. Biomasse, die heller als Grün ist, wächst langsamer, bis zu -80 % bei Weiß.",
+        "lifeBiomassAlbedo": "Albedo: {value}",
+        "lifeBiomassGrowthPenalty": "Wachstumsstrafe: -{value}%",
         "lifeCreateStepsFromCurrentButton": "Schritte aus dem aktuellen Design erstellen",
         "lifeSpendAtLabel": "Verbringen",
         "lifeMaxCostLabel": "Maximale Kosten",
@@ -5013,6 +5127,8 @@
       "autoPauseColonists": "Netto-Kolonistrate <",
       "immigrationPool": "Immigrationspool",
       "immigrationPoolTooltip": "Wenn es auf einer anderen Welt als dem Mars möglich ist, wird ein großer Teil des Kolonienwachstums direkt von der galaktischen Bevölkerung über die Einwanderung abhängig.  Immigration wird versuchen, die Weltkolonisten-Füll-Verhältnis mit der galaktischen Füll-Verhältnis zu gleichen, und alle Einwanderung wird aus dem galaktischen Bevölkerungspool genommen.  Dies kann in einigen Fällen zu einem sehr langsamen Wachstum führen.",
+      "disableColonistDecay": "Verfall der Kolonisten deaktivieren",
+      "disableColonistDecayTooltip": "Verhindert Kolonistenverluste durch Nahrungsmangel, Energiemangel, hohe Schwerkraft und Überbevölkerung. Für Leerlaufspiel empfohlen.",
       "disableUnlockAlerts": "Entsperren von Alarmen",
       "disableDayNightCycle": "Tag-Nacht Zyklus deaktivieren",
       "dayNightTooltip": "Stoppt die Zeit der Tageswechsel. Solar Panels und Ice Harvesters laufen mit halber Effizienz und halber Wartung. Sie führt zu einem realistischeren, leicht leichteren und entspannteren Erlebnis.",
@@ -5069,6 +5185,8 @@
       "unfulfilledMaintenancePenaltiesTooltip": "Bei aktivierter, unbezahlter Gebäudewartung senkt die Produktivität der betroffenen Gebäude über 900 Sekunden. Jede Bauart, die sich auf die am schlechtesten bezahlte Wartungsquote der benötigten Ressourcen bezieht, und die tatsächliche Produktivität wird durch diesen Wert begrenzt.",
       "earlyAdvancedOversight": "Frühe erweiterte Aufsicht",
       "earlyAdvancedOversightTooltip": "Das Spiel hat einen leistungsfähigen Soldat für Raumspiegel, die automatisch bestimmte Temperaturwerte ansprechen können.  Es soll etwas sein, das verdient werden muss, und ist in der Regel auf Story-Welt 5.  Wenn Sie die Verlobung zu frustrierend aber fühlen sich frei, es früh zu haben.  Sie brauchen immer noch die Raumspiegel-Fazilitäts-Übersichtsforschung.",
+      "phaseChangeHeat": "Phasenwechselwärme",
+      "phaseChangeHeatTooltip": "Wenn aktiviert, nehmen Schmelzen, Verdampfen, Sieden und Sublimation planetare Wärme auf, während Gefrieren, Kondensation und Deposition sie freisetzen. Phasenwechselwärme verändert weder Temperaturtrends noch Zuweisungen der erweiterten Aufsicht. Sie kann die Bewegung zum Trend nur beschleunigen oder verlangsamen, kann aber leicht zu stagnierenden Temperaturen führen.",
       "factoryHeating": "Fabrikheizung",
       "factoryHeatingTooltip": "Wenn möglich, wird ein Teil des lokalen Gebäudes und der Kolonie Energienutzung planetarische Wärme, während Solarpaneele kühlen den Planeten durch ihre Energieproduktion reduziert durch Oberflächenalbedo. Die meisten Strukturen wandeln alle lokalen Energie in Wärme um, während Prozesse, die Energie chemisch speichern, emittieren sie aus der Welt, oder bereits Modell direkte Heizung verwenden niedrigere Koeffizienten. Eine bestimmte Megastruktur kann dazu beitragen, die Fabrikheizung zu mildern.  \n\n Sie sollten diese Einstellung neben dem realistischen Energieverbrauch der Fabrik nutzen",
       "realisticFactoryEnergyConsumption": "Realer Energieverbrauch der Fabrik",
@@ -5133,10 +5251,17 @@
       "fastestTerraformByTypeTitle": "Schnellste Terraform nach Welttyp",
       "fastestTerraformByTypeEntry": "{type}: {game} ({real} Echtzeit)",
       "recentTerraformHistoryTitle": "Letzte {count} terraformierte Welten",
+      "recentTerraformHistoryWorld": "Welt",
+      "recentTerraformHistoryTerraformTime": "Zeit zum Terraforming",
+      "recentTerraformHistoryTravelTime": "Reisezeit",
       "recentTerraformHistoryAverage": "Durchschnitt: {game} ({real} Echtzeit)",
+      "recentTerraformHistoryAverageLabel": "Durchschnitt",
       "recentTerraformHistoryEmpty": "Noch keine terraformierten Welten.",
       "recentTerraformHistoryEntry": "{name} ({type}): {game} ({real} Echtzeit)",
+      "recentTerraformHistoryWorldEntry": "{name} ({type})",
+      "recentTerraformHistoryUnavailable": "Nicht verfügbar",
       "terraformWorldTypeArtificial": "Kunstgewerbe",
+      "terraformWorldTypeStory": "Geschichte",
       "terraformWorldTypeShell": "Schalenwelt",
       "terraformWorldTypeRing": "Ringwelt",
       "terraformWorldTypeDisk": "Alderson-Scheibe",
@@ -6502,6 +6627,10 @@
           "name": "Bio-Engineering der nächsten Generation",
           "description": "Ermöglicht die Nutzung fortschrittlicher Forschung, um das Potenzial der Lebensgestaltung dauerhaft zu erhöhen"
         },
+        "biopigmentation": {
+          "name": "Biopigmentierung",
+          "description": "Leben kann andere Pigmente nutzen. Dies kann die Albedo erhöhen, aber helle Farben haben Wachstumsstrafen."
+        },
         "repeatable_ai_research": {
           "name": "Wiederholbare KI-Forschungen",
           "description": "Erlaubt reproduzierbare Forschungsprogramme, die auf die Verbesserung der Produktion mit Hilfe von HOPE ausgerichtet sind."
@@ -6513,6 +6642,10 @@
         "galactic_market": {
           "name": "Galaktisches Marktkonkordat",
           "description": "Erstellt dauerhafte Handelsbeziehungen mit der breiteren Galaxie und ersetzt Rohexporte durch einen verwalteten Markt.  Dies ersetzt permanent Cargo Rockets und Metal Exportation."
+        },
+        "automatic_surplus_trading": {
+          "name": "Automatischer Handel mit Überschüssen",
+          "description": "Zu diesem Zeitpunkt sind Kolonieressourcen bloße Waren geworden. Der Galaktische Markt sollte sich an schnelle Änderungen unseres Angebots anpassen können, sodass wir überschüssige Ressourcen verkaufen können, ohne zuerst Geschäftspartner finden zu müssen. (Überlaufende Kolonieressourcen werden unterhalb der Sättigung automatisch auf dem Markt verkauft. Dies geschieht beim nächsten Tick.)"
         },
         "mechanical_assistance": {
           "name": "Mechanische Hilfe",
@@ -6907,6 +7040,9 @@
         },
         "solisPoints": {
           "name": "Solis-Punkte"
+        },
+        "galacticPopulation": {
+          "name": "Galaktische Bevölkerung"
         },
         "alienArtifact": {
           "name": "Alien-Artefakt"

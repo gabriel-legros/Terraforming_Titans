@@ -163,12 +163,20 @@ class Aerostat extends BaseColony {
     return Math.min(repeats, maxRepeats);
   }
 
+  getBiosphereBuoyancyBonusCap() {
+    return projectManager.projects.vanadoBiosphereBuoyancy.getAerostatSupport();
+  }
+
+  getAerostatSupportBonusCap() {
+    return this.getStructuralNetBonusCap() + this.getBiosphereBuoyancyBonusCap();
+  }
+
   shouldShowCapActiveToSupportedToggle() {
-    return this.getStructuralNetBonusCap() > 0;
+    return this.getAerostatSupportBonusCap() > 0;
   }
 
   getSupportedActiveCap() {
-    return this.getStructuralNetBonusCap();
+    return this.getAerostatSupportBonusCap();
   }
 
   shouldClampSetActiveToSupported() {
@@ -189,7 +197,7 @@ class Aerostat extends BaseColony {
   }
 
   getFreeBuildCap() {
-    return this._getBuildLimit() + this.getStructuralNetBonusCap();
+    return this._getBuildLimit() + this.getAerostatSupportBonusCap();
   }
 
   getBuildLimit() {
@@ -375,8 +383,8 @@ class Aerostat extends BaseColony {
     return Math.max(freeCap, freeCap + maxOverCap);
   }
 
-  getStructuralNetExemptBuiltCount() {
-    const bonusCap = this.getStructuralNetBonusCap();
+  getSupportExemptBuiltCount() {
+    const bonusCap = this.getAerostatSupportBonusCap();
     const baseLimit = this._getBuildLimit();
     if (bonusCap <= 0 || baseLimit <= 0) {
       return 0;
@@ -385,8 +393,8 @@ class Aerostat extends BaseColony {
     return Math.min(bonusCap, Math.max(0, this.countNumber - baseLimit));
   }
 
-  getStructuralNetFlightExemptBuiltCount() {
-    const bonusCap = this.getStructuralNetBonusCap();
+  getSupportFlightExemptBuiltCount() {
+    const bonusCap = this.getAerostatSupportBonusCap();
     if (bonusCap <= 0) {
       return 0;
     }
@@ -394,8 +402,8 @@ class Aerostat extends BaseColony {
     return Math.min(bonusCap, this.countNumber);
   }
 
-  getStructuralNetExemptActiveCount() {
-    const exemptBuiltCount = this.getStructuralNetFlightExemptBuiltCount();
+  getSupportExemptActiveCount() {
+    const exemptBuiltCount = this.getSupportFlightExemptBuiltCount();
     if (exemptBuiltCount <= 0) {
       return 0;
     }
@@ -404,7 +412,7 @@ class Aerostat extends BaseColony {
   }
 
   getPoweredFlightChargedActiveCount() {
-    return Math.max(0, this.activeNumber - this.getStructuralNetExemptActiveCount());
+    return Math.max(0, this.activeNumber - this.getSupportExemptActiveCount());
   }
 
   getAveragePoweredFlightEnergyPerActiveAerostat(liftValue, pressureValue) {
@@ -1983,6 +1991,11 @@ function updateAerostatBuoyancySection(structure) {
   const structuralNetBonus = Number.isFinite(structuralNetBonusRaw)
     ? Math.max(0, Math.floor(structuralNetBonusRaw))
     : 0;
+  const biosphereBuoyancyBonus = Math.max(
+    0,
+    Math.floor(structure.getBiosphereBuoyancyBonusCap())
+  );
+  const supportBonus = structuralNetBonus + biosphereBuoyancyBonus;
   const freeBuildCapRaw = structure.getFreeBuildCap?.() ?? baseBuildLimitRaw;
   const freeBuildCap = freeBuildCapRaw === Infinity
     ? Infinity
@@ -2257,11 +2270,11 @@ function updateAerostatBuoyancySection(structure) {
               {
                 value: formatAerostatLimit(buildLimit),
                 base: formatAerostatLimit(baseBuildLimit),
-                bonus: structuralNetBonus > 0
+                bonus: supportBonus > 0
                   ? getAerostatText(
-                      'ui.buildings.aerostat.maximumAerostatsWithStructuralNetSuffix',
-                      ', +{value} net',
-                      { value: formatAerostatLimit(structuralNetBonus) }
+                      'ui.buildings.aerostat.maximumAerostatsWithSupportSuffix',
+                      ', +{value} support',
+                      { value: formatAerostatLimit(supportBonus) }
                     )
                   : ''
               }
@@ -2284,16 +2297,23 @@ function updateAerostatBuoyancySection(structure) {
         'Aerostat Structural Net bonus cap: +{value}.',
         { value: formatAerostatLimit(structuralNetBonus) }
       )}`;
-      if (freeBuildCap !== null) {
-        limitTitle += `\n${getAerostatText(
-          'ui.buildings.aerostat.structuralNetFreeCap',
-          'Free aerostat cap before collision-avoidance surcharges: {value}.',
-          { value: formatAerostatLimit(freeBuildCap) }
-        )}`;
-      }
+    }
+    if (biosphereBuoyancyBonus > 0) {
       limitTitle += `\n${getAerostatText(
-        'ui.buildings.aerostat.structuralNetFreeCapEffect',
-        'Aerostats occupying structural-net bonus slots ignore collision-avoidance research costs and powered-flight energy.'
+        'ui.buildings.aerostat.biosphereBuoyancyBonusCap',
+        'Vanado Biosphere Buoyancy bonus cap: +{value}.',
+        { value: formatAerostatLimit(biosphereBuoyancyBonus) }
+      )}`;
+    }
+    if (supportBonus > 0 && freeBuildCap !== null) {
+      limitTitle += `\n${getAerostatText(
+        'ui.buildings.aerostat.supportFreeCap',
+        'Free aerostat cap before collision-avoidance surcharges: {value}.',
+        { value: formatAerostatLimit(freeBuildCap) }
+      )}`;
+      limitTitle += `\n${getAerostatText(
+        'ui.buildings.aerostat.supportFreeCapEffect',
+        'Aerostats occupying bonus support slots ignore collision-avoidance research costs and powered-flight energy.'
       )}`;
     }
     if (remainingCapacity !== null) {

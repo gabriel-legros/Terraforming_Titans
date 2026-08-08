@@ -254,6 +254,32 @@ class ScriptVariableRegistry {
     if (targetId === 'ringworldTerraforming') {
       attributes.push({ id: 'currentMass', label: this.getScriptVariableText('projects.currentMass', 'Current Mass'), valueType: 'number' });
     }
+    if (targetId === 'orbitalRing') {
+      attributes.push({ id: 'presentOnWorld', label: this.getScriptVariableText('projects.presentOnWorld', 'Present on World'), valueType: 'boolean' });
+    }
+    if (targetId === 'spaceElevator') {
+      attributes.push(
+        { id: 'elevatorLanesBuilt', label: this.getScriptVariableText('projects.spaceElevator.elevatorLanesBuilt', 'Elevator Lanes Built'), valueType: 'number' },
+        { id: 'skyhooksBuilt', label: this.getScriptVariableText('projects.spaceElevator.skyhooksBuilt', 'Skyhooks Built'), valueType: 'number' },
+        { id: 'totalSpaceAccessCapacity', label: this.getScriptVariableText('projects.spaceElevator.totalCapacity', 'Total Space Access Capacity'), valueType: 'number' },
+        { id: 'activeSpaceAccessThroughput', label: this.getScriptVariableText('projects.spaceElevator.activeThroughput', 'Active Space Access Throughput'), valueType: 'number' },
+        { id: 'spaceAccessBenefitCoveragePercent', label: this.getScriptVariableText('projects.spaceElevator.benefitCoveragePercent', 'Space Access Benefit Coverage %'), valueType: 'number' }
+      );
+    }
+    if (targetId === 'keratiHive') {
+      attributes.push(
+        { id: 'hiveFood', label: this.getScriptVariableText('projects.keratiHive.hiveFood', 'Hive Food'), valueType: 'number' },
+        { id: 'honey', label: this.getScriptVariableText('projects.keratiHive.honey', 'Honey'), valueType: 'number' },
+        { id: 'spawningPools', label: this.getScriptVariableText('projects.keratiHive.spawningPools', 'Spawning Pools'), valueType: 'number' },
+        { id: 'territory', label: this.getScriptVariableText('projects.keratiHive.territory', 'Territory'), valueType: 'number' },
+        { id: 'drones', label: this.getScriptVariableText('projects.keratiHive.drones', 'Drones Owned'), valueType: 'number' },
+        { id: 'builders', label: this.getScriptVariableText('projects.keratiHive.builders', 'Builders Owned'), valueType: 'number' },
+        { id: 'hunters', label: this.getScriptVariableText('projects.keratiHive.hunters', 'Hunters Owned'), valueType: 'number' },
+        { id: 'princesses', label: this.getScriptVariableText('projects.keratiHive.princesses', 'Princesses Owned'), valueType: 'number' },
+        { id: 'queens', label: this.getScriptVariableText('projects.keratiHive.queens', 'Queens Owned'), valueType: 'number' },
+        { id: 'empresses', label: this.getScriptVariableText('projects.keratiHive.empresses', 'Empresses Owned'), valueType: 'number' }
+      );
+    }
     return attributes;
   }
 
@@ -395,6 +421,8 @@ class ScriptVariableRegistry {
       return [
         { id: 'solarFlux', label: this.getScriptVariableText('terraforming.luminosity.solarFlux', 'Solar Flux'), valueType: 'number' },
         { id: 'modifiedSolarFlux', label: this.getScriptVariableText('terraforming.luminosity.modifiedSolarFlux', 'Modified Solar Flux'), valueType: 'number' },
+        { id: 'surfaceSolarFlux', label: this.getScriptVariableText('terraforming.luminosity.surfaceSolarFlux', 'Surface Solar Flux'), valueType: 'number' },
+        { id: 'averageFlux', label: this.getScriptVariableText('terraforming.luminosity.averageFlux', 'Average Flux'), valueType: 'number' },
         { id: 'albedo', label: this.getScriptVariableText('terraforming.luminosity.albedo', 'Albedo'), valueType: 'number' },
         { id: 'opticalDepth', label: this.getScriptVariableText('terraforming.luminosity.opticalDepth', 'Optical Depth'), valueType: 'number' }
       ];
@@ -720,7 +748,9 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'running') return this.resolveProjectRunning(project);
     if (ref.attribute === 'progressPercent') return this.resolveProjectProgressPercent(project);
     if (ref.attribute === 'assignedSpaceships') return this.toNumber(project.assignedSpaceships);
-    if (ref.attribute === 'durationRemaining') return this.toNumber(project.remainingTime);
+    if (ref.attribute === 'durationRemaining') {
+      return this.toNumber(ref.target === 'ringworldTerraforming' ? project.getDurationRemaining() : project.remainingTime);
+    }
     if (ref.attribute === 'repeatCount') return this.toNumber(project.repeatCount);
     if (ref.attribute === 'maxRepeatCount') return this.toNumber(project.maxRepeatCount);
     if (ref.attribute === 'autoStart') return project.autoStart ? 1 : 0;
@@ -728,6 +758,28 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'spaceshipCostMultiplier') return this.resolveProjectSpaceshipCostMultiplier(project);
     if (ref.attribute === 'currentMass' && ref.target === 'ringworldTerraforming') {
       return this.toNumber(project.getTotalRingworldMassTons());
+    }
+    if (ref.attribute === 'presentOnWorld' && ref.target === 'orbitalRing') {
+      return spaceManager.currentWorldHasOrbitalRing() ? 1 : 0;
+    }
+    if (ref.target === 'spaceElevator') {
+      if (ref.attribute === 'elevatorLanesBuilt') return this.toNumber(project.elevatorCount);
+      if (ref.attribute === 'skyhooksBuilt') return this.toNumber(project.skyhookCount);
+      if (ref.attribute === 'totalSpaceAccessCapacity') return this.toNumber(getTotalSpaceAccessCapacity());
+      if (ref.attribute === 'activeSpaceAccessThroughput') return this.toNumber(getTotalContinuousSpaceAccessDemand());
+      if (ref.attribute === 'spaceAccessBenefitCoveragePercent') return this.toNumber(getSpaceAccessCoverage() * 100);
+    }
+    if (ref.target === 'keratiHive') {
+      if (ref.attribute === 'hiveFood') return this.toNumber(project.hiveFood);
+      if (ref.attribute === 'honey') return this.toNumber(project.honey);
+      if (ref.attribute === 'spawningPools') return this.toNumber(project.spawningPools);
+      if (ref.attribute === 'territory') return this.toNumber(project.territory);
+      if (ref.attribute === 'drones') return this.toNumber(project.drones);
+      if (ref.attribute === 'builders') return this.toNumber(project.builders);
+      if (ref.attribute === 'hunters') return this.toNumber(project.hunters);
+      if (ref.attribute === 'princesses') return this.toNumber(project.princesses);
+      if (ref.attribute === 'queens') return this.toNumber(project.queens);
+      if (ref.attribute === 'empresses') return this.toNumber(project.empresses);
     }
     return 0;
   }
@@ -791,6 +843,12 @@ class ScriptVariableRegistry {
     if (attribute === 'geometricLand') return resolveWorldGeometricLand(terraforming, resources.surface.land);
     if (attribute === 'solarFlux') return this.toNumber(terraforming.luminosity.solarFlux);
     if (attribute === 'modifiedSolarFlux') return this.toNumber(terraforming.luminosity.modifiedSolarFlux);
+    if (attribute === 'surfaceSolarFlux') return this.toNumber(terraforming.calculateSurfaceSolarFlux());
+    if (attribute === 'averageFlux') {
+      let averageFlux = 0;
+      for (const zone of getZones()) averageFlux += terraforming.luminosity.zonalFluxes[zone] * terraforming.getZoneWeight(zone);
+      return this.toNumber(averageFlux);
+    }
     if (attribute === 'albedo') return this.toNumber(terraforming.luminosity.surfaceAlbedo);
     if (attribute === 'opticalDepth') return this.toNumber(terraforming.temperature.opticalDepth);
     if (attribute === 'coreHeatFlux') return this.toNumber(terraforming.celestialParameters.coreHeatFlux);

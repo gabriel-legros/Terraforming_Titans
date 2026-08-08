@@ -328,7 +328,11 @@ function getArtificialHistoryTypeLabel(type, core) {
   if (type === 'shell' && core === 'smbh') {
     return getArtificialText('history.typeLabels.supermassiveShellworld', 'SMBH Shellworld');
   }
-  return type ? type.charAt(0).toUpperCase() + type.slice(1) : '—';
+  if (!type) {
+    return '—';
+  }
+  const fallback = type.charAt(0).toUpperCase() + type.slice(1);
+  return getArtificialText(`history.typeLabels.${type}`, fallback);
 }
 
 function buildHistoryRow(entry) {

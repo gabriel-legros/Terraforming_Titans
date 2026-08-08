@@ -781,6 +781,13 @@
         "totalLabel": "Amet:",
         "spaceResources": "Esse cillum",
         "categoryResources": "{name} Nulla",
+        "categories": {
+          "colony": "Colonia",
+          "surface": "Superficies",
+          "underground": "Sub terra",
+          "atmospheric": "Atmosphaera",
+          "special": "Specialis"
+        },
         "toggleView": "Qui officia deserunt mollit anim",
         "landRecoverNote": "Culpa qui officia deserunt mollit anim id est laborum lorem",
         "wasteTooltipNote": "Qui officia deserunt mollit anim id est laborum lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore et.",

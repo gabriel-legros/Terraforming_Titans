@@ -5,17 +5,13 @@ function calculateCondensationPressureState({
   temp,
   atmPressure,
   saturationFn,
-  freezePoint,
-  boilingPoint,
   criticalTemperature,
   liftPressureFraction,
   kappa
 }) {
-  const useIceBranch = !Number.isFinite(boilingPoint);
-  const effectiveTemp = useIceBranch ? Math.min(temp, freezePoint) : temp;
-  const surfaceCap = Number.isFinite(criticalTemperature) && effectiveTemp >= criticalTemperature
+  const surfaceCap = Number.isFinite(criticalTemperature) && temp >= criticalTemperature
     ? Infinity
-    : saturationFn(effectiveTemp);
+    : saturationFn(temp);
   const humidityScale = Math.min(surfaceCap, atmPressure);
 
   let upliftCap = Infinity;
@@ -23,9 +19,8 @@ function calculateCondensationPressureState({
     && liftPressureFraction > 0 && liftPressureFraction < 1
     && kappa > 0) {
     const liftedTemp = temp * Math.pow(liftPressureFraction, kappa);
-    const effectiveLiftedTemp = useIceBranch ? Math.min(liftedTemp, freezePoint) : liftedTemp;
-    if (!(Number.isFinite(criticalTemperature) && effectiveLiftedTemp >= criticalTemperature)) {
-      upliftCap = saturationFn(effectiveLiftedTemp) / liftPressureFraction;
+    if (!(Number.isFinite(criticalTemperature) && liftedTemp >= criticalTemperature)) {
+      upliftCap = saturationFn(liftedTemp) / liftPressureFraction;
     }
   }
 
@@ -35,18 +30,6 @@ function calculateCondensationPressureState({
   };
 }
 
-function calculateExpectedHumidityExcess(meanHumidity, normalizedThreshold) {
-  if (meanHumidity <= 0) {
-    return 0;
-  }
-  const shape = terraformingParameters.phaseChange.statisticalHumidity.drySkewShape;
-  const upperBound = (shape + 1) * meanHumidity;
-  if (normalizedThreshold >= upperBound) {
-    return 0;
-  }
-  return meanHumidity * Math.pow(1 - normalizedThreshold / upperBound, shape + 1);
-}
-
 function condensationRateFactor({
   zoneArea,
   gravity,
@@ -54,22 +37,28 @@ function condensationRateFactor({
   nightTemp,
   freezePoint,
   transitionRange = terraformingParameters.phaseChange.condensation.phaseTransitionRangeK,
-  statisticalHumidityMean,
+  vaporPressure,
   dayPressureState,
   nightPressureState,
   homogeneousHumidity = false
 }) {
   const calc = (temp, pressureState) => {
-    const humidityScale = pressureState.humidityScale;
-    if (zoneArea <= 0 || humidityScale <= 0) {
+    if (zoneArea <= 0 || vaporPressure <= 0) {
       return { liquid: 0, ice: 0 };
     }
 
-    const normalizedThreshold = pressureState.saturationPressure / humidityScale;
-    const normalizedExcess = homogeneousHumidity
-      ? Math.max(0, statisticalHumidityMean - normalizedThreshold)
-      : calculateExpectedHumidityExcess(statisticalHumidityMean, normalizedThreshold);
-    const excessPressure = humidityScale * normalizedExcess;
+    const saturationPressure = pressureState.saturationPressure;
+    let excessPressure = Math.max(0, vaporPressure - saturationPressure);
+    if (!homogeneousHumidity) {
+      const shape = terraformingParameters.phaseChange.statisticalHumidity.drySkewShape;
+      const upperBoundPressure = (shape + 1) * vaporPressure;
+      excessPressure = saturationPressure >= upperBoundPressure
+        ? 0
+        : vaporPressure * Math.pow(
+            1 - saturationPressure / upperBoundPressure,
+            shape + 1
+          );
+    }
     const excessMassKg = (excessPressure * zoneArea) / gravity;
     const rate = (excessMassKg / terraformingParameters.physical.kgPerTon)
       / terraformingParameters.phaseChange.condensation.secondsPerDay;
@@ -95,7 +84,6 @@ function condensationRateFactor({
 if (isNodeCondensation) {
   module.exports = {
     calculateCondensationPressureState,
-    calculateExpectedHumidityExcess,
     condensationRateFactor
   };
 } else {

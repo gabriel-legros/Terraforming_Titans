@@ -32,6 +32,7 @@ progressHades.storyProjects.hades_pandora_mystery = {
   attributes: {
     planet: 'hades',
     ignoreDurationModifiers: true,
+    waitForStoryStep: true,
     storySteps: [
       "Mary : 'Well, obviously either I forgot something or I got an important message or a fire in the house or something like that?'",
       "Mary : 'It... discovered something that changed its knowledge?  But dad said it knew everything about biology...'",

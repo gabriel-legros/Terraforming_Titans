@@ -23,6 +23,8 @@ const automationElements = {
   autoTravelPanelBody: null,
   autoTravelMasterToggle: null,
   autoTravelPresetSelect: null,
+  autoTravelPresetMoveUpButton: null,
+  autoTravelPresetMoveDownButton: null,
   autoTravelPresetUsage: null,
   autoTravelPresetNameInput: null,
   autoTravelNewPresetButton: null,
@@ -56,6 +58,8 @@ const automationElements = {
   scriptStatusCurrent: null,
   scriptStatusHistory: null,
   scriptSelect: null,
+  scriptMoveUpButton: null,
+  scriptMoveDownButton: null,
   scriptNameInput: null,
   scriptNewButton: null,
   scriptDuplicateButton: null,
@@ -479,6 +483,12 @@ function cacheAutomationElements() {
   }
   if (!automationElements.scriptSelect && automationElements.scriptAutomation) {
     automationElements.scriptSelect = automationElements.scriptAutomation.querySelector('.script-automation-select');
+  }
+  if (!automationElements.scriptMoveUpButton && automationElements.scriptAutomation) {
+    automationElements.scriptMoveUpButton = automationElements.scriptAutomation.querySelector('.script-automation-move-up');
+  }
+  if (!automationElements.scriptMoveDownButton && automationElements.scriptAutomation) {
+    automationElements.scriptMoveDownButton = automationElements.scriptAutomation.querySelector('.script-automation-move-down');
   }
   if (!automationElements.scriptNameInput && automationElements.scriptAutomation) {
     automationElements.scriptNameInput = automationElements.scriptAutomation.querySelector('.script-automation-name');

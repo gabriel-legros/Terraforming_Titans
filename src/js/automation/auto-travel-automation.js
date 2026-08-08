@@ -128,7 +128,7 @@ class AutoTravelAutomation {
 
   getSelectedPresetTravelScriptOverrideId() {
     const preset = this.getSelectedPreset();
-    if (!preset || !preset.runScriptAfterTravelEnabled) {
+    if (!this.enabled || !preset || !preset.runScriptAfterTravelEnabled) {
       return null;
     }
     const scriptId = Number(preset.runScriptAfterTravelScriptId);
@@ -157,6 +157,18 @@ class AutoTravelAutomation {
     this.presets.push(preset);
     this.selectedPresetId = id;
     return preset;
+  }
+
+  movePreset(id, direction) {
+    const numericId = Number(id);
+    const index = this.presets.findIndex(preset => preset.id === numericId);
+    const nextIndex = index + direction;
+    if (index < 0 || nextIndex < 0 || nextIndex >= this.presets.length) {
+      return false;
+    }
+    const moved = this.presets.splice(index, 1)[0];
+    this.presets.splice(nextIndex, 0, moved);
+    return true;
   }
 
   deletePreset(id) {
@@ -277,7 +289,7 @@ class AutoTravelAutomation {
     return candidates;
   }
 
-  _getSkipEquilibrationUnlocked() {
+  canSkipEquilibration() {
     return Number(fastestTerraformRealSeconds) > 0 && Number(fastestTerraformRealSeconds) < 60;
   }
 
@@ -411,9 +423,9 @@ class AutoTravelAutomation {
   }
 
   _travelToRandomWorldPreset(preset) {
-    const canSkipEquilibration = this._getSkipEquilibrationUnlocked();
+    const canSkipEquilibration = this.canSkipEquilibration();
     if (preset.skipEquilibration && !canSkipEquilibration) {
-      return false;
+      preset.skipEquilibration = false;
     }
     const res = this._buildRandomWorldResult(preset);
     if (!res) {

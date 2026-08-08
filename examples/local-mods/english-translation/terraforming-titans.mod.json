@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "english-translation",
   "name": "English-translation",
-  "version": "1.0.0",
+  "version": "1.1.19",
   "loadOrder": 1000,
   "generatedFrom": "src/js/lang/current-language.js + src/js/lang/story-language.js",
-  "generatedStringCount": 5230,
+  "generatedStringCount": 5304,
   "content": {
     "patches": [
       {

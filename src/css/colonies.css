@@ -39,6 +39,15 @@
     gap: 4px;
   }
 
+  #growth-capacity-warning.info-tooltip-icon {
+    color: red;
+    cursor: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    font-weight: bold;
+    margin-left: 2px;
+  }
+
 /* Style the need boxes */
 .need-box {
   width: 120px;

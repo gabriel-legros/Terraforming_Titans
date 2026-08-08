@@ -1,6 +1,6 @@
 {
   "meta": {
-    "code": "zh-CN",
+    "code": "zh-Hans",
     "documentTitle": "Terraforming Titans"
   },
   "ui": {
@@ -61,6 +61,8 @@
         "energyShortage": "能源短缺",
         "gravityStrain": "重力负荷",
         "overpopulation": "人口过剩",
+        "galacticNaturalGrowth": "自然增长",
+        "galacticImmigration": "移民",
         "lifeDensityDecay": "生命密度衰减",
         "geologicalBurial": "地质封存",
         "surfaceBiomass": "地表生物质",
@@ -279,6 +281,7 @@
         "unknownStar": "未知恒星",
         "starDetailsTitle": "恒星详情",
         "worldDetailsTitle": "世界详情",
+        "renameWorldTitle": "重命名这个随机世界",
         "starTitle": "恒星：{value}",
         "spectral": "光谱",
         "luminosity": "光度",
@@ -429,6 +432,9 @@
           "abandoned": "已放弃"
         },
         "typeLabels": {
+          "shell": "壳层",
+          "ring": "环",
+          "disk": "圆盘",
           "supermassiveShellworld": "超大质量黑洞壳层世界"
         },
         "columns": {
@@ -444,6 +450,8 @@
         "title": "蓝图",
         "worldName": "世界名称",
         "worldNamePlaceholder": "人造世界",
+        "worldNumber": "数量",
+        "worldNumberPlaceholder": "可选",
         "framework": "结构框架",
         "core": "核心",
         "stellarContext": "恒星环境",
@@ -537,7 +545,7 @@
       "stash": {
         "title": "初始储备",
         "recommendation": "建议为每种资源至少预备 10 亿。",
-        "capTitle": "按每公顷 1 吨计算（{land} ha），储备上限为 {cap}。",
+        "capTitle": "储备上限为 {cap}，按每公顷 1 吨计算（{land} ha）。",
         "startConstruction": "开始建造以预备资源。",
         "capValue": "上限：{value}",
         "beginConstruction": "开始建造以预备资源",
@@ -627,6 +635,7 @@
         "unknownFaction": "未知派系"
       },
       "operationsPanel": {
+        "title": "行动",
         "emptySelectSector": "选择一个争夺中的星区来分配舰队战力。",
         "fleetPowerLabel": "舰队战力",
         "fleetPowerTooltip": "可以分配舰队战力在地图上执行行动，以尝试夺取星区控制权。你只能对正在争夺的星区，或与你完全控制的星区相邻的星区发动行动。分配的舰队战力越多，成功概率越高、损失越少，但行动期间舰队也会被占用。",
@@ -697,6 +706,14 @@
         "resourceBias": "资源倾向",
         "rich": "富饶",
         "poor": "贫瘠",
+        "resources": {
+          "metal": "金属",
+          "water": "水",
+          "silicon": "硅石",
+          "carbon": "碳",
+          "nitrogen": "氮",
+          "unknown": "未知"
+        },
         "worlds": "世界",
         "world": "世界",
         "fleetDefense": "舰队防御",
@@ -728,6 +745,7 @@
         "effectiveValue": "有效值：{value}",
         "remainingValue": "剩余：{value}",
         "clearAll": "取消所有防御分配",
+        "clearAllShort": "取消全部分配",
         "lastFiveAttacks": "最近 5 次攻击",
         "toggleAttackHistory": "切换攻击记录",
         "historyEnemy": "敌方",
@@ -785,6 +803,13 @@
         "totalLabel": "总计：",
         "spaceResources": "太空资源",
         "categoryResources": "{name}资源",
+        "categories": {
+          "colony": "殖民地",
+          "surface": "地表",
+          "underground": "地下",
+          "atmospheric": "大气",
+          "special": "特殊"
+        },
         "toggleView": "切换殖民地/太空资源视图",
         "landRecoverNote": "关闭对应建筑即可收回陆地",
         "wasteTooltipNote": "废物处理建筑显示的消耗量以可用人员与电力为基础，不考虑废物短缺。这里的数值并非其实际消耗量。",
@@ -1017,7 +1042,7 @@
         "mitigationMaxed": "在不低于 1 atm 维护下限的前提下，所有有人员建筑当前都已尽可能降低地表温度惩罚。",
         "perBuildingSupport": "随后逐建筑应用支援：剩余惩罚比例会乘以该建筑未被覆盖的比例。",
         "supportedBuildingsHeader": "受浮空站支援的建筑：",
-        "supportedBuildingEntry": "{name}：{active} 座活跃建筑中已覆盖 {supported} 座（最多可支援 {capacity} 座；每座浮空站 {perAerostat} 座）。",
+        "supportedBuildingEntry": "{name}：已支持 {supported}/{active} 座活跃建筑（最多可支援 {capacity} 座；每座浮空站 {perAerostat} 座）。",
         "noSupportedBuildings": "当前没有建筑列出“浮空站支援”数值。",
         "baseMaximumAerostats": "基础陆地上限：{value}。",
         "remainingCapacity": "剩余浮空站容量：{value}。",
@@ -1076,6 +1101,15 @@
         "growthChemistry": "生长化学反应：{equation}",
         "detailed": "详情：{equation}"
       },
+      "biopigmentation": {
+        "name": "生物色素化",
+        "description": "选择工程生物质的颜色。",
+        "colorLabel": "生物质颜色：",
+        "reset": "重置",
+        "albedo": "反照率：{value}",
+        "growthPenalty": "增长惩罚：-{value}%",
+        "tooltip": "生物质反照率取决于所选颜色。不比基础绿色更亮的颜色没有增长惩罚。更亮的颜色会线性降低增长速度，白色时达到 -80%。更改颜色免费。"
+      },
       "attributes": {
         "minTemperatureTolerance": {
           "name": "最低温度耐受",
@@ -1125,8 +1159,8 @@
         }
       },
       "shop": {
-        "buyWithLabel": "使用 {label} 购买 {quantity}",
-        "buyWithCost": "花费 {cost} {label} 购买 {quantity}",
+        "buyWithLabel": "购买 {quantity}（使用 {label}）",
+        "buyWithCost": "购买 {quantity}（花费 {cost} {label}）",
         "research": {
           "label": "研究",
           "description": "集中科学家的精力"
@@ -1197,6 +1231,7 @@
       },
       "growthTooltip": {
         "solidBiochemistry": "固态生物化学（冰替代）：×{value}",
+        "biopigmentation": "生物色素化：x{value}（反照率 {albedo}）",
         "lowGravity": "低重力：×0.00",
         "lowGravityDisabled": "环形世界重力低于 0.1g，无法留住大气，因此生长已停用。",
         "base": "基础：{value}%",
@@ -1227,6 +1262,11 @@
       "labels": {
         "productivity": "生产率",
         "cost": "费用：",
+        "constructed": "已建造",
+        "provides": "提供",
+        "production": "产出",
+        "consumption": "消耗",
+        "maintenance": "维护",
         "heat": "热量",
         "cooling": "冷却"
       },
@@ -1319,7 +1359,9 @@
         "productivityDemandLine": "  {source}：{amount}",
         "productivityWorkerLine": "{resource}：可用 {available} / 需要 {required}（{percent}%）",
         "productivityMaintenanceLine": "已支付维护：{percent}%",
+        "productivityAdvancedOversight": "高级监管分配：设施容量的 {percent}%。",
         "productivityDayNight": "夜间不运作",
+        "productivityAutomationDisabled": "已由自动化设置禁用。",
         "productivityNoDetails": "未发现限制因素。"
       }
     },
@@ -1878,7 +1920,12 @@
         },
         "foodTransfer": {
           "add": "添加食物",
+          "auto": "自动 /秒",
           "available": "殖民地食物 {value}"
+        },
+        "automation": {
+          "auto": "自动",
+          "weight": "权重"
         },
         "hunting": {
           "on": "狩猎开启",
@@ -2222,6 +2269,7 @@
         "disposalTargetsSubheading": "最多可配置 15 种资源。启用自动开始的活跃目标会平均分配已指派的处置能力。",
         "addTarget": "+ 添加目标",
         "phase": "相态",
+        "whichOne": "哪一个",
         "none": "—",
         "remove": "移除",
         "waitForFullCapacity": "等待满负荷",
@@ -2312,8 +2360,7 @@
         "capStatus": "上限：{value}",
         "capReached": "已达到上限",
         "liquidHydrogenWarning": "液氢正阻止散热器降低地核热通量。散热器仍可减轻工厂热量，也仍可继续建造。",
-        "liquidHydrogenStatus": "受阻：液氢阻止移除地核热量",
-        "liquidHydrogenStatusShort": "受阻"
+        "liquidHydrogenStatus": "受阻：液氢阻止移除地核热量"
       },
       "deeperMining": {
         "deepeningSpeedBoost": "加深速度加成",
@@ -2554,6 +2601,132 @@
     "colony": {
       "population": "人口",
       "nanocolony": "纳米殖民体",
+      "followersTab": "追随者",
+      "title": "殖民地",
+      "unhideObsoleteBuildings": "显示已淘汰建筑",
+      "common": {
+        "unknown": "未知",
+        "randomWorldNamed": "随机世界：{name}"
+      },
+      "needs": {
+        "happiness": "幸福度",
+        "comfort": "舒适度",
+        "value": "{name}：{value}%"
+      },
+      "growthRate": {
+        "title": "增长率",
+        "capacity": "容量：",
+        "capacityTooltip": "来自逻辑斯蒂增长方程的容量倍率。其公式为“1 - 人口 / 容量”，因此越接近住房上限，增长越慢；人口等于容量时，增长完全停止。\n\n若你觉得游戏进展非常缓慢，极有可能就是这个倍率导致的。请建造更多住房，尽量让它保持较高水平。",
+        "baseRate": "基础速率：",
+        "baseTooltip": "由幸福度决定的基础增长率：max((幸福度 - 50%) / 300, 0)。\n- 食物和能源需求各自满足时，最多提供 +25 幸福度。\n- 舒适度提供其评分的 20 倍。\n- 食物与能源均满足时，电子元件和仿生人各自最多提供 +10 幸福度。\n- 每个可领取或已领取的里程碑提供 +0.5 幸福度。\n- 幸福度低于 50% 时，增长暂停。",
+        "otherMultipliers": "其他倍率：",
+        "otherTooltip": "来自殖民地滑块及其他效果的倍率。",
+        "decay": "衰减：",
+        "decayTooltip": "由资源短缺、人口过剩和高重力共同造成的人口损失。",
+        "growth": "增长：",
+        "growthTooltip": "应用逻辑斯蒂增长后，再扣除饥荒、能源和重力衰减得到的最终增长率。",
+        "naturalGrowth": "自然增长",
+        "immigration": "移民",
+        "pilgrimFollowers": "朝圣者追随者：{value}×",
+        "multiplierEntry": "{name}：{value}×",
+        "decayStarvation": "• 饥荒：{rate}%/秒（{share}% 正在挨饿；每 360 秒损失 100%）。",
+        "decayEnergy": "• 能源：{rate}%/秒（{share}% 无电力；每 90 秒损失 100%）。",
+        "decayOverpopulation": "• 人口过剩：{rate}%/秒。",
+        "decayGravity": "• 重力：{rate}%/秒（重力 {gravity} m/s^2；高于 20 的部分为 {above}）。"
+      },
+      "constructionOffice": {
+        "title": "建设办公室",
+        "autobuilder": "自动建造器：",
+        "statusActive": "活跃",
+        "statusDisabled": "已禁用",
+        "pause": "暂停",
+        "resume": "继续",
+        "strategicReserve": "战略储备",
+        "strategicReserveTooltip": "若支出会使任何资源低于其容量的指定百分比，建设办公室便不会使用储存中的该资源。此限制不适用于工人。",
+        "reserveSettingsButton": "储备设置",
+        "reserveSettingsTitle": "战略储备",
+        "reserveSettingsIntro": "为每种资源设置建设办公室的储备百分比。",
+        "globalReserve": "全局默认值",
+        "close": "X",
+        "done": "完成",
+        "guide": {
+          "title": "自动建造指南",
+          "open": "打开自动建造指南",
+          "close": "关闭自动建造指南",
+          "imageAlt": "带编号指南区域的自动建造控制界面",
+          "section1": "此区域控制该建筑是否启用自动建造。输入的数值和所选模式共同决定目标的定义方式。",
+          "section2a": "无需键盘即可控制第 1 项中的数值，适合进行微调。",
+          "section2b": "此项控制自动建造优先级。优先级更高的建筑会先建造。",
+          "section3": "这是根据定义数值计算出的当前自动建造目标。建设办公室会尝试建造至该数量。",
+          "section4": "“将活跃数量设为目标值”可确保新建建筑在完工后自动启用，也可快速改变活跃建筑数量。",
+          "section5": "这是一种计算第 1 项数值的方法，可使其与当前配置相匹配。",
+          "recommendationsTitle": "建议",
+          "recommendation1": "为水培农场使用“人口的 1%”自动建造。每座升级后的农场可供养 100 人，因此所需农场数量正好等于人口的 1%。",
+          "recommendation2": "将采砂场设为玻璃冶炼厂与电子元件工厂总需求的 100%。",
+          "recommendation3": "有两种特别实用的自动建造模式：“工人百分比”和“工人占比”。“工人百分比”根据工人总数计算目标；“工人占比”根据希望分配给该建筑的工人百分比计算目标。例如，若有 200 名工人，并希望每 100 名工人配 1 座储存仓库，可使用“工人的 1%”。若希望 50% 的工人在零部件工厂工作，则可使用“50% 工人占比”。",
+          "recommendation4": "首次解锁建设办公室时，可尝试把大多数建筑设为“工人百分比”或“工人占比”，按下“将目标值设为活跃数量”，然后启用自动建造器。自动建造器会大致模仿你当前的配置。",
+          "recommendation5": "若只需要稍微增加某种资源，或想释放少量工人，第 2a 项中的输入框非常适合微调。你可以小幅增减自动建造目标值，而不会彻底破坏经济。",
+          "starterSetupTitle": "初始设置",
+          "starterSetupBuilding": "建筑名称",
+          "starterSetupValue": "数值",
+          "starterSetupMode": "模式",
+          "starterSetupPriority": "优先级",
+          "starterSetupModeMax": "最大",
+          "starterSetupModeSandQuarryDemand": "采砂场+能源厂需求的 %",
+          "starterSetupModeWorkers": "工人的 %",
+          "starterSetupModePopulation": "人口的 %",
+          "starterSetupModeWorkerShare": "工人份额 %",
+          "starterSetupApply": "应用初始设置"
+        },
+        "guidePrompt": {
+          "title": "自动建造指南",
+          "message": "此功能提供指南。现在要查看吗？（也可从“殖民地”选项卡中的建设办公室打开）",
+          "yes": "是",
+          "no": "否"
+        },
+        "reserveResources": {
+          "energy": "能源",
+          "metal": "金属",
+          "glass": "玻璃",
+          "water": "水",
+          "components": "零部件",
+          "electronics": "电子元件",
+          "superconductors": "超导体",
+          "superalloys": "超级合金",
+          "land": "陆地"
+        }
+      },
+      "sliders": {
+        "managerDescription": "管理殖民地滑块",
+        "sourceName": "殖民地滑块",
+        "title": "殖民地管理",
+        "workforceAllocation": "劳动力分配",
+        "workersValue": "工人：{value}%",
+        "scientistsValue": "科学家：{value}%",
+        "foodConsumption": "食物消耗",
+        "luxuryWaterUse": "奢侈用水",
+        "oreMineWorkers": "矿井工人",
+        "mechanicalAssistance": "机械辅助",
+        "mechanicalAssistanceTooltip": "机械辅助最多可抵消 50% 的高重力衰减，并与“高重力适应”叠加以消除剩余部分。",
+        "gravityDecayReduction": "重力衰减降低：-{value}%",
+        "sliderValue": "滑块：{value}×。",
+        "componentsCoverage": "零部件覆盖率：{value}%。",
+        "currentGravity": "当前重力：{gravity} m/s^2（高于 20 的部分为 {above}）。",
+        "effectiveMitigation": "有效减免：重力衰减的 {value}%。",
+        "highGravityAdaptation": "高重力适应：{value}",
+        "remainingDecay": "剩余衰减：当重力超过 20 m/s^2 时，原始每日高重力损失的 {value}%。",
+        "warpnet": "跃迁网",
+        "warpnetTooltip": "跃迁网汇集即时通信，以协调研究产出。",
+        "warpnetEnergyUpkeep": "左侧数值会使殖民地与仿生人住房的能源维护乘以：{value}。",
+        "warpnetResearchBoost": "右侧数值提供全局研究加成：+{value}%",
+        "warpnetEnergyCost": "能源费用会随跃迁网强度急剧增加。",
+        "warpnetSolisNote": "注意：Solis 会支付初始仿生人的费用。",
+        "warpnetLabelBase": "×1",
+        "warpnetLabelExp": "×1e{value}",
+        "researchEffect": "研究：+{value}%",
+        "growthEffect": "增长：+{value}%",
+        "boostEffect": "加成：{value}%"
+      },
       "followers": {
         "managerDescription": "管理追随者系统",
         "common": {
@@ -2691,120 +2864,6 @@
             }
           }
         }
-      },
-      "title": "殖民地",
-      "unhideObsoleteBuildings": "显示已淘汰建筑",
-      "common": {
-        "unknown": "未知",
-        "randomWorldNamed": "随机世界：{name}"
-      },
-      "needs": {
-        "happiness": "幸福度",
-        "comfort": "舒适度",
-        "value": "{name}：{value}%"
-      },
-      "growthRate": {
-        "title": "增长率",
-        "capacity": "容量：",
-        "capacityTooltip": "来自逻辑斯蒂增长方程的容量倍率。其公式为“1 - 人口 / 容量”，因此越接近住房上限，增长越慢；人口等于容量时，增长完全停止。\n\n若你觉得游戏进展非常缓慢，极有可能就是这个倍率导致的。请建造更多住房，尽量让它保持较高水平。",
-        "baseRate": "基础速率：",
-        "baseTooltip": "由幸福度决定的基础增长率：max((幸福度 - 50%) / 300, 0)。\n- 食物和能源需求各自满足时，最多提供 +25 幸福度。\n- 舒适度提供其评分的 20 倍。\n- 食物与能源均满足时，电子元件和仿生人各自最多提供 +10 幸福度。\n- 每个可领取或已领取的里程碑提供 +0.5 幸福度。\n- 幸福度低于 50% 时，增长暂停。",
-        "otherMultipliers": "其他倍率：",
-        "otherTooltip": "来自殖民地滑块及其他效果的倍率。",
-        "decay": "衰减：",
-        "decayTooltip": "由资源短缺、人口过剩和高重力共同造成的人口损失。",
-        "growth": "增长：",
-        "growthTooltip": "应用逻辑斯蒂增长后，再扣除饥荒、能源和重力衰减得到的最终增长率。",
-        "naturalGrowth": "自然增长",
-        "immigration": "移民",
-        "pilgrimFollowers": "朝圣者追随者：{value}×",
-        "multiplierEntry": "{name}：{value}×",
-        "decayStarvation": "• 饥荒：{rate}%/秒（{share}% 正在挨饿；每 360 秒损失 100%）。",
-        "decayEnergy": "• 能源：{rate}%/秒（{share}% 无电力；每 90 秒损失 100%）。",
-        "decayOverpopulation": "• 人口过剩：{rate}%/秒。",
-        "decayGravity": "• 重力：{rate}%/秒（重力 {gravity} m/s^2；高于 20 的部分为 {above}）。"
-      },
-      "constructionOffice": {
-        "title": "建设办公室",
-        "autobuilder": "自动建造器：",
-        "statusActive": "活跃",
-        "statusDisabled": "已禁用",
-        "pause": "暂停",
-        "resume": "继续",
-        "strategicReserve": "战略储备",
-        "strategicReserveTooltip": "若支出会使任何资源低于其容量的指定百分比，建设办公室便不会使用储存中的该资源。此限制不适用于工人。",
-        "reserveSettingsButton": "储备设置",
-        "reserveSettingsTitle": "战略储备",
-        "reserveSettingsIntro": "为每种资源设置建设办公室的储备百分比。",
-        "globalReserve": "全局默认值",
-        "close": "X",
-        "done": "完成",
-        "guide": {
-          "title": "自动建造指南",
-          "open": "打开自动建造指南",
-          "close": "关闭自动建造指南",
-          "imageAlt": "带编号指南区域的自动建造控制界面",
-          "section1": "此区域控制该建筑是否启用自动建造。输入的数值和所选模式共同决定目标的定义方式。",
-          "section2a": "无需键盘即可控制第 1 项中的数值，适合进行微调。",
-          "section2b": "此项控制自动建造优先级。优先级更高的建筑会先建造。",
-          "section3": "这是根据定义数值计算出的当前自动建造目标。建设办公室会尝试建造至该数量。",
-          "section4": "“将活跃数量设为目标值”可确保新建建筑在完工后自动启用，也可快速改变活跃建筑数量。",
-          "section5": "这是一种计算第 1 项数值的方法，可使其与当前配置相匹配。",
-          "recommendationsTitle": "建议",
-          "recommendation1": "为水培农场使用“人口的 1%”自动建造。每座升级后的农场可供养 100 人，因此所需农场数量正好等于人口的 1%。",
-          "recommendation2": "将采砂场设为玻璃冶炼厂与电子元件工厂总需求的 100%。",
-          "recommendation3": "有两种特别实用的自动建造模式：“工人百分比”和“工人占比”。“工人百分比”根据工人总数计算目标；“工人占比”根据希望分配给该建筑的工人百分比计算目标。例如，若有 200 名工人，并希望每 100 名工人配 1 座储存仓库，可使用“工人的 1%”。若希望 50% 的工人在零部件工厂工作，则可使用“50% 工人占比”。",
-          "recommendation4": "首次解锁建设办公室时，可尝试把大多数建筑设为“工人百分比”或“工人占比”，按下“将目标值设为活跃数量”，然后启用自动建造器。自动建造器会大致模仿你当前的配置。",
-          "recommendation5": "若只需要稍微增加某种资源，或想释放少量工人，第 2a 项中的输入框非常适合微调。你可以小幅增减自动建造目标值，而不会彻底破坏经济。"
-        },
-        "guidePrompt": {
-          "title": "自动建造指南",
-          "message": "此功能提供指南。现在要查看吗？（也可从“殖民地”选项卡中的建设办公室打开）",
-          "yes": "是",
-          "no": "否"
-        },
-        "reserveResources": {
-          "energy": "能源",
-          "metal": "金属",
-          "glass": "玻璃",
-          "water": "水",
-          "components": "零部件",
-          "electronics": "电子元件",
-          "superconductors": "超导体",
-          "superalloys": "超级合金",
-          "land": "陆地"
-        }
-      },
-      "sliders": {
-        "managerDescription": "管理殖民地滑块",
-        "sourceName": "殖民地滑块",
-        "title": "殖民地管理",
-        "workforceAllocation": "劳动力分配",
-        "workersValue": "工人：{value}%",
-        "scientistsValue": "科学家：{value}%",
-        "foodConsumption": "食物消耗",
-        "luxuryWaterUse": "奢侈用水",
-        "oreMineWorkers": "矿井工人",
-        "mechanicalAssistance": "机械辅助",
-        "mechanicalAssistanceTooltip": "机械辅助最多可抵消 50% 的高重力衰减，并与“高重力适应”叠加以消除剩余部分。",
-        "gravityDecayReduction": "重力衰减降低：-{value}%",
-        "sliderValue": "滑块：{value}×。",
-        "componentsCoverage": "零部件覆盖率：{value}%。",
-        "currentGravity": "当前重力：{gravity} m/s^2（高于 20 的部分为 {above}）。",
-        "effectiveMitigation": "有效减免：重力衰减的 {value}%。",
-        "highGravityAdaptation": "高重力适应：{value}",
-        "remainingDecay": "剩余衰减：当重力超过 20 m/s^2 时，原始每日高重力损失的 {value}%。",
-        "warpnet": "跃迁网",
-        "warpnetTooltip": "跃迁网汇集即时通信，以协调研究产出。",
-        "warpnetEnergyUpkeep": "左侧数值会使殖民地与仿生人住房的能源维护乘以：{value}。",
-        "warpnetResearchBoost": "右侧数值提供全局研究加成：+{value}%",
-        "warpnetEnergyCost": "能源费用会随跃迁网强度急剧增加。",
-        "warpnetSolisNote": "注意：Solis 会支付初始仿生人的费用。",
-        "warpnetLabelBase": "×1",
-        "warpnetLabelExp": "×1e{value}",
-        "researchEffect": "研究：+{value}%",
-        "growthEffect": "增长：+{value}%",
-        "boostEffect": "加成：{value}%"
       },
       "nanotech": {
         "managerDescription": "管理纳米机器人群",
@@ -3123,11 +3182,15 @@
           "tooltip": "温度是地球化的关键因素，由多种因素复杂交互决定：\n\n- 关键方程：模型使用斯特藩–玻尔兹曼定律，根据太阳辐照通量与反照率计算有效温度；随后按大气光学厚度加入温室效应，并依据行星热容量与自转速度计算昼夜温差。\n- 太阳辐照通量：从恒星接收的基础能量，可由太空镜等结构增强。\n- 反照率：行星的反射能力。冰和云带来的高反照率会反射更多光线，使行星降温；海洋与深色岩石带来的低反照率会吸收更多光线，使行星升温。\n- 温室效应：CO₂、H₂O 和 CH₄ 等大气气体会滞留热量。滞热程度由大气光学厚度决定，而光学厚度又取决于各种气体的数量。\n- 自转速度：自转越慢，昼夜温差越极端。\n- 热容量：行星储存和释放热量的能力，受地表成分与大气密度影响。地表液体越多，热容量越大，昼夜温差也越小。\n- 经向风：能量会在热带、温带和极地区域之间移动。趋势栏显示经风力平滑后的目标温度；它在保持总热量不变的同时缓和极端温差。\n- 热惯性：缓和昼夜波动的同一热容量，也会减慢温度向趋势值靠拢的速度。厚重大气和深海反应迟缓；稀薄大气则会迅速趋向趋势值。\n\n温度会直接影响：\n- 水循环：推动蒸发、升华、融化与冻结。\n- 生命：每种物种都有特定的生存与生长温度范围。\n- 殖民者舒适度：极端温度会提高生命保障的能源消耗。",
           "coreHeatTooltip": "行星内部热量以固定的全局辐照通量直接加入地表。\n\n人造地壳和巨型散热器可以降低此数值。\n\n若温度低于 {crustStart}{unit}，天然地壳将开始形成，并在 {crustComplete}{unit} 时完全形成。\n\n此辐照通量不受反照率或昼夜平均影响。",
           "factoryHeatTooltip": "本地建筑与殖民地能源消耗产生的工业废热，减去太阳能板发电所带来的冷却。太阳能板冷却效果会受地表反照率削弱。某种巨构可以帮助降低此项。直接废热不受反照率或昼夜平均影响。",
+          "factoryHeatTopContributors": "按绝对影响排序的主要贡献者：",
+          "factoryHeatOtherSources": "其他来源",
+          "phaseChangeHeatTooltip": "最近一次气候切片期间，因相变而交换的带符号行星热量。正值表示冻结、凝结或沉积释放了热量；负值表示熔化、蒸发、沸腾或升华吸收了热量。为保持数值稳定，该效果只能加快或减慢朝趋势移动的速度，不能反转它。这可能导致温度停滞。",
           "equilibriumTempTooltip": "由吸收的阳光、反照率和直接非大气热量决定的黑体辐射平衡温度。它不计温室气体的滞热效应；在物理意义上，这是向太空辐射等量能量时对应的温度。地球约为 255 K（-18°C）。",
           "labels": {
             "globalMeanTemp": "全球平均温度",
             "equilibriumTemp": "平衡温度",
             "netCoreHeatFlux": "净地核热通量",
+            "netPhaseChangeHeatFlux": "净相变热通量",
             "netFactoryHeatFlux": "净工厂热通量",
             "zone": "区域",
             "temperature": "温度（{unit}）",
@@ -3748,7 +3811,16 @@
           }
         },
         "rewards": {
-          "nuclearAlchemyThroughput": "核炼金术吞吐量 +{value}%"
+          "manufacturingWorldThroughput": "制造世界吞吐量 +{value}%",
+          "liftersSuperchargeMax": "升降机最大超充 +{value}",
+          "gigafoundryThroughput": "千兆铸造厂吞吐量 +{value}%",
+          "spaceChemistryThroughput": "太空化学吞吐量 +{value}%",
+          "nuclearAlchemyThroughput": "核炼金术吞吐量 +{value}%",
+          "oneillSectorCap": "奥尼尔上限乘数 +{value}",
+          "hephaestusYardEffectiveness": "赫菲斯托斯船坞效率 +{value}%",
+          "spaceStorageCapacity": "太空存储容量 +{value}%",
+          "liftersSuperchargeExponent": "升降机超充指数 -{value}",
+          "liftersThroughput": "升降机吞吐量 +{value}%"
         }
       },
       "statisticsTitle": "统计",
@@ -3780,6 +3852,7 @@
         }
       },
       "currentWorldLabel": "当前世界",
+      "renameRandomWorldTitle": "重命名这个随机世界",
       "originalProperties": "原始属性",
       "worldSelectionTitle": "世界选择",
       "worldSelectionSubtitle": "完成地球化以解锁下一个目的地。",
@@ -3824,6 +3897,7 @@
         "uniqueTooltip": "计算你已完成的每个不同剧情世界和已地球化随机世界，忽略所有其他加成。",
         "effectiveTooltip": "包括来自其他来源的世界。此数值会影响高级研究、Solis 奖励、巨构扩建速度和出口上限。",
         "galacticPopulationTooltip": "银河人口以每秒 0.5% / 365 的速率增长，并乘以（1 - 人口 / 容量）。",
+        "showGalacticPopulationInSidebar": "在侧边栏中显示",
         "effectiveTooltipGalaxy": "解锁银河系后，舰队容量使用调整后的世界数（人造世界最多贡献 {value}，忽略奥尼尔圆柱）。",
         "effectiveTooltipGalaxyUncapped": "解锁银河系后，舰队容量使用调整后的世界数（人造世界贡献完整价值，忽略奥尼尔圆柱）。"
       }
@@ -4029,7 +4103,7 @@
           "highestDifficultyArtifact": "{team}小队 - 达到最高难度 {difficulty}，+{count} 件遗物",
           "highestDifficultyArtifacts": "{team}小队 - 达到最高难度 {difficulty}，+{count} 件遗物",
           "teamRecalled": "{team}小队 - 已召回",
-          "injuryRecallJournal": "{name} 受伤后，{team}小队被召回。",
+          "injuryRecallJournal": "{team}小队因{name}受伤而被召回。",
           "events": {
             "individualPower": "个人力量挑战",
             "teamAthletics": "小队体能挑战",
@@ -4294,7 +4368,19 @@
             "autoStartConstruction": "自动开始建造",
             "autoOperationEnabled": "自动运行已启用",
             "spaceshipCostMultiplier": "飞船成本倍率",
-            "currentMass": "当前质量"
+            "currentMass": "当前质量",
+            "keratiHive": {
+              "hiveFood": "蜂巢食物",
+              "honey": "蜂蜜",
+              "spawningPools": "孵化池",
+              "territory": "领地",
+              "drones": "拥有的无人机",
+              "builders": "拥有的建造者",
+              "hunters": "拥有的猎人",
+              "princesses": "拥有的公主",
+              "queens": "拥有的女王",
+              "empresses": "拥有的女皇"
+            }
           },
           "artificial": {
             "source": "人造世界",
@@ -4391,6 +4477,8 @@
             "luminosity": {
               "solarFlux": "太阳辐照通量",
               "modifiedSolarFlux": "修正后太阳辐照通量",
+              "surfaceSolarFlux": "地表太阳通量",
+              "averageFlux": "平均通量",
               "albedo": "反照率",
               "opticalDepth": "光学深度"
             },
@@ -4486,6 +4574,7 @@
         "scriptLineTypeElse": "ELSE",
         "scriptLineTypeWait": "WAIT",
         "scriptLineTypeActions": "ACTIONS",
+        "scriptGoto": "跳转",
         "scriptLinkedTo": "链接到",
         "scriptLinkedToNone": "无",
         "scriptLineName": "名称",
@@ -4493,6 +4582,10 @@
         "scriptAlways": "始终",
         "scriptCondition": "条件",
         "scriptJoin": "连接方式",
+        "scriptJoinAnd": "且",
+        "scriptJoinOr": "或",
+        "scriptNotOn": "非",
+        "scriptNotOff": "非（关闭）",
         "scriptLeftExpression": "左侧",
         "scriptRightExpression": "右侧",
         "scriptComparator": "比较",
@@ -4505,6 +4598,19 @@
         "scriptOperatorSafeDivide": "安全除法",
         "scriptActions": "动作",
         "scriptElseActions": "否则执行",
+        "scriptNoActions": "无动作",
+        "scriptSummarySleep": "休眠 {duration} 毫秒",
+        "scriptSummaryGoto": "跳转至 {target}",
+        "scriptSummarySetScriptVariable": "设置脚本变量 {variable} = {value}",
+        "scriptSummarySetVariable": "设置 {variable} = {value}",
+        "scriptSummarySetAutomation": "将{type}自动化设为{mode}",
+        "scriptSummarySetPause": "将暂停设为{mode}",
+        "scriptSummaryAction": "动作",
+        "scriptSummaryParameter": "（参数：{variable}）",
+        "scriptSummaryApplyPreset": "应用{type}预设{name}{parameter}",
+        "scriptSummaryApplyCombination": "应用{type}组合{name}",
+        "scriptNullValue": "空值",
+        "scriptWithId": "脚本 {id}",
         "scriptApplyPreset": "应用预设",
         "scriptAutoTravelAndTurnOn": "自动旅行",
         "scriptApplyCombination": "应用组合",
@@ -4521,6 +4627,10 @@
         "scriptTogglePause": "切换暂停状态",
         "scriptGotoScript": "跳转至脚本",
         "scriptAutomationTypeScripting": "脚本",
+        "scriptAutomationTypeBuildings": "建筑",
+        "scriptAutomationTypeProjects": "项目",
+        "scriptAutomationTypeColony": "殖民地",
+        "scriptAutomationTypeResearch": "研究",
         "scriptAutomationTypeAutoTravel": "自动旅行",
         "scriptAutomationTypeShip": "飞船",
         "scriptAutomationTypeLife": "生命",
@@ -4546,6 +4656,10 @@
         "lifeDeployImproveLabel": "仅当设计提升至少以下点数时部署",
         "lifeDeployPointsSuffix": "点",
         "lifeDeployInfo": "只有当设计提升达到给定点数时，才会触发自动部署。",
+        "lifeBiomassColorLabel": "生物质颜色",
+        "lifeBiomassColorTooltip": "预设部署生命设计时会应用此颜色。更改不消耗生命点数。比绿色更亮的生物质生长更慢，白色时最高为 -80%。",
+        "lifeBiomassAlbedo": "反照率：{value}",
+        "lifeBiomassGrowthPenalty": "增长惩罚：-{value}%",
         "lifeCreateStepsFromCurrentButton": "从当前设计创建步骤",
         "lifeSpendAtLabel": "支出阈值",
         "lifeMaxCostLabel": "最高成本",
@@ -5013,6 +5127,8 @@
       "autoPauseColonists": "当殖民者净速率低于",
       "immigrationPool": "移民人口池",
       "immigrationPoolTooltip": "启用后，在火星以外的任何世界中，殖民地增长的大部分会通过移民直接依赖银河人口。移民会尝试使当前世界的殖民者填充率与银河填充率趋于一致，且所有移民都取自银河人口池。在某些情况下，这可能导致增长非常缓慢。",
+      "disableColonistDecay": "禁用殖民者衰减",
+      "disableColonistDecayTooltip": "防止因食物短缺、能源短缺、高重力和人口过剩造成的殖民者损失。建议用于挂机游玩。",
       "disableUnlockAlerts": "禁用解锁提示",
       "disableDayNightCycle": "禁用昼夜循环",
       "dayNightTooltip": "停止时段变化。太阳能板和冰采集器以一半效率运行，维护消耗也减半。这会带来更真实、略微更轻松从容的游戏体验。",
@@ -5069,6 +5185,8 @@
       "unfulfilledMaintenancePenaltiesTooltip": "启用后，未支付的建筑维护会在 900 秒内逐渐降低受影响建筑的生产效率。每座建筑会趋向其所需资源中最低的维护支付比例，实际生产效率也会以该比例为上限。",
       "earlyAdvancedOversight": "提前解锁高级监管",
       "earlyAdvancedOversightTooltip": "游戏为太空镜提供了一套强大的求解器，可自动瞄准指定温度。它原本是一项需要争取的能力，通常在剧情世界 5 解锁。如果你觉得手动调整过于烦琐，也可以提前启用。你仍需完成“太空镜设施监管”研究。",
+      "phaseChangeHeat": "相变热",
+      "phaseChangeHeatTooltip": "启用后，熔化、蒸发、沸腾和升华吸收行星热量，而冻结、凝结和沉积释放热量。相变热不会改变温度趋势或高级监管分配。它只能加快或减慢向趋势移动的速度，但很容易导致温度停滞。",
       "factoryHeating": "工厂加热",
       "factoryHeatingTooltip": "启用后，本地建筑和殖民地的一部分能量消耗会转化为行星热量；太阳能板则会按其能量产出乘以（1－地表反照率）为行星降温。大多数设施会把全部本地能量转化为热量；而以化学形式储能、向世界外排放能量，或已直接模拟加热的过程则采用较低系数。某种巨型结构可以缓解工厂加热。\n\n建议与“真实工厂能耗”设置一同使用。",
       "realisticFactoryEnergyConsumption": "真实工厂能耗",
@@ -5133,10 +5251,17 @@
       "fastestTerraformByTypeTitle": "各世界类型最快地球化",
       "fastestTerraformByTypeEntry": "{type}：{game}（现实时间 {real}）",
       "recentTerraformHistoryTitle": "最近 {count} 个已地球化世界",
+      "recentTerraformHistoryWorld": "世界",
+      "recentTerraformHistoryTerraformTime": "地球化改造时间",
+      "recentTerraformHistoryTravelTime": "旅行时间",
       "recentTerraformHistoryAverage": "平均：{game}（现实时间 {real}）",
+      "recentTerraformHistoryAverageLabel": "平均",
       "recentTerraformHistoryEmpty": "尚未记录已完成地球化的世界。",
       "recentTerraformHistoryEntry": "{name}（{type}）：{game}（现实时间 {real}）",
+      "recentTerraformHistoryWorldEntry": "{name}（{type}）",
+      "recentTerraformHistoryUnavailable": "不可用",
       "terraformWorldTypeArtificial": "人造世界",
+      "terraformWorldTypeStory": "故事",
       "terraformWorldTypeShell": "壳层世界",
       "terraformWorldTypeRing": "环形世界",
       "terraformWorldTypeDisk": "奥尔德森盘",
@@ -6502,6 +6627,10 @@
           "name": "下一代生物工程",
           "description": "允许使用高级研究永久提高生命设计潜力。"
         },
+        "biopigmentation": {
+          "name": "生物色素化",
+          "description": "生命可以使用其他色素。这有助于提高反照率，但明亮的颜色会受到增长惩罚。"
+        },
         "repeatable_ai_research": {
           "name": "可重复 AI 研究",
           "description": "批准可重复研究计划，借助 HOPE 提高生产能力。"
@@ -6513,6 +6642,10 @@
         "galactic_market": {
           "name": "银河市场协定",
           "description": "与更广阔的银河系建立永久贸易关系，用受管理的市场取代粗放出口。这会永久取代货运火箭和金属出口。"
+        },
+        "automatic_surplus_trading": {
+          "name": "自动盈余交易",
+          "description": "此时，殖民地资源已成为普通商品。银河市场应能适应我们供应的快速变化，让我们无需先寻找商业伙伴即可出售盈余资源。（溢出的殖民地资源会在低于饱和时自动在市场上出售。发生在下一次 tick。）"
         },
         "mechanical_assistance": {
           "name": "机械辅助",
@@ -6907,6 +7040,9 @@
         },
         "solisPoints": {
           "name": "Solis 点数"
+        },
+        "galacticPopulation": {
+          "name": "银河人口"
         },
         "alienArtifact": {
           "name": "外星遗物"
