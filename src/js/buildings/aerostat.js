@@ -10,6 +10,13 @@ const AEROSTAT_INTERNAL_AIR_MOL_WEIGHT =
   globalThis.AEROSTAT_INTERNAL_AIR_MOL_WEIGHT ?? 29;
 const AEROSTAT_MINIMUM_OPERATIONAL_LIFT =
   globalThis.AEROSTAT_MINIMUM_OPERATIONAL_LIFT ?? 0.2;
+const AEROSTAT_MINIMUM_EXTERNAL_AIR_MOL_WEIGHT =
+  AEROSTAT_INTERNAL_AIR_MOL_WEIGHT +
+  (AEROSTAT_MINIMUM_OPERATIONAL_LIFT *
+    terraformingParameters.physical.universalGasConstant *
+    AEROSTAT_STANDARD_TEMPERATURE_K *
+    1000) /
+    AEROSTAT_STANDARD_PRESSURE_PA;
 const AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA =
   globalThis.AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA ?? 50;
 const AEROSTAT_MAX_LAND_SHARE = 0.25;
@@ -2078,8 +2085,19 @@ function updateAerostatBuoyancySection(structure) {
     if (Number.isFinite(molecularWeight) && molecularWeight > 0) {
       title += `\n${getAerostatText(
         'ui.buildings.aerostat.liftTooltipMolecularWeight',
-        'External mean molecular weight: {value} g/mol.',
+        'Current External Mean Molecular Weight: {value} g/mol.',
         { value: formatNumber(molecularWeight, false, 2) }
+      )}`;
+      title += `\n${getAerostatText(
+        'ui.buildings.aerostat.liftTooltipMinimumMolecularWeight',
+        'Minimum External Mean Molecular Weight: {value} g/mol.',
+        {
+          value: formatNumber(
+            AEROSTAT_MINIMUM_EXTERNAL_AIR_MOL_WEIGHT,
+            false,
+            2
+          )
+        }
       )}`;
     }
     if (liftAvailable !== null) {
