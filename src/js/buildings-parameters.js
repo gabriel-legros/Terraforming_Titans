@@ -69,6 +69,10 @@ const buildingsParameters = {
     consumption: { colony : {energy : 10000}, surface: { ice: 1 } },
     realisticEnergyConsumption: 4_700,
     production: { colony: { water: 1 } },
+    zonalSurfaceTransfer: {
+      input: { category: 'surface', resource: 'ice' },
+      output: { category: 'colony', resource: 'water' }
+    },
     storage: {},
     factoryHeatCoefficient: 1,
     dayNightActivity: true,
