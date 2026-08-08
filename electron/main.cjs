@@ -1024,7 +1024,18 @@ function createWindow() {
   const steamDeckFullscreen = shouldLaunchSteamDeckFullscreen();
   const savedWindowState = steamDeckFullscreen ? null : startupSelection.windowState;
   const launchFullscreen = steamDeckFullscreen || (savedWindowState ? savedWindowState.fullscreen : false);
-  const displaySize = launchFullscreen ? screen.getPrimaryDisplay().bounds : null;
+  let displaySize = null;
+  if (launchFullscreen) {
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const primaryBounds = primaryDisplay.bounds;
+    const steamDeckPortraitBounds = steamDeckFullscreen
+      && primaryBounds.width < primaryBounds.height
+      && (primaryDisplay.internal || (primaryBounds.width === 800 && primaryBounds.height === 1280));
+    displaySize = {
+      width: steamDeckPortraitBounds ? primaryBounds.height : primaryBounds.width,
+      height: steamDeckPortraitBounds ? primaryBounds.width : primaryBounds.height
+    };
+  }
   const win = new BrowserWindow({
     width: launchFullscreen ? displaySize.width : (savedWindowState ? savedWindowState.width : 1400),
     height: launchFullscreen ? displaySize.height : (savedWindowState ? savedWindowState.height : 950),
