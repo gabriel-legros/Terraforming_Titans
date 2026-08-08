@@ -71,6 +71,10 @@ const KESSLER_EFFECTS = [
   getKesslerHazardText('effectsList.disabledProjects', 'Space Elevator, Planetary Thrusters, and Mega Heat Sink are disabled while Kessler debris remains.'),
   getKesslerHazardText('effectsList.debrisDecay', 'Debris chart altitudes are relative to the world\'s initial radius; dynamic-mass worlds adjust the live air path for current radius before calculating decay.')
 ];
+const KESSLER_CLEAR_STEPS = [
+  getKesslerHazardText('clearList.dragLine', 'Dispose of heavy gases (such as CO2) and import or produce light gases (such as Hydrogen) to increase the height of the drag line.'),
+  getKesslerHazardText('clearList.laserCannons', 'Knock off debris with laser cannons.')
+];
 const KESSLER_CHART_BINS = 64;
 const KESSLER_DEBRIS_SOURCES = {
   small: [
@@ -495,6 +499,26 @@ function buildKesslerLayout() {
     effectsSection.appendChild(effectsHeader);
     effectsSection.appendChild(effectsList);
     card.appendChild(effectsSection);
+
+    const clearSection = doc.createElement('div');
+    clearSection.className = 'hazard-effects';
+
+    const clearHeader = doc.createElement('div');
+    clearHeader.className = 'hazard-effects__header';
+    clearHeader.textContent = getKesslerHazardText('howToClear', 'How to Clear');
+
+    const clearList = doc.createElement('ul');
+    clearList.className = 'hazard-effects__list';
+    KESSLER_CLEAR_STEPS.forEach((entry) => {
+      const item = doc.createElement('li');
+      item.className = 'hazard-effects__item';
+      item.textContent = entry;
+      clearList.appendChild(item);
+    });
+
+    clearSection.appendChild(clearHeader);
+    clearSection.appendChild(clearList);
+    card.appendChild(clearSection);
 
     const debrisSourcesSection = doc.createElement('div');
     debrisSourcesSection.className = 'hazard-debris-sources';

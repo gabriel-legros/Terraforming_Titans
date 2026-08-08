@@ -3713,6 +3713,7 @@ setLanguageData({
           debrisDecay: 'Debris Decay',
           atmosphericDensity: 'Atmospheric density',
           effects: 'Effects',
+          howToClear: 'How to Clear',
           debrisSources: 'Debris Sources',
           smallChance: 'Small Chance',
           largeChance: 'Large Chance',
@@ -3737,6 +3738,10 @@ setLanguageData({
             marketCap: 'Galactic Market trades cap total import + export at 100 per second, and Cargo Rockets cap total payload at 100 × project duration (seconds) while the hazard is active.',
             disabledProjects: 'Space Elevator, Planetary Thrusters, and Mega Heat Sink are disabled while Kessler debris remains.',
             debrisDecay: 'Debris chart altitudes are relative to the world\'s initial radius; dynamic-mass worlds adjust the live air path for current radius before calculating decay.',
+          },
+          clearList: {
+            dragLine: 'Dispose of heavy gases (such as CO2 and Oxygen) and import or produce light gases (such as Hydrogen) to increase the height of the drag line.',
+            laserCannons: 'Knock off debris with laser cannons.',
           },
           debrisSourcesList: {
             small: 'Small',
