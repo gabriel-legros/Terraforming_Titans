@@ -505,6 +505,12 @@ function updateBuildingsAutomationUI() {
           activePreset.includeControl !== false,
           activePreset.includeAutomation !== false
         );
+        if (!entry.control) {
+          delete entry.control;
+        }
+        if (!entry.automation) {
+          delete entry.automation;
+        }
         if (!entry.control && !entry.automation) {
           continue;
         }

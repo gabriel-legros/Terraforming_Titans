@@ -1329,7 +1329,7 @@ function setAutomationPresetValueAtPath(target, path, value) {
   let current = target;
   for (let index = 0; index < path.length - 1; index += 1) {
     const segment = path[index];
-    if (current[segment] === undefined) {
+    if (current[segment] === undefined || current[segment] === null) {
       current[segment] = Number.isInteger(path[index + 1]) ? [] : {};
     }
     current = current[segment];
