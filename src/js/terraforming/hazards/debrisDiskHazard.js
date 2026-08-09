@@ -233,6 +233,7 @@ class DebrisDiskHazard {
 
   isCleared(terraformingState = null) {
     if (isDebrisDiskRogueCleared(terraformingState)) {
+      getDebrisDiskResource().value = 0;
       this.permanentlyCleared = true;
       return true;
     }
