@@ -7,7 +7,7 @@ class Ecumenopolis extends Colony {
     return Math.max(0, Math.min(1, colonistRatio));
   }
 
-  getConsumptionRatio() {
+  getEcumenopolisOccupancyRatio() {
     const colonistRatio = this.getEcumenopolisColonistFillRatio();
     const freeAndroidStorage = this.getFreeAndroidStorage(resources);
     const androidHousingCapacity = this.getAndroidHousingCapacity();
@@ -22,7 +22,7 @@ class Ecumenopolis extends Colony {
   }
 
   getConsumptionRatioForResource(category, resource) {
-    const consumptionRatio = this.getConsumptionRatio();
+    const consumptionRatio = this.getEcumenopolisOccupancyRatio();
     if (category === 'colony' && (resource === 'food' || resource === 'electronics' || resource === 'androids')) {
       return Math.min(consumptionRatio, super.getConsumptionRatio());
     }
@@ -46,49 +46,8 @@ class Ecumenopolis extends Colony {
   }
 
   updateProductivity(resources, deltaTime) {
-    this.setAutomationActivityMultiplier(1);
-
-    if (this.active === 0n) {
-      this.setAutomationActivityMultiplier(0);
-      this.productivity = 0;
-      this.displayProductivity = 0;
-      this.setProductivityLimitInfo(0, 0, []);
-      return;
-    }
-
-    const colonistRatio = this.getEcumenopolisColonistFillRatio();
-
-    const targetProductivity = Math.max(0, Math.min(1, colonistRatio));
-    const factors = targetProductivity < 0.9995
-      ? [{
-          type: 'resource',
-          category: 'colony',
-          resource: 'colonists',
-          label: resources.colony.colonists.displayName,
-          ratio: targetProductivity,
-          availableAmount: resources.colony.colonists.value,
-          requiredAmount: this.getEcumenopolisCapacity('colonists'),
-          largestDemands: [],
-        }]
-      : [];
-    this.setProductivityLimitInfo(targetProductivity, targetProductivity, factors);
-
-    if (this.snapProductivity) {
-      this.productivity = targetProductivity;
-      this.displayProductivity = targetProductivity;
-      return;
-    }
-
-    this.productivity = this.applyProductivityDamping(
-      this.productivity,
-      targetProductivity,
-      deltaTime
-    );
-    this.displayProductivity = this.applyProductivityDamping(
-      this.displayProductivity,
-      targetProductivity,
-      deltaTime
-    );
+    this.setAutomationActivityMultiplier(this.active === 0n ? 0 : 1);
+    super.updateProductivity(resources, deltaTime);
   }
 }
 

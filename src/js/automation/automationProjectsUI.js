@@ -571,6 +571,7 @@ function buildAutomationProjectsUI() {
       : preset.includeExpansion !== false
         ? 'expansion'
         : 'operations',
+    presetTypeOptionKeys: ['includeExpansion', 'includeOperations'],
     getTargetLabel: (projectId, context) => getAutomatableProjectDisplayName(
       projectId,
       context.projectLookup
@@ -712,6 +713,10 @@ function updateProjectsAutomationUI() {
   const selectedProjectIds = presetContext.savedTargetIds;
   updateAutomationPresetJsonDetails(projectsPresetJsonDetails, activePreset, {
     rootPath: ['projects'],
+    bucketIncludeKeys: {
+      expansion: 'includeExpansion',
+      operations: 'includeOperations'
+    },
     getParameterInputPaths: (preset) => automation.isParameterizedPreset(preset)
       ? automation.getPresetParameterInfo(preset).parameterPaths
       : [],

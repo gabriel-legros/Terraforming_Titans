@@ -293,6 +293,7 @@ function buildAutomationColonyUI() {
       : preset.includeControl
         ? 'control'
         : 'automation',
+    presetTypeOptionKeys: ['includeControl', 'includeAutomation'],
     getTargetLabel: (targetId) => getColonyAutomationTargetDisplayLabel(
       automationManager.colonyAutomation,
       targetId
@@ -403,6 +404,10 @@ function updateColonyAutomationUI() {
   const selectedTargetIds = presetContext.savedTargetIds;
   updateAutomationPresetJsonDetails(colonyPresetJsonDetails, activePreset, {
     rootPath: ['targets'],
+    bucketIncludeKeys: {
+      control: 'includeControl',
+      automation: 'includeAutomation'
+    },
     getParameterInputPaths: (preset) => automation.isParameterizedPreset(preset)
       ? automation.getPresetParameterInfo(preset).parameterPaths
       : [],

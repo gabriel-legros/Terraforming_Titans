@@ -1976,6 +1976,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   const onClearFilter = options.onClearFilter;
   const onSnapshotFilter = options.onSnapshotFilter;
   const onRegenerateFilter = options.onRegenerateFilter;
+  const bucketIncludeKeys = options.bucketIncludeKeys || null;
   const showStatus = options.showStatus || null;
   const parameterInputPath = Array.isArray(options.parameterInputPath)
     ? options.parameterInputPath
@@ -2148,9 +2149,15 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   if (parameterInputPathsResolver) {
     details._parameterInputPathKeys = new Set(parameterInputPathsResolver(effectivePreset).map((path) => buildAutomationPresetLeafPathKey(path)));
   }
-  const visibleLeafPaths = isLeafVisible
-    ? leafPaths.filter((path) => isLeafVisible(path, effectivePreset))
-    : leafPaths;
+  const visibleLeafPaths = leafPaths.filter((path) => {
+    if (bucketIncludeKeys && rootPath) {
+      const includeKey = bucketIncludeKeys[path[rootPath.length + 1]];
+      if (includeKey && effectivePreset[includeKey] === false) {
+        return false;
+      }
+    }
+    return !isLeafVisible || isLeafVisible(path, effectivePreset);
+  });
   const visiblePathSet = new Set(visibleLeafPaths.map((path) => buildAutomationPresetLeafPathKey(path)));
   const draftKeys = Object.keys(details._jsonDraftMap);
   for (let draftIndex = 0; draftIndex < draftKeys.length; draftIndex += 1) {

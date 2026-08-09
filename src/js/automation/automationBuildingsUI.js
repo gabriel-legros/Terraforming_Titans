@@ -293,6 +293,7 @@ function buildAutomationBuildingsUI() {
       : preset.includeControl
         ? 'control'
         : 'automation',
+    presetTypeOptionKeys: ['includeControl', 'includeAutomation'],
     getTargetLabel: (buildingId) => {
       const building = buildings[buildingId];
       return building ? (building.displayName || buildingId) : buildingId;
@@ -403,6 +404,10 @@ function updateBuildingsAutomationUI() {
   const selectedBuildingIds = presetContext.savedTargetIds;
   updateAutomationPresetJsonDetails(buildingsPresetJsonDetails, activePreset, {
     rootPath: ['buildings'],
+    bucketIncludeKeys: {
+      control: 'includeControl',
+      automation: 'includeAutomation'
+    },
     getParameterInputPaths: (preset) => automation.isParameterizedPreset(preset)
       ? automation.getPresetParameterInfo(preset).parameterPaths
       : [],
