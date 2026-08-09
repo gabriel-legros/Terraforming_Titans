@@ -947,7 +947,7 @@ const buildingsParameters = {
     cost: { colony: { metal: 1000, glass : 500, components: 100, electronics: 50} },
     consumption: { colony: { energy: 10000000} },
     realisticEnergyConsumption: 1_000_000,
-    production: { atmospheric: { greenhouseGas: 5 } },
+    production: { atmospheric: { greenhouseGas: 50 } },
     storage: {},
     factoryHeatCoefficient: 1,
     dayNightActivity: false,
