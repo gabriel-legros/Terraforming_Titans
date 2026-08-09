@@ -2678,7 +2678,18 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   if (zonesDiv && !antimatterSynced && resource.category !== 'spaceStorage' && typeof terraforming !== 'undefined') {
     const zoneValues = {};
     const zoneBuried = {};
-    getZones().forEach(zone => {
+    const activeZones = getZones();
+    const zoneInfo = zonesDiv._info;
+    const activeZoneSet = new Set(activeZones);
+    for (const [zone, line] of zoneInfo.lines) {
+      if (!activeZoneSet.has(zone)) line.style.display = 'none';
+    }
+    activeZones.forEach(zone => {
+      if (!zoneInfo.lines.has(zone)) {
+        const line = document.createElement('div');
+        zonesDiv.appendChild(line);
+        zoneInfo.lines.set(zone, line);
+      }
       let val;
       switch (resource.name) {
         case 'liquidWater':
@@ -2728,9 +2739,8 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
     const hasZones = Object.keys(zoneValues).length > 0;
     zonesDiv.style.display = hasZones ? 'block' : 'none';
     if (hasZones) {
-      const info = zonesDiv._info;
-      getZones().forEach(zone => {
-        const line = info.lines.get(zone);
+      activeZones.forEach(zone => {
+        const line = zoneInfo.lines.get(zone);
         if (zoneValues[zone] !== undefined) {
           let text = getResourceUICommonText('zoneAmount', '{zone}: {value}', {
             zone: capitalizeFirstLetter(zone),
