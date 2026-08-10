@@ -113,11 +113,10 @@
     (terra.zonalSurfaceResourceConfigs || []).forEach((config) => {
       (config.keys || []).forEach((key) => resourceKeys.add(key));
     });
-    ZONE_KEYS.forEach((zone) => {
-      const zoneStore = zonalSurface[zone] || (zonalSurface[zone] = {});
-      resourceKeys.forEach((key) => {
-        if (zoneStore[key] === undefined) {
-          zoneStore[key] = 0;
+    resourceKeys.forEach((key) => {
+      ZONE_KEYS.forEach((zone) => {
+        if (zonalSurface[key][zone] === undefined) {
+          zonalSurface[key][zone] = 0;
         }
       });
     });
@@ -238,14 +237,14 @@
     ];
     const zones = ['tropical', 'temperate', 'polar'];
     for (const zone of zones) {
-       const zs = terra.zonalSurface[zone] || {};
-       metrics.push(zs.liquidWater || 0, zs.ice || 0, zs.buriedIce || 0);
-       metrics.push(zs.liquidCO2 || 0, zs.dryIce || 0, zs.biomass || 0);
-       metrics.push(zs.liquidHydrogen || 0);
-       metrics.push(zs.liquidMethane || 0, zs.hydrocarbonIce || 0, zs.buriedHydrocarbonIce || 0);
-       metrics.push(zs.liquidAmmonia || 0, zs.ammoniaIce || 0, zs.buriedAmmoniaIce || 0);
-       metrics.push(zs.liquidOxygen || 0, zs.oxygenIce || 0, zs.buriedOxygenIce || 0);
-       metrics.push(zs.liquidNitrogen || 0, zs.nitrogenIce || 0, zs.buriedNitrogenIce || 0);
+       const zs = terra.zonalSurface;
+       metrics.push(zs.liquidWater[zone] || 0, zs.ice[zone] || 0, zs.buriedIce[zone] || 0);
+       metrics.push(zs.liquidCO2[zone] || 0, zs.dryIce[zone] || 0, zs.biomass[zone] || 0);
+       metrics.push(zs.liquidHydrogen[zone] || 0);
+       metrics.push(zs.liquidMethane[zone] || 0, zs.hydrocarbonIce[zone] || 0, zs.buriedHydrocarbonIce[zone] || 0);
+       metrics.push(zs.liquidAmmonia[zone] || 0, zs.ammoniaIce[zone] || 0, zs.buriedAmmoniaIce[zone] || 0);
+       metrics.push(zs.liquidOxygen[zone] || 0, zs.oxygenIce[zone] || 0, zs.buriedOxygenIce[zone] || 0);
+       metrics.push(zs.liquidNitrogen[zone] || 0, zs.nitrogenIce[zone] || 0, zs.buriedNitrogenIce[zone] || 0);
     }
     return metrics;
   }
@@ -261,8 +260,8 @@
         temperatureK: terra.temperature.zones[zone].value,
         dayTemperatureK: terra.temperature.zones[zone].day,
         nightTemperatureK: terra.temperature.zones[zone].night,
-        liquidWaterTons: terra.zonalSurface[zone].liquidWater || 0,
-        iceTons: terra.zonalSurface[zone].ice || 0,
+        liquidWaterTons: terra.zonalSurface.liquidWater[zone] || 0,
+        iceTons: terra.zonalSurface.ice[zone] || 0,
         liquidWaterCoverage: terra.zonalCoverageCache[zone].liquidWater || 0,
         iceCoverage: terra.zonalCoverageCache[zone].ice || 0
       };

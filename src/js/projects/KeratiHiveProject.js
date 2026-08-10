@@ -225,7 +225,7 @@ class KeratiHiveProject extends Project {
     const zones = getZones();
     const entries = zones.map((zone) => ({
       zone,
-      amount: (terraforming?.zonalSurface?.[zone]?.[resourceKey]) || 0,
+      amount: terraforming.zonalSurface[resourceKey][zone] || 0,
     }));
     const total = entries.reduce((sum, entry) => sum + entry.amount, 0);
     return { entries, total };
@@ -245,10 +245,7 @@ class KeratiHiveProject extends Project {
         return;
       }
       const take = requested * (entry.amount / total);
-      const zoneData = terraforming.zonalSurface?.[entry.zone];
-      if (zoneData) {
-        zoneData[resourceKey] = Math.max(0, zoneData[resourceKey] - take);
-      }
+      terraforming.zonalSurface[resourceKey].change(entry.zone, -take);
     });
     return requested;
   }

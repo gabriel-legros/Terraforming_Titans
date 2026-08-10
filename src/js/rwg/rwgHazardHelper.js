@@ -433,7 +433,7 @@
     const zoneSurface = override.zonalSurface || (override.zonalSurface = {});
     const zoneKeysSource = [];
     if (terra && terra.zonalSurface) {
-      zoneKeysSource.push(...Object.keys(terra.zonalSurface));
+      zoneKeysSource.push(...ZONE_KEYS);
     }
     zoneKeysSource.push(...Object.keys(zoneSurface));
     if (!zoneKeysSource.length) {
@@ -534,8 +534,8 @@
         const zoneBiomass = hasPositiveGrowth ? zoneArea / 10000 * maxDensity : 0;
 
         zoneOutput.hazardousBiomass = zoneBiomass;
-        if (terra && terra.zonalSurface && terra.zonalSurface[zone]) {
-          terra.zonalSurface[zone].hazardousBiomass = zoneBiomass;
+        if (terra && terra.zonalSurface) {
+          terra.zonalSurface.hazardousBiomass[zone] = zoneBiomass;
         }
 
         totalBiomass += zoneBiomass;

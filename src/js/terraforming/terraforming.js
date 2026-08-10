@@ -28,8 +28,12 @@ const MAINTENANCE_PENALTY_MAX_MULTIPLIER = TERRAFORMING_TEMPERATURE_PARAMETERS.m
 const KPA_PER_ATM = terraformingParameters.physical.paPerAtmosphere / 1000;
 var resourcePhaseGroups;
 let syncDynamicWorldGeometryHelper = null;
+var ZonalResourcesClass;
 if (typeof module !== 'undefined' && module.exports) {
   ({ syncDynamicWorldGeometry: syncDynamicWorldGeometryHelper } = require('./world-geometry.js'));
+  ({ ZonalResources: ZonalResourcesClass } = require('./zonal-resources.js'));
+} else {
+  ZonalResourcesClass = ZonalResources;
 }
 
 function calculateMaintenancePenaltyForTemperature(temp) {
@@ -62,37 +66,7 @@ function calculateMaintenancePenaltyForTemperature(temp) {
 }
 
 function createEmptyZonalSurface() {
-  const zonalSurface = {};
-  const zones = getZones();
-  for (const zone of zones) {
-    const zoneStore = {};
-    for (const key of ZONAL_SURFACE_RESOURCE_KEYS) {
-      zoneStore[key] = 0;
-    }
-    zonalSurface[zone] = zoneStore;
-  }
-  return zonalSurface;
-}
-
-function applyCompensatedZonalSurfaceChange(zonalSurface, remainders, zone, resourceKey, amount) {
-  const currentValue = zonalSurface[zone][resourceKey] || 0;
-  const currentRemainder = remainders[zone][resourceKey] || 0;
-  let actualChange = amount;
-  if (amount < 0 && -amount >= currentValue) {
-    actualChange = -Math.min(-amount, Math.max(0, currentValue + currentRemainder));
-  }
-
-  const combinedChange = currentRemainder + actualChange;
-  const nextValue = Math.max(0, currentValue + combinedChange);
-  const representedChange = nextValue - currentValue;
-  let nextRemainder = combinedChange - representedChange;
-  if (nextValue === 0 && nextRemainder < 0) {
-    nextRemainder = 0;
-  }
-
-  zonalSurface[zone][resourceKey] = nextValue;
-  remainders[zone][resourceKey] = nextRemainder;
-  return actualChange;
+  return new ZonalResourcesClass(ZONAL_SURFACE_RESOURCE_KEYS, getZones());
 }
 
 function applyLegacyZonalSurface(target, source, mapping) {
@@ -100,9 +74,8 @@ function applyLegacyZonalSurface(target, source, mapping) {
   const zones = getZones();
   for (const zone of zones) {
     const zoneSource = data[zone] || {};
-    const zoneTarget = target[zone];
     for (const [fromKey, toKey] of Object.entries(mapping)) {
-      zoneTarget[toKey] = zoneSource[fromKey] ?? zoneTarget[toKey];
+      target.set(toKey, zone, zoneSource[fromKey] ?? target.get(toKey, zone));
     }
   }
 }
@@ -110,11 +83,13 @@ function applyLegacyZonalSurface(target, source, mapping) {
 function applyZonalSurfaceOverrides(target, overrides) {
   const data = overrides || {};
   const zones = getZones();
-  for (const zone of zones) {
-    const zoneSource = data[zone] || {};
-    const zoneTarget = target[zone];
-    for (const key of ZONAL_SURFACE_RESOURCE_KEYS) {
-      zoneTarget[key] = zoneSource[key] ?? zoneTarget[key];
+  for (const key of ZONAL_SURFACE_RESOURCE_KEYS) {
+    const resourceSource = data[key] || {};
+    for (const zone of zones) {
+      const value = resourceSource[zone] ?? data[zone]?.[key];
+      if (value !== undefined) {
+        target.set(key, zone, value);
+      }
     }
   }
 }
@@ -359,7 +334,7 @@ function getTerraformingTotalBiomass(terraforming) {
       : getZones();
     for (let i = 0; i < zones.length; i += 1) {
         const zone = zones[i];
-        totalBiomass += terraforming.zonalSurface[zone]?.biomass || 0;
+        totalBiomass += terraforming.zonalSurface.biomass[zone] || 0;
     }
     return totalBiomass;
 }
@@ -566,7 +541,6 @@ class Terraforming extends EffectableEntity{
 
     // Zonal Surface Data
     this.zonalSurface = createEmptyZonalSurface();
-    this.zonalSurfaceRemainders = createEmptyZonalSurface();
 
     // Global liquid targets (supports multi-liquid terraforming requirements)
     this.liquidCoverageTargets = buildLiquidCoverageTargets(this.requirements);
@@ -990,7 +964,7 @@ class Terraforming extends EffectableEntity{
     }
     const tolerance = 1e-6;
     for (const zone of getZones()) {
-      if ((this.zonalSurface[zone]?.hazardousBiomass || 0) > tolerance) {
+      if ((this.zonalSurface.hazardousBiomass[zone] || 0) > tolerance) {
         return false;
       }
     }
@@ -1165,31 +1139,31 @@ class Terraforming extends EffectableEntity{
       zones.forEach(zone => {
           const zoneRatio = this.getZoneWeight(zone);
           // Distribute Liquid Water and Biomass proportionally
-          this.zonalSurface[zone].liquidWater = initialLiquidWater * zoneRatio;
-          this.zonalSurface[zone].biomass = initialBiomass * zoneRatio;
-          this.zonalSurface[zone].liquidCO2 = initialLiquidCO2 * zoneRatio;
-          this.zonalSurface[zone].liquidHydrogen = initialLiquidHydrogen * zoneRatio;
+          this.zonalSurface.liquidWater[zone] = initialLiquidWater * zoneRatio;
+          this.zonalSurface.biomass[zone] = initialBiomass * zoneRatio;
+          this.zonalSurface.liquidCO2[zone] = initialLiquidCO2 * zoneRatio;
+          this.zonalSurface.liquidHydrogen[zone] = initialLiquidHydrogen * zoneRatio;
 
           if (singleZone) {
-            this.zonalSurface[zone].ice = initialIce;
-            this.zonalSurface[zone].buriedIce = 0;
-            this.zonalSurface[zone].dryIce = initialDryIce;
+            this.zonalSurface.ice[zone] = initialIce;
+            this.zonalSurface.buriedIce[zone] = 0;
+            this.zonalSurface.dryIce[zone] = initialDryIce;
           } else {
             const zoneIce = initialIce * (iceZoneDistribution[zone] || 0);
             const buriedFraction = buriedFractions[zone] || 0;
-            this.zonalSurface[zone].ice = zoneIce * (1 - buriedFraction);
-            this.zonalSurface[zone].buriedIce = zoneIce * buriedFraction;
+            this.zonalSurface.ice[zone] = zoneIce * (1 - buriedFraction);
+            this.zonalSurface.buriedIce[zone] = zoneIce * buriedFraction;
 
             // Allocate Dry Ice only to Polar zone (assuming CO2 ice is less stable at lower latitudes initially)
-            this.zonalSurface[zone].dryIce = (zone === 'polar') ? initialDryIce : 0;
+            this.zonalSurface.dryIce[zone] = (zone === 'polar') ? initialDryIce : 0;
           }
   
           const initialLiquidMethane = planetParameters.resources.surface.liquidMethane?.initialValue || 0;
           const initialHydrocarbonIce = planetParameters.resources.surface.hydrocarbonIce?.initialValue || 0;
           const initialFineSand = planetParameters.resources.surface.fineSand?.initialValue || 0;
-          this.zonalSurface[zone].liquidMethane = initialLiquidMethane * zoneRatio;
-          this.zonalSurface[zone].hydrocarbonIce = initialHydrocarbonIce * zoneRatio;
-          this.zonalSurface[zone].fineSand = initialFineSand * zoneRatio;
+          this.zonalSurface.liquidMethane[zone] = initialLiquidMethane * zoneRatio;
+          this.zonalSurface.hydrocarbonIce[zone] = initialHydrocarbonIce * zoneRatio;
+          this.zonalSurface.fineSand[zone] = initialFineSand * zoneRatio;
       });
 
       applyZonalSurfaceFromLegacy(this.zonalSurface, planetParameters);
@@ -1907,7 +1881,7 @@ class Terraforming extends EffectableEntity{
           const slabOptions = {
             ...baseSlabOptions,
             zoneArea,
-            zoneLiquidWater: this.zonalSurface[zone]?.liquidWater || 0
+            zoneLiquidWater: this.zonalSurface.liquidWater[zone] || 0
           };
           const mixedSurfaceAlbedo = surfaceAlbedoMix(groundAlbedo, zoneFractions);
           zoneContexts[zone] = {
@@ -2138,7 +2112,7 @@ class Terraforming extends EffectableEntity{
         const slabOptions = {
             ...baseSlabOptions,
             zoneArea,
-            zoneLiquidWater: this.zonalSurface[zone]?.liquidWater || 0
+            zoneLiquidWater: this.zonalSurface.liquidWater[zone] || 0
         };
         const factoryCoolingScale = weightedEffectiveLight > 0
             ? zonalEffectiveLight[zone] / weightedEffectiveLight
@@ -2585,14 +2559,13 @@ class Terraforming extends EffectableEntity{
         const configs = this.zonalSurfaceResourceConfigs;
         for (const zone of getZones()) {
             const zoneArea = this.celestialParameters.surfaceArea * this.getZoneWeight(zone);
-            const zoneData = this.zonalSurface[zone] || {};
             const cacheEntry = { zoneArea };
             for (const config of configs) {
                 const coverageKeys = config.coverageKeys || [];
                 const coverageScales = config.coverageScales || {};
                 const baseScale = config.coverageScale || 0.0001;
                 for (const key of coverageKeys) {
-                    const zonalAmount = zoneData[key] || 0;
+                    const zonalAmount = this.zonalSurface[key][zone] || 0;
                     const scale = coverageScales[key] || baseScale;
                     cacheEntry[key] = estimateCoverage(zonalAmount, zoneArea, scale);
                 }
@@ -2647,14 +2620,14 @@ class Terraforming extends EffectableEntity{
             const liquidMassByKey = {};
             for (const config of liquidConfigs) {
                 liquidCoverageByKey[config.coverageKey] = this.zonalCoverageCache[zone]?.[config.coverageKey] || 0;
-                liquidMassByKey[config.key] = this.zonalSurface[zone]?.[config.key] || 0;
+                liquidMassByKey[config.key] = this.zonalSurface[config.key][zone] || 0;
             }
             const slabOptions = {
                 ...baseSlabOptions,
                 zoneArea,
                 liquidCoverageByKey,
                 liquidMassByKey,
-                zoneLiquidWater: this.zonalSurface[zone]?.liquidWater || 0
+                zoneLiquidWater: this.zonalSurface.liquidWater[zone] || 0
             };
             const Cslab = autoSlabHeatCapacity(
                 rotationPeriodH,
@@ -3452,23 +3425,14 @@ class Terraforming extends EffectableEntity{
 calculateZonalSurfaceChanges(surfaceChanges = {}) {
     const zones = getZones();
     const configs = this.zonalSurfaceResourceConfigs;
-    const projectedSurface = {};
-    const projectedRemainders = {};
+    const projectedSurface = this.zonalSurface.clone();
     const changesByZone = {};
     for (const zone of zones) {
-        projectedSurface[zone] = { ...this.zonalSurface[zone] };
-        projectedRemainders[zone] = { ...this.zonalSurfaceRemainders[zone] };
         changesByZone[zone] = {};
     }
 
     const applyProjectedChange = (zone, resourceKey, amount) => {
-        const actualChange = applyCompensatedZonalSurfaceChange(
-            projectedSurface,
-            projectedRemainders,
-            zone,
-            resourceKey,
-            amount
-        );
+        const actualChange = projectedSurface.change(resourceKey, zone, amount);
         changesByZone[zone][resourceKey] =
             (changesByZone[zone][resourceKey] || 0) + actualChange;
     };
@@ -3515,14 +3479,14 @@ calculateZonalSurfaceChanges(surfaceChanges = {}) {
             let totalSurfaceAmount = 0;
             let totalBuriedAmount = 0;
             for (const zone of zones) {
-                totalSurfaceAmount += projectedSurface[zone][config.distributionKey] || 0;
-                totalBuriedAmount += projectedSurface[zone][buriedKey] || 0;
+                totalSurfaceAmount += projectedSurface[config.distributionKey][zone] || 0;
+                totalBuriedAmount += projectedSurface[buriedKey][zone] || 0;
             }
 
             const surfaceTake = Math.min(-netChangeAmount, totalSurfaceAmount);
             if (surfaceTake > 0 && totalSurfaceAmount > 0) {
                 for (const zone of zones) {
-                    const currentAmount = projectedSurface[zone][config.distributionKey] || 0;
+                    const currentAmount = projectedSurface[config.distributionKey][zone] || 0;
                     if (currentAmount <= 0) {
                         continue;
                     }
@@ -3535,7 +3499,7 @@ calculateZonalSurfaceChanges(surfaceChanges = {}) {
             if (remaining < 0 && totalBuriedAmount > 0) {
                 const buriedTake = Math.min(-remaining, totalBuriedAmount);
                 for (const zone of zones) {
-                    const currentBuried = projectedSurface[zone][buriedKey] || 0;
+                    const currentBuried = projectedSurface[buriedKey][zone] || 0;
                     if (currentBuried <= 0) {
                         continue;
                     }
@@ -3548,7 +3512,7 @@ calculateZonalSurfaceChanges(surfaceChanges = {}) {
 
         if (distributionMode === 'currentAmount') {
             for (const zone of zones) {
-                totalDistributionFactor += projectedSurface[zone][config.distributionKey] || 0;
+                totalDistributionFactor += projectedSurface[config.distributionKey][zone] || 0;
             }
         } else if (distributionMode === 'targetZoneArea') {
             for (const zone of targetZones) {
@@ -3570,7 +3534,7 @@ calculateZonalSurfaceChanges(surfaceChanges = {}) {
 
             if (totalDistributionFactor > 1e-9) {
                 if (distributionMode === 'currentAmount') {
-                    const currentAmount = projectedSurface[zone][config.distributionKey] || 0;
+                    const currentAmount = projectedSurface[config.distributionKey][zone] || 0;
                     proportion = currentAmount / totalDistributionFactor;
                 } else if (distributionMode === 'targetZoneArea' && isTargetZone) {
                     const zoneArea = this.celestialParameters.surfaceArea * this.getZoneWeight(zone);
@@ -3603,13 +3567,7 @@ distributeSurfaceChangesToZones(surfaceChanges = {}) {
 }
 
 applyZonalSurfaceChange(zone, resourceKey, amount) {
-    return applyCompensatedZonalSurfaceChange(
-        this.zonalSurface,
-        this.zonalSurfaceRemainders,
-        zone,
-        resourceKey,
-        amount
-    );
+    return this.zonalSurface.change(resourceKey, zone, amount);
 }
 
 distributeGlobalChangesToZones(deltaTime) {
@@ -3661,8 +3619,7 @@ synchronizeGlobalResources() {
         for (const config of configs) {
             let zoneTotal = 0;
             for (const key of config.keys) {
-                zoneTotal += this.zonalSurface[zone][key] || 0;
-                zoneTotal += this.zonalSurfaceRemainders[zone][key] || 0;
+                zoneTotal += this.zonalSurface.getTotal(key, zone);
             }
             totals[config.name] += zoneTotal;
         }
@@ -3687,7 +3644,7 @@ synchronizeGlobalResources() {
       completed: this.completed,
       // zonalAtmosphere: this.zonalAtmosphere, // REMOVED - No longer saving internal zonal atmosphere state
       zonalSurface: this.zonalSurface,
-      zonalSurfaceRemainders: this.zonalSurfaceRemainders,
+      zonalSurfaceRemainders: this.zonalSurface.getRemainders(),
       // zonalBiomass: this.zonalBiomass, // REMOVED - Biomass is stored in zonalSurface
       };
   }
@@ -3760,11 +3717,16 @@ synchronizeGlobalResources() {
       // Load Zonal Surface resources (keep defaults if not in save)
       this.zonalSurface = createEmptyZonalSurface();
       applyZonalSurfaceFromLegacy(this.zonalSurface, terraformingState);
-      this.zonalSurfaceRemainders = createEmptyZonalSurface();
-      applyZonalSurfaceOverrides(
-          this.zonalSurfaceRemainders,
-          terraformingState.zonalSurfaceRemainders
-      );
+      const savedRemainders = terraformingState.zonalSurfaceRemainders || {};
+      for (const resourceKey of ZONAL_SURFACE_RESOURCE_KEYS) {
+          for (const zone of getZones()) {
+              const remainder = savedRemainders[resourceKey]?.[zone]
+                  ?? savedRemainders[zone]?.[resourceKey];
+              if (remainder !== undefined) {
+                  this.zonalSurface[resourceKey].setRemainder(zone, remainder);
+              }
+          }
+      }
 
       // If loading a save where initial values weren't calculated, run calculateInitialValues.
       // This will correctly initialize global resource amounts based on parameters

@@ -257,9 +257,14 @@ class EarthManager extends EffectableEntity {
     const targetZonalSurface = EARTH_RECONSTRUCTION_TARGET_WATER.zonalSurface;
     for (const zone in targetZonalSurface) {
       const targetZone = targetZonalSurface[zone];
-      const zoneSurface = terraforming.zonalSurface[zone];
-      zoneSurface.liquidWater += (targetZone.liquidWater || 0) * EARTH_RECONSTRUCTION_STEP_FRACTION;
-      zoneSurface.ice += (targetZone.ice || 0) * EARTH_RECONSTRUCTION_STEP_FRACTION;
+      terraforming.zonalSurface.liquidWater.change(
+        zone,
+        (targetZone.liquidWater || 0) * EARTH_RECONSTRUCTION_STEP_FRACTION
+      );
+      terraforming.zonalSurface.ice.change(
+        zone,
+        (targetZone.ice || 0) * EARTH_RECONSTRUCTION_STEP_FRACTION
+      );
     }
     this.refreshTerraformingAfterResourceStep();
   }
@@ -270,9 +275,9 @@ class EarthManager extends EffectableEntity {
     for (const zone of biomassZones) {
       const zoneArea = terraforming.celestialParameters.surfaceArea * terraforming.getZoneWeight(zone);
       const targetBiomass = estimateAmountForCoverage(1, zoneArea, EARTH_RECONSTRUCTION_BIOMASS_COVERAGE_SCALE);
-      const currentBiomass = terraforming.zonalSurface[zone].biomass || 0;
+      const currentBiomass = terraforming.zonalSurface.biomass[zone] || 0;
       const biomassStep = Math.min(targetBiomass * EARTH_RECONSTRUCTION_STEP_FRACTION, Math.max(0, targetBiomass - currentBiomass));
-      terraforming.zonalSurface[zone].biomass += biomassStep;
+      terraforming.zonalSurface.biomass.change(zone, biomassStep);
       addedBiomass += biomassStep;
     }
     resources.surface.biomass.value += addedBiomass;

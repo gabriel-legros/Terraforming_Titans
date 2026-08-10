@@ -1155,8 +1155,8 @@ class SpaceMiningProject extends SpaceshipProject {
   getCo2IceTotalAmount() {
     let total = 0;
     for (const zone of getZones()) {
-      const zoneSurface = terraforming.zonalSurface[zone];
-      total += (zoneSurface.liquidCO2 || 0) + (zoneSurface.dryIce || 0);
+      total += (terraforming.zonalSurface.liquidCO2[zone] || 0)
+        + (terraforming.zonalSurface.dryIce[zone] || 0);
     }
     return total;
   }
@@ -1188,8 +1188,8 @@ class SpaceMiningProject extends SpaceshipProject {
   getWaterIceTotalAmount() {
     let total = 0;
     for (const zone of getZones()) {
-      const zoneSurface = terraforming.zonalSurface[zone];
-      total += (zoneSurface.liquidWater || 0) + (zoneSurface.ice || 0);
+      total += (terraforming.zonalSurface.liquidWater[zone] || 0)
+        + (terraforming.zonalSurface.ice[zone] || 0);
     }
     return total;
   }
@@ -1204,13 +1204,12 @@ class SpaceMiningProject extends SpaceshipProject {
       : 0;
     let totalCoverage = 0;
     for (const zone of getZones()) {
-      const zoneSurface = terraforming.zonalSurface[zone];
       const zoneWeight = getZonePercentage(zone);
       const zoneArea = surfaceArea * zoneWeight;
-      let amount = zoneSurface.liquidWater || 0;
+      let amount = terraforming.zonalSurface.liquidWater[zone] || 0;
       amount += accumulatedChanges?.surface?.liquidWater || 0;
       if (this.includeIceInWaterCoverage === true) {
-        amount += zoneSurface.ice || 0;
+        amount += terraforming.zonalSurface.ice[zone] || 0;
         amount += accumulatedChanges?.surface?.ice || 0;
       }
       amount += vaporAmount * zoneWeight;
@@ -1261,15 +1260,15 @@ class SpaceMiningProject extends SpaceshipProject {
     let current = 0;
     let limit = 0;
     for (const zone of getZones()) {
-      const zoneSurface = terraforming.zonalSurface[zone];
       const zoneArea = surfaceArea * getZonePercentage(zone);
       if (coverageKey === 'liquidWater') {
-        current += zoneSurface.liquidWater || 0;
+        current += terraforming.zonalSurface.liquidWater[zone] || 0;
         if (this.includeIceInWaterCoverage === true) {
-          current += zoneSurface.ice || 0;
+          current += terraforming.zonalSurface.ice[zone] || 0;
         }
       } else {
-        current += (zoneSurface.liquidCO2 || 0) + (zoneSurface.dryIce || 0);
+        current += (terraforming.zonalSurface.liquidCO2[zone] || 0)
+          + (terraforming.zonalSurface.dryIce[zone] || 0);
       }
       limit += estimateAmountForCoverage(threshold, zoneArea);
     }

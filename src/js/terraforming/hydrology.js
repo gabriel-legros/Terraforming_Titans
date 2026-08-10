@@ -94,8 +94,8 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
     const liquidAreas = {};
     const liquidDepths = {};
     zones.forEach(zone => {
-        const surfaceIce = zonalData[zone][iceProp] || 0;
-        const surfaceLiquid = zonalData[zone][liquidProp] || 0;
+        const surfaceIce = zonalData[iceProp][zone] || 0;
+        const surfaceLiquid = zonalData[liquidProp][zone] || 0;
         let zoneArea = 1;
         let iceCoverage = 1;
         let liquidCoverage = 1;
@@ -171,7 +171,7 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
         for (const target of zones) {
             const melt = melts[source][target] || 0;
             if (melt > 0) {
-                const availIce = (zonalData[source][iceProp] || 0) + changes[source][iceProp];
+                const availIce = (zonalData[iceProp][source] || 0) + changes[source][iceProp];
                 const actualMelt = Math.min(melt, availIce);
                 const meltToGas = liquidPossibleByZone[target] ? 0 : actualMelt;
                 const meltToLiquid = actualMelt - meltToGas;
@@ -230,7 +230,7 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
                 const boundaryScale = getBoundaryScale(Math.min(i, j));
                 const lowElevationPenalty = deltaElevation < 1 ? deltaElevation : 1;
                 const flowCoefficient = flowRateCoefficient * boundaryScale * Math.sqrt(deltaElevation) * lowElevationPenalty;
-                const availableLiquid = (zonalData[source][liquidProp] || 0) + changes[source][liquidProp];
+                const availableLiquid = (zonalData[liquidProp][source] || 0) + changes[source][liquidProp];
                 const maxFlowToEqualize =
                     deltaElevation / (1 / (liquidAreas[source] || 1) + 1 / (liquidAreas[target] || 1));
                 const potentialFlow = Math.min(availableLiquid * flowCoefficient * secondsMultiplier, maxFlowToEqualize);
@@ -244,7 +244,7 @@ function _simulateSurfaceFlow(zonalInput, durationSeconds, zonalTemperatures, zo
 
     // Step 2.3: Scale potential flow to not exceed available liquid
     zones.forEach(zone => {
-        const availableLiquid = (zonalData[zone][liquidProp] || 0) + changes[zone][liquidProp];
+        const availableLiquid = (zonalData[liquidProp][zone] || 0) + changes[zone][liquidProp];
         if (outflow[zone] > availableLiquid && outflow[zone] > 0) {
             const scale = availableLiquid / outflow[zone];
             for (const t of zones) {
@@ -378,7 +378,7 @@ function simulateSurfaceHydrogenFlow(zonalHydrogenInput, durationSeconds, zonalT
         changes[zone] = { [liquidProp]: 0 };
         outflow[zone] = 0;
         flows[zone] = {};
-        const surfaceLiquid = zonalData?.[zone]?.[liquidProp] || 0;
+        const surfaceLiquid = zonalData[liquidProp][zone] || 0;
         let zoneArea = 1;
         let liquidCoverage = 1;
         if (terraforming && getZonePercentageFn) {
@@ -411,7 +411,7 @@ function simulateSurfaceHydrogenFlow(zonalHydrogenInput, durationSeconds, zonalT
             const boundaryScale = getBoundaryScale(Math.min(i, j));
             const lowElevationPenalty = deltaElevation < 1 ? deltaElevation : 1;
             const flowCoefficient = flowRateCoefficient * boundaryScale * Math.sqrt(deltaElevation) * lowElevationPenalty;
-            const availableLiquid = (zonalData[source][liquidProp] || 0) + changes[source][liquidProp];
+            const availableLiquid = (zonalData[liquidProp][source] || 0) + changes[source][liquidProp];
             const maxFlowToEqualize =
                 deltaElevation / (1 / (liquidAreas[source] || 1) + 1 / (liquidAreas[target] || 1));
             const potentialFlow = Math.min(availableLiquid * flowCoefficient * secondsMultiplier, maxFlowToEqualize);
@@ -423,7 +423,7 @@ function simulateSurfaceHydrogenFlow(zonalHydrogenInput, durationSeconds, zonalT
     }
 
     zones.forEach(zone => {
-        const availableLiquid = (zonalData[zone][liquidProp] || 0) + changes[zone][liquidProp];
+        const availableLiquid = (zonalData[liquidProp][zone] || 0) + changes[zone][liquidProp];
         if (outflow[zone] > availableLiquid && outflow[zone] > 0) {
             const scale = availableLiquid / outflow[zone];
             for (const target of zones) {

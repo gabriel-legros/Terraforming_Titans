@@ -105,7 +105,7 @@ class NanoworldProject extends SpecializationProject {
     terraforming.biomassDisabled = true;
     resources.surface.biomass.value = 0;
     terraforming.zoneKeys.forEach((zone) => {
-      terraforming.zonalSurface[zone].biomass = 0;
+      terraforming.zonalSurface.biomass[zone] = 0;
     });
   }
 

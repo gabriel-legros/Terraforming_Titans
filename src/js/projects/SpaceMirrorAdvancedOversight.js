@@ -642,7 +642,7 @@ class SpaceMirrorAdvancedOversight {
       const computeFocusPowerTarget = () => {
         if (!FOCUS_FLAG || !(targets.water > 0)) return 0;
         const availableSurfaceIce = ZONES.reduce(
-          (sum, zone) => sum + Math.max(0, terraforming.zonalSurface[zone].ice || 0),
+          (sum, zone) => sum + Math.max(0, terraforming.zonalSurface.ice[zone] || 0),
           0
         );
         const dailyMeltTarget = Math.min(targets.water || 0, availableSurfaceIce);
@@ -660,7 +660,7 @@ class SpaceMirrorAdvancedOversight {
         const iceZones = ZONES.map((zone) => ({
           zone,
           temperature: snapshot.temperature.zones[zone].value,
-          ice: Math.max(0, terraforming.zonalSurface[zone].ice || 0),
+          ice: Math.max(0, terraforming.zonalSurface.ice[zone] || 0),
         })).filter((entry) => entry.ice > 0);
         for (const entry of iceZones) {
           const energyPerKg = calculatePhaseTransitionEnergyPerKg(

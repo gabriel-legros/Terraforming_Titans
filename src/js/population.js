@@ -511,7 +511,7 @@ class PopulationModule extends EffectableEntity {
         if (terraforming.biomassUnsurvivableZones && terraforming.biomassUnsurvivableZones[zoneName]) {
           return;
         }
-        const zonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;
+        const zonalBiomass = terraforming.zonalSurface.biomass[zoneName] || 0;
         if (zonalBiomass > 0) {
           activeBiomass += zonalBiomass;
         }

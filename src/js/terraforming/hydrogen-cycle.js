@@ -131,7 +131,7 @@
       let totalLiquid = 0;
       for (let index = 0; index < zones.length; index += 1) {
         const zone = zones[index];
-        totalLiquid += terraforming.zonalSurface?.[zone]?.liquidHydrogen || 0;
+        totalLiquid += terraforming.zonalSurface.liquidHydrogen[zone] || 0;
       }
       if (!(totalLiquid > 0)) {
         return 0;
@@ -140,8 +140,8 @@
       let remaining = amountTons;
       for (let index = 0; index < zones.length; index += 1) {
         const zone = zones[index];
-        const zoneStore = terraforming.zonalSurface[zone];
-        const current = zoneStore?.liquidHydrogen || 0;
+        const liquidHydrogen = terraforming.zonalSurface.liquidHydrogen;
+        const current = liquidHydrogen[zone] || 0;
         if (!(current > 0)) {
           continue;
         }
@@ -151,8 +151,8 @@
         if (removal <= 0) {
           continue;
         }
-        zoneStore.liquidHydrogen = current - removal;
-        remaining -= removal;
+        const removed = -liquidHydrogen.change(zone, -removal);
+        remaining -= removed;
       }
 
       return amountTons - remaining;
@@ -166,23 +166,23 @@
       let totalLiquid = 0;
       for (let index = 0; index < zones.length; index += 1) {
         const zone = zones[index];
-        totalLiquid += terraforming.zonalSurface?.[zone]?.liquidHydrogen || 0;
+        totalLiquid += terraforming.zonalSurface.liquidHydrogen[zone] || 0;
       }
 
       let remaining = amountTons;
       for (let index = 0; index < zones.length; index += 1) {
         const zone = zones[index];
-        const zoneStore = terraforming.zonalSurface[zone];
+        const liquidHydrogen = terraforming.zonalSurface.liquidHydrogen;
         const zoneWeight = terraforming?.getZoneWeight ? terraforming.getZoneWeight(zone) : 0;
-        const current = zoneStore?.liquidHydrogen || 0;
+        const current = liquidHydrogen[zone] || 0;
         const basis = totalLiquid > 0 ? current / totalLiquid : zoneWeight;
         const isLast = index === zones.length - 1;
         const deposit = isLast ? remaining : amountTons * basis;
         if (deposit <= 0) {
           continue;
         }
-        zoneStore.liquidHydrogen = current + deposit;
-        remaining -= deposit;
+        const added = liquidHydrogen.change(zone, deposit);
+        remaining -= added;
       }
 
       return amountTons - remaining;
@@ -193,13 +193,13 @@
       const heatCapacity = terraforming.getHeatCapacity();
       let totalLiquid = 0;
       for (const zone of zones) {
-        totalLiquid += terraforming.zonalSurface[zone].liquidHydrogen || 0;
+        totalLiquid += terraforming.zonalSurface.liquidHydrogen[zone] || 0;
       }
 
       let acceptedTotal = 0;
       for (const zone of zones) {
-        const zoneStore = terraforming.zonalSurface[zone];
-        const current = zoneStore.liquidHydrogen || 0;
+        const liquidHydrogen = terraforming.zonalSurface.liquidHydrogen;
+        const current = liquidHydrogen[zone] || 0;
         const basis = totalLiquid > 0
           ? current / totalLiquid
           : terraforming.getZoneWeight(zone);
@@ -224,9 +224,7 @@
           [transition]
         );
         const accepted = result.acceptedAmounts[0];
-        zoneStore.liquidHydrogen = evaporating
-          ? current - accepted
-          : current + accepted;
+        liquidHydrogen.change(zone, evaporating ? -accepted : accepted);
         acceptedTotal += accepted;
         phaseHeat.netHeatEnergyJ += result.netHeatEnergyJ;
         phaseHeat.byZone[zone] = {
@@ -333,11 +331,8 @@
         if (!zoneChange || !Number.isFinite(zoneChange.liquidHydrogen)) {
           continue;
         }
-        const zoneStore = terraforming.zonalSurface[zone];
-        zoneStore.liquidHydrogen = Math.max(
-          0,
-          (zoneStore.liquidHydrogen || 0) + zoneChange.liquidHydrogen
-        );
+        const liquidHydrogen = terraforming.zonalSurface.liquidHydrogen;
+        liquidHydrogen.change(zone, zoneChange.liquidHydrogen);
       }
       totals.flowShift = flow.totalShift || 0;
     }

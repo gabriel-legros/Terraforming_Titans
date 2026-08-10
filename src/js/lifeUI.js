@@ -1530,8 +1530,8 @@ function updateLifeStatusTable() {
                 return;
             }
             const zoneAmount = (zone === 'global')
-                ? zoneList.reduce((sum, zoneName) => sum + (terraforming.zonalSurface[zoneName]?.[resourceKey] || 0), 0)
-                : (terraforming.zonalSurface[zone]?.[resourceKey] || 0);
+                ? zoneList.reduce((sum, zoneName) => sum + (terraforming.zonalSurface[resourceKey][zoneName] || 0), 0)
+                : (terraforming.zonalSurface[resourceKey][zone] || 0);
             const status = zone === 'global'
                 ? { pass: zoneAmount > 1e-9, reason: zoneAmount > 1e-9 ? '' : getLifeUIText('ui.life.status.needResource', 'Need {resource}', { resource: label }) }
                 : { pass: zoneAmount > 1e-9, reason: getLifeUIText('ui.life.status.needResource', 'Need {resource}', { resource: label }) };
@@ -1551,7 +1551,7 @@ function updateLifeStatusTable() {
             if (amountCell) amountCell.textContent = formatNumber(totalBiomass, true);
             if (densityCell) densityCell.textContent = formatNumber(globalDensity, false, 2);
         } else {
-            const zonalBiomass = terraforming.zonalSurface[zone]?.biomass || 0;
+            const zonalBiomass = terraforming.zonalSurface.biomass[zone] || 0;
             const zoneArea = totalSurfaceArea * getZonePercentage(zone);
             const zonalDensity = zoneArea > 0 ? zonalBiomass / zoneArea : 0;
 
@@ -1563,7 +1563,7 @@ function updateLifeStatusTable() {
         const growthCell = growthObj?.cell;
         const valueSpan = growthObj?.value;
         const tooltipIcon = growthObj?.tooltipIcon;
-        const zoneBiomass = zone === 'global' ? totalBiomass : terraforming.zonalSurface[zone]?.biomass || 0;
+        const zoneBiomass = zone === 'global' ? totalBiomass : terraforming.zonalSurface.biomass[zone] || 0;
         const baseZoneArea = zone === 'global' ? totalSurfaceArea : totalSurfaceArea * getZonePercentage(zone);
         const zoneArea = baseZoneArea * landMult;
         const maxBiomassForZone = zoneArea * maxDensity;
@@ -1597,13 +1597,13 @@ function updateLifeStatusTable() {
             const liquidKeys = getLiquidRequirementKeysFromProcess(metabolismProcess);
             const usesIceForWater = liquidKeys.includes('liquidWater')
                 && lifeDesigner.isBooleanFlagSet('solidBiochemistry')
-                && (terraforming.zonalSurface[zone].liquidWater || 0) <= 1e-9
-                && (terraforming.zonalSurface[zone].ice || 0) > 1e-9;
+                && (terraforming.zonalSurface.liquidWater[zone] || 0) <= 1e-9
+                && (terraforming.zonalSurface.ice[zone] || 0) > 1e-9;
             const liquidMult = liquidKeys.every((resourceKey) => {
                 const inputResourceKey = resourceKey === 'liquidWater' && usesIceForWater
                     ? 'ice'
                     : resourceKey;
-                return (terraforming.zonalSurface[zone][inputResourceKey] || 0) > 1e-9;
+                return (terraforming.zonalSurface[inputResourceKey][zone] || 0) > 1e-9;
             }) ? 1 : 0;
             const solidBiochemistryMult = usesIceForWater ? 0.5 : 1;
             const growthBreakdown = getLifeManagerSafe()?.getLifeGrowthMultiplierBreakdown?.() ?? {
@@ -1666,7 +1666,7 @@ function updateLifeStatusTable() {
                     const inputResourceKey = resourceKey === 'liquidWater' && usesIceForWater
                         ? 'ice'
                         : resourceKey;
-                    const zoneAmount = terraforming.zonalSurface[zone][inputResourceKey] || 0;
+                    const zoneAmount = terraforming.zonalSurface[inputResourceKey][zone] || 0;
                     const mult = zoneAmount > 1e-9 ? 1 : 0;
                     const inputResource = resources.surface[inputResourceKey];
                     const label = inputResource.displayName || inputResource.name;

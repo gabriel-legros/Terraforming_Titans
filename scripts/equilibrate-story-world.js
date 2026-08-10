@@ -442,8 +442,8 @@ function balanceAdaptiveFamily(window, familyId, threshold) {
   const baselineSurface = structuredClone(terraforming.zonalSurface);
   const baselineTemperatures = structuredClone(terraforming.temperature.zones);
   const exposedEntries = ZONES.flatMap((zone) => [
-    { zone, phase: family.liquid, amount: baselineSurface[zone][family.liquid] || 0 },
-    { zone, phase: family.solid, amount: baselineSurface[zone][family.solid] || 0 }
+    { zone, phase: family.liquid, amount: baselineSurface[family.liquid][zone] || 0 },
+    { zone, phase: family.solid, amount: baselineSurface[family.solid][zone] || 0 }
   ]);
   const reservoir = exposedEntries.reduce(
     (largest, entry) => entry.amount > largest.amount ? entry : largest,
@@ -467,11 +467,15 @@ function balanceAdaptiveFamily(window, familyId, threshold) {
       resources.atmospheric[atmosphereKey].value = value;
     }
     resources.atmospheric[family.atmosphere].value = atmosphericAmount;
+    for (const resourceKey of Object.keys(baselineSurface)) {
+      for (const zone of ZONES) {
+        terraforming.zonalSurface[resourceKey][zone] = baselineSurface[resourceKey][zone];
+      }
+    }
     for (const zone of ZONES) {
-      terraforming.zonalSurface[zone] = { ...baselineSurface[zone] };
       terraforming.temperature.zones[zone] = { ...baselineTemperatures[zone] };
     }
-    terraforming.zonalSurface[reservoir.zone][reservoir.phase] =
+    terraforming.zonalSurface[reservoir.phase][reservoir.zone] =
       exchangeableMass - fixedExposedMass - atmosphericAmount;
     terraforming.synchronizeGlobalResources();
     terraforming._updateZonalCoverageCache();
@@ -493,7 +497,7 @@ function balanceAdaptiveFamily(window, familyId, threshold) {
   process.stdout.write(
     `Adaptive ${familyId} balance: atmosphere ${solvedAtmosphere} tons, `
     + `${reservoir.zone} ${reservoir.phase} `
-    + `${terraforming.zonalSurface[reservoir.zone][reservoir.phase]} tons.\n`
+    + `${terraforming.zonalSurface[reservoir.phase][reservoir.zone]} tons.\n`
   );
 }
 
@@ -503,9 +507,9 @@ function captureAdaptiveSolution(window) {
   const activeFamilies = PHASE_FAMILIES.filter((family) => (
     resources.atmospheric[family.atmosphere].value > 0
     || ZONES.some((zone) => (
-      (terraforming.zonalSurface[zone][family.liquid] || 0) > 0
-      || (terraforming.zonalSurface[zone][family.solid] || 0) > 0
-      || (terraforming.zonalSurface[zone][family.buried] || 0) > 0
+      (terraforming.zonalSurface[family.liquid][zone] || 0) > 0
+      || (terraforming.zonalSurface[family.solid][zone] || 0) > 0
+      || (terraforming.zonalSurface[family.buried][zone] || 0) > 0
     ))
   ));
   const zonalSurface = structuredClone(terraforming.zonalSurface);
@@ -705,16 +709,16 @@ function buildSolver(window, options) {
       resources.atmospheric[family.atmosphere].value = family.atmosphericAmount;
       for (const zone of ZONES) {
         const activePhase = family.phaseByZone[zone];
-        terraforming.zonalSurface[zone][family.liquid] =
+        terraforming.zonalSurface[family.liquid][zone] =
           activePhase === family.liquid ? family.amountByZone[zone] : 0;
-        terraforming.zonalSurface[zone][family.solid] =
+        terraforming.zonalSurface[family.solid][zone] =
           activePhase === family.solid ? family.amountByZone[zone] : 0;
         if (
           family.tuneCondensation
           || family.useAtmosphereReservoir
           || zone !== family.reservoirZone
         ) {
-          terraforming.zonalSurface[zone][family.buried] = family.fixedBuried[zone];
+          terraforming.zonalSurface[family.buried][zone] = family.fixedBuried[zone];
         }
       }
       if (family.tuneCondensation || family.useAtmosphereReservoir) {
@@ -736,7 +740,7 @@ function buildSolver(window, options) {
           `${family.id} phase roots exceed the world's total inventory by ${-reservoirAmount} tons.`
         );
       }
-      terraforming.zonalSurface[family.reservoirZone][family.buried] =
+      terraforming.zonalSurface[family.buried][family.reservoirZone] =
         Math.max(0, reservoirAmount);
     }
     terraforming.synchronizeGlobalResources();
@@ -749,9 +753,9 @@ function buildSolver(window, options) {
   function evaluate(family, zone) {
     setState();
     const phase = family.phaseByZone[zone];
-    const before = terraforming.zonalSurface[zone][phase];
+    const before = terraforming.zonalSurface[phase][zone];
     terraforming.updateResources(STEP_MS, { refreshStandaloneRates: true });
-    return (terraforming.zonalSurface[zone][phase] - before) * (1000 / STEP_MS);
+    return (terraforming.zonalSurface[phase][zone] - before) * (1000 / STEP_MS);
   }
 
   function evaluateAtmosphere(family) {

@@ -1415,28 +1415,8 @@ function estimateCoverage(amount, zoneArea, scale = 0.0001) {
 }
 function calculateZonalCoverageLocal(tf, zone, resourceType, params) {
   const frac = getZoneFractionsSafe(params)[zone] || 0; const zoneArea = tf.celestialParameters.surfaceArea * frac; if (zoneArea <= 0) return 0;
-  const zs = tf.zonalSurface?.[zone] || {}; let amount = 0;
-  switch (resourceType) {
-    case "liquidWater": amount = zs.liquidWater || 0; break;
-    case "ice": amount = zs.ice || 0; break;
-    case "buriedIce": amount = zs.buriedIce || 0; break;
-    case "biomass": amount = zs.biomass || 0; break;
-    case "dryIce": amount = zs.dryIce || 0; break;
-    case "liquidCO2": amount = zs.liquidCO2 || 0; break;
-    case "liquidHydrogen": amount = zs.liquidHydrogen || 0; break;
-    case "liquidMethane": amount = zs.liquidMethane || 0; break;
-    case "hydrocarbonIce": amount = zs.hydrocarbonIce || 0; break;
-    case "buriedHydrocarbonIce": amount = zs.buriedHydrocarbonIce || 0; break;
-    case "liquidAmmonia": amount = zs.liquidAmmonia || 0; break;
-    case "ammoniaIce": amount = zs.ammoniaIce || 0; break;
-    case "buriedAmmoniaIce": amount = zs.buriedAmmoniaIce || 0; break;
-    case "liquidOxygen": amount = zs.liquidOxygen || 0; break;
-    case "oxygenIce": amount = zs.oxygenIce || 0; break;
-    case "buriedOxygenIce": amount = zs.buriedOxygenIce || 0; break;
-    case "liquidNitrogen": amount = zs.liquidNitrogen || 0; break;
-    case "nitrogenIce": amount = zs.nitrogenIce || 0; break;
-    case "buriedNitrogenIce": amount = zs.buriedNitrogenIce || 0; break;
-  }
+  const zonalSurface = tf.zonalSurface;
+  const amount = zonalSurface[resourceType]?.[zone] ?? zonalSurface[zone]?.[resourceType] ?? 0;
   let scale = 0.0001;
   if (["dryIce", "ice", "hydrocarbonIce", "ammoniaIce", "oxygenIce", "nitrogenIce"].includes(resourceType)) scale *= 100;
   else if (resourceType === "biomass") scale *= 100000;

@@ -151,9 +151,8 @@ class WaterTank extends Building {
     const totalWeight = weights.reduce((sum, value) => sum + value, 0) || zoneList.length;
 
     zoneList.forEach((zone, index) => {
-      const entry = terraforming.zonalSurface[zone];
       const portion = totalAmount * (weights[index] / totalWeight);
-      entry.liquidWater += portion;
+      terraforming.zonalSurface.liquidWater.change(zone, portion);
     });
   }
 }

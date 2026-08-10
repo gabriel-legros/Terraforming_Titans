@@ -153,7 +153,7 @@ class HazardousBiomassHazard {
       const zoneKeys = getZones();
       for (let index = 0; index < zoneKeys.length; index += 1) {
         const zone = zoneKeys[index];
-        const biomass = terraforming.zonalSurface[zone]?.hazardousBiomass;
+        const biomass = terraforming.zonalSurface.hazardousBiomass[zone];
         if (Number.isFinite(biomass) && biomass > 0) {
           return true;
         }
@@ -303,12 +303,7 @@ class HazardousBiomassHazard {
     if (terraforming && terraforming.zonalSurface) {
       const zoneKeys = getZones();
       zoneKeys.forEach((zone) => {
-        const zoneData = terraforming.zonalSurface[zone];
-        if (!zoneData) {
-          return;
-        }
-
-        const biomass = zoneData.hazardousBiomass;
+        const biomass = terraforming.zonalSurface.hazardousBiomass[zone];
         if (Number.isFinite(biomass) && biomass > 0) {
           totalBiomass += biomass;
         }
@@ -346,9 +341,9 @@ class HazardousBiomassHazard {
     let naturalDecayDelta = 0;
     const growth = hazardParameters && hazardParameters.baseGrowth;
     const zoneKeys = getZones();
+    const hazardousBiomass = terraforming.zonalSurface.hazardousBiomass;
     const zoneEntries = zoneKeys
-      .map((zone) => ({ zone, data: terraforming?.zonalSurface?.[zone] }))
-      .filter((entry) => entry.data);
+      .map((zone) => ({ zone, data: hazardousBiomass }));
     const deltaSeconds = deltaTime > 0 ? deltaTime / 1000 : 0;
 
     if (deltaTime && hazardParameters && growth && getZonePercentageHelper && zoneEntries.length) {
@@ -367,8 +362,8 @@ class HazardousBiomassHazard {
             return;
           }
 
-          const currentBiomass = Number.isFinite(data.hazardousBiomass)
-            ? data.hazardousBiomass
+          const currentBiomass = Number.isFinite(data[zone])
+            ? data[zone]
             : 0;
 
           if (!currentBiomass) {
@@ -399,7 +394,7 @@ class HazardousBiomassHazard {
           if (appliedDelta < 0) {
             naturalDecayDelta -= appliedDelta;
           }
-          data.hazardousBiomass = nextBiomass;
+          data.change(zone, appliedDelta);
         });
       }
     }
@@ -411,8 +406,8 @@ class HazardousBiomassHazard {
 
       if (crusaderCount > 0) {
         const totalBiomass = zoneEntries.reduce((sum, entry) => {
-          const zoneBiomass = Number.isFinite(entry.data.hazardousBiomass)
-            ? entry.data.hazardousBiomass
+          const zoneBiomass = Number.isFinite(entry.data[entry.zone])
+            ? entry.data[entry.zone]
             : 0;
           return zoneBiomass > 0 ? sum + zoneBiomass : sum;
         }, 0);
@@ -436,13 +431,12 @@ class HazardousBiomassHazard {
 
           if (focusEntry) {
             const focusData = focusEntry.data;
-            const previousValue = Number.isFinite(focusData.hazardousBiomass) ? focusData.hazardousBiomass : 0;
+            const previousValue = Number.isFinite(focusData[focusEntry.zone]) ? focusData[focusEntry.zone] : 0;
             if (previousValue > 0) {
               const appliedReduction = remainingReduction < previousValue ? remainingReduction : previousValue;
-              const nextValue = previousValue - appliedReduction;
               if (appliedReduction > 0) {
                 crusaderDelta -= appliedReduction;
-                focusData.hazardousBiomass = nextValue > 0 ? nextValue : 0;
+                focusData.change(focusEntry.zone, -appliedReduction);
                 remainingReduction -= appliedReduction;
               }
             }
@@ -450,8 +444,8 @@ class HazardousBiomassHazard {
 
           if (remainingReduction > 0) {
             const availableBiomass = zoneEntries.reduce((sum, entry) => {
-              const zoneBiomass = Number.isFinite(entry.data.hazardousBiomass)
-                ? entry.data.hazardousBiomass
+              const zoneBiomass = Number.isFinite(entry.data[entry.zone])
+                ? entry.data[entry.zone]
                 : 0;
               return zoneBiomass > 0 ? sum + zoneBiomass : sum;
             }, 0);
@@ -461,8 +455,8 @@ class HazardousBiomassHazard {
               let sharedReduction = 0;
 
               zoneEntries.forEach((entry) => {
-                const zoneBiomass = Number.isFinite(entry.data.hazardousBiomass)
-                  ? entry.data.hazardousBiomass
+                const zoneBiomass = Number.isFinite(entry.data[entry.zone])
+                  ? entry.data[entry.zone]
                   : 0;
                 if (zoneBiomass <= 0) {
                   return;
@@ -478,9 +472,8 @@ class HazardousBiomassHazard {
                   return;
                 }
 
-                const nextValue = zoneBiomass - desiredReduction;
                 crusaderDelta -= desiredReduction;
-                entry.data.hazardousBiomass = nextValue > 0 ? nextValue : 0;
+                entry.data.change(entry.zone, -desiredReduction);
                 sharedReduction += desiredReduction;
               });
 
@@ -555,11 +548,7 @@ class HazardousBiomassHazard {
       return emptyResult;
     }
 
-    const zoneSource = terraforming.zonalSurface
-      || (terraforming.temperature && terraforming.temperature.zones)
-      || terraforming.zonalCoverageCache
-      || {};
-    const configuredZones = Array.isArray(zonesList) && zonesList.length ? zonesList : Object.keys(zoneSource);
+    const configuredZones = Array.isArray(zonesList) && zonesList.length ? zonesList : getZones();
     if (!configuredZones.length) {
       let globalPenaltyOnly = 0;
 
@@ -892,7 +881,7 @@ class HazardousBiomassHazard {
       ? zoneKeys
       : (Array.isArray(zonesList) && zonesList.length
         ? zonesList
-        : Object.keys(terraforming.zonalSurface));
+        : getZones());
     const zoneCount = resolvedZones.length || 1;
     const weights = zoneWeights || {};
 
@@ -925,12 +914,13 @@ class HazardousBiomassHazard {
   }
 
   calculateZoneLifeDensity(terraforming, zone) {
-    const zoneData = terraforming.zonalSurface && terraforming.zonalSurface[zone];
-    if (!zoneData) {
+    if (!terraforming.zonalSurface) {
       return 0;
     }
 
-    const biomass = Number.isFinite(zoneData.biomass) ? zoneData.biomass : 0;
+    const biomass = Number.isFinite(terraforming.zonalSurface.biomass[zone])
+      ? terraforming.zonalSurface.biomass[zone]
+      : 0;
     if (!biomass) {
       return 0;
     }

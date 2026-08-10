@@ -53,10 +53,10 @@ describe('surface water extraction mass conservation', () => {
       const waterKeys = ['liquidWater', 'ice', 'buriedIce'];
       for (const zone of getZones()) {
         for (const key of waterKeys) {
-          terraforming.zonalSurface[zone][key] = 0;
-          terraforming.zonalSurfaceRemainders[zone][key] = 0;
+          terraforming.zonalSurface[key][zone] = 0;
+          terraforming.zonalSurface[key].setRemainder(zone, 0);
         }
-        terraforming.zonalSurface[zone].liquidWater = initialLiquidWater[zone];
+        terraforming.zonalSurface.liquidWater[zone] = initialLiquidWater[zone];
         terraforming.temperature.zones[zone].value = 300;
         terraforming.temperature.zones[zone].day = 305;
         terraforming.temperature.zones[zone].night = 295;
@@ -72,8 +72,8 @@ describe('surface water extraction mass conservation', () => {
         for (const zone of getZones()) {
           state.zones[zone] = {};
           for (const key of waterKeys) {
-            state.zones[zone][key] = terraforming.zonalSurface[zone][key];
-            state.zones[zone][key + 'Remainder'] = terraforming.zonalSurfaceRemainders[zone][key];
+            state.zones[zone][key] = terraforming.zonalSurface[key][zone];
+            state.zones[zone][key + 'Remainder'] = terraforming.zonalSurface[key].getRemainder(zone);
           }
         }
         return state;
@@ -123,14 +123,14 @@ describe('surface water extraction mass conservation', () => {
       resources.atmospheric.inertGas.value = 1e18;
       for (const zone of getZones()) {
         for (const key of waterKeys) {
-          terraforming.zonalSurface[zone][key] = 0;
-          terraforming.zonalSurfaceRemainders[zone][key] = 0;
+          terraforming.zonalSurface[key][zone] = 0;
+          terraforming.zonalSurface[key].setRemainder(zone, 0);
         }
         terraforming.temperature.zones[zone].value = 300;
         terraforming.temperature.zones[zone].day = 305;
         terraforming.temperature.zones[zone].night = 295;
       }
-      terraforming.zonalSurface.polar.ice = 1.6;
+      terraforming.zonalSurface.ice.polar = 1.6;
       terraforming.synchronizeGlobalResources();
 
       const totalWater = () => {
@@ -138,8 +138,8 @@ describe('surface water extraction mass conservation', () => {
           + resources.atmospheric.atmosphericWater.value;
         for (const zone of getZones()) {
           for (const key of waterKeys) {
-            total += terraforming.zonalSurface[zone][key];
-            total += terraforming.zonalSurfaceRemainders[zone][key];
+            total += terraforming.zonalSurface[key][zone];
+            total += terraforming.zonalSurface[key].getRemainder(zone);
           }
         }
         return total;

@@ -697,7 +697,7 @@ class ResourceCycle {
       const coverage = (typeof this.getCoverage === 'function')
         ? this.getCoverage(zone, terraforming.zonalCoverageCache)
         : {};
-      const zonalSource = terraforming[zonalKey]?.[zone] || {};
+      const zonalSource = terraforming[zonalKey] || {};
       const params = {
         zoneArea,
         dayTemperature: temps.day,
@@ -716,8 +716,10 @@ class ResourceCycle {
       };
       for (const key of availableKeys) {
         const paramKey = 'available' + key.charAt(0).toUpperCase() + key.slice(1);
-        const zonalKey = this.resolveSurfaceKey(key);
-        params[paramKey] = zonalSource[zonalKey] || 0;
+        const surfaceKey = this.resolveSurfaceKey(key);
+        params[paramKey] = zonalKey === 'zonalSurface'
+          ? zonalSource[surfaceKey][zone] || 0
+          : zonalSource[zone]?.[surfaceKey] || 0;
       }
       const result = this.processZone(params);
       zonalChanges[zone] = zonalChanges[zone] || {};
@@ -912,15 +914,24 @@ class ResourceCycle {
       const zonalKey = options.zonalKey || this.zonalKey;
       const bucket = options.surfaceBucket || this.surfaceBucket;
       const baseContainer = terraforming[zonalKey] || {};
-      const projectedContainer = {};
+      const projectedContainer = zonalKey === 'zonalSurface'
+        ? baseContainer.clone()
+        : {};
       for (const zone of zones) {
-        const baseZone = baseContainer[zone] || {};
-        const projectedZone = { ...baseZone };
+        const projectedZone = zonalKey === 'zonalSurface'
+          ? null
+          : { ...(baseContainer[zone] || {}) };
         const phaseChange = data.zonalChanges[zone]?.[bucket] || {};
         for (const [state, amount] of Object.entries(phaseChange)) {
-          projectedZone[state] = Math.max(0, (projectedZone[state] || 0) + amount);
+          if (zonalKey === 'zonalSurface') {
+            projectedContainer.change(state, zone, amount);
+          } else {
+            projectedZone[state] = Math.max(0, (projectedZone[state] || 0) + amount);
+          }
         }
-        projectedContainer[zone] = projectedZone;
+        if (zonalKey !== 'zonalSurface') {
+          projectedContainer[zone] = projectedZone;
+        }
       }
       const flowTerraforming = Object.create(terraforming);
       flowTerraforming[zonalKey] = projectedContainer;
@@ -1046,7 +1057,9 @@ class ResourceCycle {
       for (const zone of zones) {
         const surfaceChanges = data.zonalChanges[zone]?.[snapSurfaceBucket] || {};
         for (const [state, amount] of Object.entries(surfaceChanges)) {
-          const surfaceValue = terraforming[snapZonalKey]?.[zone]?.[state] || 0;
+          const surfaceValue = snapZonalKey === 'zonalSurface'
+            ? terraforming.zonalSurface[state][zone] || 0
+            : terraforming[snapZonalKey]?.[zone]?.[state] || 0;
           const surfaceTolerance = Math.max(
             snapAmount,
             Math.abs(surfaceValue) * Number.EPSILON

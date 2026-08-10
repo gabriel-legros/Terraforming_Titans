@@ -2761,7 +2761,7 @@ function updateLifeBox() {
     const hazardTolerance = 1e-6;
     const hazardsCleared = typeof terraforming.getHazardClearanceStatus === 'function'
       ? terraforming.getHazardClearanceStatus()
-      : zones.every(zone => (terraforming.zonalSurface[zone]?.hazardousBiomass || 0) <= hazardTolerance);
+      : zones.every(zone => (terraforming.zonalSurface.hazardousBiomass[zone] || 0) <= hazardTolerance);
     const lifeTargetMet = densityTarget > 0
       ? getLifeBiomassDensity(terraforming) >= densityTarget
       : avgBiomassCoverage >= effectiveTarget;
@@ -2799,9 +2799,9 @@ function updateLifeBox() {
     els.infoTooltip.textContent = tooltipText;
 
     const hazardByZone = {
-      tropical: terraforming.zonalSurface.tropical?.hazardousBiomass || 0,
-      temperate: terraforming.zonalSurface.temperate?.hazardousBiomass || 0,
-      polar: terraforming.zonalSurface.polar?.hazardousBiomass || 0
+      tropical: terraforming.zonalSurface.hazardousBiomass.tropical || 0,
+      temperate: terraforming.zonalSurface.hazardousBiomass.temperate || 0,
+      polar: terraforming.zonalSurface.hazardousBiomass.polar || 0
     };
     const hazardTotal = zones.reduce((sum, zone) => sum + (hazardByZone[zone] || 0), 0);
     const hazardEntries = [
@@ -2825,7 +2825,7 @@ function updateLifeBox() {
         els.hazardTarget.style.color = '';
       } else {
         const remainingZones = zones
-          .filter(zone => (terraforming.zonalSurface[zone]?.hazardousBiomass || 0) > hazardTolerance)
+          .filter(zone => (terraforming.zonalSurface.hazardousBiomass[zone] || 0) > hazardTolerance)
           .map(zone => getTerraformingZoneLabel(zone));
         els.hazardTarget.textContent = getTerraformingSummaryText(
           'lifeSummary.removeHazards',

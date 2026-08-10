@@ -2693,41 +2693,35 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       let val;
       switch (resource.name) {
         case 'liquidWater':
-          val = terraforming.zonalSurface?.[zone]?.liquidWater;
+          val = terraforming.zonalSurface.liquidWater[zone];
           break;
         case 'ice': {
-          const iceObj = terraforming.zonalSurface?.[zone];
-          if (iceObj) {
-            val = (iceObj.ice || 0);
-            zoneBuried[zone] = iceObj.buriedIce || 0;
-          }
+          val = terraforming.zonalSurface.ice[zone] || 0;
+          zoneBuried[zone] = terraforming.zonalSurface.buriedIce[zone] || 0;
           break;
         }
         case 'dryIce':
-          val = terraforming.zonalSurface?.[zone]?.dryIce;
+          val = terraforming.zonalSurface.dryIce[zone];
           break;
         case 'liquidHydrogen':
-          val = terraforming.zonalSurface?.[zone]?.liquidHydrogen;
+          val = terraforming.zonalSurface.liquidHydrogen[zone];
           break;
         case 'biomass':
-          val = terraforming.zonalSurface?.[zone]?.biomass;
+          val = terraforming.zonalSurface.biomass[zone];
           break;
         case 'hazardousBiomass':
-          val = terraforming.zonalSurface?.[zone]?.hazardousBiomass;
+          val = terraforming.zonalSurface.hazardousBiomass[zone];
           break;
         case 'liquidMethane':
-          val = terraforming.zonalSurface?.[zone]?.liquidMethane;
+          val = terraforming.zonalSurface.liquidMethane[zone];
           break;
         case 'hydrocarbonIce': {
-          const obj = terraforming.zonalSurface?.[zone];
-          if (obj) {
-            val = (obj.hydrocarbonIce || 0);
-            zoneBuried[zone] = obj.buriedHydrocarbonIce || 0;
-          }
+          val = terraforming.zonalSurface.hydrocarbonIce[zone] || 0;
+          zoneBuried[zone] = terraforming.zonalSurface.buriedHydrocarbonIce[zone] || 0;
           break;
         }
         case 'fineSand':
-          val = terraforming.zonalSurface?.[zone]?.fineSand;
+          val = terraforming.zonalSurface.fineSand[zone];
           break;
         default:
           val = undefined;
