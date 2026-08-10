@@ -439,7 +439,7 @@ function balanceAdaptiveFamily(window, familyId, threshold) {
       resources.atmospheric[entry.atmosphere].value
     ])
   );
-  const baselineSurface = structuredClone(terraforming.zonalSurface);
+  const baselineSurface = terraforming.zonalSurface.clone();
   const baselineTemperatures = structuredClone(terraforming.temperature.zones);
   const exposedEntries = ZONES.flatMap((zone) => [
     { zone, phase: family.liquid, amount: baselineSurface[family.liquid][zone] || 0 },
@@ -469,7 +469,8 @@ function balanceAdaptiveFamily(window, familyId, threshold) {
     resources.atmospheric[family.atmosphere].value = atmosphericAmount;
     for (const resourceKey of Object.keys(baselineSurface)) {
       for (const zone of ZONES) {
-        terraforming.zonalSurface[resourceKey][zone] = baselineSurface[resourceKey][zone];
+        terraforming.zonalSurface[resourceKey][zone] =
+          baselineSurface[resourceKey].getExact(zone).serialize();
       }
     }
     for (const zone of ZONES) {
@@ -512,7 +513,7 @@ function captureAdaptiveSolution(window) {
       || (terraforming.zonalSurface[family.buried][zone] || 0) > 0
     ))
   ));
-  const zonalSurface = structuredClone(terraforming.zonalSurface);
+  const zonalSurface = JSON.parse(JSON.stringify(terraforming.zonalSurface));
   const zonalTemperatures = Object.fromEntries(
     ZONES.map((zone) => [zone, {
       value: terraforming.temperature.zones[zone].value,
@@ -582,15 +583,15 @@ function buildSolver(window, options) {
   const terraforming = window.eval('terraforming');
   const resources = window.resources;
   const familyStates = [];
-  const baselineSurface = structuredClone(terraforming.zonalSurface);
+  const baselineSurface = terraforming.zonalSurface.clone();
 
   for (const config of PHASE_FAMILIES) {
     const atmosphericAmount = resources.atmospheric[config.atmosphere].value;
     const totalMass = atmosphericAmount + ZONES.reduce(
       (total, zone) => total
-        + (baselineSurface[zone][config.liquid] || 0)
-        + (baselineSurface[zone][config.solid] || 0)
-        + (baselineSurface[zone][config.buried] || 0),
+        + (baselineSurface[config.liquid][zone] || 0)
+        + (baselineSurface[config.solid][zone] || 0)
+        + (baselineSurface[config.buried][zone] || 0),
       0
     );
     const condensedMass = totalMass - atmosphericAmount;
@@ -599,8 +600,8 @@ function buildSolver(window, options) {
     const phaseByZone = {};
     const amountByZone = {};
     for (const zone of ZONES) {
-      const liquidAmount = baselineSurface[zone][config.liquid] || 0;
-      const solidAmount = baselineSurface[zone][config.solid] || 0;
+      const liquidAmount = baselineSurface[config.liquid][zone] || 0;
+      const solidAmount = baselineSurface[config.solid][zone] || 0;
       const temperature = terraforming.temperature.zones[zone].value;
       const phase = liquidAmount > solidAmount
         ? config.liquid
@@ -611,7 +612,7 @@ function buildSolver(window, options) {
       amountByZone[zone] = phase === config.liquid ? liquidAmount : solidAmount;
     }
     const reservoirZone = ZONES.reduce(
-      (best, zone) => baselineSurface[zone][config.buried] > baselineSurface[best][config.buried]
+      (best, zone) => baselineSurface[config.buried][zone] > baselineSurface[config.buried][best]
         ? zone
         : best,
       'polar'
@@ -621,7 +622,7 @@ function buildSolver(window, options) {
     const solveAtmosphere = options.solveAtmosphere.has(config.id);
     const globalPhaseBalance = options.globalBalance.has(config.id);
     const initialBuriedMass = ZONES.reduce(
-      (total, zone) => total + (baselineSurface[zone][config.buried] || 0),
+      (total, zone) => total + (baselineSurface[config.buried][zone] || 0),
       0
     );
     const useAtmosphereReservoir =
@@ -631,7 +632,7 @@ function buildSolver(window, options) {
       && !globalPhaseBalance
       && initialBuriedMass === 0;
     const baselineBuried = Object.fromEntries(
-      ZONES.map((zone) => [zone, baselineSurface[zone][config.buried] || 0])
+      ZONES.map((zone) => [zone, baselineSurface[config.buried][zone] || 0])
     );
     familyStates.push({
       ...config,
@@ -652,14 +653,14 @@ function buildSolver(window, options) {
       baselineBuried,
       targetSurfaceMass: ZONES.reduce(
         (total, zone) => total
-          + (baselineSurface[zone][config.liquid] || 0)
-          + (baselineSurface[zone][config.solid] || 0),
+          + (baselineSurface[config.liquid][zone] || 0)
+          + (baselineSurface[config.solid][zone] || 0),
         0
       ),
       exchangeableMass: atmosphericAmount + ZONES.reduce(
         (total, zone) => total
-          + (baselineSurface[zone][config.liquid] || 0)
-          + (baselineSurface[zone][config.solid] || 0),
+          + (baselineSurface[config.liquid][zone] || 0)
+          + (baselineSurface[config.solid][zone] || 0),
         0
       ),
       condensationParameter: cycle.equilibriumCondensationParameter,
@@ -1059,7 +1060,7 @@ function buildSolver(window, options) {
       }
     }
     setState();
-    const solvedZonalSurface = structuredClone(terraforming.zonalSurface);
+    const solvedZonalSurface = JSON.parse(JSON.stringify(terraforming.zonalSurface));
     const solvedTemperatures = Object.fromEntries(
       ZONES.map((zone) => [zone, {
         value: terraforming.temperature.zones[zone].value,

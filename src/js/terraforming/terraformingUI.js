@@ -2483,23 +2483,6 @@ function createWaterBox(row) {
     const zones = getZones();
     const surfaceArea = terraforming.celestialParameters.surfaceArea;
 
-    // Totals are no longer calculated here; they are read from terraforming object
-    // let totalLiquid = 0; // Not needed for rate display
-    // let totalIce = 0; // Not needed for rate display
-    // let totalEvaporationRate = 0; // Read from terraforming.totalEvaporationRate
-    // let totalBoilingRate = 0; // Read from terraforming.totalBoilingRate
-    // let totalSublimationRate = 0; // Read from terraforming.totalWaterSublimationRate
-    // let totalRainfallRate = 0; // Read from terraforming.totalRainfallRate
-    // let totalSnowfallRate = 0; // Read from terraforming.totalSnowfallRate
-    // let totalMeltingRate = 0; // Read from terraforming.totalMeltRate
-    // let totalFreezingRate = 0; // Read from terraforming.totalFreezeRate
-
-    // zones.forEach(zone => { // Loop no longer needed for rates
-    //     totalLiquid += terraforming.zonalSurface[zone].liquidWater || 0;
-    //     totalIce += terraforming.zonalSurface[zone].ice || 0;
-    //     // Remove rate summing from zonal data
-    // });
-
     // Calculate average coverage percentages using the centralized helper function
 
     const avgLiquidCoverage = calculateAverageCoverage(terraforming, 'liquidWater') || 0;

@@ -244,7 +244,7 @@ async function run() {
     const sumZonalLiquidWater = () => {
       if (!terraforming.zonalSurface) return 0;
       let total = 0;
-      for (const zoneName in terraforming.zonalSurface) {
+      for (const zoneName of Object.keys(terraforming.zonalSurface.liquidWater)) {
         total += Number(terraforming.zonalSurface.liquidWater[zoneName] || 0);
       }
       return total;
