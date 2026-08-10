@@ -3644,7 +3644,6 @@ synchronizeGlobalResources() {
       completed: this.completed,
       // zonalAtmosphere: this.zonalAtmosphere, // REMOVED - No longer saving internal zonal atmosphere state
       zonalSurface: this.zonalSurface,
-      zonalSurfaceRemainders: this.zonalSurface.getRemainders(),
       // zonalBiomass: this.zonalBiomass, // REMOVED - Biomass is stored in zonalSurface
       };
   }
@@ -3717,13 +3716,14 @@ synchronizeGlobalResources() {
       // Load Zonal Surface resources (keep defaults if not in save)
       this.zonalSurface = createEmptyZonalSurface();
       applyZonalSurfaceFromLegacy(this.zonalSurface, terraformingState);
-      const savedRemainders = terraformingState.zonalSurfaceRemainders || {};
+      // Legacy migration only: absorb the old parallel remainder values into adaptive precision.
+      const legacyRemainders = terraformingState.zonalSurfaceRemainders || {};
       for (const resourceKey of ZONAL_SURFACE_RESOURCE_KEYS) {
           for (const zone of getZones()) {
-              const remainder = savedRemainders[resourceKey]?.[zone]
-                  ?? savedRemainders[zone]?.[resourceKey];
+              const remainder = legacyRemainders[resourceKey]?.[zone]
+                  ?? legacyRemainders[zone]?.[resourceKey];
               if (remainder !== undefined) {
-                  this.zonalSurface[resourceKey].setRemainder(zone, remainder);
+                  this.zonalSurface[resourceKey].change(zone, remainder);
               }
           }
       }
