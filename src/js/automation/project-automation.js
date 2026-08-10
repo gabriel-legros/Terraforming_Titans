@@ -438,6 +438,9 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       };
     }
     const project = this.getProjectForAutomationId(normalizedProjectId);
+    if (project?.migrateLegacyAssignmentSettings) {
+      source = project.migrateLegacyAssignmentSettings(source);
+    }
     if (project && Array.isArray(project.disposalTargets)) {
       const migratedSource = {};
       const hasDisposalTargets = Array.isArray(source.disposalTargets) && source.disposalTargets.length > 0;
