@@ -13,6 +13,7 @@ class TreeOfLifeProject extends Project {
   constructor(config, name) {
     super(config, name);
     this.storage = { colony: { colonists: 0 } };
+    this.colonistNeedsFulfilled = true;
     this.uiElements = null;
     this.lastNutrientConsumptionRate = 0;
     this.lastResearchRate = 0;
