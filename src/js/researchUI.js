@@ -124,6 +124,28 @@ function formatResearchCost(cost) {
     return parts.join(' + ');
 }
 
+function getMissingResearchPrerequisites(researchItem) {
+    return researchItem.prerequisites
+        .map(prerequisiteId => researchManager.getResearchById(prerequisiteId))
+        .filter(prerequisite => !prerequisite.isResearched);
+}
+
+function getMissingResearchPrerequisiteText(missingPrerequisites) {
+    const names = missingPrerequisites.map(prerequisite => prerequisite.name).join(', ');
+    if (missingPrerequisites.length === 1) {
+        return getResearchUIText(
+            'ui.research.missingPrerequisite',
+            'Missing prerequisite: {prerequisite}',
+            { prerequisite: names }
+        );
+    }
+    return getResearchUIText(
+        'ui.research.missingPrerequisites',
+        'Missing prerequisites: {prerequisites}',
+        { prerequisites: names }
+    );
+}
+
 function updateAllResearchButtons(researchData, category = null) {
     applyHiddenResearchFlags(category);
     const researchTabs = category
@@ -136,7 +158,17 @@ function updateAllResearchButtons(researchData, category = null) {
         researchData[tab].forEach((researchItem) => {
             const elements = researchElementCache.get(researchItem.id);
             if (!elements) return;
-            const { button, costEl, descEl, container, autoCheckbox, autoLabel, autoPrioritySelect, hideToggle } = elements;
+            const {
+                button,
+                costEl,
+                descEl,
+                container,
+                researchPrerequisiteStatus,
+                autoCheckbox,
+                autoLabel,
+                autoPrioritySelect,
+                hideToggle
+            } = elements;
 
             const markCompleted = researchItem.isResearched && !researchItem.repeatable;
             if (container.classList.contains('completed-research') !== markCompleted) {
@@ -148,6 +180,8 @@ function updateAllResearchButtons(researchData, category = null) {
             }
 
             const isVisible = visibleIds.has(researchItem.id);
+            const missingPrerequisites = getMissingResearchPrerequisites(researchItem);
+            const unavailable = !researchItem.isResearched && missingPrerequisites.length > 0;
             const isDisplayable = researchManager.isResearchDisplayable(researchItem);
             const hiddenByDisableFlag = !researchItem.isResearched && hasActiveDisableFlag(researchItem);
             const display = (researchItem.disabled || hiddenByDisableFlag || !isDisplayable) ? 'none' : '';
@@ -155,6 +189,13 @@ function updateAllResearchButtons(researchData, category = null) {
                 container.style.display = display;
             }
             updateResearchButtonText(button, researchItem, isVisible);
+            researchPrerequisiteStatus.style.display = unavailable ? '' : 'none';
+            if (unavailable) {
+                const statusText = getMissingResearchPrerequisiteText(missingPrerequisites);
+                if (researchPrerequisiteStatus.textContent !== statusText) {
+                    researchPrerequisiteStatus.textContent = statusText;
+                }
+            }
             if (hideToggle) {
                 const hideToggleText = researchItem.hiddenByUser
                     ? getResearchUIText('ui.research.unhide', 'Unhide')
@@ -238,6 +279,9 @@ function updateResearchButtonText(button, researchItem, visible) {
         color = 'grey';
     } else if (!visible) {
         disabled = true;
+    } else if (!researchManager.isResearchAvailable(researchItem.id)) {
+        disabled = true;
+        color = 'grey';
     } else if (!canAffordResearch(researchItem)) {
         // If research can't be afforded, keep the button enabled but show red
         color = 'red';
@@ -426,6 +470,9 @@ function loadResearchCategory(category) {
                 updateResearchUI();
             });
 
+            const researchPrerequisiteStatus = document.createElement('div');
+            researchPrerequisiteStatus.classList.add('research-prerequisite-status');
+
             const hideToggle = document.createElement('button');
             hideToggle.type = 'button';
             hideToggle.classList.add('research-hide-toggle');
@@ -519,6 +566,7 @@ function loadResearchCategory(category) {
 
             // Append button, cost, and description to the research container
             researchContainer.appendChild(researchButton);
+            researchContainer.appendChild(researchPrerequisiteStatus);
             researchContainer.appendChild(researchCost);
             researchContainer.appendChild(researchDescription);
             researchContainer.appendChild(hideToggle);
@@ -529,6 +577,7 @@ function loadResearchCategory(category) {
                 costEl: researchCost,
                 descEl: researchDescription,
                 hideToggle,
+                researchPrerequisiteStatus,
                 autoCheckbox,
                 autoLabel,
                 autoPrioritySelect,

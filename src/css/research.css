@@ -58,6 +58,13 @@
     position: relative;
 }
 
+.research-prerequisite-status {
+    margin: -5px 0 8px;
+    color: red;
+    font-size: 14px;
+    line-height: 1;
+}
+
 .research-cost,
 .research-description {
     margin: 5px 0;

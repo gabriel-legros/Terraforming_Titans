@@ -3106,6 +3106,8 @@ setLanguageData({
       hideHidden: 'Hide Hidden',
       showHidden: 'Show Hidden',
       autoResearch: 'Auto Research ',
+      missingPrerequisite: 'Missing prerequisite: {prerequisite}',
+      missingPrerequisites: 'Missing prerequisites: {prerequisites}',
       noResearchAvailable: 'No research available.',
       researchedSuffix: ' - Researched',
       priorityLabel: 'P{value}',
