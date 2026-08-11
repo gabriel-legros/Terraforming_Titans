@@ -30,7 +30,7 @@ progressTitan.storyProjects.earthProbe = {
       'Impact cratering consistent with a colossal asteroid collision identified.',
       'Chronometric data reveals catastrophic events unfolded within minutes.',
       'Orbital dispersion patterns resemble formation dynamics of a nascent asteroid belt.',
-      'Surface integrity nullified—analysis confirms simultaneous laser, antimatter, and asteroid offensive.'
+      'Surface integrity nullified.  Analysis confirms simultaneous laser, antimatter, and asteroid offensive.'
     ]
   }
 };
