@@ -647,6 +647,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Galactic Market resource tooltips keep ideal consumption from selected trades, but replace market production with actual post-trade output after resource and funding limits are applied.
 - Galactic Market includes superconductors at 10x components price and 1/10 components sell saturation.
 - Advanced research `Automatic Surplus Trading` costs `60M`, requires Galactic Market Concordat, and queues sellable unrouted colony overflow for automatic sale on the following tick. Automatic sales use normal market proceeds, price impact, and trade caps, but add no quantity beyond the resource's saturation sell rate; excess overflow is discarded.
+- Selected Galactic Market trades take priority under the Kessler import/export limit; automatic overflow sales use only the throughput left after selected buys and sells.
 - Cargo Rocket quantity and step controls resolve the current project instance after load/travel, and the selected step persists across planet travel.
 - Shared Android assignment controls resolve the current project instance after load/travel, including assignment, step, auto-assignment, and release controls.
 - Projects can set `attributes.ignoreDurationModifiers: true` to lock runtime to base duration and ignore all project duration modifiers.
