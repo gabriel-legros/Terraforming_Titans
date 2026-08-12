@@ -30,6 +30,10 @@ const ACHIEVEMENT_ALLOWED_RENEWABLE_BUILDINGS = {
   windTurbine: true
 };
 
+const ACHIEVEMENT_DISALLOWED_RENEWABLE_BUILDINGS = {
+  antimatterBattery: true
+};
+
 class AchievementManager {
   constructor() {
     this.definitions = this.buildDefinitions();
@@ -73,7 +77,7 @@ class AchievementManager {
       ['that-was-fast', 'thatWasFast', 'That was fast', 'Terraform a world under 1 hour.', () => this.hasTerraformRealTimeUnder(3600)],
       ['that-was-faster', 'thatWasFaster', 'That was faster', 'Terraform a world under 60s.', () => this.hasTerraformRealTimeUnder(60)],
       ['that-was-fastest', 'thatWasFastest', 'That was fastest', 'Terraform a world under 5s.', () => this.hasTerraformRealTimeUnder(5)],
-      ['classic-renewables', 'classicRenewables', 'Classic Renewables', 'Terraform a world without building any power generators except solar panels and wind turbines.', () => this.isClassicRenewablesComplete()],
+      ['classic-renewables', 'classicRenewables', 'Classic Renewables', 'Terraform a world without any Antimatter Batteries or power generators other than solar panels and wind turbines.', () => this.isClassicRenewablesComplete()],
       ['heat-of-the-sun', 'heatOfTheSun', 'Heat of the Sun', 'Reach a global mean surface temperature of at least 5,500°C without using Planetary Thrusters.', () => this.isHeatOfTheSunComplete()],
       ['yo-dawg-terraforming', 'yoDawgTerraforming', 'Yo dawg, I heard you liked terraforming', 'Have all your terraforming times in the past 10 terraformed worlds be faster than the previous one. (game time)', () => this.isRecentTerraformImprovementChainComplete()],
       ['coruscant', 'coruscant', 'Coruscant', 'Build a full ecumenopolis.', () => this.isEcumenopolisComplete()],
@@ -222,7 +226,8 @@ class AchievementManager {
       if (current <= baseline) {
         continue;
       }
-      if (this.isPowerGeneratorBuilding(key, building) && !ACHIEVEMENT_ALLOWED_RENEWABLE_BUILDINGS[key]) {
+      if (ACHIEVEMENT_DISALLOWED_RENEWABLE_BUILDINGS[key]
+        || (this.isPowerGeneratorBuilding(key, building) && !ACHIEVEMENT_ALLOWED_RENEWABLE_BUILDINGS[key])) {
         this.tracking.disqualified.classicRenewables = true;
       }
       if (this.isCurrentWorldRandom() && !this.isNoBuildingLeftBehindMirrorAllowance(key, current, baseline)) {
@@ -252,7 +257,8 @@ class AchievementManager {
       if (count <= 0) {
         continue;
       }
-      if (this.isPowerGeneratorBuilding(key, buildings[key]) && !ACHIEVEMENT_ALLOWED_RENEWABLE_BUILDINGS[key]) {
+      if (ACHIEVEMENT_DISALLOWED_RENEWABLE_BUILDINGS[key]
+        || (this.isPowerGeneratorBuilding(key, buildings[key]) && !ACHIEVEMENT_ALLOWED_RENEWABLE_BUILDINGS[key])) {
         this.tracking.disqualified.classicRenewables = true;
       }
       if (this.isCurrentWorldRandom() && !this.isNoBuildingLeftBehindMirrorAllowance(key, count, 0)) {
