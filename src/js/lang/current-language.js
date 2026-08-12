@@ -1264,8 +1264,7 @@ setLanguageData({
         luminosity: 'Luminosity: x{value}',
         lifeEffects: 'Life Effects: x{value}',
         engineeredNitrogenFixation: 'Engineered Nitrogen Fixation: x{value} ({pressure} kPa)',
-        ecumenopolis: 'Ecumenopolis: x{value} (-{reduction}%)',
-        biodomeProtection: 'Biodome protection floor: x{value} ({land}% base land)',
+        ecumenopolis: 'Ecumenopolis: x{value} (-{reduction}% + {protection}% Biodome protection)',
       },
       rateLabels: {
         processDecay: '{name} Decay',
@@ -7719,7 +7718,7 @@ setLanguageData({
       },
       t7_colony: {
         name: 'Ecumenopolis District',
-        description: 'A planet-spanning city offering unparalleled comfort and capacity. Reduces land for life growth and lowers life terraforming requirements.',
+        description: 'A planet-spanning city offering unparalleled comfort and capacity. Reduces land for life growth and lowers life terraforming requirements. Biodome land coverage protects biomass growth from this land loss.',
       },
     },
     skills: {

@@ -160,10 +160,9 @@ function updateStatusSpan(statusEntry, symbol, tooltipText) {
 }
 
 var getEcumenopolisLandFraction = getEcumenopolisLandFraction;
-var getBiodomeLandFraction = getBiodomeLandFraction;
 var getLifeLandMultiplier = getLifeLandMultiplier;
 if (typeof module !== 'undefined' && module.exports) {
-  ({ getEcumenopolisLandFraction, getBiodomeLandFraction, getLifeLandMultiplier } = require('./advanced-research/ecumenopolis.js'));
+  ({ getEcumenopolisLandFraction, getLifeLandMultiplier } = require('./advanced-research/ecumenopolis.js'));
 }
 
 const tempAttributes = [
@@ -1428,7 +1427,6 @@ function updateLifeStatusTable() {
 
     const ecoFraction = getEcumenopolisLandFraction(terraforming);
     const ecumenopolisLandMult = Math.max(0, 1 - ecoFraction);
-    const biodomeFraction = getBiodomeLandFraction(terraforming);
     const landMult = getLifeLandMultiplier(terraforming);
 
     // Precompute day and night temperatures
@@ -1657,10 +1655,16 @@ function updateLifeStatusTable() {
                 }
                 if (ecoFraction > 0) {
                     const ecumenopolisReduction = (1 - ecumenopolisLandMult) * 100;
-                    lines.push(getLifeUIText('ui.life.growthTooltip.ecumenopolis', 'Ecumenopolis: x{value} (-{reduction}%)', { value: formatNumber(ecumenopolisLandMult, false, 2), reduction: ecumenopolisReduction.toFixed(2) }));
-                    if (landMult > ecumenopolisLandMult) {
-                        lines.push(getLifeUIText('ui.life.growthTooltip.biodomeProtection', 'Biodome protection floor: x{value} ({land}% base land)', { value: formatNumber(landMult, false, 2), land: formatNumber(biodomeFraction * 100, false, 2) }));
-                    }
+                    const biodomeProtection = Math.max(0, landMult - ecumenopolisLandMult) * 100;
+                    lines.push(getLifeUIText(
+                        'ui.life.growthTooltip.ecumenopolis',
+                        'Ecumenopolis: x{value} (-{reduction}% + {protection}% Biodome protection)',
+                        {
+                            value: formatNumber(landMult, false, 2),
+                            reduction: ecumenopolisReduction.toFixed(2),
+                            protection: biodomeProtection.toFixed(2)
+                        }
+                    ));
                 }
                 liquidKeys.forEach((resourceKey) => {
                     const inputResourceKey = resourceKey === 'liquidWater' && usesIceForWater
