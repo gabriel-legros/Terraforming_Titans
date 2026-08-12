@@ -38,7 +38,8 @@
     color: #666;
   }
 
-  #temperature-box .temperature-combustion-warning {
+  #temperature-box .temperature-combustion-warning,
+  #temperature-box .temperature-aerobraking-warning {
     color: var(--status-failure-color, #d00000);
     font-weight: bold;
     line-height: 1.3;

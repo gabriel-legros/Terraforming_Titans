@@ -92,6 +92,7 @@ class SpaceMiningProject extends SpaceshipProject {
     this.waterImportTarget = 'surface';
     this.materialImportTarget = 'colony';
     this.gasImportTarget = 'atmospheric';
+    this.aerobrakingEnabled = false;
     const maxPressure = config.attributes?.maxPressure;
     if (Number.isFinite(maxPressure)) {
       this.disablePressureThreshold = maxPressure;
@@ -110,6 +111,73 @@ class SpaceMiningProject extends SpaceshipProject {
 
   getMaxAssignableShips() {
     return warpGateNetworkManager.getCapForProject(this);
+  }
+
+  getAerobrakingResourceKey() {
+    if (this.attributes.dynamicWaterImport) {
+      return 'liquidWater';
+    }
+    const gas = this.getTargetAtmosphericResource();
+    return gas === 'carbonDioxide' || gas === 'inertGas' || gas === 'hydrogen'
+      ? gas
+      : null;
+  }
+
+  isAerobrakingTargetSelected() {
+    if (this.attributes.dynamicWaterImport) {
+      return this.waterImportTarget === 'surface';
+    }
+    return this.getAerobrakingResourceKey() && this.gasImportTarget === 'atmospheric';
+  }
+
+  isAerobrakingActive() {
+    return gameSettings.aerobraking
+      && this.aerobrakingEnabled
+      && this.isAerobrakingTargetSelected()
+      && terraforming.hasAerobrakingAtmosphere();
+  }
+
+  getAerobrakingSpaceAccessBypassFraction() {
+    return this.isAerobrakingActive() ? 1 : 0;
+  }
+
+  createAerobrakingCheckbox() {
+    if (!this.getAerobrakingResourceKey()) {
+      return null;
+    }
+    const container = document.createElement('div');
+    container.classList.add('checkbox-container', 'aerobraking-container');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `${this.name}-aerobraking`;
+    checkbox.checked = this.aerobrakingEnabled;
+    const label = document.createElement('label');
+    label.htmlFor = checkbox.id;
+    label.textContent = getSpaceMiningText('ui.projects.spaceship.aerobraking', 'Aerobraking');
+    const info = document.createElement('span');
+    info.classList.add('info-tooltip-icon');
+    info.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      info,
+      getSpaceMiningText(
+        'ui.projects.spaceship.aerobrakingTooltip',
+        'Bypasses Space Access Capacity when the destination is the surface or atmosphere and atmospheric column mass is at least 100 kg/m\u00B2. Converts arrival energy into planetary heat.',
+        { minimum: TERRAFORMING_AEROBRAKING_PARAMETERS.minimumAtmosphericColumnMassKgM2 }
+      )
+    );
+    checkbox.addEventListener('change', () => {
+      this.aerobrakingEnabled = checkbox.checked;
+      for (const projectName in projectManager.projects) {
+        updateProjectUI(projectName);
+      }
+    });
+    container.append(checkbox, label, info);
+    projectElements[this.name] = {
+      ...projectElements[this.name],
+      aerobrakingContainer: container,
+      aerobrakingCheckbox: checkbox
+    };
+    return container;
   }
 
   applyLegacyWaterCoverageMode(mode) {
@@ -1103,6 +1171,11 @@ class SpaceMiningProject extends SpaceshipProject {
         'Disable if total hydrogen above fill required'
       );
     }
+    if (elements.aerobrakingContainer) {
+      elements.aerobrakingContainer.style.display = gameSettings.aerobraking ? 'flex' : 'none';
+      elements.aerobrakingCheckbox.checked = this.aerobrakingEnabled;
+      elements.aerobrakingCheckbox.disabled = !this.isAerobrakingTargetSelected();
+    }
   }
 
   getTargetAtmosphericResource() {
@@ -1455,6 +1528,7 @@ class SpaceMiningProject extends SpaceshipProject {
       waterImportTarget: this.waterImportTarget,
       materialImportTarget: this.materialImportTarget,
       gasImportTarget: this.gasImportTarget,
+      aerobrakingEnabled: this.aerobrakingEnabled === true,
     };
     if (this.name === 'oreSpaceMining') {
       settings.spaceshipReplicationEnabled = this.spaceshipReplicationEnabled !== false;
@@ -1515,6 +1589,9 @@ class SpaceMiningProject extends SpaceshipProject {
     if (Object.prototype.hasOwnProperty.call(settings, 'gasImportTarget')) {
       this.gasImportTarget = normalizeGasImportTarget(settings.gasImportTarget, this.getTargetAtmosphericResource());
     }
+    if (Object.prototype.hasOwnProperty.call(settings, 'aerobrakingEnabled')) {
+      this.aerobrakingEnabled = settings.aerobrakingEnabled === true;
+    }
     if (!this.getTargetAtmosphericResource()) {
       this.disableAbovePressure = false;
       this.disablePressureThreshold = 0;
@@ -1543,6 +1620,7 @@ class SpaceMiningProject extends SpaceshipProject {
       waterImportTarget: this.waterImportTarget,
       materialImportTarget: this.materialImportTarget,
       gasImportTarget: this.gasImportTarget,
+      aerobrakingEnabled: this.aerobrakingEnabled === true,
     };
     if (this.name === 'oreSpaceMining') {
       state.spaceshipReplicationEnabled = this.spaceshipReplicationEnabled !== false;
@@ -1575,6 +1653,7 @@ class SpaceMiningProject extends SpaceshipProject {
     this.waterImportTarget = normalizeWaterImportTarget(state.waterImportTarget || this.waterImportTarget);
     this.materialImportTarget = normalizeMaterialImportTarget(state.materialImportTarget || this.materialImportTarget);
     this.gasImportTarget = normalizeGasImportTarget(state.gasImportTarget || this.gasImportTarget, this.getTargetAtmosphericResource());
+    this.aerobrakingEnabled = state.aerobrakingEnabled === true;
   }
 
   saveTravelState() {
@@ -1599,6 +1678,7 @@ class SpaceMiningProject extends SpaceshipProject {
       waterImportTarget: this.waterImportTarget,
       materialImportTarget: this.materialImportTarget,
       gasImportTarget: this.gasImportTarget,
+      aerobrakingEnabled: this.aerobrakingEnabled === true,
     };
     if (this.name === 'oreSpaceMining') {
       state.spaceshipReplicationEnabled = this.spaceshipReplicationEnabled !== false;
@@ -1629,6 +1709,9 @@ class SpaceMiningProject extends SpaceshipProject {
     this.waterImportTarget = normalizeWaterImportTarget(state.waterImportTarget || this.waterImportTarget);
     this.materialImportTarget = normalizeMaterialImportTarget(state.materialImportTarget || this.materialImportTarget);
     this.gasImportTarget = normalizeGasImportTarget(state.gasImportTarget || this.gasImportTarget, this.getTargetAtmosphericResource());
+    if (Object.prototype.hasOwnProperty.call(state, 'aerobrakingEnabled')) {
+      this.aerobrakingEnabled = state.aerobrakingEnabled === true;
+    }
   }
 
   calculateSpaceshipGainPerShip() {
@@ -1950,8 +2033,14 @@ class SpaceMiningProject extends SpaceshipProject {
       }
       const surfaceResource = (allBelow || resourceName === 'ice') ? 'ice' : 'liquidWater';
       if (accumulatedChanges) {
+        if (this.isAerobrakingActive()) {
+          terraforming.applyAerobrakingHeat(amount, accumulatedSpecialChanges);
+        }
         accumulatedChanges.surface[surfaceResource] = (accumulatedChanges.surface[surfaceResource] || 0) + amount;
       } else {
+        if (this.isAerobrakingActive()) {
+          terraforming.applyAerobrakingHeat(amount);
+        }
         resources.surface[surfaceResource].value += amount;
         terraforming.distributeSurfaceChangesToZones({ [surfaceResource]: amount });
       }
@@ -2078,6 +2167,11 @@ class SpaceMiningProject extends SpaceshipProject {
         const scale = fraction * productivity;
         entry[gas] = scale > 0 ? applied / scale : 0;
       }
+    }
+    if (this.isAerobrakingActive() && gain.atmospheric) {
+      const gas = this.getTargetAtmosphericResource();
+      const amount = (gain.atmospheric[gas] || 0) * fraction * productivity;
+      terraforming.applyAerobrakingHeat(amount, accumulatedSpecialChanges);
     }
     if (gain.spaceStorage) {
       const spaceStorageProject = projectManager.projects?.spaceStorage;

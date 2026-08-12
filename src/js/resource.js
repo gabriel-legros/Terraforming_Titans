@@ -81,6 +81,7 @@ function initializeAccumulatedSpecialChanges() {
     colonySiliconOverflowToSpaceStorage: 0,
     colonyHydrogenOverflowToSpaceStorage: 0,
     colonyHydrogenNoOverflow: 0,
+    aerobrakingHeatEnergyJ: 0,
     zonalSurfaceTransfers: []
   };
 }

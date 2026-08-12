@@ -52,13 +52,17 @@ function getSpaceAccessCoverage() {
 }
 
 function getSpaceAccessBenefitFraction(project) {
+  const aerobrakingFraction = gameSettings.aerobraking
+    ? project.getAerobrakingSpaceAccessBypassFraction()
+    : 0;
   if (!hasBuiltSpaceAccess()) {
-    return 0;
+    return aerobrakingFraction;
   }
   if (!gameSettings.spaceAccessCapacity || !project.isContinuous()) {
     return 1;
   }
-  return getSpaceAccessCoverage();
+  return aerobrakingFraction
+    + (1 - aerobrakingFraction) * getSpaceAccessCoverage();
 }
 
 function getSpaceAccessMetalCostMultiplier(project) {

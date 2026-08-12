@@ -4,6 +4,7 @@ const TERRAFORMING_TEMPERATURE_PARAMETERS = TERRAFORMING_GAMEPLAY_PARAMETERS.tem
 const TERRAFORMING_SURFACE_HEAT_PARAMETERS = TERRAFORMING_GAMEPLAY_PARAMETERS.surfaceHeat;
 const TERRAFORMING_SIMULATION_PARAMETERS = TERRAFORMING_GAMEPLAY_PARAMETERS.simulation;
 const TERRAFORMING_OXIDATION_PARAMETERS = terraformingParameters.atmosphere.chemistry.oxidation;
+const TERRAFORMING_AEROBRAKING_PARAMETERS = terraformingParameters.atmosphere.aerobraking;
 const SOLAR_LUMINOSITY_W = terraformingParameters.physical.solarLuminosityW;
 let starLuminosityMultiplier = 1; // Multiplier relative to Sol
 function setStarLuminosity(multiplier) {
@@ -573,6 +574,7 @@ class Terraforming extends EffectableEntity{
       opticalDepth: 0,
       opticalDepthContributions: {},
       combustionWarmingRateKPerDay: 0,
+      aerobrakingWarmingRateKPerDay: 0,
       unlocked: false,
       zones: {
         tropical: {
@@ -873,7 +875,7 @@ class Terraforming extends EffectableEntity{
     this.temperature.value = globalTrend;
   }
 
-  applyAtmosphericChemistryHeat(energyJ) {
+  applyClimateHeat(energyJ, maximumTemperatureK) {
     if (energyJ <= 0) return 0;
 
     const heatCapacity = this.getHeatCapacity();
@@ -890,7 +892,7 @@ class Terraforming extends EffectableEntity{
         unconstrainedIncrease,
         Math.max(
           0,
-          TERRAFORMING_OXIDATION_PARAMETERS.maximumCombustionTemperatureK - temperature.value
+          maximumTemperatureK - temperature.value
         )
       );
       temperature.value += temperatureIncrease;
@@ -902,6 +904,49 @@ class Terraforming extends EffectableEntity{
       weightedTemperature += temperature.value * zoneWeight;
     }
     this.temperature.value = weightedTemperature;
+    return depositedEnergyJ;
+  }
+
+  applyAtmosphericChemistryHeat(energyJ) {
+    return this.applyClimateHeat(
+      energyJ,
+      TERRAFORMING_OXIDATION_PARAMETERS.maximumCombustionTemperatureK
+    );
+  }
+
+  hasAerobrakingAtmosphere() {
+    const gravity = this.celestialParameters.gravity;
+    if (!(gravity > 0)) return false;
+    const pressurePa = this._updateAtmosphericPressureCache().totalPressure;
+    return pressurePa / gravity >= TERRAFORMING_AEROBRAKING_PARAMETERS.minimumAtmosphericColumnMassKgM2;
+  }
+
+  applyAerobrakingHeat(importedMassTons, accumulatedSpecialChanges = null) {
+    if (!gameSettings.aerobraking || !this.hasAerobrakingAtmosphere() || !(importedMassTons > 0)) {
+      return 0;
+    }
+    const gravity = this.celestialParameters.gravity;
+    const radiusMeters = this.celestialParameters.radius * 1000;
+    // A zero-excess-speed arrival reaches the atmosphere with escape velocity,
+    // so its minimum specific kinetic energy is v_escape^2 / 2 = GM/R = gR.
+    const energyJ = importedMassTons
+      * terraformingParameters.physical.kgPerTon
+      * gravity
+      * radiusMeters
+      * TERRAFORMING_AEROBRAKING_PARAMETERS.climateHeatDepositionFraction;
+    if (accumulatedSpecialChanges) {
+      accumulatedSpecialChanges.aerobrakingHeatEnergyJ += energyJ;
+      return energyJ;
+    }
+    const temperatureBeforeAerobrakingK = this.temperature.value;
+    const depositedEnergyJ = this.applyClimateHeat(
+      energyJ,
+      TERRAFORMING_AEROBRAKING_PARAMETERS.maximumTemperatureK
+    );
+    this.temperature.aerobrakingWarmingRateKPerDay = depositedEnergyJ > 0
+      && this.temperature.value > temperatureBeforeAerobrakingK
+        ? TERRAFORMING_AEROBRAKING_PARAMETERS.warningTemperatureRateKPerDay
+        : 0;
     return depositedEnergyJ;
   }
 
@@ -1500,6 +1545,7 @@ class Terraforming extends EffectableEntity{
         const wovenAtmosphericChanges = {};
         const wovenSurfaceChanges = {};
         const zonalSurfaceTransfers = options.accumulatedSpecialChanges?.zonalSurfaceTransfers || [];
+        const aerobrakingHeatEnergyJ = options.accumulatedSpecialChanges?.aerobrakingHeatEnergyJ || 0;
         for (const transfer of zonalSurfaceTransfers) {
             transfer.surfaceKeys = this.zonalSurfaceResourceConfigs.find(
                 config => config.name === transfer.input.resource
@@ -1530,6 +1576,7 @@ class Terraforming extends EffectableEntity{
         const combinedChemProcessChanges = {};
         let totalDurationSeconds = 0;
         let totalRealSeconds = 0;
+        let aerobrakingTemperatureIncreaseK = 0;
         let appliedFraction = 0;
         let wovenAlbedoOverflow = 0;
         // Aggregate every resource substep into one controller/UI measurement.
@@ -1593,6 +1640,15 @@ class Terraforming extends EffectableEntity{
             );
             this.runUpdateStep(stepDuration, temperatureOptions);
             const stepResult = this.runResourceUpdateStep(stepDuration);
+            const temperatureBeforeAerobrakingK = this.temperature.value;
+            this.applyClimateHeat(
+                aerobrakingHeatEnergyJ * fraction,
+                TERRAFORMING_AEROBRAKING_PARAMETERS.maximumTemperatureK
+            );
+            aerobrakingTemperatureIncreaseK += Math.max(
+                0,
+                this.temperature.value - temperatureBeforeAerobrakingK
+            );
             totalDurationSeconds += stepResult.durationSeconds || 0;
             totalRealSeconds += stepResult.realSeconds || 0;
 
@@ -1627,6 +1683,9 @@ class Terraforming extends EffectableEntity{
         }
 
         this.finalizePhaseChangeHeatTick(totalDurationSeconds);
+        this.temperature.aerobrakingWarmingRateKPerDay = totalDurationSeconds > 0
+            ? aerobrakingTemperatureIncreaseK * 86400 / totalDurationSeconds
+            : 0;
         this.runHazardUpdate(deltaTime, options);
         this.finalizeUpdate(options);
 

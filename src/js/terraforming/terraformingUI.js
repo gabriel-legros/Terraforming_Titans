@@ -1362,6 +1362,7 @@ function createTemperatureBox(row) {
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
       <p id="temperature-combustion-warning" class="temperature-combustion-warning" style="display: none;" role="status" aria-live="polite"><span aria-hidden="true">&#9888;</span> ${getTerraformingSummaryText('temperature.combustionWarning', 'Temperature is increasing from active combustion')} <span aria-hidden="true">&#9888;</span></p>
+      <p id="temperature-aerobraking-warning" class="temperature-aerobraking-warning" style="display: none;" role="status" aria-live="polite"><span aria-hidden="true">&#9888;</span> ${getTerraformingSummaryText('temperature.aerobrakingWarning', 'Temperature is increasing from aerobraking')} <span aria-hidden="true">&#9888;</span></p>
       <p>${getTerraformingSummaryText('temperature.labels.globalMeanTemp', 'Global Mean Temp')}: <span id="temperature-current"></span><span class="temp-unit"></span></p>
       <p>${getTerraformingSummaryText('temperature.labels.equilibriumTemp', 'Equilibrium Temp')}: <span id="equilibrium-temp"></span> <span class="temp-unit"></span> <span id="equilibrium-temp-info" class="info-tooltip-icon">&#9432;</span></p>
       <p id="temperature-core-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netCoreHeatFlux', 'Net Core Heat Flux')}: <span id="temperature-core-heat"></span> W/m^2</p>
@@ -1529,6 +1530,7 @@ function createTemperatureBox(row) {
       tempUnits: temperatureBox.querySelectorAll('.temp-unit'),
       target: temperatureBox.querySelector('#temperature-target'),
       combustionWarning: temperatureBox.querySelector('#temperature-combustion-warning'),
+      aerobrakingWarning: temperatureBox.querySelector('#temperature-aerobraking-warning'),
       current: temperatureBox.querySelector('#temperature-current'),
       equilibrium: temperatureBox.querySelector('#equilibrium-temp'),
       equilibriumTooltip: equilibriumTempTooltip,
@@ -1588,6 +1590,13 @@ function createTemperatureBox(row) {
     const combustionWarningDisplay = showCombustionWarning ? '' : 'none';
     if (els.combustionWarning.style.display !== combustionWarningDisplay) {
       els.combustionWarning.style.display = combustionWarningDisplay;
+    }
+
+    const showAerobrakingWarning = terraforming.temperature.aerobrakingWarmingRateKPerDay
+      >= terraformingParameters.atmosphere.aerobraking.warningTemperatureRateKPerDay;
+    const aerobrakingWarningDisplay = showAerobrakingWarning ? '' : 'none';
+    if (els.aerobrakingWarning.style.display !== aerobrakingWarningDisplay) {
+      els.aerobrakingWarning.style.display = aerobrakingWarningDisplay;
     }
 
     const zoneKeys = getZones();

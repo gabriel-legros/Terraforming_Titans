@@ -781,6 +781,10 @@ class ImportResourcesProjectUI {
     autoAssignCell.classList.add('import-resources-cell', 'import-auto-assign-cell');
     const autoAssignContainer = project.createAutoAssignSpaceshipsCheckbox(assignmentButtons, assignmentCell);
     autoAssignCell.appendChild(autoAssignContainer);
+    const aerobrakingContainer = project.createAerobrakingCheckbox();
+    if (aerobrakingContainer) {
+      autoAssignCell.appendChild(aerobrakingContainer);
+    }
 
     const totalGainCell = document.createElement('div');
     totalGainCell.classList.add('import-resources-cell', 'import-total-gain-cell');
@@ -856,6 +860,7 @@ class ImportResourcesProjectUI {
       minusButton,
       plusButton,
       autoAssignContainer,
+      aerobrakingContainer,
       assignmentButtons,
       assignmentContainer: assignmentCell,
     };

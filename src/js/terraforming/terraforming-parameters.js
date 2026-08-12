@@ -90,6 +90,12 @@ var terraformingParameters = {
       molecularHydrogenCollisionCrossSectionM2: 3e-19,
       diffusionLimitAtomsM2Second: 2.5e17
     },
+    aerobraking: {
+      minimumAtmosphericColumnMassKgM2: 100,
+      climateHeatDepositionFraction: 1,
+      maximumTemperatureK: 10000,
+      warningTemperatureRateKPerDay: 0.001
+    },
     chemistry: {
       oxidation: {
         // Background sparks are always present; water clouds add lightning activity.
@@ -101,7 +107,7 @@ var terraformingParameters = {
         combustionSpringSecondsPerDay: 86400,
         combustionWarningTemperatureRateKPerDay: 0.001,
         climateHeatDepositionFraction: 1,
-        maximumCombustionTemperatureK: 3000,
+        maximumCombustionTemperatureK: 10000,
         sparkReferenceTemperatureK: 298.15,
         minimumReactiveAtmosphereFraction: 0.2,
         fullReactiveAtmosphereFraction: 0.4,

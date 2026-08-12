@@ -415,7 +415,7 @@ const projectParameters = {
       spaceAccess: {
         elevatorCapacity: 50_000_000,
         skyhookCapacity: 10_000_000,
-        workersPerCompletion: 100_000_000,
+        workersPerCompletion: 50_000_000,
         continuousThresholdMs: 1000,
         skyhookCost: {
           colony: {

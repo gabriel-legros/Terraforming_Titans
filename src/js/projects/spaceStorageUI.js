@@ -357,6 +357,8 @@ function renderSpaceStorageUI(project, container) {
   let capOverlay = cachedCaps.capOverlay;
   let capWindow = cachedCaps.capWindow;
   let capResourceValue = cachedCaps.capResourceValue;
+  let aerobrakingRow = cachedCaps.aerobrakingRow;
+  let aerobrakingCheckbox = cachedCaps.aerobrakingCheckbox;
   let capModeSelect = cachedCaps.capModeSelect;
   let capValueInput = cachedCaps.capValueInput;
   let capValueLabel = cachedCaps.capValueLabel;
@@ -409,6 +411,28 @@ function renderSpaceStorageUI(project, container) {
     capResourceValue = document.createElement('span');
     capResourceValue.classList.add('space-storage-settings-value');
     capResourceRow.append(capResourceLabel, capResourceValue);
+
+    aerobrakingRow = document.createElement('div');
+    aerobrakingRow.classList.add('space-storage-settings-row');
+    const aerobrakingLabel = document.createElement('label');
+    aerobrakingLabel.classList.add('space-storage-settings-label');
+    aerobrakingLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.aerobraking', 'Aerobraking');
+    const aerobrakingInfo = document.createElement('span');
+    aerobrakingInfo.classList.add('info-tooltip-icon');
+    aerobrakingInfo.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      aerobrakingInfo,
+      getSpaceStorageUIText(
+        'ui.projects.spaceStorage.aerobrakingTooltip',
+        'When withdrawing this resource to the surface or atmosphere, bypass Space Access Capacity if atmospheric column mass is at least 100 kg/m\u00B2. Converts arrival energy into planetary heat.',
+        { minimum: TERRAFORMING_AEROBRAKING_PARAMETERS.minimumAtmosphericColumnMassKgM2 }
+      )
+    );
+    aerobrakingLabel.appendChild(aerobrakingInfo);
+    aerobrakingCheckbox = document.createElement('input');
+    aerobrakingCheckbox.type = 'checkbox';
+    aerobrakingCheckbox.id = 'space-storage-aerobraking';
+    aerobrakingRow.append(aerobrakingLabel, aerobrakingCheckbox);
 
     const capModeRow = document.createElement('div');
     capModeRow.classList.add('space-storage-settings-row');
@@ -780,6 +804,7 @@ function renderSpaceStorageUI(project, container) {
     capWindow.append(
       capHeader,
       capResourceRow,
+      aerobrakingRow,
       capModeRow,
       capValueRow,
       transferWeightRow,
@@ -901,6 +926,7 @@ function renderSpaceStorageUI(project, container) {
       project.setLimitWithdrawalsToMaxBiomassDensity(key, projectElements[project.name].limitBiomassDensityWithdrawalsDraft === true);
       project.setPressureWithdrawLimitPa(key, projectElements[project.name].pressureWithdrawLimitDraft);
       project.setAmountWithdrawLimit(key, projectElements[project.name].amountWithdrawLimitDraft);
+      project.setResourceAerobrakingEnabled(key, projectElements[project.name].aerobrakingDraft === true);
       projectElements[project.name].capDraftDirty = false;
       projectElements[project.name].reserveDraftDirty = false;
       closeCapWindow();
@@ -968,6 +994,9 @@ function renderSpaceStorageUI(project, container) {
     respectImportLimitsCheckbox.addEventListener('change', () => {
       projectElements[project.name].respectImportLimitsDraft = respectImportLimitsCheckbox.checked;
     });
+    aerobrakingCheckbox.addEventListener('change', () => {
+      projectElements[project.name].aerobrakingDraft = aerobrakingCheckbox.checked;
+    });
     limitBiomassDensityWithdrawalsCheckbox.addEventListener('change', () => {
       projectElements[project.name].limitBiomassDensityWithdrawalsDraft = limitBiomassDensityWithdrawalsCheckbox.checked;
     });
@@ -989,6 +1018,7 @@ function renderSpaceStorageUI(project, container) {
     projectElements[project.name].limitBiomassDensityWithdrawalsDraft = project.shouldLimitWithdrawalsToMaxBiomassDensity(resourceKey);
     projectElements[project.name].pressureWithdrawLimitDraft = project.getPressureWithdrawLimitPa(resourceKey);
     projectElements[project.name].amountWithdrawLimitDraft = project.getAmountWithdrawLimit(resourceKey);
+    projectElements[project.name].aerobrakingDraft = project.isResourceAerobrakingEnabled(resourceKey);
     capModeSelect.value = capSetting.mode;
     capValueInput.dataset.spaceStorageCap = String(capSetting.value || 0);
     capValueInput.value = capSetting.mode === 'percent' || capSetting.mode === 'weight'
@@ -1012,6 +1042,7 @@ function renderSpaceStorageUI(project, container) {
     scopeTransfersCheckbox.checked = scope.transfers === true;
     scopeConsumptionCheckbox.checked = scope.consumption === true;
     respectImportLimitsCheckbox.checked = projectElements[project.name].respectImportLimitsDraft === true;
+    aerobrakingCheckbox.checked = projectElements[project.name].aerobrakingDraft === true;
     limitBiomassDensityWithdrawalsCheckbox.checked = projectElements[project.name].limitBiomassDensityWithdrawalsDraft === true;
     const pressureWithdrawLimit = projectElements[project.name].pressureWithdrawLimitDraft;
     pressureWithdrawLimitInput.dataset.spaceStoragePressureWithdrawLimit = String(pressureWithdrawLimit);
@@ -1026,6 +1057,10 @@ function renderSpaceStorageUI(project, container) {
     pressureWithdrawLimitRow.style.display = (SPACE_STORAGE_UI_PRESSURE_LIMIT_RESOURCES.has(resourceKey)
       && isSpaceStorageAtmosphericWithdrawalTarget(project, resourceKey)) ? '' : 'none';
     amountWithdrawLimitRow.style.display = SPACE_STORAGE_UI_AMOUNT_LIMIT_RESOURCES.has(resourceKey) ? '' : 'none';
+    aerobrakingRow.style.display = gameSettings.aerobraking && SPACE_STORAGE_AEROBRAKING_RESOURCES.has(resourceKey)
+      ? ''
+      : 'none';
+    aerobrakingCheckbox.disabled = !project.isAerobrakingTargetSelected(resourceKey);
     updateCapInputState();
     updateReserveInputState();
     updateCapResourceValue();
@@ -1323,6 +1358,8 @@ function renderSpaceStorageUI(project, container) {
     capOverlay,
     capWindow,
     capResourceValue,
+    aerobrakingRow,
+    aerobrakingCheckbox,
     capValueLabel,
     capModeSelect,
     capValueInput,
@@ -1693,6 +1730,14 @@ function updateSpaceStorageUI(project) {
     if (els.respectImportLimitsCheckbox) {
       els.respectImportLimitsCheckbox.checked = els.respectImportLimitsDraft === true;
       els.respectImportLimitsRow.style.display = SPACE_STORAGE_IMPORT_LIMIT_RESPECT_RESOURCES.has(els.capResourceKey) ? '' : 'none';
+    }
+    if (els.aerobrakingCheckbox) {
+      els.aerobrakingCheckbox.checked = els.aerobrakingDraft === true;
+      els.aerobrakingRow.style.display = gameSettings.aerobraking
+        && SPACE_STORAGE_AEROBRAKING_RESOURCES.has(els.capResourceKey)
+        ? ''
+        : 'none';
+      els.aerobrakingCheckbox.disabled = !project.isAerobrakingTargetSelected(els.capResourceKey);
     }
     if (els.pressureWithdrawLimitInput) {
       const pressureWithdrawLimit = els.pressureWithdrawLimitDraft || 0;

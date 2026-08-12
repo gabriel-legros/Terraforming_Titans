@@ -63,6 +63,12 @@ const SPACE_STORAGE_PRESSURE_LIMIT_RESOURCES = {
 const SPACE_STORAGE_AMOUNT_LIMIT_RESOURCES = {
   graphite: 'graphite'
 };
+const SPACE_STORAGE_AEROBRAKING_RESOURCES = new Set([
+  'liquidWater',
+  'carbonDioxide',
+  'inertGas',
+  'hydrogen'
+]);
 const SPACE_STORAGE_DEFAULT_EXPANSION_RECIPE_KEY = 'standard';
 const SPACE_STORAGE_FLUID_TRANSFER_TARGETS = {
   liquidWater: {
@@ -161,6 +167,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.resourceBiomassDensityWithdrawLimits = {};
     this.resourcePressureWithdrawLimits = {};
     this.resourceAmountWithdrawLimits = {};
+    this.resourceAerobrakingEnabled = {};
     this.pendingTransfers = [];
     this.megaProjectResourceMode = MEGA_PROJECT_RESOURCE_MODES.SPACE_FIRST;
     this.megaProjectSpaceOnlyOnTravel = false;
@@ -751,7 +758,73 @@ class SpaceStorageProject extends SpaceshipProject {
       return 0;
     }
     const cargoPerShip = this.getShipCapacity(this.attributes.transportPerShip || 0);
-    return Math.max(0, this.assignedSpaceships || 0) * cargoPerShip / duration;
+    return Math.max(0, this.assignedSpaceships || 0)
+      * cargoPerShip
+      / duration
+      * (1 - this.getAerobrakingSpaceAccessBypassFraction());
+  }
+
+  sanitizeResourceAerobrakingEnabled() {
+    const sanitized = {};
+    for (const resourceKey in this.resourceAerobrakingEnabled) {
+      if (SPACE_STORAGE_AEROBRAKING_RESOURCES.has(resourceKey)
+        && this.resourceAerobrakingEnabled[resourceKey] === true) {
+        sanitized[resourceKey] = true;
+      }
+    }
+    this.resourceAerobrakingEnabled = sanitized;
+  }
+
+  setResourceAerobrakingEnabled(resourceKey, enabled) {
+    if (!SPACE_STORAGE_AEROBRAKING_RESOURCES.has(resourceKey) || enabled !== true) {
+      delete this.resourceAerobrakingEnabled[resourceKey];
+      return;
+    }
+    this.resourceAerobrakingEnabled[resourceKey] = true;
+  }
+
+  isResourceAerobrakingEnabled(resourceKey) {
+    return this.resourceAerobrakingEnabled[resourceKey] === true;
+  }
+
+  isAerobrakingTargetSelected(resourceKey) {
+    if (!SPACE_STORAGE_AEROBRAKING_RESOURCES.has(resourceKey)) {
+      return false;
+    }
+    const entry = this.selectedResources.find(selected => selected.resource === resourceKey)
+      || { category: resourceKey === 'liquidWater' ? 'surface' : 'atmospheric', resource: resourceKey };
+    const target = this.getTransferEndpoint(entry);
+    return target.category === 'surface' || target.category === 'atmospheric';
+  }
+
+  isAerobrakingActiveForResource(resourceKey) {
+    return gameSettings.aerobraking
+      && !this.isTeleporterTransferActive()
+      && this.isResourceAerobrakingEnabled(resourceKey)
+      && this.isAerobrakingTargetSelected(resourceKey)
+      && terraforming.hasAerobrakingAtmosphere();
+  }
+
+  getAerobrakingSpaceAccessBypassFraction() {
+    if (!gameSettings.aerobraking
+      || this.isTeleporterTransferActive()
+      || !terraforming.hasAerobrakingAtmosphere()) {
+      return 0;
+    }
+    const selected = this.getUnlockedSelectedResources();
+    let totalWeight = 0;
+    let aerobrakingWeight = 0;
+    selected.forEach((entry) => {
+      const weight = this.getResourceTransferWeight(entry.resource);
+      if (!(weight > 0)) return;
+      totalWeight += weight;
+      if (this.getShipTransferModeForResource(entry.resource) === 'withdraw'
+        && this.isResourceAerobrakingEnabled(entry.resource)
+        && this.isAerobrakingTargetSelected(entry.resource)) {
+        aerobrakingWeight += weight;
+      }
+    });
+    return totalWeight > 0 ? aerobrakingWeight / totalWeight : 0;
   }
 
   isTeleporterTransferUnlocked() {
@@ -2190,6 +2263,9 @@ class SpaceStorageProject extends SpaceshipProject {
         const isColonyOnlyFluidWithdrawal = fluidTarget?.noOverflowChangeKey
           && transfer.category === fluidTarget.category
           && transfer.resource === fluidTarget.resource;
+        if (this.isAerobrakingActiveForResource(transfer.storageKey)) {
+          terraforming.applyAerobrakingHeat(delivered, options?.accumulatedSpecialChanges);
+        }
         this.applyAccumulatedResourceDelta('spaceStorage', transfer.storageKey, -transfer.amount, accumulatedChanges);
         if (transfer.resource === 'biomass') {
           this.addBiomassToZones(delivered);
@@ -2933,7 +3009,8 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceImportLimitRespects: this.exportImportLimitRespectsForAutomation(),
       resourceBiomassDensityWithdrawLimits: this.exportBiomassDensityWithdrawLimitsForAutomation(),
       resourcePressureWithdrawLimits: this.exportPressureWithdrawLimitsForAutomation(),
-      resourceAmountWithdrawLimits: this.exportAmountWithdrawLimitsForAutomation()
+      resourceAmountWithdrawLimits: this.exportAmountWithdrawLimitsForAutomation(),
+      resourceAerobrakingEnabled: { ...(this.resourceAerobrakingEnabled || {}) }
     };
   }
 
@@ -2946,6 +3023,7 @@ class SpaceStorageProject extends SpaceshipProject {
     delete settings.resourceBiomassDensityWithdrawLimits;
     delete settings.resourcePressureWithdrawLimits;
     delete settings.resourceAmountWithdrawLimits;
+    delete settings.resourceAerobrakingEnabled;
     return settings;
   }
 
@@ -3083,12 +3161,18 @@ class SpaceStorageProject extends SpaceshipProject {
         : {};
       this.sanitizeAmountWithdrawLimits();
     }
+    if (Object.prototype.hasOwnProperty.call(settings, 'resourceAerobrakingEnabled')) {
+      this.resourceAerobrakingEnabled = settings.resourceAerobrakingEnabled
+        ? JSON.parse(JSON.stringify(settings.resourceAerobrakingEnabled))
+        : {};
+      this.sanitizeResourceAerobrakingEnabled();
+    }
   }
 
   loadOtherAutomationSettings(settings = {}) {
     const filteredSettings = {};
     for (const key in settings) {
-      if (key === 'resourceStrategicReserves' || key === 'resourceCaps' || key === 'resourceTransferWeights' || key === 'resourceImportLimitRespects' || key === 'resourceBiomassDensityWithdrawLimits' || key === 'resourcePressureWithdrawLimits' || key === 'resourceAmountWithdrawLimits') {
+      if (key === 'resourceStrategicReserves' || key === 'resourceCaps' || key === 'resourceTransferWeights' || key === 'resourceImportLimitRespects' || key === 'resourceBiomassDensityWithdrawLimits' || key === 'resourcePressureWithdrawLimits' || key === 'resourceAmountWithdrawLimits' || key === 'resourceAerobrakingEnabled') {
         continue;
       }
       filteredSettings[key] = settings[key];
@@ -3145,6 +3229,7 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceBiomassDensityWithdrawLimits: this.resourceBiomassDensityWithdrawLimits,
       resourcePressureWithdrawLimits: this.resourcePressureWithdrawLimits,
       resourceAmountWithdrawLimits: this.resourceAmountWithdrawLimits,
+      resourceAerobrakingEnabled: this.resourceAerobrakingEnabled,
       transferMethod: this.transferMethod,
       teleporterRun: this.teleporterRun === true,
       teleporterTransferRate: this.teleporterTransferRate,
@@ -3207,6 +3292,8 @@ class SpaceStorageProject extends SpaceshipProject {
     this.sanitizePressureWithdrawLimits();
     this.resourceAmountWithdrawLimits = state.resourceAmountWithdrawLimits || {};
     this.sanitizeAmountWithdrawLimits();
+    this.resourceAerobrakingEnabled = state.resourceAerobrakingEnabled || {};
+    this.sanitizeResourceAerobrakingEnabled();
     this.transferMethod = state.transferMethod === 'teleporters' ? 'teleporters' : 'spaceships';
     this.teleporterRun = state.teleporterRun === true;
     this.setTeleporterTransferRate(state.teleporterTransferRate);
@@ -3256,6 +3343,7 @@ class SpaceStorageProject extends SpaceshipProject {
       resourceBiomassDensityWithdrawLimits: this.resourceBiomassDensityWithdrawLimits,
       resourcePressureWithdrawLimits: this.resourcePressureWithdrawLimits,
       resourceAmountWithdrawLimits: this.resourceAmountWithdrawLimits,
+      resourceAerobrakingEnabled: this.resourceAerobrakingEnabled,
       transferMethod: this.transferMethod,
       teleporterRun: this.teleporterRun === true,
       teleporterTransferRate: this.teleporterTransferRate,
@@ -3295,6 +3383,8 @@ class SpaceStorageProject extends SpaceshipProject {
     this.sanitizePressureWithdrawLimits();
     this.resourceAmountWithdrawLimits = state.resourceAmountWithdrawLimits || {};
     this.sanitizeAmountWithdrawLimits();
+    this.resourceAerobrakingEnabled = state.resourceAerobrakingEnabled || {};
+    this.sanitizeResourceAerobrakingEnabled();
     this.transferMethod = state.transferMethod === 'teleporters' ? 'teleporters' : 'spaceships';
     this.teleporterRun = state.teleporterRun === true;
     this.setTeleporterTransferRate(state.teleporterTransferRate);
