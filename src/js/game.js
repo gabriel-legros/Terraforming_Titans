@@ -1030,6 +1030,8 @@ function startNewGame() {
   resetDifficultySettings();
   totalPlayTimeSeconds = 0;
   totalRealPlayTimeSeconds = 0;
+  fastestTerraformDays = null;
+  fastestTerraformRealSeconds = null;
   birchWorldTerraformTimeSeconds = null;
   birchWorldTerraformRealTimeSeconds = null;
   gameCompleted = false;
