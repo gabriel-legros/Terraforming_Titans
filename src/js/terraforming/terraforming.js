@@ -530,6 +530,7 @@ class Terraforming extends EffectableEntity{
     this.factoryCoolingPower = 0;
     this.factoryCoolingFlux = 0;
     this.factoryHeatContributors = [];
+    this.megaHeatSinkDirectHeatCapacityJ = 0;
     this.exosphereHeightMeters = 0;
     this.resourceSubstepMilliseconds = TERRAFORMING_RESOURCE_SUBSTEP_MS;
     this.maxResourceSubsteps = TERRAFORMING_RESOURCE_MAX_SUBSTEPS;
@@ -907,8 +908,17 @@ class Terraforming extends EffectableEntity{
     return depositedEnergyJ;
   }
 
+  applyClimateHeatAfterMegaHeatSink(energyJ, maximumTemperatureK) {
+    const mitigatedEnergyJ = Math.min(
+      Math.max(0, energyJ),
+      this.megaHeatSinkDirectHeatCapacityJ
+    );
+    this.megaHeatSinkDirectHeatCapacityJ -= mitigatedEnergyJ;
+    return this.applyClimateHeat(energyJ - mitigatedEnergyJ, maximumTemperatureK);
+  }
+
   applyAtmosphericChemistryHeat(energyJ) {
-    return this.applyClimateHeat(
+    return this.applyClimateHeatAfterMegaHeatSink(
       energyJ,
       TERRAFORMING_OXIDATION_PARAMETERS.maximumCombustionTemperatureK
     );
@@ -939,7 +949,7 @@ class Terraforming extends EffectableEntity{
       return energyJ;
     }
     const temperatureBeforeAerobrakingK = this.temperature.value;
-    const depositedEnergyJ = this.applyClimateHeat(
+    const depositedEnergyJ = this.applyClimateHeatAfterMegaHeatSink(
       energyJ,
       TERRAFORMING_AEROBRAKING_PARAMETERS.maximumTemperatureK
     );
@@ -1341,7 +1351,9 @@ class Terraforming extends EffectableEntity{
 
       this.updateLuminosity();
       this._updateExosphereHeightCache();
-      this.updateSurfaceTemperature(deltaTime, options);
+      const unusedMegaHeatSinkPower = this.updateSurfaceTemperature(deltaTime, options);
+      const durationSeconds = Math.max(0, deltaTime) * 86400 / 1000;
+      this.megaHeatSinkDirectHeatCapacityJ = unusedMegaHeatSinkPower * durationSeconds;
 
       this.apparentEquatorialGravity = getApparentEquatorialGravity(this.celestialParameters);
     }
@@ -1641,7 +1653,7 @@ class Terraforming extends EffectableEntity{
             this.runUpdateStep(stepDuration, temperatureOptions);
             const stepResult = this.runResourceUpdateStep(stepDuration);
             const temperatureBeforeAerobrakingK = this.temperature.value;
-            this.applyClimateHeat(
+            this.applyClimateHeatAfterMegaHeatSink(
                 aerobrakingHeatEnergyJ * fraction,
                 TERRAFORMING_AEROBRAKING_PARAMETERS.maximumTemperatureK
             );
@@ -2460,6 +2472,10 @@ class Terraforming extends EffectableEntity{
 
         this.temperature.effectiveTempNoAtmosphere =
             effectiveTemp(this.luminosity.surfaceAlbedo, this.luminosity.modifiedSolarFluxUnpenalized, { addedFlux: globalNetSurfaceHeatFlux });
+        return Math.max(
+          0,
+          megaHeatSinkAllocation.surplusCoolingPower - usableMegaHeatSinkCoolingPower
+        );
     }
 
     getRadiationDoseBoostFromEffects() {
