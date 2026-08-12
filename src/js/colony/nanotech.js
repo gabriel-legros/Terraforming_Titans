@@ -769,7 +769,6 @@ class NanotechManager extends EffectableEntity {
       this[recycling.onlyProperty] = !!state[recycling.onlyProperty];
       this[recycling.uncappedProperty] = !!state[recycling.uncappedProperty];
     });
-    this.nanobots = Math.max(1, Math.min(this.nanobots, this.getMaxNanobots()));
     this.reapplyEffects();
     this.markUIDirty();
   }
