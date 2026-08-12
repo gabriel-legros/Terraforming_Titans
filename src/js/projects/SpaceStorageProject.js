@@ -1076,8 +1076,14 @@ class SpaceStorageProject extends SpaceshipProject {
     return { category: entry.category, resource: entry.resource };
   }
 
-  getTransferDestinationFreeForTick(entry, accumulatedChanges = null) {
-    const target = this.getTransferEndpoint(entry);
+  getWithdrawalEndpoint(entry) {
+    if (entry.resource === 'liquidWater' && this.isAerobrakingActiveForResource('liquidWater')) {
+      return { category: 'atmospheric', resource: 'atmosphericWater' };
+    }
+    return this.getTransferEndpoint(entry);
+  }
+
+  getTransferDestinationFreeForTick(entry, accumulatedChanges = null, target = this.getWithdrawalEndpoint(entry)) {
     const fluidConfig = SPACE_STORAGE_FLUID_TRANSFER_TARGETS[entry.resource];
     if (fluidConfig && this.getFluidTransferTarget(entry.resource).allowsOverflow) {
       return Infinity;
@@ -1125,12 +1131,12 @@ class SpaceStorageProject extends SpaceshipProject {
       ) {
         return;
       }
-      const target = this.getTransferEndpoint(entry);
+      const target = this.getWithdrawalEndpoint(entry);
       const stored = this.getAvailableStoredResourceForTick(entry.resource, 'transfers', accumulatedChanges);
       if (!(stored > 0)) {
         return;
       }
-      const storageDemand = this.getTransferDestinationFreeForTick(entry, accumulatedChanges);
+      const storageDemand = this.getTransferDestinationFreeForTick(entry, accumulatedChanges, target);
       const consumerDemand = this.getProductivityConsumerDemandForTick(target.category, target.resource, deltaTime);
       const importLimitRemaining = this.getImportLimitRemainingForWithdrawal(entry.resource, target, accumulatedChanges);
       const amountLimitRemaining = this.getAmountWithdrawLimitRemaining(entry.resource, target, accumulatedChanges);
@@ -1801,8 +1807,8 @@ class SpaceStorageProject extends SpaceshipProject {
       if (entry.resource === 'biomass' && !this.canWithdrawBiomass()) return;
       const stored = this.getAvailableStoredResource(entry.resource, 'transfers');
       if (stored <= 0) return;
-      const target = this.getTransferEndpoint(entry);
-      const destFree = this.getTransferDestinationFreeForTick(entry);
+      const target = this.getWithdrawalEndpoint(entry);
+      const destFree = this.getTransferDestinationFreeForTick(entry, null, target);
       const importLimitRemaining = this.getImportLimitRemainingForWithdrawal(entry.resource, target);
       const amountLimitRemaining = this.getAmountWithdrawLimitRemaining(entry.resource, target);
       const biomassDensityRemaining = this.getBiomassWithdrawalDensityRemaining(null);
@@ -1924,8 +1930,8 @@ class SpaceStorageProject extends SpaceshipProject {
       if (entry.resource === 'biomass' && !this.canWithdrawBiomass()) return;
       const stored = this.getAvailableStoredResourceForTick(entry.resource, 'transfers', accumulatedChanges);
       if (stored <= 0) return;
-      const target = this.getTransferEndpoint(entry);
-      const destFree = this.getTransferDestinationFreeForTick(entry, accumulatedChanges);
+      const target = this.getWithdrawalEndpoint(entry);
+      const destFree = this.getTransferDestinationFreeForTick(entry, accumulatedChanges, target);
       const importLimitRemaining = this.getImportLimitRemainingForWithdrawal(entry.resource, target, accumulatedChanges);
       const amountLimitRemaining = this.getAmountWithdrawLimitRemaining(entry.resource, target, accumulatedChanges);
       const biomassDensityRemaining = entry.resource === 'biomass'

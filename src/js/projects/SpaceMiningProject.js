@@ -1439,6 +1439,9 @@ class SpaceMiningProject extends SpaceshipProject {
       if (targetCategory === 'colony' && targetResource === 'water') {
         return this.getColonyResourceCapacityRemaining('water', accumulatedChanges) + coverageRemaining;
       }
+      if (targetCategory === 'atmospheric' && targetResource === 'atmosphericWater') {
+        return coverageRemaining;
+      }
       return Infinity;
     }
     let remaining = this.getGasImportPressureLimitRemaining(targetResource, accumulatedChanges);
@@ -1723,6 +1726,9 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (this.attributes.dynamicWaterImport && this.attributes.resourceGainPerShip?.surface?.ice) {
       const capacity = this.getShipCapacity(this.attributes.resourceGainPerShip.surface.ice);
+      if (this.isAerobrakingActive()) {
+        return { atmospheric: { atmosphericWater: capacity } };
+      }
       if (this.waterImportTarget === 'spaceStorage') {
         return { spaceStorage: { liquidWater: capacity } };
       }
@@ -1756,7 +1762,9 @@ class SpaceMiningProject extends SpaceshipProject {
       const gainPerShip = this.calculateSpaceshipGainPerShip();
       const category = gainPerShip.colony
         ? 'colony'
-        : (gainPerShip.surface ? 'surface' : (gainPerShip.spaceStorage ? 'spaceStorage' : null));
+        : (gainPerShip.surface
+          ? 'surface'
+          : (gainPerShip.atmospheric ? 'atmospheric' : (gainPerShip.spaceStorage ? 'spaceStorage' : null)));
       if (!category || !gainPerShip[category]) {
         return super.calculateSpaceshipTotalResourceGain(perSecond);
       }
@@ -1913,6 +1921,23 @@ class SpaceMiningProject extends SpaceshipProject {
 
   getContinuousGainScaleLimit(context, gainBase, accumulatedChanges = null, productivity = 1) {
     let ratio = super.getContinuousGainScaleLimit(context, gainBase, accumulatedChanges, productivity);
+    if (this.attributes.dynamicWaterImport && gainBase.atmospheric?.atmosphericWater) {
+      const desired = gainBase.atmospheric.atmosphericWater
+        * context.fraction
+        * context.successChance
+        * productivity;
+      const remaining = this.getImportLimitRemainingForDelivery(
+        'liquidWater',
+        'atmospheric',
+        'atmosphericWater',
+        accumulatedChanges
+      );
+      const waterRatio = desired > 0 ? Math.max(0, Math.min(1, remaining / desired)) : 1;
+      if (waterRatio < 1) {
+        resources.atmospheric.atmosphericWater.automationLimited = true;
+      }
+      ratio = Math.min(ratio, waterRatio);
+    }
     if (gainBase.spaceStorage) {
       const spaceStorageProject = projectManager.projects?.spaceStorage;
       if (spaceStorageProject) {
@@ -1963,6 +1988,27 @@ class SpaceMiningProject extends SpaceshipProject {
     const hasMonitoring = this.isBooleanFlagSet('atmosphericMonitoring');
     if (this.exceedsCo2CoverageLimit(hasMonitoring)) {
       resources.surface.liquidCO2.automationLimited = true;
+      return;
+    }
+    if (this.attributes.dynamicWaterImport && gain.atmospheric?.atmosphericWater) {
+      const scale = fraction * productivity;
+      const desired = gain.atmospheric.atmosphericWater * scale;
+      const remaining = this.getImportLimitRemainingForDelivery(
+        'liquidWater',
+        'atmospheric',
+        'atmosphericWater',
+        accumulatedChanges
+      );
+      const applied = Math.min(desired, remaining);
+      if (applied < desired) {
+        resources.atmospheric.atmosphericWater.automationLimited = true;
+      }
+      if (!(applied > 0)) {
+        return;
+      }
+      gain.atmospheric.atmosphericWater = scale > 0 ? applied / scale : 0;
+      terraforming.applyAerobrakingHeat(applied, accumulatedSpecialChanges);
+      super.applySpaceshipResourceGain(gain, fraction, accumulatedChanges, productivity, accumulatedSpecialChanges);
       return;
     }
     if (this.attributes.dynamicWaterImport && (gain.surface || gain.colony)) {
