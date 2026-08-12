@@ -18,6 +18,12 @@ contextBridge.exposeInMainWorld('electronSaveStorage', {
   }
 });
 
+contextBridge.exposeInMainWorld('electronFileExport', {
+  save(filename, contents) {
+    return ipcRenderer.invoke('file-export:save', String(filename), String(contents));
+  }
+});
+
 contextBridge.exposeInMainWorld('electronMods', {
   getSession() {
     return ipcRenderer.sendSync('mods:get-session');
