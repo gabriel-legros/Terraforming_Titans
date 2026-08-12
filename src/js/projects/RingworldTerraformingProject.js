@@ -654,7 +654,7 @@ class RingworldTerraformingProject extends Project {
     const zoneArea = (terraforming.celestialParameters.surfaceArea || 0) * pct;
     const zoneLiquidWater = terraforming.zonalSurface.liquidWater.tropical || 0;
     const atmosphericHeatCapacity = atmosphereInEffect
-      ? calculateEffectiveAtmosphericHeatCapacityHelper(terraforming.resources.atmospheric, effectiveSurfacePressurePa, gSurface)
+      ? calculateEffectiveAtmosphericHeatCapacity(terraforming.resources.atmospheric, effectiveSurfacePressurePa, gSurface)
       : 0;
     const zoneFractions = calculateZonalSurfaceFractions(terraforming, 'tropical');
     const flux = terraforming.luminosity.solarFlux * (1 - shadingStrength);

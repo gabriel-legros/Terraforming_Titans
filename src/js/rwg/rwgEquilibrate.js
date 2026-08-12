@@ -1,84 +1,5 @@
 // RWG Equilibration: isolate terraforming simulation and fast-forward to a steady state
 (function() {
-  // Node compatibility: import Terraforming and default parameters if available
-  let TerraformingCtor = (typeof Terraforming === 'function') ? Terraforming : undefined;
-  let baseDefaultParams = (typeof defaultPlanetParameters !== 'undefined') ? defaultPlanetParameters : undefined;
-  if (typeof module !== 'undefined' && module.exports) {
-    try {
-      // Ensure EffectableEntity exists for Terraforming class extension
-      if (typeof globalThis.EffectableEntity === 'undefined') {
-        try { globalThis.EffectableEntity = require('../effectable-entity.js'); } catch (_) {}
-      }
-      // Provide life parameters expected by terraforming
-      if (typeof globalThis.lifeParameters === 'undefined') {
-        try { globalThis.lifeParameters = require('../life-parameters.js'); } catch (_) {}
-      }
-      // Zones helpers required by terraforming calculations
-      if (typeof globalThis.getZonePercentage === 'undefined') {
-        try {
-          const zones = require('../terraforming/zones.js');
-          globalThis.getZonePercentage = zones.getZonePercentage;
-          if (typeof globalThis.getZoneRatio === 'undefined') globalThis.getZoneRatio = zones.getZoneRatio;
-          if (typeof globalThis.ZONES === 'undefined') globalThis.ZONES = zones.ZONES;
-        } catch (_) {}
-      }
-      // Physics helpers used by terraforming
-      try {
-        const physics = require('../terraforming/physics.js');
-        if (typeof globalThis.calculateEmissivity === 'undefined') globalThis.calculateEmissivity = physics.calculateEmissivity;
-        if (typeof globalThis.calculateAtmosphericPressure === 'undefined') globalThis.calculateAtmosphericPressure = physics.calculateAtmosphericPressure;
-        if (typeof globalThis.dayNightTemperaturesModel === 'undefined') globalThis.dayNightTemperaturesModel = physics.dayNightTemperaturesModel;
-        if (typeof globalThis.effectiveTemp === 'undefined') globalThis.effectiveTemp = physics.effectiveTemp;
-        if (typeof globalThis.calculateActualAlbedoPhysics === 'undefined') globalThis.calculateActualAlbedoPhysics = physics.calculateActualAlbedoPhysics || globalThis.calculateActualAlbedoPhysics;
-        if (typeof globalThis.surfaceAlbedoMix === 'undefined') globalThis.surfaceAlbedoMix = physics.surfaceAlbedoMix || globalThis.surfaceAlbedoMix;
-        if (typeof globalThis.cloudFraction === 'undefined') globalThis.cloudFraction = physics.cloudFraction || globalThis.cloudFraction;
-      } catch (_) {}
-
-      // Phase-change utils expect some constants defined in terraforming
-      if (typeof globalThis.C_P_AIR === 'undefined') globalThis.C_P_AIR = 1004;
-      if (typeof globalThis.EPSILON === 'undefined') globalThis.EPSILON = 0.622;
-
-      // Ensure dry-ice and water cycle globals are available
-      try {
-        const dryIce = require('../terraforming/dry-ice-cycle.js');
-        if (typeof globalThis.sublimationRateCO2 === 'undefined') globalThis.sublimationRateCO2 = dryIce.sublimationRateCO2 || globalThis.sublimationRateCO2;
-        if (typeof globalThis.rapidSublimationRateCO2 === 'undefined') globalThis.rapidSublimationRateCO2 = dryIce.rapidSublimationRateCO2 || globalThis.rapidSublimationRateCO2;
-        if (typeof globalThis.co2Cycle === 'undefined') globalThis.co2Cycle = dryIce.co2Cycle || globalThis.co2Cycle;
-      } catch (_) {}
-      try {
-        const water = require('../terraforming/water-cycle.js');
-        if (typeof globalThis.sublimationRateWater === 'undefined') globalThis.sublimationRateWater = water.sublimationRateWater || globalThis.sublimationRateWater;
-        if (typeof globalThis.evaporationRateWater === 'undefined') globalThis.evaporationRateWater = water.evaporationRateWater || globalThis.evaporationRateWater;
-        if (typeof globalThis.waterCycle === 'undefined') globalThis.waterCycle = water.waterCycle || globalThis.waterCycle;
-        if (typeof globalThis.boilingPointWater === 'undefined') globalThis.boilingPointWater = water.boilingPointWater || globalThis.boilingPointWater;
-      } catch (_) {}
-      try {
-        const hydro = require('../terraforming/hydrocarbon-cycle.js');
-        if (typeof globalThis.methaneCycle === 'undefined') globalThis.methaneCycle = hydro.methaneCycle || globalThis.methaneCycle;
-        if (typeof globalThis.boilingPointMethane === 'undefined') globalThis.boilingPointMethane = hydro.boilingPointMethane || globalThis.boilingPointMethane;
-      } catch (_) {}
-      // Hydrology functions for surface flow
-      try {
-        const hydrology = require('../terraforming/hydrology.js');
-        if (typeof globalThis.simulateSurfaceWaterFlow === 'undefined') globalThis.simulateSurfaceWaterFlow = hydrology.simulateSurfaceWaterFlow;
-        if (typeof globalThis.simulateSurfaceHydrocarbonFlow === 'undefined') globalThis.simulateSurfaceHydrocarbonFlow = hydrology.simulateSurfaceHydrocarbonFlow;
-      } catch (_) {}
-      // Require Terraforming after priming globals
-      const TF = require('../terraforming/terraforming.js');
-      TerraformingCtor = TF && TF.default ? TF.default : TF;
-    } catch (_) {}
-    try {
-      const PP = require('../planet-parameters.js');
-      baseDefaultParams = PP && PP.defaultPlanetParameters ? PP.defaultPlanetParameters : baseDefaultParams;
-    } catch (_) {}
-    // Import hazard helper functions
-    try {
-      const hazardHelper = require('./rwgHazardHelper.js');
-      globalThis.clamp01 = hazardHelper.clamp01;
-      globalThis.buildHazardEquilibrationContext = hazardHelper.buildHazardEquilibrationContext;
-      globalThis.applyPostEquilibrationHazardTuning = hazardHelper.applyPostEquilibrationHazardTuning;
-    } catch (_) {}
-  }
   function isObject(item) { return (item && typeof item === 'object' && !Array.isArray(item)); }
   function deepMerge(target, source) {
     const output = { ...target };
@@ -124,7 +45,7 @@
 
   function buildSandboxResourcesFromOverride(overrideResources) {
     const res = {};
-    const mergedResources = deepMerge((baseDefaultParams && baseDefaultParams.resources) || {}, overrideResources || {});
+    const mergedResources = deepMerge(defaultPlanetParameters.resources, overrideResources || {});
     for (const cat of Object.keys(mergedResources)) {
       res[cat] = {};
       const bucket = mergedResources[cat];
@@ -329,36 +250,27 @@
     const maxSteps = options.maxSteps ?? 0;
 
     return new Promise((resolve, reject) => {
-      const prevLum = typeof getStarLuminosity === 'function' ? getStarLuminosity() : 1;
+      const prevLum = getStarLuminosity();
+      const previousPlanetParameters = currentPlanetParameters;
+      const previousResources = resources;
+      const previousFacilityFunction = calculateZoneSolarFluxWithFacility;
       let terra = null;
       let previousResourceSubstepMs = null;
       let previousMaxResourceSubsteps = null;
       try {
         isEquilibrating = true;
-        const TF = TerraformingCtor || (typeof Terraforming === 'function' ? Terraforming : undefined);
-        if (typeof TF !== 'function') {
-          isEquilibrating = false;
-          reject(new Error('Terraforming module unavailable'));
-          return;
-        }
         normalizeEquilibrationStar(fullParams);
         const sandboxResources = buildSandboxResourcesFromOverride(fullParams.resources || {});
 
-        // Guarded global swap-in (robust): track previous descriptors
-        const cppDesc = Object.getOwnPropertyDescriptor(globalThis, 'currentPlanetParameters');
-        const resDesc = Object.getOwnPropertyDescriptor(globalThis, 'resources');
-        Object.defineProperty(globalThis, 'currentPlanetParameters', { value: fullParams, configurable: true, writable: true });
-        Object.defineProperty(globalThis, 'resources', { value: sandboxResources, configurable: true, writable: true });
+        currentPlanetParameters = fullParams;
+        resources = sandboxResources;
 
         // Temporarily disable facility hooks that could contaminate equilibrium
-        const prevFacilityFn = globalThis.calculateZoneSolarFluxWithFacility;
-        globalThis.calculateZoneSolarFluxWithFacility = undefined;
+        calculateZoneSolarFluxWithFacility = undefined;
 
-        terra = new TF(sandboxResources, fullParams.celestialParameters || {});
-        if (typeof terra.calculateInitialValues === 'function') {
-          terra.calculateInitialValues(fullParams);
-          ensureEquilibrationZones(terra);
-        }
+        terra = new Terraforming(sandboxResources, fullParams.celestialParameters || {});
+        terra.calculateInitialValues(fullParams);
+        ensureEquilibrationZones(terra);
 
         let stepIdx = 0;
         let stableCount = 0;
@@ -392,21 +304,11 @@
           terra.synchronizeGlobalResources();
           clearTimeout(timeoutHandle);
           isEquilibrating = false;
-          if (typeof setStarLuminosity === 'function') {
-            setStarLuminosity(prevLum);
-          }
+          setStarLuminosity(prevLum);
           // Restore globals without leaking sandbox
-          if (cppDesc) {
-            Object.defineProperty(globalThis, 'currentPlanetParameters', cppDesc);
-          } else {
-            delete globalThis.currentPlanetParameters;
-          }
-          if (resDesc) {
-            Object.defineProperty(globalThis, 'resources', resDesc);
-          } else {
-            delete globalThis.resources;
-          }
-          globalThis.calculateZoneSolarFluxWithFacility = prevFacilityFn;
+          currentPlanetParameters = previousPlanetParameters;
+          resources = previousResources;
+          calculateZoneSolarFluxWithFacility = previousFacilityFunction;
           if (!ok) return;
           const outOverride = copyBackToOverrideFromSandbox(fullParams, sandboxResources, terra);
           const diagnostics = buildEquilibrationDiagnostics(terra);
@@ -439,7 +341,7 @@
             // 1) update luminosity/flux, 2) update surface temperatures, 3) advance resources
             terra.synchronizeGlobalResources();
             terra._updateZonalCoverageCache();
-            if (typeof terra.updateLuminosity === 'function') terra.updateLuminosity();
+            terra.updateLuminosity();
             terra.updateSurfaceTemperature(0, { ignoreHeatCapacity: true });
             terra.updateResources(stepMs, {
               refreshStandaloneRates: true,
@@ -529,9 +431,10 @@
         if (options.sync) loopChunk(); else setTimeout(loopChunk, 0);
       } catch (e) {
         isEquilibrating = false;
-        if (typeof setStarLuminosity === 'function') {
-          setStarLuminosity(prevLum);
-        }
+        setStarLuminosity(prevLum);
+        currentPlanetParameters = previousPlanetParameters;
+        resources = previousResources;
+        calculateZoneSolarFluxWithFacility = previousFacilityFunction;
         if (terra && previousResourceSubstepMs !== null && previousMaxResourceSubsteps !== null) {
           terra.resourceSubstepMilliseconds = previousResourceSubstepMs;
           terra.maxResourceSubsteps = previousMaxResourceSubsteps;
@@ -541,11 +444,7 @@
     });
   }
 
-  if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { runEquilibration, buildSandboxResourcesFromOverride, copyBackToOverrideFromSandbox };
-  } else {
-    globalThis.runEquilibration = runEquilibration;
-  }
+  window.runEquilibration = runEquilibration;
 })();
 
 

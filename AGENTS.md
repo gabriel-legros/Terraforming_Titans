@@ -105,6 +105,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ## Project Overview
 - Browser incremental game with script entry via `index.html`.
+- `Terraforming` construction and update orchestration remain in `src/js/terraforming/terraforming.js`; status evaluation, resource stepping, climate calculations, effect application, and persistence methods are attached from the corresponding `terraforming-*.js` files immediately after it in ordered script loading. These files are browser-only ordered scripts and use their required upstream globals directly; do not add CommonJS exports or environment-probing fallbacks.
 - Solar panel cooling conserves its planet-wide power while distributing the cooling flux among climate zones in proportion to each zone's mirror-modified sunlight after local surface albedo. Ordinary factory heat remains uniform across zones.
 - `Terraforming.calculateSurfaceSolarFlux()` and `calculateZonalSurfaceSolarFlux(zone)` are the canonical cloud/haze-adjusted surface-light APIs. Luminosity requirements, solar panels, photosynthetic growth, UI displays, and scripting must consume these APIs rather than interpreting `modifiedSolarFlux` or world geometry themselves.
 - English localization is split between `src/js/lang/current-language.js` for shared game/UI text and `src/js/lang/story-language.js` for chapter titles, narratives, prompts, story-project content, and story-project-specific UI.
