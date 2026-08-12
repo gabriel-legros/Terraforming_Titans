@@ -131,7 +131,10 @@ function getMissingResearchPrerequisites(researchItem) {
 }
 
 function getMissingResearchPrerequisiteText(missingPrerequisites) {
-    const names = missingPrerequisites.map(prerequisite => prerequisite.name).join(', ');
+    const names = missingPrerequisites.map(prerequisite => {
+        const visibleIds = researchManager.getVisibleResearchIdsByCategory(prerequisite.category);
+        return visibleIds.has(prerequisite.id) ? prerequisite.name : '???';
+    }).join(', ');
     if (missingPrerequisites.length === 1) {
         return getResearchUIText(
             'ui.research.missingPrerequisite',
@@ -189,8 +192,8 @@ function updateAllResearchButtons(researchData, category = null) {
                 container.style.display = display;
             }
             updateResearchButtonText(button, researchItem, isVisible);
-            researchPrerequisiteStatus.style.display = unavailable ? '' : 'none';
-            if (unavailable) {
+            researchPrerequisiteStatus.style.display = unavailable && isVisible ? '' : 'none';
+            if (unavailable && isVisible) {
                 const statusText = getMissingResearchPrerequisiteText(missingPrerequisites);
                 if (researchPrerequisiteStatus.textContent !== statusText) {
                     researchPrerequisiteStatus.textContent = statusText;
