@@ -2524,12 +2524,25 @@ class SpaceMirrorFacilityProject extends Project {
   saveAutomationSettings() {
     return {
       ...super.saveAutomationSettings(),
+      lanternDayNightPeriod: this.lanternDayNightPeriod,
       mirrorOversightSettings: buildMirrorOversightAutomationSnapshot(this.mirrorOversightSettings)
     };
   }
 
   loadAutomationSettings(settings = {}, options = {}) {
     super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'lanternDayNightPeriod')) {
+      const savedPeriod = Number(settings.lanternDayNightPeriod);
+      if (settings.lanternDayNightPeriod === null) {
+        this.lanternDayNightPeriod = null;
+      } else {
+        if (this.lanternDayNightPeriod === null) {
+          this.lanternDayNightFallbackPeriod = terraforming.celestialParameters.dayNightPeriod || 24;
+        }
+        this.lanternDayNightPeriod = Math.max(1, Math.min(1000, savedPeriod));
+      }
+      syncLanternDayNightPeriod(this);
+    }
     if (!Object.prototype.hasOwnProperty.call(settings, 'mirrorOversightSettings')) {
       return;
     }

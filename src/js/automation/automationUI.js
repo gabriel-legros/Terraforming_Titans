@@ -1206,7 +1206,7 @@ function parseAutomationPresetJsonFieldValue(rawValue, options = {}) {
   options = options || {};
   const trimmed = String(rawValue).trim();
   if (!trimmed) {
-    return '';
+    return options.emptyAsNull ? null : '';
   }
   if (trimmed === 'true') {
     return true;
@@ -1819,6 +1819,13 @@ function isValidAutomationPresetLeafReplacement(baseValue, nextValue, options = 
   if (options.projectAssignmentInteger) {
     return Number.isSafeInteger(nextValue)
       || (Object.prototype.toString.call(nextValue) === '[object String]' && /^\d+$/.test(nextValue));
+  }
+  if (options.nullableNumber) {
+    return nextValue === null
+      || (typeof nextValue === 'number'
+        && Number.isFinite(nextValue)
+        && nextValue >= options.minimum
+        && nextValue <= options.maximum);
   }
   if (baseValue === null) {
     return nextValue === null;
