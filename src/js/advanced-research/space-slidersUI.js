@@ -8,6 +8,13 @@ const spaceSlidersUiCache = {
   notches: null,
   tooltip: null,
   tooltipContent: null,
+  miningRightsCard: null,
+  miningRightsSlider: null,
+  miningRightsTick: null,
+  miningRightsSummary: null,
+  miningRightsNotches: null,
+  miningRightsTooltip: null,
+  miningRightsTooltipContent: null,
   megaprojectsCard: null,
   megaprojectsSlider: null,
   megaprojectsAllocation: null,
@@ -18,6 +25,7 @@ const spaceSlidersUiCache = {
 };
 let spaceSlidersUiSpaceManager = null;
 let spaceSlidersUiInputBound = false;
+let cylindersHopeMiningRightsInputBound = false;
 let megaprojectsCoordinationInputBound = false;
 
 function setSpaceSliderElements(elements = {}) {
@@ -47,6 +55,27 @@ function setSpaceSliderElements(elements = {}) {
   }
   if (elements.tooltipContent) {
     spaceSlidersUiCache.tooltipContent = elements.tooltipContent;
+  }
+  if (elements.miningRightsCard) {
+    spaceSlidersUiCache.miningRightsCard = elements.miningRightsCard;
+  }
+  if (elements.miningRightsSlider) {
+    spaceSlidersUiCache.miningRightsSlider = elements.miningRightsSlider;
+  }
+  if (elements.miningRightsTick) {
+    spaceSlidersUiCache.miningRightsTick = elements.miningRightsTick;
+  }
+  if (elements.miningRightsSummary) {
+    spaceSlidersUiCache.miningRightsSummary = elements.miningRightsSummary;
+  }
+  if (elements.miningRightsNotches) {
+    spaceSlidersUiCache.miningRightsNotches = elements.miningRightsNotches;
+  }
+  if (elements.miningRightsTooltip) {
+    spaceSlidersUiCache.miningRightsTooltip = elements.miningRightsTooltip;
+  }
+  if (elements.miningRightsTooltipContent) {
+    spaceSlidersUiCache.miningRightsTooltipContent = elements.miningRightsTooltipContent;
   }
   if (elements.megaprojectsCard) {
     spaceSlidersUiCache.megaprojectsCard = elements.megaprojectsCard;
@@ -83,6 +112,13 @@ function initializeSpaceSlidersUI(space) {
   const productivityValue = document.getElementById('space-slider-cylinders-hope-productivity');
   const tooltip = document.getElementById('space-slider-cylinders-hope-tooltip');
   const tooltipContent = attachDynamicInfoTooltip(tooltip, '');
+  const miningRightsCard = document.getElementById('space-slider-cylinders-hope-mining-rights-card');
+  const miningRightsSlider = document.getElementById('space-slider-cylinders-hope-mining-rights-input');
+  const miningRightsTick = document.getElementById('space-slider-cylinders-hope-mining-rights-tick');
+  const miningRightsSummary = document.getElementById('space-slider-cylinders-hope-mining-rights-summary');
+  const miningRightsNotches = document.getElementById('space-slider-cylinders-hope-mining-rights-notches');
+  const miningRightsTooltip = document.getElementById('space-slider-cylinders-hope-mining-rights-tooltip');
+  const miningRightsTooltipContent = attachDynamicInfoTooltip(miningRightsTooltip, '');
   const megaprojectsCard = document.getElementById('space-slider-megaprojects-coordination-card');
   const megaprojectsSlider = document.getElementById('space-slider-megaprojects-coordination-input');
   const megaprojectsAllocation = document.getElementById('space-slider-megaprojects-coordination-allocation');
@@ -100,6 +136,13 @@ function initializeSpaceSlidersUI(space) {
     productivityValue,
     tooltip,
     tooltipContent,
+    miningRightsCard,
+    miningRightsSlider,
+    miningRightsTick,
+    miningRightsSummary,
+    miningRightsNotches,
+    miningRightsTooltip,
+    miningRightsTooltipContent,
     megaprojectsCard,
     megaprojectsSlider,
     megaprojectsAllocation,
@@ -118,6 +161,17 @@ function initializeSpaceSlidersUI(space) {
       updateSpaceSlidersUI({ space: spaceSlidersUiSpaceManager });
     });
   }
+  if (miningRightsSlider && !cylindersHopeMiningRightsInputBound) {
+    cylindersHopeMiningRightsInputBound = true;
+    miningRightsSlider.addEventListener('input', () => {
+      if (!spaceSlidersUiSpaceManager) {
+        return;
+      }
+      spaceSlidersUiSpaceManager.setSpaceSliderTick('cylindersHopeMiningRights', miningRightsSlider.value);
+      updateSpaceSlidersUI({ space: spaceSlidersUiSpaceManager });
+      updateOneillCylinderStatsUI({ space: spaceSlidersUiSpaceManager, galaxy: galaxyManager });
+    });
+  }
   if (megaprojectsSlider && !megaprojectsCoordinationInputBound) {
     megaprojectsCoordinationInputBound = true;
     megaprojectsSlider.addEventListener('input', () => {
@@ -131,6 +185,7 @@ function initializeSpaceSlidersUI(space) {
     });
   }
   renderSpaceSliderNotches(notches);
+  renderSpaceSliderNotches(miningRightsNotches);
   renderSpaceSliderNotches(megaprojectsNotches);
 }
 
@@ -166,6 +221,9 @@ function updateSpaceSlidersUI({ space } = {}) {
   if (spaceSlidersUiCache.card) {
     spaceSlidersUiCache.card.classList.toggle('hidden', !isCylindersHopeUnlocked(space));
   }
+  if (spaceSlidersUiCache.miningRightsCard) {
+    spaceSlidersUiCache.miningRightsCard.classList.toggle('hidden', !isCylindersHopeMiningRightsUnlocked(space));
+  }
   if (spaceSlidersUiCache.megaprojectsCard) {
     spaceSlidersUiCache.megaprojectsCard.classList.toggle('hidden', !isMegaprojectsCoordinationUnlocked(space));
   }
@@ -176,7 +234,12 @@ function updateSpaceSlidersUI({ space } = {}) {
     const totalEnergy = getCylindersHopeTotalDesiredEnergyPerSecond(space);
     const productivity = tick <= 0 ? 1 : space.getSpaceSliderRuntimeProductivity('cylindersHope');
     const worldsPerSector = getCylindersHopeWarpGateWorldBonusPerSector(space, galaxyManager) * productivity;
-    const perCylinderManufacturing = tick <= 0 ? 0 : CYLINDERS_HOPE_MANUFACTURING_POP_PER_CYLINDER * (tick / 10) * productivity;
+    const perCylinderManufacturing = tick <= 0
+      ? 0
+      : CYLINDERS_HOPE_MANUFACTURING_POP_PER_CYLINDER
+        * (tick / 10)
+        * productivity
+        * getCylindersHopeMiningRightsManufacturingMultiplier(space);
     const totalManufacturing = cylinders * perCylinderManufacturing;
     if (spaceSlidersUiCache.slider && document.activeElement !== spaceSlidersUiCache.slider) {
       spaceSlidersUiCache.slider.value = String(tick);
@@ -207,6 +270,34 @@ function updateSpaceSlidersUI({ space } = {}) {
       null,
       "0-10 slider. Tick 0: disabled. Tick 1: 1Q space energy/s per O'Neill cylinder. Each additional tick multiplies this by 10. Manufacturing and Warp Gate Network bonuses are scaled by this slider's space-energy productivity."
     ));
+  }
+  if (isCylindersHopeMiningRightsUnlocked(space)) {
+    const miningRightsTick = getCylindersHopeMiningRightsTick(space);
+    const capacityMultiplier = getCylindersHopeMiningRightsCapacityMultiplier(space);
+    const manufacturingMultiplier = getCylindersHopeMiningRightsManufacturingMultiplier(space);
+    const importCapReduction = (1 - getCylindersHopeMiningRightsImportCapMultiplier(space, 'metal')) * 100;
+    if (spaceSlidersUiCache.miningRightsSlider && document.activeElement !== spaceSlidersUiCache.miningRightsSlider) {
+      spaceSlidersUiCache.miningRightsSlider.value = String(miningRightsTick);
+    }
+    if (spaceSlidersUiCache.miningRightsTick) {
+      spaceSlidersUiCache.miningRightsTick.textContent = String(miningRightsTick);
+    }
+    if (spaceSlidersUiCache.miningRightsSummary) {
+      spaceSlidersUiCache.miningRightsSummary.textContent = t(
+        'ui.space.spaceSliders.cylindersHopeMiningRights.summary',
+        {
+          capacityMultiplier: formatNumber(capacityMultiplier, false, 1),
+          manufacturingMultiplier: formatNumber(manufacturingMultiplier, false, 1),
+          importCapReduction: formatNumber(importCapReduction, false, 0),
+        },
+        'Cylinder Capacity: x{capacityMultiplier} | Cylinder Manufacturing Population: x{manufacturingMultiplier} | Mining Caps: -{importCapReduction}%'
+      );
+    }
+    spaceSlidersUiCache.miningRightsTooltipContent.textContent = t(
+      'ui.space.spaceSliders.cylindersHopeMiningRights.tooltip',
+      null,
+      "Allocates exclusive space-resource mining rights to the O'Neill cylinders in 11 settings from 0 to 10. Each tick linearly increases O'Neill cylinder capacity and their Manufacturing World population support while reducing Metal, Silicates, Water, CO2, and Nitrogen mining caps. At 10, capacity is x100, cylinder manufacturing population is x2, and those mining caps are reduced by 100%. Hydrogen is unaffected."
+    );
   }
   if (isMegaprojectsCoordinationUnlocked(space)) {
     const megaprojectsAllocation = getMegaprojectsCoordinationAllocation(space);

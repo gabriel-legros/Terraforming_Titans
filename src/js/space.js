@@ -200,7 +200,7 @@ class SpaceManager extends EffectableEntity {
         this.rwgSectorLock = null;
         this.rwgSectorLockManual = false;
         this.oneillCylinders = 0;
-        this.spaceSliders = { cylindersHope: 0, megaprojectsCoordination: 50 };
+        this.spaceSliders = { cylindersHope: 0, cylindersHopeMiningRights: 0, megaprojectsCoordination: 50 };
         this.spaceSliderRuntime = {};
         this.terraformHistory = [];
         this.fastestTerraformByWorldType = {};
@@ -2192,6 +2192,9 @@ class SpaceManager extends EffectableEntity {
         if (sliderId === 'cylindersHope') {
             return Math.max(0, Math.min(10, Math.floor(Number(this.spaceSliders.cylindersHope) || 0)));
         }
+        if (sliderId === 'cylindersHopeMiningRights') {
+            return Math.max(0, Math.min(10, Math.floor(Number(this.spaceSliders.cylindersHopeMiningRights) || 0)));
+        }
         if (sliderId === 'megaprojectsCoordination') {
             return clampMegaprojectsCoordinationAllocation(this.spaceSliders.megaprojectsCoordination);
         }
@@ -2202,6 +2205,11 @@ class SpaceManager extends EffectableEntity {
         if (sliderId === 'cylindersHope') {
             const next = Math.max(0, Math.min(10, Math.floor(Number(value) || 0)));
             this.spaceSliders.cylindersHope = next;
+            return next;
+        }
+        if (sliderId === 'cylindersHopeMiningRights') {
+            const next = Math.max(0, Math.min(10, Math.floor(Number(value) || 0)));
+            this.spaceSliders.cylindersHopeMiningRights = next;
             return next;
         }
         if (sliderId === 'megaprojectsCoordination') {
@@ -3483,6 +3491,7 @@ class SpaceManager extends EffectableEntity {
             oneillCylinders: this.getOneillCylinderCount(),
             spaceSliders: {
                 cylindersHope: this.getSpaceSliderTick('cylindersHope'),
+                cylindersHopeMiningRights: this.getSpaceSliderTick('cylindersHopeMiningRights'),
                 megaprojectsCoordination: this.getSpaceSliderTick('megaprojectsCoordination')
             },
             terraformHistory: this.terraformHistory,
@@ -3511,7 +3520,7 @@ class SpaceManager extends EffectableEntity {
         this.showGalacticPopulationInSidebar = false;
         this.birchWorldPopulation = 0;
         this.birchWorldPopulationCapacity = 0;
-        this.spaceSliders = { cylindersHope: 0, megaprojectsCoordination: 50 };
+        this.spaceSliders = { cylindersHope: 0, cylindersHopeMiningRights: 0, megaprojectsCoordination: 50 };
         this.spaceSliderRuntime = {};
         this.terraformHistory = [];
         this.fastestTerraformByWorldType = {};
@@ -3582,6 +3591,7 @@ class SpaceManager extends EffectableEntity {
         }
         const savedSliders = savedData.spaceSliders || {};
         this.setSpaceSliderTick('cylindersHope', savedSliders.cylindersHope || 0);
+        this.setSpaceSliderTick('cylindersHopeMiningRights', savedSliders.cylindersHopeMiningRights || 0);
         this.setSpaceSliderTick('megaprojectsCoordination', savedSliders.megaprojectsCoordination);
 
         // Load current location

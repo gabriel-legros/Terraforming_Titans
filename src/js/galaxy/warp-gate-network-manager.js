@@ -46,7 +46,7 @@ const getImportRatioSummary = () => (
   'Ratios: Metal x1, Nitrogen x1, CO2 x2, Silicates x5, Water x10.'
 );
 
-const getImportCapEntries = (baseCap, summary, fallbackDetail, bonusByResource = {}, rwgReductionByResource = {}) => (
+const getImportCapEntries = (baseCap, summary, fallbackDetail, bonusByResource = {}, rwgReductionByResource = {}, miningRightsMultiplier = 1) => (
   IMPORT_CAP_RESOURCES.map(({ key, label }) => {
     const ratio = getImportCapRatio(key);
     const base = baseCap * ratio;
@@ -55,7 +55,7 @@ const getImportCapEntries = (baseCap, summary, fallbackDetail, bonusByResource =
     const bonus = bonusByResource[key] || 0;
     const rwgReduction = rwgReductionByResource[key] || 1;
     const capWithoutBonus = useEntry ? entry.cap : base;
-    const cap = (capWithoutBonus + bonus) * rwgReduction;
+    const cap = (capWithoutBonus + bonus) * rwgReduction * miningRightsMultiplier;
     const bonusText = bonus > 0
       ? `, +${formatNumber(bonus, true)} bonus`
       : '';
@@ -283,7 +283,9 @@ class WarpGateNetworkManager extends EffectableEntity {
     } else {
       baseCap = this.getGalaxyCap(resourceKey);
     }
-    return (baseCap + foundryBonus + flatBonus) * rwgReduction;
+    return (baseCap + foundryBonus + flatBonus)
+      * rwgReduction
+      * getCylindersHopeMiningRightsImportCapMultiplier(spaceManager, resourceKey);
   }
 
   getGalaxyCap(resourceKey) {
@@ -297,6 +299,14 @@ class WarpGateNetworkManager extends EffectableEntity {
   getCapSummaryText() {
     this.syncUnlocks();
     const foundry = this.getFoundryMetalCapBonus();
+    const miningRightsMultiplier = getCylindersHopeMiningRightsImportCapMultiplier(spaceManager, 'metal');
+    const miningRightsLine = miningRightsMultiplier < 1
+      ? ` ${t(
+        'ui.galaxy.importCaps.miningRightsRule',
+        { multiplier: formatNumber(miningRightsMultiplier, false, 2) },
+        'Cylinders-HOPE Mining Rights Agreement: mining caps ×{multiplier}; Hydrogen remains uncapped.'
+      )}`
+      : '';
     const foundryLine = foundry.bonus > 0
       ? ` Foundry worlds add +${formatNumber(foundry.bonus, true)} to the Metal cap.`
       : '';
@@ -310,13 +320,13 @@ class WarpGateNetworkManager extends EffectableEntity {
       : '';
     if (!this.warpGateUnlocked) {
       const list = IMPORT_CAP_RESOURCES.map(({ key, label }) => `${label}: ${formatNumber(this.getCapForResource(key), true)}`).join(', ');
-      return `Due to limited deposits, import caps are ${list} ships.${foundryLine}${flatBonusLine}`;
+      return `Due to limited deposits, import caps are ${list} ships.${foundryLine}${flatBonusLine}${miningRightsLine}`;
     }
     if (!this.galaxyUnlocked) {
       const list = IMPORT_CAP_RESOURCES.map(({ key, label }) => `${label}: ${formatNumber(this.getCapForResource(key), true)}`).join(', ');
-      return `Due to limited deposits in the accessible Warp Gate Network, import caps are ${list} ships.${foundryLine}${flatBonusLine}`;
+      return `Due to limited deposits in the accessible Warp Gate Network, import caps are ${list} ships.${foundryLine}${flatBonusLine}${miningRightsLine}`;
     }
-    return `${this.getGalaxyCapText()}${foundryLine}${flatBonusLine}`;
+    return `${this.getGalaxyCapText()}${foundryLine}${flatBonusLine}${miningRightsLine}`;
   }
 
   getCapSummaryData() {
@@ -336,6 +346,14 @@ class WarpGateNetworkManager extends EffectableEntity {
       silicon: this.getRwgImportCapReduction('silicon'),
       water: this.getRwgImportCapReduction('water'),
     };
+    const miningRightsMultiplier = getCylindersHopeMiningRightsImportCapMultiplier(spaceManager, 'metal');
+    const miningRightsRule = miningRightsMultiplier < 1
+      ? t(
+        'ui.galaxy.importCaps.miningRightsRule',
+        { multiplier: formatNumber(miningRightsMultiplier, false, 2) },
+        'Cylinders-HOPE Mining Rights Agreement: mining caps ×{multiplier}; Hydrogen remains uncapped.'
+      )
+      : '';
     const foundryRule = foundry.bonus > 0
       ? `Foundry worlds: +${formatNumber(foundry.bonus, true)} Metal cap (${foundry.count} worlds).`
       : '';
@@ -352,9 +370,9 @@ class WarpGateNetworkManager extends EffectableEntity {
         intro: 'Due to limited deposits, imports are limited until Warp Gate Command is unlocked.',
         baseCapLine: `Base cap: ${formatNumber(IMPORT_CAP_BASE, true)} ships.`,
         ratiosLine: '',
-        ruleLines: [foundryRule, crackerRule].filter(Boolean),
+        ruleLines: [foundryRule, crackerRule, miningRightsRule].filter(Boolean),
         fullControlLine: '',
-        caps: getImportCapEntries(IMPORT_CAP_BASE, null, 'Base cap', bonusByResource, rwgReductionByResource),
+        caps: getImportCapEntries(IMPORT_CAP_BASE, null, 'Base cap', bonusByResource, rwgReductionByResource, miningRightsMultiplier),
         hydrogen: { label: t('ui.galaxy.importCaps.resources.hydrogen', {}, 'Hydrogen'), ratio: '—', cap: '∞', detail: t('ui.galaxy.importCaps.noCap', {}, 'No cap') },
       };
     }
@@ -363,9 +381,9 @@ class WarpGateNetworkManager extends EffectableEntity {
         intro: 'Warp Gate Command expands shipments before galaxy control is available.',
         baseCapLine: `Base cap: ${formatNumber(IMPORT_CAP_WARP, true)} ships.`,
         ratiosLine: '',
-        ruleLines: [foundryRule, crackerRule].filter(Boolean),
+        ruleLines: [foundryRule, crackerRule, miningRightsRule].filter(Boolean),
         fullControlLine: '',
-        caps: getImportCapEntries(IMPORT_CAP_WARP, null, 'Base cap', bonusByResource, rwgReductionByResource),
+        caps: getImportCapEntries(IMPORT_CAP_WARP, null, 'Base cap', bonusByResource, rwgReductionByResource, miningRightsMultiplier),
         hydrogen: { label: t('ui.galaxy.importCaps.resources.hydrogen', {}, 'Hydrogen'), ratio: '—', cap: '∞', detail: t('ui.galaxy.importCaps.noCap', {}, 'No cap') },
       };
     }
@@ -381,9 +399,10 @@ class WarpGateNetworkManager extends EffectableEntity {
           'Warp Gate Network levels add +10% cap per level.',
           ...(foundryRule ? [foundryRule] : []),
           ...(crackerRule ? [crackerRule] : []),
+          ...(miningRightsRule ? [miningRightsRule] : []),
         ],
       fullControlLine,
-      caps: getImportCapEntries(IMPORT_CAP_PER_SECTOR, summary, 'Minimum cap', bonusByResource, rwgReductionByResource),
+      caps: getImportCapEntries(IMPORT_CAP_PER_SECTOR, summary, 'Minimum cap', bonusByResource, rwgReductionByResource, miningRightsMultiplier),
       hydrogen: { label: t('ui.galaxy.importCaps.resources.hydrogen', {}, 'Hydrogen'), ratio: '—', cap: '∞', detail: t('ui.galaxy.importCaps.noCap', {}, 'No cap') },
     };
   }
@@ -406,7 +425,8 @@ class WarpGateNetworkManager extends EffectableEntity {
       const foundryBonus = key === 'metal' ? this.getFoundryMetalCapBonus().bonus : 0;
       const flatBonus = IMPORT_CAP_FLAT_BONUSES[key] || 0;
       const rwgReduction = this.getRwgImportCapReduction(key);
-      const cap = (capWithoutBonuses + foundryBonus + flatBonus) * rwgReduction;
+      const miningRightsMultiplier = getCylindersHopeMiningRightsImportCapMultiplier(spaceManager, key);
+      const cap = (capWithoutBonuses + foundryBonus + flatBonus) * rwgReduction * miningRightsMultiplier;
       const detail = summary.fullControlCount > 0
         ? `${label}: ${formatNumber(cap, true)} ships (${entry.richCount} rich, ${entry.poorCount} poor, ${entry.normalCount} normal)`
         : `${label}: ${formatNumber(cap, true)} ships (minimum cap)`;

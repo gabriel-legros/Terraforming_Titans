@@ -2354,6 +2354,22 @@ const researchParameters = {
         ]
       },
       {
+        id: 'cylinders_hope_mining_rights_agreement',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 2_000_000_000_000_000 },
+        prerequisites: ['cylinders_hope_collaboration_agreement'],
+        effects: [
+          {
+            target: 'spaceManager',
+            type: 'booleanFlag',
+            flagId: 'cylindersHopeMiningRightsAgreement',
+            effectId: 'research-cylinders-hope-mining-rights-space-flag',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'megaprojects_coordination',
         name: '',
         description: '',

@@ -626,6 +626,7 @@ setLanguageData({
       },
       importCaps: {
         noCap: 'No cap',
+        miningRightsRule: 'Cylinders-HOPE Mining Rights Agreement: mining caps ×{multiplier}; Hydrogen remains uncapped.',
         resources: {
           metal: 'Metal',
           nitrogen: 'Nitrogen',
@@ -4045,6 +4046,7 @@ setLanguageData({
       oneillTooltipLocked: "Complete the O'Neill Cylinders advanced research to seed orbital habitats.",
       oneillTooltipBase: "Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their {capacity} capacity (1000 per fully controlled sector, minimum 1 sector).\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead.",
       oneillTooltipHyperlane: "Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their {capacity} capacity. Hyperlane makes each fully controlled sector contribute O'Neill cylinder capacity by the same Warp Gate Network multiplier used for resource import caps, with a minimum base capacity of 1000 when no sectors are controlled.\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead.",
+      oneillTooltipMiningRights: "The Cylinders-HOPE Mining Rights Agreement currently multiplies O'Neill cylinder capacity by {multiplier}.",
       spaceSliders: {
         title: 'Space Sliders',
         cylindersHope: {
@@ -4055,6 +4057,12 @@ setLanguageData({
           combinedLine: 'Energy Cost: {energyPerCylinder} per cylinder/s, total {energyTotal}/s | Manufacturing Population Gain: {manufacturingPerCylinder} per cylinder, total {manufacturingTotal} | Worlds per Sector: {worldsPerSector} | Productivity: {productivity}%',
           productivityLine: 'Productivity: {value}%',
           tooltip: "Sets how much Warpnet access HOPE gives to the O'Neill cylinders.\n\nAt 0, the agreement is inactive and consumes no space energy. At 1, each O'Neill cylinder consumes 1Q space energy per second. Cost scales exponentially beyond that. \n\nThis slider has productivity and gives partial benefits in case of shortage.\n\n HOPE receives two bonuses in exchange.  First, Manufacturing Worlds gain extra usable manufacturing population equal to 10T per O'Neill cylinder, scaled by slider tick / 10 and by productivity. Second, every fully controlled sector gains extra Warp Gate Network growth equal to O'Neill cylinders divided across fully controlled sectors, multiplied by slider tick and productivity.  Cylinders can provide more worlds for Warp Gate Network expansion than their own value.",
+        },
+        cylindersHopeMiningRights: {
+          label: 'Cylinders-HOPE Mining Rights',
+          summaryDefault: 'Cylinder Capacity: ×1 | Cylinder Manufacturing Population: ×1 | Mining Caps: −0%',
+          summary: 'Cylinder Capacity: ×{capacityMultiplier} | Cylinder Manufacturing Population: ×{manufacturingMultiplier} | Mining Caps: −{importCapReduction}%',
+          tooltip: "Allocates exclusive space-resource mining rights to the O'Neill cylinders At 10, capacity is ×100, cylinder manufacturing population is ×2, and mining caps are reduced by 100%. Hydrogen is unaffected.",
         },
         megaprojectsCoordination: {
           label: 'Megaprojects Coordination',
@@ -6861,6 +6869,10 @@ setLanguageData({
         cylinders_hope_collaboration_agreement: {
           name: 'Cylinders-HOPE Collaboration Agreement',
           description: 'The cylinders have cheap access to space and are uniquely suited for manufacturing and for expanding the Warp Gate Network. However, their infrastructure is lacking and unstable.  If HOPE provides Warpnet access they will work in exchange. Unlocks a slider under the space story tab.',
+        },
+        cylinders_hope_mining_rights_agreement: {
+          name: 'Cylinders-HOPE Mining Rights Agreement',
+          description: 'The cylinders have long been lobbying for exclusive rights to space resources.  In exchange, they promise additional manufacturing support.  Enables a new space slider.',
         },
         megaprojects_coordination: {
           name: 'Megaprojects coordination',

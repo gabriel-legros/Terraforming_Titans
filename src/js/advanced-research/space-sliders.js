@@ -2,6 +2,9 @@ const CYLINDERS_HOPE_FLAG = 'cylindersHopeCollaborationAgreement';
 const CYLINDERS_HOPE_TICK_MAX = 10;
 const CYLINDERS_HOPE_BASE_ENERGY_PER_CYLINDER = 1e15;
 const CYLINDERS_HOPE_MANUFACTURING_POP_PER_CYLINDER = 1e13;
+const CYLINDERS_HOPE_MINING_RIGHTS_FLAG = 'cylindersHopeMiningRightsAgreement';
+const CYLINDERS_HOPE_MINING_RIGHTS_CAPACITY_MAX = 100;
+const CYLINDERS_HOPE_MINING_RIGHTS_MANUFACTURING_MAX = 2;
 const MEGAPROJECTS_COORDINATION_FLAG = 'megaprojectsCoordination';
 const MEGAPROJECTS_COORDINATION_MIN = 25;
 const MEGAPROJECTS_COORDINATION_MAX = 75;
@@ -41,6 +44,38 @@ function isCylindersHopeUnlocked(space) {
   return !!space?.isBooleanFlagSet?.(CYLINDERS_HOPE_FLAG);
 }
 
+function isCylindersHopeMiningRightsUnlocked(space) {
+  return space.isBooleanFlagSet(CYLINDERS_HOPE_MINING_RIGHTS_FLAG);
+}
+
+function getCylindersHopeMiningRightsTick(space) {
+  if (!isCylindersHopeMiningRightsUnlocked(space)) {
+    return 0;
+  }
+  return clampCylindersHopeTick(space.getSpaceSliderTick('cylindersHopeMiningRights'));
+}
+
+function getCylindersHopeMiningRightsStrength(space) {
+  return getCylindersHopeMiningRightsTick(space) / CYLINDERS_HOPE_TICK_MAX;
+}
+
+function getCylindersHopeMiningRightsCapacityMultiplier(space) {
+  const strength = getCylindersHopeMiningRightsStrength(space);
+  return 1 + (CYLINDERS_HOPE_MINING_RIGHTS_CAPACITY_MAX - 1) * strength;
+}
+
+function getCylindersHopeMiningRightsManufacturingMultiplier(space) {
+  const strength = getCylindersHopeMiningRightsStrength(space);
+  return 1 + (CYLINDERS_HOPE_MINING_RIGHTS_MANUFACTURING_MAX - 1) * strength;
+}
+
+function getCylindersHopeMiningRightsImportCapMultiplier(space, resourceKey) {
+  if (resourceKey === 'hydrogen') {
+    return 1;
+  }
+  return 1 - getCylindersHopeMiningRightsStrength(space);
+}
+
 function clampMegaprojectsCoordinationAllocation(value) {
   const numeric = Number(value);
   const allocation = Number.isFinite(numeric) ? numeric : MEGAPROJECTS_COORDINATION_DEFAULT;
@@ -78,7 +113,9 @@ function getMegaprojectsCoordinationProjectDurationMultiplier(space, project) {
 }
 
 function getAnySpaceSliderEnabled(space) {
-  return isCylindersHopeUnlocked(space) || isMegaprojectsCoordinationUnlocked(space);
+  return isCylindersHopeUnlocked(space)
+    || isCylindersHopeMiningRightsUnlocked(space)
+    || isMegaprojectsCoordinationUnlocked(space);
 }
 
 function getCylindersHopeTotalDesiredEnergyPerSecond(space) {
@@ -195,7 +232,11 @@ function getCylindersHopeManufacturingPopulationBonus(space) {
   }
   const cylinders = Math.max(0, Number(space?.getOneillCylinderEffectiveWorldCount?.() || 0));
   const productivity = Math.max(0, Math.min(1, Number(space?.getSpaceSliderRuntimeProductivity?.('cylindersHope') || 0)));
-  return cylinders * CYLINDERS_HOPE_MANUFACTURING_POP_PER_CYLINDER * strength * productivity;
+  return cylinders
+    * CYLINDERS_HOPE_MANUFACTURING_POP_PER_CYLINDER
+    * strength
+    * productivity
+    * getCylindersHopeMiningRightsManufacturingMultiplier(space);
 }
 
 function getCylindersHopeWarpGateWorldBonusPerSector(space, galaxy) {
