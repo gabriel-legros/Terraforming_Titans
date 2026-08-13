@@ -1108,6 +1108,9 @@ function updateRandomWorldUI() {
   refreshHazardSelect();
   refreshTypeSelect();
   rwgDominionEl && refreshDominionSelect();
+  if (rwgEquilibrateInfoEl) {
+    attachOrUpdateDynamicTooltip(rwgEquilibrateInfoEl, buildEquilibrateTooltipText(), 'pre-line');
+  }
   if (rwgDominionLoreOverlayEl && rwgDominionLoreOverlayEl.style.display === 'flex') {
     const activeLoreId = rwgDominionLoreOrder.find((id) => {
       const item = rwgDominionLoreItems[id];

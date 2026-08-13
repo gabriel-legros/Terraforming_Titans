@@ -1503,6 +1503,7 @@ setLanguageData({
         aerobraking: 'Aerobraking',
         aerobrakingTooltip: 'Bypasses Space Access Capacity when the destination is the surface or atmosphere and atmospheric column mass is at least {minimum} kg/m\u00B2. Converts arrival energy into planetary heat. Surface-targeted ice and water are delivered as atmospheric water vapour.',
         spaceAccessContinuous: 'Space access benefit: {benefit} (project {project}/s; shared {demand}/{capacity}/s)',
+        spaceAccessContinuousCapped: 'Space access benefit: {benefit}; throughput: {throughput}% (project {project}/s; shared {demand}/{capacity}/s)',
         spaceAccessDiscrete: 'Space access benefit: {benefit} (discrete shipment)',
         spaceAccessUnlimited: 'Unlimited',
         rateSources: {
@@ -2414,7 +2415,7 @@ setLanguageData({
         engineering: 'Engineering',
         stopAtCapacity: 'Stop at total capacity',
         capThroughput: 'Cap throughput to capacity',
-        capThroughputTooltip: 'Proportionally slows continuous spaceship traffic when shared demand exceeds Space Access Capacity. Aerobraking bypass traffic, Teleporters, and Mass Drivers remain uncapped.',
+        capThroughputTooltip: 'Proportionally slows continuous spaceship traffic when shared demand exceeds Space Access Capacity. Traffic that runs receives the full Space Access cost benefit. Aerobraking bypass traffic, Teleporters, and Mass Drivers remain uncapped.',
         capacityTargetMode: 'Capacity target mode',
         capacityTargetFixed: 'fixed',
         capacityTargetWorkers: 'x workers',

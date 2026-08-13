@@ -621,14 +621,22 @@ class SpaceshipProject extends Project {
       return;
     }
     const capacity = getTotalSpaceAccessCapacity();
-    const demand = getTotalContinuousSpaceAccessDemand();
+    const throughput = getTotalContinuousSpaceAccessThroughput();
+    const projectThroughput = getContinuousSpaceAccessThroughput(this);
+    const throughputPercent = getSpaceAccessThroughputFraction(this) * 100;
+    const capped = getSpaceAccessProject().capThroughputToCapacity;
     elements.spaceAccessStatusElement.textContent = getSpaceshipProjectText(
-      'ui.projects.spaceship.spaceAccessContinuous',
-      'Space access benefit: {benefit} (project {project}/s; shared {demand}/{capacity}/s)',
+      capped
+        ? 'ui.projects.spaceship.spaceAccessContinuousCapped'
+        : 'ui.projects.spaceship.spaceAccessContinuous',
+      capped
+        ? 'Space access benefit: {benefit}; throughput: {throughput}% (project {project}/s; shared {demand}/{capacity}/s)'
+        : 'Space access benefit: {benefit} (project {project}/s; shared {demand}/{capacity}/s)',
       {
         benefit: `${formatNumber(benefit * 100, false, 2)}%`,
-        project: formatNumber(this.getSpaceAccessDemand(), true),
-        demand: formatNumber(demand, true),
+        throughput: formatNumber(throughputPercent, false, 2),
+        project: formatNumber(projectThroughput, true),
+        demand: formatNumber(throughput, true),
         capacity: capacity === Infinity
           ? getSpaceshipProjectText('ui.projects.spaceship.spaceAccessUnlimited', 'Unlimited')
           : formatNumber(capacity, true),
