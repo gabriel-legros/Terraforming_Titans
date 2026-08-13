@@ -1773,7 +1773,9 @@ class SpaceMiningProject extends SpaceshipProject {
         return super.calculateSpaceshipTotalResourceGain(perSecond);
       }
       const multiplier = perSecond
-        ? this.getActiveShipCount() * (1000 / (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration()))
+        ? this.getActiveShipCount()
+          * getSpaceAccessThroughputFraction(this)
+          * (1000 / (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration()))
         : 1;
       return { [category]: { [resource]: gainPerShip[category][resource] * multiplier } };
     }

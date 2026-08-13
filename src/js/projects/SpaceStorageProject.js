@@ -896,7 +896,7 @@ class SpaceStorageProject extends SpaceshipProject {
     }
     const perShip = this.getShipCapacity(this.attributes.transportPerShip || 0);
     const scalingFactor = this.isShipOperationContinuous()
-      ? this.assignedSpaceships
+      ? this.assignedSpaceships * getSpaceAccessThroughputFraction(this)
       : 1;
     return perShip * scalingFactor;
   }

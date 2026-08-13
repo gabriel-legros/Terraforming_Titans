@@ -1472,7 +1472,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
   getContinuousOperationContext(deltaTime = 1000, productivity = 1) {
     const duration = this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration();
     const fraction = duration > 0 ? deltaTime / duration : 0;
-    const shipCount = this.getSpaceshipOnlyCount();
+    const throughputFraction = getSpaceAccessThroughputFraction(this);
+    const shipCount = this.getSpaceshipOnlyCount() * throughputFraction;
     const auxiliaryCount = this.getMassDriverContribution(true);
     const totalTransportCount = shipCount + auxiliaryCount;
     const successChance = shipCount > 0 ? this.getKesslerSuccessChance() : 1;
@@ -1483,6 +1484,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       fraction,
       seconds: deltaTime / 1000,
       productivity,
+      throughputFraction,
       shipCount,
       auxiliaryCount,
       totalTransportCount,
@@ -1530,10 +1532,13 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       ? this.getMassDriverContribution(true)
       : this.getMassDriverContribution();
     const perSecondMultiplier = perSecond ? (1000 / duration) : 1;
+    const cappedShipCount = perSecond
+      ? shipCount * getSpaceAccessThroughputFraction(this)
+      : shipCount;
     const shipMultiplier = perSecond
-      ? shipCount * perSecondMultiplier
+      ? cappedShipCount * perSecondMultiplier
       : (shipCount > 0 ? 1 : 0);
-    const energyMultiplier = perSecond ? (shipCount + massDriverCount) * perSecondMultiplier : 1;
+    const energyMultiplier = perSecond ? (cappedShipCount + massDriverCount) * perSecondMultiplier : 1;
     for (const category in costPerShip) {
       totalCost[category] = {};
       for (const resource in costPerShip[category]) {

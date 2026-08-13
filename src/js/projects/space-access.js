@@ -36,6 +36,15 @@ function getTotalContinuousSpaceAccessDemand() {
   return total;
 }
 
+function getTotalContinuousSpaceAccessThroughput() {
+  const demand = getTotalContinuousSpaceAccessDemand();
+  const project = getSpaceAccessProject();
+  if (!gameSettings.spaceAccessCapacity || !project.capThroughputToCapacity) {
+    return demand;
+  }
+  return Math.min(demand, getTotalSpaceAccessCapacity());
+}
+
 function getSpaceAccessCoverage() {
   if (!gameSettings.spaceAccessCapacity) {
     return hasBuiltSpaceAccess() ? 1 : 0;
@@ -49,6 +58,18 @@ function getSpaceAccessCoverage() {
   }
   const demand = getTotalContinuousSpaceAccessDemand();
   return demand > 0 ? Math.min(1, capacity / demand) : 1;
+}
+
+function getSpaceAccessThroughputFraction(project) {
+  const spaceAccessProject = getSpaceAccessProject();
+  if (!gameSettings.spaceAccessCapacity || !spaceAccessProject.capThroughputToCapacity) {
+    return 1;
+  }
+  const aerobrakingFraction = gameSettings.aerobraking
+    ? project.getAerobrakingSpaceAccessBypassFraction()
+    : 0;
+  return aerobrakingFraction
+    + (1 - aerobrakingFraction) * getSpaceAccessCoverage();
 }
 
 function getSpaceAccessBenefitFraction(project) {

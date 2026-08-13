@@ -1012,7 +1012,7 @@ class SpaceshipProject extends Project {
     const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
     const activeShips = this.getActiveShipCount();
     const multiplier = perSecond
-      ? activeShips * (1000 / duration)
+      ? activeShips * getSpaceAccessThroughputFraction(this) * (1000 / duration)
       : 1;
     for (const category in costPerShip) {
       totalCost[category] = {};
@@ -1029,7 +1029,7 @@ class SpaceshipProject extends Project {
     const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
     const activeShips = this.getActiveShipCount();
     const multiplier = perSecond
-      ? activeShips * (1000 / duration)
+      ? activeShips * getSpaceAccessThroughputFraction(this) * (1000 / duration)
       : 1;
     for (const category in gainPerShip) {
       totalResourceGain[category] = {};
@@ -1378,7 +1378,9 @@ class SpaceshipProject extends Project {
   getContinuousOperationContext(deltaTime = 1000, productivity = 1) {
     const duration = this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration();
     const fraction = duration > 0 ? deltaTime / duration : 0;
-    const shipCount = this.getActiveShipCount();
+    const rawShipCount = this.getActiveShipCount();
+    const throughputFraction = getSpaceAccessThroughputFraction(this);
+    const shipCount = rawShipCount * throughputFraction;
     const totalTransportCount = shipCount;
     const auxiliaryCount = 0;
     const successChance = shipCount > 0 ? this.getKesslerSuccessChance() : 1;
@@ -1391,6 +1393,7 @@ class SpaceshipProject extends Project {
       seconds: deltaTime / 1000,
       productivity: Math.max(0, productivity * workerRatio),
       workerRatio,
+      throughputFraction,
       shipCount,
       auxiliaryCount,
       totalTransportCount,
@@ -1687,6 +1690,7 @@ class SpaceshipProject extends Project {
     const cache = this.continuousExecutionPlanCache;
     const cacheSelectionKey = cache?.selection || '';
     const currentSelectionKey = this.getDisposalSelectionSignature();
+    const spaceAccessThroughputFraction = getSpaceAccessThroughputFraction(this);
     if (
       cache &&
       cache.deltaTime === deltaTime &&
@@ -1695,6 +1699,7 @@ class SpaceshipProject extends Project {
       cache.isActive === this.isActive &&
       cache.isContinuous === this.isContinuous() &&
       cache.shipCount === this.getActiveShipCount() &&
+      cache.spaceAccessThroughputFraction === spaceAccessThroughputFraction &&
       cacheSelectionKey === currentSelectionKey
     ) {
       return cache.plan;
@@ -1708,6 +1713,7 @@ class SpaceshipProject extends Project {
       isActive: this.isActive,
       isContinuous: this.isContinuous(),
       shipCount: this.getActiveShipCount(),
+      spaceAccessThroughputFraction,
       selection: currentSelectionKey,
       plan,
     };

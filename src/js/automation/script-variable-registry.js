@@ -775,7 +775,7 @@ class ScriptVariableRegistry {
       if (ref.attribute === 'elevatorLanesBuilt') return this.toNumber(project.elevatorCount);
       if (ref.attribute === 'skyhooksBuilt') return this.toNumber(project.skyhookCount);
       if (ref.attribute === 'totalSpaceAccessCapacity') return this.toNumber(getTotalSpaceAccessCapacity());
-      if (ref.attribute === 'activeSpaceAccessThroughput') return this.toNumber(getTotalContinuousSpaceAccessDemand());
+      if (ref.attribute === 'activeSpaceAccessThroughput') return this.toNumber(getTotalContinuousSpaceAccessThroughput());
       if (ref.attribute === 'spaceAccessBenefitCoveragePercent') return this.toNumber(getSpaceAccessCoverage() * 100);
     }
     if (ref.target === 'keratiHive') {

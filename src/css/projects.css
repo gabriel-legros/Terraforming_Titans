@@ -1979,6 +1979,11 @@
     font-size: 0.85em;
 }
 
+.import-space-access-status {
+    font-size: 0.85em;
+    line-height: 1.25;
+}
+
 .import-resources-detail {
     display: flex;
     flex-wrap: wrap;
@@ -3097,6 +3102,16 @@
     margin-bottom: 0;
 }
 
+.space-access-build-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-bottom: 0;
+}
+
+.space-access-operations-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin-bottom: 0;
+}
+
 .space-access-summary-grid .project-summary-box {
     min-width: 0;
     padding: 10px;
@@ -3107,6 +3122,26 @@
     display: flex;
     align-items: center;
     gap: 7px;
+}
+
+.space-access-target-panel {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.space-access-target-controls {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex: 1 1 460px;
+}
+
+.space-access-throughput-cap-toggle {
+    margin: 0;
+    flex: 1 1 230px;
+    padding-left: 16px;
+    border-left: 1px solid rgba(127, 127, 127, 0.28);
 }
 
 .space-access-target-toggle {
@@ -3133,6 +3168,12 @@
     .space-access-summary-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .space-access-throughput-cap-toggle {
+        padding-left: 0;
+        border-left: 0;
+    }
+
 }
 
 @media (max-width: 600px) {
@@ -3153,6 +3194,10 @@
         grid-template-columns: 1fr;
     }
 
+    .space-access-build-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
     .space-access-target-panel,
     .space-access-target-value {
         align-items: flex-start;
@@ -3161,6 +3206,12 @@
     .space-access-target-value {
         flex-wrap: wrap;
     }
+
+    .space-access-target-controls {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
 }
 
 .mega-heat-sink-cap-row {
