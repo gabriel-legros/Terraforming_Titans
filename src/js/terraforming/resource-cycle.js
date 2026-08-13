@@ -86,11 +86,13 @@ class ResourceCycle {
     latentHeatFusion,
     solidSpecificHeat,
     liquidSpecificHeat,
+    liquidDensity,
     saturationVaporPressureFn,
     slopeSaturationVaporPressureFn,
     freezePoint,
     sublimationPoint,
-    boilingRateMultiplier = terraformingParameters.phaseChange.resourceCycle.boilingRateMultiplier,
+    shallowBoilingDepth = terraformingParameters.phaseChange.resourceCycle.shallowBoilingDepthMeters,
+    shallowBoilingRate = terraformingParameters.phaseChange.resourceCycle.shallowBoilingRatePerKSecond,
     evaporationAlbedo = terraformingParameters.phaseChange.resourceCycle.defaultEvaporationAlbedo,
     sublimationAlbedo = terraformingParameters.phaseChange.resourceCycle.defaultSublimationAlbedo,
     nearSurfaceVaporPressureMultiplier = 1,
@@ -120,7 +122,9 @@ class ResourceCycle {
     this.slopeSaturationVaporPressureFn = slopeSaturationVaporPressureFn;
     this.freezePoint = freezePoint;
     this.sublimationPoint = sublimationPoint;
-    this.boilingRateMultiplier = boilingRateMultiplier;
+    this.liquidDensity = liquidDensity;
+    this.shallowBoilingDepth = shallowBoilingDepth;
+    this.shallowBoilingRate = shallowBoilingRate;
     this.evaporationAlbedo = evaporationAlbedo;
     this.sublimationAlbedo = sublimationAlbedo;
     this.nearSurfaceVaporPressureMultiplier = nearSurfaceVaporPressureMultiplier;
@@ -570,7 +574,11 @@ class ResourceCycle {
         const t = Math.max(0, Math.min(1, diff / transitionRange));
         activation = t * t * (3 - 2 * t);
       }
-      const boilingRate = currentLiquid * this.boilingRateMultiplier * diff * activation;
+      const shallowLiquid = Math.min(
+        currentLiquid,
+        zoneArea * liquidCoverage * this.shallowBoilingDepth * this.liquidDensity / 1000
+      );
+      const boilingRate = shallowLiquid * this.shallowBoilingRate * diff * activation;
       boilingAmount = Math.min(boilingRate * durationSeconds, currentLiquid);
       changes.atmosphere[atmosphereKey] += boilingAmount;
       changes[surfaceBucket][liquidKey] = (changes[surfaceBucket][liquidKey] || 0) - boilingAmount;

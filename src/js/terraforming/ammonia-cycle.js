@@ -228,6 +228,7 @@ class AmmoniaCycle extends ResourceCycleClass {
       latentHeatFusion: AMMONIA_PHASE_CHANGE_PARAMETERS.latentHeatFusionJPerKg,
       solidSpecificHeat: AMMONIA_PHASE_CHANGE_PARAMETERS.solidSpecificHeatJPerKgK,
       liquidSpecificHeat: AMMONIA_PHASE_CHANGE_PARAMETERS.liquidSpecificHeatJPerKgK,
+      liquidDensity: AMMONIA_PHASE_CHANGE_PARAMETERS.liquidDensityKgM3,
       saturationVaporPressureFn: calculateSaturationPressureAmmonia,
       slopeSaturationVaporPressureFn: slopeSVPAmmonia,
       freezePoint: AMMONIA_T_TRIPLE,

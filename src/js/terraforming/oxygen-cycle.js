@@ -177,6 +177,7 @@
       latentHeatFusion: OXYGEN_PHASE_CHANGE_PARAMETERS.latentHeatFusionJPerKg,
       solidSpecificHeat: OXYGEN_PHASE_CHANGE_PARAMETERS.solidSpecificHeatJPerKgK,
       liquidSpecificHeat: OXYGEN_PHASE_CHANGE_PARAMETERS.liquidSpecificHeatJPerKgK,
+      liquidDensity: OXYGEN_PHASE_CHANGE_PARAMETERS.liquidDensityKgM3,
       saturationVaporPressureFn: calculateSaturationPressureOxygen,
       slopeSaturationVaporPressureFn: slopeSVPOxygen,
       freezePoint: OXYGEN_T_TRIPLE,

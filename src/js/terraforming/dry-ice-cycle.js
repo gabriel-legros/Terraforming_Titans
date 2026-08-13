@@ -237,6 +237,7 @@ class CO2Cycle extends ResourceCycleClass {
       latentHeatFusion: CO2_PHASE_CHANGE_PARAMETERS.latentHeatFusionJPerKg,
       solidSpecificHeat: CO2_PHASE_CHANGE_PARAMETERS.solidSpecificHeatJPerKgK,
       liquidSpecificHeat: CO2_PHASE_CHANGE_PARAMETERS.liquidSpecificHeatJPerKgK,
+      liquidDensity: CO2_PHASE_CHANGE_PARAMETERS.liquidDensityKgM3,
       saturationVaporPressureFn: calculateSaturationPressureCO2,
       slopeSaturationVaporPressureFn: slopeSVPCO2,
       freezePoint: CO2_T_TRIPLE,     // liquid cannot exist below the triple point if P < P_triple
