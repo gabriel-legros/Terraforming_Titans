@@ -733,9 +733,9 @@ const buildingsParameters = {
       },
       intake: {
         shortName: '',
-        consumption: { atmospheric: { hydrogen: 10 },  colony : {energy : 10000} },
+        consumption: { atmospheric: { hydrogen: 100 },  colony : {energy : 10000} },
         realisticEnergyConsumption: 1_250_000,
-        production: { colony: { colonyHydrogen: 10 } },
+        production: { colony: { colonyHydrogen: 100 } },
         storage: { colony: { colonyHydrogen: 5000 } }
       }
     }
