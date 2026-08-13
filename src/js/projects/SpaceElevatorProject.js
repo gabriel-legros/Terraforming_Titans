@@ -596,6 +596,18 @@
         buildGrid,
         t('ui.projects.spaceElevator.speedBoost', null, 'Speed boost')
       );
+      const speedBoostInfo = document.createElement('span');
+      speedBoostInfo.className = 'info-tooltip-icon';
+      speedBoostInfo.innerHTML = '&#9432;';
+      attachDynamicInfoTooltip(
+        speedBoostInfo,
+        t(
+          'ui.projects.spaceElevator.speedBoostTooltip',
+          { workers: formatNumber(this.spaceAccessParameters.workersPerCompletion, true) },
+          'Construction speed is multiplied by max(1, total worker potential / {workers}). The project duration is divided by this multiplier.'
+        )
+      );
+      speedBoostValue.previousElementSibling.appendChild(speedBoostInfo);
       body.appendChild(buildGrid);
 
       const summaryGrid = document.createElement('div');

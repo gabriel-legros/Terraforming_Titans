@@ -2405,6 +2405,7 @@ setLanguageData({
         skyhookMode: 'Skyhook Network',
         expansionPerSecond: 'Expansion /s',
         speedBoost: 'Speed boost',
+        speedBoostTooltip: 'Construction speed is multiplied by max(1, total worker potential / {workers}). The project duration is divided by this multiplier.',
         elevatorsBuilt: 'Elevator Lanes Built',
         skyhooksBuilt: 'Skyhooks Built',
         totalCapacity: 'Total Capacity',
