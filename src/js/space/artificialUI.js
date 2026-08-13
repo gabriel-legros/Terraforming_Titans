@@ -661,6 +661,9 @@ function setRingOrbitFields(value, force = false) {
   if (artificialUICache.ringOrbitInput && (force || (!artificialRingOrbitEditing && document.activeElement !== artificialUICache.ringOrbitInput))) {
     artificialUICache.ringOrbitInput.value = next;
   }
+  if (getSelectedArtificialType(null) === 'disk') {
+    applyDiskInnerBounds();
+  }
 }
 
 function setDiskInnerFields(value, force = false) {
@@ -773,6 +776,21 @@ function applyRadiusBounds() {
   }
 }
 
+function applyDiskInnerBounds() {
+  if (!artificialUICache.diskInnerRange || !artificialUICache.diskInnerInput) return;
+  const innerBounds = getDiskInnerBoundsAU();
+  artificialUICache.diskInnerRange.min = innerBounds.min;
+  artificialUICache.diskInnerRange.max = innerBounds.max;
+  artificialUICache.diskInnerInput.min = innerBounds.min;
+  artificialUICache.diskInnerInput.max = innerBounds.max;
+  if (!isDiskInnerFieldActive() && !artificialDiskInnerEditing) {
+    artificialUICache.diskInnerRange.value = clampDiskInnerValue(parseFloat(artificialUICache.diskInnerRange.value) || innerBounds.min);
+  }
+  if (!artificialDiskInnerEditing && document.activeElement !== artificialUICache.diskInnerInput) {
+    artificialUICache.diskInnerInput.value = clampDiskInnerValue(parseFloat(artificialUICache.diskInnerInput.value) || innerBounds.min);
+  }
+}
+
 function applyRingBounds() {
   if (!artificialUICache.ringOrbitRange || !artificialUICache.ringOrbitInput || !artificialUICache.ringWidthRange || !artificialUICache.ringWidthInput) return;
 
@@ -788,19 +806,7 @@ function applyRingBounds() {
     artificialUICache.ringOrbitInput.value = clampRingOrbitValue(parseFloat(artificialUICache.ringOrbitInput.value) || orbit.min);
   }
 
-  if (artificialUICache.diskInnerRange && artificialUICache.diskInnerInput) {
-    const innerBounds = getDiskInnerBoundsAU();
-    artificialUICache.diskInnerRange.min = innerBounds.min;
-    artificialUICache.diskInnerRange.max = innerBounds.max;
-    artificialUICache.diskInnerInput.min = innerBounds.min;
-    artificialUICache.diskInnerInput.max = innerBounds.max;
-    if (!isDiskInnerFieldActive() && !artificialDiskInnerEditing) {
-      artificialUICache.diskInnerRange.value = clampDiskInnerValue(parseFloat(artificialUICache.diskInnerRange.value) || innerBounds.min);
-    }
-    if (!artificialDiskInnerEditing && document.activeElement !== artificialUICache.diskInnerInput) {
-      artificialUICache.diskInnerInput.value = clampDiskInnerValue(parseFloat(artificialUICache.diskInnerInput.value) || innerBounds.min);
-    }
-  }
+  applyDiskInnerBounds();
 
   const widthBounds = getRingWidthBounds();
   artificialUICache.ringWidthRange.min = widthBounds.min;
