@@ -5217,7 +5217,7 @@ setLanguageData({
         },
         classicRenewables: {
           title: 'Classic Renewables',
-          requirement: 'Terraform a world without any Antimatter Batteries or power generators other than solar panels and wind turbines.'
+          requirement: 'Terraform a world without any Antimatter Batteries, orbitals assigned to energy, or power generators other than solar panels and wind turbines.'
         },
         heatOfTheSun: {
           title: 'Heat of the Sun',
