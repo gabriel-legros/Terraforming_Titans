@@ -996,6 +996,10 @@ function update(time, delta) {
   let deltaMs = now - lastFrameTimeMs;
   if (deltaMs > 1000) deltaMs = 1000;
   lastFrameTimeMs = now;
+  if (isEquilibrating) {
+    updateRender.lastDelta = 0;
+    return;
+  }
   const manuallyPaused = typeof isGamePaused === 'function' && isGamePaused();
   const scaledDelta = deltaMs * gameSpeed;
   if (manuallyPaused) {
