@@ -255,7 +255,11 @@ class ScriptVariableRegistry {
       { id: 'autoContinuousOperation', label: this.getScriptVariableText('projects.autoOperationEnabled', 'Auto Operation Enabled'), valueType: 'boolean' }
     ];
     if (project instanceof SpaceshipProject) {
-      attributes.push({ id: 'spaceshipCostMultiplier', label: this.getScriptVariableText('projects.spaceshipCostMultiplier', 'Spaceship Cost Multiplier'), valueType: 'number' });
+      attributes.push(
+        { id: 'spaceshipCostMultiplier', label: this.getScriptVariableText('projects.spaceshipCostMultiplier', 'Spaceship Cost Multiplier'), valueType: 'number' },
+        { id: 'energyCostPerShipment', label: this.getScriptVariableText('projects.energyCostPerShipment', 'Energy Cost per Shipment'), valueType: 'number' },
+        { id: 'energyCostPerTon', label: this.getScriptVariableText('projects.energyCostPerTon', 'Energy Cost per Ton'), valueType: 'number' }
+      );
     }
     if (targetId === 'ringworldTerraforming') {
       attributes.push({ id: 'currentMass', label: this.getScriptVariableText('projects.currentMass', 'Current Mass'), valueType: 'number' });
@@ -765,6 +769,19 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'autoStart') return project.autoStart ? 1 : 0;
     if (ref.attribute === 'autoContinuousOperation') return project.autoContinuousOperation ? 1 : 0;
     if (ref.attribute === 'spaceshipCostMultiplier') return this.resolveProjectSpaceshipCostMultiplier(project);
+    if (ref.attribute === 'energyCostPerShipment') {
+      if (!(project instanceof SpaceshipProject)) return 0;
+      return this.toNumber(project.calculateSpaceshipCost().colony?.energy);
+    }
+    if (ref.attribute === 'energyCostPerTon') {
+      if (!(project instanceof SpaceshipProject)) return 0;
+      const energyCost = this.toNumber(project.calculateSpaceshipCost().colony?.energy);
+      let tonnage = this.toNumber(project.getSpaceshipEnergyCostTonnage());
+      if (tonnage <= 0 && project.attributes.transportPerShip > 0) {
+        tonnage = this.toNumber(project.getShipCapacity(project.attributes.transportPerShip));
+      }
+      return tonnage > 0 ? energyCost / tonnage : 0;
+    }
     if (ref.attribute === 'currentMass' && ref.target === 'ringworldTerraforming') {
       return this.toNumber(project.getTotalRingworldMassTons());
     }

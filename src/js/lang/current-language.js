@@ -4614,6 +4614,8 @@ setLanguageData({
             autoStartConstruction: 'Auto-start Construction',
             autoOperationEnabled: 'Auto Operation Enabled',
             spaceshipCostMultiplier: 'Spaceship Cost Multiplier',
+            energyCostPerShipment: 'Energy Cost per Shipment',
+            energyCostPerTon: 'Energy Cost per Ton',
             currentMass: 'Current Mass',
             presentOnWorld: 'Present on World',
             spaceElevator: {
