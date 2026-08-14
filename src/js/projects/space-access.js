@@ -82,11 +82,9 @@ function getSpaceAccessThroughputFraction(project) {
   if (!gameSettings.spaceAccessCapacity || !spaceAccessProject.capThroughputToCapacity) {
     return 1;
   }
-  const aerobrakingFraction = gameSettings.aerobraking
-    ? project.getAerobrakingSpaceAccessBypassFraction()
-    : 0;
-  return aerobrakingFraction
-    + (1 - aerobrakingFraction) * getSpaceAccessCapacityFraction();
+  const bypassFraction = project.getSpaceAccessCapacityBypassFraction();
+  return bypassFraction
+    + (1 - bypassFraction) * getSpaceAccessCapacityFraction();
 }
 
 function getSpaceAccessBenefitFraction(project) {
@@ -102,8 +100,9 @@ function getSpaceAccessBenefitFraction(project) {
   if (getSpaceAccessProject().capThroughputToCapacity) {
     return 1;
   }
-  return aerobrakingFraction
-    + (1 - aerobrakingFraction) * getSpaceAccessCoverage();
+  const bypassFraction = project.getSpaceAccessCapacityBypassFraction();
+  return bypassFraction
+    + (1 - bypassFraction) * getSpaceAccessCoverage();
 }
 
 function getSpaceAccessMetalCostMultiplier(project) {

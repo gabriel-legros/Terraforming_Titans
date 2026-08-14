@@ -178,7 +178,8 @@ function getProjectPresetJsonFieldOptions(fieldPath, value, preset) {
       return {
         selectOptions: [
           { value: 'fixed', label: t('ui.projects.spaceElevator.capacityTargetFixed', null, 'fixed') },
-          { value: 'workers', label: t('ui.projects.spaceElevator.capacityTargetWorkers', null, 'x workers') }
+          { value: 'workers', label: t('ui.projects.spaceElevator.capacityTargetWorkers', null, 'x workers') },
+          { value: 'geometricLandPercent', label: t('ui.projects.spaceElevator.capacityTargetGeometricLandPercent', null, '% of geometric land') }
         ]
       };
     }
