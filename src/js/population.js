@@ -152,15 +152,17 @@ class PopulationModule extends EffectableEntity {
     let weightedFulfillment = 0;
     let totalCapacity = 0;
 
-    for (const colonyName in colonies) {
-      const colony = colonies[colonyName];
-      const capacity = colony.getStorageContribution('colony', 'colonists');
+    const housingProviders = getStorageProvidersForResource('colony', 'colonists');
+    for (let index = 0; index < housingProviders.length; index += 1) {
+      const housingProvider = housingProviders[index];
+      const capacity = housingProvider.getStorageContribution('colony', 'colonists');
       if (capacity <= 0) {
         continue;
       }
 
-      const filledNeeds = colony.filledNeeds || {};
-      const fulfillment = filledNeeds[needKey] ?? 0;
+      const fulfillment = housingProvider.colonistNeedsFulfilled
+        ? 1
+        : housingProvider.filledNeeds[needKey] ?? 0;
 
       weightedFulfillment += fulfillment * capacity;
       totalCapacity += capacity;
@@ -511,7 +513,7 @@ class PopulationModule extends EffectableEntity {
         if (terraforming.biomassUnsurvivableZones && terraforming.biomassUnsurvivableZones[zoneName]) {
           return;
         }
-        const zonalBiomass = terraforming.zonalSurface[zoneName].biomass || 0;
+        const zonalBiomass = terraforming.zonalSurface.biomass[zoneName] || 0;
         if (zonalBiomass > 0) {
           activeBiomass += zonalBiomass;
         }

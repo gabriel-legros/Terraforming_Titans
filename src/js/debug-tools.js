@@ -89,29 +89,28 @@
       const legacyCO2 = terraforming.zonalCO2 || {};
       const legacyHydrocarbons = terraforming.zonalHydrocarbons || {};
       ZONES.forEach(zone => {
-        const zoneSurface = terraforming.zonalSurface?.[zone] || {};
         const zoneWater = legacyWater[zone] || {};
         const zoneCO2 = legacyCO2[zone] || {};
         const zoneHydro = legacyHydrocarbons[zone] || {};
         const zoneData = {
-          liquidWater: zoneSurface.liquidWater ?? zoneWater.liquid ?? 0,
-          ice: zoneSurface.ice ?? zoneWater.ice ?? 0,
-          buriedIce: zoneSurface.buriedIce ?? zoneWater.buriedIce ?? 0,
-          dryIce: zoneSurface.dryIce ?? zoneCO2.ice ?? 0,
-          buriedDryIce: zoneSurface.buriedDryIce ?? zoneCO2.buriedIce ?? 0,
-          liquidCO2: zoneSurface.liquidCO2 ?? zoneCO2.liquid ?? 0,
-          liquidHydrogen: zoneSurface.liquidHydrogen ?? 0,
-          biomass: zoneSurface.biomass ?? 0,
-          hazardousBiomass: zoneSurface.hazardousBiomass ?? 0,
-          liquidMethane: zoneSurface.liquidMethane ?? zoneHydro.liquid ?? 0,
-          hydrocarbonIce: zoneSurface.hydrocarbonIce ?? zoneHydro.ice ?? 0,
-          buriedHydrocarbonIce: zoneSurface.buriedHydrocarbonIce ?? zoneHydro.buriedIce ?? 0,
-          liquidOxygen: zoneSurface.liquidOxygen ?? 0,
-          oxygenIce: zoneSurface.oxygenIce ?? 0,
-          buriedOxygenIce: zoneSurface.buriedOxygenIce ?? 0,
-          liquidNitrogen: zoneSurface.liquidNitrogen ?? 0,
-          nitrogenIce: zoneSurface.nitrogenIce ?? 0,
-          buriedNitrogenIce: zoneSurface.buriedNitrogenIce ?? 0
+          liquidWater: terraforming.zonalSurface.liquidWater[zone] ?? zoneWater.liquid ?? 0,
+          ice: terraforming.zonalSurface.ice[zone] ?? zoneWater.ice ?? 0,
+          buriedIce: terraforming.zonalSurface.buriedIce[zone] ?? zoneWater.buriedIce ?? 0,
+          dryIce: terraforming.zonalSurface.dryIce[zone] ?? zoneCO2.ice ?? 0,
+          buriedDryIce: terraforming.zonalSurface.buriedDryIce[zone] ?? zoneCO2.buriedIce ?? 0,
+          liquidCO2: terraforming.zonalSurface.liquidCO2[zone] ?? zoneCO2.liquid ?? 0,
+          liquidHydrogen: terraforming.zonalSurface.liquidHydrogen[zone] ?? 0,
+          biomass: terraforming.zonalSurface.biomass[zone] ?? 0,
+          hazardousBiomass: terraforming.zonalSurface.hazardousBiomass[zone] ?? 0,
+          liquidMethane: terraforming.zonalSurface.liquidMethane[zone] ?? zoneHydro.liquid ?? 0,
+          hydrocarbonIce: terraforming.zonalSurface.hydrocarbonIce[zone] ?? zoneHydro.ice ?? 0,
+          buriedHydrocarbonIce: terraforming.zonalSurface.buriedHydrocarbonIce[zone] ?? zoneHydro.buriedIce ?? 0,
+          liquidOxygen: terraforming.zonalSurface.liquidOxygen[zone] ?? 0,
+          oxygenIce: terraforming.zonalSurface.oxygenIce[zone] ?? 0,
+          buriedOxygenIce: terraforming.zonalSurface.buriedOxygenIce[zone] ?? 0,
+          liquidNitrogen: terraforming.zonalSurface.liquidNitrogen[zone] ?? 0,
+          nitrogenIce: terraforming.zonalSurface.nitrogenIce[zone] ?? 0,
+          buriedNitrogenIce: terraforming.zonalSurface.buriedNitrogenIce[zone] ?? 0
         };
         globalVals.buriedIce += zoneData.buriedIce;
         zonalVals[zone] = { ...zoneData };
@@ -405,10 +404,9 @@
       const zonalSolarFlux = this.calculateZoneSolarFlux(zone) / zonalFluxDivisor;
       const zoneArea = this.celestialParameters.surfaceArea * getZonePercentage(zone);
 
-      const zoneData = this.zonalSurface[zone] || {};
-      const liquidWater = zoneData.liquidWater || 0;
-      const surfaceIce = zoneData.ice || 0;
-      const surfaceDryIce = zoneData.dryIce || 0;
+      const liquidWater = this.zonalSurface.liquidWater[zone] || 0;
+      const surfaceIce = this.zonalSurface.ice[zone] || 0;
+      const surfaceDryIce = this.zonalSurface.dryIce[zone] || 0;
       const liquidWaterCoverage = estimateCoverage(liquidWater, zoneArea);
       const iceCoverage = estimateCoverage(surfaceIce, zoneArea, 0.01);
       const dryIceCoverage = estimateCoverage(surfaceDryIce, zoneArea, 0.01);

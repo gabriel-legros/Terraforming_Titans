@@ -344,11 +344,11 @@ class WarpGateCommand extends EffectableEntity {
   }
 
   getEventDelay(event, teamIndex) {
+    const stance = this.stances && this.stances[teamIndex] ? this.stances[teamIndex].artifact : 'Neutral';
     if (event && event.type === 'science' && event.specialty === 'Natural Scientist') {
-      const stance = this.stances && this.stances[teamIndex] ? this.stances[teamIndex].artifact : 'Neutral';
       if (stance === 'Careful') return 180;
-      if (stance === 'Rapid Extraction') return 30;
     }
+    if (stance === 'Rapid Extraction') return 30;
     return 60;
   }
 
@@ -395,7 +395,7 @@ class WarpGateCommand extends EffectableEntity {
       op.progressSegmentStart = op.timer;
     }
     const completed = op.baseEventsCompleted;
-    const segments = op.baseEventsTotal + 1;
+    const segments = op.baseEventsTotal;
     const startFraction = completed / segments;
     op.progressStartValue = startFraction;
     let intervalStart = op.progressSegmentStart;
@@ -404,8 +404,7 @@ class WarpGateCommand extends EffectableEntity {
     const nextBaseIndex = this.findNextBaseEventIndex(op);
     if (completed >= op.baseEventsTotal) {
       intervalStart = op.progressSegmentStart;
-      targetFraction = (completed + 1) / segments;
-      duration = Math.max(Math.max(600, intervalStart) - intervalStart, 0);
+      targetFraction = 1;
     } else if (op.active && nextBaseIndex === op.currentEventIndex) {
       intervalStart = op.progressSegmentStart;
       targetFraction = (completed + 1) / segments;
@@ -910,7 +909,7 @@ class WarpGateCommand extends EffectableEntity {
       op.timer += seconds;
       if (!Array.isArray(op.eventQueue)) op.eventQueue = this.generateOperationEvents(op, idx);
       if (!Number.isFinite(op.currentEventIndex)) op.currentEventIndex = 0;
-      if (!Number.isFinite(op.nextEvent) || op.nextEvent <= 0) op.nextEvent = 60;
+      if (!Number.isFinite(op.nextEvent) || op.nextEvent <= 0) op.nextEvent = this.getEventDelay(null, idx);
       if (!Number.isFinite(op.baseEventsTotal) || op.baseEventsTotal <= 0) op.baseEventsTotal = 10;
       if (!Number.isFinite(op.baseEventsCompleted) || op.baseEventsCompleted < 0) op.baseEventsCompleted = 0;
 
@@ -943,8 +942,7 @@ class WarpGateCommand extends EffectableEntity {
       }
 
       const finishedEvents = op.currentEventIndex >= (op.eventQueue ? op.eventQueue.length : 0);
-      const readyToFinish = finishedEvents && op.timer >= 600;
-      if (readyToFinish) {
+      if (op.active && finishedEvents) {
         this.finishOperation(idx);
         this.totalOperations += 1;
         this.applyInfirmaryOperationHeal(idx);
@@ -963,7 +961,7 @@ class WarpGateCommand extends EffectableEntity {
           op.progressTargetValue = 0;
           op.progressIntervalStart = 0;
           op.progressIntervalDuration = 0;
-          op.nextEvent = 60;
+          op.nextEvent = this.getEventDelay(null, idx);
           op.nextDifficultyModifier = 1;
           op.nextArtifactModifier = 1;
           op.facilityRerolls = this.buildFacilityRerollPool();
@@ -1249,7 +1247,7 @@ class WarpGateCommand extends EffectableEntity {
     op.operationAlert = false;
     op.progress = 0;
     op.timer = 0;
-    op.nextEvent = 60;
+    op.nextEvent = this.getEventDelay(null, teamIndex);
     op.artifacts = 0;
     op.successes = 0;
     op.eventQueue = this.generateOperationEvents(op, teamIndex);
@@ -1529,7 +1527,7 @@ class WarpGateCommand extends EffectableEntity {
         if (!Array.isArray(op.eventQueue) || op.eventQueue.length === 0) {
           op.eventQueue = this.generateOperationEvents(op, i);
           op.currentEventIndex = 0;
-          op.nextEvent = 60;
+          op.nextEvent = this.getEventDelay(null, i);
         }
         this.refreshOperationProgress(op, i);
         op.progress = this.calculateOperationProgress(op);

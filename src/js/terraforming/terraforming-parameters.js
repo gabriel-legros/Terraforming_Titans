@@ -90,6 +90,12 @@ var terraformingParameters = {
       molecularHydrogenCollisionCrossSectionM2: 3e-19,
       diffusionLimitAtomsM2Second: 2.5e17
     },
+    aerobraking: {
+      minimumAtmosphericColumnMassKgM2: 100,
+      climateHeatDepositionFraction: 1,
+      maximumTemperatureK: 10000,
+      warningTemperatureRateKPerDay: 0.001
+    },
     chemistry: {
       oxidation: {
         // Background sparks are always present; water clouds add lightning activity.
@@ -101,7 +107,7 @@ var terraformingParameters = {
         combustionSpringSecondsPerDay: 86400,
         combustionWarningTemperatureRateKPerDay: 0.001,
         climateHeatDepositionFraction: 1,
-        maximumCombustionTemperatureK: 3000,
+        maximumCombustionTemperatureK: 10000,
         sparkReferenceTemperatureK: 298.15,
         minimumReactiveAtmosphereFraction: 0.2,
         fullReactiveAtmosphereFraction: 0.4,
@@ -204,6 +210,7 @@ var terraformingParameters = {
       latentHeatFusionJPerKg: 3.34e5,
       solidSpecificHeatJPerKgK: 2100,
       liquidSpecificHeatJPerKgK: 4200,
+      liquidDensityKgM3: 1000,
       liquidAlbedo: 0.06,
       solidAlbedo: 0.6,
       triplePointTemperatureK: 273.16,
@@ -219,6 +226,7 @@ var terraformingParameters = {
       latentHeatFusionJPerKg: 2.15e5,
       solidSpecificHeatJPerKgK: 850,
       liquidSpecificHeatJPerKgK: 2100,
+      liquidDensityKgM3: 1100,
       liquidAlbedo: 0.10,
       solidAlbedo: 0.50,
       triplePointTemperatureK: 216.58,
@@ -234,6 +242,7 @@ var terraformingParameters = {
       latentHeatFusionJPerKg: 7.7e4,
       solidSpecificHeatJPerKgK: 2200,
       liquidSpecificHeatJPerKgK: 3500,
+      liquidDensityKgM3: 450,
       liquidAlbedo: 0.1,
       solidAlbedo: 0.6,
       triplePointTemperatureK: 90.694,
@@ -250,6 +259,7 @@ var terraformingParameters = {
       latentHeatFusionJPerKg: 2.8e5,
       solidSpecificHeatJPerKgK: 2100,
       liquidSpecificHeatJPerKgK: 4700,
+      liquidDensityKgM3: 680,
       liquidAlbedo: 0.12,
       solidAlbedo: 0.70,
       triplePointTemperatureK: 195.40,
@@ -287,6 +297,7 @@ var terraformingParameters = {
       latentHeatFusionJPerKg: 5.7e4,
       solidSpecificHeatJPerKgK: 920,
       liquidSpecificHeatJPerKgK: 1700,
+      liquidDensityKgM3: 1140,
       liquidAlbedo: 0.15,
       solidAlbedo: 0.75,
       triplePointTemperatureK: 54.361,
@@ -304,6 +315,7 @@ var terraformingParameters = {
       latentHeatFusionJPerKg: 6.1e4,
       solidSpecificHeatJPerKgK: 1040,
       liquidSpecificHeatJPerKgK: 2000,
+      liquidDensityKgM3: 810,
       liquidAlbedo: 0.12,
       solidAlbedo: 0.80,
       triplePointTemperatureK: 63.151,
@@ -339,7 +351,8 @@ var terraformingParameters = {
       buriedMeltRateFraction: 0.5
     },
     resourceCycle: {
-      boilingRateMultiplier: 1e-7,
+      shallowBoilingDepthMeters: 0.05,
+      shallowBoilingRatePerKSecond: 4.25e-6,
       defaultEvaporationAlbedo: 0.6,
       defaultSublimationAlbedo: 0.6,
       daytimeSolarFluxMultiplier: 2

@@ -58,6 +58,7 @@ function setupGlobals() {
 
   setGlobal('SpaceshipProject', MockSpaceshipProject, originalGlobals);
   setGlobal('projectElements', {}, originalGlobals);
+  setGlobal('gameSettings', { aerobraking: false }, originalGlobals);
   setGlobal('calculateAverageCoverage', () => 0, originalGlobals);
   setGlobal('calculateAtmosphericPressure', (amount, gravity, radiusKm) => {
     const surfaceArea = 4 * Math.PI * Math.pow(radiusKm * 1000, 2);

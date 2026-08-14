@@ -49,7 +49,7 @@ function computeOversightMetric(window) {
   let waterError = 0;
   const waterTarget = settings.targets?.water || 0;
   const availableSurfaceIce = zones.reduce(
-    (sum, zone) => sum + Math.max(0, terraforming.zonalSurface[zone].ice || 0),
+    (sum, zone) => sum + Math.max(0, terraforming.zonalSurface.ice[zone] || 0),
     0
   );
   const effectiveWaterTarget = Math.min(waterTarget, availableSurfaceIce);
@@ -72,7 +72,7 @@ function computeOversightMetric(window) {
       const iceZones = zones.map(zone => ({
         zone,
         temperature: terraforming.temperature.zones[zone].value,
-        ice: Math.max(0, terraforming.zonalSurface[zone].ice || 0),
+        ice: Math.max(0, terraforming.zonalSurface.ice[zone] || 0),
       })).filter(entry => entry.ice > 0);
       const powerToMeltAllIce = iceZones.reduce((total, entry) => total +
         entry.ice * 1000 / 86400 * calculateTransitionEnergy(

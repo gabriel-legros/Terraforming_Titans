@@ -176,6 +176,7 @@
       latentHeatFusion: NITROGEN_PHASE_CHANGE_PARAMETERS.latentHeatFusionJPerKg,
       solidSpecificHeat: NITROGEN_PHASE_CHANGE_PARAMETERS.solidSpecificHeatJPerKgK,
       liquidSpecificHeat: NITROGEN_PHASE_CHANGE_PARAMETERS.liquidSpecificHeatJPerKgK,
+      liquidDensity: NITROGEN_PHASE_CHANGE_PARAMETERS.liquidDensityKgM3,
       saturationVaporPressureFn: calculateSaturationPressureNitrogen,
       slopeSaturationVaporPressureFn: slopeSVPNitrogen,
       freezePoint: NITROGEN_T_TRIPLE,

@@ -248,6 +248,7 @@ class MethaneCycle extends ResourceCycleClass {
       latentHeatFusion: METHANE_PHASE_CHANGE_PARAMETERS.latentHeatFusionJPerKg,
       solidSpecificHeat: METHANE_PHASE_CHANGE_PARAMETERS.solidSpecificHeatJPerKgK,
       liquidSpecificHeat: METHANE_PHASE_CHANGE_PARAMETERS.liquidSpecificHeatJPerKgK,
+      liquidDensity: METHANE_PHASE_CHANGE_PARAMETERS.liquidDensityKgM3,
       saturationVaporPressureFn: calculateSaturationPressureMethane,
       slopeSaturationVaporPressureFn: slopeSVPMethane,
       freezePoint: METHANE_T_TRIPLE,     // liquid cannot exist below T_triple

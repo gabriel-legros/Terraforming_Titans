@@ -781,6 +781,10 @@ class ImportResourcesProjectUI {
     autoAssignCell.classList.add('import-resources-cell', 'import-auto-assign-cell');
     const autoAssignContainer = project.createAutoAssignSpaceshipsCheckbox(assignmentButtons, assignmentCell);
     autoAssignCell.appendChild(autoAssignContainer);
+    const aerobrakingContainer = project.createAerobrakingCheckbox();
+    if (aerobrakingContainer) {
+      autoAssignCell.appendChild(aerobrakingContainer);
+    }
 
     const totalGainCell = document.createElement('div');
     totalGainCell.classList.add('import-resources-cell', 'import-total-gain-cell');
@@ -789,8 +793,12 @@ class ImportResourcesProjectUI {
     totalCost.classList.add('import-total-cost');
     const totalGain = document.createElement('div');
     totalGain.classList.add('import-total-gain');
+    const spaceAccessStatus = document.createElement('div');
+    spaceAccessStatus.id = `${project.name}-space-access-status`;
+    spaceAccessStatus.classList.add('import-space-access-status');
     totalGainCell.appendChild(totalCost);
     totalGainCell.appendChild(totalGain);
+    totalGainCell.appendChild(spaceAccessStatus);
 
     mainRow.appendChild(nameCell);
     mainRow.appendChild(assignmentCell);
@@ -849,6 +857,7 @@ class ImportResourcesProjectUI {
     elements.autoAssignCheckboxContainer = autoAssignContainer;
     elements.totalCostElement = totalCost;
     elements.totalGainElement = totalGain;
+    elements.spaceAccessStatusElement = spaceAccessStatus;
 
     this.rows[project.name] = {
       mainRow,
@@ -856,6 +865,7 @@ class ImportResourcesProjectUI {
       minusButton,
       plusButton,
       autoAssignContainer,
+      aerobrakingContainer,
       assignmentButtons,
       assignmentContainer: assignmentCell,
     };

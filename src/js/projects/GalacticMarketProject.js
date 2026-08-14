@@ -1067,9 +1067,9 @@ class GalacticMarketProject extends Project {
     };
   }
 
-  getTradeScales(additionalSells = 0) {
+  getTradeScales() {
     let totalBuys = 0;
-    let totalSells = additionalSells;
+    let totalSells = 0;
     this.buySelections.forEach(({ category, resource, quantity }) => {
       if (this.isSelectionResourceUnlocked(category, resource)) {
         totalBuys += quantity;
@@ -1210,10 +1210,31 @@ class GalacticMarketProject extends Project {
     });
 
     let tradeScales;
+    let automaticSellScale;
     if (selectedTradingActive) {
-      tradeScales = this.getTradeScales(automaticSellRate);
+      tradeScales = this.getTradeScales();
+      let selectedTradeRate = 0;
+      this.buySelections.forEach(({ category, resource, quantity }) => {
+        if (this.isSelectionResourceUnlocked(category, resource)) {
+          selectedTradeRate += quantity * tradeScales.buyScale;
+        }
+      });
+      this.sellSelections.forEach(({ category, resource, quantity }) => {
+        if (this.isSelectionResourceUnlocked(category, resource)) {
+          selectedTradeRate += quantity * tradeScales.sellScale;
+        }
+      });
+      const remainingKesslerRate = Math.max(
+        0,
+        this.getKesslerTradeLimitPerSecond() - selectedTradeRate
+      );
+      automaticSellScale = automaticSellRate > remainingKesslerRate
+        ? remainingKesslerRate / automaticSellRate
+        : 1;
+      this.kesslerCapped = this.kesslerCapped || automaticSellScale < 1;
     } else {
       tradeScales = this.getTradeScalesForTotals(0, automaticSellRate);
+      automaticSellScale = tradeScales.sellScale;
       this.purchaseCapped = tradeScales.purchaseScale < 1;
       this.kesslerCapped = tradeScales.kesslerScale < 1;
     }
@@ -1230,7 +1251,7 @@ class GalacticMarketProject extends Project {
       });
     }
     automaticSellTransactions.forEach((transaction) => {
-      transaction.quantity *= tradeScales.sellScale;
+      transaction.quantity *= automaticSellScale;
     });
 
     sellTransactions.forEach((transaction) => {

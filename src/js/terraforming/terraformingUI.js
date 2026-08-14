@@ -1362,6 +1362,7 @@ function createTemperatureBox(row) {
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
       <p id="temperature-combustion-warning" class="temperature-combustion-warning" style="display: none;" role="status" aria-live="polite"><span aria-hidden="true">&#9888;</span> ${getTerraformingSummaryText('temperature.combustionWarning', 'Temperature is increasing from active combustion')} <span aria-hidden="true">&#9888;</span></p>
+      <p id="temperature-aerobraking-warning" class="temperature-aerobraking-warning" style="display: none;" role="status" aria-live="polite"><span aria-hidden="true">&#9888;</span> ${getTerraformingSummaryText('temperature.aerobrakingWarning', 'Temperature is increasing from aerobraking')} <span aria-hidden="true">&#9888;</span></p>
       <p>${getTerraformingSummaryText('temperature.labels.globalMeanTemp', 'Global Mean Temp')}: <span id="temperature-current"></span><span class="temp-unit"></span></p>
       <p>${getTerraformingSummaryText('temperature.labels.equilibriumTemp', 'Equilibrium Temp')}: <span id="equilibrium-temp"></span> <span class="temp-unit"></span> <span id="equilibrium-temp-info" class="info-tooltip-icon">&#9432;</span></p>
       <p id="temperature-core-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netCoreHeatFlux', 'Net Core Heat Flux')}: <span id="temperature-core-heat"></span> W/m^2</p>
@@ -1529,6 +1530,7 @@ function createTemperatureBox(row) {
       tempUnits: temperatureBox.querySelectorAll('.temp-unit'),
       target: temperatureBox.querySelector('#temperature-target'),
       combustionWarning: temperatureBox.querySelector('#temperature-combustion-warning'),
+      aerobrakingWarning: temperatureBox.querySelector('#temperature-aerobraking-warning'),
       current: temperatureBox.querySelector('#temperature-current'),
       equilibrium: temperatureBox.querySelector('#equilibrium-temp'),
       equilibriumTooltip: equilibriumTempTooltip,
@@ -1588,6 +1590,13 @@ function createTemperatureBox(row) {
     const combustionWarningDisplay = showCombustionWarning ? '' : 'none';
     if (els.combustionWarning.style.display !== combustionWarningDisplay) {
       els.combustionWarning.style.display = combustionWarningDisplay;
+    }
+
+    const showAerobrakingWarning = terraforming.temperature.aerobrakingWarmingRateKPerDay
+      >= terraformingParameters.atmosphere.aerobraking.warningTemperatureRateKPerDay;
+    const aerobrakingWarningDisplay = showAerobrakingWarning ? '' : 'none';
+    if (els.aerobrakingWarning.style.display !== aerobrakingWarningDisplay) {
+      els.aerobrakingWarning.style.display = aerobrakingWarningDisplay;
     }
 
     const zoneKeys = getZones();
@@ -2483,23 +2492,6 @@ function createWaterBox(row) {
     const zones = getZones();
     const surfaceArea = terraforming.celestialParameters.surfaceArea;
 
-    // Totals are no longer calculated here; they are read from terraforming object
-    // let totalLiquid = 0; // Not needed for rate display
-    // let totalIce = 0; // Not needed for rate display
-    // let totalEvaporationRate = 0; // Read from terraforming.totalEvaporationRate
-    // let totalBoilingRate = 0; // Read from terraforming.totalBoilingRate
-    // let totalSublimationRate = 0; // Read from terraforming.totalWaterSublimationRate
-    // let totalRainfallRate = 0; // Read from terraforming.totalRainfallRate
-    // let totalSnowfallRate = 0; // Read from terraforming.totalSnowfallRate
-    // let totalMeltingRate = 0; // Read from terraforming.totalMeltRate
-    // let totalFreezingRate = 0; // Read from terraforming.totalFreezeRate
-
-    // zones.forEach(zone => { // Loop no longer needed for rates
-    //     totalLiquid += terraforming.zonalSurface[zone].liquidWater || 0;
-    //     totalIce += terraforming.zonalSurface[zone].ice || 0;
-    //     // Remove rate summing from zonal data
-    // });
-
     // Calculate average coverage percentages using the centralized helper function
 
     const avgLiquidCoverage = calculateAverageCoverage(terraforming, 'liquidWater') || 0;
@@ -2761,7 +2753,7 @@ function updateLifeBox() {
     const hazardTolerance = 1e-6;
     const hazardsCleared = typeof terraforming.getHazardClearanceStatus === 'function'
       ? terraforming.getHazardClearanceStatus()
-      : zones.every(zone => (terraforming.zonalSurface[zone]?.hazardousBiomass || 0) <= hazardTolerance);
+      : zones.every(zone => (terraforming.zonalSurface.hazardousBiomass[zone] || 0) <= hazardTolerance);
     const lifeTargetMet = densityTarget > 0
       ? getLifeBiomassDensity(terraforming) >= densityTarget
       : avgBiomassCoverage >= effectiveTarget;
@@ -2799,9 +2791,9 @@ function updateLifeBox() {
     els.infoTooltip.textContent = tooltipText;
 
     const hazardByZone = {
-      tropical: terraforming.zonalSurface.tropical?.hazardousBiomass || 0,
-      temperate: terraforming.zonalSurface.temperate?.hazardousBiomass || 0,
-      polar: terraforming.zonalSurface.polar?.hazardousBiomass || 0
+      tropical: terraforming.zonalSurface.hazardousBiomass.tropical || 0,
+      temperate: terraforming.zonalSurface.hazardousBiomass.temperate || 0,
+      polar: terraforming.zonalSurface.hazardousBiomass.polar || 0
     };
     const hazardTotal = zones.reduce((sum, zone) => sum + (hazardByZone[zone] || 0), 0);
     const hazardEntries = [
@@ -2825,7 +2817,7 @@ function updateLifeBox() {
         els.hazardTarget.style.color = '';
       } else {
         const remainingZones = zones
-          .filter(zone => (terraforming.zonalSurface[zone]?.hazardousBiomass || 0) > hazardTolerance)
+          .filter(zone => (terraforming.zonalSurface.hazardousBiomass[zone] || 0) > hazardTolerance)
           .map(zone => getTerraformingZoneLabel(zone));
         els.hazardTarget.textContent = getTerraformingSummaryText(
           'lifeSummary.removeHazards',

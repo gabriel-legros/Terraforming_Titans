@@ -169,6 +169,7 @@ class WaterCycle extends ResourceCycleClass {
       latentHeatFusion: WATER_PHASE_CHANGE_PARAMETERS.latentHeatFusionJPerKg,
       solidSpecificHeat: WATER_PHASE_CHANGE_PARAMETERS.solidSpecificHeatJPerKgK,
       liquidSpecificHeat: WATER_PHASE_CHANGE_PARAMETERS.liquidSpecificHeatJPerKgK,
+      liquidDensity: WATER_PHASE_CHANGE_PARAMETERS.liquidDensityKgM3,
       saturationVaporPressureFn: saturationVaporPressureMK,
       slopeSaturationVaporPressureFn: derivativeSaturationVaporPressureMK,
       freezePoint: 273.15,

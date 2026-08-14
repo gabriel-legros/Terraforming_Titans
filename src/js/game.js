@@ -253,7 +253,6 @@ function initializeDefaultGlobals(){
   patienceManager = new PatienceManager();
   earthManager = new EarthManager();
   achievementManager = new AchievementManager();
-  achievementManager.update();
   registerDefaultTabActivationHandlers();
   }
 
@@ -658,7 +657,6 @@ function initializeGameState(options = {}) {
   if (!preserveManagers || !achievementManager) {
     achievementManager = new AchievementManager();
   }
-  achievementManager.update();
 
   hazardManager = setHazardManager(new HazardManager());
   const planetHazards = currentPlanetParameters && currentPlanetParameters.hazards
@@ -669,6 +667,7 @@ function initializeGameState(options = {}) {
     hazardManager.hazardousMachineryHazard.load(savedHazardousMachineryTravelState);
   }
   rebaseDynamicMassInitialGeometryAfterHazards();
+  achievementManager.update();
 
   // Regenerate UI elements to bind to new objects
   createResourceDisplay(resources); // Also need to update resource display
@@ -1030,6 +1029,8 @@ function startNewGame() {
   resetDifficultySettings();
   totalPlayTimeSeconds = 0;
   totalRealPlayTimeSeconds = 0;
+  fastestTerraformDays = null;
+  fastestTerraformRealSeconds = null;
   birchWorldTerraformTimeSeconds = null;
   birchWorldTerraformRealTimeSeconds = null;
   gameCompleted = false;

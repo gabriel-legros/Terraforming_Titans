@@ -72,6 +72,7 @@
       this.capacityTargetEnabled = false;
       this.capacityTarget = this.spaceAccessParameters.elevatorCapacity;
       this.capacityTargetMode = CAPACITY_TARGET_FIXED;
+      this.capThroughputToCapacity = false;
       this.continuousThreshold = this.spaceAccessParameters.continuousThresholdMs;
       this.elevatorEngineeringCache = null;
       this.spaceAccessUI = null;
@@ -539,9 +540,9 @@
       modeRow.className = 'stat-item space-access-mode-panel';
       const modeCopy = document.createElement('div');
       modeCopy.className = 'space-access-control-copy';
-      const modeLabel = document.createElement('label');
+      const modeLabel = document.createElement('span');
       modeLabel.className = 'stat-label';
-      modeLabel.htmlFor = `${this.name}-construction-mode`;
+      modeLabel.id = `${this.name}-construction-mode-label`;
       modeLabel.textContent = t('ui.projects.spaceElevator.constructionMode', null, 'Construction mode');
       const modeHelp = document.createElement('span');
       modeHelp.className = 'space-access-control-help';
@@ -556,6 +557,7 @@
       const modeSelect = document.createElement('select');
       modeSelect.id = `${this.name}-construction-mode`;
       modeSelect.className = 'automation-select space-access-mode-select';
+      modeSelect.setAttribute('aria-labelledby', modeLabel.id);
       const elevatorOption = document.createElement('option');
       elevatorOption.value = SPACE_ELEVATOR_MODE;
       elevatorOption.textContent = t('ui.projects.spaceElevator.elevatorMode', null, 'Space Elevator');
@@ -567,9 +569,7 @@
       modeRow.append(modeCopy, modeSelect);
       body.appendChild(modeRow);
 
-      const grid = document.createElement('div');
-      grid.className = 'stats-grid project-summary-grid space-access-summary-grid';
-      const createMetric = (labelText) => {
+      const createMetric = (parent, labelText) => {
         const box = document.createElement('div');
         box.className = 'stat-item project-summary-box';
         const label = document.createElement('span');
@@ -578,19 +578,49 @@
         const value = document.createElement('span');
         value.className = 'stat-value';
         box.append(label, value);
-        grid.appendChild(box);
+        parent.appendChild(box);
         return value;
       };
-      const elevatorsValue = createMetric(t('ui.projects.spaceElevator.elevatorsBuilt', null, 'Elevator Lanes Built'));
-      const skyhooksValue = createMetric(t('ui.projects.spaceElevator.skyhooksBuilt', null, 'Skyhooks Built'));
-      const capacityValue = createMetric(t('ui.projects.spaceElevator.totalCapacity', null, 'Total Capacity'));
-      const throughputValue = createMetric(t('ui.projects.spaceElevator.activeThroughput', null, 'Active Throughput'));
-      const coverageValue = createMetric(t('ui.projects.spaceElevator.coverage', null, 'Benefit Coverage'));
-      const engineeringValue = createMetric(t('ui.projects.spaceElevator.engineering', null, 'Engineering'));
-      body.appendChild(grid);
+
+      const buildGrid = document.createElement('div');
+      buildGrid.className = 'stats-grid project-summary-grid space-access-build-grid';
+      const capacityValue = createMetric(
+        buildGrid,
+        t('ui.projects.spaceElevator.totalCapacity', null, 'Total Capacity')
+      );
+      const expansionRateValue = createMetric(
+        buildGrid,
+        t('ui.projects.spaceElevator.expansionPerSecond', null, 'Expansion /s')
+      );
+      const speedBoostValue = createMetric(
+        buildGrid,
+        t('ui.projects.spaceElevator.speedBoost', null, 'Speed boost')
+      );
+      const speedBoostInfo = document.createElement('span');
+      speedBoostInfo.className = 'info-tooltip-icon';
+      speedBoostInfo.innerHTML = '&#9432;';
+      attachDynamicInfoTooltip(
+        speedBoostInfo,
+        t(
+          'ui.projects.spaceElevator.speedBoostTooltip',
+          { workers: formatNumber(this.spaceAccessParameters.workersPerCompletion, true) },
+          'Construction speed is multiplied by max(1, total worker potential / {workers}). The project duration is divided by this multiplier.'
+        )
+      );
+      speedBoostValue.previousElementSibling.appendChild(speedBoostInfo);
+      body.appendChild(buildGrid);
+
+      const summaryGrid = document.createElement('div');
+      summaryGrid.className = 'stats-grid project-summary-grid space-access-summary-grid';
+      const elevatorsValue = createMetric(summaryGrid, t('ui.projects.spaceElevator.elevatorsBuilt', null, 'Elevator Lanes Built'));
+      const skyhooksValue = createMetric(summaryGrid, t('ui.projects.spaceElevator.skyhooksBuilt', null, 'Skyhooks Built'));
+      const engineeringValue = createMetric(summaryGrid, t('ui.projects.spaceElevator.engineering', null, 'Engineering'));
+      body.appendChild(summaryGrid);
 
       const targetRow = document.createElement('div');
       targetRow.className = 'stat-item space-access-target-panel';
+      const targetControls = document.createElement('div');
+      targetControls.className = 'space-access-target-controls';
       const targetToggle = document.createElement('div');
       targetToggle.className = 'checkbox-container space-access-target-toggle';
       const targetCheckbox = document.createElement('input');
@@ -622,8 +652,40 @@
       targetUnit.textContent = t('ui.projects.spaceElevator.capacityUnit', null, 't/s');
       targetToggle.append(targetCheckbox, targetLabel);
       targetValue.append(targetInput, targetModeSelect, targetUnit);
-      targetRow.append(targetToggle, targetValue);
+      targetControls.append(targetToggle, targetValue);
+
+      const throughputCapToggle = document.createElement('div');
+      throughputCapToggle.className = 'checkbox-container space-access-throughput-cap-toggle';
+      const throughputCapCheckbox = document.createElement('input');
+      throughputCapCheckbox.type = 'checkbox';
+      throughputCapCheckbox.id = `${this.name}-cap-throughput`;
+      const throughputCapLabel = document.createElement('label');
+      throughputCapLabel.htmlFor = throughputCapCheckbox.id;
+      throughputCapLabel.textContent = t(
+        'ui.projects.spaceElevator.capThroughput',
+        null,
+        'Cap throughput to capacity'
+      );
+      const throughputCapInfo = document.createElement('span');
+      throughputCapInfo.className = 'info-tooltip-icon';
+      throughputCapInfo.innerHTML = '&#9432;';
+      attachDynamicInfoTooltip(
+        throughputCapInfo,
+        t(
+          'ui.projects.spaceElevator.capThroughputTooltip',
+          null,
+          'Proportionally slows continuous spaceship traffic when shared demand exceeds Space Access Capacity. Aerobraking bypass traffic, Teleporters, and Mass Drivers remain uncapped.'
+        )
+      );
+      throughputCapToggle.append(throughputCapCheckbox, throughputCapLabel, throughputCapInfo);
+      targetRow.append(targetControls, throughputCapToggle);
       body.appendChild(targetRow);
+
+      const operationsGrid = document.createElement('div');
+      operationsGrid.className = 'stats-grid project-summary-grid space-access-operations-grid';
+      const throughputValue = createMetric(operationsGrid, t('ui.projects.spaceElevator.activeThroughput', null, 'Active Throughput'));
+      const coverageValue = createMetric(operationsGrid, t('ui.projects.spaceElevator.coverage', null, 'Benefit Coverage'));
+      body.appendChild(operationsGrid);
 
       const explanation = document.createElement('p');
       explanation.className = 'space-access-explanation';
@@ -668,12 +730,25 @@
         }
         updateProjectUI(this.name);
       });
+      throughputCapCheckbox.addEventListener('change', () => {
+        this.capThroughputToCapacity = throughputCapCheckbox.checked;
+        for (const name in projectManager.projects) {
+          const project = projectManager.projects[name];
+          if (project instanceof SpaceshipProject) {
+            project.clearContinuousExecutionPlanCache();
+          }
+        }
+        invalidateAutomationSettingsCache(this.name);
+        updateProjectUI(this.name);
+      });
 
       this.spaceAccessUI = {
         card,
         modeRow,
         modeSelect,
         elevatorOption,
+        expansionRateValue,
+        speedBoostValue,
         elevatorsValue,
         skyhooksValue,
         capacityValue,
@@ -684,6 +759,7 @@
         targetCheckbox,
         targetInput,
         targetModeSelect,
+        throughputCapCheckbox,
       };
       this.updateUI();
     }
@@ -717,13 +793,16 @@
       ui.modeSelect.value = this.constructionMode;
       ui.elevatorsValue.textContent = formatNumber(this.elevatorCount, true);
       ui.skyhooksValue.textContent = formatNumber(this.skyhookCount, true);
+      const expansionRate = 1000 / this.getEffectiveDuration();
+      ui.expansionRateValue.textContent = formatNumber(expansionRate, true, 3);
+      ui.speedBoostValue.textContent = `x${formatNumber(this.getSpeedBoost(), false, 2)}`;
       const capacity = getTotalSpaceAccessCapacity();
-      const demand = getTotalContinuousSpaceAccessDemand();
+      const throughput = getTotalContinuousSpaceAccessThroughput();
       const coverage = getSpaceAccessCoverage();
       ui.capacityValue.textContent = capacity === Infinity
         ? t('ui.projects.spaceElevator.unlimited', null, 'Unlimited')
         : `${formatNumber(capacity, true)} t/s`;
-      ui.throughputValue.textContent = `${formatNumber(demand, true)} t/s`;
+      ui.throughputValue.textContent = `${formatNumber(throughput, true)} t/s`;
       ui.coverageValue.textContent = `${formatNumber(coverage * 100, false, 2)}%`;
       ui.engineeringValue.textContent = engineering.possible
         ? t(
@@ -737,6 +816,7 @@
         )
         : t('ui.projects.spaceElevator.skyhookOnly', null, 'Skyhook only');
       ui.targetCheckbox.checked = this.capacityTargetEnabled;
+      ui.throughputCapCheckbox.checked = this.capThroughputToCapacity;
       ui.targetModeSelect.value = this.capacityTargetMode;
       if (document.activeElement !== ui.targetInput) {
         ui.targetInput.value = formatNumber(this.capacityTarget, false, 2);
@@ -750,6 +830,7 @@
         capacityTargetEnabled: this.capacityTargetEnabled === true,
         capacityTarget: this.capacityTarget,
         capacityTargetMode: this.capacityTargetMode,
+        capThroughputToCapacity: this.capThroughputToCapacity === true,
       };
     }
 
@@ -769,6 +850,9 @@
           ? CAPACITY_TARGET_WORKERS
           : CAPACITY_TARGET_FIXED;
       }
+      if (Object.prototype.hasOwnProperty.call(settings, 'capThroughputToCapacity')) {
+        this.capThroughputToCapacity = settings.capThroughputToCapacity === true;
+      }
       if (this.hasReachedCapacityTarget()) {
         this.isActive = false;
         this.manualContinuousRun = false;
@@ -787,6 +871,7 @@
         capacityTargetEnabled: this.capacityTargetEnabled,
         capacityTarget: this.capacityTarget,
         capacityTargetMode: this.capacityTargetMode,
+        capThroughputToCapacity: this.capThroughputToCapacity,
       };
     }
 
@@ -808,6 +893,7 @@
       this.capacityTargetMode = state.capacityTargetMode === CAPACITY_TARGET_WORKERS
         ? CAPACITY_TARGET_WORKERS
         : CAPACITY_TARGET_FIXED;
+      this.capThroughputToCapacity = state.capThroughputToCapacity === true;
     }
   }
 

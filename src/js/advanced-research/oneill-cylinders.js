@@ -129,7 +129,9 @@ function getOneillSectorCapMultiplier(space) {
 }
 
 function getOneillCylinderCapacity(galaxy, space, options = {}) {
-  const capacityPerSector = ONEILL_CAPACITY_PER_SECTOR * getOneillSectorCapMultiplier(space);
+  const capacityPerSector = ONEILL_CAPACITY_PER_SECTOR
+    * getOneillSectorCapMultiplier(space)
+    * getCylindersHopeMiningRightsCapacityMultiplier(space);
   const sectors = getUhfControlledSectors(galaxy);
   if (!sectors.length) {
     return capacityPerSector;
@@ -249,18 +251,27 @@ function setOneillTooltipText(text) {
 
 function getOneillTooltipText(space, capacity) {
   const capacityText = formatCapacity(capacity);
+  const miningRightsLine = isCylindersHopeMiningRightsUnlocked(space)
+    ? getLocalizedOneillText(
+      'ui.space.oneillTooltipMiningRights',
+      { multiplier: formatNumber(getCylindersHopeMiningRightsCapacityMultiplier(space), false, 1) },
+      "The Cylinders-HOPE Mining Rights Agreement currently multiplies O'Neill cylinder capacity by {multiplier}."
+    )
+    : '';
   if (space?.isBooleanFlagSet?.(HYPERLANE_FLAG)) {
-    return getLocalizedOneillText(
+    const text = getLocalizedOneillText(
       'ui.space.oneillTooltipHyperlane',
       { capacity: capacityText },
       "Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their {capacity} capacity. Hyperlane makes each fully controlled sector contribute O'Neill cylinder capacity by the same Warp Gate Network multiplier used for resource import caps, with a minimum base capacity of 1000 when no sectors are controlled.\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead."
     );
+    return miningRightsLine ? `${text}\n${miningRightsLine}` : text;
   }
-  return getLocalizedOneillText(
+  const text = getLocalizedOneillText(
     'ui.space.oneillTooltipBase',
     { capacity: capacityText },
     "Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their {capacity} capacity (1000 per fully controlled sector, minimum 1 sector).\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead."
   );
+  return miningRightsLine ? `${text}\n${miningRightsLine}` : text;
 }
 
 function updateOneillCylinders(deltaTime, { effects, space, galaxy } = {}) {

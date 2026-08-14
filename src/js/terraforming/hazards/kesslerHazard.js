@@ -293,7 +293,7 @@ class KesslerHazard {
       const surfaceWater = resources.surface.liquidWater;
       ZONES.forEach((zone) => {
         const zoneShare = dropAmount * getZonePercentage(zone);
-        terraforming.zonalSurface[zone].liquidWater += zoneShare;
+        terraforming.zonalSurface.liquidWater.change(zone, zoneShare);
       });
 
       terraforming.synchronizeGlobalResources();

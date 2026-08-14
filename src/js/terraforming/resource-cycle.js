@@ -86,11 +86,13 @@ class ResourceCycle {
     latentHeatFusion,
     solidSpecificHeat,
     liquidSpecificHeat,
+    liquidDensity,
     saturationVaporPressureFn,
     slopeSaturationVaporPressureFn,
     freezePoint,
     sublimationPoint,
-    boilingRateMultiplier = terraformingParameters.phaseChange.resourceCycle.boilingRateMultiplier,
+    shallowBoilingDepth = terraformingParameters.phaseChange.resourceCycle.shallowBoilingDepthMeters,
+    shallowBoilingRate = terraformingParameters.phaseChange.resourceCycle.shallowBoilingRatePerKSecond,
     evaporationAlbedo = terraformingParameters.phaseChange.resourceCycle.defaultEvaporationAlbedo,
     sublimationAlbedo = terraformingParameters.phaseChange.resourceCycle.defaultSublimationAlbedo,
     nearSurfaceVaporPressureMultiplier = 1,
@@ -120,7 +122,9 @@ class ResourceCycle {
     this.slopeSaturationVaporPressureFn = slopeSaturationVaporPressureFn;
     this.freezePoint = freezePoint;
     this.sublimationPoint = sublimationPoint;
-    this.boilingRateMultiplier = boilingRateMultiplier;
+    this.liquidDensity = liquidDensity;
+    this.shallowBoilingDepth = shallowBoilingDepth;
+    this.shallowBoilingRate = shallowBoilingRate;
     this.evaporationAlbedo = evaporationAlbedo;
     this.sublimationAlbedo = sublimationAlbedo;
     this.nearSurfaceVaporPressureMultiplier = nearSurfaceVaporPressureMultiplier;
@@ -570,7 +574,11 @@ class ResourceCycle {
         const t = Math.max(0, Math.min(1, diff / transitionRange));
         activation = t * t * (3 - 2 * t);
       }
-      const boilingRate = currentLiquid * this.boilingRateMultiplier * diff * activation;
+      const shallowLiquid = Math.min(
+        currentLiquid,
+        zoneArea * liquidCoverage * this.shallowBoilingDepth * this.liquidDensity / 1000
+      );
+      const boilingRate = shallowLiquid * this.shallowBoilingRate * diff * activation;
       boilingAmount = Math.min(boilingRate * durationSeconds, currentLiquid);
       changes.atmosphere[atmosphereKey] += boilingAmount;
       changes[surfaceBucket][liquidKey] = (changes[surfaceBucket][liquidKey] || 0) - boilingAmount;
@@ -697,7 +705,7 @@ class ResourceCycle {
       const coverage = (typeof this.getCoverage === 'function')
         ? this.getCoverage(zone, terraforming.zonalCoverageCache)
         : {};
-      const zonalSource = terraforming[zonalKey]?.[zone] || {};
+      const zonalSource = terraforming[zonalKey] || {};
       const params = {
         zoneArea,
         dayTemperature: temps.day,
@@ -716,8 +724,10 @@ class ResourceCycle {
       };
       for (const key of availableKeys) {
         const paramKey = 'available' + key.charAt(0).toUpperCase() + key.slice(1);
-        const zonalKey = this.resolveSurfaceKey(key);
-        params[paramKey] = zonalSource[zonalKey] || 0;
+        const surfaceKey = this.resolveSurfaceKey(key);
+        params[paramKey] = zonalKey === 'zonalSurface'
+          ? zonalSource[surfaceKey][zone] || 0
+          : zonalSource[zone]?.[surfaceKey] || 0;
       }
       const result = this.processZone(params);
       zonalChanges[zone] = zonalChanges[zone] || {};
@@ -912,15 +922,24 @@ class ResourceCycle {
       const zonalKey = options.zonalKey || this.zonalKey;
       const bucket = options.surfaceBucket || this.surfaceBucket;
       const baseContainer = terraforming[zonalKey] || {};
-      const projectedContainer = {};
+      const projectedContainer = zonalKey === 'zonalSurface'
+        ? baseContainer.clone()
+        : {};
       for (const zone of zones) {
-        const baseZone = baseContainer[zone] || {};
-        const projectedZone = { ...baseZone };
+        const projectedZone = zonalKey === 'zonalSurface'
+          ? null
+          : { ...(baseContainer[zone] || {}) };
         const phaseChange = data.zonalChanges[zone]?.[bucket] || {};
         for (const [state, amount] of Object.entries(phaseChange)) {
-          projectedZone[state] = Math.max(0, (projectedZone[state] || 0) + amount);
+          if (zonalKey === 'zonalSurface') {
+            projectedContainer.change(state, zone, amount);
+          } else {
+            projectedZone[state] = Math.max(0, (projectedZone[state] || 0) + amount);
+          }
         }
-        projectedContainer[zone] = projectedZone;
+        if (zonalKey !== 'zonalSurface') {
+          projectedContainer[zone] = projectedZone;
+        }
       }
       const flowTerraforming = Object.create(terraforming);
       flowTerraforming[zonalKey] = projectedContainer;
@@ -1046,7 +1065,9 @@ class ResourceCycle {
       for (const zone of zones) {
         const surfaceChanges = data.zonalChanges[zone]?.[snapSurfaceBucket] || {};
         for (const [state, amount] of Object.entries(surfaceChanges)) {
-          const surfaceValue = terraforming[snapZonalKey]?.[zone]?.[state] || 0;
+          const surfaceValue = snapZonalKey === 'zonalSurface'
+            ? terraforming.zonalSurface[state][zone] || 0
+            : terraforming[snapZonalKey]?.[zone]?.[state] || 0;
           const surfaceTolerance = Math.max(
             snapAmount,
             Math.abs(surfaceValue) * Number.EPSILON

@@ -875,7 +875,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     const zoneEntries = zones.map((zone) => {
       const zoneArea = terraforming.zonalCoverageCache?.[zone]?.zoneArea || 0;
       return {
-        amount: descriptor.container[zone]?.[descriptor.key] || 0,
+        amount: descriptor.container[descriptor.key][zone] || 0,
         zoneArea,
         weight: getZonePercentage(zone),
       };

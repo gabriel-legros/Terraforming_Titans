@@ -432,7 +432,14 @@ class ArtificialManager extends EffectableEntity {
         this.autoStore = false;
         this.autoStoreWithMaxStockpile = true;
         this.nextId = 1;
-        this.nextWorldNumber = 1;
+        this.frameworkNaming = {};
+        ARTIFICIAL_TYPES.forEach((entry) => {
+            this.frameworkNaming[entry.value] = {
+                prefix: this.getDefaultWorldNamePrefix(entry.value),
+                number: '1',
+                nextNumber: 1
+            };
+        });
         this.activeProject = null;
         this.unlockedTypes = new Set(
             ARTIFICIAL_TYPES
@@ -632,6 +639,7 @@ class ArtificialManager extends EffectableEntity {
         const orbitBounds = getRingRadiusBoundsAU(ringDefault.value);
         const diskBounds = getDiskRadiusBoundsAU(diskDefault.value);
         const diskInnerBounds = getDiskInnerRadiusBoundsAU(diskDefault.value, diskBounds.min);
+        const naming = this.frameworkNaming[typeDefault.value];
         return {
             type: typeDefault.value,
             core: coreDefault.value,
@@ -646,8 +654,8 @@ class ArtificialManager extends EffectableEntity {
             diskRadiusAU: clampDiskRadiusAU(diskBounds.min, diskBounds),
             sector: 'auto',
             sectorFilter: 'all',
-            name: this.getDefaultWorldNamePrefix(typeDefault.value),
-            number: String(this.nextWorldNumber)
+            name: naming.prefix,
+            number: naming.number
         };
     }
 
@@ -710,10 +718,30 @@ class ArtificialManager extends EffectableEntity {
     setDraftSelection(next) {
         const incoming = next || {};
         const merged = { ...this.draftSelection };
+        const previousType = this.draftSelection.type;
+        const typeChanged = incoming.type && incoming.type !== previousType;
+        const previousNaming = this.frameworkNaming[previousType];
+        previousNaming.prefix = this.draftSelection.name;
+        previousNaming.number = this.draftSelection.number;
+        if (previousNaming.number) {
+            previousNaming.nextNumber = Number(previousNaming.number);
+        }
+        if (typeChanged) {
+            const nextNaming = this.frameworkNaming[incoming.type];
+            merged.name = nextNaming.prefix;
+            merged.number = nextNaming.number;
+        }
         Object.keys(incoming).forEach((key) => {
+            if (typeChanged && (key === 'name' || key === 'number')) return;
             incoming[key] !== undefined && (merged[key] = incoming[key]);
         });
         this.draftSelection = this.normalizeDraftSelection(merged);
+        const naming = this.frameworkNaming[this.draftSelection.type];
+        naming.prefix = this.draftSelection.name;
+        naming.number = this.draftSelection.number;
+        if (naming.number) {
+            naming.nextNumber = Number(naming.number);
+        }
     }
 
     resolveAutoSector(filterValue = 'all') {
@@ -1309,7 +1337,7 @@ class ArtificialManager extends EffectableEntity {
     }
 
     getDefaultWorldName(type) {
-        return this.composeWorldName(this.getDefaultWorldNamePrefix(type), String(this.nextWorldNumber));
+        return this.composeWorldName(this.getDefaultWorldNamePrefix(type), String(this.frameworkNaming[type].nextNumber));
     }
 
     normalizeWorldNumber(value) {
@@ -1332,14 +1360,22 @@ class ArtificialManager extends EffectableEntity {
             : { name: fullName, number: '' };
     }
 
-    advanceWorldNumber(number) {
+    advanceWorldNumber(type, prefix, number) {
+        const naming = this.frameworkNaming[type];
+        if (prefix) {
+            naming.prefix = prefix;
+        }
         const usedNumber = this.normalizeWorldNumber(number);
         if (usedNumber) {
-            this.nextWorldNumber = Number(usedNumber) + 1;
+            naming.nextNumber = Number(usedNumber) + 1;
         } else {
-            this.nextWorldNumber += 1;
+            naming.nextNumber += 1;
         }
-        this.draftSelection.number = String(this.nextWorldNumber);
+        naming.number = String(naming.nextNumber);
+        if (this.draftSelection.type === type) {
+            this.draftSelection.name = naming.prefix;
+            this.draftSelection.number = naming.number;
+        }
     }
 
     getTotalPaymentAvailability(resourceKey, allowStorage = this.getAllowSpaceStoragePayments()) {
@@ -1625,7 +1661,7 @@ class ArtificialManager extends EffectableEntity {
           worldDivisor: worldCount
       };
 
-      this.advanceWorldNumber(nameNumber);
+      this.advanceWorldNumber('shell', namePrefix, nameNumber);
       this.nextId += 1;
       this.markUIDirty(true);
       return true;
@@ -1724,7 +1760,7 @@ class ArtificialManager extends EffectableEntity {
           worldDivisor: worldCount
       };
 
-      this.advanceWorldNumber(nameNumber);
+      this.advanceWorldNumber('ring', namePrefix, nameNumber);
       this.nextId += 1;
       this.markUIDirty(true);
       return true;
@@ -1820,7 +1856,7 @@ class ArtificialManager extends EffectableEntity {
           worldDivisor: worldCount
       };
 
-      this.advanceWorldNumber(nameNumber);
+      this.advanceWorldNumber('disk', namePrefix, nameNumber);
       this.nextId += 1;
       this.markUIDirty(true);
       return true;
@@ -2624,7 +2660,9 @@ class ArtificialManager extends EffectableEntity {
             autoStoreWithMaxStockpile: this.autoStoreWithMaxStockpile,
             fleetCapacityWorldCap: this.fleetCapacityWorldCap,
             nextId: this.nextId,
-            nextWorldNumber: this.nextWorldNumber,
+            frameworkNaming: Object.fromEntries(
+                Object.entries(this.frameworkNaming).map(([type, naming]) => [type, { ...naming }])
+            ),
             activeProject: project,
             unlockedTypes: Array.from(this.unlockedTypes),
             unlockedCores: Array.from(this.unlockedCores),
@@ -2678,16 +2716,37 @@ class ArtificialManager extends EffectableEntity {
             this.fleetCapacityWorldCap = existingFleetCap;
         }
         this.activeProject = state.activeProject || null;
-        this.nextWorldNumber = Math.max(1, Math.floor(state.nextWorldNumber || state.nextId || this.nextWorldNumber));
+        const legacyNextWorldNumber = Math.max(1, Math.floor(state.nextWorldNumber || state.nextId || 1));
         const draft = { ...(state.draftSelection || {}) };
         if (!Object.prototype.hasOwnProperty.call(draft, 'number')) {
             const migratedName = this.splitWorldName(draft.name);
             draft.name = migratedName.name;
-            draft.number = migratedName.number || String(this.nextWorldNumber);
-            if (migratedName.number) {
-                this.nextWorldNumber = Number(migratedName.number);
-            }
+            draft.number = migratedName.number || String(legacyNextWorldNumber);
         }
+        if (state.frameworkNaming) {
+            ARTIFICIAL_TYPES.forEach((entry) => {
+                const saved = state.frameworkNaming[entry.value] || {};
+                const number = Object.prototype.hasOwnProperty.call(saved, 'number')
+                    ? this.normalizeWorldNumber(saved.number)
+                    : String(Math.max(1, Math.floor(saved.nextNumber || 1)));
+                this.frameworkNaming[entry.value] = {
+                    prefix: String(saved.prefix || '').trim() || this.getDefaultWorldNamePrefix(entry.value),
+                    number,
+                    nextNumber: Math.max(1, Math.floor(saved.nextNumber || number || 1))
+                };
+            });
+        } else {
+            const draftType = ARTIFICIAL_TYPES.some((entry) => entry.value === draft.type) ? draft.type : 'shell';
+            const number = this.normalizeWorldNumber(draft.number);
+            this.frameworkNaming[draftType] = {
+                prefix: String(draft.name || '').trim() || this.getDefaultWorldNamePrefix(draftType),
+                number,
+                nextNumber: number ? Number(number) : legacyNextWorldNumber
+            };
+        }
+        const draftType = ARTIFICIAL_TYPES.some((entry) => entry.value === draft.type) ? draft.type : 'shell';
+        draft.name = this.frameworkNaming[draftType].prefix;
+        draft.number = this.frameworkNaming[draftType].number;
         const defaultDraft = this.createDefaultDraftSelection();
         this.draftSelection = this.normalizeDraftSelection({ ...defaultDraft, ...draft });
         const prepay = state.prepay || {};

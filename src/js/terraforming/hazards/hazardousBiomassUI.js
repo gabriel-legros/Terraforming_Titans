@@ -681,10 +681,9 @@ function computeHazardTotals(terraformingState, hazardParameters, manager) {
   let biomass = 0;
 
   zones.forEach((zone) => {
-    const zoneData = terraformingState && terraformingState.zonalSurface
-      ? terraformingState.zonalSurface[zone]
-      : null;
-    const zoneBiomass = zoneData && Number.isFinite(zoneData.hazardousBiomass) ? zoneData.hazardousBiomass : 0;
+    const zoneBiomass = Number.isFinite(terraformingState.zonalSurface.hazardousBiomass[zone])
+      ? terraformingState.zonalSurface.hazardousBiomass[zone]
+      : 0;
     biomass += zoneBiomass > 0 ? zoneBiomass : 0;
   });
 
@@ -1712,8 +1711,9 @@ function computeZoneGrowth(terraformingState, hazardParameters, manager, zones) 
   })();
 
   return zones.map((zone) => {
-    const zoneData = terraformingState.zonalSurface[zone];
-    const zoneBiomass = zoneData && Number.isFinite(zoneData.hazardousBiomass) ? zoneData.hazardousBiomass : 0;
+    const zoneBiomass = Number.isFinite(terraformingState.zonalSurface.hazardousBiomass[zone])
+      ? terraformingState.zonalSurface.hazardousBiomass[zone]
+      : 0;
     let percentage = shareResolver ? shareResolver(zone, zones.length) : 0;
     if (!Number.isFinite(percentage) || percentage <= 0) {
       percentage = zones.length ? 1 / zones.length : 0;

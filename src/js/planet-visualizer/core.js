@@ -1127,11 +1127,10 @@
           hb = c.hazardousBiomass;
         } else {
           const area = (t.celestialParameters.surfaceArea || 0) * getZonePercentage(zone);
-          const zs = t.zonalSurface?.[zone] || {};
-          w = estimateCoverage(zs.liquidWater || 0, area, 0.0001);
-          i = estimateCoverage(zs.ice || 0, area, 0.0001 * 100);
-          b = estimateCoverage(zs.biomass || 0, area, 0.0001 * 100000);
-          hb = estimateCoverage(zs.hazardousBiomass || 0, area, 0.0001 * 100000);
+          w = estimateCoverage(t.zonalSurface.liquidWater[zone] || 0, area, 0.0001);
+          i = estimateCoverage(t.zonalSurface.ice[zone] || 0, area, 0.0001 * 100);
+          b = estimateCoverage(t.zonalSurface.biomass[zone] || 0, area, 0.0001 * 100000);
+          hb = estimateCoverage(t.zonalSurface.hazardousBiomass[zone] || 0, area, 0.0001 * 100000);
         }
         z[zone].water = Math.max(0, Math.min(1, Number(w) || 0));
         z[zone].ice = Math.max(0, Math.min(1, Number(i) || 0));

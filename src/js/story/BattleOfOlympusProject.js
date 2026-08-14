@@ -282,7 +282,7 @@ class BattleOfOlympusProject extends AndroidProject {
   syncZonalBiomass() {
     const share = this.biomassZones.length > 0 ? this.hazardousBiomass / this.biomassZones.length : 0;
     getZones().forEach((zone) => {
-      terraforming.zonalSurface[zone].hazardousBiomass = this.biomassZones.indexOf(zone) >= 0 ? share : 0;
+      terraforming.zonalSurface.hazardousBiomass[zone] = this.biomassZones.indexOf(zone) >= 0 ? share : 0;
     });
 
     resources.surface.hazardousBiomass.value = this.hazardousBiomass;

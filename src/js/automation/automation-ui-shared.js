@@ -738,6 +738,15 @@ function createAutomationTargetPresetController(config) {
     });
     refs.typeSelect.addEventListener('change', (event) => {
       state.builderType = event.target.value || 'both';
+      const automation = config.getAutomation();
+      const activePreset = automation.getSelectedPreset();
+      if (activePreset && config.presetTypeOptionKeys) {
+        const request = config.getSaveRequest(automation, state);
+        for (let index = 0; index < config.presetTypeOptionKeys.length; index += 1) {
+          const optionKey = config.presetTypeOptionKeys[index];
+          activePreset[optionKey] = request.options[optionKey];
+        }
+      }
       refresh();
     });
     refs.scopeSelect.addEventListener('change', (event) => {

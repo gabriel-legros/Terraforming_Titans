@@ -507,6 +507,10 @@ class SpaceshipProject extends Project {
     return baseAmount * efficiency * this.shipCapacityMultiplier;
   }
 
+  getAerobrakingSpaceAccessBypassFraction() {
+    return 0;
+  }
+
   getSpaceAccessDemand() {
     if (
       !gameSettings.spaceAccessCapacity ||
@@ -525,7 +529,10 @@ class SpaceshipProject extends Project {
     if (!(duration > 0)) {
       return 0;
     }
-    return shipCount * this.getSpaceshipEnergyCostTonnage() / duration;
+    return shipCount
+      * this.getSpaceshipEnergyCostTonnage()
+      / duration
+      * (1 - this.getAerobrakingSpaceAccessBypassFraction());
   }
 
   updateCostAndGains(elements) {
@@ -614,14 +621,22 @@ class SpaceshipProject extends Project {
       return;
     }
     const capacity = getTotalSpaceAccessCapacity();
-    const demand = getTotalContinuousSpaceAccessDemand();
+    const throughput = getTotalContinuousSpaceAccessThroughput();
+    const projectThroughput = getContinuousSpaceAccessThroughput(this);
+    const throughputPercent = getSpaceAccessThroughputFraction(this) * 100;
+    const capped = getSpaceAccessProject().capThroughputToCapacity;
     elements.spaceAccessStatusElement.textContent = getSpaceshipProjectText(
-      'ui.projects.spaceship.spaceAccessContinuous',
-      'Space access benefit: {benefit} (project {project}/s; shared {demand}/{capacity}/s)',
+      capped
+        ? 'ui.projects.spaceship.spaceAccessContinuousCapped'
+        : 'ui.projects.spaceship.spaceAccessContinuous',
+      capped
+        ? 'Space access benefit: {benefit}; throughput: {throughput}% (project {project}/s; shared {demand}/{capacity}/s)'
+        : 'Space access benefit: {benefit} (project {project}/s; shared {demand}/{capacity}/s)',
       {
         benefit: `${formatNumber(benefit * 100, false, 2)}%`,
-        project: formatNumber(this.getSpaceAccessDemand(), true),
-        demand: formatNumber(demand, true),
+        throughput: formatNumber(throughputPercent, false, 2),
+        project: formatNumber(projectThroughput, true),
+        demand: formatNumber(throughput, true),
         capacity: capacity === Infinity
           ? getSpaceshipProjectText('ui.projects.spaceship.spaceAccessUnlimited', 'Unlimited')
           : formatNumber(capacity, true),
@@ -1005,7 +1020,7 @@ class SpaceshipProject extends Project {
     const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
     const activeShips = this.getActiveShipCount();
     const multiplier = perSecond
-      ? activeShips * (1000 / duration)
+      ? activeShips * getSpaceAccessThroughputFraction(this) * (1000 / duration)
       : 1;
     for (const category in costPerShip) {
       totalCost[category] = {};
@@ -1022,7 +1037,7 @@ class SpaceshipProject extends Project {
     const duration = (this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration());
     const activeShips = this.getActiveShipCount();
     const multiplier = perSecond
-      ? activeShips * (1000 / duration)
+      ? activeShips * getSpaceAccessThroughputFraction(this) * (1000 / duration)
       : 1;
     for (const category in gainPerShip) {
       totalResourceGain[category] = {};
@@ -1371,7 +1386,9 @@ class SpaceshipProject extends Project {
   getContinuousOperationContext(deltaTime = 1000, productivity = 1) {
     const duration = this.getShipOperationDuration ? this.getShipOperationDuration() : this.getEffectiveDuration();
     const fraction = duration > 0 ? deltaTime / duration : 0;
-    const shipCount = this.getActiveShipCount();
+    const rawShipCount = this.getActiveShipCount();
+    const throughputFraction = getSpaceAccessThroughputFraction(this);
+    const shipCount = rawShipCount * throughputFraction;
     const totalTransportCount = shipCount;
     const auxiliaryCount = 0;
     const successChance = shipCount > 0 ? this.getKesslerSuccessChance() : 1;
@@ -1384,6 +1401,7 @@ class SpaceshipProject extends Project {
       seconds: deltaTime / 1000,
       productivity: Math.max(0, productivity * workerRatio),
       workerRatio,
+      throughputFraction,
       shipCount,
       auxiliaryCount,
       totalTransportCount,
@@ -1680,6 +1698,7 @@ class SpaceshipProject extends Project {
     const cache = this.continuousExecutionPlanCache;
     const cacheSelectionKey = cache?.selection || '';
     const currentSelectionKey = this.getDisposalSelectionSignature();
+    const spaceAccessThroughputFraction = getSpaceAccessThroughputFraction(this);
     if (
       cache &&
       cache.deltaTime === deltaTime &&
@@ -1688,6 +1707,7 @@ class SpaceshipProject extends Project {
       cache.isActive === this.isActive &&
       cache.isContinuous === this.isContinuous() &&
       cache.shipCount === this.getActiveShipCount() &&
+      cache.spaceAccessThroughputFraction === spaceAccessThroughputFraction &&
       cacheSelectionKey === currentSelectionKey
     ) {
       return cache.plan;
@@ -1701,6 +1721,7 @@ class SpaceshipProject extends Project {
       isActive: this.isActive,
       isContinuous: this.isContinuous(),
       shipCount: this.getActiveShipCount(),
+      spaceAccessThroughputFraction,
       selection: currentSelectionKey,
       plan,
     };

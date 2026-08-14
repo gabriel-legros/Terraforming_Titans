@@ -49,9 +49,9 @@ function createDiskworldStatGroup(titleText, stats) {
 
 function getDiskworldLiquidHydrogenAvailable() {
   let total = 0;
-  const zonalSurface = terraforming.zonalSurface;
-  for (const zone in zonalSurface) {
-    total += zonalSurface[zone].liquidHydrogen || 0;
+  const liquidHydrogen = terraforming.zonalSurface.liquidHydrogen;
+  for (const zone of getZones()) {
+    total += liquidHydrogen[zone] || 0;
   }
   return total;
 }
@@ -60,21 +60,19 @@ function removeDiskworldLiquidHydrogen(amountTons) {
   if (!(amountTons > 0)) {
     return 0;
   }
-  const zonalSurface = terraforming.zonalSurface;
+  const liquidHydrogen = terraforming.zonalSurface.liquidHydrogen;
   const available = getDiskworldLiquidHydrogenAvailable();
   if (!(available > 0)) {
     return 0;
   }
   let remaining = Math.min(amountTons, available);
-  for (const zone in zonalSurface) {
-    const zoneStore = zonalSurface[zone];
-    const current = zoneStore.liquidHydrogen || 0;
+  for (const zone of getZones()) {
+    const current = liquidHydrogen[zone] || 0;
     if (!(current > 0)) {
       continue;
     }
     const removal = Math.min(current, amountTons * (current / available), remaining);
-    zoneStore.liquidHydrogen = current - removal;
-    remaining -= removal;
+    remaining -= -liquidHydrogen.change(zone, -removal);
   }
   return Math.min(amountTons, available) - remaining;
 }

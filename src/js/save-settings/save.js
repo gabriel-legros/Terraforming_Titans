@@ -1181,17 +1181,25 @@ function saveGameToFile() {
   const gameState = getGameState(new Date());
 
   const saveData = JSON.stringify(gameState);
-  const blob = new Blob([saveData], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-
-  const a = document.createElement('a');
-  a.href = url;
   const worldName = (typeof spaceManager !== 'undefined' && typeof spaceManager.getCurrentWorldName === 'function')
     ? spaceManager.getCurrentWorldName()
     : 'game';
   const safeWorldName = worldName.replace(/[^a-z0-9_\-]/gi, '_');
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  a.download = `${safeWorldName}_${timestamp}.json`;
+  const filename = `${safeWorldName}_${timestamp}.json`;
+
+  if (window.electronFileExport) {
+    window.electronFileExport.save(filename, saveData).catch((error) => {
+      console.warn('Unable to save game to file:', error);
+    });
+    return;
+  }
+
+  const blob = new Blob([saveData], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
   a.click();
 
   URL.revokeObjectURL(url);

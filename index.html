@@ -300,6 +300,8 @@
     <script src="src/js/terraforming/oxygen-cycle.js"></script>
     <script src="src/js/terraforming/nitrogen-cycle.js"></script>
     <script src="src/js/terraforming/zones.js"></script>
+    <script src="src/js/precise-decimal.js"></script>
+    <script src="src/js/terraforming/zonal-resources.js"></script>
     <script src="src/js/terraforming/terraforming-utils.js"></script>
     <script src="src/js/terraforming/gravity.js"></script>
     <script src="src/js/terraforming/radiation-utils.js"></script>
@@ -308,6 +310,11 @@
     <script src="src/js/terraforming/atmospheric-chemistry.js"></script>
     <script src="src/js/terraforming/exosphere-utils.js"></script>
     <script src="src/js/terraforming/terraforming.js"></script>
+    <script src="src/js/terraforming/terraforming-status.js"></script>
+    <script src="src/js/terraforming/terraforming-resources.js"></script>
+    <script src="src/js/terraforming/terraforming-climate.js"></script>
+    <script src="src/js/terraforming/terraforming-effects.js"></script>
+    <script src="src/js/terraforming/terraforming-state.js"></script>
     <script src="src/js/terraforming/landReservation.js"></script>
     <script src="src/js/terraforming/terraforming-graphs.js"></script>
     <script src="src/js/terraforming/hazards/hazardousBiomassHazard.js"></script>
@@ -694,6 +701,20 @@
                                     </div>
                                     <div id="space-slider-cylinders-hope-energy" class="space-slider-energy" data-i18n="ui.space.spaceSliders.cylindersHope.energyOff">0 space energy/s</div>
                                     <div id="space-slider-cylinders-hope-productivity" class="space-slider-productivity" data-i18n="ui.space.spaceSliders.cylindersHope.productivityFull">Productivity: 100%</div>
+                                </div>
+                                <div id="space-slider-cylinders-hope-mining-rights-card" class="space-slider-card hidden">
+                                    <div class="space-slider-topline">
+                                        <span data-i18n="ui.space.spaceSliders.cylindersHopeMiningRights.label">Cylinders-HOPE Mining Rights</span>
+                                        <span id="space-slider-cylinders-hope-mining-rights-tooltip" class="info-tooltip-icon">&#9432;</span>
+                                    </div>
+                                    <div class="space-slider-controls">
+                                        <div class="space-slider-range-wrap">
+                                            <input id="space-slider-cylinders-hope-mining-rights-input" type="range" min="0" max="10" step="1" value="0" />
+                                            <div id="space-slider-cylinders-hope-mining-rights-notches" class="space-slider-notches"></div>
+                                        </div>
+                                        <span id="space-slider-cylinders-hope-mining-rights-tick" class="space-slider-tick">0</span>
+                                    </div>
+                                    <div id="space-slider-cylinders-hope-mining-rights-summary" class="space-slider-energy" data-i18n="ui.space.spaceSliders.cylindersHopeMiningRights.summaryDefault">Cylinder Capacity: x1 | Cylinder Manufacturing Population: x1 | Mining Caps: -0%</div>
                                 </div>
                                 <div id="space-slider-megaprojects-coordination-card" class="space-slider-card hidden">
                                     <div class="space-slider-topline">
@@ -1274,6 +1295,9 @@
                 </label>
                 <label class="settings-option difficulty-toggle-option">
                   <input type="checkbox" id="space-access-capacity-toggle"> <span data-i18n="ui.settings.spaceAccessCapacity">Space Access Capacity</span> <span id="space-access-capacity-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+                <label class="settings-option difficulty-toggle-option">
+                  <input type="checkbox" id="aerobraking-toggle"> <span data-i18n="ui.settings.aerobraking">Aerobraking</span> <span id="aerobraking-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
               </div>
               <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-inputs">

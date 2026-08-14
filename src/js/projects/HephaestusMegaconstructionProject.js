@@ -371,7 +371,10 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
   }
 
   getExpansionRateSourceLabel() {
-    return registerRateSource('project:hephaestusMegaconstruction:expansion', 'Hephaestus Yard expansion');
+    return registerRateSource(
+      'project:hephaestusMegaconstruction:expansion',
+      getHephaestusText('ui.projects.hephaestus.rateSources.expansion', 'Hephaestus Yard expansion')
+    );
   }
 
   getEffectiveYardAssignmentMultiplier() {
@@ -615,6 +618,17 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     const headerComplexity = document.createElement('span');
     headerComplexity.classList.add('stat-label');
     headerComplexity.textContent = getHephaestusText('ui.projects.common.complexity', 'Complexity');
+    const complexityInfo = document.createElement('span');
+    complexityInfo.classList.add('info-tooltip-icon');
+    complexityInfo.innerHTML = '&#9432;';
+    attachDynamicInfoTooltip(
+      complexityInfo,
+      getHephaestusText(
+        'ui.projects.hephaestus.complexityTooltip',
+        'Complexity is the project\'s base duration relative to 60 seconds. Before other duration modifiers, projection duration is 60 seconds x Complexity / max(1, effective terraformed worlds + effective assigned yards). Yard effectiveness bonuses increase the assigned-yard contribution.'
+      )
+    );
+    headerComplexity.appendChild(complexityInfo);
     const headerValue = document.createElement('span');
     headerValue.classList.add('stat-label');
     headerValue.textContent = getHephaestusText('ui.projects.common.assigned', 'Assigned');

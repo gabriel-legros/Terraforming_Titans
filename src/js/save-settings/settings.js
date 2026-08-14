@@ -26,6 +26,7 @@ const LEGACY_GAME_SETTING_DEFAULTS = {
   phaseChangeHeat: false,
   factoryHeating: false,
   realisticFactoryEnergyConsumption: false,
+  aerobraking: false,
   infinitePatience: false,
   liftersStrippingCap: false,
   orbitalCap: false,
@@ -131,6 +132,7 @@ function loadGameSettings(savedSettings) {
   cachedSettings.phaseChangeHeatToggle.checked = gameSettings.phaseChangeHeat;
   cachedSettings.factoryHeatingToggle.checked = gameSettings.factoryHeating;
   cachedSettings.realisticFactoryEnergyConsumptionToggle.checked = gameSettings.realisticFactoryEnergyConsumption;
+  cachedSettings.aerobrakingToggle.checked = gameSettings.aerobraking;
   cachedSettings.infinitePatienceToggle.checked = gameSettings.infinitePatience;
   cachedSettings.liftersStrippingCapToggle.checked = gameSettings.liftersStrippingCap;
   cachedSettings.orbitalCapToggle.checked = gameSettings.orbitalCap;

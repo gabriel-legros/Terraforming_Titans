@@ -22,6 +22,7 @@ let projectsBuilderProjectSignature = '';
 let projectAutomationPresetController;
 
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_PROJECT_ID = 'spaceStorage';
+const PROJECT_AUTOMATION_UI_SPACE_MIRROR_FACILITY_ID = 'spaceMirrorFacility';
 const PROJECT_AUTOMATION_UI_SPACE_ELEVATOR_PROJECT_ID = 'spaceElevator';
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_CAPS_AND_RESERVE_ID = 'spaceStorageCapsReserve';
 const PROJECT_AUTOMATION_UI_SPACE_STORAGE_EXPANSION_ID = 'spaceStorageExpansion';
@@ -209,6 +210,10 @@ function getProjectPresetJsonFieldOptions(fieldPath, value, preset) {
   }
   if (presetSection !== 'operations') {
     return null;
+  }
+  if (projectId === PROJECT_AUTOMATION_UI_SPACE_MIRROR_FACILITY_ID
+    && fieldPath[3] === 'lanternDayNightPeriod') {
+    return { nullableNumber: true, emptyAsNull: true, minimum: 1, maximum: 1000 };
   }
   if (PROJECT_AUTOMATION_UI_ASSIGNMENT_INTEGER_FIELDS.has(fieldPath[3])) {
     return { projectAssignmentInteger: true };
@@ -571,6 +576,7 @@ function buildAutomationProjectsUI() {
       : preset.includeExpansion !== false
         ? 'expansion'
         : 'operations',
+    presetTypeOptionKeys: ['includeExpansion', 'includeOperations'],
     getTargetLabel: (projectId, context) => getAutomatableProjectDisplayName(
       projectId,
       context.projectLookup
@@ -712,6 +718,10 @@ function updateProjectsAutomationUI() {
   const selectedProjectIds = presetContext.savedTargetIds;
   updateAutomationPresetJsonDetails(projectsPresetJsonDetails, activePreset, {
     rootPath: ['projects'],
+    bucketIncludeKeys: {
+      expansion: 'includeExpansion',
+      operations: 'includeOperations'
+    },
     getParameterInputPaths: (preset) => automation.isParameterizedPreset(preset)
       ? automation.getPresetParameterInfo(preset).parameterPaths
       : [],

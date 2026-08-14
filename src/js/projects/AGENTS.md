@@ -23,7 +23,8 @@ This folder contains classes for repeatable or generally available projects. Sto
 
 ## Updates
 - Planetary Thrusters target caps are 10,000 days for spin and 10,000 AU for heliocentric distance.
-- The Hyperion Lantern day-night period is a nullable per-world setting. It controls the effective `dayNightPeriod` used for light and climate, while Planetary Thrusters control physical spin. Blank follows the current spin-derived cycle; numeric values remain limited to 1-1000 hours.
+- The Hyperion Lantern day-night period is a nullable per-world setting. It controls the effective `dayNightPeriod` used for light and climate, while Planetary Thrusters control physical spin. Blank follows the current spin-derived cycle; numeric values remain limited to 1-1000 hours. Project Operations presets capture and restore both numeric and blank values.
 - Warp Gate Command operations stop after completion unless Auto-start is enabled per team, with the toggle embedded in the Start button.
 - Lifters expansion switches to continuous progress under 1s duration and shows an Expansion/s readout.
+- Space Elevator's optional throughput cap proportionally limits continuous capacity-consuming spaceship traffic and grants full Space Access cost benefits to traffic that runs, while leaving aerobraking bypass traffic, Teleporters, and Mass Drivers uncapped.
 - Advanced oversight keeps Hyperion Lanterns out of zones with reversed mirrors and now stores mirror assignments as signed counts (`negative = reverse`) instead of maintaining separate reverse-mode solver state.

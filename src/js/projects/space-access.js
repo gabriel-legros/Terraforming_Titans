@@ -36,10 +36,25 @@ function getTotalContinuousSpaceAccessDemand() {
   return total;
 }
 
-function getSpaceAccessCoverage() {
-  if (!gameSettings.spaceAccessCapacity) {
-    return hasBuiltSpaceAccess() ? 1 : 0;
+function getTotalContinuousSpaceAccessThroughput() {
+  const demand = getTotalContinuousSpaceAccessDemand();
+  const project = getSpaceAccessProject();
+  if (!gameSettings.spaceAccessCapacity || !project.capThroughputToCapacity) {
+    return demand;
   }
+  return demand * getSpaceAccessCapacityFraction();
+}
+
+function getContinuousSpaceAccessThroughput(project) {
+  const demand = Math.max(0, project.getSpaceAccessDemand());
+  const spaceAccessProject = getSpaceAccessProject();
+  if (!gameSettings.spaceAccessCapacity || !spaceAccessProject.capThroughputToCapacity) {
+    return demand;
+  }
+  return demand * getSpaceAccessCapacityFraction();
+}
+
+function getSpaceAccessCapacityFraction() {
   const capacity = getTotalSpaceAccessCapacity();
   if (capacity === Infinity) {
     return 1;
@@ -51,14 +66,44 @@ function getSpaceAccessCoverage() {
   return demand > 0 ? Math.min(1, capacity / demand) : 1;
 }
 
+function getSpaceAccessCoverage() {
+  if (!gameSettings.spaceAccessCapacity) {
+    return hasBuiltSpaceAccess() ? 1 : 0;
+  }
+  const project = getSpaceAccessProject();
+  if (project.capThroughputToCapacity) {
+    return hasBuiltSpaceAccess() ? 1 : 0;
+  }
+  return getSpaceAccessCapacityFraction();
+}
+
+function getSpaceAccessThroughputFraction(project) {
+  const spaceAccessProject = getSpaceAccessProject();
+  if (!gameSettings.spaceAccessCapacity || !spaceAccessProject.capThroughputToCapacity) {
+    return 1;
+  }
+  const aerobrakingFraction = gameSettings.aerobraking
+    ? project.getAerobrakingSpaceAccessBypassFraction()
+    : 0;
+  return aerobrakingFraction
+    + (1 - aerobrakingFraction) * getSpaceAccessCapacityFraction();
+}
+
 function getSpaceAccessBenefitFraction(project) {
+  const aerobrakingFraction = gameSettings.aerobraking
+    ? project.getAerobrakingSpaceAccessBypassFraction()
+    : 0;
   if (!hasBuiltSpaceAccess()) {
-    return 0;
+    return aerobrakingFraction;
   }
   if (!gameSettings.spaceAccessCapacity || !project.isContinuous()) {
     return 1;
   }
-  return getSpaceAccessCoverage();
+  if (getSpaceAccessProject().capThroughputToCapacity) {
+    return 1;
+  }
+  return aerobrakingFraction
+    + (1 - aerobrakingFraction) * getSpaceAccessCoverage();
 }
 
 function getSpaceAccessMetalCostMultiplier(project) {

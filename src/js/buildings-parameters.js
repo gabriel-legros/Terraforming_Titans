@@ -733,9 +733,9 @@ const buildingsParameters = {
       },
       intake: {
         shortName: '',
-        consumption: { atmospheric: { hydrogen: 10 },  colony : {energy : 10000} },
+        consumption: { atmospheric: { hydrogen: 100 },  colony : {energy : 10000} },
         realisticEnergyConsumption: 1_250_000,
-        production: { colony: { colonyHydrogen: 10 } },
+        production: { colony: { colonyHydrogen: 100 } },
         storage: { colony: { colonyHydrogen: 5000 } }
       }
     }
@@ -947,7 +947,7 @@ const buildingsParameters = {
     cost: { colony: { metal: 1000, glass : 500, components: 100, electronics: 50} },
     consumption: { colony: { energy: 10000000} },
     realisticEnergyConsumption: 1_000_000,
-    production: { atmospheric: { greenhouseGas: 5 } },
+    production: { atmospheric: { greenhouseGas: 50 } },
     storage: {},
     factoryHeatCoefficient: 1,
     dayNightActivity: false,

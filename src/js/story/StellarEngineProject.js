@@ -263,13 +263,13 @@ class StellarEngineProject extends ArtificialSkyProject {
     const zones = getZones();
     let totalZonalBiomass = 0;
     for (const zone of zones) {
-      totalZonalBiomass += terraforming.zonalSurface[zone]?.biomass || 0;
+      totalZonalBiomass += terraforming.zonalSurface.biomass[zone] || 0;
     }
     if (totalZonalBiomass > 0) {
       for (const zone of zones) {
-        const zoneBiomass = terraforming.zonalSurface[zone]?.biomass || 0;
+        const zoneBiomass = terraforming.zonalSurface.biomass[zone] || 0;
         const zoneLoss = Math.min(zoneBiomass, loss * (zoneBiomass / totalZonalBiomass));
-        terraforming.zonalSurface[zone].biomass = Math.max(0, zoneBiomass - zoneLoss);
+        terraforming.zonalSurface.biomass.change(zone, -zoneLoss);
       }
     }
     biomass.decrease(loss);

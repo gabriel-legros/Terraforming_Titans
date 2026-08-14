@@ -60,6 +60,7 @@ let launcherTemporarySave = null;
 let launcherTemporarySaveData = '';
 let startupSelection = { mode: 'latest', slot: '', runScriptsOnStart: true };
 let gameLaunchStarted = false;
+let lastGameExportDirectory = '';
 
 function getSavedWindowState(saveData) {
   try {
@@ -405,6 +406,58 @@ function registerSaveStorageHandlers() {
   });
   ipcMain.on('save-storage:removeItem', (event, key) => {
     event.returnValue = removeSaveStorageItem(key);
+  });
+}
+
+function loadLastGameExportDirectory() {
+  const preferencePath = path.join(app.getPath('userData'), 'last-export-directory.txt');
+  if (!fs.existsSync(preferencePath)) {
+    return;
+  }
+  try {
+    const savedDirectory = fs.readFileSync(preferencePath, 'utf8').trim();
+    if (savedDirectory && fs.existsSync(savedDirectory)) {
+      lastGameExportDirectory = savedDirectory;
+    }
+  } catch (error) {
+    console.warn(`Unable to read the last export directory: ${error.message}`);
+  }
+}
+
+function rememberGameExportDirectory(directory) {
+  lastGameExportDirectory = directory;
+  try {
+    fs.writeFileSync(
+      path.join(app.getPath('userData'), 'last-export-directory.txt'),
+      directory,
+      'utf8'
+    );
+  } catch (error) {
+    console.warn(`Unable to remember the export directory: ${error.message}`);
+  }
+}
+
+function registerFileExportHandlers() {
+  const { ipcMain } = require('electron');
+  ipcMain.handle('file-export:save', async (event, filename, contents) => {
+    const win = BrowserWindow.fromWebContents(event.sender);
+    const safeFilename = path.basename(filename).replace(/[/\\?%*:|"<>]/g, '_')
+      || 'Terraforming_Titans_Save.json';
+    const result = await dialog.showSaveDialog(win, {
+      title: 'Save Game',
+      buttonLabel: 'Save',
+      defaultPath: path.join(lastGameExportDirectory || app.getPath('documents'), safeFilename),
+      filters: [
+        { name: 'Terraforming Titans Save', extensions: ['json'] }
+      ]
+    });
+    if (result.canceled) {
+      return false;
+    }
+
+    await fs.promises.writeFile(result.filePath, contents, 'utf8');
+    rememberGameExportDirectory(path.dirname(result.filePath));
+    return true;
   });
 }
 
@@ -1163,6 +1216,8 @@ app.whenReady().then(() => {
   registerModProtocol();
   registerCrashHandlers();
   registerSaveStorageHandlers();
+  loadLastGameExportDirectory();
+  registerFileExportHandlers();
   registerSteamAchievementHandlers();
   registerWindowControlHandlers();
   registerModHandlers();

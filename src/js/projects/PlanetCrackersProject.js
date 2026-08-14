@@ -18,6 +18,13 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     return t(`ui.projects.planetCrackers.${path}`, vars, fallback);
   }
 
+  getExpansionRateSourceLabel() {
+    return registerRateSource(
+      `project:${this.name}:expansion`,
+      this.getText('rateSources.expansion', null, `${this.displayName} expansion`)
+    );
+  }
+
   getCrackerConfig() {
     return this.attributes.planetCracking || {};
   }

@@ -144,6 +144,7 @@ const teamRulesTooltip = getWGCText('teamRulesTooltip', [
   '- Natural Science Challenge: Prefers Natural Scientists, grants double artifact rewards, and failures can escalate into immediate combat.',
   '- Social Science Challenge: Prefers Social Scientists; failures may escalate into combat.',
   '- Science challenges never deal damage on failure.',
+  '- Rapid Extraction halves every standard challenge interval; failure delays remain additive, and operations end as soon as the final challenge resolves.',
   '- Team Leaders lend half their skill on solo and science challenges unless the leader is the one handling a science check.'
 ].join('\n'));
 const wgcHazardousBiomassTooltip = getWGCText('hazardousBiomassTooltip', [
@@ -155,7 +156,7 @@ const wgcHazardousBiomassTooltip = getWGCText('hazardousBiomassTooltip', [
 const wgcArtifactStanceTooltip = getWGCText('artifactTooltip', [
   'Neutral: Standard artifact chances and timing.',
   'Careful: Doubles Natural Science artifact chance but delays the next event by triple time.',
-  'Rapid Extraction: Halves downtime but reduces artifact finds by 75%.'
+  'Rapid Extraction: Halves every standard challenge interval but reduces artifact finds by 75%. Failure delays remain additive.'
 ].join('\n'));
 const wgcDifficultyTooltip = getWGCText('difficultyTooltip', 'Raises challenge DCs (team checks +4 per level, individual and science checks +1.5 per level, combat checks +4 per level).  Stance modifiers apply after. Artifact and XP rewards increase by 10% per level. Failed team checks damage all members for 2 HP per level (Wit team checks deal half). Failed individual checks deal 5 HP per level to the selected member (Power doubles, Wit halves). Failed combat checks damage all members for 5 HP per level. Hazardous Biomass stance modifiers apply to both DCs and damage.');
 const wgcFirstNamePool = [

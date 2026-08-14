@@ -626,6 +626,7 @@ setLanguageData({
       },
       importCaps: {
         noCap: 'No cap',
+        miningRightsRule: 'Cylinders-HOPE Mining Rights Agreement: mining caps ×{multiplier}; Hydrogen remains uncapped.',
         resources: {
           metal: 'Metal',
           nitrogen: 'Nitrogen',
@@ -1264,8 +1265,7 @@ setLanguageData({
         luminosity: 'Luminosity: x{value}',
         lifeEffects: 'Life Effects: x{value}',
         engineeredNitrogenFixation: 'Engineered Nitrogen Fixation: x{value} ({pressure} kPa)',
-        ecumenopolis: 'Ecumenopolis: x{value} (-{reduction}%)',
-        biodomeProtection: 'Biodome protection floor: x{value} ({land}% base land)',
+        ecumenopolis: 'Ecumenopolis: x{value} (-{reduction}% + {protection}% Biodome protection)',
       },
       rateLabels: {
         processDecay: '{name} Decay',
@@ -1501,7 +1501,10 @@ setLanguageData({
         costPerShipmentValue: 'Cost per Shipment: {value}',
         gainPerShipmentValue: 'Gain per Shipment: {value}',
         controlledByAutomation: 'Controlled by automation',
+        aerobraking: 'Aerobraking',
+        aerobrakingTooltip: 'Bypasses Space Access Capacity when the destination is the surface or atmosphere and atmospheric column mass is at least {minimum} kg/m\u00B2. Converts arrival energy into planetary heat. Surface-targeted ice and water are delivered as atmospheric water vapour.',
         spaceAccessContinuous: 'Space access benefit: {benefit} (project {project}/s; shared {demand}/{capacity}/s)',
+        spaceAccessContinuousCapped: 'Space access benefit: {benefit}; throughput: {throughput}% (project {project}/s; shared {demand}/{capacity}/s)',
         spaceAccessDiscrete: 'Space access benefit: {benefit} (discrete shipment)',
         spaceAccessUnlimited: 'Unlimited',
         rateSources: {
@@ -1604,6 +1607,10 @@ setLanguageData({
         complexity: 'Complexity',
         maxAssignment: 'Max',
         expansionRate: '{value} quasars/s',
+        rateSources: {
+          expansion: 'Artificial Quasar expansion',
+          operation: 'Artificial Quasar',
+        },
         operationNote: 'Each assigned quasar produces {value} space energy per real-time second by spinning down stellar black holes over a 10,000-year extraction window.',
         maxAssignmentTooltip: 'Base assignment cap: {base}\nWarp Gate Network scale: max(1, {averageLevel}) / {levelCap} = {networkScale}\nAccessible black hole assignment cap: {max}',
         starLiftingTooltip: '',
@@ -1767,8 +1774,12 @@ setLanguageData({
         title: 'Hephaestus Yards',
         totalYards: 'Total Yards',
         project: 'Project',
+        complexityTooltip: "Complexity is the project's base duration relative to 60 seconds. Before other duration modifiers, project duration is 60 seconds x Complexity / (effective terraformed worlds + effective assigned yards).",
         releaseIfDisabled: 'Release if disabled',
         yardsPerSecond: '{value} yards/s',
+        rateSources: {
+          expansion: 'Hephaestus Yard expansion',
+        },
       },
       cargoRocket: {
         resource: 'Resource',
@@ -1830,6 +1841,9 @@ setLanguageData({
         hydrogenUse: 'Hydrogen Use',
         resource: 'Resource',
         expansionRate: '{value} furnaces/s',
+        rateSources: {
+          expansion: 'Nuclear Alchemical Furnace expansion',
+        },
         operationNote: 'Converts space-storage hydrogen into selected resources at (Assigned / Complexity) x {value}/s.',
         recipeLabels: {
           graphite: 'Carbon (Graphite)',
@@ -2402,6 +2416,9 @@ setLanguageData({
         constructionModeHelp: 'Elevators add {elevatorCapacity} t/s with world-scaled tether costs. Skyhook Networks add {skyhookCapacity} t/s at a fixed cost.',
         elevatorMode: 'Space Elevator',
         skyhookMode: 'Skyhook Network',
+        expansionPerSecond: 'Expansion /s',
+        speedBoost: 'Speed boost',
+        speedBoostTooltip: 'Construction speed is multiplied by max(1, worker cap / {workers}). The project duration is divided by this multiplier.',
         elevatorsBuilt: 'Elevator Lanes Built',
         skyhooksBuilt: 'Skyhooks Built',
         totalCapacity: 'Total Capacity',
@@ -2409,6 +2426,8 @@ setLanguageData({
         coverage: 'Benefit Coverage',
         engineering: 'Engineering',
         stopAtCapacity: 'Stop at total capacity',
+        capThroughput: 'Cap throughput to capacity',
+        capThroughputTooltip: 'Proportionally slows continuous spaceship traffic when shared demand exceeds Space Access Capacity. Traffic that runs receives the full Space Access cost benefit. Aerobraking bypass traffic, Teleporters, and Mass Drivers remain uncapped.',
         capacityTargetMode: 'Capacity target mode',
         capacityTargetFixed: 'fixed',
         capacityTargetWorkers: 'x workers',
@@ -2465,6 +2484,9 @@ setLanguageData({
         runGigafoundries: 'Run gigafoundries',
         inputUse: 'Input Use',
         expansionRate: '{value} gigafoundries/s',
+        rateSources: {
+          expansion: 'Superalloy Gigafoundry expansion',
+        },
         operationNote: 'Runs superalloy batches at Assigned x {parameter}/s. Each batch consumes {spaceMetal} space metal and {spaceEnergy} space energy for {output} space superalloys, multiplied by WGC superalloy output bonuses (x{wgcMultiplier}).',
         status: {
           noSpaceMetalOrEnergy: 'No space metal or energy',
@@ -2487,6 +2509,9 @@ setLanguageData({
         runPrinters: 'Run printers',
         inputUse: 'Input Use',
         expansionRate: '{value} printers/s',
+        rateSources: {
+          expansion: 'Graphene Printer expansion',
+        },
         operationNote: 'Runs graphene batches at Assigned x {parameter}/s. Each batch consumes {spaceGraphite} space graphite and {spaceEnergy} space energy for {output} space metal.',
         status: {
           noSpaceMetalOrEnergy: 'No space graphite or energy',
@@ -2509,6 +2534,9 @@ setLanguageData({
         energyUse: 'Energy Use',
         spaceEnergyRate: '{value} space energy/s',
         expansionRate: '{value} crackers/s',
+        rateSources: {
+          expansion: 'Planet Cracker expansion',
+        },
         ironRichPlanets: 'Iron-rich planets',
         crackedHeader: 'Cracked',
         remainingHeader: 'Remaining',
@@ -2540,6 +2568,9 @@ setLanguageData({
         runArrays: 'Run arrays',
         inputUse: 'Input Use',
         expansionRate: '{value} arrays/s',
+        rateSources: {
+          expansion: 'Space Chemistry Array expansion',
+        },
         operationNote: 'Runs recipes at Assigned x {value}/s using space energy and space-storage reagents.',
         resourceAmount: '{amount} {resource}',
         recipeJoiner: ' + ',
@@ -2587,6 +2618,9 @@ setLanguageData({
         expansionCostTooltip: 'Construction time is reduced for each terraformed planet.',
         expansionPerSecondLabel: 'Expansion/s:',
         expansionsPerSecond: '{value} expansions/s',
+        rateSources: {
+          expansion: 'Space storage expansion',
+        },
         kesslerWarning: 'Kessler Skies: {value}% chance of project failure.',
         mode: 'Mode:',
         autoStartExpansion: 'Auto Start Expansion',
@@ -2595,6 +2629,8 @@ setLanguageData({
         capTitle: 'Space Storage Cap',
         close: 'X',
         resource: 'Resource:',
+        aerobraking: 'Aerobraking',
+        aerobrakingTooltip: 'When withdrawing this resource to the surface or atmosphere, bypass Space Access Capacity if atmospheric column mass is at least {minimum} kg/m\u00B2. Converts arrival energy into planetary heat. Surface-targeted water is delivered as atmospheric water vapour.',
         capType: 'Cap type:',
         capTypeTooltip: 'Amount and % caps apply first. All Remaining splits leftover storage evenly across all resources using that mode. If no All Remaining is set, By Weight splits leftover storage proportionally across weighted resources. Weight 0 or no cap setting gets 0 cap while any weighted split exists.',
         noCap: 'No cap',
@@ -3106,6 +3142,8 @@ setLanguageData({
       hideHidden: 'Hide Hidden',
       showHidden: 'Show Hidden',
       autoResearch: 'Auto Research ',
+      missingPrerequisite: 'Missing prerequisite: {prerequisite}',
+      missingPrerequisites: 'Missing prerequisites: {prerequisites}',
       noResearchAvailable: 'No research available.',
       researchedSuffix: ' - Researched',
       priorityLabel: 'P{value}',
@@ -3319,6 +3357,7 @@ setLanguageData({
           phaseChangeHeatTooltip: 'Signed planetary heat exchanged by phase changes during the latest climate slice. Positive values mean freezing, condensation, or deposition released heat; negative values mean melting, evaporation, boiling, or sublimation absorbed heat.  For numerical stability, this effect can only speed or slow movement toward the trend, not reverse it.  This can lead to stalling temperatures.',
           equilibriumTempTooltip: 'The blackbody radiative balance temperature from absorbed sunlight, albedo, and direct non-atmospheric heat. It ignores greenhouse heat trapping; physically, it is the temperature that would radiate the same energy back to space. Earth\'s value is about 255 K (-18°C).',
           combustionWarning: 'Temperature is increasing from active combustion',
+          aerobrakingWarning: 'Temperature is increasing from aerobraking',
           labels: {
             globalMeanTemp: 'Global Mean Temp',
             equilibriumTemp: 'Equilibrium Temp',
@@ -4033,6 +4072,7 @@ setLanguageData({
       oneillTooltipLocked: "Complete the O'Neill Cylinders advanced research to seed orbital habitats.",
       oneillTooltipBase: "Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their {capacity} capacity (1000 per fully controlled sector, minimum 1 sector).\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead.",
       oneillTooltipHyperlane: "Worlds produce O'Neill cylinders at a rate of 1 per effective world every 100 hours, easing as they near their {capacity} capacity. Hyperlane makes each fully controlled sector contribute O'Neill cylinder capacity by the same Warp Gate Network multiplier used for resource import caps, with a minimum base capacity of 1000 when no sectors are controlled.\nO'Neill cylinders are too small, too decentralized and too vulnerable to properly organize into the UHF military hence they do not count towards fleet capacity; all their efforts are spent on defending themselves instead.",
+      oneillTooltipMiningRights: "The Cylinders-HOPE Mining Rights Agreement currently multiplies O'Neill cylinder capacity by {multiplier}.",
       spaceSliders: {
         title: 'Space Sliders',
         cylindersHope: {
@@ -4043,6 +4083,12 @@ setLanguageData({
           combinedLine: 'Energy Cost: {energyPerCylinder} per cylinder/s, total {energyTotal}/s | Manufacturing Population Gain: {manufacturingPerCylinder} per cylinder, total {manufacturingTotal} | Worlds per Sector: {worldsPerSector} | Productivity: {productivity}%',
           productivityLine: 'Productivity: {value}%',
           tooltip: "Sets how much Warpnet access HOPE gives to the O'Neill cylinders.\n\nAt 0, the agreement is inactive and consumes no space energy. At 1, each O'Neill cylinder consumes 1Q space energy per second. Cost scales exponentially beyond that. \n\nThis slider has productivity and gives partial benefits in case of shortage.\n\n HOPE receives two bonuses in exchange.  First, Manufacturing Worlds gain extra usable manufacturing population equal to 10T per O'Neill cylinder, scaled by slider tick / 10 and by productivity. Second, every fully controlled sector gains extra Warp Gate Network growth equal to O'Neill cylinders divided across fully controlled sectors, multiplied by slider tick and productivity.  Cylinders can provide more worlds for Warp Gate Network expansion than their own value.",
+        },
+        cylindersHopeMiningRights: {
+          label: 'Cylinders-HOPE Mining Rights',
+          summaryDefault: 'Cylinder Capacity: ×1 | Cylinder Manufacturing Population: ×1 | Mining Caps: −0%',
+          summary: 'Cylinder Capacity: ×{capacityMultiplier} | Cylinder Manufacturing Population: ×{manufacturingMultiplier} | Mining Caps: −{importCapReduction}%',
+          tooltip: "Allocates exclusive space-resource mining rights to the O'Neill cylinders At 10, capacity is ×100, cylinder manufacturing population is ×2, and mining caps are reduced by 100%. Hydrogen is unaffected.",
         },
         megaprojectsCoordination: {
           label: 'Megaprojects Coordination',
@@ -4341,9 +4387,9 @@ setLanguageData({
           obstacleCourse: 'Boosts Athletics for challenges by 1% per level.\nGrants 1 / 2 / 3 rerolls at 10 / 25 / 50 for individual or team Athletics checks (one per challenge). Level 100 converts one failure into a success per operation.',
           library: 'Boosts Wit for challenges by 1% per level.\nSupplies 1 / 2 / 3 rerolls at 10 / 25 / 50 for team Wit and Science challenges (one per challenge). Level 100 converts one failure into a success per operation.',
         },
-        teamRulesTooltip: 'Warp Gate Command dispatches specialist teams through the warp gate to confront threats, gather alien artifacts, and bring back intel for humanity.  Everyone involved is a volunteer and the cream of the crop humanity has to offer.\nOperations happen in 10 steps, each with a distinct challenge.  Successful challenges have a chance of granting alien artifacts.  Failed challenges deal damage.  Losing all HP will instantly recall the team, losing all rewards, and requiring to send the team again manually.  Challenges have their own special rules. Operations stop after completion unless Auto-start is checked for that team.\nSpecial rules:\n- Difficulty changes during an operation apply to the next operation.\n- Combat Challenge: Soldiers contribute double Power and failures damage the team for five times the difficulty.\n- Team Athletics Challenge: Uses team Athletics; successes ease the next challenge by 25%, failures delay it by 120 seconds.\n- Team Wits Challenge: Uses team Wit; Natural and Social Scientists contribute 1.5x their Wit; successes double the next artifact reward, failures halve it.\n- Individual Power Challenge: Failed checks deal double damage.\n- Individual Athletics Challenge: Targets the most athletic member (random if tied).\n- Natural Science Challenge: Prefers Natural Scientists, grants double artifact rewards, and failures can escalate into immediate combat.\n- Social Science Challenge: Prefers Social Scientists; failures may escalate into combat.\n- Science challenges never deal damage on failure.\n- Team Leaders lend half their skill on solo and science challenges unless the leader is the one handling a science check.',
+        teamRulesTooltip: 'Warp Gate Command dispatches specialist teams through the warp gate to confront threats, gather alien artifacts, and bring back intel for humanity.  Everyone involved is a volunteer and the cream of the crop humanity has to offer.\nOperations happen in 10 steps, each with a distinct challenge.  Successful challenges have a chance of granting alien artifacts.  Failed challenges deal damage.  Losing all HP will instantly recall the team, losing all rewards, and requiring to send the team again manually.  Challenges have their own special rules. Operations stop after completion unless Auto-start is checked for that team.\nSpecial rules:\n- Difficulty changes during an operation apply to the next operation.\n- Combat Challenge: Soldiers contribute double Power and failures damage the team for five times the difficulty.\n- Team Athletics Challenge: Uses team Athletics; successes ease the next challenge by 25%, failures delay it by 120 seconds.\n- Team Wits Challenge: Uses team Wit; Natural and Social Scientists contribute 1.5x their Wit; successes double the next artifact reward, failures halve it.\n- Individual Power Challenge: Failed checks deal double damage.\n- Individual Athletics Challenge: Targets the most athletic member (random if tied).\n- Natural Science Challenge: Prefers Natural Scientists, grants double artifact rewards, and failures can escalate into immediate combat.\n- Social Science Challenge: Prefers Social Scientists; failures may escalate into combat.\n- Science challenges never deal damage on failure.\n- Rapid Extraction halves every standard challenge interval; failure delays remain additive, and operations end as soon as the final challenge resolves.\n- Team Leaders lend half their skill on solo and science challenges unless the leader is the one handling a science check.',
         hazardousBiomassTooltip: 'Neutral: No modifiers.\nNegotiation: Social science checks about 10% easier, combat about 10% tougher.\nAggressive: Social science checks roughly 25% harder, combat about 15% easier.\nRecon: Wit checks about 10% easier, athletics checks roughly 25% harder, combat about 15% easier, failures add 60 seconds to next step.',
-        artifactTooltip: 'Neutral: Standard artifact chances and timing.\nCareful: Doubles Natural Science artifact chance but delays the next event by triple time.\nRapid Extraction: Halves downtime but reduces artifact finds by 75%.',
+        artifactTooltip: 'Neutral: Standard artifact chances and timing.\nCareful: Doubles Natural Science artifact chance but delays the next event by triple time.\nRapid Extraction: Halves every standard challenge interval but reduces artifact finds by 75%.',
         difficultyTooltip: 'Raises challenge DCs (team checks +4 per level, individual and science checks +1.5 per level, combat checks +4 per level).  Stance modifiers apply after. Artifact and XP rewards increase by 10% per level. Failed team checks damage all members for 2 HP per level (Wit team checks deal half). Failed individual checks deal 5 HP per level to the selected member (Power doubles, Wit halves). Failed combat checks damage all members for 5 HP per level. Hazardous Biomass stance modifiers apply to both DCs and damage.',
         classes: {
           teamLeader: {
@@ -4568,6 +4614,8 @@ setLanguageData({
             autoStartConstruction: 'Auto-start Construction',
             autoOperationEnabled: 'Auto Operation Enabled',
             spaceshipCostMultiplier: 'Spaceship Cost Multiplier',
+            energyCostPerShipment: 'Energy Cost per Shipment',
+            energyCostPerTon: 'Energy Cost per Ton',
             currentMass: 'Current Mass',
             presentOnWorld: 'Present on World',
             spaceElevator: {
@@ -4901,8 +4949,8 @@ setLanguageData({
         lifeZoneTemperate: 'Temperate',
         lifeZonePolar: 'Polar',
         researchAutomationTitle: 'Research Automation',
-        researchAutomationDescription: 'Store research presets and switch the Research tab between them.',
-        researchAutomationDescriptionUnlocked: 'Store research presets and switch the Research tab between them.',
+        researchAutomationDescription: 'Store research presets.',
+        researchAutomationDescriptionUnlocked: 'Store research presets.',
         researchAutomationDescriptionLocked: 'Purchase the Solis Research Automation upgrade to manage research presets.',
         researchAutomationPresetTitle: 'Preset Builder',
         researchAutomationNextTravelLabel: 'Preset on Next Travel',
@@ -5169,7 +5217,7 @@ setLanguageData({
         },
         classicRenewables: {
           title: 'Classic Renewables',
-          requirement: 'Terraform a world without building any power generators except solar panels and wind turbines.'
+          requirement: 'Terraform a world without any Antimatter Batteries, orbitals assigned to energy, or power generators other than solar panels and wind turbines.'
         },
         heatOfTheSun: {
           title: 'Heat of the Sun',
@@ -5411,6 +5459,8 @@ setLanguageData({
       realisticFactoryEnergyConsumptionTooltip: 'When enabled, buildings use plausible industrial energy demands based on their workers and material throughput instead of the defaults.  This can make the game a lot easier.  This setting may one day become the new default once the game is rebalanced around it.',
       spaceAccessCapacity: 'Space Access Capacity',
       spaceAccessCapacityTooltip: 'Reworks Space Elevator into repeatable Space Access infrastructure. Continuous spaceship operations share limited cargo capacity.',
+      aerobraking: 'Aerobraking',
+      aerobrakingTooltip: 'Allows supported imports to bypass Space Access Capacity by braking in an atmosphere with at least {minimum} kg/m\u00B2 of column mass. Aerobraking converts the imported cargo\'s arrival energy into planetary heat. Surface-targeted ice and water arrive as atmospheric water vapour.',
       infinitePatience: 'Infinite patience',
       liftersStrippingCap: 'Lifters stripping cap',
       liftersStrippingCapTooltip: 'When enabled, Strip Atmosphere cannot have more lifters assigned than the current world geometric land value.',
@@ -6848,6 +6898,10 @@ setLanguageData({
           name: 'Cylinders-HOPE Collaboration Agreement',
           description: 'The cylinders have cheap access to space and are uniquely suited for manufacturing and for expanding the Warp Gate Network. However, their infrastructure is lacking and unstable.  If HOPE provides Warpnet access they will work in exchange. Unlocks a slider under the space story tab.',
         },
+        cylinders_hope_mining_rights_agreement: {
+          name: 'Cylinders-HOPE Mining Rights Agreement',
+          description: 'The cylinders have long been lobbying for exclusive rights to space resources.  In exchange, they promise additional manufacturing support.  Enables a new space slider.',
+        },
         megaprojects_coordination: {
           name: 'Megaprojects coordination',
           description: 'As the UHF grows larger and larger we must not lose focus on what is important.  Enables a new space slider.',
@@ -7710,7 +7764,7 @@ setLanguageData({
       },
       t7_colony: {
         name: 'Ecumenopolis District',
-        description: 'A planet-spanning city offering unparalleled comfort and capacity. Reduces land for life growth and lowers life terraforming requirements.',
+        description: 'A planet-spanning city offering unparalleled comfort and capacity. Reduces land for life growth and lowers life terraforming requirements. Biodome land coverage protects biomass growth from this land loss.',
       },
     },
     skills: {

@@ -1,8 +1,8 @@
 const SPACE_CHEMISTRY_RECIPE_KEYS = [
-  'recipe1',
-  'recipe2',
-  'recipe3',
-  'recipe4',
+  'boschReaction',
+  'waterSynthesis',
+  'methaneSynthesis',
+  'carbonDioxideSynthesis',
   'haberBosch',
   'ammoniaCombustion',
   'methaneCombustion',
@@ -11,8 +11,22 @@ const SPACE_CHEMISTRY_RECIPE_KEYS = [
   'silicates'
 ];
 
+const SPACE_CHEMISTRY_LEGACY_RECIPE_KEYS = {
+  recipe1: 'boschReaction',
+  recipe2: 'waterSynthesis',
+  recipe3: 'methaneSynthesis',
+  recipe4: 'carbonDioxideSynthesis'
+};
+
+const SPACE_CHEMISTRY_RECIPE_LABEL_KEYS = {
+  boschReaction: 'recipe1',
+  waterSynthesis: 'recipe2',
+  methaneSynthesis: 'recipe3',
+  carbonDioxideSynthesis: 'recipe4'
+};
+
 const SPACE_CHEMISTRY_RECIPES = {
-  recipe1: {
+  boschReaction: {
     inputs: {
       space: { energy: 100_000 },
       spaceStorage: { carbonDioxide: 100, hydrogen: 9.09 }
@@ -21,7 +35,7 @@ const SPACE_CHEMISTRY_RECIPES = {
       spaceStorage: { liquidWater: 81.82, graphite: 27.27 }
     }
   },
-  recipe2: {
+  waterSynthesis: {
     inputs: {
       space: { energy: 100_000 },
       spaceStorage: { oxygen: 72.73, hydrogen: 9.09 }
@@ -30,7 +44,7 @@ const SPACE_CHEMISTRY_RECIPES = {
       spaceStorage: { liquidWater: 81.82 }
     }
   },
-  recipe3: {
+  methaneSynthesis: {
     inputs: {
       space: { energy: 100_000 },
       spaceStorage: { carbonDioxide: 100, hydrogen: 18.18 }
@@ -39,7 +53,7 @@ const SPACE_CHEMISTRY_RECIPES = {
       spaceStorage: { atmosphericMethane: 36.36, liquidWater: 81.82 }
     }
   },
-  recipe4: {
+  carbonDioxideSynthesis: {
     inputs: {
       space: { energy: 100_000 },
       spaceStorage: { graphite: 27.27, oxygen: 72.73 }
@@ -228,9 +242,10 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
 
   getRecipe(key) {
     const recipe = SPACE_CHEMISTRY_RECIPES[key] || {};
+    const labelKey = SPACE_CHEMISTRY_RECIPE_LABEL_KEYS[key] || key;
     return {
       label: getSpaceChemistryText(
-        `catalogs.buildings.boschReactor.recipes.${key}.shortName`,
+        `catalogs.buildings.boschReactor.recipes.${labelKey}.shortName`,
         key
       ),
       complexity: 1,
@@ -257,6 +272,30 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
 
   getAssignmentKeys() {
     return SPACE_CHEMISTRY_RECIPE_KEYS.slice();
+  }
+
+  migrateLegacyAssignmentSettings(settings = {}) {
+    const migrated = { ...settings };
+    ['furnaceAssignments', 'autoAssignFlags', 'autoAssignWeights'].forEach((settingKey) => {
+      if (!Object.prototype.hasOwnProperty.call(migrated, settingKey)) {
+        return;
+      }
+      const assignments = { ...(migrated[settingKey] || {}) };
+      for (const legacyKey in SPACE_CHEMISTRY_LEGACY_RECIPE_KEYS) {
+        const recipeKey = SPACE_CHEMISTRY_LEGACY_RECIPE_KEYS[legacyKey];
+        if (!Object.prototype.hasOwnProperty.call(assignments, recipeKey)
+          && Object.prototype.hasOwnProperty.call(assignments, legacyKey)) {
+          assignments[recipeKey] = assignments[legacyKey];
+        }
+        delete assignments[legacyKey];
+      }
+      migrated[settingKey] = assignments;
+    });
+    return migrated;
+  }
+
+  loadAssignmentSettings(settings = {}, options = {}) {
+    return super.loadAssignmentSettings(this.migrateLegacyAssignmentSettings(settings), options);
   }
 
   showsComplexityColumn() {
@@ -327,7 +366,10 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
   }
 
   getExpansionRateSourceLabel() {
-    return registerRateSource(`project:${this.name}:expansion`, `${this.displayName} expansion`);
+    return registerRateSource(
+      `project:${this.name}:expansion`,
+      this.getText('rateSources.expansion', null, `${this.displayName} expansion`)
+    );
   }
 
   getOperationNoteText() {

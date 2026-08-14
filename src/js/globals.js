@@ -71,6 +71,7 @@ const DIFFICULTY_SETTING_DEFAULTS = {
   factoryHeating: false,
   realisticFactoryEnergyConsumption: false,
   spaceAccessCapacity: false,
+  aerobraking: false,
   infinitePatience: false,
   liftersStrippingCap: false,
   orbitalCap: false,

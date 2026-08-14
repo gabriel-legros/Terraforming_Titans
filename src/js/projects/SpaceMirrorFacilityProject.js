@@ -1845,7 +1845,7 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
       const zonesData = ['tropical','temperate','polar'].map(z => ({
         zone: z,
         temp: terraforming.temperature.zones[z].value,
-        ice: terraforming.zonalSurface[z].ice
+        ice: terraforming.zonalSurface.ice[z]
       })).filter(z => z.ice > 0);
       const totalIce = zonesData.reduce((sum, z) => sum + z.ice, 0);
       let meltFraction = 0;
@@ -1867,8 +1867,8 @@ function applyFocusedMelt(terraforming, resources, durationSeconds) {
 
       for (const z of zonesData) {
         const meltHere = z.ice * meltFraction;
-        terraforming.zonalSurface[z.zone].ice -= meltHere;
-        terraforming.zonalSurface[z.zone].liquidWater += meltHere;
+        terraforming.zonalSurface.ice.change(z.zone, -meltHere);
+        terraforming.zonalSurface.liquidWater.change(z.zone, meltHere);
         focusMeltAmount += meltHere;
       }
 
@@ -2524,12 +2524,25 @@ class SpaceMirrorFacilityProject extends Project {
   saveAutomationSettings() {
     return {
       ...super.saveAutomationSettings(),
+      lanternDayNightPeriod: this.lanternDayNightPeriod,
       mirrorOversightSettings: buildMirrorOversightAutomationSnapshot(this.mirrorOversightSettings)
     };
   }
 
   loadAutomationSettings(settings = {}, options = {}) {
     super.loadAutomationSettings(settings);
+    if (Object.prototype.hasOwnProperty.call(settings, 'lanternDayNightPeriod')) {
+      const savedPeriod = Number(settings.lanternDayNightPeriod);
+      if (settings.lanternDayNightPeriod === null) {
+        this.lanternDayNightPeriod = null;
+      } else {
+        if (this.lanternDayNightPeriod === null) {
+          this.lanternDayNightFallbackPeriod = terraforming.celestialParameters.dayNightPeriod || 24;
+        }
+        this.lanternDayNightPeriod = Math.max(1, Math.min(1000, savedPeriod));
+      }
+      syncLanternDayNightPeriod(this);
+    }
     if (!Object.prototype.hasOwnProperty.call(settings, 'mirrorOversightSettings')) {
       return;
     }

@@ -53,7 +53,7 @@ function computeOversightMetric(window) {
   let waterError = 0;
   const waterTarget = settings.targets?.water || 0;
   const availableSurfaceIce = zones.reduce(
-    (sum, zone) => sum + Math.max(0, terraforming.zonalSurface[zone].ice || 0),
+    (sum, zone) => sum + Math.max(0, terraforming.zonalSurface.ice[zone] || 0),
     0
   );
   const effectiveWaterTarget = Math.min(waterTarget, availableSurfaceIce);

@@ -77,6 +77,8 @@ function cacheSettingsElements() {
     realisticFactoryEnergyConsumptionTooltip: document.getElementById('realistic-factory-energy-consumption-tooltip'),
     spaceAccessCapacityToggle: document.getElementById('space-access-capacity-toggle'),
     spaceAccessCapacityTooltip: document.getElementById('space-access-capacity-tooltip'),
+    aerobrakingToggle: document.getElementById('aerobraking-toggle'),
+    aerobrakingTooltip: document.getElementById('aerobraking-tooltip'),
     infinitePatienceToggle: document.getElementById('infinite-patience-toggle'),
     liftersStrippingCapToggle: document.getElementById('lifters-stripping-cap-toggle'),
     liftersStrippingCapTooltip: document.getElementById('lifters-stripping-cap-tooltip'),
@@ -307,6 +309,7 @@ function updateDifficultyLockUI() {
     cached.factoryHeatingToggle,
     cached.realisticFactoryEnergyConsumptionToggle,
     cached.spaceAccessCapacityToggle,
+    cached.aerobrakingToggle,
     cached.infinitePatienceToggle,
     cached.liftersStrippingCapToggle,
     cached.orbitalCapToggle,
@@ -460,6 +463,7 @@ function updateDifficultySettingInputs() {
     factoryHeating: cached.factoryHeatingToggle,
     realisticFactoryEnergyConsumption: cached.realisticFactoryEnergyConsumptionToggle,
     spaceAccessCapacity: cached.spaceAccessCapacityToggle,
+    aerobraking: cached.aerobrakingToggle,
     infinitePatience: cached.infinitePatienceToggle,
     liftersStrippingCap: cached.liftersStrippingCapToggle,
     orbitalCap: cached.orbitalCapToggle,
@@ -1222,6 +1226,39 @@ function addSettingsListeners() {
         'ui.settings.spaceAccessCapacityTooltip',
         {},
         'Reworks Space Elevator into repeatable Space Access infrastructure. Continuous spaceship logistics share limited cargo capacity, while discrete operations receive full benefits after any Elevator or Skyhook is complete. Orbital Rings, Ringworlds, and Alderson Disks provide unlimited capacity.'
+      )
+    );
+  }
+
+  if (cached.aerobrakingToggle) {
+    cached.aerobrakingToggle.checked = gameSettings.aerobraking;
+    cached.aerobrakingToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.aerobrakingToggle.checked = gameSettings.aerobraking;
+        return;
+      }
+      gameSettings.aerobraking = cached.aerobrakingToggle.checked;
+      applyDifficultySettingEffects();
+      const importProjectNames = [
+        'carbonSpaceMining',
+        'waterSpaceMining',
+        'nitrogenSpaceMining',
+        'hydrogenSpaceMining',
+        'spaceStorage'
+      ];
+      for (let i = 0; i < importProjectNames.length; i += 1) {
+        updateProjectUI(importProjectNames[i]);
+      }
+    });
+  }
+
+  if (cached.aerobrakingTooltip) {
+    attachDynamicInfoTooltip(
+      cached.aerobrakingTooltip,
+      t(
+        'ui.settings.aerobrakingTooltip',
+        { minimum: TERRAFORMING_AEROBRAKING_PARAMETERS.minimumAtmosphericColumnMassKgM2 },
+        'Allows supported imports to bypass Space Access Capacity by braking in an atmosphere with at least 100 kg/m\u00B2 of column mass. Aerobraking converts the imported cargo\'s arrival energy into planetary heat.'
       )
     );
   }

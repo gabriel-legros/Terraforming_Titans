@@ -13,7 +13,7 @@ describe('surface water extraction mass conservation', () => {
     window.close();
   });
 
-  test('conserves compensated zonal water through extraction and active phase changes', () => {
+  test('conserves adaptively precise zonal water through extraction and active phase changes', () => {
     const result = window.eval(`(() => {
       for (const name in buildings) {
         buildings[name].count = 0n;
@@ -53,10 +53,9 @@ describe('surface water extraction mass conservation', () => {
       const waterKeys = ['liquidWater', 'ice', 'buriedIce'];
       for (const zone of getZones()) {
         for (const key of waterKeys) {
-          terraforming.zonalSurface[zone][key] = 0;
-          terraforming.zonalSurfaceRemainders[zone][key] = 0;
+          terraforming.zonalSurface[key][zone] = 0;
         }
-        terraforming.zonalSurface[zone].liquidWater = initialLiquidWater[zone];
+        terraforming.zonalSurface.liquidWater[zone] = initialLiquidWater[zone];
         terraforming.temperature.zones[zone].value = 300;
         terraforming.temperature.zones[zone].day = 305;
         terraforming.temperature.zones[zone].night = 295;
@@ -72,8 +71,7 @@ describe('surface water extraction mass conservation', () => {
         for (const zone of getZones()) {
           state.zones[zone] = {};
           for (const key of waterKeys) {
-            state.zones[zone][key] = terraforming.zonalSurface[zone][key];
-            state.zones[zone][key + 'Remainder'] = terraforming.zonalSurfaceRemainders[zone][key];
+            state.zones[zone][key] = terraforming.zonalSurface[key].getExact(zone);
           }
         }
         return state;
@@ -84,19 +82,19 @@ describe('surface water extraction mass conservation', () => {
       const after = captureWater();
       let massDelta = after.colony - before.colony
         + after.atmosphere - before.atmosphere;
-      let remainderMagnitude = 0;
+      let preciseZoneCount = 0;
       for (const zone of getZones()) {
         for (const key of waterKeys) {
-          massDelta += after.zones[zone][key] - before.zones[zone][key];
-          massDelta += after.zones[zone][key + 'Remainder']
-            - before.zones[zone][key + 'Remainder'];
-          remainderMagnitude += Math.abs(after.zones[zone][key + 'Remainder']);
+          massDelta += after.zones[zone][key].subtract(before.zones[zone][key]).toNumber();
+          if (terraforming.zonalSurface[key].isPrecise(zone)) {
+            preciseZoneCount += 1;
+          }
         }
       }
 
       const pumpResult = {
         massDelta,
-        remainderMagnitude,
+        preciseZoneCount,
         atmosphericChange: after.atmosphere - before.atmosphere,
         rainRate: terraforming.totalRainRate,
         pumpProduction: pump.currentProduction.colony.water,
@@ -123,14 +121,13 @@ describe('surface water extraction mass conservation', () => {
       resources.atmospheric.inertGas.value = 1e18;
       for (const zone of getZones()) {
         for (const key of waterKeys) {
-          terraforming.zonalSurface[zone][key] = 0;
-          terraforming.zonalSurfaceRemainders[zone][key] = 0;
+          terraforming.zonalSurface[key][zone] = 0;
         }
         terraforming.temperature.zones[zone].value = 300;
         terraforming.temperature.zones[zone].day = 305;
         terraforming.temperature.zones[zone].night = 295;
       }
-      terraforming.zonalSurface.polar.ice = 1.6;
+      terraforming.zonalSurface.ice.polar = 1.6;
       terraforming.synchronizeGlobalResources();
 
       const totalWater = () => {
@@ -138,8 +135,7 @@ describe('surface water extraction mass conservation', () => {
           + resources.atmospheric.atmosphericWater.value;
         for (const zone of getZones()) {
           for (const key of waterKeys) {
-            total += terraforming.zonalSurface[zone][key];
-            total += terraforming.zonalSurfaceRemainders[zone][key];
+            total += terraforming.zonalSurface[key][zone];
           }
         }
         return total;
@@ -166,7 +162,7 @@ describe('surface water extraction mass conservation', () => {
     expect(result.pump.pumpConsumption).toBeCloseTo(result.pump.pumpProduction, 9);
     expect(Math.abs(result.pump.atmosphericChange)).toBeGreaterThan(result.pump.pumpProduction);
     expect(result.pump.rainRate).toBeGreaterThan(0);
-    expect(result.pump.remainderMagnitude).toBeGreaterThan(0);
+    expect(result.pump.preciseZoneCount).toBeGreaterThan(0);
     expect(Math.abs(result.pump.massDelta)).toBeLessThan(1e-6);
 
     expect(result.harvester.meltRate).toBeGreaterThan(0);

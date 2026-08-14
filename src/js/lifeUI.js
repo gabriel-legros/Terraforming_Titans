@@ -160,10 +160,9 @@ function updateStatusSpan(statusEntry, symbol, tooltipText) {
 }
 
 var getEcumenopolisLandFraction = getEcumenopolisLandFraction;
-var getBiodomeLandFraction = getBiodomeLandFraction;
 var getLifeLandMultiplier = getLifeLandMultiplier;
 if (typeof module !== 'undefined' && module.exports) {
-  ({ getEcumenopolisLandFraction, getBiodomeLandFraction, getLifeLandMultiplier } = require('./advanced-research/ecumenopolis.js'));
+  ({ getEcumenopolisLandFraction, getLifeLandMultiplier } = require('./advanced-research/ecumenopolis.js'));
 }
 
 const tempAttributes = [
@@ -1428,7 +1427,6 @@ function updateLifeStatusTable() {
 
     const ecoFraction = getEcumenopolisLandFraction(terraforming);
     const ecumenopolisLandMult = Math.max(0, 1 - ecoFraction);
-    const biodomeFraction = getBiodomeLandFraction(terraforming);
     const landMult = getLifeLandMultiplier(terraforming);
 
     // Precompute day and night temperatures
@@ -1530,8 +1528,8 @@ function updateLifeStatusTable() {
                 return;
             }
             const zoneAmount = (zone === 'global')
-                ? zoneList.reduce((sum, zoneName) => sum + (terraforming.zonalSurface[zoneName]?.[resourceKey] || 0), 0)
-                : (terraforming.zonalSurface[zone]?.[resourceKey] || 0);
+                ? zoneList.reduce((sum, zoneName) => sum + (terraforming.zonalSurface[resourceKey][zoneName] || 0), 0)
+                : (terraforming.zonalSurface[resourceKey][zone] || 0);
             const status = zone === 'global'
                 ? { pass: zoneAmount > 1e-9, reason: zoneAmount > 1e-9 ? '' : getLifeUIText('ui.life.status.needResource', 'Need {resource}', { resource: label }) }
                 : { pass: zoneAmount > 1e-9, reason: getLifeUIText('ui.life.status.needResource', 'Need {resource}', { resource: label }) };
@@ -1551,7 +1549,7 @@ function updateLifeStatusTable() {
             if (amountCell) amountCell.textContent = formatNumber(totalBiomass, true);
             if (densityCell) densityCell.textContent = formatNumber(globalDensity, false, 2);
         } else {
-            const zonalBiomass = terraforming.zonalSurface[zone]?.biomass || 0;
+            const zonalBiomass = terraforming.zonalSurface.biomass[zone] || 0;
             const zoneArea = totalSurfaceArea * getZonePercentage(zone);
             const zonalDensity = zoneArea > 0 ? zonalBiomass / zoneArea : 0;
 
@@ -1563,7 +1561,7 @@ function updateLifeStatusTable() {
         const growthCell = growthObj?.cell;
         const valueSpan = growthObj?.value;
         const tooltipIcon = growthObj?.tooltipIcon;
-        const zoneBiomass = zone === 'global' ? totalBiomass : terraforming.zonalSurface[zone]?.biomass || 0;
+        const zoneBiomass = zone === 'global' ? totalBiomass : terraforming.zonalSurface.biomass[zone] || 0;
         const baseZoneArea = zone === 'global' ? totalSurfaceArea : totalSurfaceArea * getZonePercentage(zone);
         const zoneArea = baseZoneArea * landMult;
         const maxBiomassForZone = zoneArea * maxDensity;
@@ -1597,13 +1595,13 @@ function updateLifeStatusTable() {
             const liquidKeys = getLiquidRequirementKeysFromProcess(metabolismProcess);
             const usesIceForWater = liquidKeys.includes('liquidWater')
                 && lifeDesigner.isBooleanFlagSet('solidBiochemistry')
-                && (terraforming.zonalSurface[zone].liquidWater || 0) <= 1e-9
-                && (terraforming.zonalSurface[zone].ice || 0) > 1e-9;
+                && (terraforming.zonalSurface.liquidWater[zone] || 0) <= 1e-9
+                && (terraforming.zonalSurface.ice[zone] || 0) > 1e-9;
             const liquidMult = liquidKeys.every((resourceKey) => {
                 const inputResourceKey = resourceKey === 'liquidWater' && usesIceForWater
                     ? 'ice'
                     : resourceKey;
-                return (terraforming.zonalSurface[zone][inputResourceKey] || 0) > 1e-9;
+                return (terraforming.zonalSurface[inputResourceKey][zone] || 0) > 1e-9;
             }) ? 1 : 0;
             const solidBiochemistryMult = usesIceForWater ? 0.5 : 1;
             const growthBreakdown = getLifeManagerSafe()?.getLifeGrowthMultiplierBreakdown?.() ?? {
@@ -1657,16 +1655,22 @@ function updateLifeStatusTable() {
                 }
                 if (ecoFraction > 0) {
                     const ecumenopolisReduction = (1 - ecumenopolisLandMult) * 100;
-                    lines.push(getLifeUIText('ui.life.growthTooltip.ecumenopolis', 'Ecumenopolis: x{value} (-{reduction}%)', { value: formatNumber(ecumenopolisLandMult, false, 2), reduction: ecumenopolisReduction.toFixed(2) }));
-                    if (landMult > ecumenopolisLandMult) {
-                        lines.push(getLifeUIText('ui.life.growthTooltip.biodomeProtection', 'Biodome protection floor: x{value} ({land}% base land)', { value: formatNumber(landMult, false, 2), land: formatNumber(biodomeFraction * 100, false, 2) }));
-                    }
+                    const biodomeProtection = Math.max(0, landMult - ecumenopolisLandMult) * 100;
+                    lines.push(getLifeUIText(
+                        'ui.life.growthTooltip.ecumenopolis',
+                        'Ecumenopolis: x{value} (-{reduction}% + {protection}% Biodome protection)',
+                        {
+                            value: formatNumber(landMult, false, 2),
+                            reduction: ecumenopolisReduction.toFixed(2),
+                            protection: biodomeProtection.toFixed(2)
+                        }
+                    ));
                 }
                 liquidKeys.forEach((resourceKey) => {
                     const inputResourceKey = resourceKey === 'liquidWater' && usesIceForWater
                         ? 'ice'
                         : resourceKey;
-                    const zoneAmount = terraforming.zonalSurface[zone][inputResourceKey] || 0;
+                    const zoneAmount = terraforming.zonalSurface[inputResourceKey][zone] || 0;
                     const mult = zoneAmount > 1e-9 ? 1 : 0;
                     const inputResource = resources.surface[inputResourceKey];
                     const label = inputResource.displayName || inputResource.name;
