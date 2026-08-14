@@ -90,6 +90,13 @@ class SuperalloyGigafoundryProject extends SuperalloyGigafoundryBase {
     );
   }
 
+  getExpansionRateSourceLabel() {
+    return registerRateSource(
+      `project:${this.name}:expansion`,
+      this.getText('rateSources.expansion', null, `${this.displayName} expansion`)
+    );
+  }
+
   getRecipeWgcMultiplier() {
     try {
       return warpGateCommand.getMultiplier(SUPERALLOY_GIGAFOUNDRY_RECIPE.wgcUpgradeId);

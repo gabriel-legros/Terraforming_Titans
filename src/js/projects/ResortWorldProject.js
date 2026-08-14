@@ -45,6 +45,7 @@
   }, {});
   let resortVacationGoldButton = null;
   let resortVacationGoldContainer = null;
+  let resortVacationCountdown = null;
 
   class ResortWorldProject extends SpecializationProject {
     constructor(config, name) {
@@ -752,7 +753,36 @@
       if (resortVacationGoldButton && resortVacationGoldButton.style.display !== 'none') {
         resortVacationGoldButton.style.display = 'none';
       }
+      if (resortVacationCountdown && !resortVacationCountdown.hidden) {
+        resortVacationCountdown.textContent = '';
+        resortVacationCountdown.hidden = true;
+      }
       return;
+    }
+    const countdownActive = project.hasVacationAccess()
+      && (project.vacationState === 'prep' || project.vacationState === 'effect');
+    if (countdownActive) {
+      if (!resortVacationCountdown || !resortVacationCountdown.isConnected) {
+        resortVacationCountdown = document.getElementById('resort-vacation-countdown') || document.createElement('div');
+        resortVacationCountdown.id = 'resort-vacation-countdown';
+        resortVacationCountdown.className = 'resort-vacation-countdown';
+        resortVacationGoldContainer.appendChild(resortVacationCountdown);
+      }
+      const countdownPath = project.vacationState === 'prep'
+        ? 'catalogs.specializations.resort.vacation.prep'
+        : 'catalogs.specializations.resort.vacation.effect';
+      const countdownText = getResortWorldText(countdownPath, {
+        time: Math.ceil(project.vacationTimer),
+      });
+      if (resortVacationCountdown.textContent !== countdownText) {
+        resortVacationCountdown.textContent = countdownText;
+      }
+      if (resortVacationCountdown.hidden) {
+        resortVacationCountdown.hidden = false;
+      }
+    } else if (resortVacationCountdown && !resortVacationCountdown.hidden) {
+      resortVacationCountdown.textContent = '';
+      resortVacationCountdown.hidden = true;
     }
     const canStart = project.canStartVacation();
     if (!project.showVacationButtonAboveResources || !canStart) {

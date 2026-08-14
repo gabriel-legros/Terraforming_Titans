@@ -267,7 +267,13 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyAssignmentTools.createP
   }
 
   getExpansionRateSourceLabel() {
-    return registerRateSource(`project:${this.name}:expansion`, `${this.displayName} expansion`);
+    return registerRateSource(
+      `project:${this.name}:expansion`,
+      getNuclearAlchemyText(
+        'ui.projects.nuclearAlchemy.rateSources.expansion',
+        'Nuclear Alchemical Furnace expansion'
+      )
+    );
   }
 
   getOperationNoteText() {

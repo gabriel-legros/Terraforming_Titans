@@ -12,11 +12,17 @@ class ArtificialQuasarsProject extends LiftersProject {
   }
 
   getExpansionRateSourceLabel() {
-    return registerRateSource('project:artificialQuasars:expansion', 'Artificial Quasar expansion');
+    return registerRateSource(
+      'project:artificialQuasars:expansion',
+      t('ui.projects.artificialQuasars.rateSources.expansion', {}, 'Artificial Quasar expansion')
+    );
   }
 
   getOperationRateSourceLabel() {
-    return registerRateSource('project:artificialQuasars:operation', 'Artificial Quasar');
+    return registerRateSource(
+      'project:artificialQuasars:operation',
+      t('ui.projects.artificialQuasars.rateSources.operation', {}, 'Artificial Quasar')
+    );
   }
 
   getEnergyPerLifterDisplayValue() {

@@ -334,7 +334,10 @@ class SpaceStorageProject extends SpaceshipProject {
   }
 
   getExpansionRateSourceLabel() {
-    return registerRateSource('project:spaceStorage:expansion', 'Space storage expansion');
+    return registerRateSource(
+      'project:spaceStorage:expansion',
+      t('ui.projects.spaceStorage.rateSources.expansion', {}, 'Space storage expansion')
+    );
   }
 
   getHazardousMachineryWorkerLoadActive() {

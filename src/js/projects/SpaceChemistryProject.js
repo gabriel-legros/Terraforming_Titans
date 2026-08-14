@@ -366,7 +366,10 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
   }
 
   getExpansionRateSourceLabel() {
-    return registerRateSource(`project:${this.name}:expansion`, `${this.displayName} expansion`);
+    return registerRateSource(
+      `project:${this.name}:expansion`,
+      this.getText('rateSources.expansion', null, `${this.displayName} expansion`)
+    );
   }
 
   getOperationNoteText() {

@@ -371,7 +371,10 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
   }
 
   getExpansionRateSourceLabel() {
-    return registerRateSource('project:hephaestusMegaconstruction:expansion', 'Hephaestus Yard expansion');
+    return registerRateSource(
+      'project:hephaestusMegaconstruction:expansion',
+      getHephaestusText('ui.projects.hephaestus.rateSources.expansion', 'Hephaestus Yard expansion')
+    );
   }
 
   getEffectiveYardAssignmentMultiplier() {

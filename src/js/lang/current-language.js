@@ -1607,6 +1607,10 @@ setLanguageData({
         complexity: 'Complexity',
         maxAssignment: 'Max',
         expansionRate: '{value} quasars/s',
+        rateSources: {
+          expansion: 'Artificial Quasar expansion',
+          operation: 'Artificial Quasar',
+        },
         operationNote: 'Each assigned quasar produces {value} space energy per real-time second by spinning down stellar black holes over a 10,000-year extraction window.',
         maxAssignmentTooltip: 'Base assignment cap: {base}\nWarp Gate Network scale: max(1, {averageLevel}) / {levelCap} = {networkScale}\nAccessible black hole assignment cap: {max}',
         starLiftingTooltip: '',
@@ -1770,9 +1774,12 @@ setLanguageData({
         title: 'Hephaestus Yards',
         totalYards: 'Total Yards',
         project: 'Project',
-        complexityTooltip: "Complexity is the project's base duration relative to 60 seconds. Before other duration modifiers, projection duration is 60 seconds x Complexity / (effective terraformed worlds + effective assigned yards).",
+        complexityTooltip: "Complexity is the project's base duration relative to 60 seconds. Before other duration modifiers, project duration is 60 seconds x Complexity / (effective terraformed worlds + effective assigned yards).",
         releaseIfDisabled: 'Release if disabled',
         yardsPerSecond: '{value} yards/s',
+        rateSources: {
+          expansion: 'Hephaestus Yard expansion',
+        },
       },
       cargoRocket: {
         resource: 'Resource',
@@ -1834,6 +1841,9 @@ setLanguageData({
         hydrogenUse: 'Hydrogen Use',
         resource: 'Resource',
         expansionRate: '{value} furnaces/s',
+        rateSources: {
+          expansion: 'Nuclear Alchemical Furnace expansion',
+        },
         operationNote: 'Converts space-storage hydrogen into selected resources at (Assigned / Complexity) x {value}/s.',
         recipeLabels: {
           graphite: 'Carbon (Graphite)',
@@ -2474,6 +2484,9 @@ setLanguageData({
         runGigafoundries: 'Run gigafoundries',
         inputUse: 'Input Use',
         expansionRate: '{value} gigafoundries/s',
+        rateSources: {
+          expansion: 'Superalloy Gigafoundry expansion',
+        },
         operationNote: 'Runs superalloy batches at Assigned x {parameter}/s. Each batch consumes {spaceMetal} space metal and {spaceEnergy} space energy for {output} space superalloys, multiplied by WGC superalloy output bonuses (x{wgcMultiplier}).',
         status: {
           noSpaceMetalOrEnergy: 'No space metal or energy',
@@ -2496,6 +2509,9 @@ setLanguageData({
         runPrinters: 'Run printers',
         inputUse: 'Input Use',
         expansionRate: '{value} printers/s',
+        rateSources: {
+          expansion: 'Graphene Printer expansion',
+        },
         operationNote: 'Runs graphene batches at Assigned x {parameter}/s. Each batch consumes {spaceGraphite} space graphite and {spaceEnergy} space energy for {output} space metal.',
         status: {
           noSpaceMetalOrEnergy: 'No space graphite or energy',
@@ -2518,6 +2534,9 @@ setLanguageData({
         energyUse: 'Energy Use',
         spaceEnergyRate: '{value} space energy/s',
         expansionRate: '{value} crackers/s',
+        rateSources: {
+          expansion: 'Planet Cracker expansion',
+        },
         ironRichPlanets: 'Iron-rich planets',
         crackedHeader: 'Cracked',
         remainingHeader: 'Remaining',
@@ -2549,6 +2568,9 @@ setLanguageData({
         runArrays: 'Run arrays',
         inputUse: 'Input Use',
         expansionRate: '{value} arrays/s',
+        rateSources: {
+          expansion: 'Space Chemistry Array expansion',
+        },
         operationNote: 'Runs recipes at Assigned x {value}/s using space energy and space-storage reagents.',
         resourceAmount: '{amount} {resource}',
         recipeJoiner: ' + ',
@@ -2596,6 +2618,9 @@ setLanguageData({
         expansionCostTooltip: 'Construction time is reduced for each terraformed planet.',
         expansionPerSecondLabel: 'Expansion/s:',
         expansionsPerSecond: '{value} expansions/s',
+        rateSources: {
+          expansion: 'Space storage expansion',
+        },
         kesslerWarning: 'Kessler Skies: {value}% chance of project failure.',
         mode: 'Mode:',
         autoStartExpansion: 'Auto Start Expansion',
