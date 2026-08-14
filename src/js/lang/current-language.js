@@ -1770,6 +1770,7 @@ setLanguageData({
         title: 'Hephaestus Yards',
         totalYards: 'Total Yards',
         project: 'Project',
+        complexityTooltip: "Complexity is the project's base duration relative to 60 seconds. Before other duration modifiers, projection duration is 60 seconds x Complexity / (effective terraformed worlds + effective assigned yards).",
         releaseIfDisabled: 'Release if disabled',
         yardsPerSecond: '{value} yards/s',
       },
