@@ -4,6 +4,7 @@ const saveList = document.getElementById('save-list');
 const globalStatus = document.getElementById('global-status');
 const workshopStatusList = document.getElementById('workshop-status-list');
 const launchSummary = document.getElementById('launch-summary');
+const launcherVersion = document.getElementById('launcher-version');
 const refreshButton = document.getElementById('refresh-button');
 const resetOrderButton = document.getElementById('reset-order-button');
 const playButton = document.getElementById('play-button');
@@ -297,6 +298,7 @@ function renderWorkshop(workshop) {
 
 function applyState(state) {
   launcherState = state;
+  launcherVersion.textContent = `Version ${state.version}`;
   orderedMods = state.mods.slice();
   enabledMods = new Set(state.mods.filter(mod => mod.enabled).map(mod => mod.instanceId));
   selectedSave = state.selectedSave;

@@ -63,7 +63,10 @@ function loadGameSettings(savedSettings) {
   applyGameFramerateSetting();
   delete gameSettings.disableAutosave;
   normalizeDifficultySettings();
-  reapplySharedManagerEffects({ includeConditionalReconcile: true });
+  reapplySharedManagerEffects({
+    includeConditionalReconcile: true,
+    includeProject: true
+  });
   setPauseKeybindCode(gameSettings.pauseKeybind);
   setDialogueSkipKeybindCode(gameSettings.dialogueSkipKeybind);
   setFullscreenKeybindCode(gameSettings.fullscreenKeybind);
