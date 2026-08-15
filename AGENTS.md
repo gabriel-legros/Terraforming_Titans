@@ -98,6 +98,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 - Forced-GC audit snapshots discard Chromium's stored console entries after the harness has captured errors. Do not log full manager/save/sandbox object graphs or growing state summaries from load, travel, generation, or other repeatable lifecycle paths; an attached inspector retains console arguments and can mimic a game heap leak.
 - CDP's broad DOM-node counter includes detached/native nodes and can make one-time lazy-initialization steps. Confirm a DOM leak with repeated monotonic growth and compare connected all-node, Element, Text, listener, tooltip-anchor, and cache-reference counts before attributing it to the game.
 - A detached cache reference that stays numerically flat is not a growing leak, but it is still a stale-cache or broken-UI defect unless the node has an explicit temporary-detachment and reattachment path.
+- Dynamic project total-cost entries own attached tooltip listeners. When a changing cost shape removes an entry, clean up its dynamic tooltip before removing the DOM node so travel-time cost recalculation cannot retain detached cost rows.
 
 ## Zeus Battle Rendering
 - The Battle of Zeus canvas runs its continuous animation loop only while its project card is connected and visible. Leaving or collapsing the project view stops the loop; returning to the active Story Projects view restarts it through `ZeusBattleProject.updateUI()`.
