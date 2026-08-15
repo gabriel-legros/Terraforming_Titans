@@ -1024,7 +1024,7 @@ setLanguageData({
         landLimitTooltip: 'At most 25% of the planet\'s starting land can host aerostat colonies to minimize collision risk.',
         temperatureTooltipIntro: 'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their total housing capacity. Eligible staffed worker requirement is calculated from current active buildings, effective worker needs, current worker capacity, and worker priority allocation. Some buildings also have an Aerostat Support value; active aerostats cover up to active aerostats x support structures for that building, and any uncovered share keeps that portion of the penalty. This mitigation cannot reduce buildings below the dry-adiabatic 1 atm maintenance floor.',
         androidSpaceTooltip: 'Reserve part of each aerostat for android housing instead of colonists. The slider value is android capacity per aerostat out of 10 total housing slots.',
-        capActiveToSupported: 'Cap Active to Supported',
+        capActiveToSupported: 'Cap to Supported',
         capWorkersToAerostatCapacity: 'Cap workers to aerostat capacity',
         capSupportedBuildingsToAerostatCapacity: 'Cap active and autobuild buildings to aerostat capacity',
         landAsResearchOutpost: 'Land as Research Outpost',

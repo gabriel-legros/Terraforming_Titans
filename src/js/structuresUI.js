@@ -329,7 +329,7 @@ function refreshAutoBuildTarget(structure) {
   const roundedPercentTarget = structure.autoBuildBasis === 'aerostatCapacity'
     ? Math.floor(percentTarget)
     : Math.ceil(percentTarget);
-  const targetCount = autoBuildUsesMax
+  const uncappedTargetCount = autoBuildUsesMax
     ? (autoBuildUsesAdjustableMax ? structure.getAutoBuildMaxTargetCount() : Infinity)
     : autoBuildUsesFixed
       ? fixedTarget
@@ -342,6 +342,10 @@ function refreshAutoBuildTarget(structure) {
           : autoBuildUsesAndroidCapacityShare
             ? structure.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
           : roundedPercentTarget;
+  const supportedActiveLimit = structure.shouldClampSetActiveToSupported && structure.shouldClampSetActiveToSupported()
+    ? Math.max(0, Math.floor(structure.getSupportedActiveCap()))
+    : Infinity;
+  const targetCount = Math.min(uncappedTargetCount, supportedActiveLimit);
   const aerostatCapacity = colonies.aerostat_colony
     ? getAerostatSupportedBuildingLimit(structure)
     : Infinity;
