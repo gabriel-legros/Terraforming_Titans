@@ -4989,6 +4989,7 @@ setLanguageData({
         shipPercentPopulation: '% Population',
         shipPercentWorkers: '% Workers',
         shipPercentGeometricLand: '% Geometric Land',
+        shipPercentEnergyProduction: '% Energy Production Usage',
         shipReleaseIfDisabled: 'Release if disabled',
         shipNoProjectsAvailable: 'No projects available',
         buildingsAutomationTitle: 'Buildings Automation',

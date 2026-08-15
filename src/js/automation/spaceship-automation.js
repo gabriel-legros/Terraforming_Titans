@@ -60,7 +60,11 @@ class SpaceshipAutomation {
       isPermanentlyDisabled: () => disposalProject.isPermanentlyDisabled(),
       isAutomationManuallyDisabled: () => disposalProject.isAutomationManuallyDisabled(),
       shouldAutomationDisable: () => disposalProject.shouldAutomationDisable() || !areMassDriversEnabled(),
-      getMaxAssignableShips: () => this.automationShipPool + this.automationMassDriverCapacity
+      getMaxAssignableShips: () => this.automationShipPool + this.automationMassDriverCapacity,
+      calculateSpaceshipCost: () => disposalProject.calculateSpaceshipCost(),
+      getShipOperationDuration: () => disposalProject.getShipOperationDuration
+        ? disposalProject.getShipOperationDuration()
+        : disposalProject.getEffectiveDuration()
     };
   }
 
@@ -395,6 +399,20 @@ class SpaceshipAutomation {
     } else if (mode === 'geometricLand') {
       const geometricLand = resolveWorldGeometricLand(terraforming, resources.surface.land);
       baseMax = geometricLand * (entry.max || 0) / 100;
+    } else if (mode === 'energyProduction') {
+      const cost = project.calculateSpaceshipCost ? project.calculateSpaceshipCost() : null;
+      const energyPerShip = cost?.colony?.energy || 0;
+      const percent = entry.max || 0;
+      if (energyPerShip > 0 && percent > 0) {
+        const duration = project.getShipOperationDuration
+          ? project.getShipOperationDuration()
+          : project.getEffectiveDuration();
+        const productionRate = resources.colony.energy.productionRate || 0;
+        baseMax = productionRate * percent / 100 * duration / 1000 / energyPerShip;
+        if (baseMax <= 0) {
+          return 0;
+        }
+      }
     }
     const boundedMax = Number.isFinite(baseMax) && baseMax > 0 ? baseMax : Infinity;
     if (!Number.isFinite(boundedMax)) {

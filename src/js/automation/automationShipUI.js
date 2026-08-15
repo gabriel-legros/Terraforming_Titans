@@ -773,10 +773,16 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
       const geometricLandOpt = document.createElement('option');
       geometricLandOpt.value = 'geometricLand';
       geometricLandOpt.textContent = getAutomationCardText('shipPercentGeometricLand', {}, '% Geometric Land');
-      maxMode.append(absoluteOpt, populationOpt, workerOpt, geometricLandOpt);
+      const energyProductionOpt = document.createElement('option');
+      energyProductionOpt.value = 'energyProduction';
+      energyProductionOpt.textContent = getAutomationCardText('shipPercentEnergyProduction', {}, '% Energy Production Usage');
+      maxMode.append(absoluteOpt, populationOpt, workerOpt, geometricLandOpt, energyProductionOpt);
       maxMode.value = entry.maxMode || 'absolute';
       const getMaxPrecision = () => (
-        maxMode.value === 'population' || maxMode.value === 'workers' || maxMode.value === 'geometricLand' ? 5 : 3
+        maxMode.value === 'population'
+          || maxMode.value === 'workers'
+          || maxMode.value === 'geometricLand'
+          || maxMode.value === 'energyProduction' ? 5 : 3
       );
       const maxInput = document.createElement('input');
       maxInput.type = 'text';
