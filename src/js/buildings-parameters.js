@@ -18,7 +18,8 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     planetaryMassChange: { category: 'colony', resource: 'metal', mode: 'drainOnProduction' },
     unlocked: false,
-    autoBuildMaxOption: true
+    autoBuildMaxOption: true,
+    autoBuildWorkerShareOption: true
   },
   foundry: {
     type: 'Foundry',

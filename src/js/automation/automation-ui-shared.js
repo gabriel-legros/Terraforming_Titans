@@ -27,7 +27,7 @@ function getAutomationAutoBuildBasisOptions(structure, currentValue) {
     }
     addOption('population', getStructuresUIText('ui.structures.autoBuild.basis.population', '% of pop'));
     addOption('workers', getStructuresUIText('ui.structures.autoBuild.basis.workers', '% of workers'));
-    if (structure.requiresWorker > 0) {
+    if (structure.requiresWorker > 0 || structure.autoBuildWorkerShareOption) {
       addOption('workerShare', getStructuresUIText('ui.structures.autoBuild.basis.workerShare', '% worker share'));
     }
     if (structure.requiresLand > 0) {

@@ -1012,7 +1012,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   workerOption.value = 'workers';
   workerOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.workers', '% of workers');
   autoBuildBasisSelect.appendChild(workerOption);
-  if (structure.requiresWorker > 0) {
+  if (structure.requiresWorker > 0 || structure.autoBuildWorkerShareOption) {
     const shareOption = document.createElement('option');
     shareOption.value = 'workerShare';
     shareOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.workerShare', '% worker share');
