@@ -723,8 +723,11 @@ class SpaceMiningProject extends SpaceshipProject {
 
     const select = document.createElement('select');
     select.classList.add('material-import-target-select');
+    const colonyTargetText = this.getPlanetaryMassImportResource() === 'silicon'
+      ? getSpaceMiningText('ui.projects.spaceMining.colonyOnly', 'Colony only')
+      : getSpaceMiningText('ui.projects.spaceMining.colony', 'Colony');
     [
-      { value: 'colony', text: getSpaceMiningText('ui.projects.spaceMining.colony', 'Colony') },
+      { value: 'colony', text: colonyTargetText },
       { value: 'colonyAndSpaceStorage', text: getSpaceMiningText('ui.projects.spaceMining.colonyAndSpaceStorage', 'Colony then Space Storage') },
       { value: 'spaceStorage', text: getSpaceMiningText('ui.projects.spaceMining.spaceStorage', 'Space Storage') },
       { value: 'colonyAndPlanetaryMass', text: getSpaceMiningText('ui.projects.spaceMining.colonyAndPlanetaryMass', 'Colony and Planetary Mass') },
@@ -1323,6 +1326,9 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     if (this.getTargetAtmosphericResource() === 'hydrogen' && this.gasImportTarget === 'colonyOnly') {
       return 'colonyHydrogen';
+    }
+    if (this.getPlanetaryMassImportResource() === 'silicon' && this.materialImportTarget === 'colony') {
+      return 'silicon';
     }
     return null;
   }

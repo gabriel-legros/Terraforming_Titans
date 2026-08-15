@@ -1,4 +1,5 @@
 const path = require('path');
+const { JSDOM } = require('jsdom');
 
 function setGlobal(name, value, original) {
   if (!(name in original)) {
@@ -109,6 +110,8 @@ function setupGlobals() {
     colony: {
       water: { value: 0, cap: 100, hasCap: true, productionRate: 0, consumptionRate: 0 },
       colonyHydrogen: { value: 90, cap: 100, hasCap: true, productionRate: 0, consumptionRate: 0 },
+      metal: { value: 0, cap: 100, hasCap: true, productionRate: 0, consumptionRate: 0 },
+      silicon: { value: 0, cap: 100, hasCap: true, productionRate: 0, consumptionRate: 0 },
     },
     surface: {
       ice: { automationLimited: false },
@@ -126,6 +129,9 @@ function setupGlobals() {
   setGlobal('formatNumber', (value) => String(value), originalGlobals);
   setGlobal('wireStringNumberInput', () => {}, originalGlobals);
   setGlobal('parseFlexibleNumber', (value) => Number(value), originalGlobals);
+  setGlobal('projectManager', { projects: {} }, originalGlobals);
+  setGlobal('currentPlanetParameters', {}, originalGlobals);
+  setGlobal('hasDynamicMassEnabled', () => false, originalGlobals);
 
   return () => {
     Object.keys(originalGlobals).forEach((name) => {
@@ -420,6 +426,81 @@ describe('SpaceMiningProject colony-only demand limiter', () => {
 
     expect(project.getProjectedAvailabilityCostRatio(1000)).toBeCloseTo(0.125, 10);
 
+    cleanup();
+  });
+
+  it('demand-limits silicon sent to its Colony only target', () => {
+    const cleanup = setupGlobals();
+    const SpaceMiningProject = require(path.resolve(__dirname, '../src/js/projects/SpaceMiningProject.js'));
+    const project = new SpaceMiningProject({
+      attributes: {
+        resourceGainPerShip: { colony: { silicon: 1 } },
+      },
+    }, 'siliconSpaceMining');
+    project.assignedSpaceships = 1000;
+    project.isActive = true;
+    project.materialImportTarget = 'colony';
+    resources.colony.silicon.value = resources.colony.silicon.cap;
+    resources.colony.silicon.consumptionRate = 125;
+
+    expect(project.getProjectedAvailabilityCostRatio(1000)).toBeCloseTo(0.125, 10);
+
+    const context = project.getContinuousOperationContext(1000, 0.5);
+    const ratio = project.getContinuousGainScaleLimit(
+      context,
+      { colony: { silicon: 1000 } },
+      { colony: { silicon: -200 } },
+      0.5
+    );
+    expect(ratio).toBeCloseTo(0.4, 10);
+
+    cleanup();
+  });
+
+  it('does not demand-limit metal sent to Colony', () => {
+    const cleanup = setupGlobals();
+    const SpaceMiningProject = require(path.resolve(__dirname, '../src/js/projects/SpaceMiningProject.js'));
+    const project = new SpaceMiningProject({
+      attributes: {
+        resourceGainPerShip: { colony: { metal: 1 } },
+      },
+    }, 'oreSpaceMining');
+    project.assignedSpaceships = 1000;
+    project.isActive = true;
+    project.materialImportTarget = 'colony';
+    resources.colony.metal.value = resources.colony.metal.cap;
+
+    expect(project.getProjectedAvailabilityCostRatio(1000)).toBe(1);
+    expect(project.getContinuousGainScaleLimit(
+      project.getContinuousOperationContext(1000, 1),
+      { colony: { metal: 1000 } },
+      null,
+      1
+    )).toBe(1);
+
+    cleanup();
+  });
+
+  it('labels only the silicon colony material target as Colony only', () => {
+    const cleanup = setupGlobals();
+    const originalDocument = global.document;
+    const dom = new JSDOM('<!doctype html><html><body></body></html>');
+    global.document = dom.window.document;
+    const SpaceMiningProject = require(path.resolve(__dirname, '../src/js/projects/SpaceMiningProject.js'));
+    const siliconProject = new SpaceMiningProject({
+      attributes: { resourceGainPerShip: { colony: { silicon: 1 } } },
+    }, 'siliconSpaceMining');
+    const metalProject = new SpaceMiningProject({
+      attributes: { resourceGainPerShip: { colony: { metal: 1 } } },
+    }, 'oreSpaceMining');
+
+    const siliconControl = siliconProject.createMaterialImportTargetControl();
+    const metalControl = metalProject.createMaterialImportTargetControl();
+    expect(siliconControl.querySelector('option[value="colony"]').textContent).toBe('Colony only');
+    expect(metalControl.querySelector('option[value="colony"]').textContent).toBe('Colony');
+
+    dom.window.close();
+    global.document = originalDocument;
     cleanup();
   });
 });
