@@ -3132,8 +3132,8 @@ function updateLifeBox() {
       [getTerraformingSummaryText('luminosity.albedoTable.ice', 'Ice'), defaults.ice.toFixed(2)],
       [getTerraformingSummaryText('luminosity.albedoTable.snow', 'Snow'), defaults.snow.toFixed(2)],
       [getTerraformingSummaryText('luminosity.albedoTable.dryIce', 'Dry Ice'), defaults.co2_ice.toFixed(2)],
-      [getTerraformingSummaryText('luminosity.albedoTable.hydrocarbon', 'Hydrocarbon'), defaults.hydrocarbon.toFixed(2)],
-      [getTerraformingSummaryText('luminosity.albedoTable.hydrocarbonIce', 'Hydrocarbon Ice'), defaults.hydrocarbonIce.toFixed(2)],
+      [getTerraformingSummaryText('luminosity.albedoTable.hydrocarbon', 'Liquid Methane'), defaults.hydrocarbon.toFixed(2)],
+      [getTerraformingSummaryText('luminosity.albedoTable.hydrocarbonIce', 'Methane Ice'), defaults.hydrocarbonIce.toFixed(2)],
       [getTerraformingSummaryText('luminosity.albedoTable.hydrogen', 'Liquid Hydrogen'), defaults.hydrogen.toFixed(2)],
       [getTerraformingSummaryText('luminosity.albedoTable.fineSand', 'Fine Sand'), defaults.fineSand.toFixed(2)],
       [getTerraformingSummaryText('luminosity.albedoTable.biomass', 'Biomass'), getActiveBiomassAlbedo().toFixed(2)]
