@@ -73,6 +73,8 @@ const DIFFICULTY_SETTING_DEFAULTS = {
   spaceAccessCapacity: false,
   aerobraking: false,
   infinitePatience: false,
+  disableDailyPatience: false,
+  fixedGoldenAsteroidInterval: false,
   liftersStrippingCap: false,
   orbitalCap: false,
   allowSpaceStorageBiomassWithdrawOnNonHumanDominion: false,

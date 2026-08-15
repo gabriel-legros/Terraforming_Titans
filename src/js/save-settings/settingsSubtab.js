@@ -80,6 +80,10 @@ function cacheSettingsElements() {
     aerobrakingToggle: document.getElementById('aerobraking-toggle'),
     aerobrakingTooltip: document.getElementById('aerobraking-tooltip'),
     infinitePatienceToggle: document.getElementById('infinite-patience-toggle'),
+    disableDailyPatienceToggle: document.getElementById('disable-daily-patience-toggle'),
+    disableDailyPatienceTooltip: document.getElementById('disable-daily-patience-tooltip'),
+    fixedGoldenAsteroidIntervalToggle: document.getElementById('fixed-golden-asteroid-interval-toggle'),
+    fixedGoldenAsteroidIntervalTooltip: document.getElementById('fixed-golden-asteroid-interval-tooltip'),
     liftersStrippingCapToggle: document.getElementById('lifters-stripping-cap-toggle'),
     liftersStrippingCapTooltip: document.getElementById('lifters-stripping-cap-tooltip'),
     orbitalCapToggle: document.getElementById('orbital-cap-toggle'),
@@ -311,6 +315,8 @@ function updateDifficultyLockUI() {
     cached.spaceAccessCapacityToggle,
     cached.aerobrakingToggle,
     cached.infinitePatienceToggle,
+    cached.disableDailyPatienceToggle,
+    cached.fixedGoldenAsteroidIntervalToggle,
     cached.liftersStrippingCapToggle,
     cached.orbitalCapToggle,
     cached.allowSpaceStorageBiomassWithdrawOnNonHumanDominionToggle,
@@ -465,6 +471,8 @@ function updateDifficultySettingInputs() {
     spaceAccessCapacity: cached.spaceAccessCapacityToggle,
     aerobraking: cached.aerobrakingToggle,
     infinitePatience: cached.infinitePatienceToggle,
+    disableDailyPatience: cached.disableDailyPatienceToggle,
+    fixedGoldenAsteroidInterval: cached.fixedGoldenAsteroidIntervalToggle,
     liftersStrippingCap: cached.liftersStrippingCapToggle,
     orbitalCap: cached.orbitalCapToggle,
     allowSpaceStorageBiomassWithdrawOnNonHumanDominion: cached.allowSpaceStorageBiomassWithdrawOnNonHumanDominionToggle,
@@ -1274,6 +1282,52 @@ function addSettingsListeners() {
       patienceManager.enforceInfinitePatience();
       updatePatienceUI();
     });
+  }
+
+  if (cached.disableDailyPatienceToggle) {
+    cached.disableDailyPatienceToggle.checked = gameSettings.disableDailyPatience;
+    cached.disableDailyPatienceToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.disableDailyPatienceToggle.checked = gameSettings.disableDailyPatience;
+        return;
+      }
+      gameSettings.disableDailyPatience = cached.disableDailyPatienceToggle.checked;
+      updatePatienceUI();
+    });
+  }
+
+  if (cached.disableDailyPatienceTooltip) {
+    attachDynamicInfoTooltip(
+      cached.disableDailyPatienceTooltip,
+      t(
+        'ui.settings.disableDailyPatienceTooltip',
+        {},
+        'Prevents daily patience claims from the Patience screen and save or export actions.'
+      )
+    );
+  }
+
+  if (cached.fixedGoldenAsteroidIntervalToggle) {
+    cached.fixedGoldenAsteroidIntervalToggle.checked = gameSettings.fixedGoldenAsteroidInterval;
+    cached.fixedGoldenAsteroidIntervalToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.fixedGoldenAsteroidIntervalToggle.checked = gameSettings.fixedGoldenAsteroidInterval;
+        return;
+      }
+      gameSettings.fixedGoldenAsteroidInterval = cached.fixedGoldenAsteroidIntervalToggle.checked;
+      goldenAsteroid.generateNextSpawnTime();
+    });
+  }
+
+  if (cached.fixedGoldenAsteroidIntervalTooltip) {
+    attachDynamicInfoTooltip(
+      cached.fixedGoldenAsteroidIntervalTooltip,
+      t(
+        'ui.settings.fixedGoldenAsteroidIntervalTooltip',
+        {},
+        'Sets every Golden Asteroid spawn interval to 10 minutes, the midpoint of the normal 5 to 15 minute range.'
+      )
+    );
   }
 
   if (cached.liftersStrippingCapToggle) {

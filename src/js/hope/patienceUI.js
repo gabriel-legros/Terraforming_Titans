@@ -828,11 +828,14 @@ const PatienceUI = {
         }
 
         if (this.dailyClaimButtonEl) {
-            const claimedToday = patienceManager.hasClaimedToday();
-            this.dailyClaimButtonEl.disabled = claimedToday;
-            this.dailyClaimButtonEl.textContent = claimedToday
-                ? getPatienceText('ui.hope.patiencePanel.claimedDaily', 'Daily patience claimed')
-                : getPatienceText('ui.hope.patiencePanel.claimDaily', 'Claim daily patience');
+            this.dailyClaimButtonEl.hidden = gameSettings.disableDailyPatience;
+            if (!gameSettings.disableDailyPatience) {
+                const claimedToday = patienceManager.hasClaimedToday();
+                this.dailyClaimButtonEl.disabled = claimedToday;
+                this.dailyClaimButtonEl.textContent = claimedToday
+                    ? getPatienceText('ui.hope.patiencePanel.claimedDaily', 'Daily patience claimed')
+                    : getPatienceText('ui.hope.patiencePanel.claimDaily', 'Claim daily patience');
+            }
         }
 
         this.updateFacilitySelector();

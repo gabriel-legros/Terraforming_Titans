@@ -390,7 +390,7 @@ class PatienceManager extends EffectableEntity {
      * @returns {boolean} Whether the claim succeeded
      */
     claimDailyPatience() {
-        if (!this.enabled) {
+        if (!this.enabled || gameSettings.disableDailyPatience) {
             return false;
         }
 

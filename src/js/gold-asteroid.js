@@ -420,7 +420,9 @@ class GoldenAsteroid {
       }
 
     generateNextSpawnTime() {
-        const spawnInterval = Math.random() * (this.maxSpawnInterval - this.minSpawnInterval) + this.minSpawnInterval;
+        const spawnInterval = gameSettings.fixedGoldenAsteroidInterval
+          ? (this.minSpawnInterval + this.maxSpawnInterval) / 2
+          : Math.random() * (this.maxSpawnInterval - this.minSpawnInterval) + this.minSpawnInterval;
         this.nextSpawnTime = spawnInterval;
     }
 
