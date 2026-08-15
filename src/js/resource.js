@@ -1666,10 +1666,11 @@ function applyProjectResourceRatesForAvailability(project, cost = {}, gain = {},
     return;
   }
   const source = project.getRateSource();
+  const costRatio = project.getProjectedAvailabilityCostRatio?.(deltaTime) ?? 1;
 
   for (const category in cost) {
     for (const resourceName in cost[category]) {
-      const amount = cost[category][resourceName] || 0;
+      const amount = (cost[category][resourceName] || 0) * costRatio;
       if (!(amount > 0)) {
         continue;
       }

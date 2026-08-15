@@ -1317,6 +1317,47 @@ class SpaceMiningProject extends SpaceshipProject {
     return Math.max(0, resource.cap - resource.value - pending);
   }
 
+  getColonyOnlyImportResourceName() {
+    if (this.attributes.dynamicWaterImport && this.waterImportTarget === 'colonyOnly') {
+      return 'water';
+    }
+    if (this.getTargetAtmosphericResource() === 'hydrogen' && this.gasImportTarget === 'colonyOnly') {
+      return 'colonyHydrogen';
+    }
+    return null;
+  }
+
+  getColonyOnlyImportCapacityRemaining(resourceName, deltaTime, accumulatedChanges = null) {
+    if (accumulatedChanges) {
+      return this.getColonyResourceCapacityRemaining(resourceName, accumulatedChanges);
+    }
+    const resource = resources.colony[resourceName];
+    if (!resource.hasCap) {
+      return Infinity;
+    }
+    const seconds = deltaTime / 1000;
+    const projectedChange = (resource.productionRate - resource.consumptionRate) * seconds;
+    return Math.max(0, resource.cap - resource.value - projectedChange);
+  }
+
+  getProjectedAvailabilityCostRatio(deltaTime = 1000) {
+    const resourceName = this.getColonyOnlyImportResourceName();
+    if (!resourceName || !this.isActive || !this.isContinuous()) {
+      return 1;
+    }
+    const context = this.getContinuousOperationContext(deltaTime, 1);
+    const gainPerShip = this.calculateSpaceshipGainPerShip();
+    const desired = (gainPerShip.colony?.[resourceName] || 0)
+      * this.getContinuousGainCount(context)
+      * context.fraction
+      * context.successChance;
+    if (!(desired > 0)) {
+      return 1;
+    }
+    const remaining = this.getColonyOnlyImportCapacityRemaining(resourceName, deltaTime);
+    return Math.max(0, Math.min(1, remaining / desired));
+  }
+
   shouldWaterCoverageLimitBlockImport(amount = null, hasMonitoring = null, accumulatedChanges = null) {
     if (!this.exceedsWaterCoverageLimit(hasMonitoring)) {
       return false;
@@ -1932,6 +1973,19 @@ class SpaceMiningProject extends SpaceshipProject {
 
   getContinuousGainScaleLimit(context, gainBase, accumulatedChanges = null, productivity = 1) {
     let ratio = super.getContinuousGainScaleLimit(context, gainBase, accumulatedChanges, productivity);
+    const colonyOnlyResource = this.getColonyOnlyImportResourceName();
+    if (colonyOnlyResource && gainBase.colony?.[colonyOnlyResource]) {
+      const desired = gainBase.colony[colonyOnlyResource]
+        * context.fraction
+        * context.successChance
+        * productivity;
+      const remaining = this.getColonyOnlyImportCapacityRemaining(
+        colonyOnlyResource,
+        context.deltaTime,
+        accumulatedChanges
+      );
+      ratio = Math.min(ratio, desired > 0 ? Math.max(0, Math.min(1, remaining / desired)) : 1);
+    }
     if (this.attributes.dynamicWaterImport && gainBase.atmospheric?.atmosphericWater) {
       const desired = gainBase.atmospheric.atmosphericWater
         * context.fraction
@@ -1993,6 +2047,13 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     ratio = Math.min(ratio, pressureRatio);
     return ratio;
+  }
+
+  estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+    if (!accumulatedChanges && this.getColonyOnlyImportResourceName()) {
+      this.clearContinuousExecutionPlanCache();
+    }
+    return super.estimateCostAndGain(deltaTime, applyRates, productivity, accumulatedChanges);
   }
 
   applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null, productivity = 1, accumulatedSpecialChanges = null) {

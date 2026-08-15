@@ -35,6 +35,31 @@ function setupGlobals() {
       return 1;
     }
 
+    getContinuousOperationContext(deltaTime = 1000, productivity = 1) {
+      return {
+        deltaTime,
+        fraction: deltaTime / this.getShipOperationDuration(),
+        shipCount: this.assignedSpaceships,
+        totalTransportCount: this.assignedSpaceships,
+        successChance: 1,
+        productivity,
+      };
+    }
+
+    getContinuousGainCount(context) {
+      return context.shipCount;
+    }
+
+    getShipCapacity(amount) {
+      return amount;
+    }
+
+    calculateSpaceshipGainPerShip() {
+      return this.attributes.resourceGainPerShip || {};
+    }
+
+    clearContinuousExecutionPlanCache() {}
+
     calculateSpaceshipCost() {
       return this.attributes.costPerShip || {};
     }
@@ -82,8 +107,8 @@ function setupGlobals() {
       oxygen: { value: 0, automationLimited: false, modifyRate: () => {} },
     },
     colony: {
-      water: { value: 0, cap: 100, hasCap: true },
-      colonyHydrogen: { value: 90, cap: 100, hasCap: true },
+      water: { value: 0, cap: 100, hasCap: true, productionRate: 0, consumptionRate: 0 },
+      colonyHydrogen: { value: 90, cap: 100, hasCap: true, productionRate: 0, consumptionRate: 0 },
     },
     surface: {
       ice: { automationLimited: false },
@@ -314,6 +339,86 @@ describe('SpaceMiningProject pressure limiter with life buffer', () => {
 
     expect(resources.colony.water.value).toBe(200);
     expect(resources.surface.ice.automationLimited).toBe(true);
+
+    cleanup();
+  });
+});
+
+describe('SpaceMiningProject colony-only demand limiter', () => {
+  function createHydrogenProject(SpaceMiningProject) {
+    const project = new SpaceMiningProject({
+      attributes: {
+        costPerShip: { colony: { energy: 10 } },
+        resourceGainPerShip: { atmospheric: { hydrogen: 1 } },
+      },
+    }, 'hydrogenSpaceMining');
+    project.assignedSpaceships = 1000;
+    project.isActive = true;
+    project.gasImportTarget = 'colonyOnly';
+    return project;
+  }
+
+  it('uses projected consumption and production to scale availability cost', () => {
+    const cleanup = setupGlobals();
+    const SpaceMiningProject = require(path.resolve(__dirname, '../src/js/projects/SpaceMiningProject.js'));
+    const project = createHydrogenProject(SpaceMiningProject);
+    const hydrogen = resources.colony.colonyHydrogen;
+    hydrogen.value = hydrogen.cap;
+    hydrogen.consumptionRate = 250;
+    hydrogen.productionRate = 50;
+
+    expect(project.getProjectedAvailabilityCostRatio(1000)).toBeCloseTo(0.2, 10);
+
+    hydrogen.value = 0;
+    expect(project.getProjectedAvailabilityCostRatio(1000)).toBeCloseTo(0.3, 10);
+
+    cleanup();
+  });
+
+  it.each([
+    { productivity: 1, pendingDemand: 0, expectedActivity: 0 },
+    { productivity: 1, pendingDemand: 200, expectedActivity: 0.2 },
+    { productivity: 0.5, pendingDemand: 200, expectedActivity: 0.2 },
+    { productivity: 0.1, pendingDemand: 200, expectedActivity: 0.1 },
+    { productivity: 0.5, pendingDemand: 1000, expectedActivity: 0.5 },
+  ])(
+    'uses $expectedActivity fleet activity at $productivity productivity with $pendingDemand demand',
+    ({ productivity, pendingDemand, expectedActivity }) => {
+      const cleanup = setupGlobals();
+      const SpaceMiningProject = require(path.resolve(__dirname, '../src/js/projects/SpaceMiningProject.js'));
+      const project = createHydrogenProject(SpaceMiningProject);
+      resources.colony.colonyHydrogen.value = resources.colony.colonyHydrogen.cap;
+      const context = project.getContinuousOperationContext(1000, productivity);
+      const ratio = project.getContinuousGainScaleLimit(
+        context,
+        { colony: { colonyHydrogen: 1000 } },
+        { colony: { colonyHydrogen: -pendingDemand } },
+        productivity
+      );
+
+      expect(productivity * ratio).toBeCloseTo(expectedActivity, 10);
+
+      cleanup();
+    }
+  );
+
+  it('applies the same demand limiter to colony-only water imports', () => {
+    const cleanup = setupGlobals();
+    const SpaceMiningProject = require(path.resolve(__dirname, '../src/js/projects/SpaceMiningProject.js'));
+    const project = new SpaceMiningProject({
+      attributes: {
+        dynamicWaterImport: true,
+        resourceGainPerShip: { surface: { ice: 1 } },
+      },
+    }, 'waterSpaceMining');
+    project.assignedSpaceships = 1000;
+    project.isActive = true;
+    project.flags.waterImportTargeting = true;
+    project.waterImportTarget = 'colonyOnly';
+    resources.colony.water.value = resources.colony.water.cap;
+    resources.colony.water.consumptionRate = 125;
+
+    expect(project.getProjectedAvailabilityCostRatio(1000)).toBeCloseTo(0.125, 10);
 
     cleanup();
   });
