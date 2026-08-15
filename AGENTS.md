@@ -439,6 +439,7 @@ This file is the working contract for contributors and coding agents. Keep it cu
 
 ### Warp Gate Command
 - Team/operation progression persists across planets.
+- When Warp Gate Command is unlocked, the Patience screen can select one facility for automatic upgrades during a spend. The selected facility upgrades each time its one-hour cooldown becomes ready during the simulated time, including multiple times in one spend, and stops at level 100.
 - Operation logs are not saved (save-size control).
 - Generated WGC operation storylines and their show/hide toggle have been removed; operations now log challenge results only.
 - Operations complete as soon as their ten base challenges and any queued extra challenges resolve; there is no fixed 600-second duration floor. Rapid Extraction halves every standard challenge interval from 60 to 30 seconds, including the first, while failure delays remain additive.

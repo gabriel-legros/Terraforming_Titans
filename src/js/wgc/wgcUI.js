@@ -145,7 +145,8 @@ const teamRulesTooltip = getWGCText('teamRulesTooltip', [
   '- Social Science Challenge: Prefers Social Scientists; failures may escalate into combat.',
   '- Science challenges never deal damage on failure.',
   '- Rapid Extraction halves every standard challenge interval; failure delays remain additive, and operations end as soon as the final challenge resolves.',
-  '- Team Leaders lend half their skill on solo and science challenges unless the leader is the one handling a science check.'
+  '- Team Leaders lend half their skill on solo and science challenges unless the leader is the one handling a science check.',
+  '- Spending Patience can automatically upgrade a selected facility whenever its cooldown becomes ready during the simulated time.'
 ].join('\n'));
 const wgcHazardousBiomassTooltip = getWGCText('hazardousBiomassTooltip', [
   'Neutral: No modifiers.',
