@@ -4090,7 +4090,7 @@ setLanguageData({
           label: 'Cylinders-HOPE Mining Rights',
           summaryDefault: 'Cylinder Capacity: ×1 | Cylinder Manufacturing Population: ×1 | Mining Caps: −0%',
           summary: 'Cylinder Capacity: ×{capacityMultiplier} | Cylinder Manufacturing Population: ×{manufacturingMultiplier} | Mining Caps: −{importCapReduction}%',
-          tooltip: "Allocates exclusive space-resource mining rights to the O'Neill cylinders At 10, capacity is ×100, cylinder manufacturing population is ×2, and mining caps are reduced by 100%. Hydrogen is unaffected.",
+          tooltip: "Allocates exclusive space-resource mining rights to the O'Neill cylinders. At 10, capacity is ×100, cylinder manufacturing population is ×2, and mining caps are reduced by 100%. Hydrogen is unaffected.",
         },
         megaprojectsCoordination: {
           label: 'Megaprojects Coordination',

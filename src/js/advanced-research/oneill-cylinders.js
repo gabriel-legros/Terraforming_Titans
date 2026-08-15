@@ -231,12 +231,7 @@ function getOneillGrowthDelta(deltaTime, { space, galaxy } = {}) {
 
 function formatCylinderRate(perSecond) {
   const numeric = Number.isFinite(perSecond) && perSecond > 0 ? perSecond : 0;
-  if (numeric >= 1) {
-    return `+${numeric.toFixed(2)}/s`;
-  }
-  const perHour = numeric * 3600;
-  const rounded = perHour >= 1 ? perHour.toFixed(2) : perHour.toFixed(3);
-  return `+${rounded}/hr`;
+  return `+${formatNumber(numeric, false, 3)}/s`;
 }
 
 function setOneillTooltipText(text) {
