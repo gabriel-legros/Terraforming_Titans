@@ -678,9 +678,6 @@ class WarpGateCommand extends EffectableEntity {
     if (event.specialty === 'Natural Scientist' && stanceObj.artifact === 'Careful') {
       artifactChance = Math.min(artifactChance * 2, 1);
     }
-    if (stanceObj.artifact === 'Rapid Extraction') {
-      artifactChance = Math.max(0, artifactChance * 0.25);
-    }
     let artifact = success && Math.random() < artifactChance;
     const critical = event.type === 'individual' && rollResult.rolls.includes(20);
     if (critical) {
@@ -698,6 +695,9 @@ class WarpGateCommand extends EffectableEntity {
       artifactReward = 1 + opDifficulty * 0.1;
       const mult = event.artifactMultiplier || (event.specialty === 'Natural Scientist' ? 2 : 1);
       artifactReward *= mult * artifactModifier;
+      if (stanceObj.artifact === 'Rapid Extraction') {
+        artifactReward *= 0.25;
+      }
       op.artifacts += artifactReward;
     }
     const rollsStr = rollResult.rolls.join(',');
