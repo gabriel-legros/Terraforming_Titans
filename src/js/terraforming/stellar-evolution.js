@@ -6,6 +6,12 @@ function isStellarEvolutionEligible(planetParameters = currentPlanetParameters) 
     && planetParameters.specialAttributes.stellarEvolutionDisabled !== true;
 }
 
+function isStellarEvolutionStarOrLater(state) {
+  return state.eligible === true
+    && state.stage !== 'planetary'
+    && state.stage !== 'brownDwarf';
+}
+
 function getStellarEvolutionState(
   terraformingState = terraforming,
   planetParameters = currentPlanetParameters
