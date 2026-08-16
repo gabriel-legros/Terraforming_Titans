@@ -190,6 +190,7 @@ var terraformingParameters = {
       biomass: 1100,
       hazardousBiomass: 1100,
       hazardousMachinery: 3000,
+      rocks: 3000,
       graphite: 2260,
       scrapMetal: 7800,
       garbage: 300,
@@ -200,6 +201,75 @@ var terraformingParameters = {
     planetaryImportDensityKgM3: {
       metal: 7800,
       silicon: 2650
+    },
+    stellarEvolution: {
+      jupiterMassKg: 1.89813e27,
+      brownDwarfThresholdJupiter: 13,
+      fusionThresholdJupiter: 80,
+      fusionThresholdTemperatureK: 2500,
+      stellarTemperatureMassExponent: 0.32,
+      photospherePressurePa: 10000,
+      photosphereElements: {
+        hydrogen: { resource: 'hydrogen', retention: 1 },
+        nitrogen: { resource: 'inertGas', retention: 0.12 },
+        oxygen: { resource: 'oxygen', retention: 0.08 }
+      },
+      bulkEarthElementFractions: {
+        iron: 0.321,
+        oxygen: 0.301,
+        silicon: 0.151,
+        magnesium: 0.139,
+        sulfur: 0.029,
+        nickel: 0.018,
+        calcium: 0.015,
+        aluminum: 0.014,
+        other: 0.012
+      },
+      resourceElementFractions: {
+        material: {
+          metal: { iron: 1 },
+          silicon: { silicon: 1 }
+        },
+        surface: {
+          liquidWater: { hydrogen: 2.01588 / 18.01528, oxygen: 15.9994 / 18.01528 },
+          ice: { hydrogen: 2.01588 / 18.01528, oxygen: 15.9994 / 18.01528 },
+          dryIce: { carbon: 12.011 / 44.0095, oxygen: 31.9985 / 44.0095 },
+          liquidCO2: { carbon: 12.011 / 44.0095, oxygen: 31.9985 / 44.0095 },
+          liquidHydrogen: { hydrogen: 1 },
+          liquidMethane: { carbon: 12.011 / 16.04246, hydrogen: 4.03146 / 16.04246 },
+          hydrocarbonIce: { carbon: 12.011 / 16.04246, hydrogen: 4.03146 / 16.04246 },
+          liquidAmmonia: { nitrogen: 14.0067 / 17.03052, hydrogen: 3.02382 / 17.03052 },
+          ammoniaIce: { nitrogen: 14.0067 / 17.03052, hydrogen: 3.02382 / 17.03052 },
+          liquidOxygen: { oxygen: 1 },
+          oxygenIce: { oxygen: 1 },
+          liquidNitrogen: { nitrogen: 1 },
+          nitrogenIce: { nitrogen: 1 },
+          fineSand: { silicon: 28.0855 / 60.0843, oxygen: 31.9988 / 60.0843 },
+          biomass: { carbon: 0.488, hydrogen: 0.073, oxygen: 0.325, nitrogen: 0.114 },
+          hazardousBiomass: { carbon: 0.488, hydrogen: 0.073, oxygen: 0.325, nitrogen: 0.114 },
+          hazardousMachinery: { iron: 0.7, silicon: 0.15, carbon: 0.05, other: 0.1 },
+          rocks: { oxygen: 0.45, silicon: 0.25, iron: 0.1, magnesium: 0.1, other: 0.1 },
+          graphite: { carbon: 1 },
+          scrapMetal: { iron: 1 },
+          garbage: { other: 1 },
+          trash: { other: 1 },
+          junk: { other: 1 },
+          radioactiveWaste: { uranium: 1 }
+        },
+        atmospheric: {
+          carbonDioxide: { carbon: 12.011 / 44.0095, oxygen: 31.9985 / 44.0095 },
+          inertGas: { nitrogen: 1 },
+          oxygen: { oxygen: 1 },
+          atmosphericWater: { hydrogen: 2.01588 / 18.01528, oxygen: 15.9994 / 18.01528 },
+          greenhouseGas: { sulfur: 0.2195, fluorine: 0.7805 },
+          atmosphericMethane: { carbon: 12.011 / 16.04246, hydrogen: 4.03146 / 16.04246 },
+          atmosphericAmmonia: { nitrogen: 14.0067 / 17.03052, hydrogen: 3.02382 / 17.03052 },
+          hydrogen: { hydrogen: 1 },
+          sulfuricAcid: { hydrogen: 0.02055, sulfur: 0.32692, oxygen: 0.65253 },
+          calciteAerosol: { calcium: 0.4004, carbon: 0.12, oxygen: 0.4796 },
+          vanadiumAerosol: { vanadium: 0.5602, oxygen: 0.4398 }
+        }
+      }
     }
   },
 

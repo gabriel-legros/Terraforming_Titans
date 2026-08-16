@@ -107,6 +107,7 @@ registerTerraformingMethods('state', ({
 
     // Ensure global resources reflect loaded/recalculated state
     this.synchronizeGlobalResources();
+    this.refreshDynamicWorldGeometry();
     this.updateLuminosity(); // Recalculate luminosity
     if (this.luminosity.initialSurfaceAlbedo === undefined) {
       this.luminosity.initialSurfaceAlbedo = this.luminosity.groundAlbedo;

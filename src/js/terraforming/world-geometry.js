@@ -23,6 +23,9 @@ const DYNAMIC_WORLD_SURFACE_MASS_KEYS = [
   'liquidNitrogen',
   'nitrogenIce',
   'biomass',
+  'hazardousBiomass',
+  'hazardousMachinery',
+  'rocks',
   'graphite',
   'scrapMetal',
   'garbage',
@@ -297,6 +300,7 @@ function addDynamicWorldPlanetaryMaterial(terraformingState, materialKey, amount
   const density = WORLD_GEOMETRY_PARAMETERS.planetaryImportDensityKgM3[materialKey]
     || WORLD_GEOMETRY_PARAMETERS.fallbackDensityKgM3;
   const addedKg = amountTons * 1000;
+  recordStellarEvolutionResourceImport(terraformingState, 'material', materialKey, amountTons);
   setDynamicWorldDirectLedger(
     terraformingState,
     (celestial.dynamicDirectMassDeltaKg || 0) + addedKg,
@@ -319,6 +323,7 @@ function disposeDynamicWorldPlanetaryMass(terraformingState, amountTons) {
   const removableKg = Math.min(amountTons * 1000, currentMassKg);
   const currentVolumeM3 = getDynamicWorldCurrentPlanetaryVolumeM3(terraformingState);
   const removedVolumeM3 = removableKg / calculateAverageDensityKgM3(currentMassKg, currentVolumeM3);
+  recordStellarEvolutionBulkDisposal(terraformingState, removableKg / 1000);
   setDynamicWorldDirectLedger(
     terraformingState,
     (celestial.dynamicDirectMassDeltaKg || 0) - removableKg,

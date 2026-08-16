@@ -150,11 +150,12 @@ registerTerraformingMethods('climate', ({
   },
   getNetSurfaceHeatFlux(factoryCoolingScale = 1, megaHeatSinkAllocation = this.getMegaHeatSinkAllocation()) {
     const coreHeatFlux = this.getCoreHeatFlux();
+    const fusionFlux = getStellarEvolutionState(this, currentPlanetParameters).fusionFluxWm2;
     const factoryHeatFlux = this.getFactoryHeatFlux();
     const factoryCoolingAdjustment = this.getFactoryCoolingFlux() * (1 - factoryCoolingScale);
     const positiveFactoryHeatFlux = Math.max(0, factoryHeatFlux);
     const factoryCoolingFlux = Math.max(0, -factoryHeatFlux);
-    return coreHeatFlux - megaHeatSinkAllocation.coreHeatFlux + positiveFactoryHeatFlux - megaHeatSinkAllocation.factoryHeatFlux - factoryCoolingFlux + factoryCoolingAdjustment;
+    return fusionFlux + coreHeatFlux - megaHeatSinkAllocation.coreHeatFlux + positiveFactoryHeatFlux - megaHeatSinkAllocation.factoryHeatFlux - factoryCoolingFlux + factoryCoolingAdjustment;
   },
   setTemperatureValuesToTrend() {
     const zones = getZones();

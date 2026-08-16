@@ -764,7 +764,10 @@ class SpaceMirrorAdvancedOversight {
       for (const priorityLevel of priorityLevels) {
         if (priorityLevel === 4.5 && settings.allowAvailableToHeat !== false && deltaTime > 0) {
           terraforming.restoreTemperatureState(snapshot);
-          terraforming.runUpdateStep(deltaTime, { disableAvailableAdvancedHeating: true });
+          terraforming.runUpdateStep(deltaTime, {
+            disableAvailableAdvancedHeating: true,
+            disableStellarAbsorption: true
+          });
           availableHeatingPowerTarget = Math.max(0, terraforming.availableAdvancedHeatingPowerDemand || 0);
           terraforming.restoreTemperatureState(snapshot);
           if (availableHeatingPowerTarget > POWER_EPSILON) {

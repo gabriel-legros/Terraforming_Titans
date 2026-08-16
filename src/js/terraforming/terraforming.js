@@ -649,6 +649,16 @@ class Terraforming extends EffectableEntity{
     runUpdateStep(deltaTime = 0, options = {}) {
       this.synchronizeGlobalResources();
       this.refreshDynamicWorldGeometry();
+      syncStellarEvolutionState(this, currentPlanetParameters);
+      if (deltaTime > 0 && options.disableStellarAbsorption !== true) {
+        applyStellarEvolutionAbsorption(
+          this,
+          currentPlanetParameters,
+          options.accumulatedSpecialChanges?.stellarAbsorption
+        );
+        this.synchronizeGlobalResources();
+        this.refreshDynamicWorldGeometry();
+      }
       this._updateZonalCoverageCache();
       this._updateAtmosphericPressureCache();
       this._updateHeatCapacityCache();

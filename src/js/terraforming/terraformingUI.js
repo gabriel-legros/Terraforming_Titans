@@ -111,6 +111,17 @@ function getFactoryHeatTooltipText(contributors = terraforming.getFactoryHeatBre
   return lines.join('\n');
 }
 
+function getFusionFluxTooltipText(stellarEvolutionState) {
+  return getTerraformingSummaryText(
+    'temperature.fusionFluxTooltip',
+    'This is the world\'s own thermal self-emission, separate from the host star\'s solar flux. It reflects the planetary, surface, and atmospheric resources currently absorbed into the stellar body. Current photosphere: {temperature} K at {pressure}.',
+    {
+      temperature: formatNumber(stellarEvolutionState.effectiveTemperatureK, false, 2),
+      pressure: formatPascalValue(stellarEvolutionState.photospherePressurePa, 2),
+    }
+  );
+}
+
 function getPhaseChangeHeatTooltipText() {
   const lines = [
     getTerraformingSummaryText(
@@ -278,6 +289,58 @@ function updateTerraformingSummaryWorldIdentity() {
   );
   if (summaryCache.worldMetaText && summaryCache.worldMetaText.textContent !== worldMeta) {
     summaryCache.worldMetaText.textContent = worldMeta;
+  }
+}
+
+function updateTerraformingSummaryStellarEvolution(stellarEvolutionState) {
+  const badge = terraformingUICache.summary.stellarEvolutionBadge;
+  const showStellarEvolution = stellarEvolutionState.eligible
+    && (stellarEvolutionState.stage !== 'planetary' || stellarEvolutionState.progress > 0.5);
+  badge.hidden = !showStellarEvolution;
+  if (!showStellarEvolution) {
+    return;
+  }
+
+  const stageFallbacks = {
+    planetary: 'Planetary',
+    brownDwarf: 'Brown Dwarf',
+    star: 'Star',
+  };
+  const stageLabel = getTerraformingSummaryText(
+    `stellarEvolution.stages.${stellarEvolutionState.stage}`,
+    stageFallbacks[stellarEvolutionState.stage]
+  );
+  const mass = formatNumber(stellarEvolutionState.massJupiter, false, 2);
+  let badgeText = '';
+  if (stellarEvolutionState.stage === 'star') {
+    badgeText = getTerraformingSummaryText(
+      'stellarEvolution.fusionActive',
+      '{stage} | {mass} Jupiter masses | Fusion active',
+      { stage: stageLabel, mass }
+    );
+  } else {
+    const nextStageKey = stellarEvolutionState.stage === 'planetary' ? 'brownDwarf' : 'fusionIgnition';
+    const nextStageFallback = stellarEvolutionState.stage === 'planetary' ? 'Brown Dwarf' : 'Fusion Ignition';
+    const nextStage = getTerraformingSummaryText(
+      `stellarEvolution.nextStages.${nextStageKey}`,
+      nextStageFallback
+    );
+    badgeText = getTerraformingSummaryText(
+      'stellarEvolution.progress',
+      '{stage} | {mass} / {threshold} Jupiter masses | {progress}% to {nextStage}',
+      {
+        stage: stageLabel,
+        mass,
+        threshold: formatNumber(stellarEvolutionState.nextThresholdJupiter, false, 2),
+        progress: formatNumber(Math.max(0, Math.min(1, stellarEvolutionState.progress)) * 100, false, 1),
+        nextStage,
+      }
+    );
+  }
+
+  badge.dataset.stage = stellarEvolutionState.stage;
+  if (badge.textContent !== badgeText) {
+    badge.textContent = badgeText;
   }
 }
 
@@ -715,10 +778,12 @@ function getActiveTerraformingSubtabId() {
 
 function updateTerraformingSubtabUI(subtabId, deltaSeconds) {
   switch (subtabId) {
-    case 'summary-terraforming':
+    case 'summary-terraforming': {
+      const stellarEvolutionState = getStellarEvolutionState(terraforming, currentPlanetParameters);
       updateTerraformingSummaryWorldIdentity();
+      updateTerraformingSummaryStellarEvolution(stellarEvolutionState);
       updatePlayTimeDisplay();
-      updateTemperatureBox(deltaSeconds);
+      updateTemperatureBox(deltaSeconds, stellarEvolutionState);
       updateAtmosphereBox(deltaSeconds);
       updateWaterBox();
       updateLuminosityBox();
@@ -726,6 +791,7 @@ function updateTerraformingSubtabUI(subtabId, deltaSeconds) {
       updateMagnetosphereBox();
       updateCompleteTerraformingButton();
       break;
+    }
     case 'life-terraforming':
       updateLifeUI();
       break;
@@ -1264,13 +1330,20 @@ function createTerraformingSummaryUI() {
   worldNameText.classList.add('terraforming-summary-world-name');
   const worldMetaText = document.createElement('div');
   worldMetaText.classList.add('terraforming-summary-world-meta');
+  const stellarEvolutionBadge = document.createElement('div');
+  stellarEvolutionBadge.classList.add('terraforming-summary-stellar-evolution');
+  stellarEvolutionBadge.hidden = true;
   worldHeader.appendChild(worldNameText);
   worldHeader.appendChild(worldMetaText);
+  worldHeader.appendChild(stellarEvolutionBadge);
   terraformingContainer.appendChild(worldHeader);
   summaryCache.worldHeader = worldHeader;
   summaryCache.worldNameText = worldNameText;
   summaryCache.worldMetaText = worldMetaText;
+  summaryCache.stellarEvolutionBadge = stellarEvolutionBadge;
+  const stellarEvolutionState = getStellarEvolutionState(terraforming, currentPlanetParameters);
   updateTerraformingSummaryWorldIdentity();
+  updateTerraformingSummaryStellarEvolution(stellarEvolutionState);
 
   const playTimeDisplay = document.createElement('div');
   playTimeDisplay.id = 'play-time-display';
@@ -1295,7 +1368,7 @@ function createTerraformingSummaryUI() {
   const grid = document.createElement('div');
   grid.classList.add('terraforming-grid');
 
-  createTemperatureBox(grid);
+  createTemperatureBox(grid, stellarEvolutionState);
   createAtmosphereBox(grid);
   createWaterBox(grid);
   createLuminosityBox(grid);
@@ -1330,7 +1403,7 @@ function updateTerraformingUI(deltaSeconds, options = {}) {
 
 // Functions to create and update each terraforming aspect box
 
-function createTemperatureBox(row) {
+function createTemperatureBox(row, stellarEvolutionState) {
   const temperatureBox = document.createElement('div');
   temperatureBox.classList.add('terraforming-box');
     temperatureBox.id = 'temperature-box';
@@ -1366,6 +1439,7 @@ function createTemperatureBox(row) {
       <p>${getTerraformingSummaryText('temperature.labels.globalMeanTemp', 'Global Mean Temp')}: <span id="temperature-current"></span><span class="temp-unit"></span></p>
       <p>${getTerraformingSummaryText('temperature.labels.equilibriumTemp', 'Equilibrium Temp')}: <span id="equilibrium-temp"></span> <span class="temp-unit"></span> <span id="equilibrium-temp-info" class="info-tooltip-icon">&#9432;</span></p>
       <p id="temperature-core-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netCoreHeatFlux', 'Net Core Heat Flux')}: <span id="temperature-core-heat"></span> W/m^2</p>
+      <p id="temperature-fusion-flux-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.fusionFlux', 'Fusion Flux')}: <span id="temperature-fusion-flux"></span> W/m^2</p>
       <p id="temperature-phase-change-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netPhaseChangeHeatFlux', 'Net Phase Change Heat Flux')}: <span id="temperature-phase-change-heat"></span> W/m^2 <span id="temperature-phase-change-heat-info" class="info-tooltip-icon">&#9432;</span></p>
       <p id="temperature-factory-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netFactoryHeatFlux', 'Net Factory Heat Flux')}: <span id="temperature-factory-heat"></span> W/m^2</p>
       <table>
@@ -1439,6 +1513,16 @@ function createTemperatureBox(row) {
         getCoreHeatTooltipText()
       );
     }
+    const fusionFluxLine = temperatureBox.querySelector('#temperature-fusion-flux-line');
+    const fusionFluxInfo = document.createElement('span');
+    fusionFluxInfo.classList.add('info-tooltip-icon');
+    fusionFluxInfo.innerHTML = '&#9432;';
+    fusionFluxLine.appendChild(document.createTextNode(' '));
+    fusionFluxLine.appendChild(fusionFluxInfo);
+    const fusionFluxTooltip = attachDynamicInfoTooltip(
+      fusionFluxInfo,
+      getFusionFluxTooltipText(stellarEvolutionState)
+    );
     const phaseChangeHeatLine = temperatureBox.querySelector('#temperature-phase-change-heat-line');
     const phaseChangeHeatInfo = temperatureBox.querySelector('#temperature-phase-change-heat-info');
     const phaseChangeHeatTooltip = attachDynamicInfoTooltip(
@@ -1537,6 +1621,9 @@ function createTemperatureBox(row) {
       coreHeatLine,
       coreHeatTooltip: coreHeatInfo.querySelector('.resource-tooltip'),
       coreHeat: temperatureBox.querySelector('#temperature-core-heat'),
+      fusionFluxLine,
+      fusionFluxTooltip,
+      fusionFlux: temperatureBox.querySelector('#temperature-fusion-flux'),
       phaseChangeHeatLine,
       phaseChangeHeatTooltip,
       phaseChangeHeat: temperatureBox.querySelector('#temperature-phase-change-heat'),
@@ -1578,7 +1665,7 @@ function createTemperatureBox(row) {
     };
   }
 
-  function updateTemperatureBox(deltaSeconds) {
+  function updateTemperatureBox(deltaSeconds, stellarEvolutionState) {
     const els = terraformingUICache.temperature;
     const temperatureBox = els.box;
     if (!temperatureBox) return;
@@ -1684,6 +1771,21 @@ function createTemperatureBox(row) {
       const coreHeatText = formatNumber(netCoreHeatFlux, false, 2);
       if (els.coreHeat.textContent !== coreHeatText) {
         els.coreHeat.textContent = coreHeatText;
+      }
+    }
+    const showFusionFlux = stellarEvolutionState.eligible && stellarEvolutionState.fusionFluxWm2 > 0;
+    const fusionFluxDisplay = showFusionFlux ? '' : 'none';
+    if (els.fusionFluxLine.style.display !== fusionFluxDisplay) {
+      els.fusionFluxLine.style.display = fusionFluxDisplay;
+    }
+    if (showFusionFlux) {
+      const fusionFluxText = formatNumber(stellarEvolutionState.fusionFluxWm2, false, 2);
+      if (els.fusionFlux.textContent !== fusionFluxText) {
+        els.fusionFlux.textContent = fusionFluxText;
+      }
+      const fusionFluxTooltipText = getFusionFluxTooltipText(stellarEvolutionState);
+      if (els.fusionFluxTooltip.textContent !== fusionFluxTooltipText) {
+        setTooltipText(els.fusionFluxTooltip, fusionFluxTooltipText);
       }
     }
     if (els.phaseChangeHeatLine) {
