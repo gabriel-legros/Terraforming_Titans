@@ -274,7 +274,8 @@
     underground: {
       ore: { name: '', initialValue: 5, maxDeposits: 14400, hasCap: true, areaTotal: 144000, unlocked:false, hideWhenSmall:true },
       geothermal: { name: '', initialValue: 3, maxDeposits: 144, hasCap: true, areaTotal: 144000, unlocked: false, hideWhenSmall:true },
-      planetaryMass: { name: '', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton', showUndergroundRate: true }
+      planetaryMass: { name: '', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton', showUndergroundRate: true },
+      stellarMass: { name: '', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton', showUndergroundRate: true, hideWhenSmall: true }
     },
     atmospheric: {
       carbonDioxide: { name: '', initialValue: 23998810562847.49, unlocked:false , unit: 'ton' },

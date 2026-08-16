@@ -86,7 +86,8 @@ function initializeAccumulatedSpecialChanges() {
       surface: {},
       atmospheric: {},
       totalTons: 0,
-      planetaryMassTons: 0
+      planetaryMassTons: 0,
+      stellarMassTons: 0
     },
     zonalSurfaceTransfers: []
   };
@@ -98,7 +99,8 @@ function reportStellarAbsorptionRates(deltaTime, stellarAbsorption) {
     return;
   }
 
-  let hasChanges = stellarAbsorption.planetaryMassTons !== 0;
+  let hasChanges = stellarAbsorption.planetaryMassTons !== 0
+    || stellarAbsorption.stellarMassTons !== 0;
   for (const category of ['surface', 'atmospheric']) {
     for (const resourceName in stellarAbsorption[category]) {
       hasChanges ||= stellarAbsorption[category][resourceName] !== 0;
@@ -123,6 +125,11 @@ function reportStellarAbsorptionRates(deltaTime, stellarAbsorption) {
   }
   resources.underground.planetaryMass.modifyRate(
     stellarAbsorption.planetaryMassTons / seconds,
+    source,
+    'terraforming'
+  );
+  resources.underground.stellarMass.modifyRate(
+    stellarAbsorption.stellarMassTons / seconds,
     source,
     'terraforming'
   );
@@ -1568,7 +1575,8 @@ function reconcileLandResourceValue() {
 
 function reconcilePlanetaryMassResourceValue() {
   const massResource = resources?.underground?.planetaryMass;
-  if (!massResource) {
+  const stellarMassResource = resources?.underground?.stellarMass;
+  if (!massResource || !stellarMassResource) {
     return;
   }
 
@@ -1581,11 +1589,23 @@ function reconcilePlanetaryMassResourceValue() {
 
   massResource.value = Math.max(0, currentMassTons);
   massResource.reserved = 0;
+  stellarMassResource.value = dynamicMassEnabled
+    ? getDynamicWorldStellarMassAvailableTons(tf)
+    : 0;
+  stellarMassResource.reserved = 0;
 
   if (massResource.unlocked !== dynamicMassEnabled) {
     massResource.unlocked = dynamicMassEnabled;
     if (dynamicMassEnabled && typeof unlockResource === 'function') {
       unlockResource(massResource);
+    }
+  }
+  const stellarEvolutionEnabled = dynamicMassEnabled
+    && params.specialAttributes.stellarEvolutionDisabled !== true;
+  if (stellarMassResource.unlocked !== stellarEvolutionEnabled) {
+    stellarMassResource.unlocked = stellarEvolutionEnabled;
+    if (stellarEvolutionEnabled) {
+      unlockResource(stellarMassResource);
     }
   }
 }

@@ -169,6 +169,30 @@ function ensurePlanetaryElementalComposition(terraformingState) {
   return composition;
 }
 
+function ensureStellarElementalComposition(terraformingState) {
+  const celestial = terraformingState.celestialParameters;
+  const stellarMassKg = getDynamicWorldCurrentStellarMassKg(terraformingState);
+  if (!celestial.stellarElementalCompositionKg) {
+    celestial.stellarElementalCompositionKg = {};
+    if (stellarMassKg > 0) {
+      celestial.stellarElementalCompositionKg.other = stellarMassKg;
+    }
+    return celestial.stellarElementalCompositionKg;
+  }
+
+  const composition = celestial.stellarElementalCompositionKg;
+  const recordedMassKg = sumElementalComposition(composition);
+  const differenceKg = stellarMassKg - recordedMassKg;
+  if (Math.abs(differenceKg) > Math.max(1, stellarMassKg * 1e-12)) {
+    if (differenceKg > 0) {
+      composition.other = (composition.other || 0) + differenceKg;
+    } else {
+      scaleElementalComposition(composition, stellarMassKg);
+    }
+  }
+  return composition;
+}
+
 function getResourceElementFractions(category, resourceKey) {
   return STELLAR_EVOLUTION_PARAMETERS.resourceElementFractions[category][resourceKey]
     || { other: 1 };
@@ -195,6 +219,7 @@ function calculateResourceElementalCompositionKg(resourceSet) {
 
 function getWorldElementalCompositionKg(terraformingState) {
   const composition = { ...ensurePlanetaryElementalComposition(terraformingState) };
+  addElementalDelta(composition, ensureStellarElementalComposition(terraformingState));
   addElementalDelta(
     composition,
     calculateResourceElementalCompositionKg(terraformingState.resources)
@@ -227,8 +252,11 @@ function syncStellarEvolutionState(
     return state;
   }
   ensurePlanetaryElementalComposition(terraformingState);
+  ensureStellarElementalComposition(terraformingState);
   if (state.stage !== 'planetary') {
     captureStellarEnvelopeBaseline(terraformingState);
+  } else if (!(getDynamicWorldCurrentStellarMassKg(terraformingState) > 0)) {
+    delete terraformingState.celestialParameters.stellarEnvelopeBaselineTons;
   }
   Object.assign(terraformingState.celestialParameters, {
     stellarEvolutionStage: state.stage,
@@ -339,7 +367,55 @@ function enforceStellarEnvelopeElementLimits(terraformingState, worldComposition
   }
 }
 
-function accumulateStellarAbsorptionChanges(accumulator, before, after, transferredMassKg) {
+function transferElementalMass(source, target, transferMassKg) {
+  const sourceMassKg = sumElementalComposition(source);
+  if (!(transferMassKg > 0) || !(sourceMassKg > 0)) {
+    return 0;
+  }
+  const fraction = Math.min(1, transferMassKg / sourceMassKg);
+  let transferredKg = 0;
+  for (const element in source) {
+    const amountKg = source[element] * fraction;
+    source[element] -= amountKg;
+    target[element] = (target[element] || 0) + amountKg;
+    transferredKg += amountKg;
+  }
+  return transferredKg;
+}
+
+function removeEnvelopeElementsFromBodies(planetaryComposition, stellarComposition, transferredElementsKg) {
+  let removedPlanetaryKg = 0;
+  let removedStellarKg = 0;
+  for (const element in transferredElementsKg) {
+    let requiredKg = Math.max(0, -transferredElementsKg[element]);
+    const stellarAmountKg = Math.min(stellarComposition[element] || 0, requiredKg);
+    if (stellarAmountKg > 0) {
+      stellarComposition[element] -= stellarAmountKg;
+      removedStellarKg += stellarAmountKg;
+      requiredKg -= stellarAmountKg;
+    }
+    const planetaryAmountKg = Math.min(planetaryComposition[element] || 0, requiredKg);
+    if (planetaryAmountKg > 0) {
+      planetaryComposition[element] -= planetaryAmountKg;
+      removedPlanetaryKg += planetaryAmountKg;
+    }
+  }
+  return { removedPlanetaryKg, removedStellarKg };
+}
+
+function transferReservoirVolume(sourceMassKg, sourceVolumeM3, transferMassKg) {
+  return sourceMassKg > 0
+    ? sourceVolumeM3 * Math.min(1, transferMassKg / sourceMassKg)
+    : 0;
+}
+
+function accumulateStellarAbsorptionChanges(
+  accumulator,
+  before,
+  after,
+  planetaryMassChangeKg,
+  stellarMassChangeKg
+) {
   if (!accumulator) {
     return;
   }
@@ -352,9 +428,11 @@ function accumulateStellarAbsorptionChanges(accumulator, before, after, transfer
       }
     }
   }
-  const transferredTons = transferredMassKg / 1000;
-  accumulator.totalTons += Math.abs(transferredTons);
-  accumulator.planetaryMassTons += transferredTons;
+  const planetaryMassChangeTons = planetaryMassChangeKg / 1000;
+  const stellarMassChangeTons = stellarMassChangeKg / 1000;
+  accumulator.totalTons += Math.abs(stellarMassChangeTons);
+  accumulator.planetaryMassTons += planetaryMassChangeTons;
+  accumulator.stellarMassTons += stellarMassChangeTons;
 }
 
 function applyStellarEvolutionAbsorption(
@@ -363,7 +441,7 @@ function applyStellarEvolutionAbsorption(
   accumulator = null
 ) {
   const state = syncStellarEvolutionState(terraformingState, planetParameters);
-  if (!state.eligible || !(state.absorptionProgress > 0)) {
+  if (!state.eligible) {
     return {
       state,
       transferredMassKg: 0,
@@ -375,10 +453,53 @@ function applyStellarEvolutionAbsorption(
   }
 
   const celestial = terraformingState.celestialParameters;
-  const baseline = captureStellarEnvelopeBaseline(terraformingState);
   const before = snapshotStellarEnvelopeTons(terraformingState);
-  const beforeElementsKg = calculateResourceElementalCompositionKg(terraformingState.resources);
+  const beforePlanetaryMassKg = getDynamicWorldCurrentPlanetaryMassKg(terraformingState);
+  const beforeStellarMassKg = getDynamicWorldCurrentStellarMassKg(terraformingState);
   const planetaryComposition = ensurePlanetaryElementalComposition(terraformingState);
+  const stellarComposition = ensureStellarElementalComposition(terraformingState);
+  let planetaryMassKg = beforePlanetaryMassKg;
+  let stellarMassKg = beforeStellarMassKg;
+  let planetaryVolumeM3 = getDynamicWorldCurrentPlanetaryVolumeM3(terraformingState);
+  let stellarVolumeM3 = getDynamicWorldCurrentStellarMaterialVolumeM3(terraformingState);
+
+  if (state.massJupiter < STELLAR_EVOLUTION_PARAMETERS.brownDwarfThresholdJupiter) {
+    const transferredVolumeM3 = stellarVolumeM3;
+    if (stellarMassKg > 0) {
+      transferElementalMass(stellarComposition, planetaryComposition, stellarMassKg);
+      planetaryMassKg += stellarMassKg;
+      planetaryVolumeM3 += stellarVolumeM3;
+      stellarMassKg = 0;
+      stellarVolumeM3 = 0;
+    }
+    celestial.dynamicDirectMassDeltaKg = planetaryMassKg - celestial.basePlanetaryMass;
+    celestial.dynamicDirectVolumeDeltaM3 = planetaryVolumeM3 - celestial.basePlanetaryVolumeM3;
+    celestial.stellarMassKg = 0;
+    celestial.stellarMaterialVolumeM3 = 0;
+    delete celestial.stellarEnvelopeBaselineTons;
+    syncDynamicWorldGeometry(terraformingState, planetParameters);
+    ensurePlanetaryElementalComposition(terraformingState);
+    ensureStellarElementalComposition(terraformingState);
+    const finalState = syncStellarEvolutionState(terraformingState, planetParameters);
+    accumulateStellarAbsorptionChanges(
+      accumulator,
+      before,
+      before,
+      planetaryMassKg - beforePlanetaryMassKg,
+      -beforeStellarMassKg
+    );
+    return {
+      state: finalState,
+      transferredMassKg: beforeStellarMassKg,
+      transferredVolumeM3,
+      photosphereMassKg: calculateDynamicWorldCurrentAtmosphericMassKg(terraformingState.resources),
+      photospherePressurePa: finalState.photospherePressurePa,
+      transferredElementsKg: {}
+    };
+  }
+
+  const baseline = captureStellarEnvelopeBaseline(terraformingState);
+  const beforeElementsKg = calculateResourceElementalCompositionKg(terraformingState.resources);
   const worldComposition = getWorldElementalCompositionKg(terraformingState);
   const beforeSurfaceVolumeM3 = calculateDynamicWorldCurrentSurfaceVolumeM3(terraformingState.resources);
   const beforeEnvelopeMassKg = calculateDynamicWorldCurrentSurfaceMassKg(terraformingState.resources)
@@ -412,14 +533,87 @@ function applyStellarEvolutionAbsorption(
       - (afterElementsKg[element] || 0);
   }
 
-  addElementalDelta(planetaryComposition, transferredElementsKg);
-  celestial.dynamicDirectMassDeltaKg = (celestial.dynamicDirectMassDeltaKg || 0) + transferredMassKg;
-  celestial.dynamicDirectVolumeDeltaM3 = (celestial.dynamicDirectVolumeDeltaM3 || 0)
-    + transferredVolumeM3;
+  const absorbedElementsKg = {};
+  let absorbedMassKg = 0;
+  for (const element in transferredElementsKg) {
+    const absorbedElementKg = Math.max(0, transferredElementsKg[element]);
+    if (absorbedElementKg > 0) {
+      absorbedElementsKg[element] = absorbedElementKg;
+      absorbedMassKg += absorbedElementKg;
+    }
+  }
+  addElementalDelta(stellarComposition, absorbedElementsKg);
+  stellarMassKg += absorbedMassKg;
+  stellarVolumeM3 += transferredVolumeM3;
+
+  const removed = removeEnvelopeElementsFromBodies(
+    planetaryComposition,
+    stellarComposition,
+    transferredElementsKg
+  );
+  if (removed.removedStellarKg > 0 || removed.removedPlanetaryKg > 0) {
+    const stellarOutgassingVolumeM3 = transferReservoirVolume(
+      stellarMassKg,
+      stellarVolumeM3,
+      removed.removedStellarKg
+    );
+    const planetaryOutgassingVolumeM3 = transferReservoirVolume(
+      planetaryMassKg,
+      planetaryVolumeM3,
+      removed.removedPlanetaryKg
+    );
+    stellarMassKg -= removed.removedStellarKg;
+    stellarVolumeM3 -= stellarOutgassingVolumeM3;
+    planetaryMassKg -= removed.removedPlanetaryKg;
+    planetaryVolumeM3 -= planetaryOutgassingVolumeM3;
+  }
+
+  const bodyMassKg = planetaryMassKg + stellarMassKg;
+  const targetStellarMassKg = Math.min(
+    bodyMassKg,
+    state.massKg * state.absorptionProgress
+  );
+  if (stellarMassKg < targetStellarMassKg) {
+    const massToStellarKg = Math.min(targetStellarMassKg - stellarMassKg, planetaryMassKg);
+    const volumeToStellarM3 = transferReservoirVolume(
+      planetaryMassKg,
+      planetaryVolumeM3,
+      massToStellarKg
+    );
+    transferElementalMass(planetaryComposition, stellarComposition, massToStellarKg);
+    planetaryMassKg -= massToStellarKg;
+    planetaryVolumeM3 -= volumeToStellarM3;
+    stellarMassKg += massToStellarKg;
+    stellarVolumeM3 += volumeToStellarM3;
+  } else if (stellarMassKg > targetStellarMassKg) {
+    const massToPlanetaryKg = stellarMassKg - targetStellarMassKg;
+    const volumeToPlanetaryM3 = transferReservoirVolume(
+      stellarMassKg,
+      stellarVolumeM3,
+      massToPlanetaryKg
+    );
+    transferElementalMass(stellarComposition, planetaryComposition, massToPlanetaryKg);
+    stellarMassKg -= massToPlanetaryKg;
+    stellarVolumeM3 -= volumeToPlanetaryM3;
+    planetaryMassKg += massToPlanetaryKg;
+    planetaryVolumeM3 += volumeToPlanetaryM3;
+  }
+
+  celestial.dynamicDirectMassDeltaKg = planetaryMassKg - celestial.basePlanetaryMass;
+  celestial.dynamicDirectVolumeDeltaM3 = planetaryVolumeM3 - celestial.basePlanetaryVolumeM3;
+  celestial.stellarMassKg = stellarMassKg;
+  celestial.stellarMaterialVolumeM3 = stellarVolumeM3;
   syncDynamicWorldGeometry(terraformingState, planetParameters);
   ensurePlanetaryElementalComposition(terraformingState);
+  ensureStellarElementalComposition(terraformingState);
   const finalState = syncStellarEvolutionState(terraformingState, planetParameters);
-  accumulateStellarAbsorptionChanges(accumulator, before, after, transferredMassKg);
+  accumulateStellarAbsorptionChanges(
+    accumulator,
+    before,
+    after,
+    planetaryMassKg - beforePlanetaryMassKg,
+    stellarMassKg - beforeStellarMassKg
+  );
 
   return {
     state: finalState,
@@ -449,6 +643,14 @@ function recordStellarEvolutionBulkDisposal(terraformingState, amountTons) {
   return currentMassKg - remainingMassKg;
 }
 
+function recordStellarEvolutionStellarDisposal(terraformingState, amountTons) {
+  const composition = ensureStellarElementalComposition(terraformingState);
+  const currentMassKg = sumElementalComposition(composition);
+  const remainingMassKg = Math.max(0, currentMassKg - amountTons * 1000);
+  scaleElementalComposition(composition, remainingMassKg);
+  return currentMassKg - remainingMassKg;
+}
+
 function getStellarEvolutionComposition(terraformingState = terraforming) {
-  return { ...ensurePlanetaryElementalComposition(terraformingState) };
+  return getWorldElementalCompositionKg(terraformingState);
 }

@@ -7149,6 +7149,7 @@ setLanguageData({
         ore: { name: 'Ore deposits' },
         geothermal: { name: 'Geo. vent' },
         planetaryMass: { name: 'Planetary Mass' },
+        stellarMass: { name: 'Stellar Mass' },
       },
       atmospheric: {
         carbonDioxide: { name: 'CO2' },
