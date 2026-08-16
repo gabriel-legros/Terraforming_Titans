@@ -33,7 +33,9 @@
     const ice = getCoverage(context, 'ice');
     const life = getCoverage(context, 'life');
     const hazardousLife = getCoverage(context, 'hazardousLife');
-    const factor = clamp01(1 - context.computeTotalPressureKPa() / 100);
+    const factor = context.isStellarWorld()
+      ? 0
+      : clamp01(1 - context.computeTotalPressureKPa() / 100);
     return [
       factor.toFixed(2),
       ...water.map(value => value.toFixed(2)),
@@ -889,7 +891,9 @@
     }
 
     const uniforms = state.uniforms;
-    uniforms.craterFactor.value = clamp01(1 - context.computeTotalPressureKPa() / 100);
+    uniforms.craterFactor.value = context.isStellarWorld()
+      ? 0
+      : clamp01(1 - context.computeTotalPressureKPa() / 100);
     setVector3(uniforms.waterCoverage.value, waterCoverage);
     setVector3(uniforms.waterThresholds.value, waterThresholds);
     setVector3(uniforms.iceCoverage.value, iceCoverage);
@@ -951,7 +955,9 @@
     renderer.setRenderTarget(previousTarget);
 
     const mapChanged = material.map !== state.colorTarget.texture;
-    const emissionMap = hasEmission ? state.emissionTarget.texture : null;
+    const emissionMap = context.isStellarWorld()
+      ? state.colorTarget.texture
+      : (hasEmission ? state.emissionTarget.texture : null);
     const emissionChanged = material.emissiveMap !== emissionMap;
     material.map = state.colorTarget.texture;
     material.emissiveMap = emissionMap;

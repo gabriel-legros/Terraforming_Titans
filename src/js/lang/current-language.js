@@ -5618,6 +5618,16 @@ setLanguageData({
         incineratorRecipeDisabled: 'Incinerator Recipe Disabled',
         planetaryThrustersDisabled: 'Planetary Thrusters Disabled',
       },
+      sirius: {
+        name: 'Sirius',
+        difficulty: 'Pending evaluation',
+        effects: {
+          tba: 'TBA',
+        },
+        rewards: {
+          tba: 'TBA',
+        },
+      },
       titania: {
         name: 'Titania',
         difficulty: 'Hard+',

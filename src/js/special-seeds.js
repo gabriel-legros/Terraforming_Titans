@@ -1970,7 +1970,121 @@ const earthOverrunOverrides = {
   }
 };
 
+const siriusAMassKg = 4.10221361e30;
+const siriusAPhotosphereMassKg = 6.083464382229175e20;
+const siriusAStellarMassKg = siriusAMassKg - siriusAPhotosphereMassKg;
+const siriusARadiusKm = 1192708.08;
+const siriusASurfaceAreaM2 = 1.7876322738853431e19;
+
+const siriusOverrides = {
+  name: 'Sirius',
+  gravityPenaltyEnabled: true,
+  specialAttributes: {
+    hasSand: false,
+    dynamicMass: true
+  },
+  resources: {
+    surface: {
+      land: { initialValue: siriusASurfaceAreaM2 / 10000 },
+      ice: { initialValue: 0 }
+    },
+    underground: {
+      ore: { initialValue: 0, maxDeposits: 0, areaTotal: 0 },
+      geothermal: { initialValue: 0, maxDeposits: 0, areaTotal: 0 }
+    },
+    atmospheric: {
+      carbonDioxide: { initialValue: 0 },
+      atmosphericWater: { initialValue: 0 },
+      greenhouseGas: { initialValue: 0 },
+      atmosphericMethane: { initialValue: 0 },
+      atmosphericAmmonia: { initialValue: 0 },
+      oxygen: { initialValue: 0 },
+      inertGas: { initialValue: 0 },
+      hydrogen: { initialValue: siriusAPhotosphereMassKg / 1000 },
+      sulfuricAcid: { initialValue: 0 },
+      calciteAerosol: { initialValue: 0 },
+      vanadiumAerosol: { initialValue: 0 }
+    }
+  },
+  zonalTemperatures: {
+    tropical: { value: 9845, day: 9845, night: 9845 },
+    temperate: { value: 9845, day: 9845, night: 9845 },
+    polar: { value: 9845, day: 9845, night: 9845 }
+  },
+  celestialParameters: {
+    distanceFromSun: 19.8,
+    gravity: 192.46673190313527,
+    radius: siriusARadiusKm,
+    mass: siriusAMassKg,
+    albedo: 0,
+    rotationPeriod: 132,
+    spinPeriod: 132,
+    starLuminosity: 0.02448,
+    surfaceArea: siriusASurfaceAreaM2,
+    crossSectionArea: 4.469080684713358e18,
+    baseLand: siriusASurfaceAreaM2 / 10000,
+    baseRadius: siriusARadiusKm,
+    baseMass: siriusAMassKg,
+    basePlanetaryMass: 0,
+    basePlanetaryVolumeM3: 0,
+    stellarMassKg: siriusAStellarMassKg,
+    stellarMaterialVolumeM3: 7.107078190439406e27,
+    stellarElementalCompositionKg: {
+      hydrogen: siriusAStellarMassKg * 0.70,
+      other: siriusAStellarMassKg * 0.28,
+      oxygen: siriusAStellarMassKg * 0.008,
+      carbon: siriusAStellarMassKg * 0.003,
+      nitrogen: siriusAStellarMassKg * 0.001,
+      iron: siriusAStellarMassKg * 0.004,
+      silicon: siriusAStellarMassKg * 0.002,
+      magnesium: siriusAStellarMassKg * 0.002
+    },
+    sector: 'R5-07'
+  },
+  star: {
+    name: 'Sirius B',
+    spectralType: 'DA2',
+    luminositySolar: 0.02448,
+    massSolar: 1.018,
+    radiusSolar: 0.0081,
+    temperatureK: 25200,
+    habitableZone: { inner: 0.15, outer: 0.22 }
+  },
+  visualization: {
+    baseColor: '#eaf4ff'
+  }
+};
+
 const specialSeedDefinitions = {
+  sirius: {
+    key: 'sirius',
+    enabled: false,
+    seed: 'Sirius',
+    name: 'Sirius',
+    nameKey: 'catalogs.specialSeeds.sirius.name',
+    difficultyKey: 'catalogs.specialSeeds.sirius.difficulty',
+    difficultyRating: 'Pending evaluation',
+    replayable: true,
+    target: 'star',
+    archetype: 'molten',
+    orbitPreset: 'cold',
+    specialEffects: [
+      {
+        id: 'tba',
+        descriptionKey: 'catalogs.specialSeeds.sirius.effects.tba',
+        description: 'TBA'
+      }
+    ],
+    completionRewards: [
+      {
+        id: 'tba',
+        descriptionKey: 'catalogs.specialSeeds.sirius.rewards.tba',
+        description: 'TBA',
+        effects: []
+      }
+    ],
+    overrides: siriusOverrides
+  },
   titania: {
     key: 'titania',
     enabled: true,

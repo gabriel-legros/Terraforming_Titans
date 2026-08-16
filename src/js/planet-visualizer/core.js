@@ -174,6 +174,10 @@
       return classification.type === 'shell' && classification.core === 'smbh';
     }
 
+    isStellarWorld() {
+      return getStellarEvolutionState(this.terraforming, currentPlanetParameters).stage === 'star';
+    }
+
     isFlatWorld() {
       return this.isRingWorld() || this.isDiskWorld();
     }
@@ -873,7 +877,7 @@
         this.sunMesh.scale.setScalar(0.2);
         this.sunMesh.renderOrder = 20;
         this.sunMesh.material.depthTest = false;
-      } else if (isBirchWorld) {
+      } else if (isBirchWorld || this.isStellarWorld()) {
         this.sunMesh.visible = false;
       } else {
         this.sunMesh.position.copy(this.sunLight.position).multiplyScalar(1.6);

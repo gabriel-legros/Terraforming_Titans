@@ -1,5 +1,6 @@
 const STELLAR_EVOLUTION_PARAMETERS = terraformingParameters.geometry.stellarEvolution;
 const STELLAR_EVOLUTION_STEFAN_BOLTZMANN = terraformingParameters.physical.stefanBoltzmannConstant;
+const STELLAR_EVOLUTION_SOLAR_LUMINOSITY_W = terraformingParameters.physical.solarLuminosityW;
 
 function isStellarEvolutionEligible(planetParameters = currentPlanetParameters) {
   return planetParameters.specialAttributes.dynamicMass === true
@@ -51,16 +52,19 @@ function getStellarEvolutionState(
     progress = 1;
     nextThresholdJupiter = null;
     absorptionProgress = 1;
-    effectiveTemperatureK = STELLAR_EVOLUTION_PARAMETERS.fusionThresholdTemperatureK
-      * Math.pow(
-        massJupiter / fusionThreshold,
-        STELLAR_EVOLUTION_PARAMETERS.stellarTemperatureMassExponent
-      );
+    const massSolar = massKg / STELLAR_EVOLUTION_PARAMETERS.solarMassKg;
+    const temperatureExponent = massSolar
+      <= STELLAR_EVOLUTION_PARAMETERS.stellarTemperatureExponentBoundarySolar
+      ? STELLAR_EVOLUTION_PARAMETERS.lowMassStellarTemperatureExponent
+      : STELLAR_EVOLUTION_PARAMETERS.highMassStellarTemperatureExponent;
+    effectiveTemperatureK = STELLAR_EVOLUTION_PARAMETERS.solarEffectiveTemperatureK
+      * Math.pow(massSolar, temperatureExponent);
     fusionFluxWm2 = STELLAR_EVOLUTION_STEFAN_BOLTZMANN * Math.pow(effectiveTemperatureK, 4);
   }
 
   const celestial = terraformingState.celestialParameters;
   const surfaceArea = celestial.surfaceArea || calculateSurfaceAreaM2FromRadius(celestial.radius);
+  const luminositySolar = fusionFluxWm2 * surfaceArea / STELLAR_EVOLUTION_SOLAR_LUMINOSITY_W;
   const atmosphericMassKg = calculateDynamicWorldCurrentAtmosphericMassKg(terraformingState.resources);
   const photospherePressurePa = surfaceArea > 0
     ? atmosphericMassKg * celestial.gravity / surfaceArea
@@ -98,6 +102,7 @@ function getStellarEvolutionState(
     effectiveTemperatureK,
     surfaceTemperatureK: effectiveTemperatureK,
     fusionFluxWm2,
+    luminositySolar,
     radiusKm: celestial.radius,
     meanDensityKgM3: celestial.meanDensityKgM3,
     photospherePressurePa,
@@ -269,6 +274,7 @@ function syncStellarEvolutionState(
     stellarEvolutionProgress: state.progress,
     stellarEffectiveTemperatureK: state.effectiveTemperatureK,
     stellarFusionFluxWm2: state.fusionFluxWm2,
+    stellarLuminositySolar: state.luminositySolar,
     stellarPhotospherePressurePa: state.photospherePressurePa
   });
   return state;
