@@ -59,7 +59,16 @@ function getStellarEvolutionState(
       : STELLAR_EVOLUTION_PARAMETERS.highMassStellarTemperatureExponent;
     effectiveTemperatureK = STELLAR_EVOLUTION_PARAMETERS.solarEffectiveTemperatureK
       * Math.pow(massSolar, temperatureExponent);
-    fusionFluxWm2 = STELLAR_EVOLUTION_STEFAN_BOLTZMANN * Math.pow(effectiveTemperatureK, 4);
+    const massDerivedFusionFluxWm2 = STELLAR_EVOLUTION_STEFAN_BOLTZMANN
+      * Math.pow(effectiveTemperatureK, 4);
+    fusionFluxWm2 = Math.max(
+      massDerivedFusionFluxWm2,
+      Math.max(0, terraformingState.celestialParameters.stellarRemnantCoreHeatFluxWm2 || 0)
+    );
+    effectiveTemperatureK = Math.pow(
+      fusionFluxWm2 / STELLAR_EVOLUTION_STEFAN_BOLTZMANN,
+      0.25
+    );
   }
 
   const celestial = terraformingState.celestialParameters;
@@ -262,14 +271,26 @@ function syncStellarEvolutionState(
   if (!state.eligible) {
     return state;
   }
+  const celestial = terraformingState.celestialParameters;
+  const previousFusionFluxWm2 = Math.max(0, celestial.stellarFusionFluxWm2 || 0);
+  const previousState = {
+    eligible: true,
+    stage: celestial.stellarEvolutionStage || 'planetary'
+  };
+  if (
+    isStellarEvolutionStarOrLater(previousState)
+    && !isStellarEvolutionStarOrLater(state)
+  ) {
+    celestial.stellarRemnantCoreHeatFluxWm2 = previousFusionFluxWm2;
+  }
   ensurePlanetaryElementalComposition(terraformingState);
   ensureStellarElementalComposition(terraformingState);
   if (state.stage !== 'planetary') {
     captureStellarEnvelopeBaseline(terraformingState);
   } else if (!(getDynamicWorldCurrentStellarMassKg(terraformingState) > 0)) {
-    delete terraformingState.celestialParameters.stellarEnvelopeBaselineTons;
+    delete celestial.stellarEnvelopeBaselineTons;
   }
-  Object.assign(terraformingState.celestialParameters, {
+  Object.assign(celestial, {
     stellarEvolutionStage: state.stage,
     stellarEvolutionProgress: state.progress,
     stellarEffectiveTemperatureK: state.effectiveTemperatureK,

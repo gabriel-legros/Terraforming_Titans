@@ -1752,7 +1752,12 @@ function createTemperatureBox(row, stellarEvolutionState) {
     if (els.equilibrium.textContent !== equilibriumText) {
       els.equilibrium.textContent = equilibriumText;
     }
-    const baseCoreHeatFlux = Math.max(0, terraforming.celestialParameters.coreHeatFlux || 0);
+    const baseCoreHeatFlux = Math.max(
+      Math.max(0, terraforming.celestialParameters.coreHeatFlux || 0),
+      isStellarEvolutionStarOrLater(stellarEvolutionState)
+        ? 0
+        : Math.max(0, terraforming.celestialParameters.stellarRemnantCoreHeatFluxWm2 || 0)
+    );
     const remainingCoreHeatFlux = terraforming.getCoreHeatFlux ? terraforming.getCoreHeatFlux() : baseCoreHeatFlux;
     const netCoreHeatFlux = terraforming.getNetCoreHeatFlux ? terraforming.getNetCoreHeatFlux() : remainingCoreHeatFlux;
     if (els.coreHeatLine) {
