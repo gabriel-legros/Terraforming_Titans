@@ -20,7 +20,9 @@ registerTerraformingMethods('climate', ({
   surfaceLiquidHeatCapacityConfigs
 }) => ({
   getCoreHeatFlux() {
-    const baseFlux = Math.max(0, this.celestialParameters.coreHeatFlux || 0);
+    const stellarEvolutionState = getStellarEvolutionState(this, currentPlanetParameters);
+    const baseFlux = Math.max(0, this.celestialParameters.coreHeatFlux || 0)
+      * (1 - stellarEvolutionState.absorptionProgress);
     if (isEquilibrating) {
       return baseFlux;
     }

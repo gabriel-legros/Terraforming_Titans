@@ -59,8 +59,26 @@ function getStellarEvolutionState(
   const photospherePressurePa = surfaceArea > 0
     ? atmosphericMassKg * celestial.gravity / surfaceArea
     : 0;
+  const opacityTemperatureK = Math.max(
+    STELLAR_EVOLUTION_PARAMETERS.photosphereMinimumOpacityTemperatureK,
+    effectiveTemperatureK
+  );
+  const photosphereOpacityM2Kg = STELLAR_EVOLUTION_PARAMETERS.photosphereReferenceOpacityM2Kg
+    * Math.pow(
+      opacityTemperatureK / STELLAR_EVOLUTION_PARAMETERS.photosphereReferenceTemperatureK,
+      STELLAR_EVOLUTION_PARAMETERS.photosphereOpacityTemperatureExponent
+    );
+  const pressureRange = STELLAR_EVOLUTION_PARAMETERS.photospherePressureRangePa;
+  const targetPhotospherePressurePa = Math.max(
+    pressureRange.minimum,
+    Math.min(
+      pressureRange.maximum,
+      STELLAR_EVOLUTION_PARAMETERS.photosphereOpticalDepth
+        * celestial.gravity / photosphereOpacityM2Kg
+    )
+  );
   const targetPhotosphereMassKg = celestial.gravity > 0
-    ? STELLAR_EVOLUTION_PARAMETERS.photospherePressurePa * surfaceArea / celestial.gravity
+    ? targetPhotospherePressurePa * surfaceArea / celestial.gravity
     : 0;
 
   return {
@@ -74,8 +92,11 @@ function getStellarEvolutionState(
     effectiveTemperatureK,
     surfaceTemperatureK: effectiveTemperatureK,
     fusionFluxWm2,
+    radiusKm: celestial.radius,
+    meanDensityKgM3: celestial.meanDensityKgM3,
     photospherePressurePa,
-    targetPhotospherePressurePa: STELLAR_EVOLUTION_PARAMETERS.photospherePressurePa,
+    targetPhotospherePressurePa,
+    photosphereOpacityM2Kg,
     targetPhotosphereMassKg
   };
 }

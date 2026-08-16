@@ -114,7 +114,7 @@ function getFactoryHeatTooltipText(contributors = terraforming.getFactoryHeatBre
 function getFusionFluxTooltipText(stellarEvolutionState) {
   return getTerraformingSummaryText(
     'temperature.fusionFluxTooltip',
-    'This is the world\'s own thermal self-emission, separate from the host star\'s solar flux. It reflects the planetary, surface, and atmospheric resources currently absorbed into the stellar body. Current photosphere: {temperature} K at {pressure}.',
+    'This is the world\'s own thermal self-emission, separate from the host star\'s solar flux. It reflects the planetary, surface, and atmospheric resources currently absorbed into the stellar body. The retained photosphere follows gravity and temperature-dependent opacity. Current photosphere: {temperature} K at {pressure}.',
     {
       temperature: formatNumber(stellarEvolutionState.effectiveTemperatureK, false, 2),
       pressure: formatPascalValue(stellarEvolutionState.photospherePressurePa, 2),
@@ -3060,6 +3060,10 @@ function updateLifeBox() {
             { value: formatNumber(gravityPenaltyPercent, false, 2) }
           )
         : '';
+      const stellarEvolutionState = getStellarEvolutionState(terraforming, currentPlanetParameters);
+      const stellarStructureStyle = stellarEvolutionState.stage === 'planetary'
+        ? ' style="display: none;"'
+        : '';
 
     magnetosphereBox.innerHTML = `
       <h3>${terraforming.magnetosphere.name}</h3>
@@ -3069,6 +3073,8 @@ function updateLifeBox() {
         <p id="radiation-penalty-row">${getTerraformingSummaryText('magnetosphere.labels.radiationPenalty', 'Radiation penalty')}: <span id="surface-radiation-penalty">${formatNumber(radPenalty * 100, false, 0)}</span>%</p>
         <p>${getTerraformingSummaryText('magnetosphere.labels.gravity', 'Gravity')}: <span id="terraforming-gravity-value">${formatNumber(gravityValue, false, 2)}</span> m/s²</p>
         <p id="terraforming-equatorial-gravity-row"${equatorialGravityRowStyle}>${getTerraformingSummaryText('magnetosphere.labels.equatorialGravity', 'Equatorial gravity')}<span class="info-tooltip-icon" title="${EQUATORIAL_GRAVITY_TOOLTIP_TEXT}">&#9432;</span> : <span id="terraforming-equatorial-gravity-value">${formatNumber(equatorialGravity, false, 2)}</span> m/s²</p>
+        <p id="terraforming-stellar-radius-row"${stellarStructureStyle}>${getTerraformingSummaryText('magnetosphere.labels.stellarRadius', 'Stellar radius')}: <span id="terraforming-stellar-radius-value">${formatNumber(stellarEvolutionState.radiusKm, false, 2)}</span> km</p>
+        <p id="terraforming-stellar-density-row"${stellarStructureStyle}>${getTerraformingSummaryText('magnetosphere.labels.meanDensity', 'Mean density')}: <span id="terraforming-stellar-density-value">${formatNumber(stellarEvolutionState.meanDensityKgM3, false, 2)}</span> kg/m³</p>
         <p id="gravity-penalty-row">${getTerraformingSummaryText('magnetosphere.labels.gravityPenalty', 'Gravity penalty')}<span class="info-tooltip-icon">&#9432;</span> : <span id="terraforming-gravity-penalty">${gravityPenaltyText}</span></p>
         <div id="others-extra-requirements"></div>
       `;
@@ -3108,6 +3114,10 @@ function updateLifeBox() {
       equatorialGravityRow: magnetosphereBox.querySelector('#terraforming-equatorial-gravity-row'),
       equatorialGravityValue: magnetosphereBox.querySelector('#terraforming-equatorial-gravity-value'),
       equatorialGravityTooltip,
+      stellarRadiusRow: magnetosphereBox.querySelector('#terraforming-stellar-radius-row'),
+      stellarRadiusValue: magnetosphereBox.querySelector('#terraforming-stellar-radius-value'),
+      stellarDensityRow: magnetosphereBox.querySelector('#terraforming-stellar-density-row'),
+      stellarDensityValue: magnetosphereBox.querySelector('#terraforming-stellar-density-value'),
       gravityPenaltyRow: magnetosphereBox.querySelector('#gravity-penalty-row'),
       gravityPenaltyValue: magnetosphereBox.querySelector('#terraforming-gravity-penalty'),
       gravityPenaltyTooltip,
@@ -3128,6 +3138,8 @@ function updateLifeBox() {
     const gravityValue = els.gravityValue;
     const equatorialGravityRow = els.equatorialGravityRow;
     const equatorialGravityValue = els.equatorialGravityValue;
+    const stellarEvolutionState = getStellarEvolutionState(terraforming, currentPlanetParameters);
+    const showStellarStructure = stellarEvolutionState.stage !== 'planetary';
     const gravityPenaltyRow = els.gravityPenaltyRow;
     const gravityPenaltyValue = els.gravityPenaltyValue;
 
@@ -3184,6 +3196,16 @@ function updateLifeBox() {
       } else {
         equatorialGravityRow.style.display = 'none';
       }
+    }
+    els.stellarRadiusRow.style.display = showStellarStructure ? '' : 'none';
+    els.stellarDensityRow.style.display = showStellarStructure ? '' : 'none';
+    if (showStellarStructure) {
+      els.stellarRadiusValue.textContent = formatNumber(stellarEvolutionState.radiusKm, false, 2);
+      els.stellarDensityValue.textContent = formatNumber(
+        stellarEvolutionState.meanDensityKgM3,
+        false,
+        2
+      );
     }
 
     if (gravityPenaltyRow && gravityPenaltyValue) {

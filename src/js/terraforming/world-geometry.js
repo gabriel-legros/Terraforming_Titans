@@ -92,6 +92,41 @@ function calculateAverageDensityKgM3(massKg, volumeM3) {
   return Math.max(WORLD_GEOMETRY_PARAMETERS.minimumDensityKgM3, massKg / volumeM3);
 }
 
+function calculateStellarEquilibriumRadiusKm(massKg) {
+  const parameters = WORLD_GEOMETRY_PARAMETERS.stellarEvolution;
+  const massSolar = massKg / parameters.solarMassKg;
+  const exponent = massSolar <= parameters.stellarRadiusExponentBoundarySolar
+    ? parameters.lowMassStellarRadiusExponent
+    : parameters.highMassStellarRadiusExponent;
+  return Math.max(
+    parameters.jupiterRadiusKm,
+    parameters.solarRadiusKm * Math.pow(massSolar, exponent)
+  );
+}
+
+function calculateDynamicWorldEffectiveRadiusKm(materialRadiusKm, massKg, planetParameters) {
+  const attributes = planetParameters.specialAttributes;
+  if (attributes.dynamicMass !== true || attributes.stellarEvolutionDisabled === true) {
+    return materialRadiusKm;
+  }
+
+  const parameters = WORLD_GEOMETRY_PARAMETERS.stellarEvolution;
+  const massJupiter = massKg / parameters.jupiterMassKg;
+  if (massJupiter < parameters.brownDwarfThresholdJupiter) {
+    return materialRadiusKm;
+  }
+
+  const stellarRadiusKm = calculateStellarEquilibriumRadiusKm(massKg);
+  if (massJupiter >= parameters.fusionThresholdJupiter) {
+    return stellarRadiusKm;
+  }
+
+  const progress = (massJupiter - parameters.brownDwarfThresholdJupiter)
+    / (parameters.fusionThresholdJupiter - parameters.brownDwarfThresholdJupiter);
+  const blend = progress * progress * (3 - 2 * progress);
+  return materialRadiusKm + (stellarRadiusKm - materialRadiusKm) * blend;
+}
+
 function getDynamicLiquidHydrogenDensity(amountTons) {
   const massKg = Math.max(0, amountTons || 0) * 1000;
   if (!(massKg > 0)) {
@@ -365,18 +400,36 @@ function syncDynamicWorldGeometry(terraformingState, planetParameters) {
     const currentPlanetaryVolumeM3 = getDynamicWorldCurrentPlanetaryVolumeM3(terraformingState);
     const currentSurfaceVolumeM3 = calculateDynamicWorldCurrentSurfaceVolumeM3(terraformingState.resources);
     const currentMassKg = currentPlanetaryMassKg + currentSurfaceMassKg + currentAtmosphericMassKg;
-    const currentVolumeM3 = currentPlanetaryVolumeM3 + currentSurfaceVolumeM3;
+    const currentMaterialVolumeM3 = currentPlanetaryVolumeM3 + currentSurfaceVolumeM3;
+    const materialRadiusKm = calculateRadiusKmFromVolume(currentMaterialVolumeM3);
+    const radiusKm = calculateDynamicWorldEffectiveRadiusKm(
+      materialRadiusKm,
+      currentMassKg,
+      planetParameters
+    );
+    const currentVolumeM3 = calculateSphereVolumeM3FromRadius(radiusKm);
+    const stellarParameters = WORLD_GEOMETRY_PARAMETERS.stellarEvolution;
+    const massJupiter = currentMassKg / stellarParameters.jupiterMassKg;
+    const usesStellarStructure = planetParameters.specialAttributes.stellarEvolutionDisabled !== true
+      && massJupiter >= stellarParameters.brownDwarfThresholdJupiter;
 
     Object.assign(celestial, {
       mass: currentMassKg,
-      radius: calculateRadiusKmFromVolume(currentVolumeM3),
+      radius: radiusKm,
       dynamicMassDeltaKg: currentMassKg - celestial.baseMass,
       dynamicSurfaceVolumeDeltaM3: currentVolumeM3 - calculateSphereVolumeM3FromRadius(celestial.baseRadius),
       currentPlanetaryMassKg,
       currentSurfaceMassKg,
       currentAtmosphericMassKg,
       currentPlanetaryVolumeM3,
-      currentSurfaceVolumeM3
+      currentSurfaceVolumeM3,
+      currentMaterialVolumeM3,
+      currentVolumeM3,
+      materialRadiusKm,
+      stellarEquilibriumRadiusKm: usesStellarStructure
+        ? calculateStellarEquilibriumRadiusKm(currentMassKg)
+        : null,
+      meanDensityKgM3: calculateAverageDensityKgM3(currentMassKg, currentVolumeM3)
     });
     celestial.gravity = calculateGravityFromMassRadius(celestial.mass, celestial.radius);
   }
@@ -389,6 +442,8 @@ try {
   module.exports = {
     calculateCrossSectionAreaM2FromRadius,
     calculateAverageDensityKgM3,
+    calculateStellarEquilibriumRadiusKm,
+    calculateDynamicWorldEffectiveRadiusKm,
     getDynamicLiquidHydrogenDensity,
     getDynamicWorldSurfaceDensity,
     calculateDynamicWorldCurrentAtmosphericMassKg,
