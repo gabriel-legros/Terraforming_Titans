@@ -43,6 +43,20 @@
       this.sunMesh = null;
       this.atmoMesh = null;
       this.atmoMaterial = null;
+      this.stellarGlowInnerMesh = null;
+      this.stellarGlowOuterMesh = null;
+      this.stellarGlowInnerMaterial = null;
+      this.stellarGlowOuterMaterial = null;
+      this.stellarGlowSprite = null;
+      this.stellarGlowSpriteMaterial = null;
+      this.stellarVisualState = {
+        active: false,
+        isStar: false,
+        progress: 0,
+        color: new THREE.Color(0xffad5c),
+        surfaceEmission: 0,
+        haloStrength: 0,
+      };
 
       // Environment visuals
       this.starField = null;

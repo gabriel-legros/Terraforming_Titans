@@ -322,17 +322,9 @@
     const lava = this.getLavaTransitionStrength();
     const city = this.getEcumenopolisVisualizerStrength();
     const nanoworld = this.getNanoworldVisualizerStrength();
+    const stellarVisual = this.getStellarVisualizerState();
     const baseRoughness = surface.userData?.baseRoughness ?? (this.isRingWorld() ? 0.85 : 0.9);
     const baseMetalness = surface.userData?.baseMetalness ?? 0;
-    if (this.isStellarWorld()) {
-      material.roughness = 0.68;
-      material.metalness = 0;
-      if (material.emissive) {
-        material.emissive.setRGB(0.95, 0.98, 1);
-        material.emissiveIntensity = 1.05;
-      }
-      return;
-    }
     material.roughness = Math.max(0.12, baseRoughness - lava * 0.45 - city * 0.28 - nanoworld * 0.62);
     material.metalness = Math.min(0.82, baseMetalness + lava * 0.06 + city * 0.24 + nanoworld * 0.76);
     if (material.emissive) {
@@ -349,6 +341,15 @@
           0.03 + lava * 0.07
         );
         material.emissiveIntensity = lava * 0.72;
+      }
+    }
+    if (stellarVisual.progress > 0) {
+      material.roughness += (0.58 - material.roughness) * stellarVisual.progress;
+      material.metalness *= 1 - stellarVisual.progress;
+      if (material.emissive) {
+        material.emissive.lerp(stellarVisual.color, stellarVisual.progress);
+        material.emissiveIntensity = material.emissiveIntensity
+          * (1 - stellarVisual.progress) + stellarVisual.surfaceEmission;
       }
     }
   };
@@ -738,7 +739,7 @@
     if (surface && surface.material) {
       const previousMap = surface.material.map;
       surface.material.map = tex;
-      if (this.isStellarWorld()) {
+      if (this.getStellarVisualizerState().progress > 0) {
         surface.material.emissiveMap = tex;
       } else if (nanoworld > 0 && this._nanoworldEmissionTexture) {
         surface.material.emissiveMap = this._nanoworldEmissionTexture;

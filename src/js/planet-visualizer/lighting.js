@@ -1,6 +1,49 @@
 (function () {
   const PlanetVisualizer = window.PlanetVisualizer;
   if (!PlanetVisualizer) return;
+  const STELLAR_EMBER_COLOR = new THREE.Color(0xff4f1f);
+  const STELLAR_WARM_COLOR = new THREE.Color(0xffad5c);
+  const STELLAR_SUNLIGHT_COLOR = new THREE.Color(0xfff2d6);
+  const STELLAR_BLUE_WHITE_COLOR = new THREE.Color(0xc6dcff);
+
+  PlanetVisualizer.prototype.getStellarVisualizerState = function getStellarVisualizerState() {
+    const state = getStellarEvolutionState(this.terraforming, currentPlanetParameters);
+    const active = state.eligible && state.stage !== 'planetary';
+    const progress = active
+      ? (state.stage === 'star' ? 1 : Math.max(0, Math.min(1, state.absorptionProgress)))
+      : 0;
+    const temperatureK = Math.max(900, state.effectiveTemperatureK || 900);
+    const visual = this.stellarVisualState;
+    if (temperatureK < 2500) {
+      visual.color.lerpColors(
+        STELLAR_EMBER_COLOR,
+        STELLAR_WARM_COLOR,
+        Math.max(0, Math.min(1, (temperatureK - 900) / 1600))
+      );
+    } else if (temperatureK < 5772) {
+      visual.color.lerpColors(
+        STELLAR_WARM_COLOR,
+        STELLAR_SUNLIGHT_COLOR,
+        (temperatureK - 2500) / 3272
+      );
+    } else {
+      visual.color.lerpColors(
+        STELLAR_SUNLIGHT_COLOR,
+        STELLAR_BLUE_WHITE_COLOR,
+        Math.max(0, Math.min(1, (temperatureK - 5772) / 4228))
+      );
+    }
+    const temperatureBoost = Math.max(
+      0,
+      Math.min(1, Math.log(temperatureK / 2500) / Math.log(4))
+    );
+    visual.active = active;
+    visual.isStar = state.stage === 'star';
+    visual.progress = progress;
+    visual.surfaceEmission = progress * (0.45 + progress * 1.25 + temperatureBoost * 0.55);
+    visual.haloStrength = progress * (0.18 + progress * 0.72 + temperatureBoost * 0.2);
+    return visual;
+  };
 
   PlanetVisualizer.prototype.createAtmosphere = function createAtmosphere() {
     const atmoRadius = 1.03;
@@ -152,18 +195,101 @@
     this.inertAuraOuterMesh = new THREE.Mesh(outerGeo, this.inertAuraOuterMaterial);
     this.scene.add(this.inertAuraInnerMesh);
     this.scene.add(this.inertAuraOuterMesh);
+
+    const stellarGlowUniforms = {
+      glowStrength: { value: 0 },
+      glowColor: { value: new THREE.Color(0xffad5c) },
+    };
+    const stellarGlowFrag = `
+      precision mediump float;
+      varying vec3 vWorldPos;
+      uniform float glowStrength;
+      uniform vec3 glowColor;
+      uniform float alphaScale;
+
+      void main() {
+        vec3 N = normalize(vWorldPos);
+        vec3 V = normalize(cameraPosition - vWorldPos);
+        float rim = 1.0 - clamp(dot(N, V), 0.0, 1.0);
+        float halo = pow(smoothstep(0.05, 1.0, rim), 1.35);
+        float alpha = halo * glowStrength * alphaScale;
+        vec3 color = glowColor * mix(0.72, 1.42, rim);
+        gl_FragColor = vec4(color, alpha);
+      }
+    `;
+    const makeStellarGlowMaterial = (alphaScale) => new THREE.ShaderMaterial({
+      vertexShader: auraVtx,
+      fragmentShader: stellarGlowFrag,
+      uniforms: {
+        glowStrength: stellarGlowUniforms.glowStrength,
+        glowColor: stellarGlowUniforms.glowColor,
+        alphaScale: { value: alphaScale },
+      },
+      side: THREE.BackSide,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    this.stellarGlowInnerMaterial = makeStellarGlowMaterial(0.3);
+    this.stellarGlowOuterMaterial = makeStellarGlowMaterial(0.07);
+    this.stellarGlowInnerMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(1.045, 48, 32),
+      this.stellarGlowInnerMaterial
+    );
+    this.stellarGlowOuterMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(1.14, 48, 32),
+      this.stellarGlowOuterMaterial
+    );
+    this.stellarGlowInnerMesh.visible = false;
+    this.stellarGlowOuterMesh.visible = false;
+    this.stellarGlowInnerMesh.renderOrder = 4;
+    this.stellarGlowOuterMesh.renderOrder = 3;
+    this.scene.add(this.stellarGlowInnerMesh);
+    this.scene.add(this.stellarGlowOuterMesh);
+
+    const stellarGlowCanvas = document.createElement('canvas');
+    stellarGlowCanvas.width = 256;
+    stellarGlowCanvas.height = 256;
+    const stellarGlowContext = stellarGlowCanvas.getContext('2d');
+    const stellarGlowGradient = stellarGlowContext.createRadialGradient(128, 128, 0, 128, 128, 128);
+    stellarGlowGradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+    stellarGlowGradient.addColorStop(0.56, 'rgba(255, 255, 255, 0.14)');
+    stellarGlowGradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.42)');
+    stellarGlowGradient.addColorStop(0.76, 'rgba(255, 255, 255, 0.56)');
+    stellarGlowGradient.addColorStop(0.84, 'rgba(255, 255, 255, 0.2)');
+    stellarGlowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    stellarGlowContext.fillStyle = stellarGlowGradient;
+    stellarGlowContext.fillRect(0, 0, 256, 256);
+    const stellarGlowTexture = new THREE.CanvasTexture(stellarGlowCanvas);
+    stellarGlowTexture.minFilter = THREE.LinearFilter;
+    stellarGlowTexture.magFilter = THREE.LinearFilter;
+    this.stellarGlowSpriteMaterial = new THREE.SpriteMaterial({
+      map: stellarGlowTexture,
+      color: 0xffad5c,
+      transparent: true,
+      opacity: 0,
+      depthTest: false,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    });
+    this.stellarGlowSprite = new THREE.Sprite(this.stellarGlowSpriteMaterial);
+    this.stellarGlowSprite.scale.set(2.8, 2.8, 1);
+    this.stellarGlowSprite.visible = false;
+    this.stellarGlowSprite.renderOrder = 2;
+    this.scene.add(this.stellarGlowSprite);
   };
 
   PlanetVisualizer.prototype.updateAtmosphereUniforms = function updateAtmosphereUniforms() {
     const useDebugIllum = this.debug && this.debug.mode === 'debug';
     const illumSource = useDebugIllum ? this.viz?.illum : this.getGameIllumination();
     const illum = Math.max(0, Math.min(3, Number(illumSource) || 0));
+    const stellarVisual = this.getStellarVisualizerState();
     if (this.sunLight) this.sunLight.intensity = illum;
     if (this.isDiskWorld() && this.ambientLight) {
       this.ambientLight.intensity = 0.8;
     }
     if (this.sunMesh) {
-      if (this.isRingWorld()) {
+      if (this.isRingWorld() || stellarVisual.isStar) {
         this.sunMesh.visible = false;
       } else if (this.isDiskWorld()) {
         this.sunMesh.visible = true;
@@ -189,9 +315,19 @@
     const mix = dry.clone().lerp(base, water);
     u.tint.value.copy(mix);
     const inertKpa = this.computeInertPressureKPa();
-    const auraStrength = Math.max(0, Math.min(1, inertKpa / 80));
+    const auraStrength = Math.max(0, Math.min(1, inertKpa / 80))
+      * (1 - stellarVisual.progress);
     this.inertAuraInnerMaterial.uniforms.auraStrength.value = auraStrength;
     this.inertAuraOuterMaterial.uniforms.auraStrength.value = auraStrength;
+    const showStellarGlow = stellarVisual.progress > 0.001;
+    this.stellarGlowInnerMesh.visible = showStellarGlow;
+    this.stellarGlowOuterMesh.visible = showStellarGlow;
+    this.stellarGlowSprite.visible = showStellarGlow;
+    this.stellarGlowInnerMaterial.uniforms.glowStrength.value = stellarVisual.haloStrength;
+    this.stellarGlowOuterMaterial.uniforms.glowStrength.value = stellarVisual.haloStrength;
+    this.stellarGlowInnerMaterial.uniforms.glowColor.value.copy(stellarVisual.color);
+    this.stellarGlowSpriteMaterial.color.copy(stellarVisual.color);
+    this.stellarGlowSpriteMaterial.opacity = Math.min(0.72, stellarVisual.haloStrength * 0.56);
   };
 
   PlanetVisualizer.prototype.updateSunFromInclination = function updateSunFromInclination() {
