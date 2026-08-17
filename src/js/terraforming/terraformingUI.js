@@ -1754,9 +1754,7 @@ function createTemperatureBox(row, stellarEvolutionState) {
     }
     const baseCoreHeatFlux = Math.max(
       Math.max(0, terraforming.celestialParameters.coreHeatFlux || 0),
-      isStellarEvolutionStarOrLater(stellarEvolutionState)
-        ? 0
-        : Math.max(0, terraforming.celestialParameters.stellarRemnantCoreHeatFluxWm2 || 0)
+      Math.max(0, terraforming.celestialParameters.stellarRemnantCoreHeatFluxWm2 || 0)
     );
     const remainingCoreHeatFlux = terraforming.getCoreHeatFlux ? terraforming.getCoreHeatFlux() : baseCoreHeatFlux;
     const netCoreHeatFlux = terraforming.getNetCoreHeatFlux ? terraforming.getNetCoreHeatFlux() : remainingCoreHeatFlux;

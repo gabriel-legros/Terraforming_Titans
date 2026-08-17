@@ -21,17 +21,15 @@ registerTerraformingMethods('climate', ({
 }) => ({
   getCoreHeatFlux() {
     const stellarEvolutionState = getStellarEvolutionState(this, currentPlanetParameters);
-    const planetaryCoreFlux = Math.max(0, this.celestialParameters.coreHeatFlux || 0)
-      * (1 - stellarEvolutionState.absorptionProgress);
+    const planetaryCoreFlux = Math.max(0, this.celestialParameters.coreHeatFlux || 0);
     const remnantIntrinsicFlux = stellarEvolutionState.eligible
-      && !isStellarEvolutionStarOrLater(stellarEvolutionState)
       ? Math.max(0, this.celestialParameters.stellarRemnantCoreHeatFluxWm2 || 0)
       : 0;
-    const remnantCoreFlux = Math.max(
+    const baseFlux = Math.max(
       0,
-      remnantIntrinsicFlux - stellarEvolutionState.fusionFluxWm2
+      Math.max(planetaryCoreFlux, remnantIntrinsicFlux)
+        - stellarEvolutionState.fusionFluxWm2 / 2
     );
-    const baseFlux = Math.max(planetaryCoreFlux, remnantCoreFlux);
     if (isEquilibrating) {
       return baseFlux;
     }

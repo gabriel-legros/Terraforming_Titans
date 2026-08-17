@@ -30,6 +30,7 @@ function getStellarEvolutionState(
   let absorptionProgress = 0;
   let effectiveTemperatureK = 0;
   let fusionFluxWm2 = 0;
+  let intrinsicFluxWm2 = 0;
 
   if (eligible && massJupiter >= brownDwarfThreshold) {
     stage = 'brownDwarf';
@@ -39,12 +40,25 @@ function getStellarEvolutionState(
     ));
     nextThresholdJupiter = fusionThreshold;
     absorptionProgress = progress * progress * (3 - 2 * progress);
-    fusionFluxWm2 = STELLAR_EVOLUTION_STEFAN_BOLTZMANN
+    const massDerivedFusionFluxWm2 = STELLAR_EVOLUTION_STEFAN_BOLTZMANN
       * Math.pow(STELLAR_EVOLUTION_PARAMETERS.fusionThresholdTemperatureK, 4)
       * absorptionProgress;
-    effectiveTemperatureK = fusionFluxWm2 > 0
-      ? Math.pow(fusionFluxWm2 / STELLAR_EVOLUTION_STEFAN_BOLTZMANN, 0.25)
-      : 0;
+    const intrinsicFluxFloorWm2 = Math.max(
+      Math.max(0, terraformingState.celestialParameters.coreHeatFlux || 0),
+      Math.max(0, terraformingState.celestialParameters.stellarRemnantCoreHeatFluxWm2 || 0)
+    );
+    fusionFluxWm2 = Math.max(
+      massDerivedFusionFluxWm2,
+      intrinsicFluxFloorWm2 * absorptionProgress
+    );
+    intrinsicFluxWm2 = fusionFluxWm2 + Math.max(
+      0,
+      intrinsicFluxFloorWm2 - fusionFluxWm2 / 2
+    );
+    effectiveTemperatureK = Math.pow(
+      intrinsicFluxWm2 / STELLAR_EVOLUTION_STEFAN_BOLTZMANN,
+      0.25
+    );
   }
 
   if (eligible && massJupiter >= fusionThreshold) {
@@ -63,17 +77,27 @@ function getStellarEvolutionState(
       * Math.pow(effectiveTemperatureK, 4);
     fusionFluxWm2 = Math.max(
       massDerivedFusionFluxWm2,
+      Math.max(0, terraformingState.celestialParameters.coreHeatFlux || 0),
       Math.max(0, terraformingState.celestialParameters.stellarRemnantCoreHeatFluxWm2 || 0)
     );
+    const intrinsicFluxFloorWm2 = Math.max(
+      Math.max(0, terraformingState.celestialParameters.coreHeatFlux || 0),
+      Math.max(0, terraformingState.celestialParameters.stellarRemnantCoreHeatFluxWm2 || 0)
+    );
+    intrinsicFluxWm2 = fusionFluxWm2 + Math.max(
+      0,
+      intrinsicFluxFloorWm2 - fusionFluxWm2 / 2
+    );
     effectiveTemperatureK = Math.pow(
-      fusionFluxWm2 / STELLAR_EVOLUTION_STEFAN_BOLTZMANN,
+      intrinsicFluxWm2 / STELLAR_EVOLUTION_STEFAN_BOLTZMANN,
       0.25
     );
   }
 
   const celestial = terraformingState.celestialParameters;
   const surfaceArea = celestial.surfaceArea || calculateSurfaceAreaM2FromRadius(celestial.radius);
-  const luminositySolar = fusionFluxWm2 * surfaceArea / STELLAR_EVOLUTION_SOLAR_LUMINOSITY_W;
+  const luminositySolar = intrinsicFluxWm2
+    * surfaceArea / STELLAR_EVOLUTION_SOLAR_LUMINOSITY_W;
   const atmosphericMassKg = calculateDynamicWorldCurrentAtmosphericMassKg(terraformingState.resources);
   const photospherePressurePa = surfaceArea > 0
     ? atmosphericMassKg * celestial.gravity / surfaceArea
@@ -111,6 +135,7 @@ function getStellarEvolutionState(
     effectiveTemperatureK,
     surfaceTemperatureK: effectiveTemperatureK,
     fusionFluxWm2,
+    intrinsicFluxWm2,
     luminositySolar,
     radiusKm: celestial.radius,
     meanDensityKgM3: celestial.meanDensityKgM3,
@@ -272,7 +297,7 @@ function syncStellarEvolutionState(
     return state;
   }
   const celestial = terraformingState.celestialParameters;
-  const previousFusionFluxWm2 = Math.max(0, celestial.stellarFusionFluxWm2 || 0);
+  const previousIntrinsicFluxWm2 = Math.max(0, celestial.stellarIntrinsicFluxWm2 || 0);
   const previousState = {
     eligible: true,
     stage: celestial.stellarEvolutionStage || 'planetary'
@@ -281,7 +306,7 @@ function syncStellarEvolutionState(
     isStellarEvolutionStarOrLater(previousState)
     && !isStellarEvolutionStarOrLater(state)
   ) {
-    celestial.stellarRemnantCoreHeatFluxWm2 = previousFusionFluxWm2;
+    celestial.stellarRemnantCoreHeatFluxWm2 = previousIntrinsicFluxWm2;
   }
   ensurePlanetaryElementalComposition(terraformingState);
   ensureStellarElementalComposition(terraformingState);
@@ -295,6 +320,7 @@ function syncStellarEvolutionState(
     stellarEvolutionProgress: state.progress,
     stellarEffectiveTemperatureK: state.effectiveTemperatureK,
     stellarFusionFluxWm2: state.fusionFluxWm2,
+    stellarIntrinsicFluxWm2: state.intrinsicFluxWm2,
     stellarLuminositySolar: state.luminositySolar,
     stellarPhotospherePressurePa: state.photospherePressurePa
   });
