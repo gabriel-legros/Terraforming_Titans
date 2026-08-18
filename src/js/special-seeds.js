@@ -1979,6 +1979,15 @@ const siriusASurfaceAreaM2 = 1.7876322738853431e19;
 const siriusOverrides = {
   name: 'Sirius',
   gravityPenaltyEnabled: true,
+  effects: [
+    {
+      target: 'followersManager',
+      type: 'booleanFlag',
+      flagId: 'advancedOrbitalsEnabled',
+      value: true,
+      effectId: 'sirius-enable-advanced-orbitals'
+    }
+  ],
   specialAttributes: {
     hasSand: false,
     dynamicMass: true
@@ -2070,9 +2079,9 @@ const specialSeedDefinitions = {
     orbitPreset: 'cold',
     specialEffects: [
       {
-        id: 'tba',
-        descriptionKey: 'catalogs.specialSeeds.sirius.effects.tba',
-        description: 'TBA'
+        id: 'advanced-orbitals',
+        descriptionKey: 'catalogs.specialSeeds.sirius.effects.advancedOrbitals',
+        description: 'Superalloys and Storage orbitals are available.'
       }
     ],
     completionRewards: [

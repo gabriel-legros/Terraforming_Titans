@@ -120,11 +120,11 @@ function buildFollowersUI() {
 
   const orbitalsTooltipText = [
     getFollowersText('ui.colony.followers.orbitals.tooltip.line1', 'With orbitals, humanity can now help HOPE with its project directly.'),
-    getFollowersText('ui.colony.followers.orbitals.tooltip.line2', 'Assign orbitals to produce resources automatically.'),
+    getFollowersText('ui.colony.followers.orbitals.tooltip.line2', 'Assign orbitals to produce resources or provide storage automatically.'),
     getFollowersText('ui.colony.followers.orbitals.tooltip.line3', 'You can assign up to your effective terraformed world count.'),
     getFollowersText('ui.colony.followers.orbitals.tooltip.line4', 'Manual mode sets exact assignments with the current step size.'),
     getFollowersText('ui.colony.followers.orbitals.tooltip.line5', 'Weight mode distributes assignments by integer weights among unlocked resources.'),
-    getFollowersText('ui.colony.followers.orbitals.tooltip.line6', 'Each orbital produces the mapped source output with its multiplier, without consumption or productivity scaling.'),
+    getFollowersText('ui.colony.followers.orbitals.tooltip.line6', 'Production orbitals provide the mapped source output without consumption or productivity scaling. Storage orbitals use default structure capacities.'),
     getFollowersText('ui.colony.followers.orbitals.tooltip.line7', 'Orbitals only produce if the target resource is unlocked.')
   ].join('\n');
   const orbitals = createFollowersCard(getFollowersText('ui.colony.followers.orbitals.title', 'Orbitals'), 'followers-orbitals-card', orbitalsTooltipText);
@@ -292,6 +292,7 @@ function buildFollowersUI() {
     rowsContainer.appendChild(row);
 
     followersUICache.rowsById[config.id] = {
+      container: row,
       assigned,
       perOrbitalRate,
       totalRate,
@@ -957,10 +958,17 @@ function updateFollowersUI() {
   followersUICache.multiplyStepButton.disabled = !manualMode;
 
   const configs = followersOrbitalParameters.orbitals;
+  const enabledConfigIds = new Set(followersManager.getOrbitalConfigs().map(config => config.id));
   for (let i = 0; i < configs.length; i += 1) {
     const config = configs[i];
     const row = followersUICache.rowsById[config.id];
     if (!row) {
+      continue;
+    }
+
+    const isEnabled = enabledConfigIds.has(config.id);
+    row.container.style.display = isEnabled ? '' : 'none';
+    if (!isEnabled) {
       continue;
     }
 
@@ -974,12 +982,25 @@ function updateFollowersUI() {
     row.assigned.textContent = getFollowersText('ui.colony.followers.orbitals.assigned', 'Assigned: {value}', {
       value: formatNumber(assigned, true)
     });
-    row.perOrbitalRate.textContent = getFollowersText('ui.colony.followers.orbitals.perOrbital', 'Per orbital: +{value}/s', {
-      value: formatNumber(perOrbital, false, 2)
-    });
-    row.totalRate.textContent = getFollowersText('ui.colony.followers.orbitals.totalRate', 'Total: +{value}/s', {
-      value: formatNumber(totalRate, false, 2)
-    });
+    if (config.sourceType === 'storage') {
+      row.perOrbitalRate.textContent = getFollowersText(
+        'ui.colony.followers.orbitals.perOrbitalStorage',
+        'Per orbital: {value}x default Storage Depot, Water Tank, and Hydrogen Reservoir capacity',
+        { value: formatNumber(config.multiplier, true) }
+      );
+      row.totalRate.textContent = getFollowersText(
+        'ui.colony.followers.orbitals.totalStorage',
+        'Total: {value}x default Storage Depot, Water Tank, and Hydrogen Reservoir capacity',
+        { value: formatNumber(config.multiplier * assigned, true) }
+      );
+    } else {
+      row.perOrbitalRate.textContent = getFollowersText('ui.colony.followers.orbitals.perOrbital', 'Per orbital: +{value}/s', {
+        value: formatNumber(perOrbital, false, 2)
+      });
+      row.totalRate.textContent = getFollowersText('ui.colony.followers.orbitals.totalRate', 'Total: +{value}/s', {
+        value: formatNumber(totalRate, false, 2)
+      });
+    }
 
     row.manualMinus.textContent = `-${formatNumber(step, true)}`;
     row.manualPlus.textContent = `+${formatNumber(step, true)}`;

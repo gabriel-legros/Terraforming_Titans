@@ -2884,16 +2884,18 @@ setLanguageData({
           assigned: 'Assigned: {value}',
           autoAssign: 'Auto assign',
           perOrbital: 'Per orbital: +{value}/s',
+          perOrbitalStorage: 'Per orbital: {value}x default Storage Depot, Water Tank, and Hydrogen Reservoir capacity',
           rateSource: 'Orbital',
           totalRate: 'Total: +{value}/s',
+          totalStorage: 'Total: {value}x default Storage Depot, Water Tank, and Hydrogen Reservoir capacity',
           weight: 'Weight',
           tooltip: {
             line1: 'With orbitals, humanity can now help HOPE with its projects directly.',
-            line2: 'Assign orbitals to produce resources automatically.',
+            line2: 'Assign orbitals to produce resources or provide storage automatically.',
             line3: 'You can assign up to your effective terraformed world count.',
             line4: 'Manual mode sets exact assignments with the current step size.',
             line5: 'Weight mode distributes assignments by integer weights among unlocked resources.',
-            line6: 'Each orbital produces the mapped source output with its multiplier, without consumption or productivity scaling.',
+            line6: 'Production orbitals provide the mapped source output without consumption or productivity scaling. Storage orbitals use default structure capacities.',
             line7: 'Orbitals only produce if the target resource is unlocked.  Each orbital also contributes to storage of the resource they produce.',
           },
         },
@@ -5625,7 +5627,7 @@ setLanguageData({
         name: 'Sirius',
         difficulty: 'Pending evaluation',
         effects: {
-          tba: 'TBA',
+          advancedOrbitals: 'Superalloys and Storage orbitals are available.',
         },
         rewards: {
           tba: 'TBA',
@@ -7411,6 +7413,12 @@ setLanguageData({
       },
       superconductors: {
         label: 'Superconductors',
+      },
+      superalloys: {
+        label: 'Superalloys',
+      },
+      storage: {
+        label: 'Storage',
       },
       androids: {
         label: 'Androids',
