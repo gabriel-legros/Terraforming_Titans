@@ -314,6 +314,12 @@ function getGameState(saveDate = new Date()) {
   };
 }
 
+function serializeGameState(gameState) {
+  return JSON.stringify(gameState).replace(/[\u007f-\uffff]/g, character => {
+    return `\\u${character.charCodeAt(0).toString(16).padStart(4, '0')}`;
+  });
+}
+
 // Load game state from a specific slot or custom string
 function loadGame(slotOrCustomString, recreate = true, options = {}) {
 
@@ -1120,7 +1126,7 @@ function saveGameToSlot(slot) {
     if (slot === 'autosave') {
       preserveCurrentAutosave();
     }
-    writeSaveStorageItem(`gameState_${slot}`, JSON.stringify(gameState));
+    writeSaveStorageItem(`gameState_${slot}`, serializeGameState(gameState));
     console.log(`Game saved successfully to slot ${slot}.`);
   } catch (e) {
     saveFailedReason = e?.message || 'Unknown error';
@@ -1180,7 +1186,7 @@ function saveGameToFile() {
   }
   const gameState = getGameState(new Date());
 
-  const saveData = JSON.stringify(gameState);
+  const saveData = serializeGameState(gameState);
   const worldName = (typeof spaceManager !== 'undefined' && typeof spaceManager.getCurrentWorldName === 'function')
     ? spaceManager.getCurrentWorldName()
     : 'game';
@@ -1210,7 +1216,7 @@ function saveGameToClipboard() {
     patienceManager.claimDailyPatience();
     updatePatienceUI();
   }
-  const saveData = JSON.stringify(getGameState(new Date()));
+  const saveData = serializeGameState(getGameState(new Date()));
   copyTextToClipboard(saveData, {
     promptLabel: 'Copy save data:',
     onSuccess: () => {

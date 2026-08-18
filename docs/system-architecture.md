@@ -85,7 +85,7 @@ Durable constraints:
 
 - Browser and Steam/Electron builds share gameplay. Branch only platform capability and presentation through `src/js/build-target.js`, `GAME_FEATURES`, preload APIs, and release scripts.
 - Do not persist build-target flags in saves or fork whole gameplay systems by platform.
-- Electron entry points are `electron/main.cjs` and `electron/preload.cjs`. Packaged saves are file-backed under the Electron user-data `saves` directory.
+- Electron entry points are `electron/main.cjs` and `electron/preload.cjs`. Packaged saves are file-backed under the Electron user-data `saves` directory. Serialized game-state JSON escapes non-ASCII code units so save data remains encoding-safe across browser storage, Electron IPC, files, and clipboard transfers.
 - Background simulation in Electron depends on disabled Chromium background throttling/suspension; preserve that behavior.
 
 ## Mod Security and Patching
