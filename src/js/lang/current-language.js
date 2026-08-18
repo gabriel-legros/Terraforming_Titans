@@ -6251,7 +6251,7 @@ setLanguageData({
       },
       lifters: {
         name: 'Lifters',
-        description: 'Assemble space-rated lifting platforms and assign them between atmosphere stripping and gas-harvest recipes.  Persists between worlds, duration scales with terraformed worlds, and taps unused Dyson power.',
+        description: 'Assemble space-rated lifting platforms and assign them between atmosphere stripping and gas-harvest recipes.  Persists between worlds, duration scales with terraformed worlds and uses space energy.  By default to prevent instant stripping, lifters are disabled on travel (this behaviour can be overriden by project presets unlocked on Story World 11).',
         attributes: {
           lifterStripRecipe: { label: 'Strip Atmosphere' },
           lifterHarvestRecipes: {
