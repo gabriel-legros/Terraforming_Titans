@@ -24,10 +24,7 @@ function resolveLandReservationInitialLand(terraformingState, landResource) {
 
 function getGeologicalHeatLandReservationShares(terraformingState = terraforming) {
   const activeTerraforming = terraformingState;
-  const baseFlux = Math.max(
-    0,
-    activeTerraforming?.celestialParameters?.coreHeatFlux || currentPlanetParameters?.celestialParameters?.coreHeatFlux || 0
-  );
+  const baseFlux = getRetainedCoreHeatFluxWm2(activeTerraforming, currentPlanetParameters);
   const fusionFlux = getStellarFusionFluxWm2(activeTerraforming, currentPlanetParameters);
   if (!(baseFlux > 0) && !(fusionFlux > 0)) {
     return { coreHeatFlux: 0, fusionFlux: 0 };

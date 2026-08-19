@@ -2308,6 +2308,8 @@ setLanguageData({
       },
       artificialCrust: {
         costRateLabel: 'Artificial Crust',
+        fusionFluxWarning: 'The Artificial Crust cannot be built while the world is undergoing core fusion.',
+        fusionFluxStatus: 'Blocked: core fusion is still present',
         liquidHydrogenWarning: 'Liquid hydrogen blocks Artificial Crust construction. Remove it first.',
         liquidHydrogenStatus: 'Blocked: remove liquid hydrogen first',
       },

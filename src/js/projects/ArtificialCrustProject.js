@@ -12,7 +12,27 @@ class ArtificialCrustProject extends ArtificialSkyProject {
     return resources.surface.liquidHydrogen.value > 0;
   }
 
+  hasFusionFluxBlocker() {
+    return getStellarFusionFluxWm2(terraforming, currentPlanetParameters) > 0;
+  }
+
   getWarningState() {
+    if (this.hasFusionFluxBlocker()) {
+      return {
+        blocksStart: true,
+        blocksProgress: true,
+        message: t(
+          'ui.projects.artificialCrust.fusionFluxWarning',
+          null,
+          'Fusion flux blocks Artificial Crust construction. Construction can begin or resume once fusion flux reaches zero.'
+        ),
+        statusText: t(
+          'ui.projects.artificialCrust.fusionFluxStatus',
+          null,
+          'Blocked: fusion flux is still present'
+        )
+      };
+    }
     if (!this.hasLiquidHydrogenBlocker()) {
       return null;
     }
@@ -40,12 +60,11 @@ class ArtificialCrustProject extends ArtificialSkyProject {
   }
 
   getBaseCoreHeatFlux() {
-    const params = currentPlanetParameters?.celestialParameters || terraforming?.celestialParameters || {};
-    return Math.max(0, params.coreHeatFlux || 0);
+    return getRetainedCoreHeatFluxWm2(terraforming, currentPlanetParameters);
   }
 
   isRelevantToCurrentPlanet() {
-    return this.getBaseCoreHeatFlux() > 0;
+    return this.getBaseCoreHeatFlux() > 0 || this.hasFusionFluxBlocker();
   }
 
   getInitialLand() {

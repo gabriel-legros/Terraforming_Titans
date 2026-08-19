@@ -359,6 +359,7 @@ class ArtificialSkyProject extends SpaceshipProject {
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
     if (!this.isContinuous() || !this.isActive) return;
     if (this.isBlockedByPulsarStorm()) return;
+    if (this.isProgressBlocked()) return;
     if (!this.canContinue()) {
       this.completeProjectFully();
       return;

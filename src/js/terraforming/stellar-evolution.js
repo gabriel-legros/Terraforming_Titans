@@ -156,16 +156,32 @@ function getStellarFusionFluxWm2(
   return Math.max(0, getStellarEvolutionState(terraformingState, planetParameters).fusionFluxWm2 || 0);
 }
 
-function hasGeologicalAccessBlockingHeat(
+function getRetainedCoreHeatFluxWm2(
   terraformingState = terraforming,
   planetParameters = currentPlanetParameters
 ) {
-  const coreHeatFlux = Math.max(
+  const planetaryCoreFlux = Math.max(
     0,
     terraformingState?.celestialParameters?.coreHeatFlux
       || planetParameters?.celestialParameters?.coreHeatFlux
       || 0
   );
+  const remnantCoreFlux = isStellarEvolutionEligible(planetParameters)
+    ? Math.max(
+      0,
+      terraformingState?.celestialParameters?.stellarRemnantCoreHeatFluxWm2
+        || planetParameters?.celestialParameters?.stellarRemnantCoreHeatFluxWm2
+        || 0
+    )
+    : 0;
+  return Math.max(planetaryCoreFlux, remnantCoreFlux);
+}
+
+function hasGeologicalAccessBlockingHeat(
+  terraformingState = terraforming,
+  planetParameters = currentPlanetParameters
+) {
+  const coreHeatFlux = getRetainedCoreHeatFluxWm2(terraformingState, planetParameters);
   return coreHeatFlux > 0 || getStellarFusionFluxWm2(terraformingState, planetParameters) > 0;
 }
 
