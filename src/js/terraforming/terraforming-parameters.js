@@ -575,7 +575,12 @@ var terraformingParameters = {
     },
     landReservation: {
       moltenWorldFullTemperatureK: 1273.15,
-      moltenWorldClearTemperatureK: 973.15
+      moltenWorldClearTemperatureK: 973.15,
+      moltenSurfaceAttrition: {
+        baseRatePerSecond: 0.01,
+        doublingIntervalK: 1000,
+        maximumRatePerSecond: 1
+      }
     },
     radiationPenalty: {
       halfInhibitionDoseMsvPerDay: 1.07,

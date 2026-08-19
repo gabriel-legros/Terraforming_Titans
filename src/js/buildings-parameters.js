@@ -1177,6 +1177,7 @@ const buildingsParameters = {
     requiresMaintenance: false,
     requiresWorker: 0,
     maintenanceFactor: 0,
+    temperatureMaintenanceImmune: true,
     unlocked: false
   },
   biodome:{

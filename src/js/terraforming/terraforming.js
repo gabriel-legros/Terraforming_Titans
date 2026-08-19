@@ -357,6 +357,8 @@ class Terraforming extends EffectableEntity{
     this.exosphereHeightMeters = 0;
     this.resourceSubstepMilliseconds = TERRAFORMING_RESOURCE_SUBSTEP_MS;
     this.maxResourceSubsteps = TERRAFORMING_RESOURCE_MAX_SUBSTEPS;
+    this.moltenSurfaceAttritionPartialByStructure = {};
+    this.lastMoltenSurfaceAttritionLosses = 0;
 
     this.initialValuesCalculated = false;
     this.completed = false;
@@ -673,7 +675,11 @@ class Terraforming extends EffectableEntity{
     }
 
     runHazardUpdate(deltaTime = 0, options = {}) {
-      if (!options.skipHazardUpdates && hazardManager && hazardManager.update) {
+      if (options.skipHazardUpdates) {
+        return;
+      }
+      this.applyMoltenSurfaceAttrition(deltaTime);
+      if (hazardManager && hazardManager.update) {
         hazardManager.update(deltaTime, this, options);
       }
     }

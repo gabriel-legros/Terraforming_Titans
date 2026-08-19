@@ -865,6 +865,7 @@ setLanguageData({
         aerostatLiftCritical: '▲ Active aerostats only have {lift} kg/m³ of lift, below the {minimum} kg/m³ minimum needed to stay aloft. ▲',
         aerostatLiftPowered: 'Active aerostats only have {lift} kg/m³ of lift, below the {minimum} kg/m³ buoyancy threshold. Powered flight is covering the deficit.',
         aerostatLiftWarning: 'Active aerostats only have {lift} kg/m³ of lift, below the {minimum} kg/m³ safety margin.',
+        moltenSurfaceAttrition: 'Molten surface attrition is absorbing unprotected buildings and colonies at {rate}%/s. The rate starts at {baseRate}%/s when lava or plasma occupies all geometric land, doubles every {doublingInterval} K, and caps at {maximumRate}%/s. Temperature-immune structures are safe. At {minimumPressure} kPa or more, active Aerostats and the active structures covered by their support or workers are also safe.',
       },
       land: {
         available: 'Available {value}',

@@ -1184,6 +1184,10 @@ class Building extends EffectableEntity {
     return this.disableWhenHazard || [];
   }
 
+  isMoltenSurfaceAttritionImmune() {
+    return this.temperatureMaintenanceImmune;
+  }
+
   isHazardActiveForDisable(hazardKey) {
     if (!hazardManager || !hazardManager.parameters) {
       return false;

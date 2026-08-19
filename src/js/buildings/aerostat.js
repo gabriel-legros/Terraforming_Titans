@@ -821,6 +821,12 @@ class Aerostat extends BaseColony {
     return this.isLiftBelowThreshold(liftValue, pressureValue);
   }
 
+  isMoltenSurfaceAttritionImmune() {
+    const pressure = this.getCurrentSurfacePressure();
+    return super.isMoltenSurfaceAttritionImmune()
+      || (pressure !== null && pressure >= this.getMinimumOperationalPressure());
+  }
+
   getCurrentSurfaceAtmosphericDensity() {
     const pressureKPa = this.getCurrentSurfacePressure();
     const temperatureK = Number(terraforming?.temperature?.value) || 0;
