@@ -1986,6 +1986,12 @@ const siriusOverrides = {
       flagId: 'advancedOrbitalsEnabled',
       value: true,
       effectId: 'sirius-enable-advanced-orbitals'
+    },
+    {
+      target: 'building',
+      targetId: 'starLifter',
+      type: 'enable',
+      effectId: 'sirius-enable-star-lifter'
     }
   ],
   specialAttributes: {
@@ -2082,6 +2088,11 @@ const specialSeedDefinitions = {
         id: 'advanced-orbitals',
         descriptionKey: 'catalogs.specialSeeds.sirius.effects.advancedOrbitals',
         description: 'Superalloys and Storage orbitals are available.'
+      },
+      {
+        id: 'star-lifter',
+        descriptionKey: 'catalogs.specialSeeds.sirius.effects.starLifter',
+        description: ''
       }
     ],
     completionRewards: [

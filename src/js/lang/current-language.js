@@ -5628,6 +5628,7 @@ setLanguageData({
         difficulty: 'Pending evaluation',
         effects: {
           advancedOrbitals: 'Superalloys and Storage orbitals are available.',
+          starLifter: 'The Star Lifter terraforming building is available.',
         },
         rewards: {
           tba: 'TBA',
@@ -5980,6 +5981,10 @@ setLanguageData({
       massDriver: {
         name: 'Mass Driver',
         description: 'Electromagnetic launcher capable of sending vast amount of mass every day through the Resource Disposal project.  Potentially a weapon.',
+      },
+      starLifter: {
+        name: 'Star Lifter',
+        description: 'Consumes enormous amounts of energy to strip stellar mass from the current star, discarding the extracted material.',
       },
       biodome: {
         name: 'Biodome',

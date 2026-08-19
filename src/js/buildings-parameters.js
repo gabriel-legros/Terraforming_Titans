@@ -1152,6 +1152,34 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     unlocked: false
   },
+  starLifter: {
+    type: 'StarLifter',
+    name: '',
+    category: 'terraforming',
+    description: '',
+    cost: {
+      colony: {
+        superalloys: 1_000_000,
+        electronics: 10_000_000,
+        superconductors: 1_000_000_000,
+        metal: 10_000_000_000,
+        components: 500_000_000
+      }
+    },
+    consumption: {
+      colony: { energy: 5_000_000_000_000_000 },
+      underground: { stellarMass: 5_000_000 }
+    },
+    realisticEnergyConsumption: 5_000_000_000_000_000,
+    production: {},
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    requiresMaintenance: false,
+    requiresWorker: 0,
+    maintenanceFactor: 0,
+    unlocked: false
+  },
   biodome:{
     type: 'Biodome',
     name: '',
