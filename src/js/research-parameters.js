@@ -321,7 +321,7 @@ const researchParameters = {
         description: '',
         cost: { research: 200 },
         artificialAllowed: false,
-        coreHeatAllowed: false,
+        geologicalHeatAllowed: false,
         prerequisites: [],
         effects: [
           {
@@ -339,7 +339,7 @@ const researchParameters = {
         description: '',
         cost: { research: 500 },
         artificialAllowed: false,
-        coreHeatAllowed: false,
+        geologicalHeatAllowed: false,
         prerequisites: [],
         effects: [
           {
@@ -513,7 +513,7 @@ const researchParameters = {
         cost: { research: 100000 },
         prerequisites: [],
         artificialAllowed: false,
-        coreHeatAllowed: false,
+        geologicalHeatAllowed: false,
         effects: [
           {
             target: 'project',
@@ -555,7 +555,7 @@ const researchParameters = {
         cost: { research: 2000000 },
         prerequisites: ['deep_mine','android_factory'],
         artificialAllowed: false,
-        coreHeatAllowed: false,
+        geologicalHeatAllowed: false,
         effects: [
           {
             target: 'project',
@@ -573,7 +573,7 @@ const researchParameters = {
         cost: { research: 200_000 },
         prerequisites: [],
         artificialAllowed: false,
-        coreHeatAllowed: false,
+        geologicalHeatAllowed: false,
         disabled: true,
         effects: [
           {

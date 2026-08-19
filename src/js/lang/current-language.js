@@ -870,6 +870,7 @@ setLanguageData({
         available: 'Available {value}',
         used: 'Used {value}',
         worldEffects: 'World Effects',
+        plasma: 'Plasma',
         keratiTerritory: 'Kerati Territory',
       },
       antimatter: {

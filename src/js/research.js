@@ -442,10 +442,6 @@ class Research {
       return (geo?.maxDeposits || 0) > 0;
     }
 
-    planetHasCoreHeat() {
-      return Math.max(0, currentPlanetParameters?.celestialParameters?.coreHeatFlux || 0) > 0;
-    }
-
     planetHasNaturalMagnetosphere() {
       return currentPlanetParameters.celestialParameters.hasNaturalMagnetosphere;
     }
@@ -493,7 +489,7 @@ class Research {
       if (research.requiresGeothermal && !this.planetHasGeothermalDeposits()) {
         return false;
       }
-      if (research.coreHeatAllowed === false && this.planetHasCoreHeat()) {
+      if (research.geologicalHeatAllowed === false && hasGeologicalAccessBlockingHeat(terraforming, currentPlanetParameters)) {
         return false;
       }
       if (research.requiresNoNaturalMagnetosphere && this.planetHasNaturalMagnetosphere()) {

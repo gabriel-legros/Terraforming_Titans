@@ -146,6 +146,29 @@ function getStellarEvolutionState(
   };
 }
 
+function getStellarFusionFluxWm2(
+  terraformingState = terraforming,
+  planetParameters = currentPlanetParameters
+) {
+  if (!isStellarEvolutionEligible(planetParameters)) {
+    return 0;
+  }
+  return Math.max(0, getStellarEvolutionState(terraformingState, planetParameters).fusionFluxWm2 || 0);
+}
+
+function hasGeologicalAccessBlockingHeat(
+  terraformingState = terraforming,
+  planetParameters = currentPlanetParameters
+) {
+  const coreHeatFlux = Math.max(
+    0,
+    terraformingState?.celestialParameters?.coreHeatFlux
+      || planetParameters?.celestialParameters?.coreHeatFlux
+      || 0
+  );
+  return coreHeatFlux > 0 || getStellarFusionFluxWm2(terraformingState, planetParameters) > 0;
+}
+
 function sumElementalComposition(composition) {
   let total = 0;
   for (const element in composition) {

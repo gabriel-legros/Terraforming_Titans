@@ -168,7 +168,7 @@ registerTerraformingMethods('climate', ({
   },
   getNetSurfaceHeatFlux(factoryCoolingScale = 1, megaHeatSinkAllocation = this.getMegaHeatSinkAllocation()) {
     const coreHeatFlux = this.getCoreHeatFlux();
-    const fusionFlux = getStellarEvolutionState(this, currentPlanetParameters).fusionFluxWm2;
+    const fusionFlux = getStellarFusionFluxWm2(this, currentPlanetParameters);
     const factoryHeatFlux = this.getFactoryHeatFlux();
     const factoryCoolingAdjustment = this.getFactoryCoolingFlux() * (1 - factoryCoolingScale);
     const positiveFactoryHeatFlux = Math.max(0, factoryHeatFlux);

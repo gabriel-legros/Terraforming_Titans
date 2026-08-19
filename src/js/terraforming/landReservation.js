@@ -6,7 +6,7 @@ const LAND_RESERVATION_SOURCE_LABELS = {
   pulsar: 'Pulsar',
   coreHeatFlux: 'Lava'
 };
-const LAND_RESERVATION_SOURCE_ORDER = ['hazardousBiomass', 'hazardousMachinery', 'pulsar', 'coreHeatFlux'];
+const LAND_RESERVATION_SOURCE_ORDER = ['hazardousBiomass', 'hazardousMachinery', 'pulsar', 'fusionFlux', 'coreHeatFlux'];
 
 function normalizeLandReservationShare(share) {
   if (!Number.isFinite(share) || share <= 0) {
@@ -22,14 +22,15 @@ function resolveLandReservationInitialLand(terraformingState, landResource) {
   return resolveWorldGeometricLand(terraformingState, landResource);
 }
 
-function getCoreFluxLandReservationShare(terraformingState = terraforming) {
+function getGeologicalHeatLandReservationShares(terraformingState = terraforming) {
   const activeTerraforming = terraformingState;
   const baseFlux = Math.max(
     0,
     activeTerraforming?.celestialParameters?.coreHeatFlux || currentPlanetParameters?.celestialParameters?.coreHeatFlux || 0
   );
-  if (!(baseFlux > 0)) {
-    return 0;
+  const fusionFlux = getStellarFusionFluxWm2(activeTerraforming, currentPlanetParameters);
+  if (!(baseFlux > 0) && !(fusionFlux > 0)) {
+    return { coreHeatFlux: 0, fusionFlux: 0 };
   }
 
   const temperature = activeTerraforming?.temperature?.value;
@@ -53,12 +54,21 @@ function getCoreFluxLandReservationShare(terraformingState = terraforming) {
     activeTerraforming?.getCoreHeatFlux ? activeTerraforming.getCoreHeatFlux() : baseFlux * (1 - crustCompletion)
   );
 
-  return normalizeLandReservationShare(Math.min(currentFlux / baseFlux, temperatureShare));
+  const coreHeatFluxShare = baseFlux > 0
+    ? normalizeLandReservationShare(Math.min(currentFlux / baseFlux, temperatureShare))
+    : 0;
+  return {
+    coreHeatFlux: coreHeatFluxShare,
+    fusionFlux: fusionFlux > 0 ? normalizeLandReservationShare(temperatureShare) : 0
+  };
 }
 
 function getLandReservationSourceLabel(source) {
   if (source === 'hazardousMachinery') {
     return t('resources.surface.hazardousMachinery.name', null, 'Hazardous Machinery');
+  }
+  if (source === 'fusionFlux') {
+    return t('ui.resources.land.plasma', null, 'Plasma');
   }
   return LAND_RESERVATION_SOURCE_LABELS[source] || 'World Effects';
 }
@@ -127,7 +137,7 @@ try {
   module.exports = {
     normalizeLandReservationShare,
     resolveLandReservationInitialLand,
-    getCoreFluxLandReservationShare,
+    getGeologicalHeatLandReservationShares,
     LandReservationReconciler
   };
 } catch (error) {

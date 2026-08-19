@@ -7,7 +7,7 @@ let KesslerHazardCtor = null;
 let PulsarHazardCtor = null;
 let DebrisDiskHazardCtor = null;
 let LandReservationReconcilerCtor = null;
-let getCoreFluxLandReservationShareHelper = null;
+let getGeologicalHeatLandReservationSharesHelper = null;
 let normalizeLandReservationShareHelper = null;
 let resolveLandReservationInitialLandHelper = null;
 
@@ -92,19 +92,19 @@ try {
 try {
   ({
     LandReservationReconciler: LandReservationReconcilerCtor,
-    getCoreFluxLandReservationShare: getCoreFluxLandReservationShareHelper,
+    getGeologicalHeatLandReservationShares: getGeologicalHeatLandReservationSharesHelper,
     normalizeLandReservationShare: normalizeLandReservationShareHelper,
     resolveLandReservationInitialLand: resolveLandReservationInitialLandHelper
   } = require('./landReservation.js'));
 } catch (error) {
   try {
     LandReservationReconcilerCtor = LandReservationReconciler;
-    getCoreFluxLandReservationShareHelper = getCoreFluxLandReservationShare;
+    getGeologicalHeatLandReservationSharesHelper = getGeologicalHeatLandReservationShares;
     normalizeLandReservationShareHelper = normalizeLandReservationShare;
     resolveLandReservationInitialLandHelper = resolveLandReservationInitialLand;
   } catch (innerError) {
     LandReservationReconcilerCtor = null;
-    getCoreFluxLandReservationShareHelper = null;
+    getGeologicalHeatLandReservationSharesHelper = null;
     normalizeLandReservationShareHelper = null;
     resolveLandReservationInitialLandHelper = null;
   }
@@ -707,42 +707,23 @@ class HazardManager {
     return resolveWorldGeometricLand(terraformingState, landResource);
   }
 
-  getCoreFluxLandReservationShare(terraformingState = null) {
-    if (getCoreFluxLandReservationShareHelper) {
-      return getCoreFluxLandReservationShareHelper(terraformingState);
-    }
-    const activeTerraforming = terraformingState || getTerraforming();
-    const baseFlux = Math.max(0, activeTerraforming?.celestialParameters?.coreHeatFlux || 0);
-    if (!(baseFlux > 0)) {
-      return 0;
-    }
-    const currentFlux = Math.max(
-      0,
-      activeTerraforming?.getCoreHeatFlux ? activeTerraforming.getCoreHeatFlux() : baseFlux
-    );
-    const temperature = activeTerraforming?.temperature?.value;
-    let temperatureShare = 1;
-    if (Number.isFinite(temperature)) {
-      if (temperature <= 973.15) {
-        temperatureShare = 0;
-      } else if (temperature < 1273.15) {
-        temperatureShare = (temperature - 973.15) / 300;
-      }
-    }
-    return Math.min(currentFlux / baseFlux, temperatureShare);
-  }
-
   getCombinedHazardLandShare(terraformingState = null) {
+    const geologicalHeatShares = getGeologicalHeatLandReservationSharesHelper(
+      terraformingState || getTerraforming()
+    );
     if (this.landReservationReconciler?.getCombinedShare) {
-      return this.landReservationReconciler.getCombinedShare({
-        coreHeatFlux: this.getCoreFluxLandReservationShare(terraformingState)
-      });
+      return this.landReservationReconciler.getCombinedShare(geologicalHeatShares);
     }
     const biomassShare = this.hazardLandReservationShares.hazardousBiomass || 0;
     const machineryShare = this.hazardLandReservationShares.hazardousMachinery || 0;
     const pulsarShare = this.hazardLandReservationShares.pulsar || 0;
-    const coreFluxShare = this.getCoreFluxLandReservationShare(terraformingState);
-    return Math.max(biomassShare, machineryShare, pulsarShare, coreFluxShare);
+    return Math.max(
+      biomassShare,
+      machineryShare,
+      pulsarShare,
+      geologicalHeatShares.coreHeatFlux,
+      geologicalHeatShares.fusionFlux
+    );
   }
 
   syncHazardLandReservation(terraformingState = null) {
@@ -760,9 +741,8 @@ class HazardManager {
 
     const activeTerraforming = terraformingState || getTerraforming();
     if (this.landReservationReconciler?.syncToLandResource) {
-      this.landReservationReconciler.syncToLandResource(landResource, activeTerraforming, {
-        coreHeatFlux: this.getCoreFluxLandReservationShare(activeTerraforming)
-      });
+      const geologicalHeatShares = getGeologicalHeatLandReservationSharesHelper(activeTerraforming);
+      this.landReservationReconciler.syncToLandResource(landResource, activeTerraforming, geologicalHeatShares);
       return;
     }
 
