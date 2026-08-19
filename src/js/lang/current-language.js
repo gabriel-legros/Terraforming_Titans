@@ -951,6 +951,10 @@ setLanguageData({
         fill: 'Fill',
         fillCooldown: 'Fill ({seconds})',
       },
+      starLifter: {
+        supercharge: 'Supercharge',
+        superchargeEnergy: 'Energy x{value}',
+      },
       oxygenFactory: {
         disableIfOxygenPressureAbove: 'Disable if O2 P > ',
         pressureUnit: 'Pa',
@@ -2888,10 +2892,10 @@ setLanguageData({
           assigned: 'Assigned: {value}',
           autoAssign: 'Auto assign',
           perOrbital: 'Per orbital: +{value}/s',
-          perOrbitalStorage: 'Per orbital: {value}x default Storage Depot, Water Tank, and Hydrogen Reservoir capacity',
+          perOrbitalStorage: 'Per orbital: {value}x most storage buildings.',
           rateSource: 'Orbital',
           totalRate: 'Total: +{value}/s',
-          totalStorage: 'Total: {value}x default Storage Depot, Water Tank, and Hydrogen Reservoir capacity',
+          totalStorage: 'Total: {value}x storage buildings.',
           weight: 'Weight',
           tooltip: {
             line1: 'With orbitals, humanity can now help HOPE with its projects directly.',
@@ -5024,7 +5028,7 @@ setLanguageData({
         buildingsAutomationDescription: 'Store building presets and apply them in priority order.',
         buildingsAutomationDescriptionUnlocked: 'Capture building control/autobuild settings and apply them in ordered presets.',
         buildingsAutomationDescriptionLocked: 'Purchase the Solis Buildings Automation upgrade to enable building presets.',
-        buildingsBuilderHint: 'Control saves worker priority, hidden state, recipe selections, and building controls (Disable if / Target albedo). Autobuild saves auto-build mode, target value, Auto-build toggle, Prioritize, Set active to target, and fill filters.',
+        buildingsBuilderHint: 'Control saves worker priority, hidden state, recipe selections, and building controls (Disable if / Target albedo / Supercharge). Autobuild saves auto-build mode, target value, Auto-build toggle, Prioritize, Set active to target, and fill filters.',
         buildingsApplyHintEmpty: 'Save a preset above to enable the Apply list.',
         buildingsApplyHintRule: 'Lower presets override higher presets when they target the same building and setting type.',
         projectsAutomationTitle: 'Projects Automation',
@@ -5631,8 +5635,9 @@ setLanguageData({
         name: 'Sirius',
         difficulty: 'Pending evaluation',
         effects: {
+          hopeStarQuestion: 'HOPE...  This is a star...  Why are we terraforming a star?',
           advancedOrbitals: 'Superalloys and Storage orbitals are available.',
-          starLifter: 'The Star Lifter terraforming building is available.',
+          starLifter: 'Lifters have chosen to go on vacation.  You may have to build new ones in the form of a new terraforming building.',
         },
         rewards: {
           tba: 'TBA',

@@ -138,6 +138,11 @@ class LiftersProject extends LiftersAssignmentTools.createProjectAssignmentBase(
       assignmentStateKey: 'lifterAssignments',
       assignmentStepMax: LIFTER_ASSIGNMENT_STEP_MAX
     });
+    this.syncStarLifterSuperchargeUpgrades();
+  }
+
+  syncStarLifterSuperchargeUpgrades() {
+    buildings.starLifter.syncLifterSuperchargeUpgrades(this);
   }
 
   getLifterTextPath() {
@@ -1924,7 +1929,34 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     this.applyPendingHarvestRecipe();
     this.markAssignmentsDirty();
     this.normalizeAssignments();
+    this.syncStarLifterSuperchargeUpgrades();
     this.updateUI();
+  }
+
+  applyEffect(effect) {
+    super.applyEffect(effect);
+    if (
+      effect?.type === 'superchargeMaxBonus'
+      || effect?.type === 'superchargeExponentReduction'
+    ) {
+      this.syncStarLifterSuperchargeUpgrades();
+    }
+  }
+
+  removeEffect(effect) {
+    const result = super.removeEffect(effect);
+    this.syncStarLifterSuperchargeUpgrades();
+    return result;
+  }
+
+  reconcileConditionalEffects() {
+    super.reconcileConditionalEffects();
+    this.syncStarLifterSuperchargeUpgrades();
+  }
+
+  clearEffectsOnTravel() {
+    super.clearEffectsOnTravel();
+    this.syncStarLifterSuperchargeUpgrades();
   }
 
   saveAutomationSettings() {

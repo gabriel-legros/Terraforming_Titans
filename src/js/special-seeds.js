@@ -2085,6 +2085,11 @@ const specialSeedDefinitions = {
     orbitPreset: 'cold',
     specialEffects: [
       {
+        id: 'hope-star-question',
+        descriptionKey: 'catalogs.specialSeeds.sirius.effects.hopeStarQuestion',
+        description: 'HOPE...  This is a star...  Why are we terraforming a star?'
+      },
+      {
         id: 'advanced-orbitals',
         descriptionKey: 'catalogs.specialSeeds.sirius.effects.advancedOrbitals',
         description: 'Superalloys and Storage orbitals are available.'

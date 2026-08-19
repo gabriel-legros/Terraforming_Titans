@@ -1008,7 +1008,12 @@ function setupHarness(initialStorage = {}) {
   setGlobal('attachDynamicInfoTooltip', () => {}, originalGlobals);
   setGlobal('getZones', () => [], originalGlobals);
   setGlobal('getZonePercentage', () => 0, originalGlobals);
-  setGlobal('buildings', {}, originalGlobals);
+  const harnessBuildings = {};
+  Object.defineProperty(harnessBuildings, 'starLifter', {
+    configurable: true,
+    value: { syncLifterSuperchargeUpgrades: () => {} },
+  });
+  setGlobal('buildings', harnessBuildings, originalGlobals);
   setGlobal('resolveWorldBaseLand', () => 0, originalGlobals);
   setGlobal('resolveWorldGeometricLand', () => 0, originalGlobals);
   setGlobal('calculateSurfaceAreaHectaresFromRadius', () => 0, originalGlobals);
