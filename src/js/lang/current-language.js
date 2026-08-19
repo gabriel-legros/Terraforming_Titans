@@ -1520,7 +1520,7 @@ setLanguageData({
       },
       lifters: {
         title: 'Lifter Controls',
-        titleTooltip: 'Assign lifters per recipe. Each recipe runs at (Assigned / Complexity) x unit rate. Gas recipes push output into space storage. Hydrogen, Methane, and Ammonia harvest assignments are capped by accessible gas giant reserves scaled by average Warp Gate Network level. Multi-output recipes add each output separately before normal resource cap handling. Star Lifting also unlocks supercharging, which multiplies throughput linearly and energy use cubically. Strip Atmosphere removes all gases proportionally.',
+        titleTooltip: 'Assign lifters per recipe. Each recipe runs at (Assigned / Complexity) x unit rate. Gas recipes push output into space storage. Hydrogen, Methane, and Ammonia harvest assignments are capped by accessible gas giant reserves scaled by average Warp Gate Network level. Multi-output recipes add each output separately before normal resource cap handling. Star Lifting also unlocks supercharging, which multiplies throughput linearly and energy use cubically. Strip Atmosphere removes all gases proportionally. Strip Stellar Mass discards stellar material down to the 10 Jupiter-mass floor.',
         totalLifters: 'Total Lifters',
         runLifters: 'Run lifters',
         energyPerLifter: 'Energy per lifter',
@@ -1543,6 +1543,7 @@ setLanguageData({
         maxAssignmentTooltip: 'Pool: {pool}\nTime divisor: {divisor} (10000 years)\nWarp Gate Network scale: max(1, {averageLevel}) / {levelCap} = {networkScale}\nMax harvest rate: {pool} / {divisor} x {networkScale} = {capRate}/s\nPer-lifter harvest rate: {unitRate} x {outputMultiplier} / {complexity}\nMax assignment: floor({capRate} x {complexity} / ({unitRate} x {outputMultiplier})) = {max}',
         strippingMaxAssignmentTooltip: 'Limited to {max} lifters by the current world geometric land value.',
         starLiftingTooltip: 'Outputs per base unit: 1 hydrogen, 0.01 oxygen, 0.005 graphite, 0.0015 nitrogen, 0.001 silica, 0.0008 metal.',
+        stellarMassStrippingTooltip: 'Discards stellar mass at the same rate and energy cost as Star Lifter buildings. Stops when the world reaches 10 Jupiter masses.',
         recipeLabels: {
           hydrogen: 'Hydrogen',
         },
@@ -1554,6 +1555,7 @@ setLanguageData({
           storageCapReached: 'Storage cap reached',
           pressureLimitReached: 'Pressure limiter reached',
           noAtmosphereToStrip: 'No atmosphere to strip',
+          stellarMassFloorReached: 'Stellar mass floor reached',
           insufficientEnergy: 'Insufficient energy',
           noAssignments: 'No assignments',
           completeAtLeastOne: 'Complete at least one lifter',
@@ -5640,7 +5642,9 @@ setLanguageData({
           starLifter: 'Lifters have chosen to go on vacation.  You may have to build new ones in the form of a new terraforming building.',
         },
         rewards: {
-          tba: 'TBA',
+          enableAdvancedOrbitals: 'Permanently enables Superalloy and Storage orbitals.',
+          enableStellarMassStripping: 'Enables Stellar Mass stripping for Lifters after researching Star Lifting.',
+          revealOrbitalExpansion: 'Reveals a new Awakening skill',
         },
       },
       titania: {
@@ -6272,6 +6276,7 @@ setLanguageData({
         description: 'Assemble space-rated lifting platforms and assign them between atmosphere stripping and gas-harvest recipes.  Persists between worlds, duration scales with terraformed worlds and uses space energy.  By default to prevent instant stripping, lifters are disabled on travel (this behaviour can be overriden by project presets unlocked on Story World 11).',
         attributes: {
           lifterStripRecipe: { label: 'Strip Atmosphere' },
+          lifterStellarStripRecipe: { label: 'Strip Stellar Mass' },
           lifterHarvestRecipes: {
             hydrogen: { label: 'Hydrogen' },
             methane: { label: 'Methane' },
@@ -7898,6 +7903,10 @@ setLanguageData({
       ecumenopolis_capacity: {
         name: 'Ecumenopolis Capacity',
         description: 'Increases Ecumenopolis District capacity, production and consumption by 20% per rank',
+      },
+      orbital_expansion: {
+        name: 'Orbital Expansion',
+        description: 'Increases available orbitals by 10% per rank',
       },
       project_speed: {
         name: 'Faster Projects',

@@ -482,6 +482,9 @@ function applyLocalizedProjectFields(localizedProjects) {
       if (attributes.lifterStripRecipe && localizedAttributes.lifterStripRecipe && localizedAttributes.lifterStripRecipe.label !== undefined) {
         attributes.lifterStripRecipe.label = localizedAttributes.lifterStripRecipe.label;
       }
+      if (attributes.lifterStellarStripRecipe && localizedAttributes.lifterStellarStripRecipe && localizedAttributes.lifterStellarStripRecipe.label !== undefined) {
+        attributes.lifterStellarStripRecipe.label = localizedAttributes.lifterStellarStripRecipe.label;
+      }
       if (attributes.lifterHarvestRecipes && localizedAttributes.lifterHarvestRecipes) {
         for (const recipeKey in localizedAttributes.lifterHarvestRecipes) {
           const recipe = attributes.lifterHarvestRecipes[recipeKey];

@@ -1405,6 +1405,12 @@ const projectParameters = {
         complexity: 10,
         displayOrder: 2
       },
+      lifterStellarStripRecipe: {
+        label: '',
+        complexity: 100,
+        displayOrder: 6,
+        requiresProjectFlags: ['starLifting', 'stellarMassStripping']
+      },
       lifterHarvestRecipes: {
         hydrogen: {
           label: '',

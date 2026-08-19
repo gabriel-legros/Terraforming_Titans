@@ -2073,7 +2073,7 @@ const siriusOverrides = {
 const specialSeedDefinitions = {
   sirius: {
     key: 'sirius',
-    enabled: false,
+    enabled: true,
     seed: 'Sirius',
     name: 'Sirius',
     nameKey: 'catalogs.specialSeeds.sirius.name',
@@ -2102,10 +2102,44 @@ const specialSeedDefinitions = {
     ],
     completionRewards: [
       {
-        id: 'tba',
-        descriptionKey: 'catalogs.specialSeeds.sirius.rewards.tba',
-        description: 'TBA',
-        effects: []
+        id: 'enable-advanced-orbitals',
+        descriptionKey: 'catalogs.specialSeeds.sirius.rewards.enableAdvancedOrbitals',
+        description: 'Permanently enables Superalloy and Storage orbitals.',
+        effects: [
+          {
+            target: 'followersManager',
+            type: 'booleanFlag',
+            flagId: 'advancedOrbitalsEnabled',
+            value: true
+          }
+        ]
+      },
+      {
+        id: 'enable-stellar-mass-stripping',
+        descriptionKey: 'catalogs.specialSeeds.sirius.rewards.enableStellarMassStripping',
+        description: 'Enables Stellar Mass stripping for Lifters after researching Star Lifting.',
+        effects: [
+          {
+            target: 'project',
+            targetId: 'lifters',
+            type: 'booleanFlag',
+            flagId: 'stellarMassStripping',
+            value: true
+          }
+        ]
+      },
+      {
+        id: 'reveal-orbital-expansion',
+        descriptionKey: 'catalogs.specialSeeds.sirius.rewards.revealOrbitalExpansion',
+        description: 'Reveals the Orbital Expansion awakening skill.',
+        effects: [
+          {
+            target: 'skillManager',
+            targetId: 'orbital_expansion',
+            type: 'skillReveal',
+            value: true
+          }
+        ]
       }
     ],
     overrides: siriusOverrides
