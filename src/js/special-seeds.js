@@ -135,7 +135,7 @@ const wolfysNightmareOverrides = {
   ],
   resources: {
     surface: {
-      land: { initialValue: 100_000_000_000 },
+      land: { initialValue: 46_023_431_667.91032 },
       ice: { initialValue: 0, unlocked: true },
       liquidWater: { initialValue: 0, unlocked: true },
       dryIce: { initialValue: 0 },
