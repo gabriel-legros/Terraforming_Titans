@@ -1056,6 +1056,28 @@ describe('Spaceship automation scenarios', () => {
     cleanup();
   });
 
+  it('treats an energy-production max as uncapped for a zero-energy project', () => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 1000,
+      energyProductionRate: 1000,
+      projects: {
+        artificialSky: {},
+      },
+    });
+    configurePreset(automation, {
+      mode: 'cappedMax',
+      entries: [
+        { projectId: 'artificialSky', weight: 1, max: 18, maxMode: 'energyProduction' },
+      ],
+    });
+
+    automation.applyAssignments();
+
+    expect(projects.artificialSky.getAutomationShipCount()).toBe(1000);
+    expect(resources.special.spaceships.value).toBe(0);
+    cleanup();
+  });
+
   it('scales only the current energy-budget step and leaves zero-energy assignments unchanged', () => {
     const { automation, projects, cleanup } = createHarness({
       initialShips: 1000,

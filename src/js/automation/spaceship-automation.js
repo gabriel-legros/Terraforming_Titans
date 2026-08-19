@@ -408,8 +408,11 @@ class SpaceshipAutomation {
       baseMax = geometricLand * (entry.max || 0) / 100;
     } else if (mode === 'energyProduction') {
       const energyRatePerShip = this.calculateProjectEnergyRatePerShip(project);
+      if (energyRatePerShip <= 0) {
+        return projectCap;
+      }
       const percent = entry.max || 0;
-      if (energyRatePerShip > 0 && percent > 0) {
+      if (percent > 0) {
         const productionRate = resources.colony.energy.productionRate || 0;
         baseMax = productionRate * percent / 100 / energyRatePerShip;
         if (baseMax <= 0) {
