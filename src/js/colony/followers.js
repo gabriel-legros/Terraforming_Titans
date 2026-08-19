@@ -1097,6 +1097,9 @@ class FollowersManager extends EffectableEntity {
   }
 
   isTargetResourceUnlocked(config) {
+    if (config.sourceType === 'storage') {
+      return true;
+    }
     const resource = resources[config.targetCategory][config.targetResource];
     return !!resource && resource.unlocked;
   }
