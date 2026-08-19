@@ -231,6 +231,9 @@
   }
 
   function applyPauseState(nextPaused) {
+    if (isEquilibrating) {
+      return;
+    }
     paused = nextPaused;
     window.manualPause = paused;
     setGameSpeed(paused ? 0 : lastActiveGameSpeed);
