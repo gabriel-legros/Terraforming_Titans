@@ -250,7 +250,9 @@ class AntimatterBattery extends Building {
     const availableAntimatter = isAntimatterSpaceEnergySyncActive()
       ? getAntimatterEquivalentValue(resources)
       : antimatter.value;
-    const fillThroughput = energy.cap * AUTO_FILL_CAPACITIES_PER_SECOND * (deltaTime / 1000);
+    const fillThroughput = this.getStorageContribution('colony', 'energy')
+      * AUTO_FILL_CAPACITIES_PER_SECOND
+      * (deltaTime / 1000);
     return Math.min(missingEnergy, availableAntimatter * this.getEnergyPerAntimatter(), fillThroughput);
   }
 
@@ -271,7 +273,7 @@ class AntimatterBattery extends Building {
       : resources.special.antimatter.value;
     const availableEnergyRate = availableAntimatter * this.getEnergyPerAntimatter() * (1000 / deltaTime);
     return Math.min(
-      resources.colony.energy.cap * AUTO_FILL_CAPACITIES_PER_SECOND,
+      this.getStorageContribution('colony', 'energy') * AUTO_FILL_CAPACITIES_PER_SECOND,
       availableEnergyRate
     );
   }
