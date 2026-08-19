@@ -2016,6 +2016,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'orbital_rings_for_shellworlds',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 400_000_000 },
+        prerequisites: ['orbital_rings'],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'shellworldOrbitalRing',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'mega_particle_accelerator',
         name: '',
         description: '',

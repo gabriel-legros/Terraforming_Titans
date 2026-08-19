@@ -9,6 +9,7 @@ This document records durable ownership and cross-system constraints. Feature va
 - Core simulation is centered on terraforming, physics, and cycle modules. Economy/colony behavior is centered on resources, buildings, colonies, and their UI modules.
 - `StoryManager` in `progress.js` owns story progression. Story-only project classes live under `src/js/story/` and load after their base classes.
 - `SpaceManager` owns planet travel/state.
+- Per-artificial-world infrastructure completion belongs on the corresponding `SpaceManager.artificialWorldStatuses` entry. Project instances mirror the current entry and do not carry completion to another world through project travel state.
 - `src/js/save-settings/settings.js` owns setting migration, runtime application, and UI synchronization. `save.js` passes the saved settings payload to it.
 - `EffectableEntity` in `effectable-entity.js` supplies shared effect and flag behavior.
 

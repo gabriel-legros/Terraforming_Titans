@@ -1193,6 +1193,27 @@ const projectParameters = {
     unlocked: false,
     attributes: { canUseSpaceStorage: true, showInResourcesRate: false }
   },
+  shellworldOrbitalRing: {
+    type: 'ShellworldOrbitalRingProject',
+    name: '',
+    category: 'infrastructure',
+    cost: {
+      colony: {
+        metal: 1_000_000_000_000_000,
+        components: 100_000_000_000_000,
+        superalloys: 10_000_000_000_000
+      }
+    },
+    duration: 30 * 60 * 1000,
+    description: '',
+    repeatable: false,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      showInResourcesRate: false,
+      ignoreDurationModifiers: true
+    }
+  },
   birchWorld: {
     type: 'BirchWorldProject',
     name: '',

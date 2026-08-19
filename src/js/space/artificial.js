@@ -318,7 +318,7 @@ function getStoredArtificialWorldCountForSector(sectorLabel) {
     Object.values(statuses).forEach((status) => {
         if (!status?.stored) return;
         if (normalizeArtificialSectorLabel(status.sector) !== target) return;
-        const storedValue = Number(status.terraformedValue);
+        const storedValue = Number(spaceManager._deriveArtificialTerraformValue(status));
         if (Number.isFinite(storedValue) && storedValue > 0) {
             count += storedValue;
             return;
@@ -2533,11 +2533,7 @@ class ArtificialManager extends EffectableEntity {
                 || merged?.resources?.surface?.land?.initialValue
                 || merged?.resources?.surface?.land?.baseCap
                 || (radiusEarth ? this.calculateAreaHectares(radiusEarth) : snapshot?.landHa);
-            const terraformedValue = this.deriveTerraformWorldValue({
-                terraformedValue: status.terraformedValue,
-                radiusEarth,
-                landHa
-            });
+            const terraformedValue = spaceManager._deriveArtificialTerraformValue(status);
             const canTravel = (label === 'abandoned' || label === 'stored') && !!snapshot;
             const canDiscard = label === 'stored' || label === 'abandoned';
             entries.push({

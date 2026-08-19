@@ -1,6 +1,9 @@
 function hasIntrinsicUnlimitedSpaceAccess() {
   const worldType = currentPlanetParameters.classification?.type;
-  return worldType === 'ring' || worldType === 'disk' || spaceManager.currentWorldHasOrbitalRing();
+  return worldType === 'ring'
+    || worldType === 'disk'
+    || spaceManager.currentWorldHasOrbitalRing()
+    || spaceManager.currentWorldHasShellworldOrbitalRing();
 }
 
 function getSpaceAccessProject() {

@@ -1529,6 +1529,10 @@ function reconcileLandResourceValue() {
     totalLand += geometricLand;
   }
 
+  if (activeSpaceManager?.currentWorldHasShellworldOrbitalRing?.()) {
+    totalLand += geometricLand * 0.25;
+  }
+
   const birchWorldProject = activeProjectManager?.projects?.birchWorld;
   if (
     birchWorldProject?.isCurrentSmbhShellworld?.()

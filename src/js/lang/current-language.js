@@ -6208,6 +6208,10 @@ setLanguageData({
         name: 'Orbital Ring',
         description: 'Orbital rings act as additional terraformed worlds and provide unlimited Space Access Capacity. As HOPE is not responsible for them they do not grant skill points or RWG bonuses. Rings can only be built on worlds that are terraformed, meaning they can be built on previous worlds and on your current one if it is terraformed.  A ring on your current world will increase land by its initial value. ',
       },
+      shellworldOrbitalRing: {
+        name: 'Shellworld Orbital Ring',
+        description: 'Reinforce and construct an orbital ring around the current shellworld.  Cost scales linearly with geometric land, with the standard orbital-ring cost applying at 50B land.  Completion adds 25% land, grants unlimited Space Access Capacity, and multiplies the shellworld\'s terraformed value by 1.25.',
+      },
       birchWorld: {
         name: 'Birch World',
         description: 'Add another habitable shell layer around the supermassive black hole shellworld. Each layer uses the mass under it for its material cost, increases land, and raises the world value by total land divided by 50B.  HOPE is finally satisfied to witness its dream fully realized and is ready to retire at any moment now.',
@@ -6861,6 +6865,10 @@ setLanguageData({
         orbital_rings: {
           name: 'Orbital Rings',
           description: 'Unlocks a new megastructure project for constructing orbital rings.',
+        },
+        orbital_rings_for_shellworlds: {
+          name: 'Orbital Rings for shellworlds',
+          description: 'Anyone can build a bridge that stands, but it takes an engineer to build a bridge that barely stands.  Our shellworld designs used to be unable to handle the additional load of an orbital ring.  We have solved this issue.',
         },
         mega_particle_accelerator: {
           name: 'Mega Particle Accelerator',
