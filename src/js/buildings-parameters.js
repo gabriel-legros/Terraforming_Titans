@@ -1167,10 +1167,9 @@ const buildingsParameters = {
       }
     },
     consumption: {
-      colony: { energy: 5_000_000_000_000_000 },
+      space: { energy: 5_000_000_000_000_000 },
       underground: { stellarMass: 5_000_000 }
     },
-    realisticEnergyConsumption: 5_000_000_000_000_000,
     production: {},
     storage: {},
     dayNightActivity: false,

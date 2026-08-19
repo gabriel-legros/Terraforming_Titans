@@ -5984,7 +5984,7 @@ setLanguageData({
       },
       starLifter: {
         name: 'Star Lifter',
-        description: 'Consumes enormous amounts of energy to strip stellar mass from the current star, discarding the extracted material.',
+        description: 'Consumes enormous amounts of space energy to strip stellar mass from the current star, discarding the extracted material.',
       },
       biodome: {
         name: 'Biodome',
