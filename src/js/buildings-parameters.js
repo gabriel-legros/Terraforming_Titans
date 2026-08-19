@@ -1174,6 +1174,7 @@ const buildingsParameters = {
     storage: {},
     dayNightActivity: false,
     canBeToggled: true,
+    snapProductivity: true,
     requiresMaintenance: false,
     requiresWorker: 0,
     maintenanceFactor: 0,

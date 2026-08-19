@@ -205,6 +205,7 @@ var terraformingParameters = {
     stellarEvolution: {
       jupiterMassKg: 1.89813e27,
       brownDwarfThresholdJupiter: 13,
+      stellarLiftingMinimumJupiter: 10,
       fusionThresholdJupiter: 80,
       jupiterRadiusKm: 69911,
       solarMassKg: 1.98847e30,

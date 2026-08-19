@@ -334,6 +334,23 @@ function getDynamicWorldStellarMassAvailableTons(terraformingState) {
   return getDynamicWorldCurrentStellarMassKg(terraformingState) / 1000;
 }
 
+function getDynamicWorldStellarLiftableMassTons(terraformingState) {
+  if (!terraformingState) {
+    return 0;
+  }
+
+  const stellarEvolution = WORLD_GEOMETRY_PARAMETERS.stellarEvolution;
+  const minimumMassKg = stellarEvolution.jupiterMassKg
+    * stellarEvolution.stellarLiftingMinimumJupiter;
+  const totalMassAboveMinimumKg = Math.max(
+    0,
+    getDynamicWorldCurrentMassKg(terraformingState) - minimumMassKg
+  );
+  const bulkMassKg = getDynamicWorldCurrentStellarMassKg(terraformingState)
+    + getDynamicWorldCurrentPlanetaryMassKg(terraformingState);
+  return Math.min(totalMassAboveMinimumKg, bulkMassKg) / 1000;
+}
+
 function setDynamicWorldDirectLedger(terraformingState, massDeltaKg, volumeDeltaM3) {
   terraformingState.celestialParameters.dynamicDirectMassDeltaKg = massDeltaKg;
   terraformingState.celestialParameters.dynamicDirectVolumeDeltaM3 = volumeDeltaM3;
@@ -398,6 +415,26 @@ function disposeDynamicWorldStellarMass(terraformingState, amountTons) {
   celestial.stellarMassKg = currentMassKg - removableKg;
   celestial.stellarMaterialVolumeM3 = Math.max(0, currentVolumeM3 - removedVolumeM3);
   return removableKg / 1000;
+}
+
+function disposeDynamicWorldStellarLiftableMass(terraformingState, amountTons) {
+  const removableTons = Math.min(
+    Math.max(0, amountTons),
+    getDynamicWorldStellarLiftableMassTons(terraformingState)
+  );
+  if (!(removableTons > 0)) {
+    return 0;
+  }
+
+  const removedStellarTons = disposeDynamicWorldStellarMass(
+    terraformingState,
+    removableTons
+  );
+  const removedPlanetaryTons = disposeDynamicWorldPlanetaryMass(
+    terraformingState,
+    removableTons - removedStellarTons
+  );
+  return removedStellarTons + removedPlanetaryTons;
 }
 
 function hasDynamicMassEnabled(terraformingState, planetParameters) {
@@ -501,10 +538,12 @@ try {
     calculateGravityFromMassRadius,
     disposeDynamicWorldPlanetaryMass,
     disposeDynamicWorldStellarMass,
+    disposeDynamicWorldStellarLiftableMass,
     getDynamicWorldCurrentMassKg,
     getDynamicWorldCurrentVolumeM3,
     getDynamicWorldPlanetaryMassAvailableTons,
     getDynamicWorldStellarMassAvailableTons,
+    getDynamicWorldStellarLiftableMassTons,
     hasDynamicMassEnabled,
     calculateRadiusKmFromVolume,
     calculateSphereVolumeM3FromRadius,
