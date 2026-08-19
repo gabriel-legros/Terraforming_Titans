@@ -258,7 +258,8 @@ class AntimatterBattery extends Building {
     if (
       this.isBooleanFlagSet('antimatterBatteryFillDisabled') ||
       !this.isBooleanFlagSet('antimatterWarpLogistics') ||
-      !this.autoFillingEnabled
+      !this.autoFillingEnabled ||
+      this.active <= 0n
     ) {
       return 0;
     }
