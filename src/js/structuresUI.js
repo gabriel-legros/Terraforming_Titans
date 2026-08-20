@@ -1220,6 +1220,20 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   const constructedValue = document.createElement('span');
   constructedCountElement.append(constructedLabel, document.createTextNode(' '), constructedValue);
 
+  const moltenAttritionWarning = document.createElement('span');
+  moltenAttritionWarning.classList.add(
+    'resource-warning',
+    'molten-attrition-warning',
+    'info-tooltip-icon'
+  );
+  moltenAttritionWarning.textContent = '⚠';
+  moltenAttritionWarning.style.display = 'none';
+  const moltenAttritionTooltip = attachDynamicInfoTooltip(moltenAttritionWarning, '');
+  constructedCountElement.append(document.createTextNode(' '), moltenAttritionWarning);
+  cached.moltenAttritionWarning = moltenAttritionWarning;
+  cached.moltenAttritionTooltip = moltenAttritionTooltip;
+  cached.moltenAttritionTooltipCache = {};
+
   if (structure.canBeToggled) {
     constructedValue.id = `${structure.name}-count-active`;
     constructedValue.textContent = `${formatBuildingCount(structure.active)}/${formatBuildingCount(structure.count)}`;
@@ -2967,6 +2981,10 @@ function updateDecreaseButtonText(button, buildCount) {
   }
   
   function updateStructureDisplay(structures, activeCategory = '') {
+    const moltenAttritionRate = terraforming.getMoltenSurfaceAttritionRatePerSecond();
+    const moltenAerostatProtection = moltenAttritionRate > 0
+      ? terraforming.getMoltenSurfaceAerostatProtection()
+      : null;
     for (const structureName in structures) {
       const structure = structures[structureName];
       if (structure.category && activeCategory && structure.category !== activeCategory) {
@@ -3024,6 +3042,35 @@ function updateDecreaseButtonText(button, buildCount) {
         : `${formatBuildingCount(structure.count)}`;
       if (els.headerActive.textContent !== headerActiveText) {
         els.headerActive.textContent = headerActiveText;
+      }
+
+      if (els.moltenAttritionWarning) {
+        const protectedCount = moltenAerostatProtection && !isColony
+          ? terraforming.getMoltenSurfaceProtectedCount(
+              structure,
+              structureName,
+              true,
+              moltenAerostatProtection
+            )
+          : 0;
+        const showMoltenAttritionWarning = !isColony
+          && moltenAttritionRate > 0
+          && !structure.isMoltenSurfaceAttritionImmune()
+          && structure.countNumber > protectedCount;
+        els.moltenAttritionWarning.style.display = showMoltenAttritionWarning
+          ? 'inline-flex'
+          : 'none';
+        setTooltipText(
+          els.moltenAttritionTooltip,
+          showMoltenAttritionWarning
+            ? getStructuresUIText(
+                'ui.structures.warnings.moltenSurfaceAttrition',
+                'Building over aerostat limit and lava present : building will sink.'
+              )
+            : '',
+          els.moltenAttritionTooltipCache,
+          'text'
+        );
       }
 
       updateStructureKesslerWarning(structure, els, manualBuildCount);

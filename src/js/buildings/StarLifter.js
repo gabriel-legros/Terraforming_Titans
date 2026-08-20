@@ -187,6 +187,7 @@ class StarLifter extends Building {
   consume(accumulatedChanges, deltaTime, accumulatedSpecialChanges) {
     super.consume(accumulatedChanges, deltaTime, accumulatedSpecialChanges);
 
+    const stellarMass = resources.underground.stellarMass;
     const stellarMassConsumption = this.currentConsumption.underground?.stellarMass || 0;
     if (!(stellarMassConsumption > 0)) {
       return;
@@ -201,11 +202,20 @@ class StarLifter extends Building {
 
     const unconsumedMass = stellarMassConsumption - removedMass;
     if (unconsumedMass > 0 && deltaTime > 0) {
-      resources.underground.stellarMass.modifyRate(
-        unconsumedMass * (1000 / deltaTime),
-        this.getRateSource(),
-        'building'
-      );
+      // Correct the requested consumption in place so an unmet request is not shown as production.
+      const unconsumedRate = unconsumedMass * (1000 / deltaTime);
+      const source = this.getRateSource();
+      const buildingRates = stellarMass.consumptionRateByType.building;
+      const trackedRate = buildingRates?.[source] || 0;
+      const rateReduction = Math.min(unconsumedRate, trackedRate);
+
+      if (rateReduction > 0) {
+        buildingRates[source] = trackedRate - rateReduction;
+        stellarMass.consumptionRate = Math.max(
+          0,
+          stellarMass.consumptionRate - rateReduction
+        );
+      }
     }
   }
 

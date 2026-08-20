@@ -1305,6 +1305,7 @@ setLanguageData({
       },
       warnings: {
         biodomeLife: '⚠ Requires Active Life Design ⚠',
+        moltenSurfaceAttrition: 'Building over aerostat limit and lava covers world : building will melt and sink.',
       },
       autoBuild: {
         header: 'Auto-build',
@@ -3385,7 +3386,7 @@ setLanguageData({
           factoryHeatTooltip: 'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Mega Heat Sinks remove core heat first, then factory heat; any remaining capacity accelerates cooling toward the temperature trend. Direct waste heat is not impacted by albedo or day-night averaging.',
           factoryHeatTopContributors: 'Top contributors by absolute impact:',
           factoryHeatOtherSources: 'Other sources',
-          fusionFluxTooltip: 'This is the world\'s own thermal self-emission, separate from the host star\'s solar flux. Half of the developing fusion flux replaces planetary or remnant core heat while the other half raises combined intrinsic output; once fusion reaches twice the core baseline, it supplies the full output alone. It reflects the planetary, stellar, surface, and atmospheric resources currently incorporated into the stellar body. At star stage and beyond, Mega Heat Sinks cannot suppress this fusion flux or the body\'s remaining intrinsic core heat; they can still mitigate factory heat and accelerate ordinary cooling toward the temperature trend. The retained photosphere follows gravity and temperature-dependent opacity. Current photosphere: {temperature} K at {pressure}.',
+          fusionFluxTooltip: 'This is the world\'s own thermal self-emission from internal fusion. It reflects the planetary, stellar, surface, and atmospheric resources currently incorporated into the stellar body. At star stage and beyond, Mega Heat Sinks cannot mitigate fusion flux.',
           phaseChangeHeatTooltip: 'Signed planetary heat exchanged by phase changes during the latest climate slice. Positive values mean freezing, condensation, or deposition released heat; negative values mean melting, evaporation, boiling, or sublimation absorbed heat.  For numerical stability, this effect can only speed or slow movement toward the trend, not reverse it.  This can lead to stalling temperatures.',
           equilibriumTempTooltip: 'The blackbody radiative balance temperature from absorbed sunlight, albedo, and direct non-atmospheric heat. It ignores greenhouse heat trapping; physically, it is the temperature that would radiate the same energy back to space. Earth\'s value is about 255 K (-18°C).',
           combustionWarning: 'Temperature is increasing from active combustion',

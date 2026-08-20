@@ -294,6 +294,10 @@
     font-size: 12px;
 }
 
+.molten-attrition-warning {
+    color: #ff4f4f !important;
+}
+
 .constructed-info {
     display: flex;
     align-items: center;
