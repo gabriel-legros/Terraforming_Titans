@@ -1996,7 +1996,8 @@ const siriusOverrides = {
   ],
   specialAttributes: {
     hasSand: false,
-    dynamicMass: true
+    dynamicMass: true,
+    countsAsStandardTerraformingRun: false
   },
   resources: {
     surface: {
