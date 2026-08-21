@@ -5650,6 +5650,7 @@ setLanguageData({
           hopeStarQuestion: 'HOPE...  This is a star...  Why are we terraforming a star?',
           advancedOrbitals: 'Superalloys and Storage orbitals are available.',
           starLifter: 'Lifters have chosen to go on vacation.  You may have to build new ones in the form of a new terraforming building.',
+          spaceStorageDepot: 'Space Storage is available as a colony storage building.',
         },
         rewards: {
           enableAdvancedOrbitals: 'Permanently enables Superalloy and Storage orbitals.',
@@ -5904,6 +5905,10 @@ setLanguageData({
           warp: { shortName: 'Warp Storage' },
           deepWarp: { shortName: 'Deep Warp Storage' },
         },
+      },
+      spaceStorageDepot: {
+        name: 'Space Storage',
+        description: 'A colossal storage facility that expands capacity for all stockpiled colony resources.',
       },
       waterTank: {
         name: 'Water Tank',

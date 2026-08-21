@@ -686,6 +686,43 @@ const buildingsParameters = {
       }
     }
   },
+  spaceStorageDepot: {
+    type: 'Building',
+    name: '',
+    category: 'storage',
+    description: '',
+    cost: { colony: { metal: 100_000_000_000 } },
+    consumption: {},
+    production: {},
+    storage: {
+      colony: {
+        metal: 100_000_000_000,
+        silicon: 100_000_000_000,
+        glass: 100_000_000_000,
+        water: 100_000_000_000,
+        colonyHydrogen: 100_000_000_000,
+        food: 100_000_000_000,
+        components: 100_000_000_000,
+        electronics: 100_000_000_000,
+        superconductors: 100_000_000_000,
+        superalloys: 100_000_000_000
+      }
+    },
+    dayNightActivity: false,
+    factoryHeatCoefficient: 1,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresProductivity: false,
+    requiresWorker: 0,
+    maintenanceFactor: 0,
+    temperatureMaintenanceImmune: true,
+    unlocked: false,
+    autoBuildFillEnabled: true,
+    autoBuildFillPercent: 95,
+    autoBuildFillResourceFilters: true,
+    autoBuildFillResourcePrimary: 'any',
+    autoBuildFillResourceSecondary: 'none'
+  },
   waterTank: {
     type: 'WaterTank',
     name: '',

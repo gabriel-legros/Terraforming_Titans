@@ -1992,6 +1992,12 @@ const siriusOverrides = {
       targetId: 'starLifter',
       type: 'enable',
       effectId: 'sirius-enable-star-lifter'
+    },
+    {
+      target: 'building',
+      targetId: 'spaceStorageDepot',
+      type: 'enable',
+      effectId: 'sirius-enable-space-storage-depot'
     }
   ],
   specialAttributes: {
@@ -2098,6 +2104,11 @@ const specialSeedDefinitions = {
       {
         id: 'star-lifter',
         descriptionKey: 'catalogs.specialSeeds.sirius.effects.starLifter',
+        description: ''
+      },
+      {
+        id: 'space-storage-depot',
+        descriptionKey: 'catalogs.specialSeeds.sirius.effects.spaceStorageDepot',
         description: ''
       }
     ],
