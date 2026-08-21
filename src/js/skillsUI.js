@@ -155,10 +155,10 @@ const atlasSkillLayoutSlots = [
     { row: 4, col: 0 },
     { row: 4, col: 2 },
     { row: 4, col: 4 },
+    { row: 4, col: 6 },
     { row: 5, col: 0 },
     { row: 5, col: 2 },
-    { row: 5, col: 4 },
-    { row: 6, col: 2 }
+    { row: 5, col: 4 }
 ];
 
 function getSkillLayout() {
