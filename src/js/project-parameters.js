@@ -1199,9 +1199,9 @@ const projectParameters = {
     category: 'infrastructure',
     cost: {
       colony: {
-        metal: 1_000_000_000_000_000,
+        metal: 2_500_000_000_000_000,
         components: 100_000_000_000_000,
-        superalloys: 10_000_000_000_000
+        superalloys: 500_000_000_000_000
       }
     },
     duration: 30 * 60 * 1000,
