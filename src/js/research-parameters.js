@@ -2625,6 +2625,20 @@ const researchParameters = {
             value: true
           },
           {
+            target: 'building',
+            targetId: 'waterTank',
+            type: 'booleanFlag',
+            flagId: 'warpStorageRecipe',
+            value: true
+          },
+          {
+            target: 'building',
+            targetId: 'hydrogenReservoir',
+            type: 'booleanFlag',
+            flagId: 'warpStorageRecipe',
+            value: true
+          },
+          {
             target: 'project',
             targetId: 'spaceStorage',
             type: 'booleanFlag',
@@ -2659,6 +2673,20 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'storageDepot',
+            type: 'booleanFlag',
+            flagId: 'deepWarpStorageRecipe',
+            value: true
+          },
+          {
+            target: 'building',
+            targetId: 'waterTank',
+            type: 'booleanFlag',
+            flagId: 'deepWarpStorageRecipe',
+            value: true
+          },
+          {
+            target: 'building',
+            targetId: 'hydrogenReservoir',
             type: 'booleanFlag',
             flagId: 'deepWarpStorageRecipe',
             value: true

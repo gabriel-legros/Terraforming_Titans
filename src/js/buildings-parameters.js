@@ -704,7 +704,28 @@ const buildingsParameters = {
     aerostatReduction: 0.01,
     unlocked: false,
     autoBuildFillEnabled: true,
-    autoBuildFillPercent: 95
+    autoBuildFillPercent: 95,
+    defaultRecipe: 'standard',
+    recipes: {
+      standard: {
+        shortName: '',
+        storage: { colony: { water: 5000 } }
+      },
+      warp: {
+        shortName: '',
+        requiresBuildingFlag: 'warpStorageRecipe',
+        consumption: { colony: { energy: 1_000_000 } },
+        realisticEnergyConsumption: 100_000,
+        storage: { colony: { water: 50_000 } }
+      },
+      deepWarp: {
+        shortName: '',
+        requiresBuildingFlag: 'deepWarpStorageRecipe',
+        consumption: { colony: { energy: 1_000_000_000 } },
+        realisticEnergyConsumption: 10_000_000,
+        storage: { colony: { water: 5_000_000 } }
+      }
+    }
   },
   hydrogenReservoir: {
     type: 'HydrogenReservoir',
@@ -738,6 +759,36 @@ const buildingsParameters = {
         realisticEnergyConsumption: 1_250_000,
         production: { colony: { colonyHydrogen: 100 } },
         storage: { colony: { colonyHydrogen: 5000 } }
+      },
+      warpStorage: {
+        shortName: '',
+        requiresBuildingFlag: 'warpStorageRecipe',
+        consumption: { colony: { energy: 1_000_000 } },
+        realisticEnergyConsumption: 100_000,
+        storage: { colony: { colonyHydrogen: 50_000 } }
+      },
+      warpIntake: {
+        shortName: '',
+        requiresBuildingFlag: 'warpStorageRecipe',
+        consumption: { atmospheric: { hydrogen: 1_000 }, colony: { energy: 1_100_000 } },
+        realisticEnergyConsumption: 12_600_000,
+        production: { colony: { colonyHydrogen: 1_000 } },
+        storage: { colony: { colonyHydrogen: 50_000 } }
+      },
+      deepWarpStorage: {
+        shortName: '',
+        requiresBuildingFlag: 'deepWarpStorageRecipe',
+        consumption: { colony: { energy: 1_000_000_000 } },
+        realisticEnergyConsumption: 10_000_000,
+        storage: { colony: { colonyHydrogen: 5_000_000 } }
+      },
+      deepWarpIntake: {
+        shortName: '',
+        requiresBuildingFlag: 'deepWarpStorageRecipe',
+        consumption: { atmospheric: { hydrogen: 100_000 }, colony: { energy: 1_010_000_000 } },
+        realisticEnergyConsumption: 1_260_000_000,
+        production: { colony: { colonyHydrogen: 100_000 } },
+        storage: { colony: { colonyHydrogen: 5_000_000 } }
       }
     }
   },

@@ -6,7 +6,7 @@ function getWaterTankText(path, fallback, vars) {
   }
 }
 
-class WaterTank extends Building {
+class WaterTank extends MultiRecipesBuilding {
   constructor(config, buildingName) {
     super(config, buildingName);
     this._cachedUI = null;
@@ -21,6 +21,8 @@ class WaterTank extends Building {
   }
 
   initializeCustomUI(context = {}) {
+    super.initializeCustomUI(context);
+
     const { leftContainer, hideButton } = context;
     if (!leftContainer || !hideButton || !globalThis.document) {
       return;
@@ -66,6 +68,8 @@ class WaterTank extends Building {
   }
 
   updateUI(elements = {}) {
+    super.updateUI(elements);
+
     if (
       elements !== this._cachedUI &&
       (elements.emptyButton || elements.emptyAboveCapButton)
