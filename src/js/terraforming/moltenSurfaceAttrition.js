@@ -5,6 +5,9 @@ const MOLTEN_SURFACE_ATTRITION_START_TEMPERATURE_K =
 
 registerTerraformingMethods('moltenSurfaceAttrition', () => ({
   getMoltenSurfaceAttritionRatePerSecond() {
+    if (gameSettings.disableMoltenSurfaceAttrition) {
+      return 0;
+    }
     const heatShares = getGeologicalHeatLandReservationShares(this);
     const moltenLandShare = Math.max(heatShares.coreHeatFlux, heatShares.fusionFlux);
     const temperatureK = this.temperature.value;

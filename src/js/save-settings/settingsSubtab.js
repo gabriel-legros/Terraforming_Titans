@@ -89,6 +89,8 @@ function cacheSettingsElements() {
     orbitalCapToggle: document.getElementById('orbital-cap-toggle'),
     orbitalCapTooltip: document.getElementById('orbital-cap-tooltip'),
     allowSpaceStorageBiomassWithdrawOnNonHumanDominionToggle: document.getElementById('allow-space-storage-biomass-withdraw-on-non-human-dominion-toggle'),
+    disableMoltenSurfaceAttritionToggle: document.getElementById('disable-molten-surface-attrition-toggle'),
+    disableMoltenSurfaceAttritionTooltip: document.getElementById('disable-molten-surface-attrition-tooltip'),
     noOverpopulationCylindersToggle: document.getElementById('no-overpopulation-cylinders-toggle'),
     noOverpopulationCylindersTooltip: document.getElementById('no-overpopulation-cylinders-tooltip'),
     buildingCostMultiplierInput: document.getElementById('building-cost-multiplier-input'),
@@ -320,6 +322,7 @@ function updateDifficultyLockUI() {
     cached.liftersStrippingCapToggle,
     cached.orbitalCapToggle,
     cached.allowSpaceStorageBiomassWithdrawOnNonHumanDominionToggle,
+    cached.disableMoltenSurfaceAttritionToggle,
     cached.noOverpopulationCylindersToggle,
     cached.buildingCostMultiplierInput,
     cached.researchCostMultiplierInput,
@@ -476,6 +479,7 @@ function updateDifficultySettingInputs() {
     liftersStrippingCap: cached.liftersStrippingCapToggle,
     orbitalCap: cached.orbitalCapToggle,
     allowSpaceStorageBiomassWithdrawOnNonHumanDominion: cached.allowSpaceStorageBiomassWithdrawOnNonHumanDominionToggle,
+    disableMoltenSurfaceAttrition: cached.disableMoltenSurfaceAttritionToggle,
     noOverpopulationCylinders: cached.noOverpopulationCylindersToggle,
   };
   const inputs = {
@@ -1389,6 +1393,31 @@ function addSettingsListeners() {
       gameSettings.allowSpaceStorageBiomassWithdrawOnNonHumanDominion = cached.allowSpaceStorageBiomassWithdrawOnNonHumanDominionToggle.checked;
       updateProjectUI('spaceStorage');
     });
+  }
+
+  if (cached.disableMoltenSurfaceAttritionToggle) {
+    cached.disableMoltenSurfaceAttritionToggle.checked = gameSettings.disableMoltenSurfaceAttrition;
+    cached.disableMoltenSurfaceAttritionToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.disableMoltenSurfaceAttritionToggle.checked = gameSettings.disableMoltenSurfaceAttrition;
+        return;
+      }
+      gameSettings.disableMoltenSurfaceAttrition = cached.disableMoltenSurfaceAttritionToggle.checked;
+      updateResourceDisplay(resources, 0);
+      updateBuildingDisplay(buildings);
+      updateColonyDisplay(colonies);
+    });
+  }
+
+  if (cached.disableMoltenSurfaceAttritionTooltip) {
+    attachDynamicInfoTooltip(
+      cached.disableMoltenSurfaceAttritionTooltip,
+      t(
+        'ui.settings.disableMoltenSurfaceAttritionTooltip',
+        {},
+        'Prevents lava- and plasma-covered surfaces from destroying buildings and colonies. Molten surfaces still reserve land normally.'
+      )
+    );
   }
 
   if (cached.noOverpopulationCylindersToggle) {

@@ -143,6 +143,7 @@ function loadGameSettings(savedSettings) {
   cachedSettings.fixedGoldenAsteroidIntervalToggle.checked = gameSettings.fixedGoldenAsteroidInterval;
   cachedSettings.liftersStrippingCapToggle.checked = gameSettings.liftersStrippingCap;
   cachedSettings.orbitalCapToggle.checked = gameSettings.orbitalCap;
+  cachedSettings.disableMoltenSurfaceAttritionToggle.checked = gameSettings.disableMoltenSurfaceAttrition;
   cachedSettings.noOverpopulationCylindersToggle.checked = gameSettings.noOverpopulationCylinders;
   patienceManager.enforceInfinitePatience();
   updateDifficultySettingInputs();
