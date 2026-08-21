@@ -869,6 +869,45 @@
       }
     }
 
+    saveTravelState() {
+      if (!gameSettings.preserveProjectSettingsOnTravel) {
+        return {};
+      }
+      return {
+        constructionMode: this.constructionMode,
+        capacityTargetEnabled: this.capacityTargetEnabled === true,
+        capacityTarget: this.capacityTarget,
+        capacityTargetMode: this.capacityTargetMode,
+        capThroughputToCapacity: this.capThroughputToCapacity === true,
+      };
+    }
+
+    loadTravelState(state = {}) {
+      if (!gameSettings.preserveProjectSettingsOnTravel) {
+        return;
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'constructionMode')) {
+        this.constructionMode = state.constructionMode === SKYHOOK_MODE
+          ? SKYHOOK_MODE
+          : SPACE_ELEVATOR_MODE;
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'capacityTargetEnabled')) {
+        this.capacityTargetEnabled = state.capacityTargetEnabled === true;
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'capacityTarget')) {
+        this.capacityTarget = Math.max(0, Number(state.capacityTarget) || 0);
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'capacityTargetMode')) {
+        this.capacityTargetMode = state.capacityTargetMode === CAPACITY_TARGET_WORKERS
+          || state.capacityTargetMode === CAPACITY_TARGET_GEOMETRIC_LAND_PERCENT
+          ? state.capacityTargetMode
+          : CAPACITY_TARGET_FIXED;
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'capThroughputToCapacity')) {
+        this.capThroughputToCapacity = state.capThroughputToCapacity === true;
+      }
+    }
+
     saveState() {
       return {
         ...super.saveState(),
