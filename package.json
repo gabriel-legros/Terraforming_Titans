@@ -1,6 +1,6 @@
 {
   "name": "terraforming-titans",
-  "version": "1.1.34-playtest.2",
+  "version": "1.1.35-playtest.1",
   "private": true,
   "productName": "Terraforming Titans",
   "main": "electron/main.cjs",

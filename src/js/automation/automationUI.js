@@ -1234,6 +1234,7 @@ function parseAutomationPresetJsonFieldValue(rawValue, options = {}) {
 }
 
 function formatAutomationPresetJsonFieldValue(value, options = {}) {
+  options = options || {};
   if (typeof value === 'number' && Number.isFinite(value)) {
     return formatNumber(value * (options.numericDisplayScale ?? 1), false, 3, true);
   }
