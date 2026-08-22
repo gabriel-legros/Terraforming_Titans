@@ -394,6 +394,37 @@ function createAutomationTargetPresetController(config) {
 
   const controller = {};
 
+  controller.snapshotPreset = () => {
+    const automation = config.getAutomation();
+    const name = refs.presetNameInput.value || state.builderName || '';
+    const presetId = automation.getSelectedPresetId();
+    const request = config.getSaveRequest(automation, state);
+    if (presetId) {
+      resetAutomationPresetJsonDetailsState(refs.presetJsonDetails, Number(presetId));
+    }
+    const candidatePreset = automation.buildPreset(
+      name,
+      request.targetIds,
+      request.options,
+      presetId || automation.nextPresetId
+    );
+    if (automation.isParameterizedPreset(candidatePreset)
+      && !automation.getPresetParameterInfo(candidatePreset).valid) {
+      state.builderPresetModeInvalidMessage = automation.getParameterizedPresetInvalidMessage(candidatePreset);
+      refresh();
+      return;
+    }
+    if (presetId) {
+      automation.updatePreset(Number(presetId), name, request.targetIds, request.options);
+    } else {
+      automation.addPreset(name, request.targetIds, request.options);
+      state.syncedPresetId = null;
+      state.builderName = '';
+    }
+    state.builderPresetModeInvalidMessage = '';
+    refresh();
+  };
+
   controller.syncPresetSelection = (presets) => {
     const automation = config.getAutomation();
     const automationId = getAutomationUIManagerId(automation);
@@ -780,36 +811,7 @@ function createAutomationTargetPresetController(config) {
       }
       refresh();
     });
-    refs.saveButton.addEventListener('click', () => {
-      const automation = config.getAutomation();
-      const name = refs.presetNameInput.value || state.builderName || '';
-      const presetId = automation.getSelectedPresetId();
-      const request = config.getSaveRequest(automation, state);
-      if (presetId) {
-        resetAutomationPresetJsonDetailsState(refs.presetJsonDetails, Number(presetId));
-      }
-      const candidatePreset = automation.buildPreset(
-        name,
-        request.targetIds,
-        request.options,
-        presetId || automation.nextPresetId
-      );
-      if (automation.isParameterizedPreset(candidatePreset)
-        && !automation.getPresetParameterInfo(candidatePreset).valid) {
-        state.builderPresetModeInvalidMessage = automation.getParameterizedPresetInvalidMessage(candidatePreset);
-        refresh();
-        return;
-      }
-      if (presetId) {
-        automation.updatePreset(Number(presetId), name, request.targetIds, request.options);
-      } else {
-        automation.addPreset(name, request.targetIds, request.options);
-        state.syncedPresetId = null;
-        state.builderName = '';
-      }
-      state.builderPresetModeInvalidMessage = '';
-      refresh();
-    });
+    refs.saveButton.addEventListener('click', controller.snapshotPreset);
     refs.duplicateButton.addEventListener('click', () => {
       const automation = config.getAutomation();
       const activePreset = automation.getSelectedPreset();
