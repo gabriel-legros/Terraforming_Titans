@@ -15,7 +15,7 @@ function getAtlasSpecialSeedKey(source) {
 
 class AtlasManager extends EffectableEntity {
     constructor() {
-        super({ description: 'Manages Atlas challenge worlds.' });
+        super({ description: 'Manages Atlas challenge worlds.', resetAt: GAME_RESET_LEVEL.NEW_GAME });
         this.enabled = false;
         this.atlasWorldCompletions = {};
         this.uiDirty = true;

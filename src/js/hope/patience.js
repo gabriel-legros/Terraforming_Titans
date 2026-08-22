@@ -5,7 +5,7 @@
 
 class PatienceManager extends EffectableEntity {
     constructor() {
-        super({ description: 'Manages patience hours for the H.O.P.E. system' });
+        super({ description: 'Manages patience hours for the H.O.P.E. system', resetAt: GAME_RESET_LEVEL.NEW_GAME });
         this.enabled = false;
         this.currentHours = 6;
         this.maxHours = 12;

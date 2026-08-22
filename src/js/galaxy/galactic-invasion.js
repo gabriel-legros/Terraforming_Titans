@@ -1,6 +1,6 @@
 class GalacticInvasionManager extends EffectableEntity {
   constructor() {
-    super({ description: 'Manages galactic invasion training.' });
+    super({ description: 'Manages galactic invasion training.', resetAt: GAME_RESET_LEVEL.NEW_GAME });
     this.enabled = false;
     this.currentLetterKey = null;
     this.completedLetters = new Set();

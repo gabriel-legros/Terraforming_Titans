@@ -2611,12 +2611,11 @@ class SpaceMirrorFacilityProject extends Project {
     }
   }
 
-  prepareTravelState() {
+  prepareTravelSnapshot(resetLevel = GAME_RESET_LEVEL.PLANET) {
     sanitizeMirrorDistribution();
   }
 
-  saveTravelState() {
-    this.prepareTravelState();
+  saveTravelState(resetLevel = GAME_RESET_LEVEL.PLANET) {
     const settings = this.mirrorOversightSettings;
     if (gameSettings.preserveProjectSettingsOnTravel) {
       return {

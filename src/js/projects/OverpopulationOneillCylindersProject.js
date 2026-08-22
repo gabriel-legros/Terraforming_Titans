@@ -170,7 +170,10 @@
       this.startingDuration = this.remainingTime;
     }
 
-    prepareTravelState() {
+    prepareTravelState(resetLevel = GAME_RESET_LEVEL.PLANET) {
+      if (resetLevel >= this.departureResetAt) {
+        return;
+      }
       const convertedCylinders = this.getTravelConversionCount();
       if (convertedCylinders <= 0) {
         return;

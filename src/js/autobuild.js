@@ -973,11 +973,19 @@ function loadConstructionOfficeState(state) {
     }
 }
 
-function captureConstructionOfficeSettings() {
+const CONSTRUCTION_OFFICE_TRAVEL_STATE_RESET_AT = GAME_RESET_LEVEL.NEW_GAME;
+
+function captureConstructionOfficeSettings(resetLevel = GAME_RESET_LEVEL.PLANET) {
+    if (resetLevel >= CONSTRUCTION_OFFICE_TRAVEL_STATE_RESET_AT) {
+        return null;
+    }
     return saveConstructionOfficeState();
 }
 
-function restoreConstructionOfficeSettings(state) {
+function restoreConstructionOfficeSettings(state, resetLevel = GAME_RESET_LEVEL.PLANET) {
+    if (resetLevel >= CONSTRUCTION_OFFICE_TRAVEL_STATE_RESET_AT) {
+        return;
+    }
     loadConstructionOfficeState(state);
 }
 
@@ -1090,12 +1098,14 @@ function initializeConstructionOfficeUI() {
     updateConstructionOfficeUI();
 }
 
-const savedAutoBuildSettings = {};
-
-function captureAutoBuildSettings(structures) {
+function captureAutoBuildSettings(structures, resetLevel = GAME_RESET_LEVEL.PLANET) {
+    const savedSettings = {};
     for (const name in structures) {
         const s = structures[name];
-        savedAutoBuildSettings[name] = {
+        if (resetLevel >= s.travelStateResetAt) {
+            continue;
+        }
+        savedSettings[name] = {
             percent: s.autoBuildPercent,
             basis: s.autoBuildBasis === 'initialLand' ? 'geometricLand' : s.autoBuildBasis,
             priority: s.autoBuildPriority,
@@ -1109,16 +1119,22 @@ function captureAutoBuildSettings(structures) {
             fillSecondary: s.autoBuildFillResourceSecondary,
         };
     }
+    return savedSettings;
 }
 
-function restoreAutoBuildSettings(structures) {
+function restoreAutoBuildSettings(
+    structures,
+    savedSettings = {},
+    resetLevel = GAME_RESET_LEVEL.PLANET
+) {
     for (const name in structures) {
         const s = structures[name];
-        if (savedAutoBuildSettings[name]) {
-            s.autoBuildPercent = savedAutoBuildSettings[name].percent;
-            const savedBasis = savedAutoBuildSettings[name].basis || (s.autoBuildFillEnabled ? 'fill' : 'population');
+        const saved = resetLevel < s.travelStateResetAt ? savedSettings[name] : null;
+        if (saved) {
+            s.autoBuildPercent = saved.percent;
+            const savedBasis = saved.basis || (s.autoBuildFillEnabled ? 'fill' : 'population');
             s.autoBuildBasis = savedBasis === 'initialLand' ? 'geometricLand' : savedBasis;
-            const priority = savedAutoBuildSettings[name].priority;
+            const priority = saved.priority;
             if (priority === true) {
                 s.autoBuildPriority = 1;
             } else if (priority === false || priority === undefined) {
@@ -1128,26 +1144,26 @@ function restoreAutoBuildSettings(structures) {
             } else {
                 s.autoBuildPriority = 0;
             }
-            s.autoActiveEnabled = savedAutoBuildSettings[name].autoActive !== undefined
-                ? savedAutoBuildSettings[name].autoActive
+            s.autoActiveEnabled = saved.autoActive !== undefined
+                ? saved.autoActive
                 : true;
-            s.autoUpgradeEnabled = !!savedAutoBuildSettings[name].autoUpgrade;
-            if (savedAutoBuildSettings[name].fixed !== undefined) {
-                s.autoBuildFixed = Math.max(0, Math.floor(savedAutoBuildSettings[name].fixed || 0));
+            s.autoUpgradeEnabled = !!saved.autoUpgrade;
+            if (saved.fixed !== undefined) {
+                s.autoBuildFixed = Math.max(0, Math.floor(saved.fixed || 0));
             }
-            if (savedAutoBuildSettings[name].maxPercent !== undefined) {
-                s.autoBuildMaxPercent = savedAutoBuildSettings[name].maxPercent;
+            if (saved.maxPercent !== undefined) {
+                s.autoBuildMaxPercent = saved.maxPercent;
             }
-            if (savedAutoBuildSettings[name].fillPercent !== undefined) {
-                s.autoBuildFillPercent = savedAutoBuildSettings[name].fillPercent;
+            if (saved.fillPercent !== undefined) {
+                s.autoBuildFillPercent = saved.fillPercent;
             }
-            if (savedAutoBuildSettings[name].fillPrimary !== undefined) {
-                s.autoBuildFillResourcePrimary = savedAutoBuildSettings[name].fillPrimary;
+            if (saved.fillPrimary !== undefined) {
+                s.autoBuildFillResourcePrimary = saved.fillPrimary;
             }
-            if (savedAutoBuildSettings[name].fillSecondary !== undefined) {
-                s.autoBuildFillResourceSecondary = savedAutoBuildSettings[name].fillSecondary;
+            if (saved.fillSecondary !== undefined) {
+                s.autoBuildFillResourceSecondary = saved.fillSecondary;
             }
-            const restoredStep = savedAutoBuildSettings[name].step;
+            const restoredStep = saved.step;
             if (Number.isFinite(restoredStep) && restoredStep > 0) {
                 s.autoBuildStep = restoredStep;
             } else {

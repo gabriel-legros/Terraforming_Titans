@@ -51,6 +51,9 @@ function canSkipShallowEqualReapply(effect) {
 class EffectableEntity {
     constructor(config) {
       this.description = config.description;
+      this.resetAt = config.resetAt ?? GAME_RESET_LEVEL.PLANET;
+      this.travelStateResetAt = config.travelStateResetAt ?? GAME_RESET_LEVEL.NEW_GAME;
+      this.departureResetAt = config.departureResetAt ?? GAME_RESET_LEVEL.GALAXY;
       this.activeEffects = []; // Array to store active effects
       this.booleanFlags = new Set(); // Set to store boolean flags
     }

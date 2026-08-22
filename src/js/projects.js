@@ -1110,7 +1110,7 @@ class Project extends EffectableEntity {
     return state;
   }
 
-  saveTravelState() {
+  saveTravelState(resetLevel = GAME_RESET_LEVEL.PLANET) {
     const state = {};
     if (this.attributes?.canUseSpaceStorage) {
       state.spaceStorageResourceMode = this.spaceStorageResourceMode || '';
@@ -1166,7 +1166,7 @@ class Project extends EffectableEntity {
     }
   }
 
-  loadTravelState(state = {}) {
+  loadTravelState(state = {}, resetLevel = GAME_RESET_LEVEL.PLANET) {
     if (this.attributes?.canUseSpaceStorage) {
       this.spaceStorageResourceMode = MEGA_PROJECT_RESOURCE_MODE_MAP[state.spaceStorageResourceMode]
         ? state.spaceStorageResourceMode
@@ -1193,6 +1193,10 @@ class Project extends EffectableEntity {
       this.repeatCount = state.repeatCount;
     }
   }
+
+  cleanupForReset(resetLevel = GAME_RESET_LEVEL.PLANET) {}
+
+  prepareTravelSnapshot(resetLevel = GAME_RESET_LEVEL.PLANET) {}
 
 }
 
@@ -1839,16 +1843,34 @@ class ProjectManager extends EffectableEntity {
     this.markUIDirty();
   }
 
-  saveTravelState() {
+  cleanupForReset(resetLevel = GAME_RESET_LEVEL.PLANET) {
+    for (const name in this.projects) {
+      const project = this.projects[name];
+      if (typeof project.cleanupForReset === 'function') {
+        project.cleanupForReset(resetLevel);
+      }
+    }
+  }
+
+  saveTravelState(resetLevel = GAME_RESET_LEVEL.PLANET) {
     this.normalizeImportProjectOrder();
-    const travelState = { _order: this.projectOrder.slice() };
+    this.cleanupForReset(resetLevel);
+    const travelState = resetLevel < this.travelStateResetAt
+      ? { _order: this.projectOrder.slice() }
+      : {};
     const preserveAuto = typeof gameSettings !== 'undefined' && gameSettings.preserveProjectAutoStart;
     for (const name in this.projects) {
       const project = this.projects[name];
       const state = {};
       const resetAuto = project.autoStartUncheckOnTravel === true;
-      if (typeof project.prepareTravelState === 'function') {
-        project.prepareTravelState();
+      if (resetLevel < project.departureResetAt && typeof project.prepareTravelState === 'function') {
+        project.prepareTravelState(resetLevel);
+      }
+      if (resetLevel >= project.travelStateResetAt) {
+        continue;
+      }
+      if (typeof project.prepareTravelSnapshot === 'function') {
+        project.prepareTravelSnapshot(resetLevel);
       }
       if (preserveAuto) {
         state.autoStart = resetAuto ? false : project.autoStart;
@@ -1862,7 +1884,7 @@ class ProjectManager extends EffectableEntity {
         state.ignoreSpaceStorageReserveOperations = project.ignoreSpaceStorageReserveOperations === true;
       }
       if (typeof project.saveTravelState === 'function') {
-        Object.assign(state, project.saveTravelState());
+        Object.assign(state, project.saveTravelState(resetLevel));
       }
       if (resetAuto && ('autoContinuousOperation' in project || 'autoDeployCollectors' in project)) {
         state.autoContinuousOperation = false;
@@ -1877,9 +1899,9 @@ class ProjectManager extends EffectableEntity {
     return travelState;
   }
 
-  loadTravelState(travelState = {}) {
+  loadTravelState(travelState = {}, resetLevel = GAME_RESET_LEVEL.PLANET) {
     const preserveAuto = typeof gameSettings !== 'undefined' && gameSettings.preserveProjectAutoStart;
-    if (Array.isArray(travelState._order)) {
+    if (resetLevel < this.travelStateResetAt && Array.isArray(travelState._order)) {
       this.projectOrder = travelState._order.slice();
       this.projectOrder = this.projectOrder.filter(projectName => this.projects.hasOwnProperty(projectName));
       Object.keys(this.projects).forEach(name => {
@@ -1892,7 +1914,7 @@ class ProjectManager extends EffectableEntity {
     this.normalizeGroupedProjectOrder();
     for (const name in travelState) {
       const project = this.projects[name];
-      if (!project) continue;
+      if (!project || resetLevel >= project.travelStateResetAt) continue;
       const state = travelState[name] || {};
       if (preserveAuto && typeof state.autoStart !== 'undefined') {
         project.autoStart = state.autoStart;
@@ -1927,7 +1949,7 @@ class ProjectManager extends EffectableEntity {
         ) {
           projectState.autoContinuousOperation = false;
         }
-        project.loadTravelState(projectState);
+        project.loadTravelState(projectState, resetLevel);
       }
       if (project.attributes?.canUseSpaceStorage) {
         project.spaceStorageResourceMode = MEGA_PROJECT_RESOURCE_MODE_MAP[state.spaceStorageResourceMode]

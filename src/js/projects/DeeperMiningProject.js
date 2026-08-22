@@ -707,7 +707,10 @@ class DeeperMiningProject extends AndroidProject {
     super.loadTravelState(state);
   }
 
-  prepareTravelState() {
+  prepareTravelState(resetLevel = GAME_RESET_LEVEL.PLANET) {
+    if (resetLevel >= this.departureResetAt) {
+      return;
+    }
     this.underworldMiningLevel = 0;
     this.superchargedMiningLevel = 0;
     this.createGeothermalDeposits = false;

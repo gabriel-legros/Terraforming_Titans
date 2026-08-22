@@ -214,6 +214,9 @@ function normalizeHazardousMachineryParameters(parameters = {}) {
 class HazardousMachineryHazard {
   constructor(manager) {
     this.manager = manager;
+    this.resetAt = GAME_RESET_LEVEL.PLANET;
+    this.travelStateResetAt = GAME_RESET_LEVEL.NEW_GAME;
+    this.departureResetAt = GAME_RESET_LEVEL.GALAXY;
     this.pendingTravelTuning = false;
     this.hackBatchSize = 1;
     this.autoSpendIfClear = false;
@@ -961,6 +964,24 @@ class HazardousMachineryHazard {
   load(data) {
     this.setHackBatchSize(data?.hackBatchSize || 1);
     this.setAutoSpendIfClear(data?.autoSpendIfClear === true);
+  }
+
+  saveTravelState(resetLevel = GAME_RESET_LEVEL.PLANET) {
+    if (resetLevel >= this.travelStateResetAt) {
+      return null;
+    }
+    return {
+      hackBatchSize: this.hackBatchSize,
+      autoSpendIfClear: this.autoSpendIfClear === true
+    };
+  }
+
+  loadTravelState(data = {}, resetLevel = GAME_RESET_LEVEL.PLANET) {
+    if (resetLevel >= this.travelStateResetAt) {
+      return;
+    }
+    this.setHackBatchSize(data.hackBatchSize || 1);
+    this.setAutoSpendIfClear(data.autoSpendIfClear === true);
   }
 
   update(deltaTime, terraforming, parameters) {

@@ -22,7 +22,7 @@ describe.skip('research travel effects', () => {
           research.timesResearched = 1;
         });
         researchManager.reapplyEffects();
-        initializeGameState({ preserveManagers: true, preserveJournal: true });
+        initializeGameState({ resetLevel: GAME_RESET_LEVEL.PLANET });
       `);
 
       await new Promise(resolve => setTimeout(resolve, 50));
@@ -62,7 +62,7 @@ describe.skip('research travel effects', () => {
           effectId: 'ringworld-disable-space-elevator-research',
           sourceId: 'planet-parameters'
         });
-        initializeGameState({ preserveManagers: true, preserveJournal: true });
+        initializeGameState({ resetLevel: GAME_RESET_LEVEL.PLANET });
       `);
 
       await new Promise(resolve => setTimeout(resolve, 50));

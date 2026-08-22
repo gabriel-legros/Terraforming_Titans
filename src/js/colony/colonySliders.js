@@ -310,6 +310,14 @@ class ColonySlidersManager extends EffectableEntity {
     this.setMechanicalAssistance(0);
     this.setWarpnetLevel(0);
   }
+
+  resetForLevel(resetLevel = GAME_RESET_LEVEL.PLANET) {
+    if (resetLevel < this.resetAt) {
+      return;
+    }
+    this.reset(resetLevel >= this.travelStateResetAt);
+    this.markUIDirty();
+  }
 }
 
 // Create global instance

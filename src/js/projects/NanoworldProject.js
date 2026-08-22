@@ -163,8 +163,8 @@ class NanoworldProject extends SpecializationProject {
     }
   }
 
-  prepareTravelState() {
-    super.prepareTravelState();
+  cleanupForReset(resetLevel = GAME_RESET_LEVEL.PLANET) {
+    super.cleanupForReset(resetLevel);
     nanotechManager.removeEffect({ sourceId: 'nanoworld' });
   }
 

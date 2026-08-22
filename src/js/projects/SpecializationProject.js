@@ -339,9 +339,18 @@
       return points * (1 + (hazardCount * this.hazardPointBonusPerHazard));
     }
 
-    prepareTravelState() {
+    prepareTravelState(resetLevel = GAME_RESET_LEVEL.PLANET) {
+      if (resetLevel >= this.departureResetAt) {
+        return;
+      }
       if (this.isCompleted) {
         this.addSpecializationPoints(this.getTravelPointGain());
+      }
+    }
+
+    cleanupForReset(resetLevel = GAME_RESET_LEVEL.PLANET) {
+      super.cleanupForReset(resetLevel);
+      if (this.isCompleted) {
         this.ecumenopolisDisabled = false;
         researchManager.removeEffect({ sourceId: this.specializationSourceId });
       }

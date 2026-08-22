@@ -72,7 +72,7 @@ try {
 
 class AutomationManager extends EffectableEntity {
   constructor() {
-    super({ description: 'Automation Manager' });
+    super({ description: 'Automation Manager', resetAt: GAME_RESET_LEVEL.NEW_GAME });
     this.enabled = false;
     this.uiDirty = true;
     this.automationCardOrder = [

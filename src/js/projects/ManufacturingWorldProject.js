@@ -432,11 +432,14 @@
       return true;
     }
 
-    prepareTravelState() {
+    prepareTravelState(resetLevel = GAME_RESET_LEVEL.PLANET) {
+      if (resetLevel >= this.departureResetAt) {
+        return;
+      }
       if (this.isCompleted) {
         this.addManufacturingPopulation(this.getCurrentPopulation());
       }
-      super.prepareTravelState();
+      super.prepareTravelState(resetLevel);
     }
 
     applySpecializationEffects() {}

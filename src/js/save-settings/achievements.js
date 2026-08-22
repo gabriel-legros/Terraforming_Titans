@@ -36,6 +36,7 @@ const ACHIEVEMENT_DISALLOWED_RENEWABLE_BUILDINGS = {
 
 class AchievementManager {
   constructor() {
+    this.resetAt = GAME_RESET_LEVEL.NEW_GAME;
     this.definitions = this.buildDefinitions();
     this.achieved = {};
     this.pendingUnlocks = [];

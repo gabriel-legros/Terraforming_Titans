@@ -420,7 +420,7 @@ const SUPERMASSIVE_SHELL_CORE = 'smbh';
 const SUPERMASSIVE_SHELL_SECTOR = 'Core';
 class ArtificialManager extends EffectableEntity {
     constructor() {
-        super({ description: 'Manages artificial constructs' });
+        super({ description: 'Manages artificial constructs', resetAt: GAME_RESET_LEVEL.NEW_GAME });
         this.enabled = false;
         this.uiDirty = true;
         this.forceUIRefresh = false;

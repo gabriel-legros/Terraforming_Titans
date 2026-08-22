@@ -33,7 +33,21 @@ This document records durable ownership and cross-system constraints. Feature va
 
 ### Travel
 
-`selectPlanet(key)` performs a soft reset through `initializeGameState({ preserveManagers: true, preserveJournal: true })`, then completes the UI refresh. Managers and effects that persist must rebind or reapply to newly created world objects.
+`selectPlanet(key)` performs a level-1 reset through `initializeGameState({ resetLevel: GAME_RESET_LEVEL.PLANET })`, then completes the UI refresh. `GAME_RESET_LEVEL` reserves ordered reset scopes: `PLANET` is `1`, `GALAXY` is `2`, and `NEW_GAME` is `100` so additional prestige layers can be inserted without renumbering the full reset.
+
+Lifecycle state owners use three independent thresholds:
+
+- `resetAt` replaces or resets the object when `resetLevel >= resetAt`. It defaults to `PLANET`.
+- `travelStateResetAt` stops copying partial state into the replacement object when `resetLevel >= travelStateResetAt`. It defaults to `NEW_GAME`.
+- `departureResetAt` stops departure rewards, conversions, and aggregation when `resetLevel >= departureResetAt`. It defaults to `GALAXY`.
+
+Managers that currently persist across planet travel explicitly use `resetAt: GAME_RESET_LEVEL.NEW_GAME`, preserving existing behavior until a future prestige layer deliberately assigns lower thresholds. A surviving manager must rebind or reapply effects to newly created world objects. Non-effectable state owners declare equivalent threshold properties directly.
+
+`prepareForTravel({ resetLevel })` captures transient gameplay state in one level-tagged `preparedTravelState` envelope before the world changes. It contains project state, preserved resources, structure autobuild controls, Construction Office settings, Life Designer state, follower transient state, and Hazardous Machinery travel settings. Initialization consumes the envelope only when its level exactly matches, then clears it. Full resets clear it without restoring. Each capture and restore path applies the owning object's `travelStateResetAt`; fields absent from a matching snapshot keep the replacement object's constructor defaults.
+
+Travel snapshots are deliberately separate from ordinary `saveState()`/`loadState()` persistence and do not change save keys or formats. Projects are reconstructed at `PLANET` and use `saveTravelState(resetLevel)` / `loadTravelState(state, resetLevel)` for partial preservation. Resources still require `preserveOnTravel`; that compatibility flag and `travelStateResetAt` must both permit capture. Presentation-only preferences such as hidden entries, navigation, and graph-window state follow their UI lifecycle and are not gameplay travel snapshots.
+
+Departure has two phases. `prepareTravelState(resetLevel)` is progression finalization and runs only below the owner's `departureResetAt`; examples include specialization awards, population commits, and O'Neill conversion. `cleanupForReset(resetLevel)` removes old-world effects and references whenever the world is replaced, regardless of prestige level. Snapshot-only normalization belongs in `prepareTravelSnapshot(resetLevel)`, which runs whenever that object's transient snapshot is preserved. `SpaceManager.recordDepartureSnapshot({ resetLevel })` likewise skips world-status recording, galactic population aggregation, follower departure aggregation, and departure skill rewards at `GALAXY` or higher while leaving cleanup active.
 
 Persistent meta systems include Research (with regular research reset), Skills, Solis, Space, Galactic Invasion, Story, and explicitly preserved manager-owned resources/state. Do not infer persistence merely because an object happens to survive one path.
 

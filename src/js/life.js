@@ -1171,13 +1171,19 @@ class LifeDesigner extends EffectableEntity {
     );
   }
 
-  prepareTravelState() {
+  prepareTravelState(resetLevel = GAME_RESET_LEVEL.PLANET) {
+    if (resetLevel >= this.travelStateResetAt) {
+      return null;
+    }
     return {
       advancedResearchPurchases: this.getPurchaseCount('advancedResearch')
     };
   }
 
-  restoreTravelState(travelState = {}) {
+  restoreTravelState(travelState = {}, resetLevel = GAME_RESET_LEVEL.PLANET) {
+    if (resetLevel >= this.travelStateResetAt) {
+      return;
+    }
     const restored = Number.isFinite(travelState.advancedResearchPurchases)
       ? travelState.advancedResearchPurchases
       : 0;

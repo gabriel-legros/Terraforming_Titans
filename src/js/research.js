@@ -34,7 +34,7 @@ class Research {
   // Research Manager Class to manage all researches
   class ResearchManager extends EffectableEntity {
     constructor(researchData) {
-      super({ description: 'Manages all research' });
+      super({ description: 'Manages all research', resetAt: GAME_RESET_LEVEL.NEW_GAME });
       this.researches = {};
       this.advancedResearchUnlocked = false;
       this.orderDirty = false;
