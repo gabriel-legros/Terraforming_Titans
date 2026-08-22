@@ -2536,7 +2536,7 @@ function exportAutomationPresetToClipboard(automationType, preset, button) {
   }
   const payload = buildAutomationPresetTransferPayload(automationType, preset);
   copyTextToClipboard(payload, {
-    promptLabel: getAutomationCardText('exportPresetPrompt', {}, 'Copy preset string:'),
+    manualCopyTitle: getAutomationCardText('exportPresetPrompt', {}, 'Copy preset string:'),
     onSuccess: () => {
       setAutomationTransferButtonFeedback(
         button,
@@ -2658,7 +2658,7 @@ function buildAutomationGlobalPayload() {
 function exportAllAutomationsToClipboard(button) {
   const payload = buildAutomationGlobalPayload();
   copyTextToClipboard(payload, {
-    promptLabel: getAutomationCardText('exportAllAutomationsPrompt', {}, 'Copy all automations string:'),
+    manualCopyTitle: getAutomationCardText('exportAllAutomationsPrompt', {}, 'Copy all automations string:'),
     onSuccess: () => {
       setAutomationTransferButtonFeedback(
         button,

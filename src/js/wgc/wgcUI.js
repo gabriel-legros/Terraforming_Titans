@@ -75,7 +75,7 @@ function copyWGCTeamStatsToClipboard() {
   };
   const serialized = JSON.stringify(payload, null, 2);
   copyTextToClipboard(serialized, {
-    promptLabel: getWGCText('clipboardPrompt', 'Copy Warp Gate Command team stats:')
+    manualCopyTitle: getWGCText('clipboardPrompt', 'Copy Warp Gate Command team stats:')
   });
 }
 

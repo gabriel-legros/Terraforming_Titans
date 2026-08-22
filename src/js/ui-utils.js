@@ -548,8 +548,8 @@ function copyTextToClipboard(text, options = {}) {
   const payload = String(text);
   const onSuccess = options.onSuccess;
   const onError = options.onError;
-  const promptLabel = options.promptLabel || 'Copy to clipboard:';
-  const allowPrompt = options.allowPrompt === undefined ? true : !!options.allowPrompt;
+  const manualCopyTitle = options.manualCopyTitle || t('ui.common.copyToClipboard', null, 'Copy to clipboard:');
+  const allowManualCopy = options.allowManualCopy === undefined ? true : !!options.allowManualCopy;
   const tryExecCommand = () => {
     const helper = document.createElement('textarea');
     helper.value = payload;
@@ -567,7 +567,16 @@ function copyTextToClipboard(text, options = {}) {
       copied = false;
     }
     helper.remove();
-    if (!copied && allowPrompt) window.prompt(promptLabel, payload);
+    if (!copied && allowManualCopy) {
+      createSystemCopyPopup(manualCopyTitle, payload, {
+        description: t(
+          'ui.common.manualCopyInstructions',
+          null,
+          'Automatic copying was unavailable. Copy the selected text manually.'
+        ),
+        closeText: t('ui.common.close', null, 'Close')
+      });
+    }
     return copied;
   };
 

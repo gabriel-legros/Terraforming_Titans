@@ -1218,7 +1218,7 @@ function saveGameToClipboard() {
   }
   const saveData = serializeGameState(getGameState(new Date()));
   copyTextToClipboard(saveData, {
-    promptLabel: 'Copy save data:',
+    manualCopyTitle: t('ui.settings.copySaveData', null, 'Copy save data:'),
     onSuccess: () => {
       console.log('Game saved to clipboard.');
       if (GAME_FEATURES.patienceDailyRewardFromExport) {

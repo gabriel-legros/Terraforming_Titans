@@ -37,6 +37,8 @@ setLanguageData({
       refresh: 'Refresh',
       close: 'Close',
       cancel: 'Cancel',
+      copyToClipboard: 'Copy to clipboard:',
+      manualCopyInstructions: 'Automatic copying was unavailable. Copy the selected text manually.',
     },
     resourceRates: {
       sources: {
@@ -5122,6 +5124,7 @@ setLanguageData({
         importPresetButton: 'Import',
         exportPresetButton: 'Export to clipboard',
         exportPresetPrompt: 'Copy preset string:',
+        exportAllAutomationsPrompt: 'Copy all automations string:',
         exportPresetCopied: 'Copied',
         importPresetDescription: 'Paste an exported preset string below. Import adds it as a new preset.',
         importResearchPresetTitle: 'Import Research Preset',
@@ -5370,6 +5373,7 @@ setLanguageData({
       saveSlotNameInputLabel: 'Save slot name',
       confirmDeleteSlot: 'Are you sure you want to delete the save file in {slot}? This action cannot be undone.',
       confirmNewGame: 'Are you sure you want to start a new game? Any unsaved progress will be lost.',
+      copySaveData: 'Copy save data:',
       pasteSaveData: 'Paste save data to load:',
       loadStringDialogTitle: 'Load from string',
       loadStringDialogDescription: 'Paste save data below.',
@@ -5381,6 +5385,7 @@ setLanguageData({
       nextAutosaveShort: 'Next autosave in {minutes}m {seconds}s',
       saveFailedLocalStorage: 'SAVE FAILED: Game needs cookies/local storage permission.',
       newGame: 'New Game',
+      startNewGame: 'Start New Game',
       saveToFile: 'Save to File',
       loadFromFile: 'Load from File',
       saveToClipboard: 'Save to Clipboard',
