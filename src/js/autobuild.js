@@ -1307,12 +1307,15 @@ function autoActivateStructures(buildings) {
         if (!canApplyAutoActiveTarget(building)) {
             continue;
         }
-        const targetCount = getAutoActivationTargetCount(
-            building,
-            population,
-            workerCap,
-            totalLand,
-            buildings
+        const targetCount = Math.min(
+            getAutoActivationTargetCount(
+                building,
+                population,
+                workerCap,
+                totalLand,
+                buildings
+            ),
+            getAerostatSupportedBuildingLimit(building)
         );
         const desiredActive = building.getClampedSetActiveTargetCount
             ? building.getClampedSetActiveTargetCount(targetCount, building.countNumber)
