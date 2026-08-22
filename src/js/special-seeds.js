@@ -2038,7 +2038,7 @@ const siriusOverrides = {
     gravity: 192.46673190313527,
     radius: siriusARadiusKm,
     mass: siriusAMassKg,
-    albedo: 0,
+    albedo: 0.1,
     rotationPeriod: 132,
     spinPeriod: 132,
     starLuminosity: 0.02448,

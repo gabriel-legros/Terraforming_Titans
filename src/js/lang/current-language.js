@@ -6250,7 +6250,7 @@ setLanguageData({
       },
       shellworldOrbitalRing: {
         name: 'Shellworld Orbital Ring',
-        description: 'Reinforce and construct an orbital ring around the current shellworld.  Cost scales linearly with geometric land, with the standard orbital-ring cost applying at 50B land.  Completion adds 25% land, grants unlimited Space Access Capacity, and multiplies the shellworld\'s terraformed value by 1.25.',
+        description: 'Reinforce and construct an orbital ring around the current shellworld.  Cost scales linearly with geometric land.  Completion adds 25% land, grants unlimited Space Access Capacity, and multiplies the shellworld\'s terraformed value by 1.25.',
       },
       birchWorld: {
         name: 'Birch World',

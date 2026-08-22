@@ -1210,8 +1210,7 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       canUseSpaceStorage: true,
-      showInResourcesRate: false,
-      ignoreDurationModifiers: true
+      showInResourcesRate: false
     }
   },
   birchWorld: {
