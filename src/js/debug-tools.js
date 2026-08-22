@@ -582,16 +582,13 @@
 
   function forceCompleteTerraformingNoChecks() {
     const alreadyTerraformed = spaceManager.isPlanetTerraformed(spaceManager.getCurrentPlanetKey());
-    const isBetterTime = fastestTerraformDays === null || playTimeSeconds < fastestTerraformDays;
-    const sameTimeMissingReal = playTimeSeconds === fastestTerraformDays && fastestTerraformRealSeconds === null;
-    const sameTimeBetterReal = playTimeSeconds === fastestTerraformDays
-      && fastestTerraformRealSeconds !== null
-      && realPlayTimeSeconds < fastestTerraformRealSeconds;
-
-    if (currentPlanetParameters.specialAttributes.countsAsStandardTerraformingRun !== false
-      && (isBetterTime || sameTimeMissingReal || sameTimeBetterReal)) {
-      fastestTerraformDays = playTimeSeconds;
-      fastestTerraformRealSeconds = realPlayTimeSeconds;
+    if (currentPlanetParameters.specialAttributes.countsAsStandardTerraformingRun !== false) {
+      if (fastestTerraformDays === null || playTimeSeconds < fastestTerraformDays) {
+        fastestTerraformDays = playTimeSeconds;
+      }
+      if (fastestTerraformRealSeconds === null || realPlayTimeSeconds < fastestTerraformRealSeconds) {
+        fastestTerraformRealSeconds = realPlayTimeSeconds;
+      }
     }
 
     terraforming.readyForCompletion = true;

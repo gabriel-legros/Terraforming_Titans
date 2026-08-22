@@ -130,6 +130,30 @@
     font-size: 0.9rem;
 }
 
+.patience-facility-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    color: var(--wgc-text-medium);
+    font-size: 0.82rem;
+}
+
+.patience-facility-row[hidden] {
+    display: none;
+}
+
+#patience-facility-select {
+    min-width: 260px;
+    padding: 7px 10px;
+    border: 1px solid var(--wgc-border-color);
+    border-radius: 0;
+    background-color: var(--wgc-bg-dark);
+    color: var(--wgc-text-light);
+    font-family: inherit;
+    font-size: 0.86rem;
+}
+
 #patience-spend-button {
     padding: 8px 15px;
     border: 1px solid var(--wgc-border-color);

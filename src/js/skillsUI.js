@@ -61,6 +61,8 @@ function getSkillPreviewValue(skill, rank) {
             return formatSkillPercent(0.4 * safeRank);
         case 'ecumenopolis_capacity':
             return formatSkillPercent(0.2 * safeRank);
+        case 'orbital_expansion':
+            return formatSkillPercent(0.1 * safeRank);
         case 'life_design_points':
             return getSkillsUIText(
                 'common.lifeDesignValue',
@@ -154,6 +156,7 @@ const atlasSkillLayoutSlots = [
     { row: 4, col: 2 },
     { row: 4, col: 4 },
     { row: 4, col: 6 },
+    { row: 5, col: 0 },
     { row: 5, col: 2 },
     { row: 5, col: 4 }
 ];

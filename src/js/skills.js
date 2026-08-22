@@ -78,7 +78,13 @@ class SkillManager {
 
     const afterQuarterSteps = baseTotal + quarterStep * 3;
     const remainingGap = Math.max(0, targetTotal - afterQuarterSteps);
-    return targetTotal - remainingGap / Math.pow(2, extraRanks - 3);
+    if (extraRanks <= 5) {
+      return targetTotal - remainingGap / Math.pow(2, extraRanks - 3);
+    }
+
+    const rankTenValue = targetTotal - remainingGap / 4;
+    const postRankTenStep = skill.id === 'project_speed' ? 0.005 : 0.01;
+    return rankTenValue + postRankTenStep * (extraRanks - 5);
   }
 
   getEffectValueForRank(skill, effectConfig) {
@@ -97,6 +103,7 @@ class SkillManager {
       (skill.id === 'cloning_expertise' && effectConfig.type === 'productionMultiplier') ||
       (skill.id === 'nanotech_efficiency' && effectConfig.type === 'nanotechEfficiencyMultiplier') ||
       (skill.id === 'optimized_heat_sinks' && effectConfig.type === 'heatSinkPowerMultiplier') ||
+      (skill.id === 'orbital_expansion' && effectConfig.type === 'availableOrbitalsMultiplier') ||
       (skill.id === 'ecumenopolis_capacity' && (
         effectConfig.type === 'storageMultiplier' ||
         effectConfig.type === 'productionMultiplier' ||

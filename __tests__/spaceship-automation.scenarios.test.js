@@ -9,6 +9,7 @@ function setGlobal(name, value, original) {
 
 function createHarness({
   initialShips = 0,
+  energyProductionRate = 0,
   massDriverCount = 0,
   massDriverActive = 0,
   massDriverEquivalency = 10,
@@ -32,6 +33,8 @@ function createHarness({
       this.visible = options.visible !== false;
       this.permanentlyDisabled = !!options.permanentlyDisabled;
       this.relevant = options.relevant !== false;
+      this.energyCostPerShip = options.energyCostPerShip || 0;
+      this.shipDuration = options.shipDuration || 1000;
     }
 
     isVisible() {
@@ -64,6 +67,20 @@ function createHarness({
 
     getAutomationShipCount() {
       return this.assignedSpaceships;
+    }
+
+    getEffectiveDuration() {
+      if (this.assignedSpaceships > 0 && this.assignedSpaceships <= 100) {
+        return this.shipDuration / this.assignedSpaceships;
+      }
+      return this.shipDuration;
+    }
+
+    calculateSpaceshipCost() {
+      if (this.energyCostPerShip <= 0) {
+        return {};
+      }
+      return { colony: { energy: this.energyCostPerShip } };
     }
 
     applySpaceshipDelta(delta) {
@@ -121,7 +138,11 @@ function createHarness({
   setGlobal('SpaceshipProject', MockSpaceshipProject, originalGlobals);
   setGlobal('resources', {
     special: { spaceships: { value: initialShips } },
-    colony: { colonists: { value: 0 }, workers: { cap: 0 } },
+    colony: {
+      energy: { productionRate: energyProductionRate },
+      colonists: { value: 0 },
+      workers: { cap: 0 }
+    },
   }, originalGlobals);
   setGlobal('buildings', {
     massDriver: { count: massDriverCount, active: massDriverActive, autoActiveEnabled: false },
@@ -1009,6 +1030,130 @@ describe('Spaceship automation scenarios', () => {
     expect(projects.disposeResources.getAutomationShipCount()).toBe(0);
     expect(buildings.massDriver.active).toBeGreaterThanOrEqual(16666);
     expect(buildings.massDriver.active).toBeLessThanOrEqual(16667);
+    cleanup();
+  });
+
+  it('caps a project to its selected share of energy production and remains stable below 101 ships', () => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 100,
+      energyProductionRate: 1000,
+      projects: {
+        energyRoute: { energyCostPerShip: 50, shipDuration: 2000 },
+      },
+    });
+    configurePreset(automation, {
+      mode: 'cappedMax',
+      entries: [
+        { projectId: 'energyRoute', weight: 1, max: 30, maxMode: 'energyProduction' },
+      ],
+    });
+
+    automation.applyAssignments();
+    automation.applyAssignments();
+
+    expect(projects.energyRoute.getAutomationShipCount()).toBe(12);
+    expect(resources.special.spaceships.value).toBe(88);
+    cleanup();
+  });
+
+  it('treats an energy-production max as uncapped for a zero-energy project', () => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 1000,
+      energyProductionRate: 1000,
+      projects: {
+        artificialSky: {},
+      },
+    });
+    configurePreset(automation, {
+      mode: 'cappedMax',
+      entries: [
+        { projectId: 'artificialSky', weight: 1, max: 18, maxMode: 'energyProduction' },
+      ],
+    });
+
+    automation.applyAssignments();
+
+    expect(projects.artificialSky.getAutomationShipCount()).toBe(1000);
+    expect(resources.special.spaceships.value).toBe(0);
+    cleanup();
+  });
+
+  it('scales only the current energy-budget step and leaves zero-energy assignments unchanged', () => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 1000,
+      energyProductionRate: 100,
+      projects: {
+        lowEnergyRoute: { energyCostPerShip: 10 },
+        highEnergyRoute: { energyCostPerShip: 20 },
+        freeRoute: {},
+      },
+    });
+    automation.presets = [{
+      id: 1,
+      name: 'Energy steps',
+      steps: [
+        {
+          id: 1,
+          mode: 'fill',
+          limit: 10,
+          entries: [
+            { projectId: 'lowEnergyRoute', weight: 1, max: null, maxMode: 'absolute' },
+          ],
+        },
+        {
+          id: 2,
+          mode: 'energyProduction',
+          limit: 30,
+          entries: [
+            { projectId: 'lowEnergyRoute', weight: 1, max: null, maxMode: 'absolute' },
+            { projectId: 'highEnergyRoute', weight: 1, max: null, maxMode: 'absolute' },
+            { projectId: 'freeRoute', weight: 1, max: null, maxMode: 'absolute' },
+          ],
+        },
+        {
+          id: 3,
+          mode: 'fill',
+          limit: 1000,
+          entries: [
+            { projectId: 'unassignedShips', weight: 1, max: null, maxMode: 'absolute' },
+          ],
+        },
+      ],
+    }];
+    automation.activePresetId = 1;
+
+    automation.applyAssignments();
+
+    expect(projects.lowEnergyRoute.getAutomationShipCount()).toBe(11);
+    expect(projects.highEnergyRoute.getAutomationShipCount()).toBe(1);
+    expect(projects.freeRoute.getAutomationShipCount()).toBe(330);
+    expect(resources.special.spaceships.value).toBe(658);
+    expect(
+      (projects.lowEnergyRoute.getAutomationShipCount() - 10) * 10
+        + projects.highEnergyRoute.getAutomationShipCount() * 20
+    ).toBe(30);
+    cleanup();
+  });
+
+  it('preserves decimal step energy budgets through save import and export', () => {
+    const { automation, cleanup } = createHarness();
+    automation.loadState({
+      presets: [{
+        id: 9,
+        name: 'Energy',
+        steps: [{ id: 4, mode: 'energyProduction', limit: 12.34567, entries: [] }],
+      }],
+      activePresetId: 9,
+    });
+
+    const exported = automation.exportPreset(9);
+    const importedId = automation.importPreset(exported);
+    const imported = automation.getPresetById(importedId);
+
+    expect(exported.steps[0].mode).toBe('energyProduction');
+    expect(exported.steps[0].limit).toBe(12.34567);
+    expect(imported.steps[0].mode).toBe('energyProduction');
+    expect(imported.steps[0].limit).toBe(12.34567);
     cleanup();
   });
 

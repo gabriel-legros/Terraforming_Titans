@@ -393,7 +393,9 @@ class FollowersManager extends EffectableEntity {
   }
 
   getOrbitalConfigs() {
-    return followersOrbitalParameters.orbitals;
+    return followersOrbitalParameters.orbitals.filter(config => (
+      !config.enableFlag || this.isBooleanFlagSet(config.enableFlag)
+    ));
   }
 
   ensureTrackedOrbitals() {
@@ -1095,6 +1097,9 @@ class FollowersManager extends EffectableEntity {
   }
 
   isTargetResourceUnlocked(config) {
+    if (config.sourceType === 'storage') {
+      return true;
+    }
     const resource = resources[config.targetCategory][config.targetResource];
     return !!resource && resource.unlocked;
   }
@@ -1269,6 +1274,10 @@ class FollowersManager extends EffectableEntity {
   }
 
   getPerOrbitalRate(config) {
+    if (config.sourceType === 'storage') {
+      return 0;
+    }
+
     const targetResource = resources[config.targetCategory][config.targetResource];
     if (!targetResource || !targetResource.unlocked) {
       return 0;
@@ -1315,6 +1324,24 @@ class FollowersManager extends EffectableEntity {
     return Math.max(100, perOrbitalRate * 10);
   }
 
+  getStorageOrbitalBonuses(config) {
+    const bonuses = {};
+    const multiplier = Number.isFinite(config.multiplier) ? config.multiplier : 1;
+    const sourceIds = Array.isArray(config.storageSourceIds) ? config.storageSourceIds : [];
+    for (let i = 0; i < sourceIds.length; i += 1) {
+      const source = buildingsParameters[sourceIds[i]];
+      const storage = source && source.storage ? source.storage : {};
+      for (const category in storage) {
+        for (const resourceName in storage[category]) {
+          const amount = storage[category][resourceName] * multiplier;
+          const cacheKey = `${category}:${resourceName}`;
+          bonuses[cacheKey] = (bonuses[cacheKey] || 0) + amount;
+        }
+      }
+    }
+    return bonuses;
+  }
+
   rebuildOrbitalStorageCapBonusCache() {
     if (!isManagerEffectivelyEnabled(this, 'followersManager')) {
       this.orbitalStorageCapBonusCache = {};
@@ -1328,6 +1355,22 @@ class FollowersManager extends EffectableEntity {
       const config = configs[i];
       const assigned = snapshot.assignments[config.id] || 0;
       if (assigned <= 0) {
+        continue;
+      }
+
+      if (config.sourceType === 'storage') {
+        const storageBonuses = this.getStorageOrbitalBonuses(config);
+        for (const cacheKey in storageBonuses) {
+          const separatorIndex = cacheKey.indexOf(':');
+          const category = cacheKey.slice(0, separatorIndex);
+          const resourceName = cacheKey.slice(separatorIndex + 1);
+          const targetResource = resources[category][resourceName];
+          if (!targetResource || !targetResource.hasCap || !targetResource.unlocked) {
+            continue;
+          }
+          bonusCache[cacheKey] = (bonusCache[cacheKey] || 0)
+            + storageBonuses[cacheKey] * assigned;
+        }
         continue;
       }
 
@@ -1376,6 +1419,11 @@ class FollowersManager extends EffectableEntity {
       const id = config.id;
       const assigned = snapshot.assignments[id] || 0;
       appliedAssignments[id] = assigned;
+
+      if (config.sourceType === 'storage') {
+        rates[id] = 0;
+        continue;
+      }
 
       let rate = 0;
       const targetResource = resources[config.targetCategory][config.targetResource];

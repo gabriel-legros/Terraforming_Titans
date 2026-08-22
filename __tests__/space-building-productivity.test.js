@@ -1008,7 +1008,12 @@ function setupHarness(initialStorage = {}) {
   setGlobal('attachDynamicInfoTooltip', () => {}, originalGlobals);
   setGlobal('getZones', () => [], originalGlobals);
   setGlobal('getZonePercentage', () => 0, originalGlobals);
-  setGlobal('buildings', {}, originalGlobals);
+  const harnessBuildings = {};
+  Object.defineProperty(harnessBuildings, 'starLifter', {
+    configurable: true,
+    value: { syncLifterSuperchargeUpgrades: () => {} },
+  });
+  setGlobal('buildings', harnessBuildings, originalGlobals);
   setGlobal('resolveWorldBaseLand', () => 0, originalGlobals);
   setGlobal('resolveWorldGeometricLand', () => 0, originalGlobals);
   setGlobal('calculateSurfaceAreaHectaresFromRadius', () => 0, originalGlobals);
@@ -1379,7 +1384,7 @@ describe('Space building productivity via produceResources', () => {
     { metal: 200 },
     { metal: 500 },
   ])('Manufacturing World superalloy recipe runs at expected ratio with metal=$metal', ({ metal }) => {
-    const harness = setupHarness({ metal, superalloys: 0 });
+    const harness = setupHarness({ metal, superalloys: 0, hydrogen: 1 });
     const {
       produceResources,
       projectManager,
@@ -1436,7 +1441,7 @@ describe('Space building productivity via produceResources', () => {
 
   test('Manufacturing World throughputMultiplier effect scales production and consumption', () => {
     const initialMetal = 10000;
-    const harness = setupHarness({ metal: initialMetal, superalloys: 0 });
+    const harness = setupHarness({ metal: initialMetal, superalloys: 0, hydrogen: 1 });
     const {
       produceResources,
       projectManager,
@@ -1488,7 +1493,7 @@ describe('Space building productivity via produceResources', () => {
     { extraDemand: 600 },
   ])('Manufacturing World productivity reflects shared metal demand (extra=$extraDemand/s)', ({ extraDemand }) => {
     const initialMetal = 200;
-    const harness = setupHarness({ metal: initialMetal, superalloys: 0 });
+    const harness = setupHarness({ metal: initialMetal, superalloys: 0, hydrogen: 1 });
     const {
       produceResources,
       projectManager,

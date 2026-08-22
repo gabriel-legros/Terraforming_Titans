@@ -403,13 +403,19 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
         return;
       }
       const assigned = activeKeySet.has(key) ? Number(this.yardAssignments[key] || 0n) * multiplier : 0;
+      const effectId = `${this.name}-yard-${key}`;
+      const previousEffect = project.activeEffects.find((effect) => effect.effectId === effectId);
+      const durationChanged = !previousEffect || previousEffect.value !== assigned;
       project.addAndReplace({
         type: 'effectiveTerraformedWorlds',
         value: assigned,
-        effectId: `${this.name}-yard-${key}`,
+        effectId,
         sourceId: this.name,
         name: this.displayName
       });
+      if (durationChanged) {
+        project.updateDurationFromEffects();
+      }
     });
   }
 

@@ -3,6 +3,7 @@
   const SKYHOOK_MODE = 'skyhook';
   const CAPACITY_TARGET_FIXED = 'fixed';
   const CAPACITY_TARGET_WORKERS = 'workers';
+  const CAPACITY_TARGET_GEOMETRIC_LAND_PERCENT = 'geometricLandPercent';
 
   function calculateTetherGeometry(
     gravity,
@@ -299,6 +300,10 @@
     getCapacityTarget() {
       if (this.capacityTargetMode === CAPACITY_TARGET_WORKERS) {
         return this.capacityTarget * Math.max(0, resources.colony.workers.potential);
+      }
+      if (this.capacityTargetMode === CAPACITY_TARGET_GEOMETRIC_LAND_PERCENT) {
+        const geometricLand = Math.max(0, resolveWorldGeometricLand(terraforming, resources.surface.land));
+        return geometricLand * this.capacityTarget / 100;
       }
       return this.capacityTarget;
     }
@@ -646,7 +651,10 @@
       const workersTargetOption = document.createElement('option');
       workersTargetOption.value = CAPACITY_TARGET_WORKERS;
       workersTargetOption.textContent = t('ui.projects.spaceElevator.capacityTargetWorkers', null, 'x workers');
-      targetModeSelect.append(fixedTargetOption, workersTargetOption);
+      const geometricLandTargetOption = document.createElement('option');
+      geometricLandTargetOption.value = CAPACITY_TARGET_GEOMETRIC_LAND_PERCENT;
+      geometricLandTargetOption.textContent = t('ui.projects.spaceElevator.capacityTargetGeometricLandPercent', null, '% of geometric land');
+      targetModeSelect.append(fixedTargetOption, workersTargetOption, geometricLandTargetOption);
       const targetUnit = document.createElement('span');
       targetUnit.className = 'space-access-target-unit';
       targetUnit.textContent = t('ui.projects.spaceElevator.capacityUnit', null, 't/s');
@@ -674,7 +682,7 @@
         t(
           'ui.projects.spaceElevator.capThroughputTooltip',
           null,
-          'Proportionally slows continuous spaceship traffic when shared demand exceeds Space Access Capacity. Aerobraking bypass traffic, Teleporters, and Mass Drivers remain uncapped.'
+          'Proportionally slows continuous spaceship traffic when shared demand exceeds Space Access Capacity. Imports targeting Space Storage, aerobraking bypass traffic, Teleporters, and Mass Drivers remain uncapped.'
         )
       );
       throughputCapToggle.append(throughputCapCheckbox, throughputCapLabel, throughputCapInfo);
@@ -723,7 +731,8 @@
       });
       targetModeSelect.addEventListener('change', () => {
         this.capacityTargetMode = targetModeSelect.value === CAPACITY_TARGET_WORKERS
-          ? CAPACITY_TARGET_WORKERS
+          || targetModeSelect.value === CAPACITY_TARGET_GEOMETRIC_LAND_PERCENT
+          ? targetModeSelect.value
           : CAPACITY_TARGET_FIXED;
         if (this.hasReachedCapacityTarget()) {
           this.isActive = false;
@@ -847,7 +856,8 @@
       }
       if (Object.prototype.hasOwnProperty.call(settings, 'capacityTargetMode')) {
         this.capacityTargetMode = settings.capacityTargetMode === CAPACITY_TARGET_WORKERS
-          ? CAPACITY_TARGET_WORKERS
+          || settings.capacityTargetMode === CAPACITY_TARGET_GEOMETRIC_LAND_PERCENT
+          ? settings.capacityTargetMode
           : CAPACITY_TARGET_FIXED;
       }
       if (Object.prototype.hasOwnProperty.call(settings, 'capThroughputToCapacity')) {
@@ -856,6 +866,45 @@
       if (this.hasReachedCapacityTarget()) {
         this.isActive = false;
         this.manualContinuousRun = false;
+      }
+    }
+
+    saveTravelState() {
+      if (!gameSettings.preserveProjectSettingsOnTravel) {
+        return {};
+      }
+      return {
+        constructionMode: this.constructionMode,
+        capacityTargetEnabled: this.capacityTargetEnabled === true,
+        capacityTarget: this.capacityTarget,
+        capacityTargetMode: this.capacityTargetMode,
+        capThroughputToCapacity: this.capThroughputToCapacity === true,
+      };
+    }
+
+    loadTravelState(state = {}) {
+      if (!gameSettings.preserveProjectSettingsOnTravel) {
+        return;
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'constructionMode')) {
+        this.constructionMode = state.constructionMode === SKYHOOK_MODE
+          ? SKYHOOK_MODE
+          : SPACE_ELEVATOR_MODE;
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'capacityTargetEnabled')) {
+        this.capacityTargetEnabled = state.capacityTargetEnabled === true;
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'capacityTarget')) {
+        this.capacityTarget = Math.max(0, Number(state.capacityTarget) || 0);
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'capacityTargetMode')) {
+        this.capacityTargetMode = state.capacityTargetMode === CAPACITY_TARGET_WORKERS
+          || state.capacityTargetMode === CAPACITY_TARGET_GEOMETRIC_LAND_PERCENT
+          ? state.capacityTargetMode
+          : CAPACITY_TARGET_FIXED;
+      }
+      if (Object.prototype.hasOwnProperty.call(state, 'capThroughputToCapacity')) {
+        this.capThroughputToCapacity = state.capThroughputToCapacity === true;
       }
     }
 
@@ -891,7 +940,8 @@
       this.capacityTargetEnabled = state.capacityTargetEnabled === true;
       this.capacityTarget = Math.max(0, state.capacityTarget ?? this.spaceAccessParameters.elevatorCapacity);
       this.capacityTargetMode = state.capacityTargetMode === CAPACITY_TARGET_WORKERS
-        ? CAPACITY_TARGET_WORKERS
+        || state.capacityTargetMode === CAPACITY_TARGET_GEOMETRIC_LAND_PERCENT
+        ? state.capacityTargetMode
         : CAPACITY_TARGET_FIXED;
       this.capThroughputToCapacity = state.capThroughputToCapacity === true;
     }

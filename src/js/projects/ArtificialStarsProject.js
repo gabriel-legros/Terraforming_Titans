@@ -71,6 +71,13 @@ class ArtificialStarsProject extends NuclearAlchemyFurnaceProject {
     );
   }
 
+  getExpansionRateSourceLabel() {
+    return registerRateSource(
+      `project:${this.name}:expansion`,
+      this.getText('rateSources.expansion', null, `${this.displayName} expansion`)
+    );
+  }
+
   getRecipeWgcMultiplier() {
     return warpGateCommand.getMultiplier(ARTIFICIAL_STAR_RECIPE.wgcUpgradeId);
   }

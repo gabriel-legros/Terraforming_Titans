@@ -23,6 +23,9 @@ const DYNAMIC_WORLD_SURFACE_MASS_KEYS = [
   'liquidNitrogen',
   'nitrogenIce',
   'biomass',
+  'hazardousBiomass',
+  'hazardousMachinery',
+  'rocks',
   'graphite',
   'scrapMetal',
   'garbage',
@@ -87,6 +90,41 @@ function calculateAverageDensityKgM3(massKg, volumeM3) {
     return WORLD_GEOMETRY_PARAMETERS.fallbackDensityKgM3;
   }
   return Math.max(WORLD_GEOMETRY_PARAMETERS.minimumDensityKgM3, massKg / volumeM3);
+}
+
+function calculateStellarEquilibriumRadiusKm(massKg) {
+  const parameters = WORLD_GEOMETRY_PARAMETERS.stellarEvolution;
+  const massSolar = massKg / parameters.solarMassKg;
+  const exponent = massSolar <= parameters.stellarRadiusExponentBoundarySolar
+    ? parameters.lowMassStellarRadiusExponent
+    : parameters.highMassStellarRadiusExponent;
+  return Math.max(
+    parameters.jupiterRadiusKm,
+    parameters.solarRadiusKm * Math.pow(massSolar, exponent)
+  );
+}
+
+function calculateDynamicWorldEffectiveRadiusKm(materialRadiusKm, massKg, planetParameters) {
+  const attributes = planetParameters.specialAttributes;
+  if (attributes.dynamicMass !== true || attributes.stellarEvolutionDisabled === true) {
+    return materialRadiusKm;
+  }
+
+  const parameters = WORLD_GEOMETRY_PARAMETERS.stellarEvolution;
+  const massJupiter = massKg / parameters.jupiterMassKg;
+  if (massJupiter < parameters.brownDwarfThresholdJupiter) {
+    return materialRadiusKm;
+  }
+
+  const stellarRadiusKm = calculateStellarEquilibriumRadiusKm(massKg);
+  if (massJupiter >= parameters.fusionThresholdJupiter) {
+    return stellarRadiusKm;
+  }
+
+  const progress = (massJupiter - parameters.brownDwarfThresholdJupiter)
+    / (parameters.fusionThresholdJupiter - parameters.brownDwarfThresholdJupiter);
+  const blend = progress * progress * (3 - 2 * progress);
+  return materialRadiusKm + (stellarRadiusKm - materialRadiusKm) * blend;
 }
 
 function getDynamicLiquidHydrogenDensity(amountTons) {
@@ -262,25 +300,55 @@ function getDynamicWorldCurrentPlanetaryMassKg(terraformingState) {
 
 function getDynamicWorldCurrentPlanetaryVolumeM3(terraformingState) {
   const celestial = terraformingState.celestialParameters;
-  return Math.max(
-    celestial.basePlanetaryVolumeM3 * WORLD_GEOMETRY_PARAMETERS.minimumVolumeFraction,
-    celestial.basePlanetaryVolumeM3 + (celestial.dynamicDirectVolumeDeltaM3 || 0)
-  );
+  return getDynamicWorldCurrentPlanetaryMassKg(terraformingState) > 0
+    ? Math.max(0, celestial.basePlanetaryVolumeM3 + (celestial.dynamicDirectVolumeDeltaM3 || 0))
+    : 0;
+}
+
+function getDynamicWorldCurrentStellarMassKg(terraformingState) {
+  return Math.max(0, terraformingState.celestialParameters.stellarMassKg || 0);
+}
+
+function getDynamicWorldCurrentStellarMaterialVolumeM3(terraformingState) {
+  return Math.max(0, terraformingState.celestialParameters.stellarMaterialVolumeM3 || 0);
 }
 
 function getDynamicWorldCurrentMassKg(terraformingState) {
   return getDynamicWorldCurrentPlanetaryMassKg(terraformingState)
+    + getDynamicWorldCurrentStellarMassKg(terraformingState)
     + calculateDynamicWorldCurrentSurfaceMassKg(terraformingState.resources)
     + calculateDynamicWorldCurrentAtmosphericMassKg(terraformingState.resources);
 }
 
 function getDynamicWorldCurrentVolumeM3(terraformingState) {
   return getDynamicWorldCurrentPlanetaryVolumeM3(terraformingState)
+    + getDynamicWorldCurrentStellarMaterialVolumeM3(terraformingState)
     + calculateDynamicWorldCurrentSurfaceVolumeM3(terraformingState.resources);
 }
 
 function getDynamicWorldPlanetaryMassAvailableTons(terraformingState) {
   return getDynamicWorldCurrentPlanetaryMassKg(terraformingState) / 1000;
+}
+
+function getDynamicWorldStellarMassAvailableTons(terraformingState) {
+  return getDynamicWorldCurrentStellarMassKg(terraformingState) / 1000;
+}
+
+function getDynamicWorldStellarLiftableMassTons(terraformingState) {
+  if (!terraformingState) {
+    return 0;
+  }
+
+  const stellarEvolution = WORLD_GEOMETRY_PARAMETERS.stellarEvolution;
+  const minimumMassKg = stellarEvolution.jupiterMassKg
+    * stellarEvolution.stellarLiftingMinimumJupiter;
+  const totalMassAboveMinimumKg = Math.max(
+    0,
+    getDynamicWorldCurrentMassKg(terraformingState) - minimumMassKg
+  );
+  const bulkMassKg = getDynamicWorldCurrentStellarMassKg(terraformingState)
+    + getDynamicWorldCurrentPlanetaryMassKg(terraformingState);
+  return Math.min(totalMassAboveMinimumKg, bulkMassKg) / 1000;
 }
 
 function setDynamicWorldDirectLedger(terraformingState, massDeltaKg, volumeDeltaM3) {
@@ -297,6 +365,7 @@ function addDynamicWorldPlanetaryMaterial(terraformingState, materialKey, amount
   const density = WORLD_GEOMETRY_PARAMETERS.planetaryImportDensityKgM3[materialKey]
     || WORLD_GEOMETRY_PARAMETERS.fallbackDensityKgM3;
   const addedKg = amountTons * 1000;
+  recordStellarEvolutionResourceImport(terraformingState, 'material', materialKey, amountTons);
   setDynamicWorldDirectLedger(
     terraformingState,
     (celestial.dynamicDirectMassDeltaKg || 0) + addedKg,
@@ -319,12 +388,53 @@ function disposeDynamicWorldPlanetaryMass(terraformingState, amountTons) {
   const removableKg = Math.min(amountTons * 1000, currentMassKg);
   const currentVolumeM3 = getDynamicWorldCurrentPlanetaryVolumeM3(terraformingState);
   const removedVolumeM3 = removableKg / calculateAverageDensityKgM3(currentMassKg, currentVolumeM3);
+  recordStellarEvolutionBulkDisposal(terraformingState, removableKg / 1000);
   setDynamicWorldDirectLedger(
     terraformingState,
     (celestial.dynamicDirectMassDeltaKg || 0) - removableKg,
     (celestial.dynamicDirectVolumeDeltaM3 || 0) - removedVolumeM3
   );
   return removableKg / 1000;
+}
+
+function disposeDynamicWorldStellarMass(terraformingState, amountTons) {
+  if (!terraformingState || amountTons <= 0) {
+    return 0;
+  }
+
+  const celestial = terraformingState.celestialParameters;
+  const currentMassKg = getDynamicWorldCurrentStellarMassKg(terraformingState);
+  if (!(currentMassKg > 0)) {
+    return 0;
+  }
+
+  const removableKg = Math.min(amountTons * 1000, currentMassKg);
+  const currentVolumeM3 = getDynamicWorldCurrentStellarMaterialVolumeM3(terraformingState);
+  const removedVolumeM3 = currentVolumeM3 * (removableKg / currentMassKg);
+  recordStellarEvolutionStellarDisposal(terraformingState, removableKg / 1000);
+  celestial.stellarMassKg = currentMassKg - removableKg;
+  celestial.stellarMaterialVolumeM3 = Math.max(0, currentVolumeM3 - removedVolumeM3);
+  return removableKg / 1000;
+}
+
+function disposeDynamicWorldStellarLiftableMass(terraformingState, amountTons) {
+  const removableTons = Math.min(
+    Math.max(0, amountTons),
+    getDynamicWorldStellarLiftableMassTons(terraformingState)
+  );
+  if (!(removableTons > 0)) {
+    return 0;
+  }
+
+  const removedStellarTons = disposeDynamicWorldStellarMass(
+    terraformingState,
+    removableTons
+  );
+  const removedPlanetaryTons = disposeDynamicWorldPlanetaryMass(
+    terraformingState,
+    removableTons - removedStellarTons
+  );
+  return removedStellarTons + removedPlanetaryTons;
 }
 
 function hasDynamicMassEnabled(terraformingState, planetParameters) {
@@ -353,25 +463,51 @@ function syncDynamicWorldGeometry(terraformingState, planetParameters) {
   if (hasDynamicMassEnabled(terraformingState, planetParameters)) {
     celestial.dynamicDirectMassDeltaKg ||= 0;
     celestial.dynamicDirectVolumeDeltaM3 ||= 0;
+    celestial.stellarMassKg ||= 0;
+    celestial.stellarMaterialVolumeM3 ||= 0;
 
     const currentPlanetaryMassKg = getDynamicWorldCurrentPlanetaryMassKg(terraformingState);
+    const currentStellarMassKg = getDynamicWorldCurrentStellarMassKg(terraformingState);
     const currentSurfaceMassKg = calculateDynamicWorldCurrentSurfaceMassKg(terraformingState.resources);
     const currentAtmosphericMassKg = calculateDynamicWorldCurrentAtmosphericMassKg(terraformingState.resources);
     const currentPlanetaryVolumeM3 = getDynamicWorldCurrentPlanetaryVolumeM3(terraformingState);
     const currentSurfaceVolumeM3 = calculateDynamicWorldCurrentSurfaceVolumeM3(terraformingState.resources);
-    const currentMassKg = currentPlanetaryMassKg + currentSurfaceMassKg + currentAtmosphericMassKg;
-    const currentVolumeM3 = currentPlanetaryVolumeM3 + currentSurfaceVolumeM3;
+    const currentStellarMaterialVolumeM3 = getDynamicWorldCurrentStellarMaterialVolumeM3(terraformingState);
+    const currentMassKg = currentPlanetaryMassKg + currentStellarMassKg
+      + currentSurfaceMassKg + currentAtmosphericMassKg;
+    const currentMaterialVolumeM3 = currentPlanetaryVolumeM3
+      + currentStellarMaterialVolumeM3 + currentSurfaceVolumeM3;
+    const materialRadiusKm = calculateRadiusKmFromVolume(currentMaterialVolumeM3);
+    const radiusKm = calculateDynamicWorldEffectiveRadiusKm(
+      materialRadiusKm,
+      currentMassKg,
+      planetParameters
+    );
+    const currentVolumeM3 = calculateSphereVolumeM3FromRadius(radiusKm);
+    const stellarParameters = WORLD_GEOMETRY_PARAMETERS.stellarEvolution;
+    const massJupiter = currentMassKg / stellarParameters.jupiterMassKg;
+    const usesStellarStructure = planetParameters.specialAttributes.stellarEvolutionDisabled !== true
+      && massJupiter >= stellarParameters.brownDwarfThresholdJupiter;
 
     Object.assign(celestial, {
       mass: currentMassKg,
-      radius: calculateRadiusKmFromVolume(currentVolumeM3),
+      radius: radiusKm,
       dynamicMassDeltaKg: currentMassKg - celestial.baseMass,
       dynamicSurfaceVolumeDeltaM3: currentVolumeM3 - calculateSphereVolumeM3FromRadius(celestial.baseRadius),
       currentPlanetaryMassKg,
+      currentStellarMassKg,
       currentSurfaceMassKg,
       currentAtmosphericMassKg,
       currentPlanetaryVolumeM3,
-      currentSurfaceVolumeM3
+      currentStellarMaterialVolumeM3,
+      currentSurfaceVolumeM3,
+      currentMaterialVolumeM3,
+      currentVolumeM3,
+      materialRadiusKm,
+      stellarEquilibriumRadiusKm: usesStellarStructure
+        ? calculateStellarEquilibriumRadiusKm(currentMassKg)
+        : null,
+      meanDensityKgM3: calculateAverageDensityKgM3(currentMassKg, currentVolumeM3)
     });
     celestial.gravity = calculateGravityFromMassRadius(celestial.mass, celestial.radius);
   }
@@ -384,6 +520,8 @@ try {
   module.exports = {
     calculateCrossSectionAreaM2FromRadius,
     calculateAverageDensityKgM3,
+    calculateStellarEquilibriumRadiusKm,
+    calculateDynamicWorldEffectiveRadiusKm,
     getDynamicLiquidHydrogenDensity,
     getDynamicWorldSurfaceDensity,
     calculateDynamicWorldCurrentAtmosphericMassKg,
@@ -399,9 +537,13 @@ try {
     addDynamicWorldPlanetaryMaterial,
     calculateGravityFromMassRadius,
     disposeDynamicWorldPlanetaryMass,
+    disposeDynamicWorldStellarMass,
+    disposeDynamicWorldStellarLiftableMass,
     getDynamicWorldCurrentMassKg,
     getDynamicWorldCurrentVolumeM3,
     getDynamicWorldPlanetaryMassAvailableTons,
+    getDynamicWorldStellarMassAvailableTons,
+    getDynamicWorldStellarLiftableMassTons,
     hasDynamicMassEnabled,
     calculateRadiusKmFromVolume,
     calculateSphereVolumeM3FromRadius,

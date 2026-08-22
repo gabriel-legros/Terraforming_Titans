@@ -193,6 +193,7 @@ class Building extends EffectableEntity {
         automationBuildingsDropDown,
         planetaryMassChange,
         autoBuildMaxOption,
+        autoBuildWorkerShareOption,
         snapProductivity,
         displayConsumptionAtMaxProductivity,
         ignoreResourceForProductivityResourceDisplay,
@@ -264,6 +265,7 @@ class Building extends EffectableEntity {
       this.planetaryMassChange = planetaryMassChange || null;
 
       this.autoBuildMaxOption = !!autoBuildMaxOption;
+      this.autoBuildWorkerShareOption = !!autoBuildWorkerShareOption;
       this.autoBuildPercent = config.autoBuildPercent ?? this.autoBuildPercent;
       this.autoBuildFillEnabled = !!config.autoBuildFillEnabled;
       this.autoBuildFillPercent = config.autoBuildFillPercent ?? 95;
@@ -375,7 +377,7 @@ class Building extends EffectableEntity {
     const perBuildingNeed = this.getTotalWorkerNeed() * this.getEffectiveWorkerMultiplier();
     const maxWorkers = Math.max(0, (this.autoBuildPercent || 0) * workerCap / 100);
     if (perBuildingNeed <= 0) {
-      return 0;
+      return Infinity;
     }
     return Math.floor(maxWorkers / perBuildingNeed);
   }
@@ -1180,6 +1182,10 @@ class Building extends EffectableEntity {
 
   getDisableHazards() {
     return this.disableWhenHazard || [];
+  }
+
+  isMoltenSurfaceAttritionImmune() {
+    return this.temperatureMaintenanceImmune;
   }
 
   isHazardActiveForDisable(hazardKey) {

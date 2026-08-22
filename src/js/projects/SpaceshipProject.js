@@ -511,6 +511,12 @@ class SpaceshipProject extends Project {
     return 0;
   }
 
+  getSpaceAccessCapacityBypassFraction() {
+    return gameSettings.aerobraking
+      ? this.getAerobrakingSpaceAccessBypassFraction()
+      : 0;
+  }
+
   getSpaceAccessDemand() {
     if (
       !gameSettings.spaceAccessCapacity ||
@@ -532,7 +538,7 @@ class SpaceshipProject extends Project {
     return shipCount
       * this.getSpaceshipEnergyCostTonnage()
       / duration
-      * (1 - this.getAerobrakingSpaceAccessBypassFraction());
+      * (1 - this.getSpaceAccessCapacityBypassFraction());
   }
 
   updateCostAndGains(elements) {

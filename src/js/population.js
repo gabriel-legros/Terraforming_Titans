@@ -259,6 +259,8 @@ class PopulationModule extends EffectableEntity {
       // Get the current population and population cap
       let currentPopulation = this.populationResource.value;
       const populationCap = this.populationResource.cap;
+      const incomingNetPopulationRate =
+        this.populationResource.productionRate - this.populationResource.consumptionRate;
       this.currentWorldPeakPopulation = Math.max(this.currentWorldPeakPopulation, currentPopulation);
 
       // Crop tiny overages to the cap to avoid unnecessary decay
@@ -399,8 +401,10 @@ class PopulationModule extends EffectableEntity {
       this.currentWorldPeakPopulation = Math.max(this.currentWorldPeakPopulation, currentPopulation);
       this.currentWorldOverpopulationLossTotal = Math.max(0, this.currentWorldPeakPopulation - currentPopulation);
 
-      if(currentPopulation < 1)
-      {
+      if (
+        currentPopulation < 1 &&
+        incomingNetPopulationRate <= 0
+      ) {
         this.populationResource.value = 0;
       }
     // Update worker requirements based on active buildings

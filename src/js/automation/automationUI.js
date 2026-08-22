@@ -1224,7 +1224,7 @@ function parseAutomationPresetJsonFieldValue(rawValue, options = {}) {
     }
     const numeric = parseFlexibleNumber(compactNumberText);
     if (Number.isFinite(numeric)) {
-      return numeric;
+      return numeric / (options.numericDisplayScale ?? 1);
     }
   }
   if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
@@ -1233,9 +1233,10 @@ function parseAutomationPresetJsonFieldValue(rawValue, options = {}) {
   return rawValue;
 }
 
-function formatAutomationPresetJsonFieldValue(value) {
+function formatAutomationPresetJsonFieldValue(value, options = {}) {
+  options = options || {};
   if (typeof value === 'number' && Number.isFinite(value)) {
-    return formatNumber(value, false, 3, true);
+    return formatNumber(value * (options.numericDisplayScale ?? 1), false, 3, true);
   }
   if (value && value.constructor === Object) {
     return JSON.stringify(value);
@@ -1596,7 +1597,7 @@ function renderAutomationPresetEditableJson(details, preset, leafPaths, onFieldC
       input.value = valueToRender ? 'true' : 'false';
     } else {
       input.type = 'text';
-      input.value = formatAutomationPresetJsonFieldValue(valueToRender);
+      input.value = formatAutomationPresetJsonFieldValue(valueToRender, fieldOptions);
       input.size = Math.max(1, input.value.length);
       input.addEventListener('input', () => {
         input.size = Math.max(1, input.value.length);
@@ -2395,7 +2396,8 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
           }
         }
       } else {
-        const nextValue = formatAutomationPresetJsonFieldValue(valueToRender);
+        const fieldOptions = fieldOptionsResolver ? fieldOptionsResolver(leafPath, valueToRender, effectivePreset) : null;
+        const nextValue = formatAutomationPresetJsonFieldValue(valueToRender, fieldOptions);
         if (input.value !== nextValue) {
           input.value = nextValue;
         }

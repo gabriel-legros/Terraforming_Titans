@@ -468,6 +468,10 @@ function formatScientific(value, precision = 1) {
   return value.toExponential(precision).replace('e+', 'e');
 }
 
+function hasMojibakeMicroSuffix(value) {
+  return typeof value === 'string' && /[^\x00-\x7f]µ$/.test(value);
+}
+
 function parseFlexibleNumber(value) {
   let text;
   try {
@@ -543,6 +547,10 @@ function parseFlexibleNumber(value) {
   const factor = suffixMap.get(suffixText);
   if (factor) return numericValue * factor;
 
+  if (hasMojibakeMicroSuffix(suffixText)) {
+    return numericValue * 1e-6;
+  }
+
   const sortedSuffixes = Array.from(suffixMap.keys()).sort((a, b) => b.length - a.length);
   const matched = sortedSuffixes.find((suffix) => suffixText.startsWith(suffix));
   if (!matched) return numericValue;
@@ -558,6 +566,7 @@ function parseFlexibleNumber(value) {
       formatShipCount,
       formatBuildingCount,
       formatScientific,
+      hasMojibakeMicroSuffix,
       parseFlexibleNumber,
       toDisplayTemperature,
       toDisplayTemperatureDelta,

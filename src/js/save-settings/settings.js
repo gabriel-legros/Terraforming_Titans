@@ -28,6 +28,8 @@ const LEGACY_GAME_SETTING_DEFAULTS = {
   realisticFactoryEnergyConsumption: false,
   aerobraking: false,
   infinitePatience: false,
+  disableDailyPatience: false,
+  fixedGoldenAsteroidInterval: false,
   liftersStrippingCap: false,
   orbitalCap: false,
   allowSpaceStorageBiomassWithdrawOnNonHumanDominion: false,
@@ -63,7 +65,10 @@ function loadGameSettings(savedSettings) {
   applyGameFramerateSetting();
   delete gameSettings.disableAutosave;
   normalizeDifficultySettings();
-  reapplySharedManagerEffects({ includeConditionalReconcile: true });
+  reapplySharedManagerEffects({
+    includeConditionalReconcile: true,
+    includeProject: true
+  });
   setPauseKeybindCode(gameSettings.pauseKeybind);
   setDialogueSkipKeybindCode(gameSettings.dialogueSkipKeybind);
   setFullscreenKeybindCode(gameSettings.fullscreenKeybind);
@@ -134,8 +139,11 @@ function loadGameSettings(savedSettings) {
   cachedSettings.realisticFactoryEnergyConsumptionToggle.checked = gameSettings.realisticFactoryEnergyConsumption;
   cachedSettings.aerobrakingToggle.checked = gameSettings.aerobraking;
   cachedSettings.infinitePatienceToggle.checked = gameSettings.infinitePatience;
+  cachedSettings.disableDailyPatienceToggle.checked = gameSettings.disableDailyPatience;
+  cachedSettings.fixedGoldenAsteroidIntervalToggle.checked = gameSettings.fixedGoldenAsteroidInterval;
   cachedSettings.liftersStrippingCapToggle.checked = gameSettings.liftersStrippingCap;
   cachedSettings.orbitalCapToggle.checked = gameSettings.orbitalCap;
+  cachedSettings.disableMoltenSurfaceAttritionToggle.checked = gameSettings.disableMoltenSurfaceAttrition;
   cachedSettings.noOverpopulationCylindersToggle.checked = gameSettings.noOverpopulationCylinders;
   patienceManager.enforceInfinitePatience();
   updateDifficultySettingInputs();

@@ -178,7 +178,8 @@ function getProjectPresetJsonFieldOptions(fieldPath, value, preset) {
       return {
         selectOptions: [
           { value: 'fixed', label: t('ui.projects.spaceElevator.capacityTargetFixed', null, 'fixed') },
-          { value: 'workers', label: t('ui.projects.spaceElevator.capacityTargetWorkers', null, 'x workers') }
+          { value: 'workers', label: t('ui.projects.spaceElevator.capacityTargetWorkers', null, 'x workers') },
+          { value: 'geometricLandPercent', label: t('ui.projects.spaceElevator.capacityTargetGeometricLandPercent', null, '% of geometric land') }
         ]
       };
     }
@@ -210,6 +211,10 @@ function getProjectPresetJsonFieldOptions(fieldPath, value, preset) {
   }
   if (presetSection !== 'operations') {
     return null;
+  }
+  const settingKey = fieldPath[fieldPath.length - 1];
+  if (settingKey === 'disablePressureThreshold' || settingKey === 'disableOxygenPressureThreshold') {
+    return { numericDisplayScale: 1000 };
   }
   if (projectId === PROJECT_AUTOMATION_UI_SPACE_MIRROR_FACILITY_ID
     && fieldPath[3] === 'lanternDayNightPeriod') {

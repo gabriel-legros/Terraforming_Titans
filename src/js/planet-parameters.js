@@ -2228,6 +2228,7 @@ const zeusOverrides = {
     hasSand: false,
     dynamicMass: true,
     gasGiant: true,
+    stellarEvolutionDisabled: true,
   },
   star: {
     name: t('catalogs.planets.zeus.star.name', {}, 'Okoth'),
@@ -2884,6 +2885,7 @@ const earthOverrides = {
         'underground:ore': 4,
         'underground:geothermal': 4,
         'underground:planetaryMass': 4,
+        'underground:stellarMass': 4,
         'atmospheric:carbonDioxide': 4,
         'atmospheric:inertGas': 4,
         'atmospheric:oxygen': 4,

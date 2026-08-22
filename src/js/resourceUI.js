@@ -2591,6 +2591,24 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
       warningMessages.push(getBiomassGrowthLimiterWarning(resource, limiter));
     }
 
+    if (allowRegularWarnings && resource.name === 'land') {
+      const attritionParameters = terraformingParameters.gameplay.landReservation.moltenSurfaceAttrition;
+      const attritionRate = terraforming.getMoltenSurfaceAttritionRatePerSecond();
+      if (attritionRate > 0) {
+        warningMessages.push(getResourceUIWarningText(
+          'moltenSurfaceAttrition',
+          'Molten surface attrition is absorbing unprotected buildings and colonies at {rate}%/s. The rate starts at {baseRate}%/s when lava or plasma occupies all geometric land, doubles every {doublingInterval} K, and caps at {maximumRate}%/s. Temperature-immune structures are safe. At {minimumPressure} kPa or more, active Aerostats and the active structures covered by their support or workers are also safe.',
+          {
+            rate: formatNumber(attritionRate * 100, false, 2),
+            baseRate: formatNumber(attritionParameters.baseRatePerSecond * 100, false, 2),
+            doublingInterval: formatNumber(attritionParameters.doublingIntervalK, false, 0),
+            maximumRate: formatNumber(attritionParameters.maximumRatePerSecond * 100, false, 0),
+            minimumPressure: formatNumber(AEROSTAT_MINIMUM_OPERATIONAL_PRESSURE_KPA, false, 0),
+          }
+        ));
+      }
+    }
+
     if (allowRegularWarnings && resource.category === 'atmospheric' && resource.name === 'hydrogen') {
       const gravityThreshold = (globalThis.HYDROGEN_ESCAPE_GRAVITY_THRESHOLD || 0);
       const photodissociationFraction = Math.round(

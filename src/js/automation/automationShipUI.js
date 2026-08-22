@@ -91,6 +91,7 @@ function updateShipStepSubtitleText(subtitle, step) {
   const usingCappedMin = step.mode === 'cappedMin';
   const usingCappedMax = step.mode === 'cappedMax';
   const usingRemainingPercent = step.mode === 'remainingPercent';
+  const usingEnergyProduction = step.mode === 'energyProduction';
   if (usingCappedMin) {
     subtitle.textContent = getAutomationCardText('shipStepSubtitleSmallestMax', {}, 'Balance ships with the smallest max');
   } else if (usingCappedMax) {
@@ -98,6 +99,9 @@ function updateShipStepSubtitleText(subtitle, step) {
   } else if (usingRemainingPercent) {
     const percentText = Number(step.limit === null || step.limit === undefined ? 100 : step.limit).toLocaleString();
     subtitle.textContent = getAutomationCardText('shipStepSubtitleRemainingPercent', { percent: percentText }, 'Assign {percent}% of remaining ships');
+  } else if (usingEnergyProduction) {
+    const percentText = formatNumber(step.limit === null || step.limit === undefined ? 100 : step.limit, true, 5);
+    subtitle.textContent = getAutomationCardText('shipStepSubtitleEnergyProduction', { percent: percentText }, 'Use up to {percent}% of energy production');
   } else if (step.limit !== null && step.limit !== undefined) {
     const limitText = formatNumber(step.limit || 0, true, 3);
     subtitle.textContent = getAutomationCardText('shipStepSubtitleAssignUpTo', { count: limitText }, `Assign up to ${limitText} ships`);
@@ -480,6 +484,7 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     const usingCappedMin = step.mode === 'cappedMin';
     const usingCappedMax = step.mode === 'cappedMax';
     const usingRemainingPercent = step.mode === 'remainingPercent';
+    const usingEnergyProduction = step.mode === 'energyProduction';
     const usingCapped = usingCappedMin || usingCappedMax;
     updateShipStepSubtitleText(subtitle, step);
     heading.append(title, subtitle);
@@ -492,7 +497,7 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     limitInfo.innerHTML = '&#9432;';
     attachDynamicInfoTooltip(
       limitInfo,
-      getAutomationCardText('shipLimitTooltip', {}, 'Assign Amount:\n- Distributes up to the entered amount by weight.\n\nModes:\n- Capped by smallest max: balance by weight until the smallest max is reached.\n- Capped by largest max: balance by weight until the largest max is reached. If no largest max is reached (infinite/unset caps), it uses every remaining ship.\n- % of remaining ships: distributes up to that percent of ships still unassigned when this step starts.\n\nMass Drivers:\n- Each Mass Driver counts as 10 ships.\n- Counts toward assign amount limits.\n- Can only be assigned through "Resource Disposal (mass drivers included)".')
+      getAutomationCardText('shipLimitTooltip', {}, 'Assign Amount:\n- Distributes up to the entered amount by weight.\n\nModes:\n- Capped by smallest max: balance by weight until the smallest max is reached.\n- Capped by largest max: balance by weight until the largest max is reached. If no largest max is reached (infinite/unset caps), it uses every remaining ship.\n- % of remaining ships: distributes up to that percent of ships still unassigned when this step starts.\n- % energy production usage: allocates as uncapped, then proportionally reduces only this step\'s energy-consuming assignments to fit the entered share of colony energy production. Zero-energy assignments are unchanged.\n\nMass Drivers:\n- Each Mass Driver counts as 10 ships.\n- Counts toward assign amount limits.\n- Can only be assigned through "Resource Disposal (mass drivers included)".')
     );
     const limitMode = document.createElement('select');
     limitMode._shipStepBinding = stepBinding;
@@ -512,14 +517,24 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
     remainingPercentOpt.value = 'remainingPercent';
     remainingPercentOpt.textContent = getAutomationCardText('shipPercentRemainingShips', {}, '% of remaining ships');
     limitMode.appendChild(remainingPercentOpt);
-    limitMode.value = usingCappedMin ? 'cappedMin' : usingCappedMax ? 'cappedMax' : usingRemainingPercent ? 'remainingPercent' : 'fixed';
+    const energyProductionOpt = document.createElement('option');
+    energyProductionOpt.value = 'energyProduction';
+    energyProductionOpt.textContent = getAutomationCardText('shipPercentEnergyProduction', {}, '% Energy Production Usage');
+    limitMode.appendChild(energyProductionOpt);
+    limitMode.value = usingCappedMin
+      ? 'cappedMin'
+      : usingCappedMax
+        ? 'cappedMax'
+        : usingRemainingPercent
+          ? 'remainingPercent'
+          : usingEnergyProduction ? 'energyProduction' : 'fixed';
     const limitInput = document.createElement('input');
     limitInput.type = 'text';
     limitInput.min = '0';
     limitInput._shipStepBinding = stepBinding;
     limitInput.placeholder = getAutomationCardText('shipAmountPlaceholder', {}, 'Amount');
     if (step.limit !== null && step.limit !== undefined && !usingCapped) {
-      limitInput.value = formatNumber(step.limit, true, 3);
+      limitInput.value = formatNumber(step.limit, true, usingEnergyProduction ? 5 : 3);
     } else {
       limitInput.value = '';
     }
@@ -545,6 +560,13 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
         automation.setStepLimit(current.preset.id, current.step.id, percent);
         limitInput.disabled = false;
         limitInput.value = formatNumber(percent, true, 3);
+      } else if (mode === 'energyProduction') {
+        automation.setStepMode(current.preset.id, current.step.id, mode);
+        const parsed = parseFlexibleNumber(limitInput.value);
+        const percent = Number.isFinite(parsed) && parsed >= 0 ? parsed : 100;
+        automation.setStepLimit(current.preset.id, current.step.id, percent);
+        limitInput.disabled = false;
+        limitInput.value = formatNumber(percent, true, 5);
       } else {
         automation.setStepMode(current.preset.id, current.step.id, 'fill');
         const parsed = parseFlexibleNumber(limitInput.value);
@@ -564,10 +586,13 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
         if (limitMode.value === 'remainingPercent') {
           return Math.min(Math.max(Math.floor(parsed), 0), 100);
         }
+        if (limitMode.value === 'energyProduction') {
+          return Math.round(parsed * 100000) / 100000;
+        }
         return Math.floor(parsed);
       },
       formatValue: (value) => {
-        return value > 0 ? formatNumber(value, true, 3) : '';
+        return value > 0 ? formatNumber(value, true, limitMode.value === 'energyProduction' ? 5 : 3) : '';
       },
       onValue: (parsed) => {
         const current = getCurrentShipAutomationStep(automation, limitInput._shipStepBinding);
@@ -577,6 +602,8 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
             limitInput._shipStepBinding,
             Math.min(Math.max(Math.floor(parsed), 0), 100)
           );
+        } else if (limitMode.value === 'energyProduction') {
+          setCurrentShipStepLimit(automation, limitInput._shipStepBinding, parsed);
         } else {
           setCurrentShipStepLimit(
             automation,
@@ -773,10 +800,16 @@ function renderAutomationSteps(automation, preset, container, projectsOverride) 
       const geometricLandOpt = document.createElement('option');
       geometricLandOpt.value = 'geometricLand';
       geometricLandOpt.textContent = getAutomationCardText('shipPercentGeometricLand', {}, '% Geometric Land');
-      maxMode.append(absoluteOpt, populationOpt, workerOpt, geometricLandOpt);
+      const energyProductionOpt = document.createElement('option');
+      energyProductionOpt.value = 'energyProduction';
+      energyProductionOpt.textContent = getAutomationCardText('shipPercentEnergyProduction', {}, '% Energy Production Usage');
+      maxMode.append(absoluteOpt, populationOpt, workerOpt, geometricLandOpt, energyProductionOpt);
       maxMode.value = entry.maxMode || 'absolute';
       const getMaxPrecision = () => (
-        maxMode.value === 'population' || maxMode.value === 'workers' || maxMode.value === 'geometricLand' ? 5 : 3
+        maxMode.value === 'population'
+          || maxMode.value === 'workers'
+          || maxMode.value === 'geometricLand'
+          || maxMode.value === 'energyProduction' ? 5 : 3
       );
       const maxInput = document.createElement('input');
       maxInput.type = 'text';

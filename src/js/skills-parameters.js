@@ -292,6 +292,21 @@ const skillParameters = {
       }
     ],
     requires: []
+  },
+  orbital_expansion: {
+    id: 'orbital_expansion',
+    name: '',
+    description: '',
+    cost: 1,
+    maxRank: 5,
+    hiddenUntilRevealed: true,
+    effect: {
+      target: 'orbitalManager',
+      type: 'availableOrbitalsMultiplier',
+      baseValue: 0.1,
+      perRank: true
+    },
+    requires: []
   }
 };
 

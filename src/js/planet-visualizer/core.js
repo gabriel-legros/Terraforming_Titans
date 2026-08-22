@@ -43,6 +43,20 @@
       this.sunMesh = null;
       this.atmoMesh = null;
       this.atmoMaterial = null;
+      this.stellarGlowInnerMesh = null;
+      this.stellarGlowOuterMesh = null;
+      this.stellarGlowInnerMaterial = null;
+      this.stellarGlowOuterMaterial = null;
+      this.stellarGlowSprite = null;
+      this.stellarGlowSpriteMaterial = null;
+      this.stellarVisualState = {
+        active: false,
+        isStar: false,
+        progress: 0,
+        color: new THREE.Color(0xffad5c),
+        surfaceEmission: 0,
+        haloStrength: 0,
+      };
 
       // Environment visuals
       this.starField = null;
@@ -172,6 +186,10 @@
     isSmbhShellWorld() {
       const classification = currentPlanetParameters?.classification || {};
       return classification.type === 'shell' && classification.core === 'smbh';
+    }
+
+    isStellarWorld() {
+      return getStellarEvolutionState(this.terraforming, currentPlanetParameters).stage === 'star';
     }
 
     isFlatWorld() {
@@ -873,7 +891,7 @@
         this.sunMesh.scale.setScalar(0.2);
         this.sunMesh.renderOrder = 20;
         this.sunMesh.material.depthTest = false;
-      } else if (isBirchWorld) {
+      } else if (isBirchWorld || this.isStellarWorld()) {
         this.sunMesh.visible = false;
       } else {
         this.sunMesh.position.copy(this.sunLight.position).multiplyScalar(1.6);

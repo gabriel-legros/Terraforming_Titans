@@ -186,6 +186,14 @@ class Aerostat extends BaseColony {
     return this.getAerostatSupportBonusCap();
   }
 
+  getAutoBuildCountLimit() {
+    const base = super.getAutoBuildCountLimit();
+    if (!this.shouldClampSetActiveToSupported()) {
+      return base;
+    }
+    return Math.min(base, this.getSupportedActiveCap());
+  }
+
   shouldClampSetActiveToSupported() {
     return this.shouldShowCapActiveToSupportedToggle() && !!this.capActiveToSupported;
   }
@@ -813,6 +821,12 @@ class Aerostat extends BaseColony {
     return this.isLiftBelowThreshold(liftValue, pressureValue);
   }
 
+  isMoltenSurfaceAttritionImmune() {
+    const pressure = this.getCurrentSurfacePressure();
+    return super.isMoltenSurfaceAttritionImmune()
+      || (pressure !== null && pressure >= this.getMinimumOperationalPressure());
+  }
+
   getCurrentSurfaceAtmosphericDensity() {
     const pressureKPa = this.getCurrentSurfacePressure();
     const temperatureK = Number(terraforming?.temperature?.value) || 0;
@@ -1275,7 +1289,7 @@ class Aerostat extends BaseColony {
       text.htmlFor = checkbox.id;
       text.textContent = getAerostatText(
         'ui.buildings.aerostat.capActiveToSupported',
-        'Cap Active to Supported'
+        'Cap to Supported'
       );
 
       container.appendChild(checkbox);

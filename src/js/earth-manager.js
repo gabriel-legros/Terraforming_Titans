@@ -204,7 +204,7 @@ class EarthManager extends EffectableEntity {
     terraforming.initialCelestialParameters.gravity = gravity;
     terraforming.initialCelestialParameters.surfaceArea = surfaceArea;
     terraforming.initialCelestialParameters.crossSectionArea = crossSectionArea;
-    terraforming.apparentEquatorialGravity = getApparentEquatorialGravity(terraforming.celestialParameters);
+    terraforming.apparentEquatorialGravity = calculateApparentEquatorialGravity(terraforming.celestialParameters);
 
     currentPlanetParameters.celestialParameters.radius = radius;
     currentPlanetParameters.celestialParameters.mass = mass;

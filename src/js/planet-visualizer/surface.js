@@ -133,6 +133,17 @@
       featureMask: 0.92,
       shade: 0.94,
     },
+    stellar: {
+      top: { color: '#ffffff', t: 0.7 },
+      bottom: { color: '#d9e7f5', t: 0.12 },
+      tint: { color: '#eef7ff', min: 0.1, max: 0.18 },
+      topJitter: 0.025,
+      bottomJitter: 0.025,
+      heightScale: 0.72,
+      heightJitter: 0.025,
+      featureMask: 0.42,
+      shade: 1.08,
+    },
     artificial: {
       top: { color: '#e4e8ec', t: 0.42 },
       bottom: { color: '#5a6167', t: 0.52 },
@@ -147,6 +158,9 @@
   };
 
   function resolvePlanetArchetype(context, baseHex) {
+    if (getStellarEvolutionState(terraforming, currentPlanetParameters).stage === 'star') {
+      return 'stellar';
+    }
     let type = null;
     if (context?.viz?.classification?.archetype) {
       type = context.viz.classification.archetype;
@@ -282,6 +296,9 @@
   };
 
   PlanetVisualizer.prototype.getLavaTransitionStrength = function getLavaTransitionStrength() {
+    if (this.isStellarWorld()) {
+      return 0;
+    }
     const baseStrength = smoothstep(LAVA_WORLD_START_K, LAVA_WORLD_FULL_K, this.getSurfaceTemperatureK());
     if (this.isEarthReconstructionVisualActive()) {
       return baseStrength * earthManager.getVisualizerState().heatRatio;
@@ -305,6 +322,7 @@
     const lava = this.getLavaTransitionStrength();
     const city = this.getEcumenopolisVisualizerStrength();
     const nanoworld = this.getNanoworldVisualizerStrength();
+    const stellarVisual = this.getStellarVisualizerState();
     const baseRoughness = surface.userData?.baseRoughness ?? (this.isRingWorld() ? 0.85 : 0.9);
     const baseMetalness = surface.userData?.baseMetalness ?? 0;
     material.roughness = Math.max(0.12, baseRoughness - lava * 0.45 - city * 0.28 - nanoworld * 0.62);
@@ -323,6 +341,15 @@
           0.03 + lava * 0.07
         );
         material.emissiveIntensity = lava * 0.72;
+      }
+    }
+    if (stellarVisual.progress > 0) {
+      material.roughness += (0.58 - material.roughness) * stellarVisual.progress;
+      material.metalness *= 1 - stellarVisual.progress;
+      if (material.emissive) {
+        material.emissive.lerp(stellarVisual.color, stellarVisual.progress);
+        material.emissiveIntensity = material.emissiveIntensity
+          * (1 - stellarVisual.progress) + stellarVisual.surfaceEmission;
       }
     }
   };
@@ -674,7 +701,9 @@
       this._lastSurfaceTextureUpdate = now;
     }
     const kPa = this.computeTotalPressureKPa();
-    const factor = Math.max(0, Math.min(1, 1 - (kPa / 100)));
+    const factor = this.isStellarWorld()
+      ? 0
+      : Math.max(0, Math.min(1, 1 - (kPa / 100)));
     const water = (this.viz.coverage?.water || 0) / 100;
     const life = (this.viz.coverage?.life || 0) / 100;
     const hazardousLife = (this.viz.coverage?.hazardousLife || 0) / 100;
@@ -710,7 +739,9 @@
     if (surface && surface.material) {
       const previousMap = surface.material.map;
       surface.material.map = tex;
-      if (nanoworld > 0 && this._nanoworldEmissionTexture) {
+      if (this.getStellarVisualizerState().progress > 0) {
+        surface.material.emissiveMap = tex;
+      } else if (nanoworld > 0 && this._nanoworldEmissionTexture) {
         surface.material.emissiveMap = this._nanoworldEmissionTexture;
       } else if (ecumenopolis > 0 && this._ecumenopolisEmissionTexture) {
         surface.material.emissiveMap = this._ecumenopolisEmissionTexture;

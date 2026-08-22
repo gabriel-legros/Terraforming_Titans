@@ -448,16 +448,17 @@ class PlanetaryThrustersProject extends Project{
       this.spinInvest = this.el.rotCb.checked;
       if(this.spinInvest){
         this.motionInvest=false;this.el.distCb.checked=false;
-        if(this.dVreq===0 || this.activeMode!=='spin') this.prepareJob(true,false);
+        const prepare = this.dVreq===0 || this.activeMode!=='spin';
         this.activeMode='spin';
+        if(prepare) this.prepareJob(true,false);
       }
     };
     this.el.distCb.onchange= ()=>{
       this.motionInvest = this.el.distCb.checked;
       if(this.motionInvest){
         this.spinInvest=false;this.el.rotCb.checked=false;
-        this.prepareJob(true,false);
         this.activeMode='motion';
+        this.prepareJob(true,false);
       }
     };
     this.el.goRogueAutoCb.onclick = event => event.stopPropagation();
@@ -537,7 +538,7 @@ class PlanetaryThrustersProject extends Project{
       this.energySpentSpin=0;
       this.spinStartDays=null;
     }
-    if(this.spinInvest && (changed || this.dVreq===0)) { this.prepareJob(true,false); this.activeMode='spin'; }
+    if(this.spinInvest && (changed || this.dVreq===0)) { this.activeMode='spin'; this.prepareJob(true,false); }
   }
 
   readMotionTargetAU(){
@@ -586,7 +587,7 @@ class PlanetaryThrustersProject extends Project{
         this.energySpentMotion=0;
         this.startAU=null;
       }
-      if(this.motionInvest && (changed || this.dVreq===0)) { this.prepareJob(true,false); this.activeMode='motion'; }
+      if(this.motionInvest && (changed || this.dVreq===0)) { this.activeMode='motion'; this.prepareJob(true,false); }
       return;
     }
 
@@ -608,7 +609,7 @@ class PlanetaryThrustersProject extends Project{
     const energyRem = p.mass * escArrival / this.getThrustPowerRatio();
     this.el.distE.textContent = formatEnergy(energyRem);
     this.setBurnTime(this.el.distBurn, energyRem);
-    if(this.motionInvest && this.dVreq===0) { this.prepareJob(true,false); this.activeMode='motion'; }
+    if(this.motionInvest && this.dVreq===0) { this.activeMode='motion'; this.prepareJob(true,false); }
   }
 
   setBurnTime(el, energyRequired){
@@ -681,6 +682,14 @@ class PlanetaryThrustersProject extends Project{
     if(resetDV) this.dVdone=0;
 
     if(this.spinInvest){
+      const currentDV=spinDeltaV(p.radius,getSpinPeriodHours(p),this.tgtDays*24);
+      if(currentDV===0){
+        this.spinInvest=false;
+        this.dVreq=this.dVdone=0;
+        this.activeMode=null;
+        if(this.el.rotCb) this.el.rotCb.checked=false;
+        return;
+      }
       if(resetEnergy || this.spinStartDays===null){
         this.energySpentSpin=0;
         this.spinStartDays=getSpinPeriodHours(p)/24;
@@ -700,9 +709,22 @@ class PlanetaryThrustersProject extends Project{
         this.dVreq = dvToCircularAtRadius(G*p.parentBody.mass, (p.parentBody.orbitRadius||1_000_000)*1e3, r_hill_m);
       }else{
         this.escapePhase=false;
-        if(resetDV || this.startAU===null) this.startAU=p.distanceFromSun;
         const starM = getStarMassKgFromCurrent();
+        if(spiralDeltaV(p.distanceFromSun,this.tgtAU,G*starM)===0){
+          this.motionInvest=false;
+          this.dVreq=this.dVdone=0;
+          this.activeMode=null;
+          if(this.el.distCb) this.el.distCb.checked=false;
+          return;
+        }
+        if(resetDV || this.startAU===null) this.startAU=p.distanceFromSun;
         this.dVreq=spiralDeltaV(this.startAU,this.tgtAU, G*starM);
+      }
+      if(this.dVreq===0){
+        this.motionInvest=false;
+        this.dVdone=0;
+        this.activeMode=null;
+        if(this.el.distCb) this.el.distCb.checked=false;
       }
     }
   }

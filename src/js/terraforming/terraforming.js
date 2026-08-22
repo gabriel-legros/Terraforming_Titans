@@ -357,6 +357,8 @@ class Terraforming extends EffectableEntity{
     this.exosphereHeightMeters = 0;
     this.resourceSubstepMilliseconds = TERRAFORMING_RESOURCE_SUBSTEP_MS;
     this.maxResourceSubsteps = TERRAFORMING_RESOURCE_MAX_SUBSTEPS;
+    this.moltenSurfaceAttritionPartialByStructure = {};
+    this.lastMoltenSurfaceAttritionLosses = 0;
 
     this.initialValuesCalculated = false;
     this.completed = false;
@@ -649,6 +651,16 @@ class Terraforming extends EffectableEntity{
     runUpdateStep(deltaTime = 0, options = {}) {
       this.synchronizeGlobalResources();
       this.refreshDynamicWorldGeometry();
+      syncStellarEvolutionState(this, currentPlanetParameters);
+      if (deltaTime > 0 && options.disableStellarAbsorption !== true) {
+        applyStellarEvolutionAbsorption(
+          this,
+          currentPlanetParameters,
+          options.accumulatedSpecialChanges?.stellarAbsorption
+        );
+        this.synchronizeGlobalResources();
+        this.refreshDynamicWorldGeometry();
+      }
       this._updateZonalCoverageCache();
       this._updateAtmosphericPressureCache();
       this._updateHeatCapacityCache();
@@ -663,7 +675,11 @@ class Terraforming extends EffectableEntity{
     }
 
     runHazardUpdate(deltaTime = 0, options = {}) {
-      if (!options.skipHazardUpdates && hazardManager && hazardManager.update) {
+      if (options.skipHazardUpdates) {
+        return;
+      }
+      this.applyMoltenSurfaceAttrition(deltaTime);
+      if (hazardManager && hazardManager.update) {
         hazardManager.update(deltaTime, this, options);
       }
     }

@@ -52,7 +52,16 @@ registerTerraformingMethods('resources', ({
   runResourceUpdateStep(deltaTime) {
     const durationSeconds = 86400 * deltaTime / 1000; // 1 in-game second equals one day
     const realSeconds = deltaTime / 1000;
-    if (durationSeconds <= 0 || this.isBooleanFlagSet('ringworldLowGravityTerraforming')) {
+    const stellarEvolutionState = getStellarEvolutionState(this, currentPlanetParameters);
+    if (
+      durationSeconds <= 0
+      || this.isBooleanFlagSet('ringworldLowGravityTerraforming')
+      || stellarEvolutionState.stage === 'star'
+    ) {
+      if (stellarEvolutionState.stage === 'star') {
+        this.temperature.combustionWarmingRateKPerDay = 0;
+        this.resetStandaloneTerraformingRateState();
+      }
       return {
         durationSeconds,
         realSeconds,

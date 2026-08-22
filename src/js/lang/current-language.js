@@ -865,11 +865,13 @@ setLanguageData({
         aerostatLiftCritical: '▲ Active aerostats only have {lift} kg/m³ of lift, below the {minimum} kg/m³ minimum needed to stay aloft. ▲',
         aerostatLiftPowered: 'Active aerostats only have {lift} kg/m³ of lift, below the {minimum} kg/m³ buoyancy threshold. Powered flight is covering the deficit.',
         aerostatLiftWarning: 'Active aerostats only have {lift} kg/m³ of lift, below the {minimum} kg/m³ safety margin.',
+        moltenSurfaceAttrition: 'Molten surface attrition is absorbing unprotected buildings and colonies at {rate}%/s. The rate starts at {baseRate}%/s when lava or plasma occupies all geometric land, doubles every {doublingInterval} K, and caps at {maximumRate}%/s. Temperature-immune structures are safe. At {minimumPressure} kPa or more, active Aerostats and the active structures covered by their support or workers are also safe.',
       },
       land: {
         available: 'Available {value}',
         used: 'Used {value}',
         worldEffects: 'World Effects',
+        plasma: 'Plasma',
         keratiTerritory: 'Kerati Territory',
       },
       antimatter: {
@@ -945,9 +947,22 @@ setLanguageData({
       waterTank: {
         emptyAboveCap: 'Empty above Cap',
       },
+      hydrogenReservoir: {
+        storageTierLabel: 'Storage Tier: ',
+        operatingModeLabel: 'Mode: ',
+        standardTier: 'Standard',
+        warpTier: 'Warp',
+        deepWarpTier: 'Deep Warp',
+        storageMode: 'Storage',
+        pumpingMode: 'Atmospheric Pumping',
+      },
       antimatterBattery: {
         fill: 'Fill',
         fillCooldown: 'Fill ({seconds})',
+      },
+      starLifter: {
+        supercharge: 'Supercharge',
+        superchargeEnergy: 'Energy x{value}',
       },
       oxygenFactory: {
         disableIfOxygenPressureAbove: 'Disable if O2 P > ',
@@ -1024,7 +1039,7 @@ setLanguageData({
         landLimitTooltip: 'At most 25% of the planet\'s starting land can host aerostat colonies to minimize collision risk.',
         temperatureTooltipIntro: 'Aerostats reduce temperature maintenance penalties for staffed factories (excluding ore mines) using their total housing capacity. Eligible staffed worker requirement is calculated from current active buildings, effective worker needs, current worker capacity, and worker priority allocation. Some buildings also have an Aerostat Support value; active aerostats cover up to active aerostats x support structures for that building, and any uncovered share keeps that portion of the penalty. This mitigation cannot reduce buildings below the dry-adiabatic 1 atm maintenance floor.',
         androidSpaceTooltip: 'Reserve part of each aerostat for android housing instead of colonists. The slider value is android capacity per aerostat out of 10 total housing slots.',
-        capActiveToSupported: 'Cap Active to Supported',
+        capActiveToSupported: 'Cap to Supported',
         capWorkersToAerostatCapacity: 'Cap workers to aerostat capacity',
         capSupportedBuildingsToAerostatCapacity: 'Cap active and autobuild buildings to aerostat capacity',
         landAsResearchOutpost: 'Land as Research Outpost',
@@ -1299,6 +1314,7 @@ setLanguageData({
       },
       warnings: {
         biodomeLife: '⚠ Requires Active Life Design ⚠',
+        moltenSurfaceAttrition: 'Building over aerostat limit and lava covers world : building will melt and sink.',
       },
       autoBuild: {
         header: 'Auto-build',
@@ -1514,7 +1530,7 @@ setLanguageData({
       },
       lifters: {
         title: 'Lifter Controls',
-        titleTooltip: 'Assign lifters per recipe. Each recipe runs at (Assigned / Complexity) x unit rate. Gas recipes push output into space storage. Hydrogen, Methane, and Ammonia harvest assignments are capped by accessible gas giant reserves scaled by average Warp Gate Network level. Multi-output recipes add each output separately before normal resource cap handling. Star Lifting also unlocks supercharging, which multiplies throughput linearly and energy use cubically. Strip Atmosphere removes all gases proportionally.',
+        titleTooltip: 'Assign lifters per recipe. Each recipe runs at (Assigned / Complexity) x unit rate. Gas recipes push output into space storage. Hydrogen, Methane, and Ammonia harvest assignments are capped by accessible gas giant reserves scaled by average Warp Gate Network level. Multi-output recipes add each output separately before normal resource cap handling. Star Lifting also unlocks supercharging, which multiplies throughput linearly and energy use cubically. Strip Atmosphere removes all gases proportionally. Strip Stellar Mass discards stellar material down to the 10 Jupiter-mass floor.',
         totalLifters: 'Total Lifters',
         runLifters: 'Run lifters',
         energyPerLifter: 'Energy per lifter',
@@ -1537,6 +1553,7 @@ setLanguageData({
         maxAssignmentTooltip: 'Pool: {pool}\nTime divisor: {divisor} (10000 years)\nWarp Gate Network scale: max(1, {averageLevel}) / {levelCap} = {networkScale}\nMax harvest rate: {pool} / {divisor} x {networkScale} = {capRate}/s\nPer-lifter harvest rate: {unitRate} x {outputMultiplier} / {complexity}\nMax assignment: floor({capRate} x {complexity} / ({unitRate} x {outputMultiplier})) = {max}',
         strippingMaxAssignmentTooltip: 'Limited to {max} lifters by the current world geometric land value.',
         starLiftingTooltip: 'Outputs per base unit: 1 hydrogen, 0.01 oxygen, 0.005 graphite, 0.0015 nitrogen, 0.001 silica, 0.0008 metal.',
+        stellarMassStrippingTooltip: 'Discards stellar mass at the same rate and energy cost as Star Lifter buildings. Stops when the world reaches 10 Jupiter masses.',
         recipeLabels: {
           hydrogen: 'Hydrogen',
         },
@@ -1548,6 +1565,7 @@ setLanguageData({
           storageCapReached: 'Storage cap reached',
           pressureLimitReached: 'Pressure limiter reached',
           noAtmosphereToStrip: 'No atmosphere to strip',
+          stellarMassFloorReached: 'Stellar mass floor reached',
           insufficientEnergy: 'Insufficient energy',
           noAssignments: 'No assignments',
           completeAtLeastOne: 'Complete at least one lifter',
@@ -1884,6 +1902,9 @@ setLanguageData({
         inputUse: 'Input Use',
         hydrogenRate: '{value} hydrogen/s',
         expansionRate: '{value} stars/s',
+        rateSources: {
+          expansion: 'Artificial Star expansion',
+        },
         operationNote: 'Runs artificial stars at Assigned x {parameter}/s. Each assignment consumes {hydrogen} hydrogen and produces {output} space energy, with both input and output multiplied by WGC superalloy fusion bonuses (x{wgcMultiplier}).',
         status: {
           noHydrogen: 'No hydrogen in space storage',
@@ -2304,6 +2325,8 @@ setLanguageData({
       },
       artificialCrust: {
         costRateLabel: 'Artificial Crust',
+        fusionFluxWarning: 'The Artificial Crust cannot be built while the world is undergoing core fusion.',
+        fusionFluxStatus: 'Blocked: core fusion is still present',
         liquidHydrogenWarning: 'Liquid hydrogen blocks Artificial Crust construction. Remove it first.',
         liquidHydrogenStatus: 'Blocked: remove liquid hydrogen first',
       },
@@ -2427,10 +2450,11 @@ setLanguageData({
         engineering: 'Engineering',
         stopAtCapacity: 'Stop at total capacity',
         capThroughput: 'Cap throughput to capacity',
-        capThroughputTooltip: 'Proportionally slows continuous spaceship traffic when shared demand exceeds Space Access Capacity. Traffic that runs receives the full Space Access cost benefit. Aerobraking bypass traffic, Teleporters, and Mass Drivers remain uncapped.',
+        capThroughputTooltip: 'Proportionally slows continuous spaceship traffic when shared demand exceeds Space Access Capacity. Traffic that runs receives the full Space Access cost benefit. Imports targeting Space Storage, aerobraking bypass traffic, Teleporters, and Mass Drivers remain uncapped.',
         capacityTargetMode: 'Capacity target mode',
         capacityTargetFixed: 'fixed',
         capacityTargetWorkers: 'x workers',
+        capacityTargetGeometricLandPercent: '% of geometric land',
         capacityUnit: 't/s',
         unlimited: 'Unlimited',
         traditionalEngineering: 'Traditional tether, taper {taper}',
@@ -2454,6 +2478,7 @@ setLanguageData({
         alsoCapActiveToTarget: 'Also cap active to target',
         capModeFixed: 'fixed',
         capModeGeometricLandPercent: '% of geometric land',
+        capModeWorkers: 'x workers',
         capStatus: 'Cap: {value}',
         capReached: 'Cap reached',
         liquidHydrogenWarning: 'Liquid hydrogen is preventing heat sinks from reducing core heat flux. Heat sinks can still mitigate factory heat, accelerate cooling toward the temperature trend, and be built.',
@@ -2879,16 +2904,18 @@ setLanguageData({
           assigned: 'Assigned: {value}',
           autoAssign: 'Auto assign',
           perOrbital: 'Per orbital: +{value}/s',
+          perOrbitalStorage: 'Per orbital: {value}x most storage buildings.',
           rateSource: 'Orbital',
           totalRate: 'Total: +{value}/s',
+          totalStorage: 'Total: {value}x storage buildings.',
           weight: 'Weight',
           tooltip: {
             line1: 'With orbitals, humanity can now help HOPE with its projects directly.',
-            line2: 'Assign orbitals to produce resources automatically.',
+            line2: 'Assign orbitals to produce resources or provide storage automatically.',
             line3: 'You can assign up to your effective terraformed world count.',
             line4: 'Manual mode sets exact assignments with the current step size.',
             line5: 'Weight mode distributes assignments by integer weights among unlocked resources.',
-            line6: 'Each orbital produces the mapped source output with its multiplier, without consumption or productivity scaling.',
+            line6: 'Production orbitals provide the mapped source output without consumption or productivity scaling. Storage orbitals use default structure capacities.',
             line7: 'Orbitals only produce if the target resource is unlocked.  Each orbital also contributes to storage of the resource they produce.',
           },
         },
@@ -3165,6 +3192,7 @@ setLanguageData({
         calciteDecay: 'Calcite Decay',
         acidRain: 'Acid rain',
         hydrogenEscape: 'Hydrogen Escape',
+        stellarAbsorption: 'Stellar Absorption',
       },
       playTimeDefault: '0 seconds',
       playTimeLabel: 'Time since awakening :',
@@ -3269,6 +3297,19 @@ setLanguageData({
       },
       summaryUi: {
         worldMeta: '{worldType}, {requirementName}',
+        stellarEvolution: {
+          stages: {
+            planetary: 'Planetary',
+            brownDwarf: 'Brown Dwarf',
+            star: 'Star',
+          },
+          nextStages: {
+            brownDwarf: 'Brown Dwarf',
+            fusionIgnition: 'Fusion Ignition',
+          },
+          progress: '{stage} | {mass} / {threshold} Jupiter masses | {progress}% to {nextStage}',
+          fusionActive: '{stage} | {mass} Jupiter masses | Fusion active',
+        },
         close: 'Close',
         notAvailable: 'N/A',
         targetPrefix: 'Target : {value}',
@@ -3354,6 +3395,7 @@ setLanguageData({
           factoryHeatTooltip: 'Industrial waste heat from local building and colony energy consumption, minus solar panel cooling from their energy production. Solar panel cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Mega Heat Sinks remove core heat first, then factory heat; any remaining capacity accelerates cooling toward the temperature trend. Direct waste heat is not impacted by albedo or day-night averaging.',
           factoryHeatTopContributors: 'Top contributors by absolute impact:',
           factoryHeatOtherSources: 'Other sources',
+          fusionFluxTooltip: 'This is the world\'s own thermal self-emission from internal fusion. It reflects the planetary, stellar, surface, and atmospheric resources currently incorporated into the stellar body. At star stage and beyond, Mega Heat Sinks cannot mitigate fusion flux.',
           phaseChangeHeatTooltip: 'Signed planetary heat exchanged by phase changes during the latest climate slice. Positive values mean freezing, condensation, or deposition released heat; negative values mean melting, evaporation, boiling, or sublimation absorbed heat.  For numerical stability, this effect can only speed or slow movement toward the trend, not reverse it.  This can lead to stalling temperatures.',
           equilibriumTempTooltip: 'The blackbody radiative balance temperature from absorbed sunlight, albedo, and direct non-atmospheric heat. It ignores greenhouse heat trapping; physically, it is the temperature that would radiate the same energy back to space. Earth\'s value is about 255 K (-18°C).',
           combustionWarning: 'Temperature is increasing from active combustion',
@@ -3362,6 +3404,7 @@ setLanguageData({
             globalMeanTemp: 'Global Mean Temp',
             equilibriumTemp: 'Equilibrium Temp',
             netCoreHeatFlux: 'Net Core Heat Flux',
+            fusionFlux: 'Fusion Flux',
             netPhaseChangeHeatFlux: 'Net Phase Change Heat Flux',
             netFactoryHeatFlux: 'Net Factory Heat Flux',
             zone: 'Zone',
@@ -3509,6 +3552,8 @@ setLanguageData({
             radiationPenalty: 'Radiation penalty',
             gravity: 'Gravity',
             equatorialGravity: 'Equatorial gravity',
+            stellarRadius: 'Stellar radius',
+            meanDensity: 'Mean density',
             gravityPenalty: 'Gravity penalty',
             gravityBuildCost: '+{value}% build cost',
           },
@@ -3569,8 +3614,8 @@ setLanguageData({
             ice: 'Ice',
             snow: 'Snow',
             dryIce: 'Dry Ice',
-            hydrocarbon: 'Hydrocarbon',
-            hydrocarbonIce: 'Hydrocarbon Ice',
+            hydrocarbon: 'Liquid Methane',
+            hydrocarbonIce: 'Methane Ice',
             hydrogen: 'Liquid Hydrogen',
             fineSand: 'Fine Sand',
             biomass: 'Biomass',
@@ -4088,7 +4133,7 @@ setLanguageData({
           label: 'Cylinders-HOPE Mining Rights',
           summaryDefault: 'Cylinder Capacity: ×1 | Cylinder Manufacturing Population: ×1 | Mining Caps: −0%',
           summary: 'Cylinder Capacity: ×{capacityMultiplier} | Cylinder Manufacturing Population: ×{manufacturingMultiplier} | Mining Caps: −{importCapReduction}%',
-          tooltip: "Allocates exclusive space-resource mining rights to the O'Neill cylinders At 10, capacity is ×100, cylinder manufacturing population is ×2, and mining caps are reduced by 100%. Hydrogen is unaffected.",
+          tooltip: "Allocates exclusive space-resource mining rights to the O'Neill cylinders. At 10, capacity is ×100, cylinder manufacturing population is ×2, and mining caps are reduced by 100%. Hydrogen is unaffected.",
         },
         megaprojectsCoordination: {
           label: 'Megaprojects Coordination',
@@ -4223,6 +4268,12 @@ setLanguageData({
           warpGateProgress: 'Warp Gate Command/Network progress',
         },
         spend: 'Spend',
+        facilityUpgradeLabel: 'Automatic facility upgrade',
+        facilityUpgradeTooltip: 'Choose a Warp Gate Command facility to upgrade whenever its cooldown becomes ready during the simulated time. Multi-hour spends can grant multiple upgrades. No upgrades are granted after the selected facility reaches level 100.',
+        noFacilityUpgrade: 'Do not upgrade a facility',
+        facilityUpgradeOption: '{facility} (level {level}/100)',
+        facilityUpgradePreviewSingle: '{facility} will upgrade 1 time.',
+        facilityUpgradePreviewMultiple: '{facility} will upgrade {count} times.',
         saveToFile: 'Save to file',
         exportToClipboard: 'Export to clipboard',
         claimDaily: 'Claim daily patience',
@@ -4387,9 +4438,9 @@ setLanguageData({
           obstacleCourse: 'Boosts Athletics for challenges by 1% per level.\nGrants 1 / 2 / 3 rerolls at 10 / 25 / 50 for individual or team Athletics checks (one per challenge). Level 100 converts one failure into a success per operation.',
           library: 'Boosts Wit for challenges by 1% per level.\nSupplies 1 / 2 / 3 rerolls at 10 / 25 / 50 for team Wit and Science challenges (one per challenge). Level 100 converts one failure into a success per operation.',
         },
-        teamRulesTooltip: 'Warp Gate Command dispatches specialist teams through the warp gate to confront threats, gather alien artifacts, and bring back intel for humanity.  Everyone involved is a volunteer and the cream of the crop humanity has to offer.\nOperations happen in 10 steps, each with a distinct challenge.  Successful challenges have a chance of granting alien artifacts.  Failed challenges deal damage.  Losing all HP will instantly recall the team, losing all rewards, and requiring to send the team again manually.  Challenges have their own special rules. Operations stop after completion unless Auto-start is checked for that team.\nSpecial rules:\n- Difficulty changes during an operation apply to the next operation.\n- Combat Challenge: Soldiers contribute double Power and failures damage the team for five times the difficulty.\n- Team Athletics Challenge: Uses team Athletics; successes ease the next challenge by 25%, failures delay it by 120 seconds.\n- Team Wits Challenge: Uses team Wit; Natural and Social Scientists contribute 1.5x their Wit; successes double the next artifact reward, failures halve it.\n- Individual Power Challenge: Failed checks deal double damage.\n- Individual Athletics Challenge: Targets the most athletic member (random if tied).\n- Natural Science Challenge: Prefers Natural Scientists, grants double artifact rewards, and failures can escalate into immediate combat.\n- Social Science Challenge: Prefers Social Scientists; failures may escalate into combat.\n- Science challenges never deal damage on failure.\n- Rapid Extraction halves every standard challenge interval; failure delays remain additive, and operations end as soon as the final challenge resolves.\n- Team Leaders lend half their skill on solo and science challenges unless the leader is the one handling a science check.',
+        teamRulesTooltip: 'Warp Gate Command dispatches specialist teams through the warp gate to confront threats, gather alien artifacts, and bring back intel for humanity.  Everyone involved is a volunteer and the cream of the crop humanity has to offer.\nOperations happen in 10 steps, each with a distinct challenge.  Successful challenges have a chance of granting alien artifacts.  Failed challenges deal damage.  Losing all HP will instantly recall the team, losing all rewards, and requiring to send the team again manually.  Challenges have their own special rules. Operations stop after completion unless Auto-start is checked for that team.\nSpecial rules:\n- Difficulty changes during an operation apply to the next operation.\n- Combat Challenge: Soldiers contribute double Power and failures damage the team for five times the difficulty.\n- Team Athletics Challenge: Uses team Athletics; successes ease the next challenge by 25%, failures delay it by 120 seconds.\n- Team Wits Challenge: Uses team Wit; Natural and Social Scientists contribute 1.5x their Wit; successes double the next artifact reward, failures halve it.\n- Individual Power Challenge: Failed checks deal double damage.\n- Individual Athletics Challenge: Targets the most athletic member (random if tied).\n- Natural Science Challenge: Prefers Natural Scientists, grants double artifact rewards, and failures can escalate into immediate combat.\n- Social Science Challenge: Prefers Social Scientists; failures may escalate into combat.\n- Science challenges never deal damage on failure.\n- Rapid Extraction halves every standard challenge interval and reduces artifact rewards by 75%; failure delays remain additive, and operations end as soon as the final challenge resolves.\n- Team Leaders lend half their skill on solo and science challenges unless the leader is the one handling a science check.\n- Spending Patience can automatically upgrade a selected facility whenever its cooldown becomes ready during the simulated time.',
         hazardousBiomassTooltip: 'Neutral: No modifiers.\nNegotiation: Social science checks about 10% easier, combat about 10% tougher.\nAggressive: Social science checks roughly 25% harder, combat about 15% easier.\nRecon: Wit checks about 10% easier, athletics checks roughly 25% harder, combat about 15% easier, failures add 60 seconds to next step.',
-        artifactTooltip: 'Neutral: Standard artifact chances and timing.\nCareful: Doubles Natural Science artifact chance but delays the next event by triple time.\nRapid Extraction: Halves every standard challenge interval but reduces artifact finds by 75%.',
+        artifactTooltip: 'Neutral: Standard artifact chances and timing.\nCareful: Doubles Natural Science artifact chance but delays the next event by triple time.\nRapid Extraction: Halves every standard challenge interval and reduces artifact rewards by 75%. Failure delays remain additive.',
         difficultyTooltip: 'Raises challenge DCs (team checks +4 per level, individual and science checks +1.5 per level, combat checks +4 per level).  Stance modifiers apply after. Artifact and XP rewards increase by 10% per level. Failed team checks damage all members for 2 HP per level (Wit team checks deal half). Failed individual checks deal 5 HP per level to the selected member (Power doubles, Wit halves). Failed combat checks damage all members for 5 HP per level. Hazardous Biomass stance modifiers apply to both DCs and damage.',
         classes: {
           teamLeader: {
@@ -4961,9 +5012,10 @@ setLanguageData({
         shipStepSubtitleSmallestMax: 'Balance ships with the smallest max',
         shipStepSubtitleLargestMax: 'Balance ships with the largest max',
         shipStepSubtitleRemainingPercent: 'Assign {percent}% of remaining ships',
+        shipStepSubtitleEnergyProduction: 'Use up to {percent}% of energy production',
         shipStepSubtitleAssignUpTo: 'Assign up to {count} ships',
         shipStepSubtitleByWeight: 'Distribute ships by weight',
-        shipLimitTooltip: 'Assign Amount:\n- Distributes up to the entered amount by weight.\n\nModes:\n- Capped by smallest max: balance by weight until the smallest max is reached.\n- Capped by largest max: balance by weight until the largest max is reached. If no largest max is reached (infinite/unset caps), it uses every remaining ship.\n- % of remaining ships: distributes up to that percent of ships still unassigned when this step starts.\n\nMass Drivers:\n- Each Mass Driver counts as 10 ships.\n- Counts toward assign amount limits.\n- Can only be assigned through "Resource Disposal (mass drivers included)".',
+        shipLimitTooltip: 'Assign Amount:\n- Distributes up to the entered amount by weight.\n\nModes:\n- Capped by smallest max: balance by weight until the smallest max is reached.\n- Capped by largest max: balance by weight until the largest max is reached. If no largest max is reached (infinite/unset caps), it uses every remaining ship.\n- % of remaining ships: distributes up to that percent of ships still unassigned when this step starts.\n- % energy production usage: allocates as uncapped, then proportionally reduces only this step\'s energy-consuming assignments to fit the entered share of colony energy production. Zero-energy assignments are unchanged.\n\nMass Drivers:\n- Each Mass Driver counts as 10 ships.\n- Counts toward assign amount limits.\n- Can only be assigned through "Resource Disposal (mass drivers included)".',
         massDriverDisposalTarget: 'Resource Disposal (mass drivers included)',
         unassignedShipsTarget: 'Unassigned Ships',
         shipAssignAmount: 'Assign Amount',
@@ -4981,13 +5033,14 @@ setLanguageData({
         shipPercentPopulation: '% Population',
         shipPercentWorkers: '% Workers',
         shipPercentGeometricLand: '% Geometric Land',
+        shipPercentEnergyProduction: '% Energy Production Usage',
         shipReleaseIfDisabled: 'Release if disabled',
         shipNoProjectsAvailable: 'No projects available',
         buildingsAutomationTitle: 'Buildings Automation',
         buildingsAutomationDescription: 'Store building presets and apply them in priority order.',
         buildingsAutomationDescriptionUnlocked: 'Capture building control/autobuild settings and apply them in ordered presets.',
         buildingsAutomationDescriptionLocked: 'Purchase the Solis Buildings Automation upgrade to enable building presets.',
-        buildingsBuilderHint: 'Control saves worker priority, hidden state, recipe selections, and building controls (Disable if / Target albedo). Autobuild saves auto-build mode, target value, Auto-build toggle, Prioritize, Set active to target, and fill filters.',
+        buildingsBuilderHint: 'Control saves worker priority, hidden state, recipe selections, and building controls (Disable if / Target albedo / Supercharge). Autobuild saves auto-build mode, target value, Auto-build toggle, Prioritize, Set active to target, and fill filters.',
         buildingsApplyHintEmpty: 'Save a preset above to enable the Apply list.',
         buildingsApplyHintRule: 'Lower presets override higher presets when they target the same building and setting type.',
         projectsAutomationTitle: 'Projects Automation',
@@ -5441,6 +5494,7 @@ setLanguageData({
       postWorld8Difficulty: 'Post-World 8',
       duringWorld9Difficulty: 'During World 9',
       postWorld11Difficulty: 'Post-World 11',
+      duringWorld12Difficulty: 'During World 12',
       duringWorld14Difficulty: 'During World 14',
       postWorld14Difficulty: 'Post-World 14',
       disableFusionConsumptionScaling: 'Disable fusion consumption scaling',
@@ -5462,11 +5516,17 @@ setLanguageData({
       aerobraking: 'Aerobraking',
       aerobrakingTooltip: 'Allows supported imports to bypass Space Access Capacity by braking in an atmosphere with at least {minimum} kg/m\u00B2 of column mass. Aerobraking converts the imported cargo\'s arrival energy into planetary heat. Surface-targeted ice and water arrive as atmospheric water vapour.',
       infinitePatience: 'Infinite patience',
+      disableDailyPatience: 'Disable daily patience',
+      disableDailyPatienceTooltip: 'Prevents daily patience claims from the Patience screen and save or export actions.',
+      fixedGoldenAsteroidInterval: 'Fixed Golden Asteroid interval',
+      fixedGoldenAsteroidIntervalTooltip: 'Sets every Golden Asteroid spawn interval to 10 minutes, the midpoint of the normal 5 to 15 minute range.',
       liftersStrippingCap: 'Lifters stripping cap',
       liftersStrippingCapTooltip: 'When enabled, Strip Atmosphere cannot have more lifters assigned than the current world geometric land value.',
       orbitalCap: 'Orbital cap',
       orbitalCapTooltip: 'When enabled, available Orbitals cannot exceed the current world geometric land value.',
       allowSpaceStorageBiomassWithdrawOnNonHumanDominion: 'Allow space storage biomass withdrawal on non-Human dominions',
+      disableMoltenSurfaceAttrition: 'Disable molten surface attrition',
+      disableMoltenSurfaceAttritionTooltip: 'Prevents lava- and plasma-covered surfaces from destroying buildings and colonies. Molten surfaces still reserve land normally.',
       noOverpopulationCylinders: 'No overpopulation cylinders',
       noOverpopulationCylindersTooltip: "World 14 has a feature known as the 'Zeus catapult' that is very powerful but makes a lot of sense narratively.  It is arguably too powerful.  By checking this box you can ensure you gain nothing from it.  The project will still appear.",
       buildingCostMultiplier: 'Building Cost Multiplier',
@@ -5585,6 +5645,21 @@ setLanguageData({
         liftersStripModeDisabled: 'Lifters Strip Mode Disabled',
         incineratorRecipeDisabled: 'Incinerator Recipe Disabled',
         planetaryThrustersDisabled: 'Planetary Thrusters Disabled',
+      },
+      sirius: {
+        name: 'Sirius',
+        difficulty: 'Pending evaluation',
+        effects: {
+          hopeStarQuestion: 'HOPE...  This is a star...  Why are we terraforming a star?',
+          advancedOrbitals: 'Superalloys and Storage orbitals are available.',
+          starLifter: 'Lifters have chosen to go on vacation.  You may have to build new ones in the form of a new terraforming building.',
+          spaceStorageDepot: 'Space Storage is available as a colony storage building.',
+        },
+        rewards: {
+          enableAdvancedOrbitals: 'Permanently enables Superalloy and Storage orbitals.',
+          enableStellarMassStripping: 'Enables Stellar Mass stripping for Lifters after researching Star Lifting.',
+          revealOrbitalExpansion: 'Reveals a new Awakening skill',
+        },
       },
       titania: {
         name: 'Titania',
@@ -5834,9 +5909,18 @@ setLanguageData({
           deepWarp: { shortName: 'Deep Warp Storage' },
         },
       },
+      spaceStorageDepot: {
+        name: 'Space Storage',
+        description: 'A colossal storage facility that expands capacity for all stockpiled colony resources.',
+      },
       waterTank: {
         name: 'Water Tank',
         description: 'Dedicated reservoir that preserves large water reserves with minimal upkeep.',
+        recipes: {
+          standard: { shortName: 'Standard Storage' },
+          warp: { shortName: 'Warp Storage' },
+          deepWarp: { shortName: 'Deep Warp Storage' },
+        },
       },
       hydrogenReservoir: {
         name: 'Hydrogen Reservoir',
@@ -5844,6 +5928,10 @@ setLanguageData({
         recipes: {
           storage: { shortName: 'Hydrogen Storage' },
           intake: { shortName: 'Atmosphere -> Storage' },
+          warpStorage: { shortName: 'Warp Hydrogen Storage' },
+          warpIntake: { shortName: 'Atmosphere -> Warp Storage' },
+          deepWarpStorage: { shortName: 'Deep Warp Hydrogen Storage' },
+          deepWarpIntake: { shortName: 'Atmosphere -> Deep Warp Storage' },
         },
       },
       hydrogenBattery: {
@@ -5933,6 +6021,10 @@ setLanguageData({
       massDriver: {
         name: 'Mass Driver',
         description: 'Electromagnetic launcher capable of sending vast amount of mass every day through the Resource Disposal project.  Potentially a weapon.',
+      },
+      starLifter: {
+        name: 'Star Lifter',
+        description: 'Consumes enormous amounts of space energy to strip stellar mass from the current star, discarding the extracted material.',
       },
       biodome: {
         name: 'Biodome',
@@ -6156,6 +6248,10 @@ setLanguageData({
         name: 'Orbital Ring',
         description: 'Orbital rings act as additional terraformed worlds and provide unlimited Space Access Capacity. As HOPE is not responsible for them they do not grant skill points or RWG bonuses. Rings can only be built on worlds that are terraformed, meaning they can be built on previous worlds and on your current one if it is terraformed.  A ring on your current world will increase land by its initial value. ',
       },
+      shellworldOrbitalRing: {
+        name: 'Shellworld Orbital Ring',
+        description: 'Reinforce and construct an orbital ring around the current shellworld.  Cost scales linearly with geometric land.  Completion adds 25% land, grants unlimited Space Access Capacity, and multiplies the shellworld\'s terraformed value by 1.25.',
+      },
       birchWorld: {
         name: 'Birch World',
         description: 'Add another habitable shell layer around the supermassive black hole shellworld. Each layer uses the mass under it for its material cost, increases land, and raises the world value by total land divided by 50B.  HOPE is finally satisfied to witness its dream fully realized and is ready to retire at any moment now.',
@@ -6204,9 +6300,10 @@ setLanguageData({
       },
       lifters: {
         name: 'Lifters',
-        description: 'Assemble space-rated lifting platforms and assign them between atmosphere stripping and gas-harvest recipes.  Persists between worlds, duration scales with terraformed worlds, and taps unused Dyson power.',
+        description: 'Assemble space-rated lifting platforms and assign them between atmosphere stripping and gas-harvest recipes.  Persists between worlds, duration scales with terraformed worlds and uses space energy.  By default to prevent instant stripping, lifters are disabled on travel (this behaviour can be overriden by project presets unlocked on Story World 11).',
         attributes: {
           lifterStripRecipe: { label: 'Strip Atmosphere' },
+          lifterStellarStripRecipe: { label: 'Strip Stellar Mass' },
           lifterHarvestRecipes: {
             hydrogen: { label: 'Hydrogen' },
             methane: { label: 'Methane' },
@@ -6810,6 +6907,10 @@ setLanguageData({
           name: 'Orbital Rings',
           description: 'Unlocks a new megastructure project for constructing orbital rings.',
         },
+        orbital_rings_for_shellworlds: {
+          name: 'Orbital Rings for shellworlds',
+          description: 'Anyone can build a bridge that stands, but it takes an engineer to build a bridge that barely stands.  Our shellworld designs used to be unable to handle the additional load of an orbital ring.  We have solved this issue.',
+        },
         mega_particle_accelerator: {
           name: 'Mega Particle Accelerator',
           description: 'Unlocks a new megastructure that can assist in boosting advanced research gains.',
@@ -6972,7 +7073,7 @@ setLanguageData({
         },
         warp_storage: {
           name: 'Warp Storage',
-          description: 'Our mastery of the warp has gotten to the point where we can just store things in there.  Enables an alternate Storage Depot mode and Space Storage expansion mode.',
+          description: 'Our mastery of the warp has gotten to the point where we can just store things in there.  Enables alternate storage modes for Storage Depots, Water Tanks, Hydrogen Reservoirs, and Space Storage expansion.',
         },
         teleporters: {
           name: 'Teleporters',
@@ -6980,7 +7081,7 @@ setLanguageData({
         },
         deep_warp_storage: {
           name: 'Deep Warp Storage',
-          description: 'Sometimes we lose objects in warp storage.  Now we finally know why.  The warp can go so much deeper that we once thought...  How deep?  Provides a new deep warp storage option for storage depots and space storage.',
+          description: 'Sometimes we lose objects in warp storage.  Now we finally know why.  The warp can go so much deeper than we once thought...  How deep?  Provides a new deep warp storage option for Storage Depots, Water Tanks, Hydrogen Reservoirs, and Space Storage.',
         },
         space_chemistry: {
           name: 'Space Chemistry',
@@ -7117,6 +7218,7 @@ setLanguageData({
         ore: { name: 'Ore deposits' },
         geothermal: { name: 'Geo. vent' },
         planetaryMass: { name: 'Planetary Mass' },
+        stellarMass: { name: 'Stellar Mass' },
       },
       atmospheric: {
         carbonDioxide: { name: 'CO2' },
@@ -7366,6 +7468,12 @@ setLanguageData({
       superconductors: {
         label: 'Superconductors',
       },
+      superalloys: {
+        label: 'Superalloys',
+      },
+      storage: {
+        label: 'Storage',
+      },
       androids: {
         label: 'Androids',
       },
@@ -7497,7 +7605,7 @@ setLanguageData({
         requirements: {
           terraformed: 'World is fully terraformed',
           biomassDensity: 'Biomass density above 1 ton/m^2',
-          ecumenopolisCount: 'At most {value} Ecumenopolis Districts constructed (Max Land / 1M; this checks for constructed Ecumenopolis Districts, not active)',
+          ecumenopolisCount: 'No Ecumenopolis Districts constructed (note : this says constructed, not active)',
           otherSpecialization: 'No other specialization started or completed',
         },
         shopItems: {
@@ -7686,7 +7794,7 @@ setLanguageData({
           waterCoverage: 'Liquid water coverage at least 75% ({value}%)',
           zoneTemperature: 'Every zone at least {target} {unit} (coldest: {value} {unit})',
           beachSilica: 'Available silica for beaches: {value}',
-          ecumenopolisCount: 'At most {value} Ecumenopolis Districts constructed (Max Land / 1M; this checks for constructed Ecumenopolis Districts, not active)',
+          ecumenopolisCount: 'No Ecumenopolis Districts constructed',
           otherSpecialization: 'No other specialization started or completed',
         },
         shop: {
@@ -7822,6 +7930,10 @@ setLanguageData({
       ecumenopolis_capacity: {
         name: 'Ecumenopolis Capacity',
         description: 'Increases Ecumenopolis District capacity, production and consumption by 20% per rank',
+      },
+      orbital_expansion: {
+        name: 'Orbital Expansion',
+        description: 'Increases available orbitals by 10% per rank',
       },
       project_speed: {
         name: 'Faster Projects',

@@ -123,7 +123,7 @@ class PatienceManager extends EffectableEntity {
      * @param {number} hours - Hours to spend
      * @returns {boolean} Whether the spend was successful
      */
-    spendPatience(hours) {
+    spendPatience(hours, facilityKey = '') {
         if (!this.enabled || hours <= 0 || hours > this.currentHours) {
             return false;
         }
@@ -186,7 +186,7 @@ class PatienceManager extends EffectableEntity {
             followersManager.applyPatienceFaithSpend(hours);
         }
 
-        this.advanceWarpGateCommand(hours * 3600);
+        this.advanceWarpGateCommand(hours * 3600, facilityKey);
         this.advanceWarpGateNetwork(hours * 3600);
         return true;
     }
@@ -301,15 +301,58 @@ class PatienceManager extends EffectableEntity {
         return Array.from(this.everPossibleSpendGainIds);
     }
 
-    advanceWarpGateCommand(seconds) {
+    getFacilityUpgradeCount(hours, facilityKey) {
+        if (hours <= 0
+            || !facilityKey
+            || !warpGateCommand.enabled
+            || warpGateCommand.facilities[facilityKey] === undefined
+            || warpGateCommand.facilities[facilityKey] >= 100) {
+            return 0;
+        }
+
+        let remaining = hours * 3600;
+        let cooldown = warpGateCommand.facilityCooldown;
+        const availableUpgrades = 100 - warpGateCommand.facilities[facilityKey];
+        let count = 0;
+        if (cooldown <= 0) {
+            count += 1;
+            cooldown = 3600;
+        }
+        while (count < availableUpgrades && remaining >= cooldown) {
+            remaining -= cooldown;
+            count += 1;
+            cooldown = 3600;
+        }
+        return count;
+    }
+
+    advanceWarpGateCommand(seconds, facilityKey = '') {
         if (seconds <= 0 || !warpGateCommand || !warpGateCommand.enabled) return;
 
         let remaining = seconds;
         const interval = 60;
+        if (facilityKey
+            && warpGateCommand.facilities[facilityKey] !== undefined
+            && warpGateCommand.facilities[facilityKey] < 100
+            && warpGateCommand.facilityCooldown <= 0) {
+            warpGateCommand.upgradeFacility(facilityKey);
+        }
         while (remaining > 0) {
-            const slice = remaining > interval ? interval : remaining;
+            let slice = remaining > interval ? interval : remaining;
+            if (facilityKey
+                && warpGateCommand.facilities[facilityKey] !== undefined
+                && warpGateCommand.facilities[facilityKey] < 100
+                && warpGateCommand.facilityCooldown > 0) {
+                slice = Math.min(slice, warpGateCommand.facilityCooldown);
+            }
             warpGateCommand.update(slice * 1000);
             remaining -= slice;
+            if (facilityKey
+                && warpGateCommand.facilities[facilityKey] !== undefined
+                && warpGateCommand.facilities[facilityKey] < 100
+                && warpGateCommand.facilityCooldown <= 0) {
+                warpGateCommand.upgradeFacility(facilityKey);
+            }
         }
     }
 
@@ -347,7 +390,7 @@ class PatienceManager extends EffectableEntity {
      * @returns {boolean} Whether the claim succeeded
      */
     claimDailyPatience() {
-        if (!this.enabled) {
+        if (!this.enabled || gameSettings.disableDailyPatience) {
             return false;
         }
 

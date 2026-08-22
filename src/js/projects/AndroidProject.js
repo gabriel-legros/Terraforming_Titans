@@ -175,6 +175,9 @@ class AndroidProject extends Project {
       this.isPaused = false;
       return;
     }
+    if (this.isActive && this.remainingTime === Infinity && !this.isContinuous()) {
+      this.adjustActiveDuration();
+    }
     if (!this.isActive || this.isCompleted || this.isPaused) return;
 
     if (this.isContinuous()) {

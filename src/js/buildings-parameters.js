@@ -18,7 +18,8 @@ const buildingsParameters = {
     maintenanceFactor: 1,
     planetaryMassChange: { category: 'colony', resource: 'metal', mode: 'drainOnProduction' },
     unlocked: false,
-    autoBuildMaxOption: true
+    autoBuildMaxOption: true,
+    autoBuildWorkerShareOption: true
   },
   foundry: {
     type: 'Foundry',
@@ -685,6 +686,43 @@ const buildingsParameters = {
       }
     }
   },
+  spaceStorageDepot: {
+    type: 'Building',
+    name: '',
+    category: 'storage',
+    description: '',
+    cost: { colony: { metal: 100_000_000_000 } },
+    consumption: {},
+    production: {},
+    storage: {
+      colony: {
+        metal: 100_000_000_000,
+        silicon: 100_000_000_000,
+        glass: 100_000_000_000,
+        water: 100_000_000_000,
+        colonyHydrogen: 100_000_000_000,
+        food: 100_000_000_000,
+        components: 100_000_000_000,
+        electronics: 100_000_000_000,
+        superconductors: 100_000_000_000,
+        superalloys: 100_000_000_000
+      }
+    },
+    dayNightActivity: false,
+    factoryHeatCoefficient: 1,
+    canBeToggled: true,
+    requiresMaintenance: true,
+    requiresProductivity: false,
+    requiresWorker: 0,
+    maintenanceFactor: 0,
+    temperatureMaintenanceImmune: true,
+    unlocked: false,
+    autoBuildFillEnabled: true,
+    autoBuildFillPercent: 95,
+    autoBuildFillResourceFilters: true,
+    autoBuildFillResourcePrimary: 'any',
+    autoBuildFillResourceSecondary: 'none'
+  },
   waterTank: {
     type: 'WaterTank',
     name: '',
@@ -703,7 +741,28 @@ const buildingsParameters = {
     aerostatReduction: 0.01,
     unlocked: false,
     autoBuildFillEnabled: true,
-    autoBuildFillPercent: 95
+    autoBuildFillPercent: 95,
+    defaultRecipe: 'standard',
+    recipes: {
+      standard: {
+        shortName: '',
+        storage: { colony: { water: 5000 } }
+      },
+      warp: {
+        shortName: '',
+        requiresBuildingFlag: 'warpStorageRecipe',
+        consumption: { colony: { energy: 1_000_000 } },
+        realisticEnergyConsumption: 100_000,
+        storage: { colony: { water: 50_000 } }
+      },
+      deepWarp: {
+        shortName: '',
+        requiresBuildingFlag: 'deepWarpStorageRecipe',
+        consumption: { colony: { energy: 1_000_000_000 } },
+        realisticEnergyConsumption: 10_000_000,
+        storage: { colony: { water: 5_000_000 } }
+      }
+    }
   },
   hydrogenReservoir: {
     type: 'HydrogenReservoir',
@@ -737,6 +796,36 @@ const buildingsParameters = {
         realisticEnergyConsumption: 1_250_000,
         production: { colony: { colonyHydrogen: 100 } },
         storage: { colony: { colonyHydrogen: 5000 } }
+      },
+      warpStorage: {
+        shortName: '',
+        requiresBuildingFlag: 'warpStorageRecipe',
+        consumption: { colony: { energy: 1_000_000 } },
+        realisticEnergyConsumption: 100_000,
+        storage: { colony: { colonyHydrogen: 50_000 } }
+      },
+      warpIntake: {
+        shortName: '',
+        requiresBuildingFlag: 'warpStorageRecipe',
+        consumption: { atmospheric: { hydrogen: 1_000 }, colony: { energy: 1_100_000 } },
+        realisticEnergyConsumption: 12_600_000,
+        production: { colony: { colonyHydrogen: 1_000 } },
+        storage: { colony: { colonyHydrogen: 50_000 } }
+      },
+      deepWarpStorage: {
+        shortName: '',
+        requiresBuildingFlag: 'deepWarpStorageRecipe',
+        consumption: { colony: { energy: 1_000_000_000 } },
+        realisticEnergyConsumption: 10_000_000,
+        storage: { colony: { colonyHydrogen: 5_000_000 } }
+      },
+      deepWarpIntake: {
+        shortName: '',
+        requiresBuildingFlag: 'deepWarpStorageRecipe',
+        consumption: { atmospheric: { hydrogen: 100_000 }, colony: { energy: 1_010_000_000 } },
+        realisticEnergyConsumption: 1_260_000_000,
+        production: { colony: { colonyHydrogen: 100_000 } },
+        storage: { colony: { colonyHydrogen: 5_000_000 } }
       }
     }
   },
@@ -1149,6 +1238,35 @@ const buildingsParameters = {
     requiresWorker: 0,
     aerostatReduction: 0.1,
     maintenanceFactor: 1,
+    unlocked: false
+  },
+  starLifter: {
+    type: 'StarLifter',
+    name: '',
+    category: 'terraforming',
+    description: '',
+    cost: {
+      colony: {
+        superalloys: 1_000_000,
+        electronics: 10_000_000,
+        superconductors: 1_000_000_000,
+        metal: 10_000_000_000,
+        components: 500_000_000
+      }
+    },
+    consumption: {
+      space: { energy: 5_000_000_000_000_000 },
+      underground: { stellarMass: 5_000_000 }
+    },
+    production: {},
+    storage: {},
+    dayNightActivity: false,
+    canBeToggled: true,
+    snapProductivity: true,
+    requiresMaintenance: false,
+    requiresWorker: 0,
+    maintenanceFactor: 0,
+    temperatureMaintenanceImmune: true,
     unlocked: false
   },
   biodome:{

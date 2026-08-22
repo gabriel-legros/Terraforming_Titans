@@ -24,6 +24,7 @@ let lastWorldKey = null;
 let lastWorldSeed = null;
 let currentWorldDetailsDirty = true;
 let currentWorldNameEl = null;
+let currentWorldNameContainerEl = null;
 let currentWorldRenameButtonEl = null;
 let spaceStatUniqueValueEl = null;
 let spaceStatEffectiveValueEl = null;
@@ -697,6 +698,7 @@ function initializeSpaceUI(spaceManager) {
     const optionsContainer = document.getElementById('planet-selection-options');
     const statusContainer = document.getElementById('travel-status');
     currentWorldNameEl = document.getElementById('current-world-name');
+    currentWorldNameContainerEl = currentWorldNameEl?.parentElement || null;
     currentWorldRenameButtonEl = document.getElementById('current-world-rename-button');
     spaceStatUniqueValueEl = document.getElementById('space-stat-unique-value');
     spaceStatEffectiveValueEl = document.getElementById('space-stat-effective-value');
@@ -1154,13 +1156,13 @@ function updateCurrentWorldUI(forceDetailsRender = false) {
     }
 
     const detailsBox = document.getElementById('current-world-details');
-    if (currentWorldNameEl) {
+    if (currentWorldNameEl && currentWorldNameContainerEl && currentWorldRenameButtonEl) {
         const worldName = _spaceManagerInstance.getCurrentWorldName();
         currentWorldNameEl.textContent = worldName;
         const randomWorldActive = seed !== null;
         currentWorldRenameButtonEl.classList.toggle('hidden', !randomWorldActive);
         if (randomWorldActive) {
-            attachRandomWorldRenameControl(currentWorldNameEl.parentElement, seed, worldName);
+            attachRandomWorldRenameControl(currentWorldNameContainerEl, seed, worldName);
         }
     }
     if (detailsBox) {

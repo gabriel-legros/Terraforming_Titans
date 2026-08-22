@@ -20,7 +20,12 @@ registerTerraformingMethods('climate', ({
   surfaceLiquidHeatCapacityConfigs
 }) => ({
   getCoreHeatFlux() {
-    const baseFlux = Math.max(0, this.celestialParameters.coreHeatFlux || 0);
+    const stellarEvolutionState = getStellarEvolutionState(this, currentPlanetParameters);
+    const retainedCoreFlux = getRetainedCoreHeatFluxWm2(this, currentPlanetParameters);
+    const baseFlux = Math.max(
+      0,
+      retainedCoreFlux - stellarEvolutionState.fusionFluxWm2 / 2
+    );
     if (isEquilibrating) {
       return baseFlux;
     }
@@ -33,7 +38,11 @@ registerTerraformingMethods('climate', ({
     }
     const rawFlux = this.getMegaHeatSinkRawFlux();
     const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
-    if (megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()) {
+    const stellarEvolutionState = getStellarEvolutionState(this, currentPlanetParameters);
+    if (
+      megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()
+      || isStellarEvolutionStarOrLater(stellarEvolutionState)
+    ) {
       return 0;
     }
     return rawFlux;
@@ -55,8 +64,13 @@ registerTerraformingMethods('climate', ({
   getMegaHeatSinkAllocation() {
     const surfaceArea = this.celestialParameters.surfaceArea || 4 * Math.PI * Math.pow((this.celestialParameters.radius || 0) * 1000, 2);
     const megaHeatSinkProject = projectManager?.projects?.megaHeatSink;
+    const stellarEvolutionState = getStellarEvolutionState(this, currentPlanetParameters);
     let remainingPower = this.getMegaHeatSinkRawFlux() * surfaceArea;
-    const coreHeatPower = megaHeatSinkProject?.hasLiquidHydrogenBlocker?.() ? 0 : Math.min(remainingPower, this.getCoreHeatFlux() * surfaceArea);
+    const intrinsicHeatBlocked = megaHeatSinkProject?.hasLiquidHydrogenBlocker?.()
+      || isStellarEvolutionStarOrLater(stellarEvolutionState);
+    const coreHeatPower = intrinsicHeatBlocked
+      ? 0
+      : Math.min(remainingPower, this.getCoreHeatFlux() * surfaceArea);
     remainingPower -= coreHeatPower;
     const factoryHeatPower = Math.min(remainingPower, Math.max(0, this.getFactoryHeatFlux()) * surfaceArea);
     remainingPower -= factoryHeatPower;
@@ -150,11 +164,12 @@ registerTerraformingMethods('climate', ({
   },
   getNetSurfaceHeatFlux(factoryCoolingScale = 1, megaHeatSinkAllocation = this.getMegaHeatSinkAllocation()) {
     const coreHeatFlux = this.getCoreHeatFlux();
+    const fusionFlux = getStellarFusionFluxWm2(this, currentPlanetParameters);
     const factoryHeatFlux = this.getFactoryHeatFlux();
     const factoryCoolingAdjustment = this.getFactoryCoolingFlux() * (1 - factoryCoolingScale);
     const positiveFactoryHeatFlux = Math.max(0, factoryHeatFlux);
     const factoryCoolingFlux = Math.max(0, -factoryHeatFlux);
-    return coreHeatFlux - megaHeatSinkAllocation.coreHeatFlux + positiveFactoryHeatFlux - megaHeatSinkAllocation.factoryHeatFlux - factoryCoolingFlux + factoryCoolingAdjustment;
+    return fusionFlux + coreHeatFlux - megaHeatSinkAllocation.coreHeatFlux + positiveFactoryHeatFlux - megaHeatSinkAllocation.factoryHeatFlux - factoryCoolingFlux + factoryCoolingAdjustment;
   },
   setTemperatureValuesToTrend() {
     const zones = getZones();

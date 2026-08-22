@@ -1400,9 +1400,13 @@ function autoBuild(buildings, delta = 0) {
                             : usesAndroidCapacityShareBasis
                             ? building.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
                             : roundedPercentTarget;
+            const supportedActiveLimit = building.shouldClampSetActiveToSupported && building.shouldClampSetActiveToSupported()
+                ? Math.max(0, Math.floor(building.getSupportedActiveCap()))
+                : Infinity;
             const targetCount = Math.min(
                 uncappedTargetCount,
-                getAerostatSupportedBuildingLimit(building)
+                getAerostatSupportedBuildingLimit(building),
+                supportedActiveLimit
             );
 
             if (building.autoBuildEnabled && !skipAutoBuildForAutoUpgradeColony) {

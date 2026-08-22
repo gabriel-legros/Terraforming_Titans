@@ -141,6 +141,15 @@ class SpaceMiningProject extends SpaceshipProject {
     return this.isAerobrakingActive() ? 1 : 0;
   }
 
+  getSpaceAccessCapacityBypassFraction() {
+    if ((this.attributes.dynamicWaterImport && this.waterImportTarget === 'spaceStorage')
+      || (this.getPlanetaryMassImportResource() && this.materialImportTarget === 'spaceStorage')
+      || this.isGasStorageImportSelected()) {
+      return 1;
+    }
+    return super.getSpaceAccessCapacityBypassFraction();
+  }
+
   createAerobrakingCheckbox() {
     if (!this.getAerobrakingResourceKey()) {
       return null;

@@ -850,9 +850,9 @@ class LifeAutomation {
       if (attribute.value !== 0 && Math.sign(attribute.value) !== direction) {
         return 0;
       }
-      return Math.max(0, target - Math.abs(attribute.value));
+      return Math.max(0, Math.floor(target - Math.abs(attribute.value)));
     }
-    return Math.max(0, target - attribute.value);
+    return Math.max(0, Math.floor(target - attribute.value));
   }
 
   applyEntryPoints(candidate, entry, amount) {

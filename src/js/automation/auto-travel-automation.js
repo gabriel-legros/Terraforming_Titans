@@ -449,7 +449,8 @@ class AutoTravelAutomation {
       }
       if (typeof runAutoTravelEquilibrationPopup === 'function') {
         this._equilibrationInProgress = true;
-        runAutoTravelEquilibrationPopup(res)
+        Promise.resolve()
+          .then(() => runAutoTravelEquilibrationPopup(res))
           .then((equilibratedRes) => {
             if (!equilibratedRes) {
               this._travelInProgress = false;

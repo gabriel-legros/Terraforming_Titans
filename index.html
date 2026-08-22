@@ -118,6 +118,7 @@
     <script src="src/js/numbers.js"></script>
     <script src="src/js/globals.js"></script>
     <script src="src/js/terraforming/world-geometry.js"></script>
+    <script src="src/js/terraforming/stellar-evolution.js"></script>
     <script src="src/js/buildCount.js"></script>
     <script src="src/js/tab.js"></script>
     <script src="src/js/ui-utils.js"></script>
@@ -161,6 +162,7 @@
     <script src="src/js/buildings/OxygenFactory.js"></script>
     <script src="src/js/buildings/GrapheneFactory.js"></script>
     <script src="src/js/buildings/MassDriver.js"></script>
+    <script src="src/js/buildings/StarLifter.js"></script>
     <script src="src/js/buildings/ChemicalReactor.js"></script>
     <script src="src/js/buildings/Pyrolyzer.js"></script>
     <script src="src/js/buildings/Biodome.js"></script>
@@ -233,6 +235,7 @@
     <script src="src/js/projects/DiskworldTerraformingProject.js"></script>
     <script src="src/js/projects/SpaceStorageProject.js"></script>
     <script src="src/js/projects/OrbitalRingProject.js"></script>
+    <script src="src/js/projects/ShellworldOrbitalRingProject.js"></script>
     <script src="src/js/projects/BirchWorldProject.js"></script>
     <script src="src/js/projects/orbitalRingUI.js"></script>
     <script src="src/js/projects/spaceStorageUI.js"></script>
@@ -316,6 +319,7 @@
     <script src="src/js/terraforming/terraforming-effects.js"></script>
     <script src="src/js/terraforming/terraforming-state.js"></script>
     <script src="src/js/terraforming/landReservation.js"></script>
+    <script src="src/js/terraforming/moltenSurfaceAttrition.js"></script>
     <script src="src/js/terraforming/terraforming-graphs.js"></script>
     <script src="src/js/terraforming/hazards/hazardousBiomassHazard.js"></script>
     <script src="src/js/terraforming/hazards/hazardousMachineryHazard.js"></script>
@@ -1359,6 +1363,12 @@
                     <label class="settings-option difficulty-toggle-option">
                       <input type="checkbox" id="infinite-patience-toggle"> <span data-i18n="ui.settings.infinitePatience">Infinite patience</span>
                     </label>
+                    <label class="settings-option difficulty-toggle-option">
+                      <input type="checkbox" id="disable-daily-patience-toggle"> <span data-i18n="ui.settings.disableDailyPatience">Disable daily patience</span> <span id="disable-daily-patience-tooltip" class="info-tooltip-icon">&#9432;</span>
+                    </label>
+                    <label class="settings-option difficulty-toggle-option">
+                      <input type="checkbox" id="fixed-golden-asteroid-interval-toggle"> <span data-i18n="ui.settings.fixedGoldenAsteroidInterval">Fixed Golden Asteroid interval</span> <span id="fixed-golden-asteroid-interval-tooltip" class="info-tooltip-icon">&#9432;</span>
+                    </label>
                   </div>
                 </details>
                 <details class="difficulty-spoiler-section">
@@ -1404,6 +1414,14 @@
                   <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-toggles">
                     <label class="settings-option difficulty-toggle-option">
                       <input type="checkbox" id="orbital-cap-toggle"> <span data-i18n="ui.settings.orbitalCap">Orbital cap</span> <span id="orbital-cap-tooltip" class="info-tooltip-icon">&#9432;</span>
+                    </label>
+                  </div>
+                </details>
+                <details class="difficulty-spoiler-section">
+                  <summary data-i18n="ui.settings.duringWorld12Difficulty">During World 12</summary>
+                  <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-toggles">
+                    <label class="settings-option difficulty-toggle-option">
+                      <input type="checkbox" id="disable-molten-surface-attrition-toggle"> <span data-i18n="ui.settings.disableMoltenSurfaceAttrition">Disable molten surface attrition</span> <span id="disable-molten-surface-attrition-tooltip" class="info-tooltip-icon">&#9432;</span>
                     </label>
                   </div>
                 </details>

@@ -116,14 +116,6 @@
       return resources.surface.biomass.value / landArea;
     }
 
-    getEcumenopolisLimit() {
-      return Math.max(0, resolveWorldGeometricLand(terraforming, resources.surface.land) / 1000000);
-    }
-
-    isEcumenopolisCountWithinLimit() {
-      return colonies.t7_colony.count <= this.getEcumenopolisLimit();
-    }
-
     getEvolutionPointGain(totalBiomass) {
       const normalized = Math.max(totalBiomass / EVOLUTION_POINT_DIVISOR, 1);
       return ((Math.log10(normalized) * 3) + 1);
@@ -157,10 +149,8 @@
         },
         {
           id: 'ecumenopolisCount',
-          label: getBioworldText('catalogs.specializations.bioworld.requirements.ecumenopolisCount', {
-            value: formatNumber(this.getEcumenopolisLimit(), true, 2),
-          }),
-          met: this.isEcumenopolisCountWithinLimit(),
+          label: getBioworldText('catalogs.specializations.bioworld.requirements.ecumenopolisCount'),
+          met: colonies.t7_colony.count === 0n,
         },
         {
           id: 'otherSpecialization',
@@ -184,7 +174,7 @@
       if (this.getBiomassDensity() <= 1) {
         return false;
       }
-      return this.isEcumenopolisCountWithinLimit();
+      return colonies.t7_colony.count === 0n;
     }
 
     complete() {

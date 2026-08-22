@@ -6,9 +6,11 @@ const LIFTER_MODES = {
 const LIFTER_RECIPE_TYPES = {
   HARVEST: 'harvest',
   STRIP: 'strip',
+  STELLAR_STRIP: 'stellarStrip',
 };
 
 const LIFTER_STRIP_RECIPE_KEY = 'stripAtmosphere';
+const LIFTER_STELLAR_STRIP_RECIPE_KEY = 'stripStellarMass';
 const LIFTERS_UNASSIGNED_KEY = 'idleUnassigned';
 const LIFTER_EMPTY_OUTPUTS = [];
 const LIFTER_ASSIGNMENT_STEP_MAX = 1_000_000_000_000_000_000_000_000_000_000n;
@@ -91,7 +93,9 @@ class LiftersProject extends LiftersAssignmentTools.createProjectAssignmentBase(
     this.harvestRecipes = this.attributes?.lifterHarvestRecipes || DEFAULT_LIFTER_HARVEST_RECIPES;
     this.lifterRecipes = this.buildLifterRecipes();
     this.recipeKeys = this.buildRecipeKeys();
-    this.harvestRecipeKeys = this.recipeKeys.filter((key) => key !== LIFTER_STRIP_RECIPE_KEY);
+    this.harvestRecipeKeys = this.recipeKeys.filter((key) => (
+      this.lifterRecipes[key]?.type === LIFTER_RECIPE_TYPES.HARVEST
+    ));
 
     this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
     this.pendingHarvestRecipeKey = '';
@@ -111,6 +115,7 @@ class LiftersProject extends LiftersAssignmentTools.createProjectAssignmentBase(
     this.lastHarvestResourceKey = this.getHarvestRecipe().storageKey;
     this.lastHydrogenPerSecond = 0;
     this.lastAtmospherePerSecond = 0;
+    this.lastStellarMassPerSecond = 0;
     this.lastDysonEnergyPerSecond = 0;
     this.lastStoredSpaceEnergyPerSecond = 0;
     this.lastOutputRatesByRecipe = {};
@@ -138,6 +143,11 @@ class LiftersProject extends LiftersAssignmentTools.createProjectAssignmentBase(
       assignmentStateKey: 'lifterAssignments',
       assignmentStepMax: LIFTER_ASSIGNMENT_STEP_MAX
     });
+    this.syncStarLifterSuperchargeUpgrades();
+  }
+
+  syncStarLifterSuperchargeUpgrades() {
+    buildings.starLifter.syncLifterSuperchargeUpgrades(this);
   }
 
   getLifterTextPath() {
@@ -248,6 +258,25 @@ class LiftersProject extends LiftersAssignmentTools.createProjectAssignmentBase(
       displayOrder: Number.isFinite(stripDisplayOrder) && stripDisplayOrder > 0 ? stripDisplayOrder : 2,
     };
 
+    const stellarStripSource = this.attributes?.lifterStellarStripRecipe;
+    if (stellarStripSource) {
+      const stellarStripComplexity = Number(stellarStripSource.complexity);
+      const stellarStripDisplayOrder = Number(stellarStripSource.displayOrder);
+      recipes[LIFTER_STELLAR_STRIP_RECIPE_KEY] = {
+        label: stellarStripSource.label,
+        type: LIFTER_RECIPE_TYPES.STELLAR_STRIP,
+        complexity: Number.isFinite(stellarStripComplexity) && stellarStripComplexity > 0
+          ? stellarStripComplexity
+          : 100,
+        displayOrder: Number.isFinite(stellarStripDisplayOrder) && stellarStripDisplayOrder > 0
+          ? stellarStripDisplayOrder
+          : 6,
+        requiresProjectFlags: Array.isArray(stellarStripSource.requiresProjectFlags)
+          ? stellarStripSource.requiresProjectFlags.slice()
+          : [],
+      };
+    }
+
     const harvestKeys = Object.keys(this.harvestRecipes || {});
     harvestKeys.forEach((key) => {
       const source = this.harvestRecipes[key] || {};
@@ -327,13 +356,18 @@ class LiftersProject extends LiftersAssignmentTools.createProjectAssignmentBase(
       return !this.isAtmosphereStripDisabled();
     }
     const resolved = recipe || this.getRecipe(key);
-    const requiredFlag = resolved?.requiresProjectFlag;
-    return !requiredFlag || this.isBooleanFlagSet(requiredFlag);
+    const requiredFlags = [];
+    if (resolved?.requiresProjectFlag) {
+      requiredFlags.push(resolved.requiresProjectFlag);
+    }
+    if (Array.isArray(resolved?.requiresProjectFlags)) {
+      requiredFlags.push(...resolved.requiresProjectFlags);
+    }
+    return requiredFlags.every((flagId) => this.isBooleanFlagSet(flagId));
   }
 
   isHarvestRecipeAvailable(recipe) {
-    const requiredFlag = recipe?.requiresProjectFlag;
-    return !requiredFlag || this.isBooleanFlagSet(requiredFlag);
+    return this.isRecipeAvailable('', recipe);
   }
 
   getAvailableRecipeKeys() {
@@ -1045,6 +1079,9 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     const entries = this.buildOperationEntries(seconds, productivity, options);
     const storage = this.getSpaceStorageProject();
     let stripAvailableAtmosphere = this.getStripAvailableAtmosphere(accumulatedChanges);
+    let stellarMassAvailable = this.getRecipe(LIFTER_STELLAR_STRIP_RECIPE_KEY)
+      ? getDynamicWorldStellarLiftableMassTons(terraforming)
+      : 0;
     const skipEnergyLimit = options.skipEnergyLimit === true;
 
     const plan = {
@@ -1056,6 +1093,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       limitedAssignedLifters: 0,
       hasHarvestAssignments: false,
       hasStripAssignments: false,
+      hasStellarStripAssignments: false,
       energyNeeded: 0,
       energyRatio: 1,
       energyAvailability: {
@@ -1068,6 +1106,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
         storageLimited: false,
         capLimited: false,
         atmosphereLimited: false,
+        stellarMassLimited: false,
         pressureLimited: false,
         energyLimited: false,
       },
@@ -1090,6 +1129,17 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
           }
         }
         stripAvailableAtmosphere = Math.max(0, stripAvailableAtmosphere - limited);
+        entry.limitedUnits = Math.max(0, limited);
+        return;
+      }
+
+      if (entry.recipe.type === LIFTER_RECIPE_TYPES.STELLAR_STRIP) {
+        plan.hasStellarStripAssignments = true;
+        const limited = Math.min(entry.desiredUnits, stellarMassAvailable);
+        if (limited < entry.desiredUnits) {
+          plan.reasons.stellarMassLimited = true;
+        }
+        stellarMassAvailable = Math.max(0, stellarMassAvailable - limited);
         entry.limitedUnits = Math.max(0, limited);
         return;
       }
@@ -1244,6 +1294,12 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     if (plan.hasStripAssignments && this.getAtmosphereTotal() <= 0) {
       return getLiftersProjectText('status.noAtmosphereToStrip', null, 'No atmosphere to strip');
     }
+    if (
+      plan.hasStellarStripAssignments
+      && getDynamicWorldStellarLiftableMassTons(terraforming) <= 0
+    ) {
+      return getLiftersProjectText('status.stellarMassFloorReached');
+    }
     if (plan.reasons.energyLimited) {
       return getLiftersProjectText('status.insufficientEnergy', null, 'Insufficient energy');
     }
@@ -1257,6 +1313,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     this.lastUnitsPerSecond = stats.totalUnitsPerSecond || 0;
     this.lastEnergyPerSecond = stats.energyPerSecond || 0;
     this.lastAtmospherePerSecond = stats.atmospherePerSecond || 0;
+    this.lastStellarMassPerSecond = stats.stellarMassPerSecond || 0;
     this.lastDysonEnergyPerSecond = stats.dysonPerSecond || 0;
 
     this.lastHarvestPerSecond = 0;
@@ -1505,6 +1562,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     const outputBreakdownByRecipe = {};
     const producedOutputBreakdownByRecipe = {};
     let atmosphereRemoved = 0;
+    let stellarMassRemoved = 0;
     let processedUnits = 0;
 
     plan.entries.forEach((entry) => {
@@ -1523,6 +1581,23 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
         outputRatesByRecipe[entry.key] = seconds > 0 ? removed / seconds : 0;
         outputBreakdownByRecipe[entry.key] = {};
         producedOutputBreakdownByRecipe[entry.key] = {};
+        return;
+      }
+
+      if (entry.recipe.type === LIFTER_RECIPE_TYPES.STELLAR_STRIP) {
+        const removed = disposeDynamicWorldStellarLiftableMass(terraforming, units);
+        stellarMassRemoved += removed;
+        processedUnits += removed;
+        outputRatesByRecipe[entry.key] = seconds > 0 ? removed / seconds : 0;
+        outputBreakdownByRecipe[entry.key] = {};
+        producedOutputBreakdownByRecipe[entry.key] = {};
+        if (removed > 0 && seconds > 0) {
+          resources?.underground?.stellarMass?.modifyRate?.(
+            -(removed / seconds),
+            this.getOperationRateSourceLabel(),
+            'project'
+          );
+        }
         return;
       }
 
@@ -1567,6 +1642,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       energyPerSecond,
       storedSpacePerSecond,
       atmospherePerSecond: atmosphereRemoved / seconds,
+      stellarMassPerSecond: stellarMassRemoved / seconds,
       dysonPerSecond,
       outputRatesByRecipe,
       outputBreakdownByRecipe,
@@ -1578,7 +1654,8 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
 
     if (processedUnits > 0) {
       const wasLimited = plan.reasons.energyLimited
-        || plan.reasons.atmosphereLimited;
+        || plan.reasons.atmosphereLimited
+        || plan.reasons.stellarMassLimited;
       this.updateStatus(getLiftersProjectText('status.running', null, 'Running'));
       this.shortfallLastTick = wasLimited;
     } else {
@@ -1731,6 +1808,20 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
           totals.cost.atmospheric ||= {};
           totals.cost.atmospheric[gas.key] = (totals.cost.atmospheric[gas.key] || 0) + removed;
         });
+        return;
+      }
+
+      if (entry.recipe.type === LIFTER_RECIPE_TYPES.STELLAR_STRIP) {
+        if (applyRates) {
+          resources?.underground?.stellarMass?.modifyRate?.(
+            -(entry.finalUnits / seconds),
+            this.getOperationRateSourceLabel(),
+            'project'
+          );
+        }
+        totals.cost.underground ||= {};
+        totals.cost.underground.stellarMass =
+          (totals.cost.underground.stellarMass || 0) + entry.finalUnits;
         return;
       }
 
@@ -1924,7 +2015,34 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     this.applyPendingHarvestRecipe();
     this.markAssignmentsDirty();
     this.normalizeAssignments();
+    this.syncStarLifterSuperchargeUpgrades();
     this.updateUI();
+  }
+
+  applyEffect(effect) {
+    super.applyEffect(effect);
+    if (
+      effect?.type === 'superchargeMaxBonus'
+      || effect?.type === 'superchargeExponentReduction'
+    ) {
+      this.syncStarLifterSuperchargeUpgrades();
+    }
+  }
+
+  removeEffect(effect) {
+    const result = super.removeEffect(effect);
+    this.syncStarLifterSuperchargeUpgrades();
+    return result;
+  }
+
+  reconcileConditionalEffects() {
+    super.reconcileConditionalEffects();
+    this.syncStarLifterSuperchargeUpgrades();
+  }
+
+  clearEffectsOnTravel() {
+    super.clearEffectsOnTravel();
+    this.syncStarLifterSuperchargeUpgrades();
   }
 
   saveAutomationSettings() {

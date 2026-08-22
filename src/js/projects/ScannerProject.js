@@ -123,6 +123,14 @@ class ScannerProject extends WorkerCapacityBatchProjectBase {
     }
   }
 
+  isRelevantToCurrentPlanet(currentPlanetKey, planetParameters) {
+    const depositType = this.attributes?.scanner?.depositType;
+    if (!depositType) {
+      return true;
+    }
+    return Math.max(0, planetParameters.resources.underground?.[depositType]?.maxDeposits || 0) > 0;
+  }
+
   calculateExpectedTime(depositType, scanningStrength = 1) {
     const scanData = this.scanData[depositType];
     if (!scanData || scanData.D_current >= scanData.D_max) {

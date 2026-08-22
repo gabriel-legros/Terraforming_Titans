@@ -321,7 +321,7 @@ const researchParameters = {
         description: '',
         cost: { research: 200 },
         artificialAllowed: false,
-        coreHeatAllowed: false,
+        geologicalHeatAllowed: false,
         prerequisites: [],
         effects: [
           {
@@ -339,7 +339,7 @@ const researchParameters = {
         description: '',
         cost: { research: 500 },
         artificialAllowed: false,
-        coreHeatAllowed: false,
+        geologicalHeatAllowed: false,
         prerequisites: [],
         effects: [
           {
@@ -513,7 +513,7 @@ const researchParameters = {
         cost: { research: 100000 },
         prerequisites: [],
         artificialAllowed: false,
-        coreHeatAllowed: false,
+        geologicalHeatAllowed: false,
         effects: [
           {
             target: 'project',
@@ -555,7 +555,7 @@ const researchParameters = {
         cost: { research: 2000000 },
         prerequisites: ['deep_mine','android_factory'],
         artificialAllowed: false,
-        coreHeatAllowed: false,
+        geologicalHeatAllowed: false,
         effects: [
           {
             target: 'project',
@@ -573,7 +573,7 @@ const researchParameters = {
         cost: { research: 200_000 },
         prerequisites: [],
         artificialAllowed: false,
-        coreHeatAllowed: false,
+        geologicalHeatAllowed: false,
         disabled: true,
         effects: [
           {
@@ -2016,6 +2016,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'orbital_rings_for_shellworlds',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 400_000_000 },
+        prerequisites: ['orbital_rings'],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'shellworldOrbitalRing',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'mega_particle_accelerator',
         name: '',
         description: '',
@@ -2611,6 +2625,20 @@ const researchParameters = {
             value: true
           },
           {
+            target: 'building',
+            targetId: 'waterTank',
+            type: 'booleanFlag',
+            flagId: 'warpStorageRecipe',
+            value: true
+          },
+          {
+            target: 'building',
+            targetId: 'hydrogenReservoir',
+            type: 'booleanFlag',
+            flagId: 'warpStorageRecipe',
+            value: true
+          },
+          {
             target: 'project',
             targetId: 'spaceStorage',
             type: 'booleanFlag',
@@ -2645,6 +2673,20 @@ const researchParameters = {
           {
             target: 'building',
             targetId: 'storageDepot',
+            type: 'booleanFlag',
+            flagId: 'deepWarpStorageRecipe',
+            value: true
+          },
+          {
+            target: 'building',
+            targetId: 'waterTank',
+            type: 'booleanFlag',
+            flagId: 'deepWarpStorageRecipe',
+            value: true
+          },
+          {
+            target: 'building',
+            targetId: 'hydrogenReservoir',
             type: 'booleanFlag',
             flagId: 'deepWarpStorageRecipe',
             value: true

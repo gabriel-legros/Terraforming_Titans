@@ -11,6 +11,9 @@ registerTerraformingMethods('state', ({
       initialCelestialParameters: this.initialCelestialParameters,
       temperature: this.temperature,
       graphHistory: terraformingGraphsManager.saveState(),
+      moltenSurfaceAttritionPartialByStructure: {
+        ...this.moltenSurfaceAttritionPartialByStructure
+      },
       // atmosphere: this.atmosphere, // REMOVED - No longer saving internal atmosphere state
       completed: this.completed,
       // zonalAtmosphere: this.zonalAtmosphere, // REMOVED - No longer saving internal zonal atmosphere state
@@ -49,6 +52,9 @@ registerTerraformingMethods('state', ({
     this.refreshDynamicWorldGeometry();
     this.completed = terraformingState.completed || false;
     this.initialValuesCalculated = terraformingState.initialValuesCalculated || false;
+    this.moltenSurfaceAttritionPartialByStructure = {
+      ...(terraformingState.moltenSurfaceAttritionPartialByStructure || {})
+    };
 
     // Load Temperature (including zonal)
     if (terraformingState.temperature) {
@@ -107,6 +113,7 @@ registerTerraformingMethods('state', ({
 
     // Ensure global resources reflect loaded/recalculated state
     this.synchronizeGlobalResources();
+    this.refreshDynamicWorldGeometry();
     this.updateLuminosity(); // Recalculate luminosity
     if (this.luminosity.initialSurfaceAlbedo === undefined) {
       this.luminosity.initialSurfaceAlbedo = this.luminosity.groundAlbedo;

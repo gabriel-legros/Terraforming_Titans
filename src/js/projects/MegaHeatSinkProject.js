@@ -5,6 +5,7 @@
   const MEGA_HEAT_SINK_CONTINUOUS_THRESHOLD_MS = 1000;
   const MEGA_HEAT_SINK_CAP_MODES = {
     FIXED: 'fixed',
+    WORKERS: 'workers',
     GEOMETRIC_LAND_PERCENT: 'geometricLandPercent'
   };
   const getOrderedZones = () => getZones();
@@ -178,7 +179,10 @@
       const geometricLandOption = document.createElement('option');
       geometricLandOption.value = MEGA_HEAT_SINK_CAP_MODES.GEOMETRIC_LAND_PERCENT;
       geometricLandOption.textContent = getMegaHeatSinkText('ui.projects.megaHeatSink.capModeGeometricLandPercent', '% of geometric land');
-      capModeSelect.append(fixedOption, geometricLandOption);
+      const workersOption = document.createElement('option');
+      workersOption.value = MEGA_HEAT_SINK_CAP_MODES.WORKERS;
+      workersOption.textContent = getMegaHeatSinkText('ui.projects.megaHeatSink.capModeWorkers', 'x workers');
+      capModeSelect.append(fixedOption, geometricLandOption, workersOption);
       capModeSelect.value = this.capMode;
       const activeCapCheckbox = document.createElement('input');
       activeCapCheckbox.type = 'checkbox';
@@ -251,7 +255,8 @@
       });
       capModeSelect.addEventListener('change', () => {
         this.capMode = capModeSelect.value === MEGA_HEAT_SINK_CAP_MODES.FIXED
-          ? MEGA_HEAT_SINK_CAP_MODES.FIXED
+          || capModeSelect.value === MEGA_HEAT_SINK_CAP_MODES.WORKERS
+          ? capModeSelect.value
           : MEGA_HEAT_SINK_CAP_MODES.GEOMETRIC_LAND_PERCENT;
         if (this.capEnabled && this.isCapReached()) {
           this.isActive = false;
@@ -467,6 +472,9 @@
       if (this.capMode === MEGA_HEAT_SINK_CAP_MODES.FIXED) {
         return value;
       }
+      if (this.capMode === MEGA_HEAT_SINK_CAP_MODES.WORKERS) {
+        return value * Math.max(0, resources.colony.workers.potential);
+      }
       const geometricLand = Math.max(0, resolveWorldGeometricLand(terraforming, resources.surface.land));
       return geometricLand * value / 100;
     }
@@ -637,7 +645,8 @@
       }
       if (Object.prototype.hasOwnProperty.call(settings, 'capMode')) {
         this.capMode = settings.capMode === MEGA_HEAT_SINK_CAP_MODES.FIXED
-          ? MEGA_HEAT_SINK_CAP_MODES.FIXED
+          || settings.capMode === MEGA_HEAT_SINK_CAP_MODES.WORKERS
+          ? settings.capMode
           : MEGA_HEAT_SINK_CAP_MODES.GEOMETRIC_LAND_PERCENT;
       }
     }
@@ -670,7 +679,8 @@
       }
       if (Object.prototype.hasOwnProperty.call(state, 'capMode')) {
         this.capMode = state.capMode === MEGA_HEAT_SINK_CAP_MODES.FIXED
-          ? MEGA_HEAT_SINK_CAP_MODES.FIXED
+          || state.capMode === MEGA_HEAT_SINK_CAP_MODES.WORKERS
+          ? state.capMode
           : MEGA_HEAT_SINK_CAP_MODES.GEOMETRIC_LAND_PERCENT;
       }
     }
@@ -694,7 +704,8 @@
       const value = Number(state.capValue);
       this.capValue = Number.isFinite(value) && value >= 0 ? value : 100;
       this.capMode = state.capMode === MEGA_HEAT_SINK_CAP_MODES.FIXED
-        ? MEGA_HEAT_SINK_CAP_MODES.FIXED
+        || state.capMode === MEGA_HEAT_SINK_CAP_MODES.WORKERS
+        ? state.capMode
         : MEGA_HEAT_SINK_CAP_MODES.GEOMETRIC_LAND_PERCENT;
     }
   }

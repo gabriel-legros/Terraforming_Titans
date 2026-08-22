@@ -764,7 +764,7 @@ class SpaceStorageProject extends SpaceshipProject {
     return Math.max(0, this.assignedSpaceships || 0)
       * cargoPerShip
       / duration
-      * (1 - this.getAerobrakingSpaceAccessBypassFraction());
+      * (1 - this.getSpaceAccessCapacityBypassFraction());
   }
 
   sanitizeResourceAerobrakingEnabled() {

@@ -17,14 +17,85 @@ class HydrogenReservoir extends MultiRecipesBuilding {
   }
 
   initializeCustomUI(context = {}) {
-    super.initializeCustomUI(context);
-
-    const { hideButton } = context;
-    if (!hideButton) {
+    const { leftContainer, hideButton } = context;
+    if (!leftContainer || !hideButton) {
       return;
     }
 
     const cache = context.cachedElements || {};
+    let { storageTierContainer, storageTierSelect } = cache;
+    if (!storageTierContainer) {
+      storageTierContainer = document.createElement('span');
+      storageTierContainer.classList.add('building-recipe-select');
+
+      const storageTierLabel = document.createElement('label');
+      storageTierLabel.textContent = getHydrogenReservoirText(
+        'ui.buildings.hydrogenReservoir.storageTierLabel'
+      );
+      storageTierLabel.htmlFor = `${this.name}-storage-tier-select`;
+      storageTierContainer.appendChild(storageTierLabel);
+
+      storageTierSelect = document.createElement('select');
+      storageTierSelect.id = `${this.name}-storage-tier-select`;
+      [
+        ['standard', 'standardTier'],
+        ['warp', 'warpTier'],
+        ['deepWarp', 'deepWarpTier']
+      ].forEach(([value, textKey]) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = getHydrogenReservoirText(
+          `ui.buildings.hydrogenReservoir.${textKey}`
+        );
+        storageTierSelect.appendChild(option);
+      });
+      storageTierContainer.appendChild(storageTierSelect);
+      leftContainer.appendChild(storageTierContainer);
+
+      storageTierSelect.addEventListener('change', () => {
+        this.setStorageTier(storageTierSelect.value);
+      });
+
+      cache.storageTierContainer = storageTierContainer;
+      cache.storageTierSelect = storageTierSelect;
+    }
+
+    let { operatingModeContainer, operatingModeSelect } = cache;
+    if (!operatingModeContainer) {
+      operatingModeContainer = document.createElement('span');
+      operatingModeContainer.classList.add('building-recipe-select');
+
+      const operatingModeLabel = document.createElement('label');
+      operatingModeLabel.textContent = getHydrogenReservoirText(
+        'ui.buildings.hydrogenReservoir.operatingModeLabel'
+      );
+      operatingModeLabel.htmlFor = `${this.name}-operating-mode-select`;
+      operatingModeContainer.appendChild(operatingModeLabel);
+
+      operatingModeSelect = document.createElement('select');
+      operatingModeSelect.id = `${this.name}-operating-mode-select`;
+      [
+        ['storage', 'storageMode'],
+        ['intake', 'pumpingMode']
+      ].forEach(([value, textKey]) => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = getHydrogenReservoirText(
+          `ui.buildings.hydrogenReservoir.${textKey}`
+        );
+        operatingModeSelect.appendChild(option);
+      });
+      operatingModeContainer.appendChild(operatingModeSelect);
+      leftContainer.appendChild(operatingModeContainer);
+
+      operatingModeSelect.addEventListener('change', () => {
+        this.setOperatingMode(operatingModeSelect.value);
+      });
+
+      cache.operatingModeContainer = operatingModeContainer;
+      cache.operatingModeSelect = operatingModeSelect;
+    }
+
     let { emptyButton } = cache;
     if (!emptyButton) {
       emptyButton = document.createElement('button');
@@ -46,21 +117,80 @@ class HydrogenReservoir extends MultiRecipesBuilding {
   }
 
   updateUI(elements = {}) {
-    super.updateUI(elements);
-
-    if (elements !== this._cachedUI && elements.emptyButton) {
+    if (
+      elements !== this._cachedUI &&
+      (elements.emptyButton || elements.storageTierSelect || elements.operatingModeSelect)
+    ) {
       this._cachedUI = elements;
     }
 
-    const button = elements.emptyButton || this._cachedUI?.emptyButton;
-    if (!button) {
+    const cache = this._cachedUI || {};
+    const storageTierSelect = elements.storageTierSelect || cache.storageTierSelect;
+    const storageTierContainer = elements.storageTierContainer || cache.storageTierContainer;
+    const operatingModeSelect = elements.operatingModeSelect || cache.operatingModeSelect;
+    const button = elements.emptyButton || cache.emptyButton;
+    if (!storageTierSelect || !operatingModeSelect || !button) {
       return;
     }
+
+    const allowedKeys = this._getAllowedRecipeKeys();
+    const availableTiers = ['standard', 'warp', 'deepWarp'].filter(tier =>
+      allowedKeys.includes(this.getRecipeKey(tier, 'storage'))
+    );
+    Array.from(storageTierSelect.options).forEach(option => {
+      const disabled = !availableTiers.includes(option.value);
+      option.disabled = disabled;
+      option.hidden = disabled;
+    });
+    storageTierContainer.style.display = availableTiers.length > 1 ? '' : 'none';
+
+    const tier = this.getStorageTier();
+    const mode = this.getOperatingMode();
+    storageTierSelect.value = tier;
+    operatingModeSelect.value = mode;
+    Array.from(operatingModeSelect.options).forEach(option => {
+      option.disabled = !allowedKeys.includes(this.getRecipeKey(tier, option.value));
+    });
 
     const colonyHydrogen = resources?.colony?.colonyHydrogen;
     const availableHydrogen = colonyHydrogen?.value ?? 0;
     button.disabled = availableHydrogen <= 0;
     button.style.display = this.unlocked && !this.isHidden ? 'inline-block' : 'none';
+  }
+
+  getStorageTier(recipeKey = this.currentRecipeKey) {
+    if (recipeKey === 'deepWarpStorage' || recipeKey === 'deepWarpIntake') {
+      return 'deepWarp';
+    }
+    if (recipeKey === 'warpStorage' || recipeKey === 'warpIntake') {
+      return 'warp';
+    }
+    return 'standard';
+  }
+
+  getOperatingMode(recipeKey = this.currentRecipeKey) {
+    return recipeKey === 'intake' || recipeKey === 'warpIntake' || recipeKey === 'deepWarpIntake'
+      ? 'intake'
+      : 'storage';
+  }
+
+  getRecipeKey(tier, mode) {
+    const pumping = mode === 'intake';
+    if (tier === 'deepWarp') {
+      return pumping ? 'deepWarpIntake' : 'deepWarpStorage';
+    }
+    if (tier === 'warp') {
+      return pumping ? 'warpIntake' : 'warpStorage';
+    }
+    return pumping ? 'intake' : 'storage';
+  }
+
+  setStorageTier(tier) {
+    return this.setRecipe(this.getRecipeKey(tier, this.getOperatingMode()));
+  }
+
+  setOperatingMode(mode) {
+    return this.setRecipe(this.getRecipeKey(this.getStorageTier(), mode));
   }
 
   emptyToAtmosphere() {

@@ -1193,6 +1193,26 @@ const projectParameters = {
     unlocked: false,
     attributes: { canUseSpaceStorage: true, showInResourcesRate: false }
   },
+  shellworldOrbitalRing: {
+    type: 'ShellworldOrbitalRingProject',
+    name: '',
+    category: 'infrastructure',
+    cost: {
+      colony: {
+        metal: 2_500_000_000_000_000,
+        components: 100_000_000_000_000,
+        superalloys: 500_000_000_000_000
+      }
+    },
+    duration: 30 * 60 * 1000,
+    description: '',
+    repeatable: false,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      showInResourcesRate: false
+    }
+  },
   birchWorld: {
     type: 'BirchWorldProject',
     name: '',
@@ -1383,6 +1403,12 @@ const projectParameters = {
         label: '',
         complexity: 10,
         displayOrder: 2
+      },
+      lifterStellarStripRecipe: {
+        label: '',
+        complexity: 100,
+        displayOrder: 6,
+        requiresProjectFlags: ['starLifting', 'stellarMassStripping']
       },
       lifterHarvestRecipes: {
         hydrogen: {

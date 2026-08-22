@@ -204,6 +204,15 @@ function renderLiftersUI(project, container) {
         getProjectLiftersUIText(project, 'starLiftingTooltip', 'Outputs per base unit: 1 hydrogen, 0.01 oxygen, 0.005 graphite, 0.0015 nitrogen, 0.001 silica, 0.0008 metal.')
       );
       nameWrap.appendChild(infoIcon);
+    } else if (key === 'stripStellarMass') {
+      const infoIcon = document.createElement('span');
+      infoIcon.classList.add('info-tooltip-icon');
+      infoIcon.innerHTML = '&#9432;';
+      attachDynamicInfoTooltip(
+        infoIcon,
+        getProjectLiftersUIText(project, 'stellarMassStrippingTooltip', '')
+      );
+      nameWrap.appendChild(infoIcon);
     }
 
     const complexityEl = document.createElement('span');

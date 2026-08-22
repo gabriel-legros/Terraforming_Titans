@@ -2309,6 +2309,7 @@ function updateTotalCostDisplayElement(element, totalCost, project, perSecond = 
   while (nodes.entries.length > entries.length) {
     const entry = nodes.entries.pop();
     const separator = nodes.separators.pop();
+    cleanupDynamicTooltipsIn(entry);
     element.removeChild(entry);
     element.removeChild(separator);
   }

@@ -1417,7 +1417,7 @@ class ScriptAutomation {
   }
 
   normalizeLine(line) {
-    return {
+    const normalized = {
       id: Number(line.id) || this.nextLineId++,
       name: line.name || '',
       description: line.description || '',
@@ -1428,6 +1428,23 @@ class ScriptAutomation {
       condition: line.condition?.constructor === Object ? line.condition : this.createDefaultCondition(),
       actions: Array.isArray(line.actions) ? line.actions.map(action => this.normalizeAction(action)) : []
     };
+    const clauses = Array.isArray(normalized.condition?.clauses) ? normalized.condition.clauses : [];
+    clauses.forEach(clause => {
+      this.normalizeExpressionConstants(clause.left);
+      this.normalizeExpressionConstants(clause.right);
+    });
+    normalized.actions.forEach(action => this.normalizeExpressionConstants(action.valueExpression));
+    return normalized;
+  }
+
+  normalizeExpressionConstants(expression) {
+    const terms = Array.isArray(expression?.terms) ? expression.terms : [];
+    terms.forEach(term => {
+      const ref = term?.ref;
+      if (ref?.source === 'constant' && hasMojibakeMicroSuffix(ref.constant)) {
+        ref.constant = formatNumber(this.registry.toNumber(ref.constant), true, 3);
+      }
+    });
   }
 
   normalizeAction(action) {

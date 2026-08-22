@@ -329,7 +329,7 @@ function refreshAutoBuildTarget(structure) {
   const roundedPercentTarget = structure.autoBuildBasis === 'aerostatCapacity'
     ? Math.floor(percentTarget)
     : Math.ceil(percentTarget);
-  const targetCount = autoBuildUsesMax
+  const uncappedTargetCount = autoBuildUsesMax
     ? (autoBuildUsesAdjustableMax ? structure.getAutoBuildMaxTargetCount() : Infinity)
     : autoBuildUsesFixed
       ? fixedTarget
@@ -342,6 +342,10 @@ function refreshAutoBuildTarget(structure) {
           : autoBuildUsesAndroidCapacityShare
             ? structure.getAndroidCapacityShareTarget(resources.colony.androids.cap || 0)
           : roundedPercentTarget;
+  const supportedActiveLimit = structure.shouldClampSetActiveToSupported && structure.shouldClampSetActiveToSupported()
+    ? Math.max(0, Math.floor(structure.getSupportedActiveCap()))
+    : Infinity;
+  const targetCount = Math.min(uncappedTargetCount, supportedActiveLimit);
   const aerostatCapacity = colonies.aerostat_colony
     ? getAerostatSupportedBuildingLimit(structure)
     : Infinity;
@@ -1012,7 +1016,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   workerOption.value = 'workers';
   workerOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.workers', '% of workers');
   autoBuildBasisSelect.appendChild(workerOption);
-  if (structure.requiresWorker > 0) {
+  if (structure.requiresWorker > 0 || structure.autoBuildWorkerShareOption) {
     const shareOption = document.createElement('option');
     shareOption.value = 'workerShare';
     shareOption.textContent = getStructuresUIText('ui.structures.autoBuild.basis.workerShare', '% worker share');
@@ -1215,6 +1219,20 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
   constructedLabel.textContent = `${getStructuresUIText('ui.structures.labels.constructed', 'Constructed')}:`;
   const constructedValue = document.createElement('span');
   constructedCountElement.append(constructedLabel, document.createTextNode(' '), constructedValue);
+
+  const moltenAttritionWarning = document.createElement('span');
+  moltenAttritionWarning.classList.add(
+    'resource-warning',
+    'molten-attrition-warning',
+    'info-tooltip-icon'
+  );
+  moltenAttritionWarning.textContent = '⚠';
+  moltenAttritionWarning.style.display = 'none';
+  const moltenAttritionTooltip = attachDynamicInfoTooltip(moltenAttritionWarning, '');
+  constructedCountElement.append(document.createTextNode(' '), moltenAttritionWarning);
+  cached.moltenAttritionWarning = moltenAttritionWarning;
+  cached.moltenAttritionTooltip = moltenAttritionTooltip;
+  cached.moltenAttritionTooltipCache = {};
 
   if (structure.canBeToggled) {
     constructedValue.id = `${structure.name}-count-active`;
@@ -2963,6 +2981,10 @@ function updateDecreaseButtonText(button, buildCount) {
   }
   
   function updateStructureDisplay(structures, activeCategory = '') {
+    const moltenAttritionRate = terraforming.getMoltenSurfaceAttritionRatePerSecond();
+    const moltenAerostatProtection = moltenAttritionRate > 0
+      ? terraforming.getMoltenSurfaceAerostatProtection()
+      : null;
     for (const structureName in structures) {
       const structure = structures[structureName];
       if (structure.category && activeCategory && structure.category !== activeCategory) {
@@ -3020,6 +3042,35 @@ function updateDecreaseButtonText(button, buildCount) {
         : `${formatBuildingCount(structure.count)}`;
       if (els.headerActive.textContent !== headerActiveText) {
         els.headerActive.textContent = headerActiveText;
+      }
+
+      if (els.moltenAttritionWarning) {
+        const protectedCount = moltenAerostatProtection && !isColony
+          ? terraforming.getMoltenSurfaceProtectedCount(
+              structure,
+              structureName,
+              true,
+              moltenAerostatProtection
+            )
+          : 0;
+        const showMoltenAttritionWarning = !isColony
+          && moltenAttritionRate > 0
+          && !structure.isMoltenSurfaceAttritionImmune()
+          && structure.countNumber > protectedCount;
+        els.moltenAttritionWarning.style.display = showMoltenAttritionWarning
+          ? 'inline-flex'
+          : 'none';
+        setTooltipText(
+          els.moltenAttritionTooltip,
+          showMoltenAttritionWarning
+            ? getStructuresUIText(
+                'ui.structures.warnings.moltenSurfaceAttrition',
+                'Building over aerostat limit and lava present : building will sink.'
+              )
+            : '',
+          els.moltenAttritionTooltipCache,
+          'text'
+        );
       }
 
       updateStructureKesslerWarning(structure, els, manualBuildCount);

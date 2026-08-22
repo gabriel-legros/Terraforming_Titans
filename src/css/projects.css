@@ -33,6 +33,7 @@
 .project-card.collapsed .progress-button-container,
 .info-card.collapsed .card-body,
 .mirror-oversight-card.collapsed .card-body,
+.dyson-sphere-card.collapsed .card-body,
 .dyson-swarm-card.collapsed .card-body {
     display: none;
 }

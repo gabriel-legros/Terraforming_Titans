@@ -22,6 +22,8 @@ const PatienceUI = {
     spendButtonEl: null,
     spendHeaderEl: null,
     spendPreviewEl: null,
+    facilityUpgradeRowEl: null,
+    facilitySelectEl: null,
     meterFillEl: null,
     gainValueEl: null,
     gainMetaEl: null,
@@ -77,6 +79,8 @@ const PatienceUI = {
         this.spendButtonEl = document.getElementById('patience-spend-button');
         this.spendHeaderEl = this.container.querySelector('.patience-spend-card .patience-card-label');
         this.spendPreviewEl = document.getElementById('patience-spend-preview');
+        this.facilityUpgradeRowEl = document.getElementById('patience-facility-upgrade-row');
+        this.facilitySelectEl = document.getElementById('patience-facility-select');
         this.meterFillEl = this.container.querySelector('.patience-meter-fill');
         this.gainValueEl = cards[1] ? cards[1].querySelector('.patience-card-value') : null;
         this.gainMetaEl = cards[1] ? cards[1].querySelector('.patience-card-meta') : null;
@@ -295,6 +299,51 @@ const PatienceUI = {
 
         spendCard.appendChild(spendRow);
 
+        const facilityUpgradeRow = document.createElement('div');
+        facilityUpgradeRow.id = 'patience-facility-upgrade-row';
+        facilityUpgradeRow.className = 'patience-facility-row';
+        facilityUpgradeRow.hidden = true;
+
+        const facilityLabel = document.createElement('label');
+        facilityLabel.htmlFor = 'patience-facility-select';
+        facilityLabel.textContent = getPatienceText('ui.hope.patiencePanel.facilityUpgradeLabel', 'Automatic facility upgrade');
+        facilityUpgradeRow.appendChild(facilityLabel);
+
+        const facilityInfo = document.createElement('span');
+        facilityInfo.className = 'info-tooltip-icon';
+        facilityInfo.textContent = 'ⓘ';
+        attachDynamicInfoTooltip(
+            facilityInfo,
+            getPatienceText(
+                'ui.hope.patiencePanel.facilityUpgradeTooltip',
+                'Choose a Warp Gate Command facility to upgrade whenever its cooldown becomes ready during the simulated time. Multi-hour spends can grant multiple upgrades. No upgrades are granted after the selected facility reaches level 100.'
+            )
+        );
+        facilityUpgradeRow.appendChild(facilityInfo);
+
+        const facilitySelect = document.createElement('select');
+        facilitySelect.id = 'patience-facility-select';
+        const noFacilityOption = document.createElement('option');
+        noFacilityOption.value = '';
+        noFacilityOption.textContent = getPatienceText('ui.hope.patiencePanel.noFacilityUpgrade', 'Do not upgrade a facility');
+        facilitySelect.appendChild(noFacilityOption);
+        const facilityOptions = [
+            ['infirmary', getPatienceText('ui.hope.wgcUi.facilityItems.infirmary', 'Infirmary')],
+            ['barracks', getPatienceText('ui.hope.wgcUi.facilityItems.barracks', 'Barracks')],
+            ['shootingRange', getPatienceText('ui.hope.wgcUi.facilityItems.shootingRange', 'Shooting Range')],
+            ['obstacleCourse', getPatienceText('ui.hope.wgcUi.facilityItems.obstacleCourse', 'Obstacle Course')],
+            ['library', getPatienceText('ui.hope.wgcUi.facilityItems.library', 'Library')]
+        ];
+        for (let i = 0; i < facilityOptions.length; i += 1) {
+            const option = document.createElement('option');
+            option.value = facilityOptions[i][0];
+            option._facilityLabel = facilityOptions[i][1];
+            option.textContent = facilityOptions[i][1];
+            facilitySelect.appendChild(option);
+        }
+        facilityUpgradeRow.appendChild(facilitySelect);
+        spendCard.appendChild(facilityUpgradeRow);
+
         const spendPreview = document.createElement('div');
         spendPreview.id = 'patience-spend-preview';
         spendPreview.className = 'patience-preview';
@@ -338,6 +387,8 @@ const PatienceUI = {
         this.spendButtonEl = spendButton;
         this.spendHeaderEl = spendHeader;
         this.spendPreviewEl = spendPreview;
+        this.facilityUpgradeRowEl = facilityUpgradeRow;
+        this.facilitySelectEl = facilitySelect;
         this.meterFillEl = meterFill;
         this.gainValueEl = gainValue;
         this.gainMetaEl = gainMeta;
@@ -360,6 +411,9 @@ const PatienceUI = {
         if (this.spendInputEl) {
             this.spendInputEl.addEventListener('input', () => this.updateSpendPreview());
         }
+        if (this.facilitySelectEl) {
+            this.facilitySelectEl.addEventListener('change', () => this.updateSpendPreview());
+        }
         if (this.saveFileButtonEl) {
             this.saveFileButtonEl.addEventListener('click', () => this.handleSaveFile());
         }
@@ -378,8 +432,48 @@ const PatienceUI = {
         if (!this.spendInputEl || !patienceManager) return;
         
         const hours = parseFloat(this.spendInputEl.value) || 0;
-        if (hours > 0 && patienceManager.spendPatience(hours)) {
+        const facilityKey = this.facilitySelectEl ? this.facilitySelectEl.value : '';
+        if (hours > 0 && patienceManager.spendPatience(hours, facilityKey)) {
+            this.updateFacilitySelector();
             this.updateSpendPreview();
+        }
+    },
+
+    updateFacilitySelector() {
+        if (!this.facilityUpgradeRowEl || !this.facilitySelectEl) return;
+
+        const facilitiesMaxed = warpGateCommand.enabled && warpGateCommand.areFacilitiesMaxed();
+        const shouldHide = !warpGateCommand.enabled || facilitiesMaxed;
+        if (this.facilityUpgradeRowEl.hidden !== shouldHide) {
+            this.facilityUpgradeRowEl.hidden = shouldHide;
+        }
+        if (shouldHide) {
+            if (facilitiesMaxed && this.facilitySelectEl.value) {
+                this.facilitySelectEl.value = '';
+            }
+            return;
+        }
+
+        const options = this.facilitySelectEl.options;
+        for (let i = 1; i < options.length; i += 1) {
+            const option = options[i];
+            const level = warpGateCommand.facilities[option.value];
+            const text = getPatienceText(
+                'ui.hope.patiencePanel.facilityUpgradeOption',
+                '{facility} (level {level}/100)',
+                { facility: option._facilityLabel, level }
+            );
+            if (option.textContent !== text) {
+                option.textContent = text;
+            }
+            const disabled = level >= 100;
+            if (option.disabled !== disabled) {
+                option.disabled = disabled;
+            }
+        }
+        const selectedKey = this.facilitySelectEl.value;
+        if (selectedKey && warpGateCommand.facilities[selectedKey] >= 100) {
+            this.facilitySelectEl.value = '';
         }
     },
 
@@ -576,6 +670,19 @@ const PatienceUI = {
             : [];
         if (wgcAdvance) {
             entries.push([{ text: wgcAdvance }]);
+            if (this.facilitySelectEl && this.facilitySelectEl.value) {
+                const selectedOption = this.facilitySelectEl.options[this.facilitySelectEl.selectedIndex];
+                const upgradeCount = patienceManager.getFacilityUpgradeCount(hours, this.facilitySelectEl.value);
+                entries.push([{ text: getPatienceText(
+                    upgradeCount === 1
+                        ? 'ui.hope.patiencePanel.facilityUpgradePreviewSingle'
+                        : 'ui.hope.patiencePanel.facilityUpgradePreviewMultiple',
+                    upgradeCount === 1
+                        ? '{facility} will upgrade 1 time.'
+                        : '{facility} will upgrade {count} times.',
+                    { facility: selectedOption._facilityLabel, count: upgradeCount }
+                ) }]);
+            }
         }
         this.setSpendPreviewEntries(entries);
     },
@@ -721,12 +828,17 @@ const PatienceUI = {
         }
 
         if (this.dailyClaimButtonEl) {
-            const claimedToday = patienceManager.hasClaimedToday();
-            this.dailyClaimButtonEl.disabled = claimedToday;
-            this.dailyClaimButtonEl.textContent = claimedToday
-                ? getPatienceText('ui.hope.patiencePanel.claimedDaily', 'Daily patience claimed')
-                : getPatienceText('ui.hope.patiencePanel.claimDaily', 'Claim daily patience');
+            this.dailyClaimButtonEl.hidden = gameSettings.disableDailyPatience;
+            if (!gameSettings.disableDailyPatience) {
+                const claimedToday = patienceManager.hasClaimedToday();
+                this.dailyClaimButtonEl.disabled = claimedToday;
+                this.dailyClaimButtonEl.textContent = claimedToday
+                    ? getPatienceText('ui.hope.patiencePanel.claimedDaily', 'Daily patience claimed')
+                    : getPatienceText('ui.hope.patiencePanel.claimDaily', 'Claim daily patience');
+            }
         }
+
+        this.updateFacilitySelector();
 
         // Update preview on each render
         this.updateSpendPreview();

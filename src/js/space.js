@@ -396,7 +396,7 @@ class SpaceManager extends EffectableEntity {
             return 0;
         }
         const rewardIndex = this.dominionTerraformRewardCount + 1;
-        const reward = 1000 * rewardIndex;
+        const reward = 2000 * rewardIndex;
         this.dominionTerraformRewards[resolvedDominion] = true;
         this.dominionTerraformRewardCount = rewardIndex;
         const artifactGain = getArtifactGainAmount(reward);
@@ -1194,7 +1194,7 @@ class SpaceManager extends EffectableEntity {
             }
         }
         if (!Number.isFinite(status.terraformedValue) || status.terraformedValue <= 0) {
-            status.terraformedValue = this._deriveArtificialTerraformValue(status);
+            status.terraformedValue = this._deriveArtificialBaseTerraformValue(status);
         }
         if (!Number.isFinite(status.fleetCapacityValue) || status.fleetCapacityValue <= 0) {
             status.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(status);
@@ -1467,7 +1467,7 @@ class SpaceManager extends EffectableEntity {
 
         const terraformedValue = this._deriveArtificialTerraformValue(status);
         contribution.sector = this._resolveStatusSector(type, key, status);
-        status.terraformedValue = terraformedValue;
+        status.terraformedValue = this._deriveArtificialBaseTerraformValue(status);
         if (!Number.isFinite(status.fleetCapacityValue) || status.fleetCapacityValue <= 0) {
             status.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(status);
         }
@@ -1838,6 +1838,36 @@ class SpaceManager extends EffectableEntity {
         return !!this.planetStatuses[this.currentPlanetKey]?.orbitalRing;
     }
 
+    isCurrentWorldShellworldOrbitalRingEligible() {
+        if (this.currentArtificialKey === null) {
+            return false;
+        }
+        const status = this.artificialWorldStatuses[String(this.currentArtificialKey)];
+        return !!status
+            && this._resolveArtificialWorldType(status) === 'shell'
+            && !isSupermassiveShellworldStatus(status)
+            && !isSupermassiveShellworldStatus(currentPlanetParameters);
+    }
+
+    currentWorldHasShellworldOrbitalRing() {
+        if (!this.isCurrentWorldShellworldOrbitalRingEligible()) {
+            return false;
+        }
+        return this.artificialWorldStatuses[String(this.currentArtificialKey)]?.shellworldOrbitalRing === true;
+    }
+
+    setCurrentWorldHasShellworldOrbitalRing(value) {
+        if (!this.isCurrentWorldShellworldOrbitalRingEligible()) {
+            return false;
+        }
+        const key = String(this.currentArtificialKey);
+        this._updateWorldCacheForStatusMutation('artificial', key, (status) => {
+            status.shellworldOrbitalRing = value === true;
+            status.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(status);
+        });
+        return true;
+    }
+
     setCurrentWorldHasOrbitalRing(value) {
         if (this.currentRandomSeed !== null) {
             const seed = String(this.currentRandomSeed);
@@ -2046,7 +2076,7 @@ class SpaceManager extends EffectableEntity {
         return total;
     }
 
-    _deriveArtificialTerraformValue(status) {
+    _deriveArtificialBaseTerraformValue(status) {
         if (!status) return 1;
         if (Number.isFinite(status.terraformedValue) && status.terraformedValue > 0) {
             return Math.max(1, Math.floor(status.terraformedValue));
@@ -2065,6 +2095,13 @@ class SpaceManager extends EffectableEntity {
         const land = landSources.find((val) => Number.isFinite(val) && val > 0) || 0;
         const derived = Math.max(1, Math.floor(land / ARTIFICIAL_TERRAFORM_DIVISOR));
         return derived;
+    }
+
+    _deriveArtificialTerraformValue(status) {
+        const baseValue = this._deriveArtificialBaseTerraformValue(status);
+        return status?.shellworldOrbitalRing === true
+            ? baseValue * 1.25
+            : baseValue;
     }
 
     _deriveArtificialFleetCapacityValue(status) {
@@ -2645,7 +2682,7 @@ class SpaceManager extends EffectableEntity {
                 let target = status;
                 if (!target) {
                     const original = this.getCurrentWorldOriginal();
-                    const terraformedValue = this._deriveArtificialTerraformValue({
+                    const terraformedValue = this._deriveArtificialBaseTerraformValue({
                         landHa: this._getCurrentWorldLandHa(),
                         original
                     });
@@ -2670,7 +2707,7 @@ class SpaceManager extends EffectableEntity {
                     };
                     map[resolvedKey] = target;
                 } else if (!target.terraformedValue) {
-                    target.terraformedValue = this._deriveArtificialTerraformValue({
+                    target.terraformedValue = this._deriveArtificialBaseTerraformValue({
                         landHa: this._getCurrentWorldLandHa(),
                         original: this.getCurrentWorldOriginal(),
                         terraformedValue: target.terraformedValue
@@ -2899,7 +2936,7 @@ class SpaceManager extends EffectableEntity {
             const key = String(this.currentArtificialKey);
             const landHa = this._getCurrentWorldLandHa();
             if (!this.artificialWorldStatuses[key]) {
-                const terraformedValue = this._deriveArtificialTerraformValue({
+                const terraformedValue = this._deriveArtificialBaseTerraformValue({
                     landHa,
                     original: this.getCurrentWorldOriginal()
                 });
@@ -2949,7 +2986,7 @@ class SpaceManager extends EffectableEntity {
                 ? SPACE_SUPERMASSIVE_SHELL_CORE
                 : currentPlanetParameters?.classification?.core || st.core || this._resolveArtificialWorldCore(st, st.type);
             if (!st.terraformedValue) {
-                st.terraformedValue = this._deriveArtificialTerraformValue({
+                st.terraformedValue = this._deriveArtificialBaseTerraformValue({
                     landHa: this._getCurrentWorldLandHa(),
                     original: this.getCurrentWorldOriginal(),
                     terraformedValue: st.terraformedValue
@@ -3684,7 +3721,7 @@ class SpaceManager extends EffectableEntity {
                     entry.orbitalRing = false;
                 }
                 if (!Number.isFinite(entry.terraformedValue) && entry.terraformed) {
-                    entry.terraformedValue = this._deriveArtificialTerraformValue(entry);
+                    entry.terraformedValue = this._deriveArtificialBaseTerraformValue(entry);
                 }
                 if (!Number.isFinite(entry.fleetCapacityValue) || entry.fleetCapacityValue <= 0) {
                     entry.fleetCapacityValue = this._deriveArtificialFleetCapacityValue(entry);

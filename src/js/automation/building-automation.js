@@ -254,6 +254,9 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
     if (building instanceof DustFactoryClass) {
       control.dustFactory = DustFactoryClass.saveAutomationSettings();
     }
+    if (building.name === 'starLifter') {
+      control.superchargeMultiplier = building.superchargeMultiplier;
+    }
     return Object.keys(control).length ? control : null;
   }
 
@@ -318,6 +321,16 @@ class BuildingAutomation extends BuildingAutomationPresetManagerBaseClass {
       const nextAutoFillingEnabled = control.autoFillingEnabled === true;
       if (building.autoFillingEnabled !== nextAutoFillingEnabled) {
         building.autoFillingEnabled = nextAutoFillingEnabled;
+        changed = true;
+      }
+    }
+    if (
+      building.name === 'starLifter'
+      && Object.prototype.hasOwnProperty.call(control, 'superchargeMultiplier')
+    ) {
+      const previous = building.superchargeMultiplier;
+      building.setSuperchargeMultiplier(control.superchargeMultiplier);
+      if (building.superchargeMultiplier !== previous) {
         changed = true;
       }
     }

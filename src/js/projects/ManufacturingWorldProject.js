@@ -892,6 +892,10 @@
         assignedValue: card.querySelector('[data-manufacturing-ui="assignedValue"]'),
         freeValue: card.querySelector('[data-manufacturing-ui="freeValue"]'),
         inputValue: card.querySelector('[data-manufacturing-ui="inputValue"]'),
+        inputElements: MANUFACTURING_INPUT_KEYS.reduce((map, inputKey) => {
+          map[inputKey] = card.querySelector(`[data-manufacturing-input-key="${inputKey}"]`);
+          return map;
+        }, {}),
         statusValue: card.querySelector('[data-manufacturing-ui="statusValue"]'),
         runCheckbox: card.querySelector('[data-manufacturing-ui="runCheckbox"]'),
         stepDownButton: card.querySelector('[data-manufacturing-ui="stepDownButton"]'),
@@ -933,6 +937,7 @@
       if (!skipNormalization) {
         this.normalizeAssignments();
       }
+      const hydrogenRatio = resources.spaceStorage.hydrogen.availabilityRatio;
       this.getAssignmentKeys().forEach((key) => {
         const assigned = this.manufacturingAssignments[key] || 0n;
         if (assigned <= 0n) {
@@ -940,7 +945,7 @@
           return;
         }
         const recipe = this.getRecipe(key);
-        let productivity = 1;
+        let productivity = hydrogenRatio;
         Object.keys(recipe.inputs).forEach((inputKey) => {
           const ratio = resources.spaceStorage[inputKey].availabilityRatio;
           productivity = Math.min(productivity, ratio);
@@ -1176,12 +1181,14 @@
         return totals;
       }
       const entries = [];
+      let assignedTotal = 0n;
 
       this.getAssignmentKeys().forEach((key) => {
         const assigned = this.manufacturingAssignments[key] || 0n;
         if (assigned <= 0n) {
           return;
         }
+        assignedTotal += assigned;
         const assignedNumber = Number(assigned);
         const recipe = this.getRecipe(key);
         const recipeProductivity = this.getRecipeOperationProductivity(key, productivity);
@@ -1215,6 +1222,9 @@
         });
         estimatedOutputs[entry.key] = entry.desiredOutput || 0;
       });
+      estimatedInputs.hydrogen = Number(assignedTotal)
+        * MANUFACTURING_FLAT_HYDROGEN_PER_WORKER
+        * seconds;
 
       MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
         const amount = estimatedInputs[inputKey] || 0;
@@ -1345,6 +1355,16 @@
       const inputValue = document.createElement('span');
       inputValue.classList.add('stat-value');
       inputValue.dataset.manufacturingUi = 'inputValue';
+      const inputElements = {};
+      MANUFACTURING_INPUT_KEYS.forEach((inputKey, index) => {
+        if (index > 0) {
+          inputValue.appendChild(document.createTextNode(', '));
+        }
+        const inputElement = document.createElement('span');
+        inputElement.dataset.manufacturingInputKey = inputKey;
+        inputValue.appendChild(inputElement);
+        inputElements[inputKey] = inputElement;
+      });
       inputField.append(inputLabel, inputValue);
       controlsGrid.appendChild(inputField);
       body.appendChild(controlsGrid);
@@ -1450,6 +1470,7 @@
         assignedValue,
         freeValue,
         inputValue,
+        inputElements,
         statusValue,
         runCheckbox,
         stepDownButton,
@@ -1509,10 +1530,16 @@
       const assignedText = formatNumber(assigned, true, 2);
       const availableText = formatNumber(available, true);
       const statusText = this.statusText || getManufacturingText('catalogs.specializations.manufacturing.status.idle');
-      const inputText = MANUFACTURING_INPUT_KEYS.map((inputKey) => {
-        const label = MANUFACTURING_INPUT_LABELS[inputKey] || inputKey;
-        return `${formatNumber(this.lastInputRates[inputKey] || 0, true, 3)} ${label}/s`;
-      }).join(', ');
+      const demandedInputKeys = new Set();
+      if (this.isRunning) {
+        this.getAssignmentKeys().forEach((key) => {
+          if ((this.manufacturingAssignments[key] || 0n) <= 0n) {
+            return;
+          }
+          demandedInputKeys.add('hydrogen');
+          this.getRecipe(key).inputEntries.forEach((entry) => demandedInputKeys.add(entry.inputKey));
+        });
+      }
       if (elements.cumulativeValue.textContent !== cumulativeText) {
         elements.cumulativeValue.textContent = cumulativeText;
       }
@@ -1525,9 +1552,19 @@
       if (elements.statusValue.textContent !== statusText) {
         elements.statusValue.textContent = statusText;
       }
-      if (elements.inputValue.textContent !== inputText) {
-        elements.inputValue.textContent = inputText;
-      }
+      MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
+        const inputElement = elements.inputElements[inputKey];
+        const label = MANUFACTURING_INPUT_LABELS[inputKey] || inputKey;
+        const inputText = `${formatNumber(this.lastInputRates[inputKey] || 0, true, 3)} ${label}/s`;
+        if (inputElement.textContent !== inputText) {
+          inputElement.textContent = inputText;
+        }
+        const productivityLimited = demandedInputKeys.has(inputKey)
+          && resources.spaceStorage[inputKey].availabilityRatio < 1;
+        if (inputElement.classList.contains('project-rate-productivity-limited') !== productivityLimited) {
+          inputElement.classList.toggle('project-rate-productivity-limited', productivityLimited);
+        }
+      });
       if (elements.runCheckbox.checked !== this.isRunning) {
         elements.runCheckbox.checked = this.isRunning;
       }

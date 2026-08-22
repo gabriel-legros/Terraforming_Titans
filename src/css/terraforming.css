@@ -133,12 +133,60 @@
     opacity: 0.9;
   }
 
+  .terraforming-summary-stellar-evolution {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 5px;
+    padding: 3px 9px;
+    border: 1px solid #8293ad;
+    border-radius: 999px;
+    background: #edf2f8;
+    color: #34445c;
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .terraforming-summary-stellar-evolution[hidden] {
+    display: none;
+  }
+
+  .terraforming-summary-stellar-evolution[data-stage="brownDwarf"] {
+    border-color: #a76f1d;
+    background: #fff1cf;
+    color: #71460d;
+  }
+
+  .terraforming-summary-stellar-evolution[data-stage="star"] {
+    border-color: #c34b22;
+    background: #ffe1cc;
+    color: #832d13;
+  }
+
   .dark-mode .terraforming-summary-world-name {
     color: #d4def0;
   }
 
   .dark-mode .terraforming-summary-world-meta {
     color: #9fb0d1;
+  }
+
+  .dark-mode .terraforming-summary-stellar-evolution {
+    border-color: #7789a8;
+    background: #26344a;
+    color: #d4def0;
+  }
+
+  .dark-mode .terraforming-summary-stellar-evolution[data-stage="brownDwarf"] {
+    border-color: #bd8737;
+    background: #4a351b;
+    color: #ffd98d;
+  }
+
+  .dark-mode .terraforming-summary-stellar-evolution[data-stage="star"] {
+    border-color: #dc7048;
+    background: #4c291e;
+    color: #ffb18f;
   }
 
   .status-check {
