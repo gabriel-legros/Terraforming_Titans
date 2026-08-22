@@ -2219,6 +2219,13 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
         return;
       }
       const draftEntries = Object.values(details._jsonDraftMap);
+      const validationPreset = JSON.parse(JSON.stringify(currentPreset));
+      for (let index = 0; index < draftEntries.length; index += 1) {
+        const draftEntry = draftEntries[index];
+        if (draftEntry.included !== false) {
+          setAutomationPresetValueAtPath(validationPreset, draftEntry.path, draftEntry.value);
+        }
+      }
       for (let index = 0; index < draftEntries.length; index += 1) {
         const draftEntry = draftEntries[index];
         if (draftEntry.included === false) {
@@ -2226,7 +2233,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
         }
         const baseValue = getAutomationPresetJsonBaseValue(currentPreset, draftEntry.path, draftEntry.value);
         const fieldOptions = currentFieldOptionsResolver
-          ? currentFieldOptionsResolver(draftEntry.path, baseValue, currentPreset)
+          ? currentFieldOptionsResolver(draftEntry.path, baseValue, validationPreset)
           : null;
         const hasCustomSelectOptions = !!(fieldOptions
           && Array.isArray(fieldOptions.selectOptions)
@@ -2975,6 +2982,8 @@ if (typeof module !== 'undefined' && module.exports) {
     updateAutomationVisibility,
     updateAutomationUI,
     queueAutomationUIRefresh,
+    createAutomationPresetJsonDetails,
+    updateAutomationPresetJsonDetails,
     removeAutomationPresetValueAtPath
   };
 }
