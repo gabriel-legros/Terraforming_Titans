@@ -1535,6 +1535,7 @@ setLanguageData({
         titleTooltip: 'Assign lifters per recipe. Each recipe runs at (Assigned / Complexity) x unit rate. Gas recipes push output into space storage. Hydrogen, Methane, and Ammonia harvest assignments are capped by accessible gas giant reserves scaled by average Warp Gate Network level. Multi-output recipes add each output separately before normal resource cap handling. Star Lifting also unlocks supercharging, which multiplies throughput linearly and energy use cubically. Strip Atmosphere removes all gases proportionally. Strip Stellar Mass discards stellar material down to the 10 Jupiter-mass floor.',
         totalLifters: 'Total Lifters',
         runLifters: 'Run lifters',
+        keepRunningOnTravel: 'Keep running on travel',
         energyPerLifter: 'Energy per lifter',
         energyPerLifterTooltip: 'Each assigned lifter uses this much space energy per second, regardless of recipe.',
         energyUse: 'Energy Use',
@@ -6305,7 +6306,7 @@ setLanguageData({
       },
       lifters: {
         name: 'Lifters',
-        description: 'Assemble space-rated lifting platforms and assign them between atmosphere stripping and gas-harvest recipes.  Persists between worlds, duration scales with terraformed worlds and uses space energy.  By default to prevent instant stripping, lifters are disabled on travel (this behaviour can be overriden by project presets unlocked on Story World 11).',
+        description: 'Assemble space-rated lifting platforms and assign them between atmosphere stripping and gas-harvest recipes.  Persists between worlds, duration scales with terraformed worlds and uses space energy.',
         attributes: {
           lifterStripRecipe: { label: 'Strip Atmosphere' },
           lifterStellarStripRecipe: { label: 'Strip Stellar Mass' },

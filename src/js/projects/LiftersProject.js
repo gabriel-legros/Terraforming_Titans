@@ -107,6 +107,7 @@ class LiftersProject extends LiftersAssignmentTools.createProjectAssignmentBase(
     this.autoAssignWeights = {};
 
     this.isRunning = false;
+    this.keepRunningOnTravel = false;
     this.disableStripBelowPressure = false;
     this.stripPressureThreshold = 0;
     this.lastUnitsPerSecond = 0;
@@ -1454,7 +1455,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
   }
 
   shouldKeepRunningOnTravel() {
-    return false;
+    return this.keepRunningOnTravel;
   }
 
   applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
@@ -2049,6 +2050,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     return {
       ...super.saveAutomationSettings(),
       isRunning: this.isRunning === true,
+      keepRunningOnTravel: this.keepRunningOnTravel === true,
       ...this.saveAssignmentSettings(),
       superchargeMultiplier: this.superchargeMultiplier,
       disableStripBelowPressure: this.disableStripBelowPressure === true,
@@ -2070,6 +2072,9 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
 
     if (Object.prototype.hasOwnProperty.call(settings, 'isRunning')) {
       this.isRunning = settings.isRunning === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'keepRunningOnTravel')) {
+      this.keepRunningOnTravel = settings.keepRunningOnTravel === true;
     }
 
     const hasAssignmentState =
@@ -2124,6 +2129,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     return {
       ...super.saveState(),
       isRunning: this.isRunning,
+      keepRunningOnTravel: this.keepRunningOnTravel === true,
       expansionProgress: this.expansionProgress,
       ...this.saveAssignmentSettings(),
       superchargeMultiplier: this.superchargeMultiplier,
@@ -2137,6 +2143,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
   loadState(state = {}) {
     super.loadState(state);
     this.isRunning = state.isRunning === true;
+    this.keepRunningOnTravel = state.keepRunningOnTravel === true;
     this.expansionProgress = state.expansionProgress || 0;
 
     const hasAssignmentState =
@@ -2184,6 +2191,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     const state = {
       repeatCount: this.repeatCount,
       isRunning: this.isRunning === true,
+      keepRunningOnTravel: this.keepRunningOnTravel === true,
       expansionProgress: this.expansionProgress,
       ...this.saveAssignmentSettings(),
       superchargeMultiplier: this.superchargeMultiplier,
@@ -2202,6 +2210,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
 
   loadTravelState(state = {}) {
     this.repeatCount = state.repeatCount || 0;
+    this.keepRunningOnTravel = state.keepRunningOnTravel === true;
     this.expansionProgress = state.expansionProgress || 0;
 
     const hasAssignmentState =

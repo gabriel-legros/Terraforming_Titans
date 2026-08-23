@@ -1672,6 +1672,18 @@
     margin-bottom: 12px;
 }
 
+.lifters-run-control {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.lifters-checkbox-line {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .lifters-supercharge-control {
     display: grid;
     grid-template-columns: max-content minmax(0, 1fr) max-content;
