@@ -28,7 +28,7 @@ progressTitan.storyProjects.earthProbe = {
       'Carbonized debris displays signatures of precision-directed energy pulses.',
       'Spectroscopic analysis indicates widespread positron annihilation events.',
       'Impact cratering consistent with a colossal asteroid collision identified.',
-      'Chronometric data reveals catastrophic events unfolded within minutes.',
+      'Data reveals catastrophic events unfolded within minutes.',
       'Orbital dispersion patterns resemble formation dynamics of a nascent asteroid belt.',
       'Surface integrity nullified.  Analysis confirms simultaneous laser, antimatter, and asteroid offensive.'
     ]
@@ -413,7 +413,7 @@ progressTitan.storyProjects.triangulate_attack = {
     costDoubling: true,
     storySteps: [
     'Cross-referencing asteroid trajectory data points toward the vicinity of Barnard\'s Star, suggesting deliberate manipulation from a known stellar system.',
-    'Initial spectral analysis of the laser beam indicates no match with known astronomical sources or human technologies, but aligns closely with energetic events in the Crab Nebula (Messier 1).',
+    'Initial spectral analysis of the laser beam indicates no match with known astronomical sources or human technologies, but aligns closely with energetic events in the Crab Nebula.',
     'The positron beam emission aligns precisely with Cygnus X-1, a stellar-mass black hole previously catalogued for anomalous energetic outputs.',
     'Timing and coordination analysis confirm that the asteroid and energy beams originated from distinctly separate astronomical locations, suggesting strategic coordination.',
     'An optical anomaly detected along the positron beam trajectory hints at a cloaked object or unknown spatial anomaly masking its true source.'    ]
