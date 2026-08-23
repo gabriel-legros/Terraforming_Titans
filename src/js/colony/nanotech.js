@@ -553,7 +553,7 @@ class NanotechManager extends EffectableEntity {
     const growthDelta = this.nanobots * breakdown.effectiveRate * (deltaTime / 1000);
     const max = this.getMaxNanobots();
     if (growthDelta > 0 && this.nanobots < max) this.nanobots = Math.min(max, this.nanobots + growthDelta);
-    else if (growthDelta < 0) this.nanobots += growthDelta;
+    else if (growthDelta < 0) this.nanobots = Math.max(1, this.nanobots + growthDelta);
     this.applyMaintenanceEffects();
   }
 
