@@ -944,6 +944,7 @@
         ? state.capacityTargetMode
         : CAPACITY_TARGET_FIXED;
       this.capThroughputToCapacity = state.capThroughputToCapacity === true;
+      this.refreshSpaceAccessRules();
     }
   }
 
