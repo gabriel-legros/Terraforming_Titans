@@ -7769,7 +7769,7 @@ setLanguageData({
           },
           stage1: {
             label: 'Nanotechnology Stage I +1%',
-            description: 'Increases Stage I production, growth, material use, and maintenance effects by 1%.',
+            description: 'Increases Stage I production, growth, material use, and maintenance effects by 1%.  Includes growth from energy.',
           },
           stage2: {
             label: 'Nanotechnology Stage II +1%',
