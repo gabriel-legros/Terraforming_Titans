@@ -213,7 +213,7 @@ class ArtificialSkyProject extends SpaceshipProject {
   }
 
   shouldAutomationDisable() {
-    return !this.canContinue();
+    return !this.canContinue() || this.isProgressBlocked();
   }
 
   deductResources(resources) {
