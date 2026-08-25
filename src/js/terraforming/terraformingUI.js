@@ -515,7 +515,7 @@ const EQUATORIAL_GRAVITY_TOOLTIP_TEXT = getTerraformingSummaryText(
 
 const GRAVITY_PENALTY_TOOLTIP_TEXT = getTerraformingSummaryText(
   'magnetosphere.gravityPenaltyTooltip',
-  'Gravity penalties blend equatorial and surface gravity with fixed weights.\nThe final penalty always uses 25% equatorial gravity penalty plus 75% full surface gravity penalty.'
+  'Gravity penalties use estimated gravity at the altitude where atmospheric pressure reaches 1 atm.\nBelow 1 atm surface pressure, they use surface gravity instead.\nThe final penalty blends 25% equatorial gravity penalty with 75% full gravity penalty at that altitude.'
 );
 
 const GRAVITY_DENSITY_TABLE_ROWS = [
@@ -591,8 +591,8 @@ function appendGravityDensityTable(container, category, materials, titleKey) {
     const densityCell = document.createElement('td');
     if (category === 'atmospheric') {
       densityCell.textContent = getTerraformingSummaryText(
-        'magnetosphere.gravityTooltip.massOnly',
-        'Mass only'
+        'magnetosphere.gravityTooltip.atmosphereExcluded',
+        'Excluded'
       );
     } else if (material.key === 'liquidHydrogen') {
       densityCell.textContent = `${formatNumber(LIQUID_HYDROGEN_COMPRESSION_PARAMETERS.baseDensityKgM3, false, 0)}–${formatNumber(LIQUID_HYDROGEN_COMPRESSION_PARAMETERS.maximumDensityKgM3, false, 0)}`;
@@ -614,7 +614,7 @@ function createGravityTooltip(icon) {
   const explanation = document.createElement('p');
   explanation.textContent = getTerraformingSummaryText(
     'magnetosphere.gravityTooltip.explanation',
-    'Surface gravity is calculated from the world\'s mass and radius: g = G × mass / radius².'
+    'Surface gravity is calculated from the world\'s non-atmospheric mass and radius: g = G × mass / radius².'
   );
   tooltip.appendChild(explanation);
 
@@ -691,9 +691,9 @@ function createGravityTooltip(icon) {
     const celestial = terraforming.celestialParameters;
     dynamicDetails.textContent = getTerraformingSummaryText(
       'magnetosphere.gravityTooltip.dynamicDetails',
-      'Dynamic mass world: gravity updates as material changes mass and radius. Current calculation: G × {mass} kg / ({radius} m)² = {gravity} m/s². Core and surface density affect radius; atmospheric materials affect mass only.',
+      'Dynamic mass world: gravity updates as material changes mass and radius. Current calculation: G × {mass} kg / ({radius} m)² = {gravity} m/s². Core and surface density affect radius; atmospheric mass is excluded because it lies above the surface.',
       {
-        mass: formatNumber(celestial.mass, true, 3),
+        mass: formatNumber(celestial.mass - (celestial.currentAtmosphericMassKg || 0), true, 3),
         radius: formatNumber(celestial.radius * 1000, true, 3),
         gravity: formatNumber(celestial.gravity, false, 2)
       }

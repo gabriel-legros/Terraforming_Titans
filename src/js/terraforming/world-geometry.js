@@ -285,7 +285,10 @@ function calculateWorldBaseGeometry(terraformingState) {
     baseLand: resolveWorldBaseLand(terraformingState, resources.surface?.land),
     baseRadius,
     baseMass,
-    baseGravity: calculateGravityFromMassRadius(baseMass, baseRadius),
+    baseGravity: calculateGravityFromMassRadius(
+      Math.max(0, baseMass - baseAtmosphericMassKg),
+      baseRadius
+    ),
     basePlanetaryMass,
     basePlanetaryVolumeM3,
     baseSurfaceMassKg,
@@ -509,7 +512,10 @@ function syncDynamicWorldGeometry(terraformingState, planetParameters) {
         : null,
       meanDensityKgM3: calculateAverageDensityKgM3(currentMassKg, currentVolumeM3)
     });
-    celestial.gravity = calculateGravityFromMassRadius(celestial.mass, celestial.radius);
+    celestial.gravity = calculateGravityFromMassRadius(
+      Math.max(0, celestial.mass - currentAtmosphericMassKg),
+      celestial.radius
+    );
   }
 
   updateCelestialAreaFields(celestial);

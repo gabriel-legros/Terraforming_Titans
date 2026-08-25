@@ -2256,7 +2256,7 @@ const zeusOverrides = {
         "initialValue": 0
       },
       "liquidHydrogen": {
-        "initialValue": 1.6305400223685466e+24
+        "initialValue": 1.6302427804653322e+24
       },
       "liquidMethane": {
         "initialValue": 0
@@ -2277,19 +2277,7 @@ const zeusOverrides = {
         "initialValue": 0
       },
       "land": {
-        "initialValue": 6291545240475.356
-      }
-    },
-    "underground": {
-      "ore": {
-        "initialValue": 0,
-        "maxDeposits": 0,
-        "areaTotal": 0
-      },
-      "geothermal": {
-        "initialValue": 0,
-        "maxDeposits": 0,
-        "areaTotal": 0
+        "initialValue": 6290808229140.887
       }
     },
     "atmospheric": {
@@ -2312,7 +2300,7 @@ const zeusOverrides = {
         "initialValue": 52700000000000000000
       },
       "hydrogen": {
-        "initialValue": 2.44912245678809e+22
+        "initialValue": 2.478846647109552e+22
       },
       "sulfuricAcid": {
         "initialValue": 0
@@ -2324,90 +2312,78 @@ const zeusOverrides = {
       "liquidWater": 0,
       "ice": 0,
       "buriedIce": 0,
-      "liquidCO2": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 6.500577908326557e+23,
+      "biomass": 0,
+      "hazardousBiomass": 0,
       "liquidMethane": 0,
       "hydrocarbonIce": 0,
       "buriedHydrocarbonIce": 0,
-      "liquidAmmonia": 0,
-      "ammoniaIce": 0,
-      "buriedAmmoniaIce": 0,
       "liquidOxygen": 0,
       "oxygenIce": 0,
       "buriedOxygenIce": 0,
       "liquidNitrogen": 0,
       "nitrogenIce": 0,
-      "buriedNitrogenIce": 0,
-      "liquidHydrogen": 6.50176315764808e+23,
-      "fineSand": 0,
-      "biomass": 0,
-      "hazardousBiomass": 0
+      "buriedNitrogenIce": 0
     },
     "temperate": {
       "liquidWater": 0,
       "ice": 0,
       "buriedIce": 0,
-      "liquidCO2": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 8.449727746866932e+23,
+      "biomass": 0,
+      "hazardousBiomass": 0,
       "liquidMethane": 0,
       "hydrocarbonIce": 0,
       "buriedHydrocarbonIce": 0,
-      "liquidAmmonia": 0,
-      "ammoniaIce": 0,
-      "buriedAmmoniaIce": 0,
       "liquidOxygen": 0,
       "oxygenIce": 0,
       "buriedOxygenIce": 0,
       "liquidNitrogen": 0,
       "nitrogenIce": 0,
-      "buriedNitrogenIce": 0,
-      "liquidHydrogen": 8.451268384364132e+23,
-      "fineSand": 0,
-      "biomass": 0,
-      "hazardousBiomass": 0
+      "buriedNitrogenIce": 0
     },
     "polar": {
       "liquidWater": 0,
       "ice": 0,
       "buriedIce": 0,
-      "liquidCO2": 0,
       "dryIce": 0,
       "buriedDryIce": 0,
+      "liquidCO2": 0,
+      "liquidHydrogen": 1.3521221494598319e+23,
+      "biomass": 0,
+      "hazardousBiomass": 0,
       "liquidMethane": 0,
       "hydrocarbonIce": 0,
       "buriedHydrocarbonIce": 0,
-      "liquidAmmonia": 0,
-      "ammoniaIce": 0,
-      "buriedAmmoniaIce": 0,
       "liquidOxygen": 0,
       "oxygenIce": 0,
       "buriedOxygenIce": 0,
       "liquidNitrogen": 0,
       "nitrogenIce": 0,
-      "buriedNitrogenIce": 0,
-      "liquidHydrogen": 1.3523686816732544e+23,
-      "fineSand": 0,
-      "biomass": 0,
-      "hazardousBiomass": 0
+      "buriedNitrogenIce": 0
     }
   },
   "zonalTemperatures": {
     "tropical": {
-      "value": 2955.9894413562192,
-      "day": 2955.989447954513,
-      "night": 2955.9894347579257
+      "value": 2955.9916786335352,
+      "day": 2955.9916851918556,
+      "night": 2955.991672075215
     },
     "temperate": {
-      "value": 2955.9892561240413,
-      "day": 2955.989261036242,
-      "night": 2955.9892512118404
+      "value": 2955.991493398618,
+      "day": 2955.99149828106,
+      "night": 2955.9914885161757
     },
     "polar": {
-      "value": 2955.9889164047004,
-      "day": 2955.988918224575,
-      "night": 2955.9889145848256
+      "value": 2955.991153674253,
+      "day": 2955.991155483103,
+      "night": 2955.991151865403
     }
   },
   "celestialParameters": {
@@ -2418,27 +2394,29 @@ const zeusOverrides = {
     "spinPeriod": 10.14,
     "starLuminosity": 0.46,
     "coreHeatFlux": 4112684,
-    "sector": "R5-29",
+    "surfaceArea": 62908082291408860,
+    "crossSectionArea": 15727020572852216,
     "baseLand": 6291545240475.356,
     "baseRadius": 70738,
     "baseMass": 1.8726e+27,
-    "baseGravity": 24.977282698856314,
+    "baseGravity": 24.649896358236727,
     "basePlanetaryMass": 2.182328308239878e+26,
     "basePlanetaryVolumeM3": 5.361937984673442e+22,
     "baseSurfaceMassKg": 1.6305400223685466e+27,
     "baseAtmosphericMassKg": 2.45448501678809e+25,
     "dynamicDirectMassDeltaKg": 0,
     "dynamicDirectVolumeDeltaM3": 0,
-    "dynamicMassDeltaKg": 7.177033604151992e+23,
-    "dynamicSurfaceVolumeDeltaM3": 1.2393178671461328e+21,
+    "dynamicMassDeltaKg": 7.17703360415474e+23,
+    "dynamicSurfaceVolumeDeltaM3": 978579355554153500000,
     "currentPlanetaryMassKg": 2.182328308239878e+26,
-    "currentSurfaceMassKg": 1.6305400223685466e+27,
-    "currentAtmosphericMassKg": 2.45448501678809e+25,
+    "currentSurfaceMassKg": 1.630242780465332e+27,
+    "currentAtmosphericMassKg": 2.484209207109552e+25,
     "currentPlanetaryVolumeM3": 5.361937984673442e+22,
-    "currentSurfaceVolumeM3": 1.4302982652355672e+24,
-    "mass": 1.8733177033604153e+27,
-    "radius": 70757.70363387793,
-    "gravity": 24.97294157927566
+    "currentSurfaceVolumeM3": 1.4300375267239755e+24,
+    "mass": 1.8733177033604156e+27,
+    "radius": 70753.55912287893,
+    "gravity": 24.64466200727185,
+    "sector": "R5-29"
   }
 };
 

@@ -3565,17 +3565,19 @@ setLanguageData({
             'This value subtracts the centrifugal term (ω²R) so you see the effective pull felt on the surface.',
           ].join('\n'),
           gravityPenaltyTooltip: [
-            'Gravity penalties blend equatorial and surface gravity with fixed weights.',
-            'The final penalty always uses 25% equatorial gravity penalty plus 75% full surface gravity penalty.',
+            'Gravity penalties use estimated gravity at the altitude where atmospheric pressure reaches 1 atm.',
+            'Below 1 atm surface pressure, they use surface gravity instead.',
+            'The final penalty blends 25% equatorial gravity penalty with 75% full gravity penalty at that altitude.',
           ].join('\n'),
           gravityTooltip: {
-            explanation: 'Surface gravity is calculated from the world\'s mass and radius: g = G × mass / radius².',
+            explanation: 'Surface gravity is calculated from the world\'s non-atmospheric mass and radius: g = G × mass / radius².',
             worldNote: 'On most worlds gravity cannot be easily changed.',
-            dynamicDetails: 'Dynamic mass world: gravity updates as material changes mass and radius. Current calculation: G × {mass} kg / ({radius} m)² = {gravity} m/s². Core and surface density affect radius; atmospheric materials affect mass only.',
+            dynamicDetails: 'Dynamic mass world: gravity updates as material changes mass and radius. Current calculation: G × {mass} kg / ({radius} m)² = {gravity} m/s². Core and surface density affect radius; atmospheric mass is excluded because it lies above the surface.',
             densityTableTitle: 'Material density used for dynamic world radius calculations:',
             materialHeading: 'Material',
             densityHeading: 'Density (kg/m³)',
             massOnly: 'Mass only',
+            atmosphereExcluded: 'Excluded',
             hydrogenNote: 'Liquid hydrogen ranges from 71 kg/m³ to 1,140 kg/m³ as compression increases.',
             categories: {
               core: 'Core / imported material',

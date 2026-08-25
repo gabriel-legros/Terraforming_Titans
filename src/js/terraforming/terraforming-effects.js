@@ -35,11 +35,18 @@ registerTerraformingMethods('effects', ({
     return 1 + smallestDifference / 10;
   },
   calculateGravityCostPenalty() {
-    const gravity = this.celestialParameters.gravity;
+    const oneAtmContext = this.calculateOneAtmMaintenanceFloor();
+    const gravity = oneAtmContext.gravity;
     if (!calculateGravityCostPenalty) {
       return createNoGravityPenalty();
     }
-    const equatorialGravity = calculateApparentEquatorialGravity ? calculateApparentEquatorialGravity(this.celestialParameters) : gravity;
+    const equatorialGravity = calculateApparentEquatorialGravity
+      ? calculateApparentEquatorialGravity({
+          ...this.celestialParameters,
+          gravity,
+          radius: oneAtmContext.radiusKm
+        })
+      : gravity;
     return calculateGravityCostPenalty({
       gravity,
       equatorialGravity
@@ -53,6 +60,8 @@ registerTerraformingMethods('effects', ({
     const result = {
       pressureKPa: surfacePressureKPa,
       altitudeKm: null,
+      radiusKm: this.celestialParameters.radius,
+      gravity: this.celestialParameters.gravity,
       temperatureK: null,
       penalty: 1
     };
@@ -78,6 +87,22 @@ registerTerraformingMethods('effects', ({
     const altitudeMeters = lapseRate > 0 ? (this.temperature.value - temperatureK) / lapseRate : null;
     result.temperatureK = temperatureK;
     result.altitudeKm = Number.isFinite(altitudeMeters) && altitudeMeters >= 0 ? altitudeMeters / 1000 : null;
+    if (result.altitudeKm !== null) {
+      result.radiusKm += result.altitudeKm;
+      const atmosphericMassKg = this.celestialParameters.currentAtmosphericMassKg;
+      const totalMassKg = this.celestialParameters.mass;
+      const surfaceRadiusKm = this.celestialParameters.radius;
+      if (Number.isFinite(atmosphericMassKg) && atmosphericMassKg >= 0
+          && Number.isFinite(totalMassKg) && totalMassKg > atmosphericMassKg
+          && Number.isFinite(surfaceRadiusKm) && surfaceRadiusKm > 0) {
+        const atmosphereBelowOneAtmKg = atmosphericMassKg * (1 - pressureRatio);
+        const nonAtmosphericMassKg = totalMassKg - atmosphericMassKg;
+        result.gravity *= (nonAtmosphericMassKg + atmosphereBelowOneAtmKg) / nonAtmosphericMassKg
+          * Math.pow(surfaceRadiusKm / result.radiusKm, 2);
+      } else if (Number.isFinite(surfaceRadiusKm) && surfaceRadiusKm > 0) {
+        result.gravity *= Math.pow(surfaceRadiusKm / result.radiusKm, 2);
+      }
+    }
     result.penalty = calculateMaintenancePenaltyForTemperature(temperatureK);
     return result;
   },

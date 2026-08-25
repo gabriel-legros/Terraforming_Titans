@@ -16,6 +16,7 @@ This document records durable ownership and cross-system constraints. Feature va
 ## Parameter and Constructor Ownership
 
 - Physical, atmosphere, geometry, phase-change, climate, gameplay, and hazard defaults live in `src/js/terraforming/terraforming-parameters.js`.
+- Dynamic-world surface gravity excludes atmospheric mass. Gravity penalties instead estimate gravity at the altitude where atmospheric pressure reaches 1 atm, including the atmosphere below that altitude.
 - World-specific values live in planet or special-seed parameters. Derive dependent values only after mod patch stages have run.
 - Specialized building, colony, and project constructors are selected through each parameter entry's `type`. Keep constructor selection data-driven.
 - Building-specific logic belongs in a dedicated subclass under `src/js/buildings/`.
