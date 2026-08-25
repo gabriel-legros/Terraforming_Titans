@@ -114,9 +114,110 @@
   pointer-events: none;
 }
 
+.resource-tooltip.gravity-calculation-tooltip {
+  width: min(900px, calc(100vw - 16px));
+  max-width: min(900px, calc(100vw - 16px));
+  padding: 10px;
+  background: #111;
+  color: #f7f7f7;
+  border: 1px solid #6f6f6f;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+}
+
+.resource-tooltip.gravity-calculation-tooltip * {
+  color: #f7f7f7 !important;
+}
+
+.gravity-calculation-tooltip p {
+  margin: 0 0 8px;
+}
+
+.gravity-calculation-tooltip__dynamic-details {
+  padding: 7px;
+  border-left: 3px solid #7eb6ff;
+  background: rgba(126, 182, 255, 0.14);
+}
+
+.gravity-calculation-tooltip__table-title {
+  font-weight: 700;
+}
+
+.gravity-calculation-tooltip table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+.gravity-calculation-tooltip__density-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.gravity-calculation-tooltip th,
+.gravity-calculation-tooltip td {
+  padding: 3px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
+.gravity-calculation-tooltip th:first-child,
+.gravity-calculation-tooltip td:first-child {
+  text-align: left;
+}
+
+.gravity-calculation-tooltip th:last-child,
+.gravity-calculation-tooltip td:last-child {
+  text-align: right;
+}
+
+.gravity-calculation-tooltip__category th {
+  text-align: left !important;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.gravity-calculation-tooltip__note {
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+@media (max-width: 720px) {
+  .gravity-calculation-tooltip__density-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .dark-mode .resource-tooltip.dynamic-tooltip {
   background-color: rgba(255, 255, 255, 0.92);
   color: #121212;
+}
+
+.dark-mode .resource-tooltip.gravity-calculation-tooltip,
+.dark-grey-mode .resource-tooltip.gravity-calculation-tooltip,
+.oled-black-mode .resource-tooltip.gravity-calculation-tooltip {
+  background: #f4f4f4;
+  color: #171717;
+  border-color: #707070;
+}
+
+.dark-mode .resource-tooltip.gravity-calculation-tooltip *,
+.dark-grey-mode .resource-tooltip.gravity-calculation-tooltip *,
+.oled-black-mode .resource-tooltip.gravity-calculation-tooltip * {
+  color: #171717 !important;
+}
+
+.dark-mode .gravity-calculation-tooltip th,
+.dark-mode .gravity-calculation-tooltip td,
+.dark-grey-mode .gravity-calculation-tooltip th,
+.dark-grey-mode .gravity-calculation-tooltip td,
+.oled-black-mode .gravity-calculation-tooltip th,
+.oled-black-mode .gravity-calculation-tooltip td {
+  border-color: rgba(0, 0, 0, 0.35);
+}
+
+.dark-mode .gravity-calculation-tooltip__category th,
+.dark-grey-mode .gravity-calculation-tooltip__category th,
+.oled-black-mode .gravity-calculation-tooltip__category th {
+  background: rgba(0, 0, 0, 0.12);
 }
 
 .info-tooltip-icon:hover .resource-tooltip,
