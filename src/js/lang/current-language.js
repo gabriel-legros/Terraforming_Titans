@@ -3573,17 +3573,14 @@ setLanguageData({
             explanation: 'Surface gravity is calculated from the world\'s non-atmospheric mass and radius: g = G × mass / radius².',
             worldNote: 'On most worlds gravity cannot be easily changed.',
             dynamicDetails: 'Dynamic mass world: gravity updates as material changes mass and radius. Current calculation: G × {mass} kg / ({radius} m)² = {gravity} m/s². Core and surface density affect radius; atmospheric mass is excluded because it lies above the surface.',
-            densityTableTitle: 'Material density used for dynamic world radius calculations:',
+            densityTableTitle: 'Table of material density:',
             materialHeading: 'Material',
             densityHeading: 'Density (kg/m³)',
-            massOnly: 'Mass only',
-            atmosphereExcluded: 'Excluded',
             hydrogenNote: 'Liquid hydrogen ranges from 71 kg/m³ to 1,140 kg/m³ as compression increases.',
             categories: {
               core: 'Core / imported material',
               surface: 'Surface material',
               surfaceContinued: 'Surface material (continued)',
-              atmospheric: 'Atmospheric material',
             },
             materials: {
               metal: 'Metal',

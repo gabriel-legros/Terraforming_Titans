@@ -534,16 +534,11 @@ const GRAVITY_DENSITY_TABLE_ROWS = [
         ? null
         : WORLD_GEOMETRY_PARAMETERS.surfaceDensityKgM3[key]
     }))
-  },
-  {
-    category: 'atmospheric',
-    materials: DYNAMIC_WORLD_ATMOSPHERIC_MASS_KEYS.map(key => ({ key, density: null }))
   }
 ];
 
 function getGravityMaterialName(category, key) {
-  const resourceCategory = category === 'atmospheric' ? 'atmospheric' : 'surface';
-  const resource = resources[resourceCategory]?.[key];
+  const resource = resources.surface?.[key];
   if (resource?.displayName || resource?.name) {
     return resource.displayName || resource.name;
   }
@@ -589,15 +584,10 @@ function appendGravityDensityTable(container, category, materials, titleKey) {
     row.appendChild(nameCell);
 
     const densityCell = document.createElement('td');
-    if (category === 'atmospheric') {
-      densityCell.textContent = getTerraformingSummaryText(
-        'magnetosphere.gravityTooltip.atmosphereExcluded',
-        'Excluded'
-      );
-    } else if (material.key === 'liquidHydrogen') {
-      densityCell.textContent = `${formatNumber(LIQUID_HYDROGEN_COMPRESSION_PARAMETERS.baseDensityKgM3, false, 0)}–${formatNumber(LIQUID_HYDROGEN_COMPRESSION_PARAMETERS.maximumDensityKgM3, false, 0)}`;
+    if (material.key === 'liquidHydrogen') {
+      densityCell.textContent = `${formatNumber(LIQUID_HYDROGEN_COMPRESSION_PARAMETERS.baseDensityKgM3, false, 2)}–${formatNumber(LIQUID_HYDROGEN_COMPRESSION_PARAMETERS.maximumDensityKgM3, false, 2)}`;
     } else {
-      densityCell.textContent = formatNumber(material.density, false, 0);
+      densityCell.textContent = formatNumber(material.density, false, 2);
     }
     row.appendChild(densityCell);
     body.appendChild(row);
@@ -639,31 +629,22 @@ function createGravityTooltip(icon) {
 
   const densityGrid = document.createElement('div');
   densityGrid.classList.add('gravity-calculation-tooltip__density-grid');
-  const coreAndAtmosphereColumn = document.createElement('div');
+  const coreAndSurfaceColumn = document.createElement('div');
   const coreGroup = GRAVITY_DENSITY_TABLE_ROWS[0];
   const surfaceGroup = GRAVITY_DENSITY_TABLE_ROWS[1];
-  const atmosphereGroup = GRAVITY_DENSITY_TABLE_ROWS[2];
   const surfaceSplitIndex = Math.ceil(surfaceGroup.materials.length / 2);
 
   appendGravityDensityTable(
-    coreAndAtmosphereColumn,
+    coreAndSurfaceColumn,
     coreGroup.category,
     coreGroup.materials
   );
   appendGravityDensityTable(
-    coreAndAtmosphereColumn,
-    atmosphereGroup.category,
-    atmosphereGroup.materials
-  );
-  densityGrid.appendChild(coreAndAtmosphereColumn);
-
-  const surfaceFirstColumn = document.createElement('div');
-  appendGravityDensityTable(
-    surfaceFirstColumn,
+    coreAndSurfaceColumn,
     surfaceGroup.category,
     surfaceGroup.materials.slice(0, surfaceSplitIndex)
   );
-  densityGrid.appendChild(surfaceFirstColumn);
+  densityGrid.appendChild(coreAndSurfaceColumn);
 
   const surfaceSecondColumn = document.createElement('div');
   appendGravityDensityTable(
