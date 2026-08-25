@@ -1014,7 +1014,7 @@ class ScriptAutomation {
         if (gotoUsed) continue;
         const targetScriptId = this.resolveGotoScriptTargetId(action);
         const targetScript = this.scripts.find(item => item.id === Number(targetScriptId));
-        const targetLine = targetScript?.lines?.[0] || null;
+        const targetLine = this.resolveGotoScriptTargetLine(action, targetScript);
         if (targetScript && targetLine) {
           this.activeScriptId = targetScript.id;
           this.selectedScriptId = targetScript.id;
@@ -1027,7 +1027,7 @@ class ScriptAutomation {
             { id: targetScript.id },
             `Script ${targetScript.id}`
           );
-          const targetLabel = `${scriptLabel} #1`;
+          const targetLabel = `${scriptLabel} ${this.getLineLabel(targetScript, targetLine)}`;
           summaries.push(t(
             'ui.hope.automationCards.scriptSummaryGoto',
             { target: targetLabel },
@@ -1126,6 +1126,20 @@ class ScriptAutomation {
       return this.getScriptVariableValue(action.scriptVariableId);
     }
     return action.targetScriptId;
+  }
+
+  resolveGotoScriptLineNumber(action) {
+    const rawLineNumber = action.lineTargetMode === 'variable'
+      ? this.getVariableValue(action.lineVariableId)
+      : this.registry.toNumber(action.targetLineNumber);
+    if (!Number.isFinite(rawLineNumber)) return 1;
+    return Math.floor(rawLineNumber);
+  }
+
+  resolveGotoScriptTargetLine(action, targetScript) {
+    if (!targetScript || !Array.isArray(targetScript.lines) || targetScript.lines.length === 0) return null;
+    const lineNumber = this.resolveGotoScriptLineNumber(action);
+    return targetScript.lines[lineNumber - 1] || targetScript.lines[0];
   }
 
   getAutomationTarget(type) {
@@ -1321,7 +1335,14 @@ class ScriptAutomation {
         { id: targetScript.id },
         `Script ${targetScript.id}`
       );
-      const target = `${scriptLabel} #1`;
+      const lineTarget = action.lineTargetMode === 'variable'
+        ? t(
+          'ui.hope.automationCards.scriptGotoLineVariableSummary',
+          { variable: this.getVariableName('number', action.lineVariableId) || this.normalizeVariableId(action.lineVariableId) },
+          `line ${this.normalizeVariableId(action.lineVariableId)}`
+        )
+        : `#${Math.max(1, Math.floor(this.registry.toNumber(action.targetLineNumber) || 1))}`;
+      const target = `${scriptLabel} ${lineTarget}`;
       return t('ui.hope.automationCards.scriptSummaryGoto', { target }, `GOTO ${target}`);
     }
     if (action.kind === 'toggleAutomation') {
@@ -1532,6 +1553,10 @@ class ScriptAutomation {
     } else if (normalized.kind === 'gotoScript') {
       normalized.scriptTargetMode = normalized.scriptTargetMode === 'variable' ? 'variable' : 'script';
       normalized.scriptVariableId = this.normalizeVariableId(normalized.scriptVariableId);
+      normalized.lineTargetMode = normalized.lineTargetMode === 'variable' ? 'variable' : 'specified';
+      normalized.lineVariableId = this.normalizeVariableId(normalized.lineVariableId);
+      const targetLineNumber = Number(normalized.targetLineNumber);
+      normalized.targetLineNumber = Number.isFinite(targetLineNumber) && targetLineNumber >= 1 ? targetLineNumber : 1;
       normalized.targetScriptId = normalized.targetScriptId ? Number(normalized.targetScriptId) : null;
     } else if (normalized.kind === 'applyPreset') {
       normalized.parameterVariableId = this.normalizeVariableId(normalized.parameterVariableId);

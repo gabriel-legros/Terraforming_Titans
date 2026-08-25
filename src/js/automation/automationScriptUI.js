@@ -36,7 +36,7 @@ function buildScriptAutomationUI() {
     getAutomationCardText(
       'scriptAutomationTooltip',
       {},
-      'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines and start new lines while fewer than 25 actions have run. Once a line starts, all its actions run even if the total goes over 25. One GOTO can take effect per tick. These limits keep loops from spending the whole tick in automation.\n\nIF and ELSE IF lines test their condition. WAIT lines also test a condition, but they stay on that line until the condition becomes true. ELSE IF and ELSE lines use Linked to to choose the prior IF or ELSE IF they belong to; if no valid link exists, they behave like ACTIONS. When a linked IF or ELSE IF is false, script execution jumps to its linked ELSE IF or ELSE for free without using the one-GOTO limit. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, research, ship, or life presets and combinations, and can toggle scripting, auto-travel, ship automation, or life automation. GOTO jumps to another line, while GOTO Script jumps to row 1 of another script. Both use the same one-GOTO-per-tick limit.\n\nUse Pause to stop without moving the current line, Step Once to execute one action at a time, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.'
+      'Script Automation runs the selected script when Scripts On is enabled and Run is active.\n\nEach game tick starts at the highlighted line. It can evaluate up to 25 lines and start new lines while fewer than 25 actions have run. Once a line starts, all its actions run even if the total goes over 25. One GOTO can take effect per tick. These limits keep loops from spending the whole tick in automation.\n\nIF and ELSE IF lines test their condition. WAIT lines also test a condition, but they stay on that line until the condition becomes true. ELSE IF and ELSE lines use Linked to to choose the prior IF or ELSE IF they belong to; if no valid link exists, they behave like ACTIONS. When a linked IF or ELSE IF is false, script execution jumps to its linked ELSE IF or ELSE for free without using the one-GOTO limit. ACTIONS lines always run once and then move to the next line.\n\nActions apply saved building, project, colony, research, ship, or life presets and combinations, and can toggle scripting, auto-travel, ship automation, or life automation. GOTO jumps to another line. GOTO Script jumps to the selected line of another script; its line can be specified directly or read from a numeric variable, and variable values are floored. If the line is outside the target script, it jumps to row 1. Both use the same one-GOTO-per-tick limit.\n\nUse Pause to stop without moving the current line, Step Once to execute one action at a time, Reset to return to the first line, and Auto Restart to start again after the script reaches the end.'
     )
   );
 
@@ -864,13 +864,7 @@ function describeScriptActions(automation, script, actions) {
       const gotoLabel = getAutomationCardText('scriptGoto', {}, 'GOTO');
       return target ? `${gotoLabel} ${automation.getLineLabel(script, target)}` : `${gotoLabel} ?`;
     }
-    if (action.kind === 'gotoScript') {
-      const targetScript = automation.scripts.find(item => item.id === Number(automation.resolveGotoScriptTargetId(action)));
-      if (!targetScript) return `${getAutomationCardText('scriptGotoScript', {}, 'GOTO Script')} ?`;
-      const scriptLabel = targetScript.name
-        || getAutomationCardText('scriptWithId', { id: targetScript.id }, `Script ${targetScript.id}`);
-      return `${getAutomationCardText('scriptGotoScript', {}, 'GOTO Script')} ${scriptLabel} #1`;
-    }
+    if (action.kind === 'gotoScript') return automation.describeAction(action);
     return automation.describeAction(action);
   }).join('; ');
 }
@@ -932,6 +926,10 @@ function normalizeScriptAction(automation, action) {
   if (action.kind === 'gotoScript') {
     action.scriptTargetMode = action.scriptTargetMode === 'variable' ? 'variable' : 'script';
     action.scriptVariableId = automation.normalizeVariableId(action.scriptVariableId);
+    action.lineTargetMode = action.lineTargetMode === 'variable' ? 'variable' : 'specified';
+    action.lineVariableId = automation.normalizeVariableId(action.lineVariableId);
+    const targetLineNumber = Number(action.targetLineNumber);
+    action.targetLineNumber = Number.isFinite(targetLineNumber) && targetLineNumber >= 1 ? targetLineNumber : 1;
     if (action.scriptTargetMode === 'script') {
       const scripts = Array.isArray(automation.scripts) ? automation.scripts : [];
       if (!scripts.find(script => script.id === Number(action.targetScriptId))) {
@@ -1620,6 +1618,45 @@ function renderGotoScriptActionEditor(automation, script, action, row) {
       queueAutomationUIRefresh();
     });
     row.appendChild(scriptSelect);
+  }
+
+  const lineModeSelect = createSelect([
+    { id: 'specified', label: getAutomationCardText('scriptGotoLineModeSpecified', {}, 'To line specified') },
+    { id: 'variable', label: getAutomationCardText('scriptGotoLineModeVariable', {}, 'To line by variable') }
+  ], action.lineTargetMode);
+  action.lineTargetMode = lineModeSelect.value;
+  lineModeSelect.addEventListener('change', event => {
+    action.lineTargetMode = event.target.value;
+    normalizeScriptAction(automation, action);
+    forceScriptAutomationRefresh = true;
+    queueAutomationUIRefresh();
+  });
+  row.appendChild(lineModeSelect);
+
+  if (action.lineTargetMode === 'variable') {
+    const variables = automation.getVariableTargets('number', script.id);
+    const variableSelect = createSelect(variables.map(item => ({ id: item.id, label: item.label })), action.lineVariableId);
+    action.lineVariableId = variableSelect.value || 'A';
+    variableSelect.addEventListener('change', event => {
+      action.lineVariableId = event.target.value || 'A';
+      queueAutomationUIRefresh();
+    });
+    variableSelect.title = getAutomationCardText('scriptGotoLineVariable', {}, 'Line variable');
+    row.appendChild(variableSelect);
+  } else {
+    const lineNumber = document.createElement('input');
+    lineNumber.type = 'number';
+    lineNumber.min = '1';
+    lineNumber.step = '1';
+    lineNumber.value = action.targetLineNumber;
+    lineNumber.title = getAutomationCardText('scriptGotoLineNumber', {}, 'Line number');
+    lineNumber.addEventListener('change', event => {
+      const value = Number(event.target.value);
+      action.targetLineNumber = Number.isFinite(value) && value >= 1 ? value : 1;
+      event.target.value = action.targetLineNumber;
+      queueAutomationUIRefresh();
+    });
+    row.appendChild(lineNumber);
   }
 }
 
