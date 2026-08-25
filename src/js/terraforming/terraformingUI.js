@@ -619,13 +619,16 @@ function createGravityTooltip(icon) {
   dynamicDetails.classList.add('gravity-calculation-tooltip__dynamic-details');
   tooltip.appendChild(dynamicDetails);
 
+  const densitySection = document.createElement('div');
+  densitySection.classList.add('gravity-calculation-tooltip__density-section');
+
   const tableTitle = document.createElement('p');
   tableTitle.classList.add('gravity-calculation-tooltip__table-title');
   tableTitle.textContent = getTerraformingSummaryText(
     'magnetosphere.gravityTooltip.densityTableTitle',
     'Material density used for dynamic world radius calculations:'
   );
-  tooltip.appendChild(tableTitle);
+  densitySection.appendChild(tableTitle);
 
   const densityGrid = document.createElement('div');
   densityGrid.classList.add('gravity-calculation-tooltip__density-grid');
@@ -654,7 +657,7 @@ function createGravityTooltip(icon) {
     'surfaceContinued'
   );
   densityGrid.appendChild(surfaceSecondColumn);
-  tooltip.appendChild(densityGrid);
+  densitySection.appendChild(densityGrid);
 
   const hydrogenNote = document.createElement('p');
   hydrogenNote.classList.add('gravity-calculation-tooltip__note');
@@ -662,11 +665,14 @@ function createGravityTooltip(icon) {
     'magnetosphere.gravityTooltip.hydrogenNote',
     'Liquid hydrogen ranges from 71 kg/m³ to 1,140 kg/m³ as compression increases.'
   );
-  tooltip.appendChild(hydrogenNote);
+  densitySection.appendChild(hydrogenNote);
+  tooltip.appendChild(densitySection);
 
   const update = () => {
     const dynamicMassWorld = currentPlanetParameters.specialAttributes?.dynamicMass === true;
+    tooltip.classList.toggle('gravity-calculation-tooltip--compact', !dynamicMassWorld);
     dynamicDetails.style.display = dynamicMassWorld ? '' : 'none';
+    densitySection.style.display = dynamicMassWorld ? '' : 'none';
     if (!dynamicMassWorld) return;
 
     const celestial = terraforming.celestialParameters;

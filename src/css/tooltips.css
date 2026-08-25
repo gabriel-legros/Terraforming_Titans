@@ -124,6 +124,11 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 }
 
+.resource-tooltip.gravity-calculation-tooltip--compact {
+  width: min(360px, calc(100vw - 16px));
+  max-width: min(360px, calc(100vw - 16px));
+}
+
 .resource-tooltip.gravity-calculation-tooltip * {
   color: #f7f7f7 !important;
 }
