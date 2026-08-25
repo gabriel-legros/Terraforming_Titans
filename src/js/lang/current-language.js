@@ -4241,8 +4241,10 @@ setLanguageData({
       patiencePanel: {
         titleTooltip: 'Save to file or export to clipboard once per day to claim patience. Each world banks patience at 2 seconds per second; completing terraforming claims the bank and keeps earning until the 3 hour world cap is reached.',
         titleTooltipSteam: 'Claim patience once per day. Each world banks patience at 2 seconds per second; completing terraforming claims the bank and keeps earning until the 3 hour world cap is reached.',
+        titleTooltipDisabled: 'Each world banks patience at 2 seconds per second; completing terraforming claims the bank and keeps earning until the 3 hour world cap is reached.',
         subtitle: 'Claim daily patience by saving or exporting. Each world banks patience until terraforming completes, then continues earning up to 3 hours total. Use patience to gain equivalent hours of production for various things.',
         subtitleSteam: 'Claim daily patience directly. Each world banks patience until terraforming completes, then continues earning up to 3 hours total. Use patience to gain equivalent hours of production for various things.',
+        subtitleDisabled: 'Gain patience by terraforming worlds. Each world banks patience until terraforming completes, then continues earning up to 3 hours total. Use patience to gain equivalent hours of production for various things.',
         availablePatience: 'Available Patience',
         capacityPrefix: 'Capacity ',
         capacitySuffix: ' points (hours)',

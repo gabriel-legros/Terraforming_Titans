@@ -33,6 +33,7 @@ const PatienceUI = {
     saveFileButtonEl: null,
     saveClipboardButtonEl: null,
     dailyClaimButtonEl: null,
+    dailyPatienceDisabled: null,
 
     /**
      * Initialize the patience UI
@@ -41,7 +42,16 @@ const PatienceUI = {
         this.cacheElements();
         if (!this.container) return;
 
-        const existingShell = this.container.querySelector('.patience-shell');
+        let existingShell = this.container.querySelector('.patience-shell');
+        if (existingShell && this.dailyPatienceDisabled !== gameSettings.disableDailyPatience) {
+            cleanupTrackedUIListeners(this.container);
+            cleanupDynamicTooltipsIn(this.container);
+            this.container.innerHTML = '';
+            this.container._patienceListenersBound = false;
+            this.dailyPatienceDisabled = null;
+            existingShell = null;
+        }
+
         if (existingShell) {
             this.cacheBuiltElements();
         } else {
@@ -70,11 +80,10 @@ const PatienceUI = {
      * Re-cache static patience UI nodes when the shell already exists
      */
     cacheBuiltElements() {
-        const cards = this.container.querySelectorAll('.patience-stats .patience-card');
         this.currentValueEl = document.getElementById('patience-current-value');
         this.maxValueEl = document.getElementById('patience-max-value');
         this.timerValueEl = document.getElementById('patience-timer-value');
-        this.timerMetaEl = cards[2] ? cards[2].querySelector('.patience-card-meta') : null;
+        this.timerMetaEl = document.getElementById('patience-timer-meta');
         this.spendInputEl = document.getElementById('patience-spend-input');
         this.spendButtonEl = document.getElementById('patience-spend-button');
         this.spendHeaderEl = this.container.querySelector('.patience-spend-card .patience-card-label');
@@ -82,10 +91,10 @@ const PatienceUI = {
         this.facilityUpgradeRowEl = document.getElementById('patience-facility-upgrade-row');
         this.facilitySelectEl = document.getElementById('patience-facility-select');
         this.meterFillEl = this.container.querySelector('.patience-meter-fill');
-        this.gainValueEl = cards[1] ? cards[1].querySelector('.patience-card-value') : null;
-        this.gainMetaEl = cards[1] ? cards[1].querySelector('.patience-card-meta') : null;
+        this.gainValueEl = document.getElementById('patience-gain-value');
+        this.gainMetaEl = document.getElementById('patience-gain-meta');
         this.worldValueEl = document.getElementById('patience-world-value');
-        this.worldMetaEl = cards[3] ? cards[3].querySelector('.patience-card-meta') : null;
+        this.worldMetaEl = document.getElementById('patience-world-meta');
         this.saveFileButtonEl = document.getElementById('patience-save-file-button');
         this.saveClipboardButtonEl = document.getElementById('patience-save-clipboard-button');
         this.dailyClaimButtonEl = document.getElementById('patience-daily-claim-button');
@@ -104,6 +113,7 @@ const PatienceUI = {
 
         // Clear existing content
         this.container.innerHTML = '';
+        const dailyPatienceDisabled = gameSettings.disableDailyPatience;
 
         // Create patience container
         const shell = document.createElement('div');
@@ -123,7 +133,12 @@ const PatienceUI = {
         tooltip.className = 'info-tooltip-icon';
         attachDynamicInfoTooltip(
             tooltip,
-            GAME_FEATURES.patienceDailyClaimButton
+            dailyPatienceDisabled
+                ? getPatienceText(
+                    'ui.hope.patiencePanel.titleTooltipDisabled',
+                    'Each world banks patience at 2 seconds per second; completing terraforming claims the bank and keeps earning until the 3 hour world cap is reached.'
+                )
+                : GAME_FEATURES.patienceDailyClaimButton
                 ? getPatienceText(
                     'ui.hope.patiencePanel.titleTooltipSteam',
                     'Claim patience once per day. Each world banks patience at 2 seconds per second; completing terraforming claims the bank and keeps earning until the 3 hour world cap is reached.'
@@ -138,7 +153,12 @@ const PatienceUI = {
 
         const subtitle = document.createElement('p');
         subtitle.className = 'patience-subtitle';
-        subtitle.textContent = GAME_FEATURES.patienceDailyClaimButton
+        subtitle.textContent = dailyPatienceDisabled
+            ? getPatienceText(
+                'ui.hope.patiencePanel.subtitleDisabled',
+                'Gain patience by terraforming worlds. Each world banks patience until terraforming completes, then continues earning up to 3 hours total. Use patience to gain equivalent hours of production for various things.'
+            )
+            : GAME_FEATURES.patienceDailyClaimButton
             ? getPatienceText(
                 'ui.hope.patiencePanel.subtitleSteam',
                 'Claim daily patience directly. Each world banks patience until terraforming completes, then continues earning up to 3 hours total. Use patience to gain equivalent hours of production for various things.'
@@ -178,49 +198,58 @@ const PatienceUI = {
         currentCard.appendChild(maxLine);
         statsRow.appendChild(currentCard);
 
-        const gainCard = document.createElement('div');
-        gainCard.className = 'patience-card';
+        let gainValue = null;
+        let gainMeta = null;
+        let timerValue = null;
+        let timerMeta = null;
+        if (!dailyPatienceDisabled) {
+            const gainCard = document.createElement('div');
+            gainCard.className = 'patience-card';
 
-        const gainLabel = document.createElement('div');
-        gainLabel.className = 'patience-card-label';
-        gainLabel.textContent = getPatienceText('ui.hope.patiencePanel.dailyPatience', 'Daily patience');
-        gainCard.appendChild(gainLabel);
+            const gainLabel = document.createElement('div');
+            gainLabel.className = 'patience-card-label';
+            gainLabel.textContent = getPatienceText('ui.hope.patiencePanel.dailyPatience', 'Daily patience');
+            gainCard.appendChild(gainLabel);
 
-        const gainValue = document.createElement('div');
-        gainValue.className = 'patience-card-value';
-        gainValue.textContent = '+3';
-        gainCard.appendChild(gainValue);
+            gainValue = document.createElement('div');
+            gainValue.id = 'patience-gain-value';
+            gainValue.className = 'patience-card-value';
+            gainValue.textContent = '+3';
+            gainCard.appendChild(gainValue);
 
-        const gainMeta = document.createElement('div');
-        gainMeta.className = 'patience-card-meta';
-        gainMeta.textContent = GAME_FEATURES.patienceDailyClaimButton
-            ? getPatienceText('ui.hope.patiencePanel.dailyMetaSteam', 'Claim daily')
-            : getPatienceText('ui.hope.patiencePanel.dailyMeta', 'Save/export daily');
-        gainCard.appendChild(gainMeta);
+            gainMeta = document.createElement('div');
+            gainMeta.id = 'patience-gain-meta';
+            gainMeta.className = 'patience-card-meta';
+            gainMeta.textContent = GAME_FEATURES.patienceDailyClaimButton
+                ? getPatienceText('ui.hope.patiencePanel.dailyMetaSteam', 'Claim daily')
+                : getPatienceText('ui.hope.patiencePanel.dailyMeta', 'Save/export daily');
+            gainCard.appendChild(gainMeta);
 
-        statsRow.appendChild(gainCard);
+            statsRow.appendChild(gainCard);
 
-        const timerCard = document.createElement('div');
-        timerCard.className = 'patience-card';
+            const timerCard = document.createElement('div');
+            timerCard.className = 'patience-card';
 
-        const timerLabel = document.createElement('div');
-        timerLabel.className = 'patience-card-label';
-        timerLabel.textContent = GAME_FEATURES.patienceDailyClaimButton
-            ? getPatienceText('ui.hope.patiencePanel.dailyClaimStatus', 'Daily claim status')
-            : getPatienceText('ui.hope.patiencePanel.saveBonusStatus', 'Save bonus status');
-        timerCard.appendChild(timerLabel);
+            const timerLabel = document.createElement('div');
+            timerLabel.className = 'patience-card-label';
+            timerLabel.textContent = GAME_FEATURES.patienceDailyClaimButton
+                ? getPatienceText('ui.hope.patiencePanel.dailyClaimStatus', 'Daily claim status')
+                : getPatienceText('ui.hope.patiencePanel.saveBonusStatus', 'Save bonus status');
+            timerCard.appendChild(timerLabel);
 
-        const timerValue = document.createElement('div');
-        timerValue.id = 'patience-timer-value';
-        timerValue.className = 'patience-card-value';
-        timerValue.textContent = '--:--';
-        timerCard.appendChild(timerValue);
+            timerValue = document.createElement('div');
+            timerValue.id = 'patience-timer-value';
+            timerValue.className = 'patience-card-value';
+            timerValue.textContent = '--:--';
+            timerCard.appendChild(timerValue);
 
-        const timerMeta = document.createElement('div');
-        timerMeta.className = 'patience-card-meta';
-        timerMeta.textContent = getPatienceText('ui.hope.patiencePanel.nextResetIn', 'Next reset in {value}', { value: '--:--:--' });
-        timerCard.appendChild(timerMeta);
-        statsRow.appendChild(timerCard);
+            timerMeta = document.createElement('div');
+            timerMeta.id = 'patience-timer-meta';
+            timerMeta.className = 'patience-card-meta';
+            timerMeta.textContent = getPatienceText('ui.hope.patiencePanel.nextResetIn', 'Next reset in {value}', { value: '--:--:--' });
+            timerCard.appendChild(timerMeta);
+            statsRow.appendChild(timerCard);
+        }
 
         const worldCard = document.createElement('div');
         worldCard.className = 'patience-card';
@@ -249,6 +278,7 @@ const PatienceUI = {
         worldCard.appendChild(worldValue);
 
         const worldMeta = document.createElement('div');
+        worldMeta.id = 'patience-world-meta';
         worldMeta.className = 'patience-card-meta';
         worldMeta.textContent = getPatienceText('ui.hope.patiencePanel.status.worldBanking', 'Banking {earned} / {cap}h (complete terraforming to claim)', {
             earned: '0.00',
@@ -360,6 +390,7 @@ const PatienceUI = {
         if (GAME_FEATURES.patienceDailyClaimButton) {
             dailyClaimButton = document.createElement('button');
             dailyClaimButton.id = 'patience-daily-claim-button';
+            dailyClaimButton.hidden = dailyPatienceDisabled;
             dailyClaimButton.textContent = getPatienceText('ui.hope.patiencePanel.claimDaily', 'Claim daily patience');
             saveRow.appendChild(dailyClaimButton);
         } else {
@@ -397,6 +428,7 @@ const PatienceUI = {
         this.saveFileButtonEl = saveFileButton;
         this.saveClipboardButtonEl = saveClipboardButton;
         this.dailyClaimButtonEl = dailyClaimButton;
+        this.dailyPatienceDisabled = dailyPatienceDisabled;
         this.updateSpendPreview();
         this.updateSpendDescription();
     },
@@ -692,6 +724,10 @@ const PatienceUI = {
      */
     update() {
         this.updateSubtabVisibility();
+
+        if (this.dailyPatienceDisabled !== gameSettings.disableDailyPatience) {
+            this.initialize();
+        }
         
         if (!patienceManager || !patienceManager.enabled) {
             return;
