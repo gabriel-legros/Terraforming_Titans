@@ -68,6 +68,8 @@ const automationElements = {
   scriptAddLineButton: null,
   scriptImportButton: null,
   scriptExportButton: null,
+  scriptVariableConfigButton: null,
+  scriptVariableConfigPanel: null,
   shipAssignment: null,
   shipAssignmentStatus: null,
   shipAssignmentDescription: null,

@@ -2,6 +2,8 @@ let scriptAutomationLinesSignature = '';
 let forceScriptAutomationRefresh = false;
 let scriptNextTravelOptionsSignature = '';
 let scriptSelectOptionsSignature = '';
+let scriptVariableConfigOpen = false;
+let scriptVariableNamesSignature = '';
 
 function getScriptAutomation() {
   return automationManager ? automationManager.scriptAutomation : null;
@@ -118,7 +120,7 @@ function buildScriptAutomationUI() {
   body.appendChild(statusLine);
 
   const scriptRow = document.createElement('div');
-  scriptRow.classList.add('script-automation-script-row');
+  scriptRow.classList.add('script-automation-script-row', 'script-automation-script-toolbar');
 
   const scriptSelect = document.createElement('select');
   scriptSelect.classList.add('script-automation-select');
@@ -153,8 +155,18 @@ function buildScriptAutomationUI() {
   deleteButton.textContent = getAutomationCardText('scriptDelete', {}, 'Delete');
 
   const scriptTransferButtons = createAutomationPresetTransferButtons('script-automation-script');
-  scriptRow.append(scriptSelect, scriptOrderButtons, scriptName, newButton, duplicateButton, deleteButton, scriptTransferButtons.importButton, scriptTransferButtons.exportButton);
+  const variableConfigButton = document.createElement('button');
+  variableConfigButton.classList.add('script-variable-config-button');
+  variableConfigButton.innerHTML = '&#9881;';
+  variableConfigButton.title = getAutomationCardText('scriptVariableConfigButton');
+  variableConfigButton.setAttribute('aria-label', getAutomationCardText('scriptVariableConfigButton'));
+  variableConfigButton.setAttribute('aria-expanded', 'false');
+
+  scriptRow.append(scriptSelect, scriptOrderButtons, scriptName, newButton, duplicateButton, deleteButton, scriptTransferButtons.importButton, scriptTransferButtons.exportButton, variableConfigButton);
   body.appendChild(scriptRow);
+
+  const variableConfigPanel = buildScriptVariableConfigPanel();
+  document.body.appendChild(variableConfigPanel);
 
   const linesContainer = document.createElement('div');
   linesContainer.classList.add('script-automation-lines');
@@ -191,8 +203,162 @@ function buildScriptAutomationUI() {
   automationElements.scriptAddLineButton = addLineButton;
   automationElements.scriptImportButton = scriptTransferButtons.importButton;
   automationElements.scriptExportButton = scriptTransferButtons.exportButton;
+  automationElements.scriptVariableConfigButton = variableConfigButton;
+  automationElements.scriptVariableConfigPanel = variableConfigPanel;
 
   wireScriptAutomationEvents();
+}
+
+function buildScriptVariableConfigPanel() {
+  const panel = document.createElement('div');
+  panel.classList.add('space-storage-settings-overlay', 'script-variable-config-overlay');
+  const windowElement = document.createElement('section');
+  windowElement.classList.add('space-storage-settings-window', 'script-variable-config-window');
+
+  const header = document.createElement('div');
+  header.classList.add('space-storage-settings-header');
+  const heading = document.createElement('div');
+  heading.classList.add('space-storage-settings-title');
+  heading.textContent = getAutomationCardText('scriptVariableConfigTitle');
+  const closeButton = document.createElement('button');
+  closeButton.type = 'button';
+  closeButton.classList.add('space-storage-settings-close');
+  closeButton.textContent = getAutomationCardText('scriptVariableConfigCloseIcon');
+  closeButton.setAttribute('aria-label', getAutomationCardText('scriptVariableConfigClose'));
+  header.append(heading, closeButton);
+  const description = document.createElement('p');
+  description.classList.add('script-variable-config-description');
+  description.textContent = getAutomationCardText('scriptVariableConfigDescription');
+  windowElement.append(header, description);
+
+  const sections = document.createElement('div');
+  sections.classList.add('script-variable-config-sections');
+  panel._variableControls = {};
+  ['number', 'script'].forEach(variableType => {
+    const section = document.createElement('section');
+    section.classList.add('script-variable-name-section');
+    const title = document.createElement('h5');
+    title.textContent = getAutomationCardText(
+      variableType === 'script' ? 'scriptVariableNamesScriptTitle' : 'scriptVariableNamesNumberTitle'
+    );
+    section.appendChild(title);
+
+    const controls = document.createElement('div');
+    controls.classList.add('script-variable-name-controls');
+    const variableSelect = document.createElement('select');
+    variableSelect.classList.add('space-storage-settings-select');
+    for (let index = 0; index < 26; index += 1) {
+      const variableId = String.fromCharCode(65 + index);
+      const option = document.createElement('option');
+      option.value = variableId;
+      option.textContent = variableId;
+      variableSelect.appendChild(option);
+    }
+    variableSelect.addEventListener('change', () => {
+      scriptVariableNamesSignature = '';
+      updateScriptVariableConfigUI(getScriptAutomation(), getScriptAutomation().getSelectedScript());
+    });
+    controls.appendChild(labeledNode(getAutomationCardText('scriptVariableSelectorLabel'), variableSelect));
+
+    const inputs = {};
+    ['global', 'script'].forEach(scope => {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.maxLength = 64;
+      input.classList.add('space-storage-settings-input');
+      input.dataset.variableType = variableType;
+      input.dataset.variableScope = scope;
+      input.addEventListener('input', event => {
+        const automation = getScriptAutomation();
+        const selectedScript = automation?.getSelectedScript();
+        if (!automation || !selectedScript) return;
+        automation.setVariableName(
+          event.target.dataset.variableScope,
+          event.target.dataset.variableType,
+          event.target.dataset.variableId,
+          event.target.value,
+          selectedScript.id
+        );
+        forceScriptAutomationRefresh = true;
+        scriptVariableNamesSignature = '';
+        queueAutomationUIRefresh();
+      });
+      const label = labeledNode(
+        getAutomationCardText(scope === 'global' ? 'scriptVariableGlobalNameHeader' : 'scriptVariableScriptScopeLabel'),
+        input
+      );
+      controls.appendChild(label);
+      inputs[scope] = { input, label: label.firstElementChild };
+    });
+    panel._variableControls[variableType] = { select: variableSelect, inputs, title: title.textContent };
+    section.appendChild(controls);
+    sections.appendChild(section);
+  });
+  const confirmButton = document.createElement('button');
+  confirmButton.type = 'button';
+  confirmButton.classList.add('space-storage-settings-confirm');
+  confirmButton.textContent = getAutomationCardText('scriptVariableConfigClose');
+  windowElement.append(sections, confirmButton);
+  panel.appendChild(windowElement);
+  panel._closeButton = closeButton;
+  panel._confirmButton = confirmButton;
+  return panel;
+}
+
+function setScriptVariableConfigOpen(open) {
+  scriptVariableConfigOpen = !!open;
+  automationElements.scriptVariableConfigButton.setAttribute('aria-expanded', String(scriptVariableConfigOpen));
+  automationElements.scriptVariableConfigPanel.classList.toggle('is-visible', scriptVariableConfigOpen);
+  scriptVariableNamesSignature = '';
+  queueAutomationUIRefresh();
+}
+
+function updateScriptVariableConfigUI(automation, script) {
+  const panel = automationElements.scriptVariableConfigPanel;
+  if (!panel || !scriptVariableConfigOpen) return;
+  const signature = JSON.stringify([
+    script?.id || null,
+    script?.name || '',
+    automation.variableNames,
+    script?.variableNames || null,
+    panel._variableControls.number.select.value,
+    panel._variableControls.script.select.value
+  ]);
+  if (signature === scriptVariableNamesSignature) return;
+
+  const scriptHeader = getAutomationCardText('scriptVariableScriptNameHeader', {
+    script: script?.name || getAutomationCardText('scriptWithId', { id: script?.id || '' })
+  });
+  ['number', 'script'].forEach(variableType => {
+    const controls = panel._variableControls[variableType];
+    const variableId = controls.select.value || 'A';
+    const targets = automation.getVariableTargets(variableType, script.id);
+    targets.forEach((target, index) => {
+      controls.select.options[index].textContent = target.label === target.id
+        ? target.id
+        : `${target.id} - ${target.label}`;
+    });
+    controls.inputs.script.label.textContent = scriptHeader;
+    ['global', 'script'].forEach(scope => {
+      const input = controls.inputs[scope].input;
+      input.dataset.variableId = variableId;
+      input.setAttribute('aria-label', getAutomationCardText('scriptVariableNameInputLabel', {
+        id: variableId,
+        scope: scope === 'global' ? getAutomationCardText('scriptVariableGlobalNameHeader') : scriptHeader,
+        type: controls.title
+      }));
+      const value = scope === 'global'
+        ? automation.getGlobalVariableName(variableType, variableId)
+        : automation.getScriptVariableName(script.id, variableType, variableId);
+      if (document.activeElement !== input) input.value = value;
+      input.placeholder = scope === 'global'
+        ? variableId
+        : getAutomationCardText('scriptVariableInheritedPlaceholder', {
+            name: automation.getGlobalVariableName(variableType, variableId) || variableId
+          });
+    });
+  });
+  scriptVariableNamesSignature = signature;
 }
 
 function wireScriptAutomationEvents() {
@@ -326,6 +492,18 @@ function wireScriptAutomationEvents() {
     queueAutomationUIRefresh();
   });
 
+  els.scriptVariableConfigButton.addEventListener('click', () => {
+    setScriptVariableConfigOpen(!scriptVariableConfigOpen);
+  });
+  els.scriptVariableConfigPanel._closeButton.addEventListener('click', () => setScriptVariableConfigOpen(false));
+  els.scriptVariableConfigPanel._confirmButton.addEventListener('click', () => setScriptVariableConfigOpen(false));
+  els.scriptVariableConfigPanel.addEventListener('click', event => {
+    if (event.target === els.scriptVariableConfigPanel) setScriptVariableConfigOpen(false);
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && scriptVariableConfigOpen) setScriptVariableConfigOpen(false);
+  });
+
   els.scriptAddLineButton.addEventListener('click', () => {
     const automation = getScriptAutomation();
     const script = automation?.getSelectedScript();
@@ -441,6 +619,7 @@ function updateScriptAutomationUI() {
   if (script && document.activeElement !== automationElements.scriptNameInput) {
     automationElements.scriptNameInput.value = script.name || '';
   }
+  updateScriptVariableConfigUI(automation, script);
   const selectedScriptIndex = automation.scripts.findIndex(item => item.id === script.id);
   automationElements.scriptMoveUpButton.disabled = selectedScriptIndex <= 0;
   automationElements.scriptMoveDownButton.disabled = selectedScriptIndex < 0 || selectedScriptIndex >= automation.scripts.length - 1;
@@ -1277,7 +1456,7 @@ function renderActionsEditor(automation, script, line, container, actions, title
     row.appendChild(kind);
 
     if (action.kind === 'setVariable') {
-      renderSetVariableActionEditor(automation, action, row);
+      renderSetVariableActionEditor(automation, script, action, row);
     } else if (action.kind === 'sleep') {
       normalizeScriptSleepDuration(action);
       const duration = document.createElement('input');
@@ -1311,7 +1490,7 @@ function renderActionsEditor(automation, script, line, container, actions, title
     } else if (action.kind === 'gotoScript') {
       renderGotoScriptActionEditor(automation, script, action, row);
     } else {
-      renderActionTargetPicker(action, row);
+      renderActionTargetPicker(automation, script, action, row);
     }
 
     const controls = document.createElement('div');
@@ -1362,7 +1541,7 @@ function renderActionsEditor(automation, script, line, container, actions, title
   container.appendChild(section);
 }
 
-function renderSetVariableActionEditor(automation, action, row) {
+function renderSetVariableActionEditor(automation, script, action, row) {
   normalizeScriptAction(automation, action);
   const typeSelect = createSelect([
     { id: 'number', label: getAutomationCardText('scriptVariableTypeNumber', {}, 'Number') },
@@ -1378,7 +1557,7 @@ function renderSetVariableActionEditor(automation, action, row) {
   typeSelect.title = getAutomationCardText('scriptVariableTypeLabel', {}, 'Variable type');
   row.appendChild(typeSelect);
 
-  const variables = automation.registry.getVariableTargets();
+  const variables = automation.getVariableTargets(action.variableType, script.id);
   const variableSelect = createSelect(variables.map(item => ({ id: item.id, label: item.label })), action.variableId);
   action.variableId = variableSelect.value || 'A';
   variableSelect.addEventListener('change', event => {
@@ -1423,7 +1602,7 @@ function renderGotoScriptActionEditor(automation, script, action, row) {
   row.appendChild(modeSelect);
 
   if (action.scriptTargetMode === 'variable') {
-    const variables = automation.registry.getVariableTargets();
+    const variables = automation.getVariableTargets('script', script.id);
     const variableSelect = createSelect(variables.map(item => ({ id: item.id, label: item.label })), action.scriptVariableId);
     action.scriptVariableId = variableSelect.value || 'A';
     variableSelect.addEventListener('change', event => {
@@ -1460,7 +1639,7 @@ function createScriptTargetOptions(automation, includeNull) {
   return options;
 }
 
-function renderActionTargetPicker(action, row) {
+function renderActionTargetPicker(automation, script, action, row) {
   if (action.kind === 'togglePause') {
     const modeSelect = createSelect([
       { id: 'on', label: getAutomationCardText('scriptToggleModeOn', {}, 'On') },
@@ -1569,7 +1748,7 @@ function renderActionTargetPicker(action, row) {
       : null;
     if (selectedPreset && target.isParameterizedPreset && target.isParameterizedPreset(selectedPreset)) {
       action.parameterVariableId = automationManager.scriptAutomation.normalizeVariableId(action.parameterVariableId);
-      const variables = automationManager.scriptAutomation.registry.getVariableTargets();
+      const variables = automation.getVariableTargets('number', script.id);
       const parameterLabel = document.createElement('span');
       parameterLabel.classList.add('script-action-parameter-label');
       parameterLabel.textContent = getAutomationCardText('scriptParameterWithValueLabel', {}, 'with value');
