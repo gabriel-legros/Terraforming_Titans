@@ -1511,10 +1511,12 @@ class LifeManager extends EffectableEntity {
 
     const potentialGrowthByZone = {};
     const thermodynamicGrowthCapByZone = {};
+    const thermodynamicGrowthDemandByZone = {};
     const radiationDecayByZone = {};
     zones.forEach(zoneName => {
       potentialGrowthByZone[zoneName] = 0;
       thermodynamicGrowthCapByZone[zoneName] = Infinity;
+      thermodynamicGrowthDemandByZone[zoneName] = 0;
       radiationDecayByZone[zoneName] = 0;
     });
     if (gameSettings.lifeThermodynamics && secondsMultiplier > 0) {
@@ -1604,7 +1606,9 @@ class LifeManager extends EffectableEntity {
         addBiomassGrowthLimiter(limitingSurfaceKey, zoneName, 'surface', limitingSurfaceShortfall);
       }
 
-      const capped = Math.max(0, Math.min(maxBySurfaceInputs, thermodynamicGrowthCapByZone[zoneName]));
+      const uncapped = Math.max(0, maxBySurfaceInputs);
+      thermodynamicGrowthDemandByZone[zoneName] = uncapped;
+      const capped = Math.min(uncapped, thermodynamicGrowthCapByZone[zoneName]);
       potentialGrowthByZone[zoneName] = capped;
       totalPotentialGrowth += capped;
     });
@@ -1866,6 +1870,7 @@ class LifeManager extends EffectableEntity {
       yggieGrowthController,
       yggieGrowthControl,
       thermodynamicGrowthCapByZone,
+      thermodynamicGrowthDemandByZone,
     };
   }
 
@@ -1973,6 +1978,7 @@ class LifeManager extends EffectableEntity {
       decayAtmosphericDeltas,
       yggieGrowthController,
       yggieGrowthControl,
+      thermodynamicGrowthDemandByZone,
     } = plan;
 
     terraforming.biomassDyingZones = {};
@@ -2061,7 +2067,11 @@ class LifeManager extends EffectableEntity {
       );
     }
 
-    terraforming.setLifeThermodynamicsGrowth(zoneGrowthByZone, secondsMultiplier);
+    terraforming.setLifeThermodynamicsGrowth(
+      zoneGrowthByZone,
+      secondsMultiplier,
+      thermodynamicGrowthDemandByZone
+    );
 
     Object.entries(growthAtmosphericDeltas).forEach(([resourceKey, delta]) => {
       if (!delta) return;
