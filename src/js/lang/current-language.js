@@ -7349,6 +7349,7 @@ setLanguageData({
         superconductors: { name: 'Supercond.' },
         superalloys: { name: 'Superalloys' },
         liquidWater: { name: 'Water' },
+        food: { name: 'Food' },
         biomass: { name: 'Biomass' },
         carbonDioxide: { name: 'CO2' },
         inertGas: { name: 'Nitrogen' },
