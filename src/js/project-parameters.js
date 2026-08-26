@@ -1463,7 +1463,9 @@ const projectParameters = {
     unlocked: false,
     attributes: {
       projectGroup: 'specializedWorlds',
-      keepStartBarVisible: true
+      keepStartBarVisible: true,
+      spaceBuilding: true,
+      spaceBuildingProductivity: true
     }
   },
   foundryWorld: {

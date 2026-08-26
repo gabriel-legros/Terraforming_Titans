@@ -574,6 +574,13 @@ var terraformingParameters = {
       equilibriumSnapEnabled: false,
       equilibriumSnapRateTonsPerSecond: 0.01
     },
+    life: {
+      surfaceBiomassFoodPerTonPerSecond: 0.01
+    },
+    specializedWorlds: {
+      manufacturingFoodPopulationPerUnit: 10,
+      manufacturingFoodMaximumThroughputBonus: 1
+    },
     landReservation: {
       moltenWorldFullTemperatureK: 1273.15,
       moltenWorldClearTemperatureK: 973.15,

@@ -105,6 +105,9 @@
         hazardPointBonusPerHazard: 0.1,
       });
       this.biocortexIntegration = false;
+      this.cumulativeBiomass = 0;
+      this.operationPreRunThisTick = false;
+      this.passiveFoodElements = null;
     }
 
     getBiomassDensity() {
@@ -124,6 +127,17 @@
     getTravelPointGain() {
       const basePoints = this.getEvolutionPointGain(resources.surface.biomass.value);
       return this.applyHazardPointBonus(basePoints);
+    }
+
+    getPassiveFoodProduction(deltaTime = 1000) {
+      const seconds = Math.max(0, deltaTime / 1000);
+      const rate = this.isBooleanFlagSet('megaPotatoes')
+        ? this.cumulativeBiomass * terraformingParameters.gameplay.life.surfaceBiomassFoodPerTonPerSecond
+        : 0;
+      return {
+        rate,
+        amount: rate * seconds,
+      };
     }
 
     getShopPurchaseCountText(item, purchases, maxPurchases) {
@@ -175,6 +189,16 @@
         return false;
       }
       return colonies.t7_colony.count === 0n;
+    }
+
+    prepareTravelState(resetLevel = GAME_RESET_LEVEL.PLANET) {
+      if (resetLevel >= this.departureResetAt) {
+        return;
+      }
+      if (this.isCompleted) {
+        this.cumulativeBiomass += Math.max(0, resources.surface.biomass.value || 0);
+      }
+      super.prepareTravelState(resetLevel);
     }
 
     complete() {
@@ -260,16 +284,158 @@
       }
     }
 
+    estimateOperationCostAndGain(deltaTime = 1000, applyRates = true) {
+      const totals = { cost: {}, gain: {} };
+      const production = this.getPassiveFoodProduction(deltaTime);
+      if (!(production.amount > 0)) {
+        return totals;
+      }
+      totals.gain.spaceStorage = { food: production.amount };
+      if (applyRates) {
+        resources.spaceStorage.food.modifyRate(production.rate, this.getRateSource(), 'project');
+      }
+      return totals;
+    }
+
+    applyOperationCostAndGain(deltaTime = 1000, accumulatedChanges = null) {
+      const production = this.getPassiveFoodProduction(deltaTime);
+      if (!(production.amount > 0)) {
+        return;
+      }
+      if (accumulatedChanges) {
+        accumulatedChanges.spaceStorage ||= {};
+        accumulatedChanges.spaceStorage.food = (accumulatedChanges.spaceStorage.food || 0)
+          + production.amount;
+      } else {
+        resources.spaceStorage.food.increase(production.amount);
+        projectManager.projects.spaceStorage.reconcileUsedStorage();
+      }
+      resources.spaceStorage.food.modifyRate(production.rate, this.getRateSource(), 'project');
+    }
+
+    estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+      const totals = super.estimateCostAndGain(deltaTime, applyRates, productivity, accumulatedChanges);
+      if (this.operationPreRunThisTick === true) {
+        return totals;
+      }
+      const operationTotals = this.estimateOperationCostAndGain(deltaTime, applyRates);
+      const foodGain = operationTotals.gain.spaceStorage?.food || 0;
+      if (foodGain > 0) {
+        totals.gain.spaceStorage ||= {};
+        totals.gain.spaceStorage.food = (totals.gain.spaceStorage.food || 0) + foodGain;
+      }
+      return totals;
+    }
+
+    applyCostAndGain(deltaTime = 1000, accumulatedChanges = null, productivity = 1) {
+      super.applyCostAndGain(deltaTime, accumulatedChanges, productivity);
+      this.operationPreRunThisTick = false;
+    }
+
     update(deltaTime) {
       super.update(deltaTime);
       this.applyEffects();
+    }
+
+    renderUI(container) {
+      super.renderUI(container);
+
+      const card = document.createElement('div');
+      card.classList.add('info-card', 'manufacturing-world-card');
+      card.dataset.bioworldFoodUi = 'card';
+
+      const header = document.createElement('div');
+      header.classList.add('card-header');
+      const title = document.createElement('span');
+      title.classList.add('card-title');
+      title.textContent = getBioworldText('catalogs.specializations.bioworld.passiveFood.title');
+      header.appendChild(title);
+      card.appendChild(header);
+
+      const body = document.createElement('div');
+      body.classList.add('card-body');
+      const summaryGrid = document.createElement('div');
+      summaryGrid.classList.add('stats-grid', 'two-col', 'project-summary-grid');
+
+      const createStatBox = (labelText, key) => {
+        const box = document.createElement('div');
+        box.classList.add('stat-item', 'project-summary-box');
+        const label = document.createElement('span');
+        label.classList.add('stat-label');
+        label.textContent = labelText;
+        const value = document.createElement('span');
+        value.classList.add('stat-value');
+        value.dataset.bioworldFoodUi = key;
+        box.append(label, value);
+        summaryGrid.appendChild(box);
+        return value;
+      };
+
+      const cumulativeBiomass = createStatBox(
+        getBioworldText('catalogs.specializations.bioworld.passiveFood.cumulativeBiomass'),
+        'cumulativeBiomass'
+      );
+      const foodProduction = createStatBox(
+        getBioworldText('catalogs.specializations.bioworld.passiveFood.production'),
+        'foodProduction'
+      );
+      body.appendChild(summaryGrid);
+      card.appendChild(body);
+      container.appendChild(card);
+
+      this.passiveFoodElements = { card, cumulativeBiomass, foodProduction };
+      this.updateUI();
+    }
+
+    updateUI() {
+      super.updateUI();
+      const elements = this.passiveFoodElements;
+      if (!elements?.card?.isConnected) {
+        return;
+      }
+      const unlocked = this.isBooleanFlagSet('megaPotatoes');
+      const display = unlocked ? '' : 'none';
+      if (elements.card.style.display !== display) {
+        elements.card.style.display = display;
+      }
+      if (!unlocked) {
+        return;
+      }
+      const biomassText = formatNumber(this.cumulativeBiomass, true, 2);
+      const productionText = `${formatNumber(this.getPassiveFoodProduction().rate, true, 3)}/s`;
+      if (elements.cumulativeBiomass.textContent !== biomassText) {
+        elements.cumulativeBiomass.textContent = biomassText;
+      }
+      if (elements.foodProduction.textContent !== productionText) {
+        elements.foodProduction.textContent = productionText;
+      }
+    }
+
+    saveState() {
+      return {
+        ...super.saveState(),
+        cumulativeBiomass: this.cumulativeBiomass,
+      };
     }
 
     loadState(state = {}) {
       super.loadState(state);
       this.ecumenopolisDisabled = this.isCompleted || false;
       this.loadSpecializationState(state);
+      this.cumulativeBiomass = Math.max(0, state.cumulativeBiomass || 0);
       this.applySpecializationEffects();
+    }
+
+    saveTravelState() {
+      return {
+        ...super.saveTravelState(),
+        cumulativeBiomass: this.cumulativeBiomass,
+      };
+    }
+
+    loadTravelState(state = {}) {
+      super.loadTravelState(state);
+      this.cumulativeBiomass = Math.max(0, state.cumulativeBiomass || 0);
     }
   }
 

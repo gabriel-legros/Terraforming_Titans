@@ -2188,7 +2188,8 @@ class LifeManager extends EffectableEntity {
       const biomassAmount = biomassResource?.value || 0;
 
       if (foodResource && biomassAmount > 0) {
-        const foodPerSecond = biomassAmount * 0.01;
+        const foodPerSecond = biomassAmount
+          * terraformingParameters.gameplay.life.surfaceBiomassFoodPerTonPerSecond;
         foodResource.modifyRate(
           foodPerSecond,
           getLocalizedRateSource('life:surfaceBiomass', 'ui.resourceRates.sources.surfaceBiomass', 'Surface Biomass'),

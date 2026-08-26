@@ -7220,9 +7220,17 @@ setLanguageData({
           name: 'Manufacturing Warp-assembly Lines',
           description: 'What if we had a box that could transport objects between places?  What if we could send trains through a warp-gate?  What if logistics robots could go from anywhere on a manufacturing world to anywhere else?  The factory will need refactoring.  Enables the ability to push the limits of manufacturing worlds further... at the cost of setbacks.',
         },
+        mega_potatoes: {
+          name: 'Mega potatoes',
+          description: 'HOPE... you broke the record for the largest potato again this year.  Bioworlds will now passively produce food.',
+        },
         white_dwarf_harvesting: {
           name: 'White Dwarf Harvesting',
           description: 'Some stellar remnants are rich in carbon and oxygen.  Our lifters cannot get to it easily but if we charge the dwarfs with enough positrons this task can be made more doable.  Unlocks a new terastructure.  (Special Thanks to Citizen Power for this research proposal)',
+        },
+        agrarian_worlds: {
+          name: 'Agrarian worlds',
+          description: "Our manufacturing worlds have caught wind of recent development in... food production.   They're interested in striking a deal.  Unlocks a new toggle for manufacturing worlds.",
         },
         artificial_quasars: {
           name: 'Artificial Quasars',
@@ -7680,6 +7688,11 @@ setLanguageData({
         shopTooltip: 'You gain evolution points when travelling after completing this project: 3*log10(total biomass / 1T) + 1, then +10% per hazard on this world.',
         lockedByHolyWorld: 'Blocked by Holy World',
         biocortexEffectName: 'Biocortex-human integration',
+        passiveFood: {
+          title: 'Departed Bioworlds',
+          cumulativeBiomass: 'Cumulative Biomass',
+          production: 'Food Production',
+        },
         shop: {
           purchases: 'Purchased: {value}',
         },
@@ -7734,6 +7747,7 @@ setLanguageData({
           silicon: 'silica',
           graphite: 'graphite',
           hydrogen: 'space hydrogen',
+          food: 'space food',
         },
         outputLabels: {
           glass: 'glass',
@@ -7765,6 +7779,7 @@ setLanguageData({
           controlsTitle: 'Manufacturing Controls',
           controlsTooltip: 'Assign cumulative manufacturing population to recipes. Output uses (Assigned x Output / Complexity). Each assigned worker also consumes a flat 1e-6 space hydrogen/s, unaffected by manufacturing multipliers. WGC bonuses apply to eligible outputs.',
           runManufacturing: 'Run manufacturing',
+          consumeFood: 'Consume food',
           status: 'Status',
           inputUse: 'Input Use',
           auto: 'Auto',
