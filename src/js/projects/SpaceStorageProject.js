@@ -5,6 +5,7 @@ const SPACE_STORAGE_TRANSFER_RATE_SOURCE = registerRateSource(
 const SPACE_STORAGE_RESOURCE_REQUIREMENTS = {
   superalloys: { requiresFlag: 'superalloyResearchUnlocked' },
   graphite: { requiresProjectFlag: 'graphiteStorage' },
+  food: { requiresProjectFlag: 'biostorage' },
   biomass: { requiresProjectFlag: 'biostorage' },
   atmosphericMethane: { requiresProjectFlag: 'methaneAmmoniaStorage' },
   atmosphericAmmonia: { requiresProjectFlag: 'methaneAmmoniaStorage' },
@@ -19,6 +20,7 @@ const SPACE_STORAGE_LEGACY_RESERVE_KEYS = [
   'superconductors',
   'superalloys',
   'liquidWater',
+  'food',
   'biomass',
   'carbonDioxide',
   'inertGas',
@@ -37,6 +39,7 @@ const SPACE_STORAGE_RESOURCE_KEYS = [
   'superconductors',
   'superalloys',
   'liquidWater',
+  'food',
   'biomass',
   'carbonDioxide',
   'inertGas',

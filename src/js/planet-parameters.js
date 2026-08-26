@@ -2892,6 +2892,7 @@ const earthOverrides = {
         'spaceStorage:superconductors': 4,
         'spaceStorage:superalloys': 4,
         'spaceStorage:liquidWater': 4,
+        'spaceStorage:food': 4,
         'spaceStorage:biomass': 4,
         'spaceStorage:carbonDioxide': 4,
         'spaceStorage:inertGas': 4,

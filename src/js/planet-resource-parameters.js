@@ -318,6 +318,7 @@
       superconductors: { name: '', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       superalloys: { name: '', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       liquidWater: { name: '', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton', marginTop: 10 },
+      food: { name: '', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       biomass: { name: '', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },
       carbonDioxide: { name: '', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton', marginTop: 10 },
       inertGas: { name: '', initialValue: 0, hasCap: false, unlocked: false, unit: 'ton' },

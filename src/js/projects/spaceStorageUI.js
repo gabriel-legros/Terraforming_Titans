@@ -27,6 +27,7 @@ const storageResourceOptions = [
   { labelKey: 'superconductors', fallbackLabel: 'Superconductors', category: 'colony', resource: 'superconductors' },
   { labelKey: 'superalloys', fallbackLabel: 'Superalloys', category: 'colony', resource: 'superalloys', requiresFlag: 'superalloyResearchUnlocked' },
   { labelKey: 'water', fallbackLabel: 'Water', category: 'surface', resource: 'liquidWater' },
+  { labelKey: 'food', fallbackLabel: 'Food', category: 'colony', resource: 'food', requiresProjectFlag: 'biostorage' },
   { labelKey: 'biomass', fallbackLabel: 'Biomass', category: 'surface', resource: 'biomass', requiresProjectFlag: 'biostorage' },
   { labelKey: 'carbonDioxide', fallbackLabel: 'Carbon Dioxide', category: 'atmospheric', resource: 'carbonDioxide' },
   { labelKey: 'nitrogen', fallbackLabel: 'Nitrogen', category: 'atmospheric', resource: 'inertGas' },

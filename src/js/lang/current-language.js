@@ -2727,6 +2727,7 @@ setLanguageData({
           superconductors: 'Superconductors',
           superalloys: 'Superalloys',
           water: 'Water',
+          food: 'Food',
           biomass: 'Biomass',
           carbonDioxide: 'Carbon Dioxide',
           nitrogen: 'Nitrogen',
@@ -7101,7 +7102,7 @@ setLanguageData({
         },
         biostorage: {
           name: 'Biostorage',
-          description: 'Allows safe storage of biomass in space storage.  Hazardous Biomass should be stored at the nearest incinerator.',
+          description: 'Allows safe storage of food and biomass in space storage.  Hazardous Biomass should be stored at the nearest incinerator.',
         },
         warp_gate_fabrication: {
           name: 'Warp Gate Fabrication',
