@@ -166,6 +166,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.lastUniformTransferMode = 'store';
     this.resourceTransferModes = {};
     this.resourceTransferWeights = {};
+    this.transferWeightsVisible = false;
     this.resourceImportLimitRespects = {};
     this.resourceBiomassDensityWithdrawLimits = {};
     this.resourcePressureWithdrawLimits = {};
@@ -3237,6 +3238,7 @@ class SpaceStorageProject extends SpaceshipProject {
       artificialEcosystemsEnabled: this.artificialEcosystemsEnabled,
       resourceCaps: this.resourceCaps,
       resourceTransferWeights: this.resourceTransferWeights,
+      transferWeightsVisible: this.transferWeightsVisible === true,
       resourceImportLimitRespects: this.resourceImportLimitRespects,
       resourceBiomassDensityWithdrawLimits: this.resourceBiomassDensityWithdrawLimits,
       resourcePressureWithdrawLimits: this.resourcePressureWithdrawLimits,
@@ -3296,6 +3298,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.resourceTransferModes = state.resourceTransferModes || {};
     this.resourceTransferWeights = state.resourceTransferWeights || {};
     this.sanitizeTransferWeights();
+    this.transferWeightsVisible = state.transferWeightsVisible === true;
     this.resourceImportLimitRespects = state.resourceImportLimitRespects || {};
     this.sanitizeImportLimitRespects();
     this.resourceBiomassDensityWithdrawLimits = state.resourceBiomassDensityWithdrawLimits || {};
@@ -3351,6 +3354,7 @@ class SpaceStorageProject extends SpaceshipProject {
       hydrogenTransferTarget: this.hydrogenTransferTarget,
       resourceCaps: this.resourceCaps,
       resourceTransferWeights: this.resourceTransferWeights,
+      transferWeightsVisible: this.transferWeightsVisible === true,
       resourceImportLimitRespects: this.resourceImportLimitRespects,
       resourceBiomassDensityWithdrawLimits: this.resourceBiomassDensityWithdrawLimits,
       resourcePressureWithdrawLimits: this.resourcePressureWithdrawLimits,
@@ -3387,6 +3391,7 @@ class SpaceStorageProject extends SpaceshipProject {
     this.resourceTransferModes = state.resourceTransferModes || {};
     this.resourceTransferWeights = state.resourceTransferWeights || {};
     this.sanitizeTransferWeights();
+    this.transferWeightsVisible = state.transferWeightsVisible === true;
     this.resourceImportLimitRespects = state.resourceImportLimitRespects || {};
     this.sanitizeImportLimitRespects();
     this.resourceBiomassDensityWithdrawLimits = state.resourceBiomassDensityWithdrawLimits || {};

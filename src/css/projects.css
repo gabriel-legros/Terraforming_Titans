@@ -721,12 +721,49 @@
     container-name: space-storage-card;
 }
 
+.space-storage-transfer-weights-toggle {
+    margin-left: auto;
+    flex: 0 0 auto;
+}
+
+.space-storage-transfer-weights-toggle .ui-toggle__label {
+    min-width: 0;
+    white-space: nowrap;
+}
+
 .storage-resource-item {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto auto auto;
     gap: 5px;
     align-items: center;
     min-width: 0;
+}
+
+.space-storage-transfer-weight-controls {
+    grid-column: 1 / -1;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    padding-left: 21px;
+}
+
+.space-storage-transfer-weight-slider {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+}
+
+.space-storage-transfer-weight-input {
+    flex: 0 0 58px;
+    width: 58px;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 1px 3px;
+    border: 1px solid #ced4da;
+    border-radius: 3px;
+    font-size: 11px;
+    line-height: 16px;
+    text-align: right;
 }
 
 .storage-resource-separator {
