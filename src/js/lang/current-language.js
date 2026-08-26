@@ -7690,9 +7690,13 @@ setLanguageData({
         lockedByHolyWorld: 'Blocked by Holy World',
         biocortexEffectName: 'Biocortex-human integration',
         passiveFood: {
-          title: 'Departed Bioworlds',
+          title: 'Bioworld Controls',
           cumulativeBiomass: 'Cumulative Biomass',
           production: 'Food Production',
+        },
+        ui: {
+          showShop: 'Show Shop',
+          hideShop: 'Hide Shop',
         },
         shop: {
           purchases: 'Purchased: {value}',
@@ -7781,6 +7785,7 @@ setLanguageData({
           controlsTooltip: 'Assign cumulative manufacturing population to recipes. Output uses (Assigned x Output / Complexity). Each assigned worker also consumes a flat 1e-6 space hydrogen/s, unaffected by manufacturing multipliers. WGC bonuses apply to eligible outputs.',
           runManufacturing: 'Run manufacturing',
           consumeFood: 'Consume food',
+          consumeFoodTooltip: 'Consumes 1 space food/s per 10 manufacturing population for up to +100% throughput.',
           status: 'Status',
           inputUse: 'Input Use',
           auto: 'Auto',

@@ -108,6 +108,7 @@
       this.cumulativeBiomass = 0;
       this.operationPreRunThisTick = false;
       this.passiveFoodElements = null;
+      this.shopCollapsed = false;
     }
 
     getBiomassDensity() {
@@ -381,9 +382,36 @@
       );
       body.appendChild(summaryGrid);
       card.appendChild(body);
-      container.appendChild(card);
 
-      this.passiveFoodElements = { card, cumulativeBiomass, foodProduction };
+      const shopWrapper = container.querySelector('[data-specialization-ui="wrapper"]');
+      if (shopWrapper) {
+        container.insertBefore(card, shopWrapper);
+      } else {
+        container.appendChild(card);
+      }
+
+      const shopTitle = shopWrapper?.querySelector('.bioworld-shop-title');
+      const shopItems = shopWrapper?.querySelector('.bioworld-shop-items');
+      let shopCollapseButton = null;
+      if (shopTitle && shopItems) {
+        shopCollapseButton = document.createElement('button');
+        shopCollapseButton.type = 'button';
+        shopCollapseButton.classList.add('bioworld-shop-button', 'bioworld-shop-collapse-button');
+        shopCollapseButton.dataset.bioworldFoodUi = 'shopCollapseButton';
+        shopCollapseButton.addEventListener('click', () => {
+          this.shopCollapsed = !this.shopCollapsed;
+          this.updateUI();
+        });
+        shopTitle.appendChild(shopCollapseButton);
+      }
+
+      this.passiveFoodElements = {
+        card,
+        cumulativeBiomass,
+        foodProduction,
+        shopItems,
+        shopCollapseButton,
+      };
       this.updateUI();
     }
 
@@ -392,6 +420,21 @@
       const elements = this.passiveFoodElements;
       if (!elements?.card?.isConnected) {
         return;
+      }
+      const collapsed = this.shopCollapsed === true;
+      if (elements.shopItems) {
+        const shopDisplay = collapsed ? 'none' : '';
+        if (elements.shopItems.style.display !== shopDisplay) {
+          elements.shopItems.style.display = shopDisplay;
+        }
+      }
+      if (elements.shopCollapseButton) {
+        const collapseText = collapsed
+          ? getBioworldText('catalogs.specializations.bioworld.ui.showShop')
+          : getBioworldText('catalogs.specializations.bioworld.ui.hideShop');
+        if (elements.shopCollapseButton.textContent !== collapseText) {
+          elements.shopCollapseButton.textContent = collapseText;
+        }
       }
       const unlocked = this.isBooleanFlagSet('megaPotatoes');
       const display = unlocked ? '' : 'none';
@@ -415,6 +458,7 @@
       return {
         ...super.saveState(),
         cumulativeBiomass: this.cumulativeBiomass,
+        shopCollapsed: this.shopCollapsed,
       };
     }
 
@@ -423,6 +467,7 @@
       this.ecumenopolisDisabled = this.isCompleted || false;
       this.loadSpecializationState(state);
       this.cumulativeBiomass = Math.max(0, state.cumulativeBiomass || 0);
+      this.shopCollapsed = state.shopCollapsed === true;
       this.applySpecializationEffects();
     }
 
@@ -430,12 +475,14 @@
       return {
         ...super.saveTravelState(),
         cumulativeBiomass: this.cumulativeBiomass,
+        shopCollapsed: this.shopCollapsed,
       };
     }
 
     loadTravelState(state = {}) {
       super.loadTravelState(state);
       this.cumulativeBiomass = Math.max(0, state.cumulativeBiomass || 0);
+      this.shopCollapsed = state.shopCollapsed === true;
     }
   }
 

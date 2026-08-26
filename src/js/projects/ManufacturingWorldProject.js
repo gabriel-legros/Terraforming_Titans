@@ -1387,7 +1387,14 @@
       const foodLabel = document.createElement('label');
       foodLabel.htmlFor = foodCheckbox.id;
       foodLabel.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.consumeFood');
-      foodToggleRow.append(foodCheckbox, foodLabel);
+      const foodInfo = document.createElement('span');
+      foodInfo.classList.add('info-tooltip-icon');
+      foodInfo.innerHTML = '&#9432;';
+      attachDynamicInfoTooltip(
+        foodInfo,
+        getManufacturingText('catalogs.specializations.manufacturing.ui.consumeFoodTooltip')
+      );
+      foodToggleRow.append(foodCheckbox, foodLabel, foodInfo);
       runField.appendChild(foodToggleRow);
       controlsGrid.appendChild(runField);
 
