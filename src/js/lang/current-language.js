@@ -7222,7 +7222,7 @@ setLanguageData({
         },
         mega_potatoes: {
           name: 'Mega potatoes',
-          description: 'HOPE... you broke the record for the largest potato again this year.  Bioworlds will now passively produce food.',
+          description: '"HOPE... you broke the record for the largest potato again this year."  Bioworlds will now passively produce food in space storage.',
         },
         white_dwarf_harvesting: {
           name: 'White Dwarf Harvesting',
