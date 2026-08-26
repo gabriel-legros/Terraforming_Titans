@@ -138,6 +138,22 @@ function getPhaseChangeHeatTooltipText() {
   return lines.join('\n');
 }
 
+function getLifeThermodynamicsTooltipText() {
+  const lines = [
+    getTerraformingSummaryText(
+      'lifeSummary.thermodynamicsFluxTooltip',
+      'Solar energy stored as chemical energy by natural surface-life growth during the latest tick. Negative values represent cooling. Growth in each zone can absorb at most 10% of its surface solar flux, and this cooling changes that zone\'s temperature trend.'
+    ),
+    '',
+  ];
+  for (const zone of getZones()) {
+    const flux = terraforming.getLifeThermodynamicsFlux(zone);
+    const fluxText = `${flux > 0 ? '+' : ''}${formatNumber(flux, false, 2)}`;
+    lines.push(`${getTerraformingZoneLabel(zone)}: ${fluxText} W/m²`);
+  }
+  return lines.join('\n');
+}
+
 const ATMOSPHERE_TOOLTIP_MOLAR_WEIGHTS = {
   carbonDioxide: 44.01,
   atmosphericWater: 18.01528,
@@ -2957,12 +2973,17 @@ function createWaterBox(row) {
           <tr data-zone-row="tropical"><td>${getTerraformingZoneLabel('tropical')}</td><td id="life-coverage-tropical">0.00</td><td id="life-photo-tropical">0.00</td></tr>
         </tbody>
       </table>
+      <p id="life-thermodynamics-flux-line" style="display: none;">${getTerraformingSummaryText('lifeSummary.labels.thermodynamicsFlux', 'Life Thermodynamics Flux')}: <span id="life-thermodynamics-flux">0.00</span> W/m² <span id="life-thermodynamics-flux-info" class="info-tooltip-icon">&#9432;</span></p>
       `;
 
     const lifeHeading = lifeBox.querySelector('h3');
     if (lifeHeading) {
       lifeHeading.appendChild(lifeInfo);
     }
+    const thermodynamicsFluxTooltip = attachDynamicInfoTooltip(
+      lifeBox.querySelector('#life-thermodynamics-flux-info'),
+      getLifeThermodynamicsTooltipText()
+    );
 
     const targetSpan = document.createElement('span');
     const effectiveLifeTarget = getEffectiveLifeFraction(terraforming);
@@ -2994,6 +3015,9 @@ function createWaterBox(row) {
       target: targetSpan,
       coverageOverall: lifeBox.querySelector('#life-coverage-overall'),
       photoOverall: lifeBox.querySelector('#life-photo-overall'),
+      thermodynamicsFluxLine: lifeBox.querySelector('#life-thermodynamics-flux-line'),
+      thermodynamicsFlux: lifeBox.querySelector('#life-thermodynamics-flux'),
+      thermodynamicsFluxTooltip,
       zoneRows: {
         tropical: lifeBox.querySelector('tr[data-zone-row="tropical"]'),
         temperate: lifeBox.querySelector('tr[data-zone-row="temperate"]'),
@@ -3069,6 +3093,20 @@ function updateLifeBox() {
       'Life is the pinnacle of the terraforming process.'
     )}\n${zoneLines.join('\n')}`;
     els.infoTooltip.textContent = tooltipText;
+
+    if (els.thermodynamicsFluxLine) {
+      els.thermodynamicsFluxLine.style.display = gameSettings.lifeThermodynamics ? '' : 'none';
+    }
+    if (els.thermodynamicsFlux) {
+      const flux = terraforming.getLifeThermodynamicsFlux();
+      els.thermodynamicsFlux.textContent = `${flux > 0 ? '+' : ''}${formatNumber(flux, false, 2)}`;
+    }
+    if (els.thermodynamicsFluxTooltip) {
+      const thermodynamicsTooltipText = getLifeThermodynamicsTooltipText();
+      if (els.thermodynamicsFluxTooltip.textContent !== thermodynamicsTooltipText) {
+        setTooltipText(els.thermodynamicsFluxTooltip, thermodynamicsTooltipText);
+      }
+    }
 
     const hazardByZone = {
       tropical: terraforming.zonalSurface.hazardousBiomass.tropical || 0,

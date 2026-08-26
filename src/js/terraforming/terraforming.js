@@ -353,6 +353,8 @@ class Terraforming extends EffectableEntity{
     this.factoryCoolingPower = 0;
     this.factoryCoolingFlux = 0;
     this.factoryHeatContributors = [];
+    this.lifeThermodynamicsFlux = 0;
+    this.lifeThermodynamicsFluxByZone = { tropical: 0, temperate: 0, polar: 0 };
     this.megaHeatSinkDirectHeatCapacityJ = 0;
     this.exosphereHeightMeters = 0;
     this.resourceSubstepMilliseconds = TERRAFORMING_RESOURCE_SUBSTEP_MS;

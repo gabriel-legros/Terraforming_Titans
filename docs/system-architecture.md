@@ -78,11 +78,13 @@ Durable constraints:
 - Surface land uses its existing fixed-point `BigInt` reservation/value ledger. Assignment systems that store `BigInt` counts convert to `Number` only at rate/formula boundaries.
 - Molten-surface structure attrition belongs to `Terraforming` rather than `HazardManager`, so it remains active on worlds that disable optional hazard systems. It runs with environmental hazard updates after climate stepping unless the `disableMoltenSurfaceAttrition` difficulty setting is enabled. Geological lava or plasma must reserve all geometric land before attrition begins; temperature-maintenance immunity also grants molten-surface immunity. Operational Aerostats additionally protect their own colony and the active structures covered by existing direct-support and worker-capacity calculations.
 - Every life metabolism growth/decay recipe must conserve mass. Validate coefficient arithmetic rather than tuning it by feel.
+- Life Thermodynamics applies only to natural zonal surface-life growth. It caps chemical-energy storage against canonical zonal surface solar flux and contributes its signed zonal flux directly to the radiative temperature trend; direct biomass transfers and constructed or space-based growth do not participate.
 
 ## Climate and Phase Change
 
 - `Terraforming.calculateSurfaceSolarFlux()` and `calculateZonalSurfaceSolarFlux(zone)` are the canonical cloud/haze-adjusted light APIs. Consumers must not reinterpret `modifiedSolarFlux` or world geometry independently.
 - Solar-panel cooling conserves planet-wide power and distributes it by mirror-modified zonal sunlight after local surface albedo. Ordinary factory heat stays uniform.
+- Life Thermodynamics cooling is zonal and trend-shifting. Keep it in the radiative balance with factory heat rather than in the trend-constrained phase-change path.
 - Boiling uses only the configured shallow liquid inventory: zone area times coverage times depth and density, capped by available liquid. It must not scale with the full ocean inventory.
 - Temperature trends, meridional mixing, and Advanced Oversight projections exclude phase-change heat. The previous tick's phase heat may modify progress toward the phase-free trend but cannot reverse that motion or cross the trend.
 - Mega Heat Sinks do not directly mitigate phase-change heat. Their unused cooling can absorb atmospheric-combustion and aerobraking heat before either raises temperature.
