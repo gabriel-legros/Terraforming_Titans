@@ -33,6 +33,7 @@ class SpaceshipAutomation {
     this.encounteredTargets = encounteredTargets;
     this.collapsed = false;
     this.nextPresetId = 1;
+    this.starterSetupPresetId = null;
     this.elapsed = 0;
     this.lockedAssignments = false;
     this.automationShipPool = 0;
@@ -215,6 +216,9 @@ class SpaceshipAutomation {
     const index = this.presets.findIndex(item => item.id === id);
     if (index === -1) return;
     this.presets.splice(index, 1);
+    if (this.starterSetupPresetId === id) {
+      this.starterSetupPresetId = null;
+    }
     if (automationManager && automationManager.scriptAutomation) {
       automationManager.scriptAutomation.clearDeletedAutomationTargetReference('ship', 'preset', id);
     }
@@ -1261,7 +1265,8 @@ class SpaceshipAutomation {
       disabledProjects: Array.from(this.disabledProjects),
       seenProjectTargets: Array.from(this.seenProjectTargets),
       collapsed: this.collapsed,
-      nextPresetId: this.nextPresetId
+      nextPresetId: this.nextPresetId,
+      starterSetupPresetId: this.starterSetupPresetId
     };
   }
 
@@ -1317,6 +1322,7 @@ class SpaceshipAutomation {
     }
     this.collapsed = !!data.collapsed;
     this.nextPresetId = data.nextPresetId || this.presets.length + 1;
+    this.starterSetupPresetId = data.starterSetupPresetId || null;
     this.ensureDefaultPreset();
     this.recordCurrentlyAvailableTargets();
   }

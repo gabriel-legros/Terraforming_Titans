@@ -34,6 +34,62 @@
   gap: 6px;
 }
 
+.ship-automation-guide-button {
+  width: 24px;
+  height: 24px;
+  margin-left: 0;
+  flex: 0 0 auto;
+}
+
+.ship-automation-guide-window {
+  width: min(1280px, calc(100vw - 32px));
+}
+
+.ship-automation-guide-image-wrap {
+  width: min(1234px, 100%);
+}
+
+.ship-automation-guide-marker-1 {
+  left: 3.5%;
+  top: 11%;
+}
+
+.ship-automation-guide-marker-2 {
+  left: 67%;
+  top: 11%;
+}
+
+.ship-automation-guide-marker-3 {
+  left: 20%;
+  top: 35%;
+}
+
+.ship-automation-guide-marker-4 {
+  left: 44%;
+  top: 35%;
+}
+
+.ship-automation-guide-marker-5 {
+  left: 66%;
+  top: 35%;
+}
+
+.ship-automation-guide-marker-6 {
+  left: 87%;
+  top: 35%;
+}
+
+.ship-automation-guide-starter-setup th:nth-child(1),
+.ship-automation-guide-starter-setup td:nth-child(1),
+.ship-automation-guide-starter-setup th:nth-child(3),
+.ship-automation-guide-starter-setup td:nth-child(3),
+.ship-automation-guide-starter-setup th:nth-child(5),
+.ship-automation-guide-starter-setup td:nth-child(5),
+.ship-automation-guide-starter-setup th:nth-child(6),
+.ship-automation-guide-starter-setup td:nth-child(6) {
+  text-align: center;
+}
+
 .automation-status {
   display: none;
 }
