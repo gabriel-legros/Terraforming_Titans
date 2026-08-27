@@ -1524,7 +1524,10 @@ class LifeManager extends EffectableEntity {
       const simulatedDurationSeconds = secondsMultiplier * parameters.simulatedSecondsPerRealSecond;
       zones.forEach(zoneName => {
         const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName);
-        const availableFlux = Math.max(0, terraforming.calculateZonalSurfaceSolarFlux(zoneName));
+        const availableFlux = Math.max(
+          0,
+          terraforming.calculateZonalAverageSurfaceSolarFlux(zoneName)
+        );
         thermodynamicGrowthCapByZone[zoneName] = availableFlux
           * parameters.maximumSolarFluxFraction
           * zoneArea

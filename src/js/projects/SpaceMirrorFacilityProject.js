@@ -1965,7 +1965,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
 
     const zoneArea = totalSurfaceArea * getZonePercentage(zone);
     if (zoneArea > 0) {
-      const fluxScale = isDisk ? 1 : 4;
+      const fluxScale = isDisk || angleAdjusted ? 1 : 4;
       if (focusedMirrorPower > 0) focusedMirrorFlux = fluxScale * focusedMirrorPower / zoneArea;
       if (focusedLanternPower > 0) focusedLanternFlux = fluxScale * focusedLanternPower / zoneArea;
     }
@@ -1978,7 +1978,7 @@ function calculateZoneSolarFluxWithFacility(terraforming, zone, angleAdjusted = 
     ? ((mirrorOversightSettings.assignments.mirrors?.[zone] || 0) < 0)
     : !!mirrorOversightSettings.assignments.reversalMode?.[zone];
 
-  const fluxScale = isDisk ? 1 : 4;
+  const fluxScale = isDisk || angleAdjusted ? 1 : 4;
   const distributedMirrorFlux = totalSurfaceArea > 0
     ? ((anyReverse ? -fluxScale : fluxScale) * distributedMirrorPower / totalSurfaceArea)
     : 0;

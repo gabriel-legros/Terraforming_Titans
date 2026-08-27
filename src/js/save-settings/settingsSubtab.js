@@ -1217,7 +1217,7 @@ function addSettingsListeners() {
       t(
         'ui.settings.lifeThermodynamicsTooltip',
         {},
-        'When enabled, natural surface-life growth in each climate zone is limited by the chemical energy it can store from at most 10% of that zone\'s surface solar flux. The stored energy cools the same zone and changes its temperature trend. Biodomes, artificial ecosystems, space-storage growth, and direct biomass transfers are unaffected.'
+        'When enabled, natural surface-life growth in each climate zone is limited by the chemical energy it can store from at most 10% of that zone\'s surface solar flux averaged over the zone, including curvature and night. The stored energy cools the same zone and changes its temperature trend. Biodomes, artificial ecosystems, space-storage growth, and direct biomass transfers are unaffected.'
       )
     );
   }

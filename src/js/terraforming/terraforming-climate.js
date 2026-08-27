@@ -108,7 +108,7 @@ registerTerraformingMethods('climate', ({
         ? growthDemand * parameters.chemicalEnergyJPerTon / (simulatedDurationSeconds * zoneArea)
         : 0;
       const solarCapFlux = parameters.maximumSolarFluxFraction
-        * Math.max(0, this.calculateZonalSurfaceSolarFlux(zone));
+        * Math.max(0, this.calculateZonalAverageSurfaceSolarFlux(zone));
       this.lifeThermodynamicsFluxByZone[zone] = flux;
       this.lifeThermodynamicsDemandFluxByZone[zone] = demandFlux;
       this.lifeThermodynamicsSolarCapActiveByZone[zone] = solarCapFlux > 0
@@ -130,22 +130,24 @@ registerTerraformingMethods('climate', ({
     }
     const parameters = terraformingParameters.gameplay.lifeThermodynamics;
     const cloudHazeMultiplier = 1 - Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
-    let projectedSurfaceSolarFlux;
-    if (isRingWorld()) {
-      const tropicalFlux = Number.isFinite(projectedZonalFluxes.tropical)
-        ? projectedZonalFluxes.tropical
-        : this.luminosity.zonalFluxes?.tropical || 0;
-      projectedSurfaceSolarFlux = tropicalFlux * 4 * cloudHazeMultiplier;
+    const projectedZoneFlux = Number.isFinite(projectedZonalFluxes[zone])
+      ? projectedZonalFluxes[zone]
+      : this.luminosity.zonalFluxes?.[zone] || 0;
+    let projectedAverageSurfaceSolarFlux;
+    if (isAldersonDiskWorld()) {
+      projectedAverageSurfaceSolarFlux = projectedZoneFlux;
+    } else if (isRingWorld()) {
+      const baseZoneFlux = this.calculateZoneSolarFlux(zone, false, true);
+      projectedAverageSurfaceSolarFlux = baseZoneFlux
+        + (projectedZoneFlux - baseZoneFlux) * 0.25;
     } else {
-      const projectedZoneFlux = Number.isFinite(projectedZonalFluxes[zone])
-        ? projectedZonalFluxes[zone]
-        : this.luminosity.zonalFluxes?.[zone] || 0;
-      projectedSurfaceSolarFlux = projectedZoneFlux
-        * (isAldersonDiskWorld() ? 4 : 1)
-        * cloudHazeMultiplier;
+      // Curved-world solver fluxes already contain the zone-specific
+      // illumination ratio but use 4x average units.
+      projectedAverageSurfaceSolarFlux = projectedZoneFlux * 0.25;
     }
+    projectedAverageSurfaceSolarFlux *= cloudHazeMultiplier;
     const projectedCapFlux = parameters.maximumSolarFluxFraction
-      * Math.max(0, projectedSurfaceSolarFlux);
+      * Math.max(0, projectedAverageSurfaceSolarFlux);
     return -Math.min(
       this.lifeThermodynamicsDemandFluxByZone[zone] || 0,
       projectedCapFlux
@@ -1283,6 +1285,10 @@ registerTerraformingMethods('climate', ({
       return this.luminosity.zonalFluxes[zone] * (1 - penalty) * fluxScale;
     }
     return this.calculateSurfaceSolarFlux();
+  },
+  calculateZonalAverageSurfaceSolarFlux(zone) {
+    const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
+    return this.calculateZoneSolarFlux(zone, true) * (1 - penalty);
   },
   calculateSolarPanelMultiplier() {
     return this.calculateSurfaceSolarFlux() / SOLAR_PANEL_BASE_LUMINOSITY;

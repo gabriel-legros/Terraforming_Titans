@@ -142,7 +142,7 @@ function getLifeThermodynamicsTooltipText() {
   const lines = [
     getTerraformingSummaryText(
       'lifeSummary.thermodynamicsFluxTooltip',
-      'Solar energy stored as chemical energy by natural surface-life growth during the latest tick. Negative values represent cooling. Growth in each zone can absorb at most 10% of its surface solar flux, and this cooling changes that zone\'s temperature trend.'
+      'Solar energy stored as chemical energy by natural surface-life growth during the latest tick. Negative values represent cooling. Growth in each zone can absorb at most 10% of its surface solar flux averaged over the zone, including curvature and night, and this cooling changes that zone\'s temperature trend.'
     ),
     '',
   ];
