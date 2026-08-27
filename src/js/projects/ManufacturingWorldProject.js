@@ -179,6 +179,7 @@
     acc[item.id] = item;
     return acc;
   }, {});
+  const MANUFACTURING_SHOP_REFACTOR_SLICE_SIZE = 1000;
 
   const MANUFACTURING_FLAT_HYDROGEN_PER_WORKER = 1e-6;
 
@@ -511,12 +512,54 @@
       super.addSpecializationPoints(value + bonus);
     }
 
+    getShopItemCostAtPurchaseCount(item, purchaseCount) {
+      const purchasesBeyondInitialSlice = Math.max(0, purchaseCount + 1 - item.maxPurchases);
+      const additionalCost = Math.ceil(purchasesBeyondInitialSlice / MANUFACTURING_SHOP_REFACTOR_SLICE_SIZE);
+      return item.cost + additionalCost;
+    }
+
     getShopItemCost(item) {
-      return item.cost + this.getShopRefactorCount(item.id);
+      return this.getShopItemCostAtPurchaseCount(item, this.getShopPurchaseCount(item.id));
+    }
+
+    getShopPurchaseTotalCost(item, purchaseCount) {
+      if (purchaseCount <= 0) {
+        return 0;
+      }
+      const initialPurchases = Math.min(purchaseCount, item.maxPurchases);
+      const remainingPurchases = Math.max(0, purchaseCount - item.maxPurchases);
+      const fullSlices = Math.floor(remainingPurchases / MANUFACTURING_SHOP_REFACTOR_SLICE_SIZE);
+      const partialSlicePurchases = remainingPurchases % MANUFACTURING_SHOP_REFACTOR_SLICE_SIZE;
+      const fullSliceCost = MANUFACTURING_SHOP_REFACTOR_SLICE_SIZE
+        * ((fullSlices * item.cost) + (fullSlices * (fullSlices + 1) / 2));
+      const partialSliceCost = partialSlicePurchases * (item.cost + fullSlices + 1);
+      return (initialPurchases * item.cost) + fullSliceCost + partialSliceCost;
+    }
+
+    getShopPurchaseCost(item, purchaseCount) {
+      const currentPurchases = this.getShopPurchaseCount(item.id);
+      return this.getShopPurchaseTotalCost(item, currentPurchases + purchaseCount)
+        - this.getShopPurchaseTotalCost(item, currentPurchases);
+    }
+
+    getMaxShopPurchases(item) {
+      const points = this.getSpecializationPoints();
+      const remainingPurchases = this.getShopItemMaxPurchases(item) - this.getShopPurchaseCount(item.id);
+      let low = 0;
+      let high = remainingPurchases;
+      while (low < high) {
+        const mid = Math.ceil((low + high) / 2);
+        if (this.getShopPurchaseCost(item, mid) <= points) {
+          low = mid;
+        } else {
+          high = mid - 1;
+        }
+      }
+      return low;
     }
 
     getShopItemMaxPurchases(item) {
-      return item.maxPurchases + (this.getShopRefactorCount(item.id) * 1000);
+      return item.maxPurchases + (this.getShopRefactorCount(item.id) * MANUFACTURING_SHOP_REFACTOR_SLICE_SIZE);
     }
 
     canRefactorShopItem(item) {
@@ -551,8 +594,8 @@
     refactorShopItem(item) {
       const currentPurchases = this.getShopPurchaseCount(item.id);
       const halvedPurchases = Math.floor(currentPurchases / 2);
-      const nextMax = this.getShopItemMaxPurchases(item) + 1000;
-      const nextCost = this.getShopItemCost(item) + 1;
+      const nextMax = this.getShopItemMaxPurchases(item) + MANUFACTURING_SHOP_REFACTOR_SLICE_SIZE;
+      const nextCost = this.getShopItemCostAtPurchaseCount(item, halvedPurchases);
       const message = getManufacturingText('catalogs.specializations.manufacturing.ui.refactorConfirm', {
         label: item.label,
         purchases: formatNumber(currentPurchases, true),
