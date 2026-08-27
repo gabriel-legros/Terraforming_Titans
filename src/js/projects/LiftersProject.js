@@ -1,8 +1,3 @@
-const LIFTER_MODES = {
-  GAS_HARVEST: 'gasHarvest',
-  ATMOSPHERE_STRIP: 'stripAtmosphere',
-};
-
 const LIFTER_RECIPE_TYPES = {
   HARVEST: 'harvest',
   STRIP: 'strip',
@@ -97,10 +92,6 @@ class LiftersProject extends LiftersAssignmentTools.createProjectAssignmentBase(
       this.lifterRecipes[key]?.type === LIFTER_RECIPE_TYPES.HARVEST
     ));
 
-    this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
-    this.pendingHarvestRecipeKey = '';
-    this.mode = LIFTER_MODES.GAS_HARVEST;
-
     this.lifterAssignments = {};
     this.assignmentStep = 1n;
     this.autoAssignFlags = {};
@@ -113,7 +104,9 @@ class LiftersProject extends LiftersAssignmentTools.createProjectAssignmentBase(
     this.lastUnitsPerSecond = 0;
     this.lastEnergyPerSecond = 0;
     this.lastHarvestPerSecond = 0;
-    this.lastHarvestResourceKey = this.getHarvestRecipe().storageKey;
+    const defaultHarvestRecipe = this.getRecipe(this.getDefaultHarvestRecipeKey())
+      || DEFAULT_LIFTER_HARVEST_RECIPES.hydrogen;
+    this.lastHarvestResourceKey = defaultHarvestRecipe.storageKey;
     this.lastHydrogenPerSecond = 0;
     this.lastAtmospherePerSecond = 0;
     this.lastStellarMassPerSecond = 0;
@@ -405,46 +398,19 @@ class LiftersProject extends LiftersAssignmentTools.createProjectAssignmentBase(
     return available[0] || fallback[0] || 'hydrogen';
   }
 
-  getHarvestRecipe() {
-    this.applyPendingHarvestRecipe();
-    const available = this.getAvailableHarvestRecipeKeys();
-    const nextKey = available.includes(this.harvestRecipeKey)
-      ? this.harvestRecipeKey
-      : this.getDefaultHarvestRecipeKey();
-    if (this.harvestRecipeKey !== nextKey) {
-      this.harvestRecipeKey = nextKey;
-    }
-    return this.getRecipe(nextKey) || DEFAULT_LIFTER_HARVEST_RECIPES.hydrogen;
-  }
-
-  getHarvestOptions() {
-    return this.getAvailableHarvestRecipeKeys().map((key) => {
-      const recipe = this.getRecipe(key);
-      return { value: key, label: recipe?.label || key };
-    });
-  }
-
-  normalizeModeForFlags() {
-    if (this.isAtmosphereStripDisabled() && this.mode === LIFTER_MODES.ATMOSPHERE_STRIP) {
-      this.mode = LIFTER_MODES.GAS_HARVEST;
-      return true;
-    }
-    return false;
-  }
-
-  resolveLegacyRecipeKey(mode = LIFTER_MODES.GAS_HARVEST, harvestRecipeKey = this.harvestRecipeKey) {
-    if (mode === LIFTER_MODES.ATMOSPHERE_STRIP && !this.isAtmosphereStripDisabled()) {
+  resolveLegacyRecipeKey(settings = {}) {
+    if (settings.mode === LIFTER_STRIP_RECIPE_KEY && !this.isAtmosphereStripDisabled()) {
       return LIFTER_STRIP_RECIPE_KEY;
     }
     const availableHarvest = this.getAvailableHarvestRecipeKeys();
-    if (availableHarvest.includes(harvestRecipeKey)) {
-      return harvestRecipeKey;
+    if (availableHarvest.includes(settings.harvestRecipeKey)) {
+      return settings.harvestRecipeKey;
     }
     return this.getDefaultHarvestRecipeKey();
   }
 
-  applyLegacySingleRecipeConfiguration(mode = LIFTER_MODES.GAS_HARVEST, harvestRecipeKey = this.harvestRecipeKey, useAutoAssign = false) {
-    const targetKey = this.resolveLegacyRecipeKey(mode, harvestRecipeKey);
+  migrateLegacyRecipeConfiguration(settings = {}, useAutoAssign = false) {
+    const targetKey = this.resolveLegacyRecipeKey(settings);
     this.getRecipeKeys().forEach((key) => {
       this.lifterAssignments[key] = 0;
       this.autoAssignFlags[key] = false;
@@ -461,43 +427,6 @@ class LiftersProject extends LiftersAssignmentTools.createProjectAssignmentBase(
     }
     this.markAssignmentsDirty();
     this.normalizeAssignments();
-  }
-
-  setMode(value) {
-    const next = value === LIFTER_MODES.ATMOSPHERE_STRIP && !this.isAtmosphereStripDisabled()
-      ? LIFTER_MODES.ATMOSPHERE_STRIP
-      : LIFTER_MODES.GAS_HARVEST;
-    if (this.mode === next) {
-      return;
-    }
-    this.mode = next;
-    this.applyLegacySingleRecipeConfiguration(this.mode, this.harvestRecipeKey, false);
-    this.updateUI();
-  }
-
-  setHarvestRecipe(value) {
-    const available = this.getAvailableHarvestRecipeKeys();
-    const next = available.includes(value) ? value : this.getDefaultHarvestRecipeKey();
-    if (this.harvestRecipeKey === next) {
-      return;
-    }
-    this.harvestRecipeKey = next;
-    this.pendingHarvestRecipeKey = '';
-    this.applyLegacySingleRecipeConfiguration(this.mode, this.harvestRecipeKey, false);
-    this.updateUI();
-  }
-
-  applyPendingHarvestRecipe() {
-    const pendingKey = this.pendingHarvestRecipeKey;
-    if (!pendingKey) {
-      return;
-    }
-    const available = this.getAvailableHarvestRecipeKeys();
-    if (!available.includes(pendingKey)) {
-      return;
-    }
-    this.pendingHarvestRecipeKey = '';
-    this.harvestRecipeKey = pendingKey;
   }
 
   getRecipeComplexity(recipe) {
@@ -739,6 +668,15 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     return this.getStoredAssignmentAmount(key);
   }
 
+  hasAssignedRecipe(recipeKey = null) {
+    this.normalizeAssignments();
+    const availableKeys = this.getAssignmentKeys();
+    if (recipeKey !== null) {
+      return availableKeys.includes(recipeKey) && this.getStoredAssignmentAmount(recipeKey) > 0n;
+    }
+    return availableKeys.some((key) => this.getStoredAssignmentAmount(key) > 0n);
+  }
+
   shouldOperate() {
     if (this.isPermanentlyDisabled?.()) {
       return false;
@@ -747,7 +685,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
     if (!this.isRunning || total <= 0n) {
       return false;
     }
-    return this.getAssignedTotal() > 0n;
+    return this.hasAssignedRecipe();
   }
 
   getAvailableLifters(skipNormalization = false, assignedTotal = null) {
@@ -2011,9 +1949,7 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
 
   applyBooleanFlag(effect) {
     super.applyBooleanFlag(effect);
-    this.normalizeModeForFlags();
     this.normalizeSuperchargeForFlags({ skipMaxClamp: true });
-    this.applyPendingHarvestRecipe();
     this.markAssignmentsDirty();
     this.normalizeAssignments();
     this.syncStarLifterSuperchargeUpgrades();
@@ -2055,8 +1991,6 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       superchargeMultiplier: this.superchargeMultiplier,
       disableStripBelowPressure: this.disableStripBelowPressure === true,
       stripPressureThreshold: this.stripPressureThreshold,
-      mode: this.mode,
-      harvestRecipeKey: this.harvestRecipeKey,
     };
   }
 
@@ -2081,8 +2015,9 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       (Object.prototype.hasOwnProperty.call(settings, 'lifterAssignments') && shouldApplyPresetAssignments)
       || Object.prototype.hasOwnProperty.call(settings, 'assignmentStep')
       || (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags') && shouldApplyPresetAutoFlags)
-      || (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights') && shouldApplyPresetAutoWeights)
-      || Object.prototype.hasOwnProperty.call(settings, 'superchargeMultiplier')
+      || (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights') && shouldApplyPresetAutoWeights);
+    const hasOperationSettings =
+      Object.prototype.hasOwnProperty.call(settings, 'superchargeMultiplier')
       || Object.prototype.hasOwnProperty.call(settings, 'disableStripBelowPressure')
       || Object.prototype.hasOwnProperty.call(settings, 'stripPressureThreshold');
     const hasLegacyRecipeConfiguration =
@@ -2094,29 +2029,21 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
         this.deferLoadedAssignmentCapClamp();
       }
       this.loadAssignmentSettings(settings, options);
-      if (Object.prototype.hasOwnProperty.call(settings, 'superchargeMultiplier')) {
-        this.superchargeMultiplier = settings.superchargeMultiplier || 1;
-      }
-      if (Object.prototype.hasOwnProperty.call(settings, 'disableStripBelowPressure')) {
-        this.disableStripBelowPressure = settings.disableStripBelowPressure === true;
-      }
-      if (Object.prototype.hasOwnProperty.call(settings, 'stripPressureThreshold')) {
-        this.stripPressureThreshold = Math.max(0, Number(settings.stripPressureThreshold) || 0);
-      }
     } else if (hasLegacyRecipeConfiguration) {
-      if (Object.prototype.hasOwnProperty.call(settings, 'mode')) {
-        this.mode = settings.mode || LIFTER_MODES.GAS_HARVEST;
-      }
-      if (Object.prototype.hasOwnProperty.call(settings, 'harvestRecipeKey')) {
-        this.pendingHarvestRecipeKey = settings.harvestRecipeKey || '';
-        this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
-        this.applyPendingHarvestRecipe();
-      }
-      this.applyLegacySingleRecipeConfiguration(this.mode, this.harvestRecipeKey, true);
+      this.migrateLegacyRecipeConfiguration(settings, true);
     }
 
-    if (hasAssignmentState || hasLegacyRecipeConfiguration) {
-      this.normalizeModeForFlags();
+    if (Object.prototype.hasOwnProperty.call(settings, 'superchargeMultiplier')) {
+      this.superchargeMultiplier = settings.superchargeMultiplier || 1;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'disableStripBelowPressure')) {
+      this.disableStripBelowPressure = settings.disableStripBelowPressure === true;
+    }
+    if (Object.prototype.hasOwnProperty.call(settings, 'stripPressureThreshold')) {
+      this.stripPressureThreshold = Math.max(0, Number(settings.stripPressureThreshold) || 0);
+    }
+
+    if (hasAssignmentState || hasLegacyRecipeConfiguration || hasOperationSettings) {
       this.normalizeSuperchargeForFlags({ skipMaxClamp: true });
       this.markAssignmentsDirty();
       this.normalizeAssignments();
@@ -2135,8 +2062,6 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       superchargeMultiplier: this.superchargeMultiplier,
       disableStripBelowPressure: this.disableStripBelowPressure === true,
       stripPressureThreshold: this.stripPressureThreshold,
-      mode: this.mode,
-      harvestRecipeKey: this.harvestRecipeKey,
     };
   }
 
@@ -2150,31 +2075,21 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       Object.prototype.hasOwnProperty.call(state, 'lifterAssignments')
       || Object.prototype.hasOwnProperty.call(state, 'assignmentStep')
       || Object.prototype.hasOwnProperty.call(state, 'autoAssignFlags')
-      || Object.prototype.hasOwnProperty.call(state, 'autoAssignWeights')
-      || Object.prototype.hasOwnProperty.call(state, 'superchargeMultiplier')
-      || Object.prototype.hasOwnProperty.call(state, 'disableStripBelowPressure')
-      || Object.prototype.hasOwnProperty.call(state, 'stripPressureThreshold');
+      || Object.prototype.hasOwnProperty.call(state, 'autoAssignWeights');
+    const hasLegacyRecipeConfiguration =
+      Object.prototype.hasOwnProperty.call(state, 'mode')
+      || Object.prototype.hasOwnProperty.call(state, 'harvestRecipeKey');
 
     if (hasAssignmentState) {
       this.deferLoadedAssignmentCapClamp();
       this.loadAssignmentSettings(state);
-      this.superchargeMultiplier = state.superchargeMultiplier || 1;
-      this.disableStripBelowPressure = state.disableStripBelowPressure === true;
-      this.stripPressureThreshold = Math.max(0, Number(state.stripPressureThreshold) || 0);
-      this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
-      this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
-      this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
-      this.applyPendingHarvestRecipe();
-    } else {
-      this.superchargeMultiplier = state.superchargeMultiplier || 1;
-      this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
-      this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
-      this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
-      this.applyPendingHarvestRecipe();
-      this.applyLegacySingleRecipeConfiguration(this.mode, this.harvestRecipeKey, false);
+    } else if (hasLegacyRecipeConfiguration) {
+      this.migrateLegacyRecipeConfiguration(state, false);
     }
+    this.superchargeMultiplier = state.superchargeMultiplier || 1;
+    this.disableStripBelowPressure = state.disableStripBelowPressure === true;
+    this.stripPressureThreshold = Math.max(0, Number(state.stripPressureThreshold) || 0);
 
-    this.normalizeModeForFlags();
     this.normalizeSuperchargeForFlags({ skipMaxClamp: true });
     this.markAssignmentsDirty();
     this.normalizeAssignments();
@@ -2197,8 +2112,6 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       superchargeMultiplier: this.superchargeMultiplier,
       disableStripBelowPressure: this.disableStripBelowPressure === true,
       stripPressureThreshold: this.stripPressureThreshold,
-      mode: this.mode,
-      harvestRecipeKey: this.harvestRecipeKey,
     };
     if (this.isActive) {
       state.isActive = true;
@@ -2217,31 +2130,21 @@ Max assignment: floor(${formatNumber(capRate, true, 3)} x ${formatNumber(complex
       Object.prototype.hasOwnProperty.call(state, 'lifterAssignments')
       || Object.prototype.hasOwnProperty.call(state, 'assignmentStep')
       || Object.prototype.hasOwnProperty.call(state, 'autoAssignFlags')
-      || Object.prototype.hasOwnProperty.call(state, 'autoAssignWeights')
-      || Object.prototype.hasOwnProperty.call(state, 'superchargeMultiplier')
-      || Object.prototype.hasOwnProperty.call(state, 'disableStripBelowPressure')
-      || Object.prototype.hasOwnProperty.call(state, 'stripPressureThreshold');
+      || Object.prototype.hasOwnProperty.call(state, 'autoAssignWeights');
+    const hasLegacyRecipeConfiguration =
+      Object.prototype.hasOwnProperty.call(state, 'mode')
+      || Object.prototype.hasOwnProperty.call(state, 'harvestRecipeKey');
 
     if (hasAssignmentState) {
       this.deferLoadedAssignmentCapClamp();
       this.loadAssignmentSettings(state);
-      this.superchargeMultiplier = state.superchargeMultiplier || 1;
-      this.disableStripBelowPressure = state.disableStripBelowPressure === true;
-      this.stripPressureThreshold = Math.max(0, Number(state.stripPressureThreshold) || 0);
-      this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
-      this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
-      this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
-      this.applyPendingHarvestRecipe();
-    } else {
-      this.superchargeMultiplier = state.superchargeMultiplier || 1;
-      this.mode = state.mode || LIFTER_MODES.GAS_HARVEST;
-      this.pendingHarvestRecipeKey = state.harvestRecipeKey || '';
-      this.harvestRecipeKey = this.getDefaultHarvestRecipeKey();
-      this.applyPendingHarvestRecipe();
-      this.applyLegacySingleRecipeConfiguration(this.mode, this.harvestRecipeKey, false);
+    } else if (hasLegacyRecipeConfiguration) {
+      this.migrateLegacyRecipeConfiguration(state, false);
     }
+    this.superchargeMultiplier = state.superchargeMultiplier || 1;
+    this.disableStripBelowPressure = state.disableStripBelowPressure === true;
+    this.stripPressureThreshold = Math.max(0, Number(state.stripPressureThreshold) || 0);
 
-    this.normalizeModeForFlags();
     this.normalizeSuperchargeForFlags({ skipMaxClamp: true });
     this.markAssignmentsDirty();
     this.normalizeAssignments();

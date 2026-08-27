@@ -353,7 +353,7 @@ class AchievementManager {
     if (!lifters) {
       return false;
     }
-    return lifters.isRunning === true && lifters.mode === 'stripAtmosphere';
+    return lifters.isRunning === true && lifters.hasAssignedRecipe('stripAtmosphere');
   }
 
   isCurrentWorldRandom() {

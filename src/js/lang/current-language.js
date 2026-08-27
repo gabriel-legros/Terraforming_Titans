@@ -5842,7 +5842,7 @@ setLanguageData({
         difficulty: 'Extreme',
         effects: {
           allHazardsIncreasedDifficulty: 'All hazards have increased difficulty.',
-          liftersNoStrip: 'Lifters cannot use Atmosphere Strip mode.',
+          liftersNoStrip: 'Lifters cannot use the Atmosphere Strip recipe.',
           incineratorNoHazardousBiomass: 'Trash Incinerator cannot run the Hazardous Biomass recipe.',
         },
         rewards: {
