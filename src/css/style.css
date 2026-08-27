@@ -536,6 +536,29 @@ body.journal-collapsed .tab-content {
     font-weight: 600;
     font-size: 0.95em;
     color: #333;
+    cursor: pointer;
+}
+
+.journal-automation-section-link {
+    appearance: none;
+    border: 0;
+    padding: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    cursor: pointer;
+}
+
+.journal-automation-section-link:hover,
+.journal-automation-section-link:focus-visible {
+    color: #245dc1;
+}
+
+.journal-automation-section-link-icon {
+    font-size: 0.8em;
 }
 
 .journal-automation-section-status {

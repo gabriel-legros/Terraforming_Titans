@@ -109,18 +109,48 @@ function cacheSidebarAutomationElements() {
   }
 }
 
-function createSidebarSection(titleText) {
+function navigateToAutomationCard(cardId) {
+  activateTab('hope');
+  activateHopeSubtab('automation-hope');
+  requestAnimationFrame(() => {
+    const card = document.getElementById(cardId);
+    if (card) {
+      const body = card.querySelector('.automation-body');
+      const collapseButton = card.querySelector('.automation-collapse');
+      if (body && body.style.display === 'none' && collapseButton) {
+        collapseButton.click();
+      }
+      card.scrollIntoView({ block: 'start', inline: 'nearest' });
+    }
+  });
+}
+
+function createSidebarSection(titleText, automationCardId) {
   const section = document.createElement('div');
   section.classList.add('journal-automation-section');
   const header = document.createElement('div');
   header.classList.add('journal-automation-section-header');
+  const link = document.createElement('button');
+  link.type = 'button';
+  link.classList.add('journal-automation-section-link');
   const title = document.createElement('span');
   title.textContent = titleText;
+  const icon = document.createElement('span');
+  icon.classList.add('journal-automation-section-link-icon');
+  icon.setAttribute('aria-hidden', 'true');
+  icon.innerHTML = '&#8599;';
+  link.append(title, icon);
   const status = document.createElement('span');
   status.classList.add('journal-automation-section-status');
-  header.append(title, status);
+  header.append(link, status);
+  header.addEventListener('click', (event) => {
+    if (event.target.closest('button:not(.journal-automation-section-link), select, input, .journal-scripting-control-button')) {
+      return;
+    }
+    navigateToAutomationCard(automationCardId);
+  });
   section.appendChild(header);
-  return { section, status, header, title };
+  return { section, status, header, title, link };
 }
 
 function createSidebarRow() {
@@ -177,7 +207,10 @@ function buildSidebarAutomationUI() {
     return;
   }
 
-  const autoTravel = createSidebarSection(getSidebarAutomationText('autoTravel', null, 'Auto-travel'));
+  const autoTravel = createSidebarSection(
+    getSidebarAutomationText('autoTravel', null, 'Auto-travel'),
+    'automation-auto-travel'
+  );
   const autoTravelRow = createSidebarRow();
   const autoTravelPresetSelect = document.createElement('select');
   autoTravelPresetSelect.classList.add('journal-automation-select');
@@ -197,7 +230,10 @@ function buildSidebarAutomationUI() {
   elements.autoTravelPresetSelect = autoTravelPresetSelect;
   elements.autoTravelPresetToggle = autoTravelToggle;
 
-  const scripting = createSidebarSection(getSidebarAutomationText('scripting', null, 'Scripting'));
+  const scripting = createSidebarSection(
+    getSidebarAutomationText('scripting', null, 'Scripting'),
+    'automation-scripts'
+  );
   scripting.header.classList.add('journal-scripting-header');
   scripting.title.classList.add('journal-scripting-title');
   const scriptingRow = createSidebarRow();
@@ -233,7 +269,10 @@ function buildSidebarAutomationUI() {
   elements.scriptingPauseButton = scriptingPauseButton;
   elements.scriptingPlayButton = scriptingPlayButton;
 
-  const ship = createSidebarSection(getSidebarAutomationText('ships', null, 'Ships'));
+  const ship = createSidebarSection(
+    getSidebarAutomationText('ships', null, 'Ships'),
+    'automation-ship-assignment'
+  );
   const shipRow = createSidebarRow();
   const shipPresetSelect = document.createElement('select');
   shipPresetSelect.classList.add('journal-automation-select');
@@ -253,7 +292,10 @@ function buildSidebarAutomationUI() {
   elements.shipPresetSelect = shipPresetSelect;
   elements.shipPresetToggle = shipToggle;
 
-  const life = createSidebarSection(getSidebarAutomationText('life', null, 'Life'));
+  const life = createSidebarSection(
+    getSidebarAutomationText('life', null, 'Life'),
+    'automation-life-design'
+  );
   const lifeRow = createSidebarRow();
   const lifePresetSelect = document.createElement('select');
   lifePresetSelect.classList.add('journal-automation-select');
@@ -292,7 +334,10 @@ function buildSidebarAutomationUI() {
   elements.lifePurchaseToggle = purchaseToggle;
   elements.lifeDesignToggle = designToggle;
 
-  const buildings = createSidebarSection(getSidebarAutomationText('buildings', null, 'Buildings'));
+  const buildings = createSidebarSection(
+    getSidebarAutomationText('buildings', null, 'Buildings'),
+    'automation-buildings'
+  );
   const buildingsControls = createSidebarPresetCombinationControls();
   buildings.section.append(buildingsControls.presetRow, buildingsControls.comboRow);
   panel.appendChild(buildings.section);
@@ -303,7 +348,10 @@ function buildSidebarAutomationUI() {
   elements.buildingsCombinationSelect = buildingsControls.comboSelect;
   elements.buildingsCombinationDeploy = buildingsControls.comboDeploy;
 
-  const projects = createSidebarSection(getSidebarAutomationText('projects', null, 'Projects'));
+  const projects = createSidebarSection(
+    getSidebarAutomationText('projects', null, 'Projects'),
+    'automation-projects'
+  );
   const projectsControls = createSidebarPresetCombinationControls();
   projects.section.append(projectsControls.presetRow, projectsControls.comboRow);
   panel.appendChild(projects.section);
@@ -314,7 +362,10 @@ function buildSidebarAutomationUI() {
   elements.projectsCombinationSelect = projectsControls.comboSelect;
   elements.projectsCombinationDeploy = projectsControls.comboDeploy;
 
-  const colony = createSidebarSection(getSidebarAutomationText('colony', null, 'Colony'));
+  const colony = createSidebarSection(
+    getSidebarAutomationText('colony', null, 'Colony'),
+    'automation-colony'
+  );
   const colonyControls = createSidebarPresetCombinationControls();
   colony.section.append(colonyControls.presetRow, colonyControls.comboRow);
   panel.appendChild(colony.section);
@@ -325,7 +376,10 @@ function buildSidebarAutomationUI() {
   elements.colonyCombinationSelect = colonyControls.comboSelect;
   elements.colonyCombinationDeploy = colonyControls.comboDeploy;
 
-  const research = createSidebarSection(getSidebarAutomationText('research', null, 'Research'));
+  const research = createSidebarSection(
+    getSidebarAutomationText('research', null, 'Research'),
+    'automation-research'
+  );
   const researchRow = createSidebarRow();
   researchRow.classList.add('journal-automation-row-stacked');
   const researchPresetLabel = document.createElement('span');
