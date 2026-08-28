@@ -842,6 +842,13 @@ body.dark-mode {
     background-color: #4a5568;
 }
 
+.dark-mode button.journal-automation-section-link,
+.dark-mode button.journal-automation-section-link:hover,
+.dark-mode button.journal-automation-section-link:focus-visible {
+    background: none;
+    border: 0;
+}
+
 .dark-mode button:disabled {
     background-color: #111827;
     color: #4a5568;

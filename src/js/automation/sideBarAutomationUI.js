@@ -120,7 +120,12 @@ function navigateToAutomationCard(cardId) {
       if (body && body.style.display === 'none' && collapseButton) {
         collapseButton.click();
       }
-      card.scrollIntoView({ block: 'start', inline: 'nearest' });
+      const scrollContainer = card.closest('.hope-subtab-content-wrapper');
+      if (scrollContainer) {
+        const containerTop = scrollContainer.getBoundingClientRect().top;
+        const cardTop = card.getBoundingClientRect().top;
+        scrollContainer.scrollTop += cardTop - containerTop;
+      }
     }
   });
 }
