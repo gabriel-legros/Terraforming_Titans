@@ -451,6 +451,7 @@ function updateColonyAutomationUI() {
       queueAutomationUIRefresh();
       updateAutomationUI();
     },
+    onSnapshotAll: () => colonyAutomationPresetController.snapshotPreset(),
     onSnapshotFilter: (targetId) => {
       if (!activePreset) {
         return;

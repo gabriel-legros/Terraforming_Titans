@@ -472,6 +472,7 @@ function updateBuildingsAutomationUI() {
       queueAutomationUIRefresh();
       updateAutomationUI();
     },
+    onSnapshotAll: () => buildingAutomationPresetController.snapshotPreset(),
     onSnapshotFilter: (buildingId) => {
       if (!activePreset) {
         return;

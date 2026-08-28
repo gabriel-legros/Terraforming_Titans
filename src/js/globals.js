@@ -69,6 +69,7 @@ const DIFFICULTY_SETTING_DEFAULTS = {
   unfulfilledMaintenancePenalties: false,
   phaseChangeHeat: false,
   factoryHeating: false,
+  lifeThermodynamics: false,
   realisticFactoryEnergyConsumption: false,
   spaceAccessCapacity: false,
   aerobraking: false,

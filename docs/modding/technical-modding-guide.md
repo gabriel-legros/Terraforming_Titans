@@ -871,7 +871,12 @@ Projects have a timed logic lifecycle and optional UI hooks. The manager calls `
 | `complete()` | Runs when progress finishes. Call `super.complete()` to retain repeat handling, configured resource gains, completion effects, and story steps. |
 | `resetProject()` | Resets a repeatable project for another run. Call `super.resetProject()` before adding custom reset state. |
 | `saveState()` / `loadState(state)` | Serializes and restores ordinary save state. Extend the object returned by `super.saveState()` and call `super.loadState(state)`. |
-| `saveTravelState()` / `loadTravelState(state = {})` | Serializes only the state that should survive planet travel. This is separate from ordinary save/load state. |
+| `saveTravelState(resetLevel)` / `loadTravelState(state = {}, resetLevel)` | Serializes only the partial state that should survive the requested reset. This is separate from ordinary save/load state. `travelStateResetAt` defaults to `GAME_RESET_LEVEL.NEW_GAME`; omitted fields retain constructor defaults. |
+| `prepareTravelState(resetLevel)` | Finalizes departure rewards or conversions. The manager calls it only while `resetLevel < departureResetAt`, which defaults to `GAME_RESET_LEVEL.GALAXY`. |
+| `cleanupForReset(resetLevel)` | Removes old-world effects and references whenever the old world is replaced. Cleanup is not suppressed by prestige level. Call `super.cleanupForReset(resetLevel)` when extending it. |
+| `prepareTravelSnapshot(resetLevel)` | Normalizes state immediately before an eligible travel snapshot is serialized. Use this for sanitation, not rewards or effect cleanup. |
+
+Projects and other effectable entities use three ordered lifecycle thresholds: `resetAt` (default `PLANET`) controls instance replacement, `travelStateResetAt` (default `NEW_GAME`) controls partial snapshot copying, and `departureResetAt` (default `GALAXY`) controls departure progression. Existing overrides may omit the new optional `resetLevel` argument and continue to work for planet travel, but new code should accept and pass it through to `super` hooks. Ordinary save state, transient travel state, departure finalization, and cleanup are separate contracts; do not reuse ordinary persistence methods as travel hooks.
 
 Add a custom start condition with `canStart()`:
 

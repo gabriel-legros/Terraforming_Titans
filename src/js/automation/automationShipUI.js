@@ -2,6 +2,242 @@ let forceShipStepsRefresh = false;
 let shipPresetOptionsSignature = '';
 let shipStepsSignature = '';
 
+const SHIP_AUTOMATION_GUIDE_SECTIONS = [
+  {
+    key: 'guideSectionStep',
+    marker: '1'
+  },
+  {
+    key: 'guideSectionStepMode',
+    marker: '2'
+  },
+  {
+    key: 'guideSectionProject',
+    marker: '3'
+  },
+  {
+    key: 'guideSectionWeight',
+    marker: '4'
+  },
+  {
+    key: 'guideSectionProjectCap',
+    marker: '5'
+  },
+  {
+    key: 'guideSectionReleaseIfDisabled',
+    marker: '6'
+  }
+];
+
+const SHIP_AUTOMATION_GUIDE_MARKERS = [
+  { label: '1', className: 'ship-automation-guide-marker-1' },
+  { label: '2', className: 'ship-automation-guide-marker-2' },
+  { label: '3', className: 'ship-automation-guide-marker-3' },
+  { label: '4', className: 'ship-automation-guide-marker-4' },
+  { label: '5', className: 'ship-automation-guide-marker-5' },
+  { label: '6', className: 'ship-automation-guide-marker-6' }
+];
+
+const SHIP_AUTOMATION_GUIDE_RECOMMENDATION_KEYS = [
+  'shipGuideRecommendation1',
+  'shipGuideRecommendation2',
+  'shipGuideRecommendation3',
+  'shipGuideRecommendation4',
+  'shipGuideRecommendation5'
+];
+
+const SHIP_AUTOMATION_GUIDE_STARTER_STEPS = [
+  {
+    mode: 'cappedMax',
+    entries: [
+      { projectId: 'oreSpaceMining', weight: 1, maxMode: 'workers', max: 0.1 },
+      { projectId: 'siliconSpaceMining', weight: 1, maxMode: 'workers', max: 0.01 },
+      { projectId: 'waterSpaceMining', weight: 1, maxMode: 'workers', max: 0.01 },
+      { projectId: 'hydrogenSpaceMining', weight: 1, maxMode: 'workers', max: 0.001 }
+    ]
+  },
+  {
+    mode: 'cappedMax',
+    entries: [
+      { projectId: 'nitrogenSpaceMining', weight: 1, maxMode: 'absolute', max: null },
+      { projectId: 'carbonSpaceMining', weight: 1, maxMode: 'absolute', max: null },
+      { projectId: 'waterSpaceMining', weight: 1, maxMode: 'absolute', max: null }
+    ]
+  }
+];
+
+function closeShipAutomationGuide(overlay) {
+  overlay.remove();
+  window.popupActive = false;
+}
+
+function getShipAutomationStarterSetupPresetId() {
+  const automation = automationManager.spaceshipAutomation;
+  if (automation.getPresetById(automation.starterSetupPresetId)) {
+    return automation.starterSetupPresetId;
+  }
+
+  const stepIdBase = Date.now();
+  automation.starterSetupPresetId = automation.importPreset({
+    name: getAutomationCardText('shipGuideStarterSetupTitle', {}),
+    showInSidebar: true,
+    steps: SHIP_AUTOMATION_GUIDE_STARTER_STEPS.map((step, index) => ({
+      id: stepIdBase + index,
+      limit: null,
+      mode: step.mode,
+      entries: step.entries.map(entry => ({
+        projectId: entry.projectId,
+        weight: entry.weight,
+        maxMode: entry.maxMode,
+        max: entry.max
+      }))
+    }))
+  });
+  return automation.starterSetupPresetId;
+}
+
+function applyShipAutomationStarterSetup() {
+  const automation = automationManager.spaceshipAutomation;
+  const presetId = getShipAutomationStarterSetupPresetId();
+  const releaseProjectIds = new Set();
+  SHIP_AUTOMATION_GUIDE_STARTER_STEPS.forEach(step => {
+    step.entries.forEach(entry => releaseProjectIds.add(entry.projectId));
+  });
+  releaseProjectIds.forEach(projectId => automation.toggleProjectDisabled(projectId, true));
+  automation.setSelectedPresetId(presetId);
+  automation.setEnabled(true);
+  automation.applyAssignments();
+  forceShipStepsRefresh = true;
+  queueAutomationUIRefresh();
+  updateAutomationUI();
+}
+
+function openShipAutomationGuide() {
+  window.popupActive = true;
+
+  const overlay = document.createElement('div');
+  overlay.classList.add('construction-office-guide-overlay');
+
+  const win = document.createElement('div');
+  win.classList.add('construction-office-guide-window', 'ship-automation-guide-window');
+
+  const header = document.createElement('div');
+  header.classList.add('construction-office-guide-header');
+  const title = document.createElement('h2');
+  title.classList.add('construction-office-guide-title');
+  title.textContent = getAutomationCardText('shipGuideTitle', {});
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.classList.add('construction-office-guide-close');
+  close.textContent = getAutomationCardText('shipGuideCloseButton', {});
+  close.setAttribute('aria-label', getAutomationCardText('shipGuideClose', {}));
+  close.addEventListener('click', () => closeShipAutomationGuide(overlay));
+  header.append(title, close);
+
+  const imageWrap = document.createElement('div');
+  imageWrap.classList.add('construction-office-guide-image-wrap', 'ship-automation-guide-image-wrap');
+  const image = document.createElement('img');
+  image.classList.add('construction-office-guide-image');
+  image.src = 'assets/ship_guide/overall.png';
+  image.alt = getAutomationCardText('shipGuideImageAlt', {});
+  imageWrap.appendChild(image);
+  SHIP_AUTOMATION_GUIDE_MARKERS.forEach(marker => {
+    const label = document.createElement('span');
+    label.classList.add('construction-office-guide-marker', marker.className);
+    label.textContent = marker.label;
+    imageWrap.appendChild(label);
+  });
+
+  const sections = document.createElement('div');
+  sections.classList.add('construction-office-guide-sections');
+  SHIP_AUTOMATION_GUIDE_SECTIONS.forEach(section => {
+    const item = document.createElement('div');
+    item.classList.add('construction-office-guide-section');
+    const marker = document.createElement('span');
+    marker.classList.add('construction-office-guide-section-marker');
+    marker.textContent = section.marker;
+    const text = document.createElement('span');
+    text.textContent = getAutomationCardText(section.key, {});
+    item.append(marker, text);
+    sections.appendChild(item);
+  });
+
+  const recommendationsTitle = document.createElement('h3');
+  recommendationsTitle.classList.add('construction-office-guide-recommendations-title');
+  recommendationsTitle.textContent = getAutomationCardText('shipGuideRecommendationsTitle', {});
+  const recommendations = document.createElement('ul');
+  recommendations.classList.add('construction-office-guide-recommendations');
+  SHIP_AUTOMATION_GUIDE_RECOMMENDATION_KEYS.forEach(key => {
+    const item = document.createElement('li');
+    item.textContent = getAutomationCardText(key, {});
+    recommendations.appendChild(item);
+  });
+
+  const starterTitle = document.createElement('h3');
+  starterTitle.classList.add('construction-office-guide-starter-setup-title');
+  starterTitle.textContent = getAutomationCardText('shipGuideStarterSetupTitle', {});
+  const starterWrap = document.createElement('div');
+  starterWrap.classList.add('construction-office-guide-starter-setup-wrap');
+  const starterTable = document.createElement('table');
+  starterTable.classList.add('construction-office-guide-starter-setup', 'ship-automation-guide-starter-setup');
+  const tableHead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  [
+    'shipGuideStarterStep',
+    'shipGuideStarterProject',
+    'shipGuideStarterWeight',
+    'shipGuideStarterCapMode',
+    'shipGuideStarterCapValue',
+    'shipGuideStarterRelease'
+  ].forEach(key => {
+    const cell = document.createElement('th');
+    cell.scope = 'col';
+    cell.textContent = getAutomationCardText(key, {});
+    headerRow.appendChild(cell);
+  });
+  tableHead.appendChild(headerRow);
+  const tableBody = document.createElement('tbody');
+  SHIP_AUTOMATION_GUIDE_STARTER_STEPS.forEach((step, stepIndex) => {
+    step.entries.forEach(entry => {
+      const row = document.createElement('tr');
+      const target = automationManager.spaceshipAutomation.getProjectTargetById(entry.projectId);
+      const values = [
+        getAutomationCardText('stepWithIndex', { index: stepIndex + 1 }),
+        target.displayName,
+        String(entry.weight),
+        entry.maxMode === 'workers'
+          ? getAutomationCardText('shipPercentWorkers', {})
+          : getAutomationCardText('shipMaxLabel', {}),
+        entry.max === null ? '' : String(entry.max),
+        getAutomationCardText('shipGuideStarterReleaseYes', {})
+      ];
+      values.forEach(value => {
+        const cell = document.createElement('td');
+        cell.textContent = value;
+        row.appendChild(cell);
+      });
+      tableBody.appendChild(row);
+    });
+  });
+  starterTable.append(tableHead, tableBody);
+  starterWrap.appendChild(starterTable);
+
+  const applyButton = document.createElement('button');
+  applyButton.type = 'button';
+  applyButton.classList.add('construction-office-guide-starter-setup-apply');
+  applyButton.textContent = getAutomationCardText('shipGuideStarterApply', {});
+  applyButton.addEventListener('click', applyShipAutomationStarterSetup);
+
+  overlay.addEventListener('click', event => {
+    if (event.target === overlay) {
+      closeShipAutomationGuide(overlay);
+    }
+  });
+  win.append(header, imageWrap, sections, recommendationsTitle, recommendations, starterTitle, starterWrap, applyButton);
+  overlay.appendChild(win);
+  document.body.appendChild(overlay);
+}
+
 function invalidateShipAutomationUI() {
   forceShipStepsRefresh = true;
   shipPresetOptionsSignature = '';
@@ -138,6 +374,20 @@ function buildAutomationShipUI() {
     toggleCollapsed,
     'ships'
   );
+  const guideButton = document.createElement('button');
+  guideButton.type = 'button';
+  guideButton.classList.add('terraforming-infographic-button', 'ship-automation-guide-button');
+  guideButton.title = getAutomationCardText('shipGuideOpen', {});
+  guideButton.setAttribute('aria-label', getAutomationCardText('shipGuideOpen', {}));
+  const guideIcon = document.createElement('span');
+  guideIcon.classList.add('terraforming-infographic-icon');
+  guideIcon.textContent = '?';
+  guideButton.appendChild(guideIcon);
+  guideButton.addEventListener('click', event => {
+    event.stopPropagation();
+    openShipAutomationGuide();
+  });
+  header.titleGroup.appendChild(guideButton);
 
   const body = document.createElement('div');
   body.classList.add('automation-body');

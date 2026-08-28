@@ -179,6 +179,7 @@
     acc[item.id] = item;
     return acc;
   }, {});
+  const MANUFACTURING_SHOP_REFACTOR_SLICE_SIZE = 1000;
 
   const MANUFACTURING_FLAT_HYDROGEN_PER_WORKER = 1e-6;
 
@@ -194,6 +195,9 @@
   if (!MANUFACTURING_INPUT_KEYS.includes('hydrogen')) {
     MANUFACTURING_INPUT_KEYS.push('hydrogen');
   }
+  if (!MANUFACTURING_INPUT_KEYS.includes('food')) {
+    MANUFACTURING_INPUT_KEYS.push('food');
+  }
   MANUFACTURING_RECIPE_KEYS.forEach((recipeKey) => {
     const recipe = MANUFACTURING_RECIPES[recipeKey];
     recipe.inputEntries = Object.keys(recipe.inputs).map((inputKey) => ({
@@ -207,6 +211,7 @@
     silicon: getManufacturingText('catalogs.specializations.manufacturing.inputLabels.silicon'),
     graphite: getManufacturingText('catalogs.specializations.manufacturing.inputLabels.graphite'),
     hydrogen: getManufacturingText('catalogs.specializations.manufacturing.inputLabels.hydrogen'),
+    food: getManufacturingText('catalogs.specializations.manufacturing.inputLabels.food'),
   };
 
   const MANUFACTURING_OUTPUT_LABELS = {
@@ -240,6 +245,8 @@
       this.autoAssignFlags = {};
       this.autoAssignWeights = {};
       this.isRunning = false;
+      this.foodConsumptionEnabled = false;
+      this.lastFoodFulfillmentRatio = 0;
       this.statusText = getManufacturingText('catalogs.specializations.manufacturing.status.idle');
       this.lastInputRates = this.createEmptyInputRates();
       this.lastOutputRatesByRecipe = {};
@@ -294,6 +301,29 @@
     getTotalPotentialPopulation() {
       const bonus = this.getCylindersHopePopulationBonus();
       return Math.max(0, Math.floor(this.cumulativePopulation + bonus));
+    }
+
+    getFoodOperationPlan(deltaTime = 1000) {
+      const available = this.foodConsumptionEnabled
+        && this.isBooleanFlagSet('agrarianWorlds')
+        && this.isRunning;
+      const population = available ? this.getTotalPotentialPopulation() : 0;
+      const demandRate = population
+        / terraformingParameters.gameplay.specializedWorlds.manufacturingFoodPopulationPerUnit;
+      const fulfillmentRatio = demandRate > 0
+        ? Math.max(0, Math.min(1, resources.spaceStorage.food.availabilityRatio))
+        : 0;
+      const seconds = Math.max(0, deltaTime / 1000);
+      return {
+        demandRate,
+        desiredAmount: demandRate * seconds,
+        fulfillmentRatio,
+        fulfilledAmount: demandRate * seconds * fulfillmentRatio,
+        throughputMultiplier: 1 + (
+          fulfillmentRatio
+          * terraformingParameters.gameplay.specializedWorlds.manufacturingFoodMaximumThroughputBonus
+        ),
+      };
     }
 
     getAssignmentKeys() {
@@ -432,11 +462,14 @@
       return true;
     }
 
-    prepareTravelState() {
+    prepareTravelState(resetLevel = GAME_RESET_LEVEL.PLANET) {
+      if (resetLevel >= this.departureResetAt) {
+        return;
+      }
       if (this.isCompleted) {
         this.addManufacturingPopulation(this.getCurrentPopulation());
       }
-      super.prepareTravelState();
+      super.prepareTravelState(resetLevel);
     }
 
     applySpecializationEffects() {}
@@ -479,12 +512,54 @@
       super.addSpecializationPoints(value + bonus);
     }
 
+    getShopItemCostAtPurchaseCount(item, purchaseCount) {
+      const purchasesBeyondInitialSlice = Math.max(0, purchaseCount + 1 - item.maxPurchases);
+      const additionalCost = Math.ceil(purchasesBeyondInitialSlice / MANUFACTURING_SHOP_REFACTOR_SLICE_SIZE);
+      return item.cost + additionalCost;
+    }
+
     getShopItemCost(item) {
-      return item.cost + this.getShopRefactorCount(item.id);
+      return this.getShopItemCostAtPurchaseCount(item, this.getShopPurchaseCount(item.id));
+    }
+
+    getShopPurchaseTotalCost(item, purchaseCount) {
+      if (purchaseCount <= 0) {
+        return 0;
+      }
+      const initialPurchases = Math.min(purchaseCount, item.maxPurchases);
+      const remainingPurchases = Math.max(0, purchaseCount - item.maxPurchases);
+      const fullSlices = Math.floor(remainingPurchases / MANUFACTURING_SHOP_REFACTOR_SLICE_SIZE);
+      const partialSlicePurchases = remainingPurchases % MANUFACTURING_SHOP_REFACTOR_SLICE_SIZE;
+      const fullSliceCost = MANUFACTURING_SHOP_REFACTOR_SLICE_SIZE
+        * ((fullSlices * item.cost) + (fullSlices * (fullSlices + 1) / 2));
+      const partialSliceCost = partialSlicePurchases * (item.cost + fullSlices + 1);
+      return (initialPurchases * item.cost) + fullSliceCost + partialSliceCost;
+    }
+
+    getShopPurchaseCost(item, purchaseCount) {
+      const currentPurchases = this.getShopPurchaseCount(item.id);
+      return this.getShopPurchaseTotalCost(item, currentPurchases + purchaseCount)
+        - this.getShopPurchaseTotalCost(item, currentPurchases);
+    }
+
+    getMaxShopPurchases(item) {
+      const points = this.getSpecializationPoints();
+      const remainingPurchases = this.getShopItemMaxPurchases(item) - this.getShopPurchaseCount(item.id);
+      let low = 0;
+      let high = remainingPurchases;
+      while (low < high) {
+        const mid = Math.ceil((low + high) / 2);
+        if (this.getShopPurchaseCost(item, mid) <= points) {
+          low = mid;
+        } else {
+          high = mid - 1;
+        }
+      }
+      return low;
     }
 
     getShopItemMaxPurchases(item) {
-      return item.maxPurchases + (this.getShopRefactorCount(item.id) * 1000);
+      return item.maxPurchases + (this.getShopRefactorCount(item.id) * MANUFACTURING_SHOP_REFACTOR_SLICE_SIZE);
     }
 
     canRefactorShopItem(item) {
@@ -519,8 +594,8 @@
     refactorShopItem(item) {
       const currentPurchases = this.getShopPurchaseCount(item.id);
       const halvedPurchases = Math.floor(currentPurchases / 2);
-      const nextMax = this.getShopItemMaxPurchases(item) + 1000;
-      const nextCost = this.getShopItemCost(item) + 1;
+      const nextMax = this.getShopItemMaxPurchases(item) + MANUFACTURING_SHOP_REFACTOR_SLICE_SIZE;
+      const nextCost = this.getShopItemCostAtPurchaseCount(item, halvedPurchases);
       const message = getManufacturingText('catalogs.specializations.manufacturing.ui.refactorConfirm', {
         label: item.label,
         purchases: formatNumber(currentPurchases, true),
@@ -898,6 +973,8 @@
         }, {}),
         statusValue: card.querySelector('[data-manufacturing-ui="statusValue"]'),
         runCheckbox: card.querySelector('[data-manufacturing-ui="runCheckbox"]'),
+        foodToggleRow: card.querySelector('[data-manufacturing-ui="foodToggleRow"]'),
+        foodCheckbox: card.querySelector('[data-manufacturing-ui="foodCheckbox"]'),
         stepDownButton: card.querySelector('[data-manufacturing-ui="stepDownButton"]'),
         stepUpButton: card.querySelector('[data-manufacturing-ui="stepUpButton"]'),
         rowElements
@@ -905,7 +982,7 @@
       return this.uiElements;
     }
 
-    setLastRunStats(inputRates = {}, outputRates = {}) {
+    setLastRunStats(inputRates = {}, outputRates = {}, foodFulfillmentRatio = 0) {
       this.lastInputRates = this.createEmptyInputRates();
       MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
         this.lastInputRates[inputKey] = inputRates[inputKey] || 0;
@@ -914,6 +991,7 @@
       this.getAssignmentKeys().forEach((key) => {
         this.lastOutputRatesByRecipe[key] = outputRates[key] || 0;
       });
+      this.lastFoodFulfillmentRatio = Math.max(0, Math.min(1, foodFulfillmentRatio));
     }
 
     shouldOperate() {
@@ -1025,6 +1103,7 @@
 
       const entries = [];
       let hasInputShortfall = false;
+      const foodPlan = this.getFoodOperationPlan(deltaTime);
 
       this.getAssignmentKeys().forEach((key) => {
         const assigned = this.manufacturingAssignments[key] || 0n;
@@ -1034,8 +1113,8 @@
         const assignedNumber = Number(assigned);
         const recipe = this.getRecipe(key);
         const recipeProductivity = this.getRecipeOperationProductivity(key, productivity);
-        const outputMultiplier = this.getRecipeOutputMultiplier(key);
-        const consumptionMultiplier = this.getRecipeConsumptionMultiplier(key);
+        const outputMultiplier = this.getRecipeOutputMultiplier(key) * foodPlan.throughputMultiplier;
+        const consumptionMultiplier = this.getRecipeConsumptionMultiplier(key) * foodPlan.throughputMultiplier;
         const desiredOutput = ((assignedNumber * recipe.baseOutput * outputMultiplier) / recipe.complexity) * seconds * recipeProductivity;
         const desiredInputs = {};
         recipe.inputEntries.forEach((entry) => {
@@ -1065,6 +1144,11 @@
       const inputSpent = this.createEmptyInputRates();
       const outputProduced = {};
       let totalOutput = 0;
+
+      if (foodPlan.fulfilledAmount > 0) {
+        inputSpent.food = foodPlan.fulfilledAmount;
+        this.applySpaceStorageDeltaForTick('food', -foodPlan.fulfilledAmount, accumulatedChanges);
+      }
 
       entries.forEach((entry) => {
         Object.keys(entry.desiredInputs).forEach((inputKey) => {
@@ -1128,7 +1212,7 @@
         resources.spaceStorage[recipe.outputStorageKey].modifyRate(rate, this.getRateSource(), 'project');
       });
 
-      this.setLastRunStats(inputRates, outputRates);
+      this.setLastRunStats(inputRates, outputRates, foodPlan.fulfillmentRatio);
 
       if (totalOutput > 0) {
         this.updateStatus(getManufacturingText('catalogs.specializations.manufacturing.status.running'));
@@ -1182,6 +1266,7 @@
       }
       const entries = [];
       let assignedTotal = 0n;
+      const foodPlan = this.getFoodOperationPlan(deltaTime);
 
       this.getAssignmentKeys().forEach((key) => {
         const assigned = this.manufacturingAssignments[key] || 0n;
@@ -1192,8 +1277,8 @@
         const assignedNumber = Number(assigned);
         const recipe = this.getRecipe(key);
         const recipeProductivity = this.getRecipeOperationProductivity(key, productivity);
-        const outputMultiplier = this.getRecipeOutputMultiplier(key);
-        const consumptionMultiplier = this.getRecipeConsumptionMultiplier(key);
+        const outputMultiplier = this.getRecipeOutputMultiplier(key) * foodPlan.throughputMultiplier;
+        const consumptionMultiplier = this.getRecipeConsumptionMultiplier(key) * foodPlan.throughputMultiplier;
         const desiredOutput = ((assignedNumber * recipe.baseOutput * outputMultiplier) / recipe.complexity) * seconds * recipeProductivity;
         const desiredInputs = {};
         recipe.inputEntries.forEach((entry) => {
@@ -1225,6 +1310,7 @@
       estimatedInputs.hydrogen = Number(assignedTotal)
         * MANUFACTURING_FLAT_HYDROGEN_PER_WORKER
         * seconds;
+      estimatedInputs.food = foodPlan.desiredAmount;
 
       MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
         const amount = estimatedInputs[inputKey] || 0;
@@ -1334,6 +1420,25 @@
       runLabel.htmlFor = runCheckbox.id;
       runLabel.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.runManufacturing');
       runField.append(runCheckbox, runLabel);
+
+      const foodToggleRow = document.createElement('div');
+      foodToggleRow.dataset.manufacturingUi = 'foodToggleRow';
+      const foodCheckbox = document.createElement('input');
+      foodCheckbox.type = 'checkbox';
+      foodCheckbox.dataset.manufacturingUi = 'foodCheckbox';
+      foodCheckbox.id = `${this.name}-consume-food`;
+      const foodLabel = document.createElement('label');
+      foodLabel.htmlFor = foodCheckbox.id;
+      foodLabel.textContent = getManufacturingText('catalogs.specializations.manufacturing.ui.consumeFood');
+      const foodInfo = document.createElement('span');
+      foodInfo.classList.add('info-tooltip-icon');
+      foodInfo.innerHTML = '&#9432;';
+      attachDynamicInfoTooltip(
+        foodInfo,
+        getManufacturingText('catalogs.specializations.manufacturing.ui.consumeFoodTooltip')
+      );
+      foodToggleRow.append(foodCheckbox, foodLabel, foodInfo);
+      runField.appendChild(foodToggleRow);
       controlsGrid.appendChild(runField);
 
       const statusField = document.createElement('div');
@@ -1357,12 +1462,15 @@
       inputValue.dataset.manufacturingUi = 'inputValue';
       const inputElements = {};
       MANUFACTURING_INPUT_KEYS.forEach((inputKey, index) => {
+        const inputGroup = document.createElement('span');
+        inputGroup.dataset.manufacturingInputGroup = inputKey;
         if (index > 0) {
-          inputValue.appendChild(document.createTextNode(', '));
+          inputGroup.appendChild(document.createTextNode(', '));
         }
         const inputElement = document.createElement('span');
         inputElement.dataset.manufacturingInputKey = inputKey;
-        inputValue.appendChild(inputElement);
+        inputGroup.appendChild(inputElement);
+        inputValue.appendChild(inputGroup);
         inputElements[inputKey] = inputElement;
       });
       inputField.append(inputLabel, inputValue);
@@ -1456,6 +1564,10 @@
       runCheckbox.addEventListener('change', (event) => {
         this.setRunning(event.target.checked);
       });
+      foodCheckbox.addEventListener('change', (event) => {
+        this.foodConsumptionEnabled = event.target.checked;
+        this.updateUI();
+      });
 
       card.appendChild(body);
       container.appendChild(card);
@@ -1473,6 +1585,8 @@
         inputElements,
         statusValue,
         runCheckbox,
+        foodToggleRow,
+        foodCheckbox,
         stepDownButton,
         stepUpButton,
         rowElements,
@@ -1531,6 +1645,7 @@
       const availableText = formatNumber(available, true);
       const statusText = this.statusText || getManufacturingText('catalogs.specializations.manufacturing.status.idle');
       const demandedInputKeys = new Set();
+      const agrarianWorldsUnlocked = this.isBooleanFlagSet('agrarianWorlds');
       if (this.isRunning) {
         this.getAssignmentKeys().forEach((key) => {
           if ((this.manufacturingAssignments[key] || 0n) <= 0n) {
@@ -1539,6 +1654,9 @@
           demandedInputKeys.add('hydrogen');
           this.getRecipe(key).inputEntries.forEach((entry) => demandedInputKeys.add(entry.inputKey));
         });
+        if (agrarianWorldsUnlocked && this.foodConsumptionEnabled && total > 0) {
+          demandedInputKeys.add('food');
+        }
       }
       if (elements.cumulativeValue.textContent !== cumulativeText) {
         elements.cumulativeValue.textContent = cumulativeText;
@@ -1554,13 +1672,21 @@
       }
       MANUFACTURING_INPUT_KEYS.forEach((inputKey) => {
         const inputElement = elements.inputElements[inputKey];
+        const inputGroup = inputElement.parentElement;
+        const inputVisible = inputKey !== 'food' || agrarianWorldsUnlocked;
+        const inputDisplay = inputVisible ? '' : 'none';
+        if (inputGroup.style.display !== inputDisplay) {
+          inputGroup.style.display = inputDisplay;
+        }
         const label = MANUFACTURING_INPUT_LABELS[inputKey] || inputKey;
         const inputText = `${formatNumber(this.lastInputRates[inputKey] || 0, true, 3)} ${label}/s`;
         if (inputElement.textContent !== inputText) {
           inputElement.textContent = inputText;
         }
-        const productivityLimited = demandedInputKeys.has(inputKey)
-          && resources.spaceStorage[inputKey].availabilityRatio < 1;
+        const availabilityRatio = inputKey === 'food'
+          ? this.lastFoodFulfillmentRatio
+          : resources.spaceStorage[inputKey].availabilityRatio;
+        const productivityLimited = demandedInputKeys.has(inputKey) && availabilityRatio < 1;
         if (inputElement.classList.contains('project-rate-productivity-limited') !== productivityLimited) {
           inputElement.classList.toggle('project-rate-productivity-limited', productivityLimited);
         }
@@ -1568,9 +1694,19 @@
       if (elements.runCheckbox.checked !== this.isRunning) {
         elements.runCheckbox.checked = this.isRunning;
       }
+      const foodToggleDisplay = agrarianWorldsUnlocked ? '' : 'none';
+      if (elements.foodToggleRow.style.display !== foodToggleDisplay) {
+        elements.foodToggleRow.style.display = foodToggleDisplay;
+      }
+      if (elements.foodCheckbox.checked !== this.foodConsumptionEnabled) {
+        elements.foodCheckbox.checked = this.foodConsumptionEnabled;
+      }
       const controlsDisabled = totalBigInt <= 0n;
       if (elements.runCheckbox.disabled !== controlsDisabled) {
         elements.runCheckbox.disabled = controlsDisabled;
+      }
+      if (elements.foodCheckbox.disabled !== controlsDisabled) {
+        elements.foodCheckbox.disabled = controlsDisabled;
       }
       if (elements.stepDownButton.disabled !== controlsDisabled) {
         elements.stepDownButton.disabled = controlsDisabled;
@@ -1628,6 +1764,7 @@
       return {
         ...super.saveAutomationSettings(),
         isRunning: this.isRunning === true,
+        foodConsumptionEnabled: this.foodConsumptionEnabled === true,
         ...this.saveAssignmentSettings(),
       };
     }
@@ -1637,6 +1774,9 @@
       if (Object.prototype.hasOwnProperty.call(settings, 'isRunning')) {
         this.isRunning = settings.isRunning === true;
       }
+      if (Object.prototype.hasOwnProperty.call(settings, 'foodConsumptionEnabled')) {
+        this.foodConsumptionEnabled = settings.foodConsumptionEnabled === true;
+      }
       this.loadAssignmentSettings(settings, options);
     }
 
@@ -1645,6 +1785,7 @@
         ...super.saveState(),
         cumulativePopulation: this.cumulativePopulation,
         isRunning: this.isRunning,
+        foodConsumptionEnabled: this.foodConsumptionEnabled,
         shopRefactorCounts: { ...this.shopRefactorCounts },
         adaptationPoints: this.getAdaptationPoints(),
         ...this.saveAssignmentSettings(),
@@ -1656,6 +1797,7 @@
       this.loadSpecializationState(state);
       this.cumulativePopulation = Math.max(0, state.cumulativePopulation || 0);
       this.isRunning = state.isRunning === true;
+      this.foodConsumptionEnabled = state.foodConsumptionEnabled === true;
       this.shopRefactorCounts = {
         ...this.createEmptyShopRefactorCounts(),
         ...(state.shopRefactorCounts || {}),
@@ -1673,6 +1815,7 @@
         ...super.saveTravelState(),
         cumulativePopulation: this.cumulativePopulation,
         isRunning: this.isRunning,
+        foodConsumptionEnabled: this.foodConsumptionEnabled,
         shopRefactorCounts: { ...this.shopRefactorCounts },
         adaptationPoints: this.getAdaptationPoints(),
         ...this.saveAssignmentSettings(),
@@ -1683,6 +1826,7 @@
       super.loadTravelState(state);
       this.cumulativePopulation = Math.max(0, state.cumulativePopulation || 0);
       this.isRunning = state.isRunning === true;
+      this.foodConsumptionEnabled = state.foodConsumptionEnabled === true;
       this.shopRefactorCounts = {
         ...this.createEmptyShopRefactorCounts(),
         ...(state.shopRefactorCounts || {}),

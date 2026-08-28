@@ -1435,13 +1435,17 @@ function createResources(resourcesData) {
   return resources;
 }
 
-function capturePreservedTravelResourceState(resourceSet) {
+function capturePreservedTravelResourceState(resourceSet, resetLevel = GAME_RESET_LEVEL.PLANET) {
   const preservedState = {};
 
   for (const category in resourceSet) {
     for (const resourceName in resourceSet[category]) {
       const resource = resourceSet[category][resourceName];
-      if (!resource || resource.preserveOnTravel !== true) {
+      if (
+        !resource
+        || resource.preserveOnTravel !== true
+        || resetLevel >= resource.travelStateResetAt
+      ) {
         continue;
       }
 
@@ -1473,7 +1477,11 @@ function capturePreservedTravelResourceState(resourceSet) {
   return preservedState;
 }
 
-function restorePreservedTravelResourceState(resourceSet, preservedState) {
+function restorePreservedTravelResourceState(
+  resourceSet,
+  preservedState,
+  resetLevel = GAME_RESET_LEVEL.PLANET
+) {
   if (!resourceSet || !preservedState) {
     return;
   }
@@ -1487,7 +1495,7 @@ function restorePreservedTravelResourceState(resourceSet, preservedState) {
 
     for (const resourceName in savedCategory) {
       const resource = targetCategory[resourceName];
-      if (!resource) {
+      if (!resource || resetLevel >= resource.travelStateResetAt) {
         continue;
       }
 

@@ -545,6 +545,12 @@ var terraformingParameters = {
       solarPanelBaseLuminosity: 1000,
       backgroundSolarFluxWm2: 6e-6
     },
+    lifeThermodynamics: {
+      maximumSolarFluxFraction: 0.1,
+      // Gibbs free energy stored by the default glucose-forming photosynthesis recipe.
+      chemicalEnergyJPerTon: 15.94e9,
+      simulatedSecondsPerRealSecond: 86400
+    },
     temperature: {
       comfortableMinimumK: 288.15,
       comfortableMaximumK: 293.15,
@@ -573,6 +579,13 @@ var terraformingParameters = {
       maximumResourceSubsteps: 24,
       equilibriumSnapEnabled: false,
       equilibriumSnapRateTonsPerSecond: 0.01
+    },
+    life: {
+      surfaceBiomassFoodPerTonPerSecond: 0.01
+    },
+    specializedWorlds: {
+      manufacturingFoodPopulationPerUnit: 10,
+      manufacturingFoodMaximumThroughputBonus: 1
     },
     landReservation: {
       moltenWorldFullTemperatureK: 1273.15,

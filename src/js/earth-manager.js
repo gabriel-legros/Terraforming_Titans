@@ -36,7 +36,7 @@ const EARTH_RECONSTRUCTION_TARGET_WATER = {
 
 class EarthManager extends EffectableEntity {
   constructor() {
-    super({ description: 'Manages Earth reconstruction actions' });
+    super({ description: 'Manages Earth reconstruction actions', resetAt: GAME_RESET_LEVEL.NEW_GAME });
     this.enabled = false;
     this.unlockedActions = new Set();
     this.increaseMassCount = 0;

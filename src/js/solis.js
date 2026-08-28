@@ -21,7 +21,7 @@ const SOLIS_MAX_REWARD_MULTIPLIER = 100;
 
 class SolisManager extends EffectableEntity {
   constructor(resourceValues = {}) {
-    super({ description: 'Solis Manager' });
+    super({ description: 'Solis Manager', resetAt: GAME_RESET_LEVEL.NEW_GAME });
     this.enabled = false;
     this.resourceValues = Object.assign({
       metal: 1,

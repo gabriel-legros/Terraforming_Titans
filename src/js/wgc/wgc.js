@@ -67,7 +67,7 @@ function sanitizeOperationEvent(event) {
 
 class WarpGateCommand extends EffectableEntity {
   constructor() {
-    super({ description: 'Warp Gate Command manager' });
+    super({ description: 'Warp Gate Command manager', resetAt: GAME_RESET_LEVEL.NEW_GAME });
     this.enabled = false;
     this.teams = Array.from({ length: 4 }, () => Array(4).fill(null));
     this.operations = Array.from({ length: 4 }, () => ({

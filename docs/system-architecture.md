@@ -16,6 +16,7 @@ This document records durable ownership and cross-system constraints. Feature va
 ## Parameter and Constructor Ownership
 
 - Physical, atmosphere, geometry, phase-change, climate, gameplay, and hazard defaults live in `src/js/terraforming/terraforming-parameters.js`.
+- Dynamic-world surface gravity excludes atmospheric mass. Gravity penalties instead estimate gravity at the altitude where atmospheric pressure reaches 1 atm, including the atmosphere below that altitude.
 - World-specific values live in planet or special-seed parameters. Derive dependent values only after mod patch stages have run.
 - Specialized building, colony, and project constructors are selected through each parameter entry's `type`. Keep constructor selection data-driven.
 - Building-specific logic belongs in a dedicated subclass under `src/js/buildings/`.
@@ -33,7 +34,21 @@ This document records durable ownership and cross-system constraints. Feature va
 
 ### Travel
 
-`selectPlanet(key)` performs a soft reset through `initializeGameState({ preserveManagers: true, preserveJournal: true })`, then completes the UI refresh. Managers and effects that persist must rebind or reapply to newly created world objects.
+`selectPlanet(key)` performs a level-1 reset through `initializeGameState({ resetLevel: GAME_RESET_LEVEL.PLANET })`, then completes the UI refresh. `GAME_RESET_LEVEL` reserves ordered reset scopes: `PLANET` is `1`, `GALAXY` is `2`, and `NEW_GAME` is `100` so additional prestige layers can be inserted without renumbering the full reset.
+
+Lifecycle state owners use three independent thresholds:
+
+- `resetAt` replaces or resets the object when `resetLevel >= resetAt`. It defaults to `PLANET`.
+- `travelStateResetAt` stops copying partial state into the replacement object when `resetLevel >= travelStateResetAt`. It defaults to `NEW_GAME`.
+- `departureResetAt` stops departure rewards, conversions, and aggregation when `resetLevel >= departureResetAt`. It defaults to `GALAXY`.
+
+Managers that currently persist across planet travel explicitly use `resetAt: GAME_RESET_LEVEL.NEW_GAME`, preserving existing behavior until a future prestige layer deliberately assigns lower thresholds. A surviving manager must rebind or reapply effects to newly created world objects. Non-effectable state owners declare equivalent threshold properties directly.
+
+`prepareForTravel({ resetLevel })` captures transient gameplay state in one level-tagged `preparedTravelState` envelope before the world changes. It contains project state, preserved resources, structure autobuild controls, Construction Office settings, Life Designer state, follower transient state, and Hazardous Machinery travel settings. Initialization consumes the envelope only when its level exactly matches, then clears it. Full resets clear it without restoring. Each capture and restore path applies the owning object's `travelStateResetAt`; fields absent from a matching snapshot keep the replacement object's constructor defaults.
+
+Travel snapshots are deliberately separate from ordinary `saveState()`/`loadState()` persistence and do not change save keys or formats. Projects are reconstructed at `PLANET` and use `saveTravelState(resetLevel)` / `loadTravelState(state, resetLevel)` for partial preservation. Resources still require `preserveOnTravel`; that compatibility flag and `travelStateResetAt` must both permit capture. Presentation-only preferences such as hidden entries, navigation, and graph-window state follow their UI lifecycle and are not gameplay travel snapshots.
+
+Departure has two phases. `prepareTravelState(resetLevel)` is progression finalization and runs only below the owner's `departureResetAt`; examples include specialization awards, population commits, and O'Neill conversion. `cleanupForReset(resetLevel)` removes old-world effects and references whenever the world is replaced, regardless of prestige level. Snapshot-only normalization belongs in `prepareTravelSnapshot(resetLevel)`, which runs whenever that object's transient snapshot is preserved. `SpaceManager.recordDepartureSnapshot({ resetLevel })` likewise skips world-status recording, galactic population aggregation, follower departure aggregation, and departure skill rewards at `GALAXY` or higher while leaving cleanup active.
 
 Persistent meta systems include Research (with regular research reset), Skills, Solis, Space, Galactic Invasion, Story, and explicitly preserved manager-owned resources/state. Do not infer persistence merely because an object happens to survive one path.
 
@@ -63,11 +78,13 @@ Durable constraints:
 - Surface land uses its existing fixed-point `BigInt` reservation/value ledger. Assignment systems that store `BigInt` counts convert to `Number` only at rate/formula boundaries.
 - Molten-surface structure attrition belongs to `Terraforming` rather than `HazardManager`, so it remains active on worlds that disable optional hazard systems. It runs with environmental hazard updates after climate stepping unless the `disableMoltenSurfaceAttrition` difficulty setting is enabled. Geological lava or plasma must reserve all geometric land before attrition begins; temperature-maintenance immunity also grants molten-surface immunity. Operational Aerostats additionally protect their own colony and the active structures covered by existing direct-support and worker-capacity calculations.
 - Every life metabolism growth/decay recipe must conserve mass. Validate coefficient arithmetic rather than tuning it by feel.
+- Life Thermodynamics applies only to natural zonal surface-life growth. It caps chemical-energy storage against the canonical zonal surface solar flux after converting it to the zone-wide average for curvature and night, and contributes its signed zonal flux directly to the radiative temperature trend; direct biomass transfers and constructed or space-based growth do not participate.
 
 ## Climate and Phase Change
 
-- `Terraforming.calculateSurfaceSolarFlux()` and `calculateZonalSurfaceSolarFlux(zone)` are the canonical cloud/haze-adjusted light APIs. Consumers must not reinterpret `modifiedSolarFlux` or world geometry independently.
+- `Terraforming.calculateSurfaceSolarFlux()` and `calculateZonalSurfaceSolarFlux(zone)` are the canonical cloud/haze-adjusted light APIs. `calculateZonalAverageSurfaceSolarFlux(zone)` additionally applies each zone's projected illuminated-area ratio for curvature and night. Consumers must not reinterpret `modifiedSolarFlux` or world geometry independently.
 - Solar-panel cooling conserves planet-wide power and distributes it by mirror-modified zonal sunlight after local surface albedo. Ordinary factory heat stays uniform.
+- Life Thermodynamics cooling is zonal and trend-shifting. Keep it in the radiative balance with factory heat rather than in the trend-constrained phase-change path. Advanced Oversight trial projections hold cooling fixed below the solar cap; while the cap is active, they project the lesser of chemical-energy demand or the configured fraction of trial zonal surface flux so mirror assignments solve the coupled response without tick-to-tick swings.
 - Boiling uses only the configured shallow liquid inventory: zone area times coverage times depth and density, capped by available liquid. It must not scale with the full ocean inventory.
 - Temperature trends, meridional mixing, and Advanced Oversight projections exclude phase-change heat. The previous tick's phase heat may modify progress toward the phase-free trend but cannot reverse that motion or cross the trend.
 - Mega Heat Sinks do not directly mitigate phase-change heat. Their unused cooling can absorb atmospheric-combustion and aerobraking heat before either raises temperature.

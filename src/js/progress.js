@@ -175,6 +175,7 @@ function describeHazardObjective(objective) {
 
 class StoryManager {
     constructor(progressData) {
+        this.resetAt = GAME_RESET_LEVEL.NEW_GAME;
         this.progressData = progressData;
         this.allEvents = this.loadEvents(progressData);
         this.activeEventIds = new Set();

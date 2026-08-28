@@ -759,6 +759,7 @@ function updateProjectsAutomationUI() {
       queueAutomationUIRefresh();
       updateAutomationUI();
     },
+    onSnapshotAll: () => projectAutomationPresetController.snapshotPreset(),
     onSnapshotFilter: (projectId) => {
       if (!activePreset) {
         return;

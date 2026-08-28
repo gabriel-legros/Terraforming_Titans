@@ -25,6 +25,10 @@ function createHarness() {
     },
   }, originalGlobals);
   setGlobal('calculateAtmosphericPressure', amount => amount, originalGlobals);
+  setGlobal('lifeManager', {
+    estimateAtmosphericIdealNeed: () => ({}),
+    estimateAtmosphericConsumption: () => ({}),
+  }, originalGlobals);
 
   const SpaceDisposalProject = require(path.resolve(
     __dirname,
@@ -78,6 +82,69 @@ describe('Resource Disposal active-target grace', () => {
 
     expect(project.getRunnableTargets()).toEqual([]);
     expect(project.getRunnableTargets({ atmospheric: { oxygen: 100 } })).toEqual([target]);
+
+    cleanup();
+  });
+
+  it('reserves actual net life consumption instead of ideal demand for atmospheric gas disposal', () => {
+    const { project, cleanup } = createHarness();
+    const target = createOxygenTarget();
+    const accumulatedChanges = { atmospheric: { oxygen: 500 } };
+    project.isBooleanFlagSet = flagId => flagId === 'atmosphericMonitoring';
+    project.getDisposalGroupData = () => ({
+      resourceMetaLookup: {
+        'atmospheric:oxygen': { phaseType: 'gas' },
+      },
+    });
+    lifeManager.estimateAtmosphericIdealNeed = jest.fn(() => ({ oxygen: 250 }));
+    lifeManager.estimateAtmosphericConsumption = (deltaTime, changes) => {
+      expect(deltaTime).toBe(1000);
+      expect(changes).toBe(accumulatedChanges);
+      return { oxygen: 100 };
+    };
+
+    const disposed = project.getTargetClampedDisposalAmount(
+      target,
+      1000,
+      'atmospheric',
+      'oxygen',
+      20500,
+      1000,
+      accumulatedChanges
+    );
+
+    expect(disposed).toBe(401);
+    expect(20500 - disposed - 100).toBe(19999);
+    expect(lifeManager.estimateAtmosphericIdealNeed).not.toHaveBeenCalled();
+
+    cleanup();
+  });
+
+  it('reserves life need for atmospheric gases without a pressure floor', () => {
+    const { project, cleanup } = createHarness();
+    const target = createOxygenTarget();
+    target.disableBelowPressure = false;
+    project.isBooleanFlagSet = flagId => flagId === 'atmosphericMonitoring';
+    project.getDisposalGroupData = () => ({
+      resourceMetaLookup: {
+        'atmospheric:oxygen': { phaseType: 'gas' },
+      },
+    });
+    lifeManager.estimateAtmosphericIdealNeed = jest.fn(() => ({ oxygen: 250 }));
+    lifeManager.estimateAtmosphericConsumption = () => ({ oxygen: 100 });
+
+    const disposed = project.getTargetClampedDisposalAmount(
+      target,
+      1000,
+      'atmospheric',
+      'oxygen',
+      500,
+      1000
+    );
+
+    expect(disposed).toBe(401);
+    expect(500 - disposed).toBe(99);
+    expect(lifeManager.estimateAtmosphericIdealNeed).not.toHaveBeenCalled();
 
     cleanup();
   });

@@ -25,6 +25,7 @@ const LEGACY_GAME_SETTING_DEFAULTS = {
   earlyAdvancedOversight: false,
   phaseChangeHeat: false,
   factoryHeating: false,
+  lifeThermodynamics: false,
   realisticFactoryEnergyConsumption: false,
   aerobraking: false,
   infinitePatience: false,
@@ -136,6 +137,7 @@ function loadGameSettings(savedSettings) {
   cachedSettings.earlyAdvancedOversightToggle.checked = gameSettings.earlyAdvancedOversight;
   cachedSettings.phaseChangeHeatToggle.checked = gameSettings.phaseChangeHeat;
   cachedSettings.factoryHeatingToggle.checked = gameSettings.factoryHeating;
+  cachedSettings.lifeThermodynamicsToggle.checked = gameSettings.lifeThermodynamics;
   cachedSettings.realisticFactoryEnergyConsumptionToggle.checked = gameSettings.realisticFactoryEnergyConsumption;
   cachedSettings.aerobrakingToggle.checked = gameSettings.aerobraking;
   cachedSettings.infinitePatienceToggle.checked = gameSettings.infinitePatience;

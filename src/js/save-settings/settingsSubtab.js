@@ -73,6 +73,8 @@ function cacheSettingsElements() {
     phaseChangeHeatTooltip: document.getElementById('phase-change-heat-tooltip'),
     factoryHeatingToggle: document.getElementById('factory-heating-toggle'),
     factoryHeatingTooltip: document.getElementById('factory-heating-tooltip'),
+    lifeThermodynamicsToggle: document.getElementById('life-thermodynamics-toggle'),
+    lifeThermodynamicsTooltip: document.getElementById('life-thermodynamics-tooltip'),
     realisticFactoryEnergyConsumptionToggle: document.getElementById('realistic-factory-energy-consumption-toggle'),
     realisticFactoryEnergyConsumptionTooltip: document.getElementById('realistic-factory-energy-consumption-tooltip'),
     spaceAccessCapacityToggle: document.getElementById('space-access-capacity-toggle'),
@@ -313,6 +315,7 @@ function updateDifficultyLockUI() {
     cached.unfulfilledMaintenancePenaltiesToggle,
     cached.phaseChangeHeatToggle,
     cached.factoryHeatingToggle,
+    cached.lifeThermodynamicsToggle,
     cached.realisticFactoryEnergyConsumptionToggle,
     cached.spaceAccessCapacityToggle,
     cached.aerobrakingToggle,
@@ -470,6 +473,7 @@ function updateDifficultySettingInputs() {
     unfulfilledMaintenancePenalties: cached.unfulfilledMaintenancePenaltiesToggle,
     phaseChangeHeat: cached.phaseChangeHeatToggle,
     factoryHeating: cached.factoryHeatingToggle,
+    lifeThermodynamics: cached.lifeThermodynamicsToggle,
     realisticFactoryEnergyConsumption: cached.realisticFactoryEnergyConsumptionToggle,
     spaceAccessCapacity: cached.spaceAccessCapacityToggle,
     aerobraking: cached.aerobrakingToggle,
@@ -1188,6 +1192,32 @@ function addSettingsListeners() {
         'ui.settings.factoryHeatingTooltip',
         {},
         'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat; any remaining capacity accelerates cooling toward the temperature trend.'
+      )
+    );
+  }
+
+  if (cached.lifeThermodynamicsToggle) {
+    cached.lifeThermodynamicsToggle.checked = gameSettings.lifeThermodynamics;
+    cached.lifeThermodynamicsToggle.addEventListener('change', () => {
+      if (isDifficultySettingsLocked()) {
+        cached.lifeThermodynamicsToggle.checked = gameSettings.lifeThermodynamics;
+        return;
+      }
+      gameSettings.lifeThermodynamics = cached.lifeThermodynamicsToggle.checked;
+      if (!gameSettings.lifeThermodynamics && terraforming) {
+        terraforming.setLifeThermodynamicsGrowth({}, 0);
+      }
+      updateTerraformingUI();
+    });
+  }
+
+  if (cached.lifeThermodynamicsTooltip) {
+    attachDynamicInfoTooltip(
+      cached.lifeThermodynamicsTooltip,
+      t(
+        'ui.settings.lifeThermodynamicsTooltip',
+        {},
+        'When enabled, natural surface-life growth in each climate zone is limited by the chemical energy it can store from at most 10% of that zone\'s surface solar flux averaged over the zone, including curvature and night. The stored energy cools the same zone and changes its temperature trend. Biodomes, artificial ecosystems, space-storage growth, and direct biomass transfers are unaffected.'
       )
     );
   }

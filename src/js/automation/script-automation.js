@@ -30,9 +30,10 @@ class ScriptAutomation {
     this.sleepRemainingMs = 0;
     this.maxLinesPerTick = 25;
     this.maxActionsPerTick = 25;
-    this.registry = new ScriptVariableRegistry();
+    this.registry = new ScriptVariableRegistry(this);
     this.variableValues = {};
     this.scriptVariableValues = {};
+    this.variableNames = this.createVariableNames();
     this.resetVariables();
     this.ensureDefaultScript();
   }
@@ -61,6 +62,7 @@ class ScriptAutomation {
     const script = {
       id: this.nextScriptId++,
       name: t('ui.hope.automationCards.defaultScriptName', {}, 'Default Script'),
+      variableNames: this.createVariableNames(),
       lines: [this.createLine('if')]
     };
     this.scripts.push(script);
@@ -177,6 +179,71 @@ class ScriptAutomation {
     return script;
   }
 
+  createVariableNames() {
+    return {
+      number: {},
+      script: {}
+    };
+  }
+
+  normalizeVariableNames(variableNames) {
+    const normalized = this.createVariableNames();
+    if (!variableNames || variableNames.constructor !== Object) return normalized;
+    ['number', 'script'].forEach(variableType => {
+      const names = variableNames[variableType];
+      if (!names || names.constructor !== Object) return;
+      for (const variableId in names) {
+        const id = String(variableId).toUpperCase();
+        if (!/^[A-Z]$/.test(id)) continue;
+        const name = String(names[variableId] || '').trim().slice(0, 64);
+        if (name) normalized[variableType][id] = name;
+      }
+    });
+    return normalized;
+  }
+
+  getVariableName(variableType, variableId, scriptId = this.selectedScriptId) {
+    const type = variableType === 'script' ? 'script' : 'number';
+    const id = this.normalizeVariableId(variableId);
+    const script = this.scripts.find(item => item.id === Number(scriptId));
+    return script?.variableNames?.[type]?.[id] || this.variableNames[type][id] || '';
+  }
+
+  getGlobalVariableName(variableType, variableId) {
+    const type = variableType === 'script' ? 'script' : 'number';
+    const id = this.normalizeVariableId(variableId);
+    return this.variableNames[type][id] || '';
+  }
+
+  getScriptVariableName(scriptId, variableType, variableId) {
+    const type = variableType === 'script' ? 'script' : 'number';
+    const id = this.normalizeVariableId(variableId);
+    const script = this.scripts.find(item => item.id === Number(scriptId));
+    return script?.variableNames?.[type]?.[id] || '';
+  }
+
+  setVariableName(scope, variableType, variableId, name, scriptId = this.selectedScriptId) {
+    const type = variableType === 'script' ? 'script' : 'number';
+    const id = this.normalizeVariableId(variableId);
+    const normalizedName = String(name || '').trim().slice(0, 64);
+    const names = scope === 'script'
+      ? this.scripts.find(item => item.id === Number(scriptId))?.variableNames?.[type]
+      : this.variableNames[type];
+    if (!names) return false;
+    if (normalizedName) names[id] = normalizedName;
+    else delete names[id];
+    return true;
+  }
+
+  getVariableTargets(variableType = 'number', scriptId = this.selectedScriptId) {
+    const targets = [];
+    for (let index = 0; index < 26; index += 1) {
+      const id = String.fromCharCode(65 + index);
+      targets.push({ id, label: this.getVariableName(variableType, id, scriptId) || id });
+    }
+    return targets;
+  }
+
   moveScript(id, direction) {
     const numericId = Number(id);
     const index = this.scripts.findIndex(script => script.id === numericId);
@@ -194,6 +261,7 @@ class ScriptAutomation {
     const script = {
       id: this.nextScriptId++,
       name: name || `Script ${this.nextScriptId - 1}`,
+      variableNames: this.createVariableNames(),
       lines: [line]
     };
     this.scripts.push(script);
@@ -946,7 +1014,7 @@ class ScriptAutomation {
         if (gotoUsed) continue;
         const targetScriptId = this.resolveGotoScriptTargetId(action);
         const targetScript = this.scripts.find(item => item.id === Number(targetScriptId));
-        const targetLine = targetScript?.lines?.[0] || null;
+        const targetLine = this.resolveGotoScriptTargetLine(action, targetScript);
         if (targetScript && targetLine) {
           this.activeScriptId = targetScript.id;
           this.selectedScriptId = targetScript.id;
@@ -959,7 +1027,7 @@ class ScriptAutomation {
             { id: targetScript.id },
             `Script ${targetScript.id}`
           );
-          const targetLabel = `${scriptLabel} #1`;
+          const targetLabel = `${scriptLabel} ${this.getLineLabel(targetScript, targetLine)}`;
           summaries.push(t(
             'ui.hope.automationCards.scriptSummaryGoto',
             { target: targetLabel },
@@ -1058,6 +1126,20 @@ class ScriptAutomation {
       return this.getScriptVariableValue(action.scriptVariableId);
     }
     return action.targetScriptId;
+  }
+
+  resolveGotoScriptLineNumber(action) {
+    const rawLineNumber = action.lineTargetMode === 'variable'
+      ? this.getVariableValue(action.lineVariableId)
+      : this.registry.toNumber(action.targetLineNumber);
+    if (!Number.isFinite(rawLineNumber)) return 1;
+    return Math.floor(rawLineNumber);
+  }
+
+  resolveGotoScriptTargetLine(action, targetScript) {
+    if (!targetScript || !Array.isArray(targetScript.lines) || targetScript.lines.length === 0) return null;
+    const lineNumber = this.resolveGotoScriptLineNumber(action);
+    return targetScript.lines[lineNumber - 1] || targetScript.lines[0];
   }
 
   getAutomationTarget(type) {
@@ -1230,14 +1312,14 @@ class ScriptAutomation {
         const value = targetScript
           ? targetScript.name || t('ui.hope.automationCards.scriptWithId', { id: targetScript.id }, `Script ${targetScript.id}`)
           : t('ui.hope.automationCards.scriptNullValue', {}, 'NULL');
-        const variable = this.normalizeVariableId(action.variableId);
+        const variable = this.getVariableName('script', action.variableId) || this.normalizeVariableId(action.variableId);
         return t(
           'ui.hope.automationCards.scriptSummarySetScriptVariable',
           { variable, value },
           `Set Script ${variable} = ${value}`
         );
       }
-      const variable = this.normalizeVariableId(action.variableId);
+      const variable = this.getVariableName('number', action.variableId) || this.normalizeVariableId(action.variableId);
       const value = this.describeExpression(action.valueExpression);
       return t(
         'ui.hope.automationCards.scriptSummarySetVariable',
@@ -1253,7 +1335,14 @@ class ScriptAutomation {
         { id: targetScript.id },
         `Script ${targetScript.id}`
       );
-      const target = `${scriptLabel} #1`;
+      const lineTarget = action.lineTargetMode === 'variable'
+        ? t(
+          'ui.hope.automationCards.scriptGotoLineVariableSummary',
+          { variable: this.getVariableName('number', action.lineVariableId) || this.normalizeVariableId(action.lineVariableId) },
+          `line ${this.normalizeVariableId(action.lineVariableId)}`
+        )
+        : `#${Math.max(1, Math.floor(this.registry.toNumber(action.targetLineNumber) || 1))}`;
+      const target = `${scriptLabel} ${lineTarget}`;
       return t('ui.hope.automationCards.scriptSummaryGoto', { target }, `GOTO ${target}`);
     }
     if (action.kind === 'toggleAutomation') {
@@ -1277,8 +1366,8 @@ class ScriptAutomation {
       const parameterText = preset && target.isParameterizedPreset && target.isParameterizedPreset(preset)
         ? t(
           'ui.hope.automationCards.scriptSummaryParameter',
-          { variable: this.normalizeVariableId(action.parameterVariableId) },
-          ` with ${this.normalizeVariableId(action.parameterVariableId)}`
+          { variable: this.getVariableName('number', action.parameterVariableId) || this.normalizeVariableId(action.parameterVariableId) },
+          ` with ${this.getVariableName('number', action.parameterVariableId) || this.normalizeVariableId(action.parameterVariableId)}`
         )
         : '';
       const name = preset?.name || action.presetId;
@@ -1346,6 +1435,7 @@ class ScriptAutomation {
       sleepRemainingMs: this.sleepRemainingMs,
       variableValues: { ...this.variableValues },
       scriptVariableValues: { ...this.scriptVariableValues },
+      variableNames: this.deepClone(this.variableNames),
       scripts: this.deepClone(this.scripts),
       selectedScriptId: this.selectedScriptId,
       activeScriptId: this.activeScriptId,
@@ -1369,6 +1459,7 @@ class ScriptAutomation {
     this.nextTravelScriptId = data.nextTravelScriptId ? Number(data.nextTravelScriptId) : null;
     this.nextTravelPersistent = data.nextTravelPersistent === true && !!this.nextTravelScriptId;
     this.sleepRemainingMs = this.registry.toNumber(data.sleepRemainingMs);
+    this.variableNames = this.normalizeVariableNames(data.variableNames);
     this.resetVariables();
     if (data.variableValues && data.variableValues.constructor === Object) {
       for (const id in data.variableValues) {
@@ -1407,6 +1498,7 @@ class ScriptAutomation {
       const normalizedScript = {
         id: Number(script.id) || this.nextScriptId++,
         name: script.name || 'Script',
+        variableNames: this.normalizeVariableNames(script.variableNames),
         lines: Array.isArray(script.lines) && script.lines.length
           ? script.lines.map(line => this.normalizeLine(line))
           : [this.createLine('if')]
@@ -1461,6 +1553,10 @@ class ScriptAutomation {
     } else if (normalized.kind === 'gotoScript') {
       normalized.scriptTargetMode = normalized.scriptTargetMode === 'variable' ? 'variable' : 'script';
       normalized.scriptVariableId = this.normalizeVariableId(normalized.scriptVariableId);
+      normalized.lineTargetMode = normalized.lineTargetMode === 'variable' ? 'variable' : 'specified';
+      normalized.lineVariableId = this.normalizeVariableId(normalized.lineVariableId);
+      const targetLineNumber = Number(normalized.targetLineNumber);
+      normalized.targetLineNumber = Number.isFinite(targetLineNumber) && targetLineNumber >= 1 ? targetLineNumber : 1;
       normalized.targetScriptId = normalized.targetScriptId ? Number(normalized.targetScriptId) : null;
     } else if (normalized.kind === 'applyPreset') {
       normalized.parameterVariableId = this.normalizeVariableId(normalized.parameterVariableId);
@@ -1520,6 +1616,7 @@ class ScriptAutomation {
     const rawScript = {
       id,
       name: scriptData.name || `Script ${id}`,
+      variableNames: this.normalizeVariableNames(scriptData.variableNames),
       lines: Array.isArray(scriptData.lines) && scriptData.lines.length
         ? scriptData.lines.map(line => {
             const oldId = line.id;
@@ -1541,6 +1638,7 @@ class ScriptAutomation {
     const normalizedScript = {
       id: rawScript.id,
       name: rawScript.name,
+      variableNames: rawScript.variableNames,
       lines: rawScript.lines.map(line => this.normalizeLine(line))
     };
     this.normalizeLinkedElseLines(normalizedScript);

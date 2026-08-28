@@ -1171,13 +1171,19 @@ class LifeDesigner extends EffectableEntity {
     );
   }
 
-  prepareTravelState() {
+  prepareTravelState(resetLevel = GAME_RESET_LEVEL.PLANET) {
+    if (resetLevel >= this.travelStateResetAt) {
+      return null;
+    }
     return {
       advancedResearchPurchases: this.getPurchaseCount('advancedResearch')
     };
   }
 
-  restoreTravelState(travelState = {}) {
+  restoreTravelState(travelState = {}, resetLevel = GAME_RESET_LEVEL.PLANET) {
+    if (resetLevel >= this.travelStateResetAt) {
+      return;
+    }
     const restored = Number.isFinite(travelState.advancedResearchPurchases)
       ? travelState.advancedResearchPurchases
       : 0;
@@ -1504,11 +1510,31 @@ class LifeManager extends EffectableEntity {
     });
 
     const potentialGrowthByZone = {};
+    const thermodynamicGrowthCapByZone = {};
+    const thermodynamicGrowthDemandByZone = {};
     const radiationDecayByZone = {};
     zones.forEach(zoneName => {
       potentialGrowthByZone[zoneName] = 0;
+      thermodynamicGrowthCapByZone[zoneName] = Infinity;
+      thermodynamicGrowthDemandByZone[zoneName] = 0;
       radiationDecayByZone[zoneName] = 0;
     });
+    if (gameSettings.lifeThermodynamics && secondsMultiplier > 0) {
+      const parameters = terraformingParameters.gameplay.lifeThermodynamics;
+      const simulatedDurationSeconds = secondsMultiplier * parameters.simulatedSecondsPerRealSecond;
+      zones.forEach(zoneName => {
+        const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName);
+        const availableFlux = Math.max(
+          0,
+          terraforming.calculateZonalAverageSurfaceSolarFlux(zoneName)
+        );
+        thermodynamicGrowthCapByZone[zoneName] = availableFlux
+          * parameters.maximumSolarFluxFraction
+          * zoneArea
+          * simulatedDurationSeconds
+          / parameters.chemicalEnergyJPerTon;
+      });
+    }
     let totalPotentialGrowth = 0;
 
     zones.forEach(zoneName => {
@@ -1583,7 +1609,9 @@ class LifeManager extends EffectableEntity {
         addBiomassGrowthLimiter(limitingSurfaceKey, zoneName, 'surface', limitingSurfaceShortfall);
       }
 
-      const capped = Math.max(0, maxBySurfaceInputs);
+      const uncapped = Math.max(0, maxBySurfaceInputs);
+      thermodynamicGrowthDemandByZone[zoneName] = uncapped;
+      const capped = Math.min(uncapped, thermodynamicGrowthCapByZone[zoneName]);
       potentialGrowthByZone[zoneName] = capped;
       totalPotentialGrowth += capped;
     });
@@ -1734,7 +1762,11 @@ class LifeManager extends EffectableEntity {
         const boundaryLengthMeters = getBoundaryLengthMeters(donorZone, targetZone);
         if (boundaryLengthMeters <= 0) return;
         const donorCap = donorGrowth * 0.01;
-        const transferAmount = Math.min(donorGrowth, donorCap, boundaryLengthMeters);
+        const targetThermodynamicCapacity = Math.max(
+          0,
+          thermodynamicGrowthCapByZone[targetZone] - zoneGrowthByZone[targetZone]
+        );
+        const transferAmount = Math.min(donorGrowth, donorCap, boundaryLengthMeters, targetThermodynamicCapacity);
         if (transferAmount <= 0) return;
         zoneGrowthByZone[donorZone] -= transferAmount;
         zoneGrowthByZone[targetZone] += transferAmount;
@@ -1840,6 +1872,8 @@ class LifeManager extends EffectableEntity {
       decayAtmosphericDeltas,
       yggieGrowthController,
       yggieGrowthControl,
+      thermodynamicGrowthCapByZone,
+      thermodynamicGrowthDemandByZone,
     };
   }
 
@@ -1919,6 +1953,7 @@ class LifeManager extends EffectableEntity {
   // Now uses global atmospheric resources instead of zonal atmosphere
   updateLife(deltaTime, accumulatedChanges = null, accumulatedSpecialChanges = null) {
     if (this.isBooleanFlagSet('ringworldLowGravityLife')) {
+      terraforming.setLifeThermodynamicsGrowth({}, 0);
       return;
     }
     const plan = this.buildAtmosphericPlan(deltaTime, accumulatedChanges);
@@ -1946,6 +1981,7 @@ class LifeManager extends EffectableEntity {
       decayAtmosphericDeltas,
       yggieGrowthController,
       yggieGrowthControl,
+      thermodynamicGrowthDemandByZone,
     } = plan;
 
     terraforming.biomassDyingZones = {};
@@ -2033,6 +2069,12 @@ class LifeManager extends EffectableEntity {
         secondsMultiplier
       );
     }
+
+    terraforming.setLifeThermodynamicsGrowth(
+      zoneGrowthByZone,
+      secondsMultiplier,
+      thermodynamicGrowthDemandByZone
+    );
 
     Object.entries(growthAtmosphericDeltas).forEach(([resourceKey, delta]) => {
       if (!delta) return;
@@ -2182,7 +2224,8 @@ class LifeManager extends EffectableEntity {
       const biomassAmount = biomassResource?.value || 0;
 
       if (foodResource && biomassAmount > 0) {
-        const foodPerSecond = biomassAmount * 0.01;
+        const foodPerSecond = biomassAmount
+          * terraformingParameters.gameplay.life.surfaceBiomassFoodPerTonPerSecond;
         foodResource.modifyRate(
           foodPerSecond,
           getLocalizedRateSource('life:surfaceBiomass', 'ui.resourceRates.sources.surfaceBiomass', 'Surface Biomass'),

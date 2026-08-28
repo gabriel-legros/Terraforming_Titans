@@ -73,14 +73,35 @@ function renderLiftersUI(project, container) {
   controlsGrid.classList.add('stats-grid', 'four-col', 'nuclear-alchemy-controls-grid', 'lifters-controls-grid');
 
   const runField = document.createElement('div');
-  runField.classList.add('stat-item');
+  runField.classList.add('stat-item', 'lifters-run-control');
+  const runOption = document.createElement('div');
+  runOption.classList.add('lifters-checkbox-line');
   const runCheckbox = document.createElement('input');
   runCheckbox.type = 'checkbox';
   runCheckbox.id = `${project.name}-lifters-run`;
   const runLabel = document.createElement('label');
   runLabel.htmlFor = runCheckbox.id;
   runLabel.textContent = getProjectLiftersUIText(project, 'runLifters', 'Run lifters');
-  runField.append(runCheckbox, runLabel);
+  runOption.append(runCheckbox, runLabel);
+  runField.appendChild(runOption);
+
+  let keepRunningOnTravelCheckbox = null;
+  if (project.name === 'lifters') {
+    const keepRunningOnTravelOption = document.createElement('div');
+    keepRunningOnTravelOption.classList.add('lifters-checkbox-line');
+    keepRunningOnTravelCheckbox = document.createElement('input');
+    keepRunningOnTravelCheckbox.type = 'checkbox';
+    keepRunningOnTravelCheckbox.id = `${project.name}-keep-running-on-travel`;
+    const keepRunningOnTravelLabel = document.createElement('label');
+    keepRunningOnTravelLabel.htmlFor = keepRunningOnTravelCheckbox.id;
+    keepRunningOnTravelLabel.textContent = getProjectLiftersUIText(
+      project,
+      'keepRunningOnTravel',
+      'Keep running on travel'
+    );
+    keepRunningOnTravelOption.append(keepRunningOnTravelCheckbox, keepRunningOnTravelLabel);
+    runField.appendChild(keepRunningOnTravelOption);
+  }
   controlsGrid.appendChild(runField);
 
   const statusStat = buildStat(getLiftersUIText('ui.projects.common.status', 'Status'));
@@ -276,6 +297,9 @@ function renderLiftersUI(project, container) {
   runCheckbox.addEventListener('change', (event) => {
     project.setRunning(event.target.checked);
   });
+  keepRunningOnTravelCheckbox?.addEventListener('change', (event) => {
+    project.keepRunningOnTravel = event.target.checked;
+  });
 
   card.appendChild(body);
   container.appendChild(card);
@@ -293,6 +317,7 @@ function renderLiftersUI(project, container) {
     assignedValue: assignedStat.valueEl,
     unassignedValue: unassignedStat.valueEl,
     runCheckbox,
+    keepRunningOnTravelCheckbox,
     statusValue: statusStat.valueEl,
     energyPerLifterValue: energyPerLifterStat.valueEl,
     energyRateValue: energyRateStat.valueEl,
@@ -397,6 +422,12 @@ function updateLiftersUI(project) {
   }
   if (elements.runCheckbox.disabled !== controlsDisabled) {
     elements.runCheckbox.disabled = controlsDisabled;
+  }
+  if (
+    elements.keepRunningOnTravelCheckbox
+    && elements.keepRunningOnTravelCheckbox.checked !== project.keepRunningOnTravel
+  ) {
+    elements.keepRunningOnTravelCheckbox.checked = project.keepRunningOnTravel;
   }
   if (elements.stepDownButton.disabled !== controlsDisabled) {
     elements.stepDownButton.disabled = controlsDisabled;

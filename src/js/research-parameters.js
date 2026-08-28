@@ -3001,6 +3001,22 @@ const researchParameters = {
         ]
       },
       {
+        id: 'mega_potatoes',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 20_000_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'bioworld',
+            type: 'booleanFlag',
+            flagId: 'megaPotatoes',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'white_dwarf_harvesting',
         name: '',
         description: '',
@@ -3011,6 +3027,22 @@ const researchParameters = {
             target: 'project',
             targetId: 'whiteDwarfHarvesters',
             type: 'enable'
+          }
+        ]
+      },
+      {
+        id: 'agrarian_worlds',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 150_000_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'manufacturingWorld',
+            type: 'booleanFlag',
+            flagId: 'agrarianWorlds',
+            value: true
           }
         ]
       },

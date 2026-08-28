@@ -559,8 +559,8 @@
       this.updateVacation(deltaTime);
     }
 
-    prepareTravelState() {
-      super.prepareTravelState();
+    cleanupForReset(resetLevel = GAME_RESET_LEVEL.PLANET) {
+      super.cleanupForReset(resetLevel);
       this.vacationState = 'ready';
       this.vacationTimer = 0;
       this.removeFactoryEffects(true);

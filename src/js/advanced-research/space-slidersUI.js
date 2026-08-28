@@ -229,7 +229,6 @@ function updateSpaceSlidersUI({ space } = {}) {
   }
   if (isCylindersHopeUnlocked(space)) {
     const tick = getCylindersHopeTick(space);
-    const cylinders = Math.max(0, Number(space?.getOneillCylinderCount?.() || 0));
     const perCylinder = getCylindersHopeEnergyPerCylinderPerSecond(tick);
     const totalEnergy = getCylindersHopeTotalDesiredEnergyPerSecond(space);
     const productivity = tick <= 0 ? 1 : space.getSpaceSliderRuntimeProductivity('cylindersHope');
@@ -240,7 +239,7 @@ function updateSpaceSlidersUI({ space } = {}) {
         * (tick / 10)
         * productivity
         * getCylindersHopeMiningRightsManufacturingMultiplier(space);
-    const totalManufacturing = cylinders * perCylinderManufacturing;
+    const totalManufacturing = getCylindersHopeManufacturingPopulationBonus(space);
     if (spaceSlidersUiCache.slider && document.activeElement !== spaceSlidersUiCache.slider) {
       spaceSlidersUiCache.slider.value = String(tick);
     }

@@ -91,6 +91,68 @@ registerTerraformingMethods('climate', ({
       flux: surfaceArea > 0 ? contributor.power / surfaceArea : 0
     }));
   },
+  setLifeThermodynamicsGrowth(growthByZone, realDurationSeconds, growthDemandByZone = {}) {
+    const parameters = terraformingParameters.gameplay.lifeThermodynamics;
+    const simulatedDurationSeconds = Math.max(0, realDurationSeconds) * parameters.simulatedSecondsPerRealSecond;
+    const surfaceArea = this.celestialParameters.surfaceArea || 0;
+    let weightedFlux = 0;
+    for (const zone of getZones()) {
+      const zoneWeight = this.getZoneWeight(zone);
+      const zoneArea = surfaceArea * zoneWeight;
+      const growth = Math.max(0, Number(growthByZone[zone]) || 0);
+      const growthDemand = Math.max(growth, Number(growthDemandByZone[zone]) || 0);
+      const flux = gameSettings.lifeThermodynamics && simulatedDurationSeconds > 0 && zoneArea > 0
+        ? -(growth * parameters.chemicalEnergyJPerTon) / (simulatedDurationSeconds * zoneArea)
+        : 0;
+      const demandFlux = gameSettings.lifeThermodynamics && simulatedDurationSeconds > 0 && zoneArea > 0
+        ? growthDemand * parameters.chemicalEnergyJPerTon / (simulatedDurationSeconds * zoneArea)
+        : 0;
+      const solarCapFlux = parameters.maximumSolarFluxFraction
+        * Math.max(0, this.calculateZonalAverageSurfaceSolarFlux(zone));
+      this.lifeThermodynamicsFluxByZone[zone] = flux;
+      this.lifeThermodynamicsDemandFluxByZone[zone] = demandFlux;
+      this.lifeThermodynamicsSolarCapActiveByZone[zone] = solarCapFlux > 0
+        && -flux >= solarCapFlux * (1 - 1e-9);
+      weightedFlux += flux * zoneWeight;
+    }
+    this.lifeThermodynamicsFlux = weightedFlux;
+  },
+  getLifeThermodynamicsFlux(zone = null, projectedZonalFluxes = null) {
+    if (!gameSettings.lifeThermodynamics || isEquilibrating) {
+      return 0;
+    }
+    if (!zone) {
+      return this.lifeThermodynamicsFlux || 0;
+    }
+    const currentFlux = this.lifeThermodynamicsFluxByZone[zone] || 0;
+    if (!projectedZonalFluxes || !this.lifeThermodynamicsSolarCapActiveByZone[zone]) {
+      return currentFlux;
+    }
+    const parameters = terraformingParameters.gameplay.lifeThermodynamics;
+    const cloudHazeMultiplier = 1 - Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
+    const projectedZoneFlux = Number.isFinite(projectedZonalFluxes[zone])
+      ? projectedZonalFluxes[zone]
+      : this.luminosity.zonalFluxes?.[zone] || 0;
+    let projectedAverageSurfaceSolarFlux;
+    if (isAldersonDiskWorld()) {
+      projectedAverageSurfaceSolarFlux = projectedZoneFlux;
+    } else if (isRingWorld()) {
+      const baseZoneFlux = this.calculateZoneSolarFlux(zone, false, true);
+      projectedAverageSurfaceSolarFlux = baseZoneFlux
+        + (projectedZoneFlux - baseZoneFlux) * 0.25;
+    } else {
+      // Curved-world solver fluxes already contain the zone-specific
+      // illumination ratio but use 4x average units.
+      projectedAverageSurfaceSolarFlux = projectedZoneFlux * 0.25;
+    }
+    projectedAverageSurfaceSolarFlux *= cloudHazeMultiplier;
+    const projectedCapFlux = parameters.maximumSolarFluxFraction
+      * Math.max(0, projectedAverageSurfaceSolarFlux);
+    return -Math.min(
+      this.lifeThermodynamicsDemandFluxByZone[zone] || 0,
+      projectedCapFlux
+    );
+  },
   resetPhaseChangeHeat() {
     this.phaseChangeHeatPower = 0;
     this.phaseChangeHeatFlux = 0;
@@ -162,14 +224,15 @@ registerTerraformingMethods('climate', ({
     }
     return contributors;
   },
-  getNetSurfaceHeatFlux(factoryCoolingScale = 1, megaHeatSinkAllocation = this.getMegaHeatSinkAllocation()) {
+  getNetSurfaceHeatFlux(factoryCoolingScale = 1, megaHeatSinkAllocation = this.getMegaHeatSinkAllocation(), zone = null, projectedZonalFluxes = null) {
     const coreHeatFlux = this.getCoreHeatFlux();
     const fusionFlux = getStellarFusionFluxWm2(this, currentPlanetParameters);
     const factoryHeatFlux = this.getFactoryHeatFlux();
     const factoryCoolingAdjustment = this.getFactoryCoolingFlux() * (1 - factoryCoolingScale);
     const positiveFactoryHeatFlux = Math.max(0, factoryHeatFlux);
     const factoryCoolingFlux = Math.max(0, -factoryHeatFlux);
-    return fusionFlux + coreHeatFlux - megaHeatSinkAllocation.coreHeatFlux + positiveFactoryHeatFlux - megaHeatSinkAllocation.factoryHeatFlux - factoryCoolingFlux + factoryCoolingAdjustment;
+    const lifeThermodynamicsFlux = this.getLifeThermodynamicsFlux(zone, projectedZonalFluxes);
+    return fusionFlux + coreHeatFlux - megaHeatSinkAllocation.coreHeatFlux + positiveFactoryHeatFlux - megaHeatSinkAllocation.factoryHeatFlux - factoryCoolingFlux + factoryCoolingAdjustment + lifeThermodynamicsFlux;
   },
   setTemperatureValuesToTrend() {
     const zones = getZones();
@@ -590,7 +653,12 @@ registerTerraformingMethods('climate', ({
         zoneLiquidWater: this.zonalSurface.liquidWater[zone] || 0
       };
       const factoryCoolingScale = weightedEffectiveLight > 0 ? zonalEffectiveLight[zone] / weightedEffectiveLight : 0;
-      const netSurfaceHeatFlux = this.getNetSurfaceHeatFlux(factoryCoolingScale, megaHeatSinkAllocation);
+      const netSurfaceHeatFlux = this.getNetSurfaceHeatFlux(
+        factoryCoolingScale,
+        megaHeatSinkAllocation,
+        zone,
+        zonalFluxOverrides
+      );
       const zTemps = dayNightTemperaturesModel({
         ...baseParams,
         flux: zoneFlux,
@@ -1217,6 +1285,10 @@ registerTerraformingMethods('climate', ({
       return this.luminosity.zonalFluxes[zone] * (1 - penalty) * fluxScale;
     }
     return this.calculateSurfaceSolarFlux();
+  },
+  calculateZonalAverageSurfaceSolarFlux(zone) {
+    const penalty = Math.min(1, Math.max(0, this.luminosity.cloudHazePenalty || 0));
+    return this.calculateZoneSolarFlux(zone, true) * (1 - penalty);
   },
   calculateSolarPanelMultiplier() {
     return this.calculateSurfaceSolarFlux() / SOLAR_PANEL_BASE_LUMINOSITY;

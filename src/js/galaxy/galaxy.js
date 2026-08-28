@@ -15,7 +15,7 @@ function generateSectorCoordinates(radius) {
 
 class GalaxyManager extends EffectableEntity {
     constructor() {
-        super({ description: 'Manages the galactic view.' });
+        super({ description: 'Manages the galactic view.', resetAt: GAME_RESET_LEVEL.NEW_GAME });
         this.enabled = false;
         this.initialized = false;
         this.radius = GALAXY_RADIUS;

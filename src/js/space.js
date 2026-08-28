@@ -179,7 +179,7 @@ if (typeof module !== 'undefined' && module.exports) {
 
 class SpaceManager extends EffectableEntity {
     constructor(planetsData) { // Keep planetsData for validation
-        super({ description: 'Manages planetary travel' });
+        super({ description: 'Manages planetary travel', resetAt: GAME_RESET_LEVEL.NEW_GAME });
         if (!planetsData) {
             throw new Error("SpaceManager requires planetsData during construction.");
         }
@@ -2806,7 +2806,7 @@ class SpaceManager extends EffectableEntity {
             console.warn(`SpaceManager: Planet ${key} already terraformed.`);
             return false;
         }
-        this.recordDepartureSnapshot();
+        this.recordDepartureSnapshot({ resetLevel: GAME_RESET_LEVEL.PLANET });
         return this._setCurrentPlanetKey(key);
     }
 
@@ -2857,8 +2857,15 @@ class SpaceManager extends EffectableEntity {
      * Works for both story planets and random worlds.
      */
     recordDepartureSnapshot(options = {}) {
+        const resetLevel = options.resetLevel ?? GAME_RESET_LEVEL.PLANET;
         // Call unified prepareForTravel before recording snapshot
-        this.prepareForTravel({ savePretravel: options.savePretravel });
+        this.prepareForTravel({
+            savePretravel: options.savePretravel,
+            resetLevel
+        });
+        if (resetLevel >= this.departureResetAt) {
+            return;
+        }
         this._recordCurrentTerraformTravelTime();
         
         const now = Date.now();
@@ -3082,7 +3089,10 @@ class SpaceManager extends EffectableEntity {
         return this.isPlanetTerraformed(this.currentPlanetKey);
     }
 
-    _grantDepartureSkillPoint() {
+    _grantDepartureSkillPoint(resetLevel = GAME_RESET_LEVEL.PLANET) {
+        if (resetLevel >= this.departureResetAt) {
+            return false;
+        }
         const status = this.getCurrentWorldStatus();
         if (!status || status.departureSkillPointGranted || !this._isCurrentWorldTerraformed() || !skillManager) {
             return false;
@@ -3105,7 +3115,7 @@ class SpaceManager extends EffectableEntity {
             currentPlanetParameters = JSON.parse(JSON.stringify(params));
         }
         this._ensureGalacticPopulationTotals();
-        initializeGameState({ preserveManagers: true, preserveJournal: true });
+        initializeGameState({ resetLevel: GAME_RESET_LEVEL.PLANET });
         restoreCurrentSmbhShellworldSnapshot(this);
         if (followersManager && followersManager.syncGalacticBelievers) {
             followersManager.syncGalacticBelievers();
@@ -3133,8 +3143,11 @@ class SpaceManager extends EffectableEntity {
         const savePretravel = params.specialAttributes?.savePretravel !== false;
 
         // Preserve departure context for rewards/state before switching worlds.
-        this.recordDepartureSnapshot({ savePretravel });
-        this._grantDepartureSkillPoint();
+        this.recordDepartureSnapshot({
+            savePretravel,
+            resetLevel: GAME_RESET_LEVEL.PLANET
+        });
+        this._grantDepartureSkillPoint(GAME_RESET_LEVEL.PLANET);
         if (!this._setCurrentPlanetKey(targetKey)) {
             return false;
         }
@@ -3212,8 +3225,8 @@ class SpaceManager extends EffectableEntity {
         const artificialWorld = isArtificial || existing?.artificial;
 
         // prepareForTravel is now called within recordDepartureSnapshot
-        this.recordDepartureSnapshot();
-        this._grantDepartureSkillPoint();
+        this.recordDepartureSnapshot({ resetLevel: GAME_RESET_LEVEL.PLANET });
+        this._grantDepartureSkillPoint(GAME_RESET_LEVEL.PLANET);
         if (revisitingRandomSeed) {
             this.resetRandomWorldStatus(s);
         }

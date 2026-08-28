@@ -34,6 +34,62 @@
   gap: 6px;
 }
 
+.ship-automation-guide-button {
+  width: 24px;
+  height: 24px;
+  margin-left: 0;
+  flex: 0 0 auto;
+}
+
+.ship-automation-guide-window {
+  width: min(1280px, calc(100vw - 32px));
+}
+
+.ship-automation-guide-image-wrap {
+  width: min(1234px, 100%);
+}
+
+.ship-automation-guide-marker-1 {
+  left: 3.5%;
+  top: 11%;
+}
+
+.ship-automation-guide-marker-2 {
+  left: 67%;
+  top: 11%;
+}
+
+.ship-automation-guide-marker-3 {
+  left: 20%;
+  top: 35%;
+}
+
+.ship-automation-guide-marker-4 {
+  left: 44%;
+  top: 35%;
+}
+
+.ship-automation-guide-marker-5 {
+  left: 66%;
+  top: 35%;
+}
+
+.ship-automation-guide-marker-6 {
+  left: 87%;
+  top: 35%;
+}
+
+.ship-automation-guide-starter-setup th:nth-child(1),
+.ship-automation-guide-starter-setup td:nth-child(1),
+.ship-automation-guide-starter-setup th:nth-child(3),
+.ship-automation-guide-starter-setup td:nth-child(3),
+.ship-automation-guide-starter-setup th:nth-child(5),
+.ship-automation-guide-starter-setup td:nth-child(5),
+.ship-automation-guide-starter-setup th:nth-child(6),
+.ship-automation-guide-starter-setup td:nth-child(6) {
+  text-align: center;
+}
+
 .automation-status {
   display: none;
 }
@@ -1269,6 +1325,75 @@
   gap: 10px;
 }
 
+.script-automation-script-toolbar {
+  position: relative;
+  box-sizing: border-box;
+  padding-right: 54px;
+}
+
+.script-variable-config-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  min-width: 34px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.script-variable-config-window {
+  width: min(680px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+}
+
+.script-variable-config-window h5,
+.script-variable-config-description {
+  margin: 0;
+}
+
+.script-variable-config-description {
+  margin-top: 4px;
+  color: #51617f;
+  font-size: 12px;
+}
+
+.script-variable-config-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.script-variable-name-section {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid #e1e7f1;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.script-variable-name-section h5 {
+  margin-bottom: 8px;
+}
+
+.script-variable-name-controls {
+  display: grid;
+  grid-template-columns: minmax(100px, 0.7fr) repeat(2, minmax(150px, 1fr));
+  gap: 8px;
+  align-items: end;
+}
+
+.script-variable-name-controls input,
+.script-variable-name-controls select {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 5px 7px;
+  border: 1px solid #cfd6e5;
+  border-radius: 5px;
+  background: #fff;
+}
+
 .script-line-card {
   border-left: 4px solid #4d68c9;
 }
@@ -1574,6 +1699,47 @@
   background: #0e1421;
 }
 
+.dark-mode .script-variable-name-section,
+.dark-grey-mode .script-variable-name-section {
+  background: #0e1421;
+  border-color: #24324a;
+  color: #e7ecf7;
+}
+
+.dark-mode .script-variable-config-description,
+.dark-grey-mode .script-variable-config-description {
+  color: #acb6c6;
+}
+
+.dark-mode .script-variable-name-controls input,
+.dark-mode .script-variable-name-controls select,
+.dark-grey-mode .script-variable-name-controls input,
+.dark-grey-mode .script-variable-name-controls select {
+  background: #0d1522;
+  border-color: #30405a;
+  color: #e7ecf7;
+}
+
+.dark-mode .script-variable-name-controls input:focus,
+.dark-mode .script-variable-name-controls select:focus,
+.dark-grey-mode .script-variable-name-controls input:focus,
+.dark-grey-mode .script-variable-name-controls select:focus {
+  border-color: #3f7bf7;
+  outline: 2px solid rgba(63, 123, 247, 0.3);
+  outline-offset: 1px;
+}
+
+.oled-black-mode .script-variable-name-section {
+  background: var(--oled-surface);
+  border-color: var(--oled-border);
+  color: var(--oled-text);
+}
+
+.oled-black-mode .script-variable-config-description,
+.oled-black-mode .script-variable-name-controls .script-labeled-node {
+  color: var(--oled-text-muted);
+}
+
 .dark-mode .script-line-card {
   background: linear-gradient(180deg, #121a28 0%, #0b111b 100%);
   border-color: #2a3650;
@@ -1704,6 +1870,10 @@
   }
 
   .building-automation-apply-row {
+    grid-template-columns: 1fr;
+  }
+
+  .script-variable-name-controls {
     grid-template-columns: 1fr;
   }
 }

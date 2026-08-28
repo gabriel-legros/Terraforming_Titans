@@ -15,7 +15,10 @@ function formatNanotechSingleRate(current, unit) {
 
 class NanotechManager extends EffectableEntity {
   constructor() {
-    super({ description: t('ui.colony.nanotech.managerDescription') });
+    super({
+      description: t('ui.colony.nanotech.managerDescription'),
+      resetAt: GAME_RESET_LEVEL.NEW_GAME
+    });
     this.nanobots = 1;
     this.showNanobotsInSidebar = false;
     this.travelNanobotFloor = 1;
@@ -550,7 +553,7 @@ class NanotechManager extends EffectableEntity {
     const growthDelta = this.nanobots * breakdown.effectiveRate * (deltaTime / 1000);
     const max = this.getMaxNanobots();
     if (growthDelta > 0 && this.nanobots < max) this.nanobots = Math.min(max, this.nanobots + growthDelta);
-    else if (growthDelta < 0) this.nanobots += growthDelta;
+    else if (growthDelta < 0) this.nanobots = Math.max(1, this.nanobots + growthDelta);
     this.applyMaintenanceEffects();
   }
 
@@ -565,7 +568,10 @@ class NanotechManager extends EffectableEntity {
     this.uiDirty = true;
   }
 
-  prepareForTravel() {
+  prepareForTravel(resetLevel = GAME_RESET_LEVEL.PLANET) {
+    if (resetLevel >= this.departureResetAt) {
+      return;
+    }
     const travelCap = this.getTravelPreserveCap();
     this.nanobots = Math.max(1, Math.min(Number(this.nanobots), travelCap)) || travelCap;
     this.travelNanobotFloor = this.nanobots;

@@ -1,5 +1,6 @@
 class ScriptVariableRegistry {
-  constructor() {
+  constructor(scriptAutomation) {
+    this.scriptAutomation = scriptAutomation;
     this.sources = [
       { id: 'constant', label: this.getScriptVariableText('sources.constant', 'Constant') },
       { id: 'variables', label: this.getScriptVariableText('variables.source', 'Variables') },
@@ -69,12 +70,7 @@ class ScriptVariableRegistry {
   }
 
   getVariableTargets() {
-    const targets = [];
-    for (let index = 0; index < 26; index += 1) {
-      const letter = String.fromCharCode(65 + index);
-      targets.push({ id: letter, label: letter });
-    }
-    return targets;
+    return this.scriptAutomation.getVariableTargets('number');
   }
 
   getBuildingCategories() {

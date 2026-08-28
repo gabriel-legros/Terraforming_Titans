@@ -67,25 +67,37 @@ function addSaveSlotListeners() {
       const confirmation = slot === 'autosave'
         ? t('ui.settings.confirmDeleteAutosaves', null, 'Are you sure you want to delete every autosave? This action cannot be undone.')
         : t('ui.settings.confirmDeleteSlot', { slot: getSaveSlotLabel(slot) }, `Are you sure you want to delete the save file in ${getSaveSlotLabel(slot)}? This action cannot be undone.`);
-      if (confirm(confirmation)) {
-        deleteSaveFileFromSlot(slot);
-      }
+      createSystemChoicePopup(
+        '',
+        confirmation,
+        t('ui.common.delete', null, 'Delete'),
+        t('ui.common.cancel', null, 'Cancel'),
+        () => deleteSaveFileFromSlot(slot),
+        null
+      );
     });
   });
 }
 
 function addSaveLoadListeners() {
   document.getElementById('new-game-button').addEventListener('click', () => {
-    if (confirm(t('ui.settings.confirmNewGame', null, 'Are you sure you want to start a new game? Any unsaved progress will be lost.'))) {
-      if (typeof startNewGame === 'function') {
-        startNewGame();
-      } else {
-        initializeGameState();
-        if (typeof openTerraformingWorldTab === 'function') {
-          openTerraformingWorldTab();
+    createSystemChoicePopup(
+      '',
+      t('ui.settings.confirmNewGame', null, 'Are you sure you want to start a new game? Any unsaved progress will be lost.'),
+      t('ui.settings.startNewGame', null, 'Start New Game'),
+      t('ui.common.cancel', null, 'Cancel'),
+      () => {
+        if (typeof startNewGame === 'function') {
+          startNewGame();
+        } else {
+          initializeGameState();
+          if (typeof openTerraformingWorldTab === 'function') {
+            openTerraformingWorldTab();
+          }
         }
-      }
-    }
+      },
+      null
+    );
   });
 
   document.getElementById('save-to-file-button').addEventListener('click', saveGameToFile);

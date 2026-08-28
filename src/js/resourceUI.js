@@ -10,6 +10,7 @@ const SPACE_STORAGE_UI_ORDER = [
   'superconductors',
   'superalloys',
   'liquidWater',
+  'food',
   'biomass',
   'carbonDioxide',
   'inertGas',

@@ -36,6 +36,7 @@ const ACHIEVEMENT_DISALLOWED_RENEWABLE_BUILDINGS = {
 
 class AchievementManager {
   constructor() {
+    this.resetAt = GAME_RESET_LEVEL.NEW_GAME;
     this.definitions = this.buildDefinitions();
     this.achieved = {};
     this.pendingUnlocks = [];
@@ -352,7 +353,7 @@ class AchievementManager {
     if (!lifters) {
       return false;
     }
-    return lifters.isRunning === true && lifters.mode === 'stripAtmosphere';
+    return lifters.isRunning === true && lifters.hasAssignedRecipe('stripAtmosphere');
   }
 
   isCurrentWorldRandom() {

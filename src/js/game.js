@@ -344,19 +344,36 @@ function updateAutoTravelLoadingPopupVisibility() {
 }
 
 function prepareForTravel(options = {}) {
+  const resetLevel = options.resetLevel ?? GAME_RESET_LEVEL.PLANET;
   if (options.savePretravel !== false) {
     try {
       saveGameToSlot('pretravel');
     } catch (_) {}
   }
 
-  const travelState = {
-    projects: projectManager?.saveTravelState?.(),
-    followers: followersManager?.prepareTravelState?.()
-  };
-
+  const projectTravelState = projectManager?.saveTravelState?.(resetLevel);
+  const followerTravelState = resetLevel < followersManager.resetAt
+    ? followersManager.prepareTravelState(resetLevel)
+    : null;
   hazardManager?.prepareForTravel?.(terraforming);
-  nanotechManager?.prepareForTravel?.();
+  if (resetLevel < nanotechManager.resetAt) {
+    nanotechManager.prepareForTravel(resetLevel);
+  }
+
+  const travelState = {
+    resetLevel,
+    projects: projectTravelState,
+    followers: followerTravelState,
+    resources: resources
+      ? capturePreservedTravelResourceState(resources, resetLevel)
+      : null,
+    autoBuild: typeof structures !== 'undefined'
+      ? captureAutoBuildSettings(structures, resetLevel)
+      : null,
+    constructionOffice: captureConstructionOfficeSettings(resetLevel),
+    lifeDesigner: lifeDesigner?.prepareTravelState?.(resetLevel),
+    hazardousMachinery: hazardManager?.hazardousMachineryHazard?.saveTravelState?.(resetLevel)
+  };
 
   preparedTravelState = travelState;
   return travelState;
@@ -372,14 +389,32 @@ function rebaseDynamicMassInitialGeometryAfterHazards() {
 }
 
 function initializeGameState(options = {}) {
-  const preserveManagers = options.preserveManagers || false;
-  const preserveJournal = options.preserveJournal || false;
+  const resetLevel = options.resetLevel ?? GAME_RESET_LEVEL.NEW_GAME;
+  const isLayerReset = resetLevel < GAME_RESET_LEVEL.NEW_GAME;
   const skipStoryInitialization = options.skipStoryInitialization || false;
+  const managerSurvivesReset = {
+    research: !!researchManager && resetLevel < researchManager.resetAt,
+    skill: !!skillManager && resetLevel < skillManager.resetAt,
+    automation: !!automationManager && resetLevel < automationManager.resetAt,
+    solis: !!solisManager && resetLevel < solisManager.resetAt,
+    warpGateCommand: !!warpGateCommand && resetLevel < warpGateCommand.resetAt,
+    nanotech: !!nanotechManager && resetLevel < nanotechManager.resetAt,
+    patience: !!patienceManager && resetLevel < patienceManager.resetAt,
+    earth: !!earthManager && resetLevel < earthManager.resetAt,
+    followers: !!followersManager && resetLevel < followersManager.resetAt,
+    artificial: !!artificialManager && resetLevel < artificialManager.resetAt,
+    atlas: !!atlasManager && resetLevel < atlasManager.resetAt,
+    galaxy: !!galaxyManager && resetLevel < galaxyManager.resetAt,
+    galaxyInvasion: !!galaxyInvasionManager && resetLevel < galaxyInvasionManager.resetAt,
+    story: !!storyManager && resetLevel < storyManager.resetAt,
+    achievement: !!achievementManager && resetLevel < achievementManager.resetAt,
+    space: !!spaceManager && resetLevel < spaceManager.resetAt
+  };
   suppressPlanetVisualizerRuntime = true;
-  if (!preserveManagers) {
+  if (!isLayerReset) {
     shipEfficiency = 1;
   }
-  globalGameIsTraveling = preserveManagers && !globalGameIsLoadingFromSave;
+  globalGameIsTraveling = isLayerReset && !globalGameIsLoadingFromSave;
   autobuildCostTracker.reset();
   const pendingAutoTravelTabRestore = (
     autoTravelContext
@@ -413,55 +448,43 @@ function initializeGameState(options = {}) {
       activateSubtabByDataId(pendingAutoTravelTabRestore.settingsSubtabId || 'save-settings-subtab');
     }
   };
-  let savedTravelResources = null;
-  let savedProjectTravelState = null;
-  let savedConstructionOffice = null;
-  let savedLifeDesignerTravelState = null;
-  let savedFollowersTravelState = null;
-  let savedHazardousMachineryTravelState = null;
-  if (!preserveManagers && !globalGameIsLoadingFromSave) {
+  let travelState = null;
+  if (!isLayerReset && !globalGameIsLoadingFromSave) {
     resetStructureDisplayState();
     resetProjectDisplayState();
     resetResourceCategoryCollapseState();
-  } else if (preserveManagers && !globalGameIsLoadingFromSave && !gameSettings.keepHiddenStructuresOnTravel) {
+  } else if (isLayerReset && !globalGameIsLoadingFromSave && !gameSettings.keepHiddenStructuresOnTravel) {
     structureDisplayState.hidden = {};
   }
-  if (preserveManagers && !globalGameIsLoadingFromSave && !gameSettings.keepHiddenResearchOnTravel && typeof resetHiddenResearchOnTravel === 'function') {
+  if (isLayerReset && !globalGameIsLoadingFromSave && !gameSettings.keepHiddenResearchOnTravel && typeof resetHiddenResearchOnTravel === 'function') {
     resetHiddenResearchOnTravel();
   }
   goldenAsteroid?.resetForTravel?.();
-  if (preserveManagers) {
+  if (isLayerReset) {
     // Use prepared travel state from departure when available to avoid overwriting pretravel save.
-    const travelState = preparedTravelState || prepareForTravel({ savePretravel: false });
+    travelState = preparedTravelState?.resetLevel === resetLevel
+      ? preparedTravelState
+      : prepareForTravel({ savePretravel: false, resetLevel });
     preparedTravelState = null;
-    savedProjectTravelState = travelState.projects;
-    savedFollowersTravelState = travelState.followers;
-    savedHazardousMachineryTravelState = hazardManager?.hazardousMachineryHazard?.save
-      ? hazardManager.hazardousMachineryHazard.save()
-      : null;
+  } else {
+    preparedTravelState = null;
+    if (!globalGameIsLoadingFromSave) {
+      projectManager?.cleanupForReset?.(resetLevel);
+      hazardManager?.prepareForTravel?.(terraforming);
+    }
   }
-  if (preserveManagers && typeof captureAutoBuildSettings === 'function' && typeof structures !== 'undefined') {
-    captureAutoBuildSettings(structures);
-  }
-  if (preserveManagers && typeof captureConstructionOfficeSettings === 'function') {
-    savedConstructionOffice = captureConstructionOfficeSettings();
-  }
-  if (preserveManagers && resources) {
-    savedTravelResources = capturePreservedTravelResourceState(resources);
+  if (isLayerReset && resources) {
     clearResourceTooltipRateCooldownsForTravel(resources);
-  }
-  if (preserveManagers && lifeDesigner?.prepareTravelState) {
-    savedLifeDesignerTravelState = lifeDesigner.prepareTravelState();
   }
   tabManager = new TabManager({
     description: 'Manages game tabs and unlocks them based on effects.',
   }, tabParameters);
 
-  if (!preserveJournal && typeof resetJournal === 'function') {
+  if (!isLayerReset && typeof resetJournal === 'function') {
     resetJournal();
   }
 
-  if (!preserveManagers) {
+  if (!isLayerReset) {
     if (!globalGameIsLoadingFromSave) {
       fastestTerraformDays = null;
       fastestTerraformRealSeconds = null;
@@ -469,6 +492,8 @@ function initializeGameState(options = {}) {
       birchWorldTerraformRealTimeSeconds = null;
     }
     updateDifficultySettingInputs();
+  }
+  if (!managerSurvivesReset.nanotech) {
     nanotechManager.reset();
   }
 
@@ -509,24 +534,24 @@ function initializeGameState(options = {}) {
       }
     }
   }
-  if (savedTravelResources) {
-    restorePreservedTravelResourceState(resources, savedTravelResources);
+  if (travelState?.resources) {
+    restorePreservedTravelResourceState(resources, travelState.resources, resetLevel);
   }
   setProjectStorageProviders({});
   buildings = initializeBuildings(buildingsParameters);
   projectManager = new ProjectManager();
   projectManager.initializeProjects(projectParameters);
-  if (savedProjectTravelState && typeof projectManager.loadTravelState === 'function') {
-    projectManager.loadTravelState(savedProjectTravelState);
+  if (travelState?.projects && typeof projectManager.loadTravelState === 'function') {
+    projectManager.loadTravelState(travelState.projects, resetLevel);
   }
   colonies = initializeColonies(colonyParameters);
   structures = { ...buildings, ...colonies };
-  if (preserveManagers && typeof restoreAutoBuildSettings === 'function') {
-    restoreAutoBuildSettings(structures);
+  if (travelState?.autoBuild && typeof restoreAutoBuildSettings === 'function') {
+    restoreAutoBuildSettings(structures, travelState.autoBuild, resetLevel);
   }
   applyStructureDisplayPreferences(structures);
-  if (savedConstructionOffice && typeof restoreConstructionOfficeSettings === 'function') {
-    restoreConstructionOfficeSettings(savedConstructionOffice);
+  if (travelState?.constructionOffice && typeof restoreConstructionOfficeSettings === 'function') {
+    restoreConstructionOfficeSettings(travelState.constructionOffice, resetLevel);
   }
 
   const fundingRate = currentPlanetParameters.fundingRate || 0;
@@ -534,13 +559,13 @@ function initializeGameState(options = {}) {
   populationModule = new PopulationModule(resources, currentPlanetParameters.populationParameters);
 
   lifeDesigner = new LifeDesigner();
-  if (preserveManagers && savedLifeDesignerTravelState && lifeDesigner.restoreTravelState) {
-    lifeDesigner.restoreTravelState(savedLifeDesignerTravelState);
+  if (travelState?.lifeDesigner && lifeDesigner.restoreTravelState) {
+    lifeDesigner.restoreTravelState(travelState.lifeDesigner, resetLevel);
   }
   lifeManager = new LifeManager();
   warpGateNetworkManager = new WarpGateNetworkManager();
 
-  if (!preserveManagers || !researchManager) {
+  if (!managerSurvivesReset.research) {
     researchManager = new ResearchManager(researchParameters);
   } else {
     if (!globalGameIsLoadingFromSave && researchManager.clearEffectsOnTravel) {
@@ -555,17 +580,18 @@ function initializeGameState(options = {}) {
   }
   projectManager.applyEffects();
   applyCompanionResearchTravelRewards();
-  if (!preserveManagers || !skillManager) {
+  if (!managerSurvivesReset.skill) {
     skillManager = new SkillManager(skillParameters);
   }
-  // Reset colony management sliders to their default values
-  // so a fresh game always starts from a clean state. Saved games
-  // will overwrite these values after loading.
-  if (typeof resetColonySliders === 'function') {
-    resetColonySliders(!preserveManagers);
-  }
+  // Control values are world state, while slider unlocks/effects survive until
+  // the manager's travel-state threshold is reached.
+  colonySliderSettings.resetForLevel(resetLevel);
   if (typeof resetMirrorOversightSettings === 'function') {
-    if (!preserveManagers || !gameSettings.preserveProjectSettingsOnTravel) {
+    const mirrorProject = projectManager.projects.spaceMirrorFacility;
+    const preserveMirrorSettings = isLayerReset
+      && gameSettings.preserveProjectSettingsOnTravel
+      && resetLevel < mirrorProject.travelStateResetAt;
+    if (!preserveMirrorSettings) {
       resetMirrorOversightSettings();
     }
   }
@@ -574,7 +600,7 @@ function initializeGameState(options = {}) {
   terraforming = new Terraforming(resources, celestialParameters, currentPlanetParameters.specialAttributes);
   terraforming.initializeTerraforming();
   terraformingGraphsManager.reset({
-    preserveWindowState: preserveManagers && autoTravelContext && autoTravelContext.active
+    preserveWindowState: isLayerReset && autoTravelContext && autoTravelContext.active
   });
   if (typeof window !== 'undefined') {
     window.terraformingManager = terraforming;
@@ -598,32 +624,32 @@ function initializeGameState(options = {}) {
 
   goldenAsteroid = new GoldenAsteroid();
 
-  if (!preserveManagers || !automationManager) {
+  if (!managerSurvivesReset.automation) {
     automationManager = new AutomationManager();
   }
-  if (!preserveManagers || !solisManager) {
+  if (!managerSurvivesReset.solis) {
     solisManager = new SolisManager();
   }
-  if (!preserveManagers || !warpGateCommand) {
+  if (!managerSurvivesReset.warpGateCommand) {
     warpGateCommand = new WarpGateCommand();
   }
-  if (!preserveManagers || !patienceManager) {
+  if (!managerSurvivesReset.patience) {
     patienceManager = new PatienceManager();
   }
-  if (!preserveManagers || !earthManager) {
+  if (!managerSurvivesReset.earth) {
     earthManager = new EarthManager();
   }
-  if (!preserveManagers || !followersManager) {
+  if (!managerSurvivesReset.followers) {
     followersManager = new FollowersManager();
-  } else if (preserveManagers && savedFollowersTravelState && followersManager.restoreTravelState) {
-    followersManager.restoreTravelState(savedFollowersTravelState);
+  } else if (travelState?.followers && followersManager.restoreTravelState) {
+    followersManager.restoreTravelState(travelState.followers, resetLevel);
   }
-  if (!preserveManagers || !artificialManager) {
+  if (!managerSurvivesReset.artificial) {
     artificialManager = setArtificialManager(new ArtificialManager());
   } else if (artificialManager && typeof artificialManager.updateUI === 'function') {
     artificialManager.updateUI({ force: true });
   }
-  if (!preserveManagers || !atlasManager) {
+  if (!managerSurvivesReset.atlas) {
     atlasManager = new AtlasManager();
   } else {
     atlasManager.refreshUIVisibility();
@@ -631,13 +657,13 @@ function initializeGameState(options = {}) {
   }
 
   milestonesManager = new MilestonesManager();
-  if (preserveManagers) {
+  if (isLayerReset) {
     clearFestivalNotification();
   }
-  if (!preserveManagers || !galaxyManager) {
+  if (!managerSurvivesReset.galaxy) {
     galaxyManager = new GalaxyManager();
   }
-  if (!preserveManagers || !galaxyInvasionManager) {
+  if (!managerSurvivesReset.galaxyInvasion) {
     galaxyInvasionManager = new GalacticInvasionManager();
   }
   galaxyManager.galacticInvasionManager = galaxyInvasionManager;
@@ -645,17 +671,19 @@ function initializeGameState(options = {}) {
     galaxyManager.initialize();
   }
   warpGateNetworkManager.syncUnlocks();
-  if (!preserveManagers) {
+  if (!managerSurvivesReset.story) {
     storyManager.destroy();
     storyManager = new StoryManager(progressData);  // Pass the progressData object
     if (!skipStoryInitialization) {
       storyManager.initializeStory();
-      spaceManager = new SpaceManager(planetParameters);
-      globalThis.spaceManager = spaceManager;
     }
   }
+  if (!managerSurvivesReset.space && !skipStoryInitialization) {
+    spaceManager = new SpaceManager(planetParameters);
+    globalThis.spaceManager = spaceManager;
+  }
   spaceManager.syncGalacticPopulationResource();
-  if (!preserveManagers || !achievementManager) {
+  if (!managerSurvivesReset.achievement) {
     achievementManager = new AchievementManager();
   }
 
@@ -664,8 +692,8 @@ function initializeGameState(options = {}) {
     ? currentPlanetParameters.hazards
     : {};
   hazardManager.initialize(planetHazards);
-  if (preserveManagers && savedHazardousMachineryTravelState && hazardManager?.hazardousMachineryHazard?.load) {
-    hazardManager.hazardousMachineryHazard.load(savedHazardousMachineryTravelState);
+  if (travelState?.hazardousMachinery && hazardManager?.hazardousMachineryHazard?.loadTravelState) {
+    hazardManager.hazardousMachineryHazard.loadTravelState(travelState.hazardousMachinery, resetLevel);
   }
   rebaseDynamicMassInitialGeometryAfterHazards();
   achievementManager.update();
@@ -697,9 +725,9 @@ function initializeGameState(options = {}) {
     initializeResearchAlerts();
   }
   initializeHopeUI();
-  if (preserveManagers && typeof updateSpaceUI === 'function') {
+  if (isLayerReset && typeof updateSpaceUI === 'function') {
     updateSpaceUI();
-  } else if (!preserveManagers && typeof initializeSpaceUI === 'function') {
+  } else if (!isLayerReset && typeof initializeSpaceUI === 'function') {
     initializeSpaceUI(spaceManager);
   }
   if (atlasManager) {
@@ -715,41 +743,41 @@ function initializeGameState(options = {}) {
 
   // When keeping existing managers, reapplied story effects need to
   // target the newly created game objects for this planet.
-  if (preserveManagers && storyManager && typeof storyManager.reapplyEffects === 'function') {
+  if (managerSurvivesReset.story && typeof storyManager.reapplyEffects === 'function') {
     storyManager.reapplyEffects();
   }
-  if (preserveManagers && skillManager && typeof skillManager.reapplyEffects === 'function') {
+  if (managerSurvivesReset.skill && typeof skillManager.reapplyEffects === 'function') {
     skillManager.reapplyEffects();
   }
-  if (preserveManagers) {
+  if (isLayerReset) {
     applyDifficultySettingEffects();
   }
-  if (preserveManagers && automationManager && typeof automationManager.reapplyEffects === 'function') {
+  if (managerSurvivesReset.automation && typeof automationManager.reapplyEffects === 'function') {
     automationManager.reapplyEffects();
   }
-  if (preserveManagers && solisManager && typeof solisManager.reapplyEffects === 'function') {
+  if (managerSurvivesReset.solis && typeof solisManager.reapplyEffects === 'function') {
     solisManager.reapplyEffects({ grantStartingResources: true });
     hazardManager.applyTravelAdjustments(terraforming);
   }
-  if (preserveManagers && warpGateCommand && typeof warpGateCommand.reapplyEffects === 'function') {
+  if (managerSurvivesReset.warpGateCommand && typeof warpGateCommand.reapplyEffects === 'function') {
     warpGateCommand.reapplyEffects();
   }
-  if (preserveManagers && patienceManager && typeof patienceManager.reapplyEffects === 'function') {
+  if (managerSurvivesReset.patience && typeof patienceManager.reapplyEffects === 'function') {
     patienceManager.reapplyEffects();
   }
-  if (preserveManagers && followersManager && typeof followersManager.reapplyEffects === 'function') {
+  if (managerSurvivesReset.followers && typeof followersManager.reapplyEffects === 'function') {
     followersManager.reapplyEffects();
   }
-  if (preserveManagers && atlasManager && typeof atlasManager.reapplyEffects === 'function') {
+  if (managerSurvivesReset.atlas && typeof atlasManager.reapplyEffects === 'function') {
     atlasManager.reapplyEffects();
   }
-  if (preserveManagers && galaxyInvasionManager && galaxyInvasionManager.reapplyEffects) {
+  if (managerSurvivesReset.galaxyInvasion && galaxyInvasionManager.reapplyEffects) {
     galaxyInvasionManager.reapplyEffects();
   }
   if (typeof nanotechManager !== 'undefined' && typeof nanotechManager.reapplyEffects === 'function') {
     nanotechManager.reapplyEffects();
   }
-  if (preserveManagers) {
+  if (managerSurvivesReset.research) {
     researchManager.applyActiveEffects(false);
     researchManager.reapplyEffects();
   }
@@ -760,10 +788,10 @@ function initializeGameState(options = {}) {
   }
   hazardManager.ensureCrusaderPresence(terraforming);
   updateColonySubtabsVisibility();
-  if (preserveManagers && typeof updateRender === 'function') {
+  if (isLayerReset && typeof updateRender === 'function') {
     updateRender(true, { forceAllSubtabs: true });
   }
-  if (preserveManagers && automationManager) {
+  if (managerSurvivesReset.automation) {
     automationManager.applyTravelCombinationPresets();
   }
   globalGameIsTraveling = false;

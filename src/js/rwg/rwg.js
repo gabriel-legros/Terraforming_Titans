@@ -1683,7 +1683,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   if (type === 'jupiter-like') {
     const atmosphericMassKg = sumAtmosphericMass(atmo) * 1000;
     bulk.mass = (bulk.basePlanetaryMassKg || 0) + (bulk.liquidHydrogenMassKg || 0) + atmosphericMassKg;
-    bulk.gravity = gravityFromMassRadius(bulk.mass, bulk.radius_km);
+    bulk.gravity = gravityFromMassRadius(bulk.mass - atmosphericMassKg, bulk.radius_km);
   }
   const surface = buildVolatiles(
     type,
@@ -1702,7 +1702,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     const surfaceMassKg = sumInitialResourceMassKg(surface, { land: true });
     const atmosphericMassKg = sumInitialResourceMassKg(atmo);
     bulk.mass = (bulk.basePlanetaryMassKg || 0) + surfaceMassKg + atmosphericMassKg;
-    bulk.gravity = gravityFromMassRadius(bulk.mass, bulk.radius_km);
+    bulk.gravity = gravityFromMassRadius(bulk.mass - atmosphericMassKg, bulk.radius_km);
   }
   let rotation = (type === "titan-like" || type === "icy-moon") ? randRange(rng, 150, 450) : randRange(rng, 10, 48);
   if (type === "venus-like") rotation = randRange(rng, 5200, 6400);

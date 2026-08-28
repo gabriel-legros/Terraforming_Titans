@@ -138,6 +138,22 @@ function getPhaseChangeHeatTooltipText() {
   return lines.join('\n');
 }
 
+function getLifeThermodynamicsTooltipText() {
+  const lines = [
+    getTerraformingSummaryText(
+      'lifeSummary.thermodynamicsFluxTooltip',
+      'Solar energy stored as chemical energy by natural surface-life growth during the latest tick. Negative values represent cooling. Growth in each zone can absorb at most 10% of its surface solar flux averaged over the zone, including curvature and night, and this cooling changes that zone\'s temperature trend.'
+    ),
+    '',
+  ];
+  for (const zone of getZones()) {
+    const flux = terraforming.getLifeThermodynamicsFlux(zone);
+    const fluxText = `${flux > 0 ? '+' : ''}${formatNumber(flux, false, 2)}`;
+    lines.push(`${getTerraformingZoneLabel(zone)}: ${fluxText} W/m²`);
+  }
+  return lines.join('\n');
+}
+
 const ATMOSPHERE_TOOLTIP_MOLAR_WEIGHTS = {
   carbonDioxide: 44.01,
   atmosphericWater: 18.01528,
@@ -515,8 +531,183 @@ const EQUATORIAL_GRAVITY_TOOLTIP_TEXT = getTerraformingSummaryText(
 
 const GRAVITY_PENALTY_TOOLTIP_TEXT = getTerraformingSummaryText(
   'magnetosphere.gravityPenaltyTooltip',
-  'Gravity penalties blend equatorial and surface gravity with fixed weights.\nThe final penalty always uses 25% equatorial gravity penalty plus 75% full surface gravity penalty.'
+  'Gravity penalties use estimated gravity at the altitude where atmospheric pressure reaches 1 atm.\nBelow 1 atm surface pressure, they use surface gravity instead.\nThe final penalty blends 25% equatorial gravity penalty with 75% full gravity penalty at that altitude.'
 );
+
+const GRAVITY_DENSITY_TABLE_ROWS = [
+  {
+    category: 'core',
+    materials: [
+      { key: 'metal', density: WORLD_GEOMETRY_PARAMETERS.planetaryImportDensityKgM3.metal },
+      { key: 'silicon', density: WORLD_GEOMETRY_PARAMETERS.planetaryImportDensityKgM3.silicon }
+    ]
+  },
+  {
+    category: 'surface',
+    materials: DYNAMIC_WORLD_SURFACE_MASS_KEYS.map(key => ({
+      key,
+      density: key === 'liquidHydrogen'
+        ? null
+        : WORLD_GEOMETRY_PARAMETERS.surfaceDensityKgM3[key]
+    }))
+  }
+];
+
+function getGravityMaterialName(category, key) {
+  const resource = resources.surface?.[key];
+  if (resource?.displayName || resource?.name) {
+    return resource.displayName || resource.name;
+  }
+  return getTerraformingSummaryText(
+    `magnetosphere.gravityTooltip.materials.${key}`,
+    formatTerraformingSummaryLabel(key, key)
+  );
+}
+
+function appendGravityDensityTable(container, category, materials, titleKey) {
+  const table = document.createElement('table');
+  const header = document.createElement('thead');
+  const categoryRow = document.createElement('tr');
+  categoryRow.classList.add('gravity-calculation-tooltip__category');
+  const categoryCell = document.createElement('th');
+  categoryCell.colSpan = 2;
+  categoryCell.scope = 'colgroup';
+  categoryCell.textContent = getTerraformingSummaryText(
+    `magnetosphere.gravityTooltip.categories.${titleKey || category}`,
+    formatTerraformingSummaryLabel(category, category)
+  );
+  categoryRow.appendChild(categoryCell);
+  header.appendChild(categoryRow);
+
+  const headingRow = document.createElement('tr');
+  for (const heading of [
+    getTerraformingSummaryText('magnetosphere.gravityTooltip.materialHeading', 'Material'),
+    getTerraformingSummaryText('magnetosphere.gravityTooltip.densityHeading', 'Density (kg/m³)')
+  ]) {
+    const cell = document.createElement('th');
+    cell.scope = 'col';
+    cell.textContent = heading;
+    headingRow.appendChild(cell);
+  }
+  header.appendChild(headingRow);
+  table.appendChild(header);
+
+  const body = document.createElement('tbody');
+  for (const material of materials) {
+    const row = document.createElement('tr');
+    const nameCell = document.createElement('td');
+    nameCell.textContent = getGravityMaterialName(category, material.key);
+    row.appendChild(nameCell);
+
+    const densityCell = document.createElement('td');
+    if (material.key === 'liquidHydrogen') {
+      densityCell.textContent = `${formatNumber(LIQUID_HYDROGEN_COMPRESSION_PARAMETERS.baseDensityKgM3, false, 2)}–${formatNumber(LIQUID_HYDROGEN_COMPRESSION_PARAMETERS.maximumDensityKgM3, false, 2)}`;
+    } else {
+      densityCell.textContent = formatNumber(material.density, false, 2);
+    }
+    row.appendChild(densityCell);
+    body.appendChild(row);
+  }
+  table.appendChild(body);
+  container.appendChild(table);
+}
+
+function createGravityTooltip(icon) {
+  const tooltip = attachDynamicInfoTooltip(icon, '');
+  tooltip.classList.add('gravity-calculation-tooltip');
+  tooltip.textContent = '';
+
+  const explanation = document.createElement('p');
+  explanation.textContent = getTerraformingSummaryText(
+    'magnetosphere.gravityTooltip.explanation',
+    'Surface gravity is calculated from the world\'s non-atmospheric mass and radius: g = G × mass / radius².'
+  );
+  tooltip.appendChild(explanation);
+
+  const worldNote = document.createElement('p');
+  worldNote.textContent = getTerraformingSummaryText(
+    'magnetosphere.gravityTooltip.worldNote',
+    'On most worlds gravity cannot be easily changed.'
+  );
+  tooltip.appendChild(worldNote);
+
+  const dynamicDetails = document.createElement('p');
+  dynamicDetails.classList.add('gravity-calculation-tooltip__dynamic-details');
+  tooltip.appendChild(dynamicDetails);
+
+  const densitySection = document.createElement('div');
+  densitySection.classList.add('gravity-calculation-tooltip__density-section');
+
+  const tableTitle = document.createElement('p');
+  tableTitle.classList.add('gravity-calculation-tooltip__table-title');
+  tableTitle.textContent = getTerraformingSummaryText(
+    'magnetosphere.gravityTooltip.densityTableTitle',
+    'Material density used for dynamic world radius calculations:'
+  );
+  densitySection.appendChild(tableTitle);
+
+  const densityGrid = document.createElement('div');
+  densityGrid.classList.add('gravity-calculation-tooltip__density-grid');
+  const coreAndSurfaceColumn = document.createElement('div');
+  const coreGroup = GRAVITY_DENSITY_TABLE_ROWS[0];
+  const surfaceGroup = GRAVITY_DENSITY_TABLE_ROWS[1];
+  const surfaceSplitIndex = Math.ceil(surfaceGroup.materials.length / 2);
+
+  appendGravityDensityTable(
+    coreAndSurfaceColumn,
+    coreGroup.category,
+    coreGroup.materials
+  );
+  appendGravityDensityTable(
+    coreAndSurfaceColumn,
+    surfaceGroup.category,
+    surfaceGroup.materials.slice(0, surfaceSplitIndex)
+  );
+  densityGrid.appendChild(coreAndSurfaceColumn);
+
+  const surfaceSecondColumn = document.createElement('div');
+  appendGravityDensityTable(
+    surfaceSecondColumn,
+    surfaceGroup.category,
+    surfaceGroup.materials.slice(surfaceSplitIndex),
+    'surfaceContinued'
+  );
+  densityGrid.appendChild(surfaceSecondColumn);
+  densitySection.appendChild(densityGrid);
+
+  const hydrogenNote = document.createElement('p');
+  hydrogenNote.classList.add('gravity-calculation-tooltip__note');
+  hydrogenNote.textContent = getTerraformingSummaryText(
+    'magnetosphere.gravityTooltip.hydrogenNote',
+    'Liquid hydrogen ranges from 71 kg/m³ to 1,140 kg/m³ as compression increases.'
+  );
+  densitySection.appendChild(hydrogenNote);
+  tooltip.appendChild(densitySection);
+
+  const update = () => {
+    const dynamicMassWorld = currentPlanetParameters.specialAttributes?.dynamicMass === true;
+    tooltip.classList.toggle('gravity-calculation-tooltip--compact', !dynamicMassWorld);
+    dynamicDetails.style.display = dynamicMassWorld ? '' : 'none';
+    densitySection.style.display = dynamicMassWorld ? '' : 'none';
+    if (!dynamicMassWorld) return;
+
+    const celestial = terraforming.celestialParameters;
+    dynamicDetails.textContent = getTerraformingSummaryText(
+      'magnetosphere.gravityTooltip.dynamicDetails',
+      'Dynamic mass world: gravity updates as material changes mass and radius. Current calculation: G × {mass} kg / ({radius} m)² = {gravity} m/s². Core and surface density affect radius; atmospheric mass is excluded because it lies above the surface.',
+      {
+        mass: formatNumber(celestial.mass - (celestial.currentAtmosphericMassKg || 0), true, 3),
+        radius: formatNumber(celestial.radius * 1000, true, 3),
+        gravity: formatNumber(celestial.gravity, false, 2)
+      }
+    );
+  };
+  icon.addEventListener('mouseenter', update);
+  icon.addEventListener('focusin', update);
+  icon.addEventListener('pointerdown', update);
+  update();
+  return { tooltip, update };
+}
 
 function getTemperatureMaintenanceImmuneTooltip() {
   const buildingMap = globalThis?.buildings ?? {};
@@ -2782,12 +2973,17 @@ function createWaterBox(row) {
           <tr data-zone-row="tropical"><td>${getTerraformingZoneLabel('tropical')}</td><td id="life-coverage-tropical">0.00</td><td id="life-photo-tropical">0.00</td></tr>
         </tbody>
       </table>
+      <p id="life-thermodynamics-flux-line" style="display: none;">${getTerraformingSummaryText('lifeSummary.labels.thermodynamicsFlux', 'Life Thermodynamics Flux')}: <span id="life-thermodynamics-flux">0.00</span> W/m² <span id="life-thermodynamics-flux-info" class="info-tooltip-icon">&#9432;</span></p>
       `;
 
     const lifeHeading = lifeBox.querySelector('h3');
     if (lifeHeading) {
       lifeHeading.appendChild(lifeInfo);
     }
+    const thermodynamicsFluxTooltip = attachDynamicInfoTooltip(
+      lifeBox.querySelector('#life-thermodynamics-flux-info'),
+      getLifeThermodynamicsTooltipText()
+    );
 
     const targetSpan = document.createElement('span');
     const effectiveLifeTarget = getEffectiveLifeFraction(terraforming);
@@ -2819,6 +3015,9 @@ function createWaterBox(row) {
       target: targetSpan,
       coverageOverall: lifeBox.querySelector('#life-coverage-overall'),
       photoOverall: lifeBox.querySelector('#life-photo-overall'),
+      thermodynamicsFluxLine: lifeBox.querySelector('#life-thermodynamics-flux-line'),
+      thermodynamicsFlux: lifeBox.querySelector('#life-thermodynamics-flux'),
+      thermodynamicsFluxTooltip,
       zoneRows: {
         tropical: lifeBox.querySelector('tr[data-zone-row="tropical"]'),
         temperate: lifeBox.querySelector('tr[data-zone-row="temperate"]'),
@@ -2894,6 +3093,20 @@ function updateLifeBox() {
       'Life is the pinnacle of the terraforming process.'
     )}\n${zoneLines.join('\n')}`;
     els.infoTooltip.textContent = tooltipText;
+
+    if (els.thermodynamicsFluxLine) {
+      els.thermodynamicsFluxLine.style.display = gameSettings.lifeThermodynamics ? '' : 'none';
+    }
+    if (els.thermodynamicsFlux) {
+      const flux = terraforming.getLifeThermodynamicsFlux();
+      els.thermodynamicsFlux.textContent = `${flux > 0 ? '+' : ''}${formatNumber(flux, false, 2)}`;
+    }
+    if (els.thermodynamicsFluxTooltip) {
+      const thermodynamicsTooltipText = getLifeThermodynamicsTooltipText();
+      if (els.thermodynamicsFluxTooltip.textContent !== thermodynamicsTooltipText) {
+        setTooltipText(els.thermodynamicsFluxTooltip, thermodynamicsTooltipText);
+      }
+    }
 
     const hazardByZone = {
       tropical: terraforming.zonalSurface.hazardousBiomass.tropical || 0,
@@ -3074,7 +3287,7 @@ function updateLifeBox() {
         <p>${getTerraformingSummaryText('magnetosphere.labels.orbitalRadiation', 'Orbital radiation')}: <span id="orbital-radiation">${formatRadiation(orbRad)}</span> mSv/day</p>
         <p>${getTerraformingSummaryText('magnetosphere.labels.surfaceRadiation', 'Surface radiation')}: <span id="surface-radiation">${formatRadiation(rad)}</span> mSv/day</p>
         <p id="radiation-penalty-row">${getTerraformingSummaryText('magnetosphere.labels.radiationPenalty', 'Radiation penalty')}: <span id="surface-radiation-penalty">${formatNumber(radPenalty * 100, false, 0)}</span>%</p>
-        <p>${getTerraformingSummaryText('magnetosphere.labels.gravity', 'Gravity')}: <span id="terraforming-gravity-value">${formatNumber(gravityValue, false, 2)}</span> m/s²</p>
+        <p>${getTerraformingSummaryText('magnetosphere.labels.gravity', 'Gravity')}: <span id="terraforming-gravity-value">${formatNumber(gravityValue, false, 2)}</span> m/s² <span id="terraforming-gravity-tooltip" class="info-tooltip-icon">&#9432;</span></p>
         <p id="terraforming-equatorial-gravity-row"${equatorialGravityRowStyle}>${getTerraformingSummaryText('magnetosphere.labels.equatorialGravity', 'Equatorial gravity')}<span class="info-tooltip-icon" title="${EQUATORIAL_GRAVITY_TOOLTIP_TEXT}">&#9432;</span> : <span id="terraforming-equatorial-gravity-value">${formatNumber(equatorialGravity, false, 2)}</span> m/s²</p>
         <p id="terraforming-stellar-radius-row"${stellarStructureStyle}>${getTerraformingSummaryText('magnetosphere.labels.stellarRadius', 'Stellar radius')}: <span id="terraforming-stellar-radius-value">${formatNumber(stellarEvolutionState.radiusKm, false, 2)}</span> km</p>
         <p id="terraforming-stellar-density-row"${stellarStructureStyle}>${getTerraformingSummaryText('magnetosphere.labels.meanDensity', 'Mean density')}: <span id="terraforming-stellar-density-value">${formatNumber(stellarEvolutionState.meanDensityKgM3, false, 2)}</span> kg/m³</p>
@@ -3098,6 +3311,9 @@ function updateLifeBox() {
       equatorialGravityInfo,
       EQUATORIAL_GRAVITY_TOOLTIP_TEXT
     );
+    const gravityTooltip = createGravityTooltip(
+      magnetosphereBox.querySelector('#terraforming-gravity-tooltip')
+    );
     const gravityPenaltyInfo = magnetosphereBox.querySelector('#gravity-penalty-row .info-tooltip-icon');
     const gravityPenaltyTooltip = attachDynamicInfoTooltip(
       gravityPenaltyInfo,
@@ -3114,6 +3330,7 @@ function updateLifeBox() {
       orbitalRadiation: magnetosphereBox.querySelector('#orbital-radiation'),
       surfaceRadiationPenalty: magnetosphereBox.querySelector('#surface-radiation-penalty'),
       gravityValue: magnetosphereBox.querySelector('#terraforming-gravity-value'),
+      gravityTooltip,
       equatorialGravityRow: magnetosphereBox.querySelector('#terraforming-equatorial-gravity-row'),
       equatorialGravityValue: magnetosphereBox.querySelector('#terraforming-equatorial-gravity-value'),
       equatorialGravityTooltip,
@@ -3187,6 +3404,7 @@ function updateLifeBox() {
     if (gravityValue) {
       gravityValue.textContent = formatNumber(gravity, false, 2);
     }
+    els.gravityTooltip.update();
     if (equatorialGravityRow) {
       if (gravity > 10) {
         equatorialGravityRow.style.display = '';

@@ -369,7 +369,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return this.disposalTargets.filter(target => target.autoStart && target.selectedDisposalResource);
   }
 
-  canTargetStart(target, accumulatedChanges = null) {
+  canTargetStart(target, accumulatedChanges = null, deltaTime = this.currentTickDeltaTime || 0) {
     if (!this.canTargetRun(target, accumulatedChanges)) {
       return false;
     }
@@ -381,13 +381,15 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       this.getShipCapacity(),
       selection.category,
       selection.resource,
-      available
+      available,
+      deltaTime,
+      accumulatedChanges
     ) > 0;
   }
 
-  getRunnableTargets(accumulatedChanges = null) {
+  getRunnableTargets(accumulatedChanges = null, deltaTime = this.currentTickDeltaTime || 0) {
     const autoTargets = this.getAutoStartTargets();
-    return autoTargets.filter(target => this.canTargetStart(target, accumulatedChanges));
+    return autoTargets.filter(target => this.canTargetStart(target, accumulatedChanges, deltaTime));
   }
 
   getDisposalTargetsForDisplay() {
@@ -1550,7 +1552,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
   }
 
   getDiscreteDisposalEntries() {
-    const activeTargets = this.getRunnableTargets();
+    const deltaTime = this.currentTickDeltaTime || 0;
+    const activeTargets = this.getRunnableTargets(null, deltaTime);
     if (!activeTargets.length) {
       return [];
     }
@@ -1562,11 +1565,13 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       category: target.selectedDisposalResource.category,
       resource: target.selectedDisposalResource.resource,
       requestedAmount,
+      deltaTime,
+      accumulatedChanges: null,
     }));
   }
 
   getContinuousDisposalEntries(context, productivity = 1, accumulatedChanges = null) {
-    const activeTargets = this.getRunnableTargets(accumulatedChanges);
+    const activeTargets = this.getRunnableTargets(accumulatedChanges, context.deltaTime);
     if (!activeTargets.length) {
       return [];
     }
@@ -1581,6 +1586,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       category: target.selectedDisposalResource.category,
       resource: target.selectedDisposalResource.resource,
       requestedAmount,
+      deltaTime: context.deltaTime,
+      accumulatedChanges,
     }));
   }
 
@@ -1691,7 +1698,9 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       entry.requestedAmount,
       entry.category,
       entry.resource,
-      availableAmount
+      availableAmount,
+      entry.deltaTime ?? this.currentTickDeltaTime ?? 0,
+      entry.accumulatedChanges ?? null
     );
   }
 
@@ -1702,13 +1711,28 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return super.getEffectiveAvailableAmount(category, resource, accumulatedChanges);
   }
 
-  getTargetClampedDisposalAmount(target, requestedAmount, category, resource, availableAmount) {
+  getTargetClampedDisposalAmount(
+    target,
+    requestedAmount,
+    category,
+    resource,
+    availableAmount,
+    deltaTime = this.currentTickDeltaTime || 0,
+    accumulatedChanges = null
+  ) {
     const maxByAvailable = Math.max(0, Math.min(requestedAmount, availableAmount));
     if (maxByAvailable <= 0) {
       return 0;
     }
 
-    const floorAmount = this.getTargetDisposalLowerLimitFloorAmount(target, category, resource, availableAmount);
+    const floorAmount = this.getTargetDisposalLowerLimitFloorAmount(
+      target,
+      category,
+      resource,
+      availableAmount,
+      deltaTime,
+      accumulatedChanges
+    );
     if (floorAmount <= 0) {
       return maxByAvailable;
     }
@@ -1717,7 +1741,14 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return Math.max(0, Math.min(maxByAvailable, maxDisposableByFloor));
   }
 
-  getTargetDisposalLowerLimitFloorAmount(target, category, resource, availableAmount) {
+  getTargetDisposalLowerLimitFloorAmount(
+    target,
+    category,
+    resource,
+    availableAmount,
+    deltaTime = this.currentTickDeltaTime || 0,
+    accumulatedChanges = null
+  ) {
     if (!this.isBooleanFlagSet('atmosphericMonitoring') || !target?.selectedDisposalResource) {
       return 0;
     }
@@ -1746,7 +1777,15 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       );
     }
 
+    if (category === 'atmospheric' && this.shouldTargetShowPressureControl(target)) {
+      floorAmount += this.getAtmosphericNeedForGas(resource, deltaTime, accumulatedChanges);
+    }
+
     return floorAmount;
+  }
+
+  getAtmosphericNeedForGas(gas, deltaTime = this.currentTickDeltaTime || 0, accumulatedChanges = null) {
+    return lifeManager.estimateAtmosphericConsumption(deltaTime, accumulatedChanges)[gas] || 0;
   }
 
   getTargetPressureFloorAmount(target) {

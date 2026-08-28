@@ -11,7 +11,10 @@ const FOLLOWERS_ART_WORKER_EFFECT_SOURCE_ID = 'followersArtWorkerEfficiency';
 
 class FollowersManager extends EffectableEntity {
   constructor() {
-    super({ description: getFollowersText('ui.colony.followers.managerDescription', 'Manages followers systems') });
+    super({
+      description: getFollowersText('ui.colony.followers.managerDescription', 'Manages followers systems'),
+      resetAt: GAME_RESET_LEVEL.NEW_GAME
+    });
     this.enabled = false;
     this.assignmentMode = 'manual';
     this.assignmentStep = 1;
@@ -1500,8 +1503,11 @@ class FollowersManager extends EffectableEntity {
     this.markUIDirty();
   }
 
-  prepareTravelState() {
-    if (isManagerEffectivelyEnabled(this, 'followersManager')) {
+  prepareTravelState(resetLevel = GAME_RESET_LEVEL.PLANET) {
+    if (
+      resetLevel < this.departureResetAt
+      && isManagerEffectivelyEnabled(this, 'followersManager')
+    ) {
       this.investFundingMax();
     }
     const travelState = {
@@ -1510,10 +1516,13 @@ class FollowersManager extends EffectableEntity {
     };
     this.clearEffectsOnTravel();
     this.resetTransientState();
-    return travelState;
+    return resetLevel < this.travelStateResetAt ? travelState : null;
   }
 
-  restoreTravelState() {
+  restoreTravelState(travelState = {}, resetLevel = GAME_RESET_LEVEL.PLANET) {
+    if (resetLevel >= this.travelStateResetAt) {
+      return;
+    }
     this.resetTransientState();
     if (this.enabled) {
       this.initializeFaithIfNeeded();

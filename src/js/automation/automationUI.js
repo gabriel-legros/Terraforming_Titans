@@ -68,6 +68,8 @@ const automationElements = {
   scriptAddLineButton: null,
   scriptImportButton: null,
   scriptExportButton: null,
+  scriptVariableConfigButton: null,
+  scriptVariableConfigPanel: null,
   shipAssignment: null,
   shipAssignmentStatus: null,
   shipAssignmentDescription: null,
@@ -1146,6 +1148,7 @@ function createAutomationPresetJsonDetails(extraClassName) {
   details._activeOnFilterChange = null;
   details._activeOnClearFilter = null;
   details._activeOnSnapshotFilter = null;
+  details._activeOnSnapshotAll = null;
   details._activeOnRegenerateFilter = null;
   details._activeSelectedFilterValue = '';
   details._hasSnapshotButton = false;
@@ -1983,6 +1986,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   const onFilterChange = options.onFilterChange;
   const onClearFilter = options.onClearFilter;
   const onSnapshotFilter = options.onSnapshotFilter;
+  const onSnapshotAll = options.onSnapshotAll;
   const onRegenerateFilter = options.onRegenerateFilter;
   const bucketIncludeKeys = options.bucketIncludeKeys || null;
   const showStatus = options.showStatus || null;
@@ -2002,9 +2006,10 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   details._activeOnFilterChange = onFilterChange || null;
   details._activeOnClearFilter = onClearFilter || null;
   details._activeOnSnapshotFilter = onSnapshotFilter || null;
+  details._activeOnSnapshotAll = onSnapshotAll || null;
   details._activeOnRegenerateFilter = onRegenerateFilter || null;
   details._activeSelectedFilterValue = selectedFilterValue || '';
-  details._hasSnapshotButton = !!onSnapshotFilter;
+  details._hasSnapshotButton = !!onSnapshotFilter || !!onSnapshotAll;
   details._hasRegenerateButton = !!onRegenerateFilter;
   details._showStatus = showStatus;
   details._parameterInputPathKeys = new Set(parameterInputPaths.map((path) => buildAutomationPresetLeafPathKey(path)));
@@ -2061,7 +2066,9 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
   }
   details._saveButton.style.display = details.open ? '' : 'none';
   details._snapshotButton.style.display = details.open && details._hasSnapshotButton ? '' : 'none';
-  details._snapshotButton.disabled = !details._activeOnSnapshotFilter || !details._activeSelectedFilterValue;
+  details._snapshotButton.disabled = details._activeSelectedFilterValue
+    ? !details._activeOnSnapshotFilter
+    : !details._activeOnSnapshotAll;
   details._regenerateButton.style.display = details.open && details._hasRegenerateButton ? '' : 'none';
   details._regenerateButton.disabled = !details._activeOnRegenerateFilter;
   const filterOptions = filterOptionsResolver ? filterOptionsResolver(preset) : [];
@@ -2219,6 +2226,13 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
         return;
       }
       const draftEntries = Object.values(details._jsonDraftMap);
+      const validationPreset = JSON.parse(JSON.stringify(currentPreset));
+      for (let index = 0; index < draftEntries.length; index += 1) {
+        const draftEntry = draftEntries[index];
+        if (draftEntry.included !== false) {
+          setAutomationPresetValueAtPath(validationPreset, draftEntry.path, draftEntry.value);
+        }
+      }
       for (let index = 0; index < draftEntries.length; index += 1) {
         const draftEntry = draftEntries[index];
         if (draftEntry.included === false) {
@@ -2226,7 +2240,7 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
         }
         const baseValue = getAutomationPresetJsonBaseValue(currentPreset, draftEntry.path, draftEntry.value);
         const fieldOptions = currentFieldOptionsResolver
-          ? currentFieldOptionsResolver(draftEntry.path, baseValue, currentPreset)
+          ? currentFieldOptionsResolver(draftEntry.path, baseValue, validationPreset)
           : null;
         const hasCustomSelectOptions = !!(fieldOptions
           && Array.isArray(fieldOptions.selectOptions)
@@ -2291,8 +2305,18 @@ function updateAutomationPresetJsonDetails(details, preset, options = {}) {
       event.preventDefault();
       event.stopPropagation();
       const currentOnSnapshotFilter = details._activeOnSnapshotFilter;
+      const currentOnSnapshotAll = details._activeOnSnapshotAll;
       const currentSelectedFilterValue = details._activeSelectedFilterValue;
-      if (!details._activePresetRef || !currentOnSnapshotFilter || !currentSelectedFilterValue) {
+      if (!details._activePresetRef) {
+        return;
+      }
+      if (!currentSelectedFilterValue) {
+        if (currentOnSnapshotAll) {
+          currentOnSnapshotAll();
+        }
+        return;
+      }
+      if (!currentOnSnapshotFilter) {
         return;
       }
       currentOnSnapshotFilter(currentSelectedFilterValue);
@@ -2536,7 +2560,7 @@ function exportAutomationPresetToClipboard(automationType, preset, button) {
   }
   const payload = buildAutomationPresetTransferPayload(automationType, preset);
   copyTextToClipboard(payload, {
-    promptLabel: getAutomationCardText('exportPresetPrompt', {}, 'Copy preset string:'),
+    manualCopyTitle: getAutomationCardText('exportPresetPrompt', {}, 'Copy preset string:'),
     onSuccess: () => {
       setAutomationTransferButtonFeedback(
         button,
@@ -2658,7 +2682,7 @@ function buildAutomationGlobalPayload() {
 function exportAllAutomationsToClipboard(button) {
   const payload = buildAutomationGlobalPayload();
   copyTextToClipboard(payload, {
-    promptLabel: getAutomationCardText('exportAllAutomationsPrompt', {}, 'Copy all automations string:'),
+    manualCopyTitle: getAutomationCardText('exportAllAutomationsPrompt', {}, 'Copy all automations string:'),
     onSuccess: () => {
       setAutomationTransferButtonFeedback(
         button,
@@ -2975,6 +2999,8 @@ if (typeof module !== 'undefined' && module.exports) {
     updateAutomationVisibility,
     updateAutomationUI,
     queueAutomationUIRefresh,
+    createAutomationPresetJsonDetails,
+    updateAutomationPresetJsonDetails,
     removeAutomationPresetValueAtPath
   };
 }

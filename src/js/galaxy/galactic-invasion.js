@@ -1,6 +1,6 @@
 class GalacticInvasionManager extends EffectableEntity {
   constructor() {
-    super({ description: 'Manages galactic invasion training.' });
+    super({ description: 'Manages galactic invasion training.', resetAt: GAME_RESET_LEVEL.NEW_GAME });
     this.enabled = false;
     this.currentLetterKey = null;
     this.completedLetters = new Set();
@@ -553,9 +553,7 @@ class GalacticInvasionManager extends EffectableEntity {
   }
 
   isActiveInvasionDefeated() {
-    if (this.getRunningOperation()) {
-      return false;
-    }
+    const runningOperation = this.getRunningOperation();
     let hasControlledSector = false;
     galaxyManager.getSectors().forEach((sector) => {
       const control = Number(sector.getControlValue?.(PROMETHEAN_INVASION_FACTION_ID)) || 0;
@@ -564,7 +562,11 @@ class GalacticInvasionManager extends EffectableEntity {
       }
     });
     if (!hasControlledSector) {
-      return true;
+      return !runningOperation
+        || (this.hasActiveTrait('commandBypass') && runningOperation.externalInvasion !== true);
+    }
+    if (runningOperation) {
+      return false;
     }
     const faction = galaxyManager.getFaction(PROMETHEAN_INVASION_FACTION_ID);
     if ((Number(faction.fleetPower) || 0) > FULL_CONTROL_EPSILON) {

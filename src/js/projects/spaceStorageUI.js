@@ -27,6 +27,7 @@ const storageResourceOptions = [
   { labelKey: 'superconductors', fallbackLabel: 'Superconductors', category: 'colony', resource: 'superconductors' },
   { labelKey: 'superalloys', fallbackLabel: 'Superalloys', category: 'colony', resource: 'superalloys', requiresFlag: 'superalloyResearchUnlocked' },
   { labelKey: 'water', fallbackLabel: 'Water', category: 'surface', resource: 'liquidWater' },
+  { labelKey: 'food', fallbackLabel: 'Food', category: 'colony', resource: 'food', requiresProjectFlag: 'biostorage' },
   { labelKey: 'biomass', fallbackLabel: 'Biomass', category: 'surface', resource: 'biomass', requiresProjectFlag: 'biostorage' },
   { labelKey: 'carbonDioxide', fallbackLabel: 'Carbon Dioxide', category: 'atmospheric', resource: 'carbonDioxide' },
   { labelKey: 'nitrogen', fallbackLabel: 'Nitrogen', category: 'atmospheric', resource: 'inertGas' },
@@ -262,6 +263,23 @@ function renderSpaceStorageUI(project, container) {
       </div>
       <div id="ss-resource-grid"></div>
     </div>`;
+  const transferWeightsText = getSpaceStorageUIText('ui.projects.spaceStorage.transferWeights', 'Transfer weights');
+  const transferWeightsToggle = createToggleButton({
+    onLabel: transferWeightsText,
+    offLabel: transferWeightsText,
+    isOn: project.transferWeightsVisible === true
+  });
+  transferWeightsToggle.classList.add('space-storage-transfer-weights-toggle');
+  transferWeightsToggle.setAttribute('aria-label', transferWeightsText);
+  transferWeightsToggle.addEventListener('click', () => {
+    project.transferWeightsVisible = !project.transferWeightsVisible;
+    setToggleButtonState(transferWeightsToggle, project.transferWeightsVisible);
+    const controls = projectElements[project.name]?.transferWeightControls || {};
+    for (const resourceKey in controls) {
+      controls[resourceKey].style.display = project.transferWeightsVisible ? 'flex' : 'none';
+    }
+  });
+  card.querySelector('.card-header').appendChild(transferWeightsToggle);
   if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(card);
   const cardBody = card.querySelector('.card-body');
 
@@ -1141,6 +1159,53 @@ function renderSpaceStorageUI(project, container) {
       openCapWindow(opt.resource, getSpaceStorageResourceLabel(opt));
     });
 
+    const transferWeightControls = document.createElement('div');
+    transferWeightControls.classList.add('space-storage-transfer-weight-controls');
+    transferWeightControls.style.display = project.transferWeightsVisible ? 'flex' : 'none';
+    const transferWeightAriaLabel = getSpaceStorageUIText(
+      'ui.projects.spaceStorage.transferWeightForResource',
+      'Transfer weight for {resource}',
+      { resource: getSpaceStorageResourceLabel(opt) }
+    );
+    const transferWeightSlider = document.createElement('input');
+    transferWeightSlider.type = 'range';
+    transferWeightSlider.min = '1';
+    transferWeightSlider.max = '100';
+    transferWeightSlider.step = '1';
+    transferWeightSlider.classList.add('pretty-slider', 'space-storage-transfer-weight-slider');
+    transferWeightSlider.setAttribute('aria-label', transferWeightAriaLabel);
+    const transferWeightValueInput = document.createElement('input');
+    transferWeightValueInput.type = 'text';
+    transferWeightValueInput.inputMode = 'decimal';
+    transferWeightValueInput.classList.add('space-storage-transfer-weight-input');
+    transferWeightValueInput.setAttribute('aria-label', transferWeightAriaLabel);
+    const initialTransferWeight = project.getResourceTransferWeight(opt.resource);
+    transferWeightSlider.value = String(Math.max(1, Math.min(100, initialTransferWeight)));
+    transferWeightValueInput.dataset.spaceStorageTransferWeight = String(initialTransferWeight);
+    transferWeightValueInput.value = initialTransferWeight >= 1e6
+      ? formatNumber(initialTransferWeight, true, 3)
+      : String(initialTransferWeight);
+    wireStringNumberInput(transferWeightValueInput, {
+      datasetKey: 'spaceStorageTransferWeight',
+      parseValue: (value) => {
+        const parsed = parseFlexibleNumber(value);
+        return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+      },
+      formatValue: (value) => value >= 1e6 ? formatNumber(value, true, 3) : String(value),
+      onValue: (value) => {
+        const normalized = project.setResourceTransferWeight(opt.resource, value);
+        transferWeightSlider.value = String(Math.max(1, Math.min(100, normalized)));
+      }
+    });
+    transferWeightSlider.addEventListener('input', () => {
+      const normalized = project.setResourceTransferWeight(opt.resource, Number(transferWeightSlider.value));
+      transferWeightValueInput.dataset.spaceStorageTransferWeight = String(normalized);
+      transferWeightValueInput.value = normalized >= 1e6
+        ? formatNumber(normalized, true, 3)
+        : String(normalized);
+    });
+    transferWeightControls.append(transferWeightSlider, transferWeightValueInput);
+
     const fluidConfig = SPACE_STORAGE_FLUID_TRANSFER_TARGETS[opt.resource];
     let fluidDestinationSelect = null;
     if (fluidConfig) {
@@ -1170,7 +1235,7 @@ function renderSpaceStorageUI(project, container) {
     } else {
       label.append(textSpan, fullIcon);
     }
-    resourceItem.append(checkbox, label, usage, transferButton, capButton);
+    resourceItem.append(checkbox, label, usage, transferButton, capButton, transferWeightControls);
     resourceGrid.appendChild(resourceItem);
 
     if (opt.requiresFlag || opt.requiresProjectFlag) {
@@ -1212,6 +1277,18 @@ function renderSpaceStorageUI(project, container) {
       capButtons: {
         ...(projectElements[project.name]?.capButtons || {}),
         [opt.resource]: capButton
+      },
+      transferWeightControls: {
+        ...(projectElements[project.name]?.transferWeightControls || {}),
+        [opt.resource]: transferWeightControls
+      },
+      transferWeightSliders: {
+        ...(projectElements[project.name]?.transferWeightSliders || {}),
+        [opt.resource]: transferWeightSlider
+      },
+      transferWeightValueInputs: {
+        ...(projectElements[project.name]?.transferWeightValueInputs || {}),
+        [opt.resource]: transferWeightValueInput
       },
       fullIcons: {
         ...(projectElements[project.name]?.fullIcons || {}),
@@ -1348,6 +1425,7 @@ function renderSpaceStorageUI(project, container) {
   projectElements[project.name] = {
     ...projectElements[project.name],
     storageCard: card,
+    transferWeightsToggle,
     usedDisplay: card.querySelector('#ss-used'),
     maxDisplay: card.querySelector('#ss-max'),
     resourceGrid,
@@ -1469,6 +1547,35 @@ function updateSpaceStorageUI(project) {
   }
   if (els.artificialEcosystemsLabel) {
     els.artificialEcosystemsLabel.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.artificialEcosystems', 'Artificial Ecosystems');
+  }
+  if (els.transferWeightsToggle) {
+    const transferWeightsText = getSpaceStorageUIText('ui.projects.spaceStorage.transferWeights', 'Transfer weights');
+    els.transferWeightsToggle.dataset.onLabel = transferWeightsText;
+    els.transferWeightsToggle.dataset.offLabel = transferWeightsText;
+    els.transferWeightsToggle.setAttribute('aria-label', transferWeightsText);
+    setToggleButtonState(els.transferWeightsToggle, project.transferWeightsVisible === true);
+  }
+  if (els.transferWeightControls) {
+    storageResourceOptions.forEach((opt) => {
+      const controls = els.transferWeightControls[opt.resource];
+      const slider = els.transferWeightSliders[opt.resource];
+      const input = els.transferWeightValueInputs[opt.resource];
+      if (!controls || !slider || !input) return;
+      controls.style.display = project.transferWeightsVisible ? 'flex' : 'none';
+      const label = getSpaceStorageUIText(
+        'ui.projects.spaceStorage.transferWeightForResource',
+        'Transfer weight for {resource}',
+        { resource: getSpaceStorageResourceLabel(opt) }
+      );
+      slider.setAttribute('aria-label', label);
+      input.setAttribute('aria-label', label);
+      const weight = project.getResourceTransferWeight(opt.resource);
+      slider.value = String(Math.max(1, Math.min(100, weight)));
+      if (input !== document.activeElement) {
+        input.dataset.spaceStorageTransferWeight = String(weight);
+        input.value = weight >= 1e6 ? formatNumber(weight, true, 3) : String(weight);
+      }
+    });
   }
   if (els.usedDisplay) {
     els.usedDisplay.textContent = formatNumber(project.usedStorage, false, 2);

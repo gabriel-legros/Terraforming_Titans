@@ -22,6 +22,7 @@ class Skill {
 
 class SkillManager {
   constructor(skillData) {
+    this.resetAt = GAME_RESET_LEVEL.NEW_GAME;
     this.skills = {};
     this.skillPoints = 0;
     this.activeEffects = [];

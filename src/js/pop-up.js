@@ -176,6 +176,50 @@ function createSystemPopup(title, text, buttonText) {
   document.body.appendChild(overlay);
 }
 
+function createSystemCopyPopup(title, text, options = {}) {
+  window.popupActive = true;
+  game.scene.pause('mainScene');
+
+  const overlay = document.createElement('div');
+  overlay.classList.add('system-popup-overlay');
+
+  const popupWindow = document.createElement('div');
+  popupWindow.classList.add('system-popup-window', 'system-copy-popup-window');
+  popupWindow.setAttribute('role', 'dialog');
+  popupWindow.setAttribute('aria-modal', 'true');
+  popupWindow.setAttribute('aria-label', title);
+
+  const popupTitle = document.createElement('h2');
+  popupTitle.classList.add('system-popup-title');
+  popupTitle.textContent = title;
+
+  const description = document.createElement('p');
+  description.classList.add('system-popup-text');
+  description.textContent = options.description;
+
+  const textarea = document.createElement('textarea');
+  textarea.classList.add('system-copy-popup-textarea');
+  textarea.value = text;
+  textarea.readOnly = true;
+  textarea.spellcheck = false;
+  textarea.setAttribute('aria-label', title);
+
+  const closeButton = document.createElement('button');
+  closeButton.classList.add('system-choice-popup-button', 'system-choice-popup-button-no');
+  closeButton.textContent = options.closeText;
+  closeButton.addEventListener('click', () => {
+    document.body.removeChild(overlay);
+    window.popupActive = false;
+    game.scene.resume('mainScene');
+  });
+
+  popupWindow.append(popupTitle, description, textarea, closeButton);
+  overlay.appendChild(popupWindow);
+  document.body.appendChild(overlay);
+  textarea.focus();
+  textarea.select();
+}
+
 function createSystemChoicePopup(title, text, yesText, noText, onYes, onNo, options = {}) {
   window.popupActive = true;
   game.scene.pause('mainScene');
