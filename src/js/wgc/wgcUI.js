@@ -1776,8 +1776,6 @@ function updateWGCUI() {
       summaryEl,
       logContainer,
       logEl,
-      lockOverlay,
-      lockDetail,
       slots
     } = refs;
     const team = warpGateCommand.teams[tIdx] || [];
@@ -1787,17 +1785,34 @@ function updateWGCUI() {
     const unlocked = typeof warpGateCommand.isTeamUnlocked === 'function'
       ? warpGateCommand.isTeamUnlocked(tIdx)
       : warpGateCommand.totalOperations >= threshold;
-    if (lockOverlay) {
+    if (refs.lockOverlay) {
       if (unlocked) {
-        lockOverlay.remove();
+        refs.lockOverlay.remove();
         refs.lockOverlay = null;
         refs.lockDetail = null;
       } else {
-        lockOverlay.classList.remove('hidden');
+        refs.lockOverlay.classList.remove('hidden');
       }
+    } else if (!unlocked) {
+      const lockOverlay = document.createElement('div');
+      lockOverlay.className = 'wgc-team-locked';
+      lockOverlay.dataset.team = `${tIdx}`;
+      lockOverlay.dataset.threshold = `${threshold}`;
+
+      const lockTitle = document.createElement('div');
+      lockTitle.className = 'wgc-team-locked-title';
+      lockTitle.textContent = getWGCText('teamLockedTitle', 'LOCKED');
+
+      const lockDetail = document.createElement('div');
+      lockDetail.className = 'wgc-team-locked-detail';
+
+      lockOverlay.append(lockTitle, lockDetail);
+      refs.card.appendChild(lockOverlay);
+      refs.lockOverlay = lockOverlay;
+      refs.lockDetail = lockDetail;
     }
-    if (lockDetail && !unlocked) {
-      lockDetail.textContent = getWGCText('operationsCompletedProgress', '{value} / {threshold} Operations Completed', {
+    if (refs.lockDetail && !unlocked) {
+      refs.lockDetail.textContent = getWGCText('operationsCompletedProgress', '{value} / {threshold} Operations Completed', {
         value: Math.min(warpGateCommand.totalOperations, threshold),
         threshold
       });
