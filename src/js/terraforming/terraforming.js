@@ -628,7 +628,7 @@ class Terraforming extends EffectableEntity{
         if (options.ignoreSubstepping) {
             return [deltaTime];
         }
-        if (!gameSettings.enableTerraformingSubsteps) {
+        if (!gameSettings.enableTerraformingSubsteps || gameSpeed !== 1) {
             return [deltaTime];
         }
         if (deltaTime <= this.resourceSubstepMilliseconds) {
