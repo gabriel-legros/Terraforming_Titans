@@ -628,21 +628,22 @@ class Terraforming extends EffectableEntity{
         if (options.ignoreSubstepping) {
             return [deltaTime];
         }
-        if (!gameSettings.enableTerraformingSubsteps || gameSpeed !== 1) {
+        if (!gameSettings.enableTerraformingSubsteps || gameSpeed <= 0) {
             return [deltaTime];
         }
-        if (deltaTime <= this.resourceSubstepMilliseconds) {
+        const resourceSubstepMilliseconds = this.resourceSubstepMilliseconds * gameSpeed;
+        if (deltaTime <= resourceSubstepMilliseconds) {
             return [deltaTime];
         }
 
         const durations = [];
         let remaining = deltaTime;
         while (
-            remaining > this.resourceSubstepMilliseconds &&
+            remaining > resourceSubstepMilliseconds &&
             durations.length + 1 < this.maxResourceSubsteps
         ) {
-            durations.push(this.resourceSubstepMilliseconds);
-            remaining -= this.resourceSubstepMilliseconds;
+            durations.push(resourceSubstepMilliseconds);
+            remaining -= resourceSubstepMilliseconds;
         }
         durations.push(remaining);
         return durations;
