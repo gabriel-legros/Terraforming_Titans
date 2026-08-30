@@ -124,6 +124,57 @@ const LIVE_TICK_CASES = [
 ];
 
 describe('Space Mirror advanced oversight debug saves', () => {
+  it('applies a focused-melt preset without resetting omitted oversight settings', async () => {
+    const dom = await createGameDom();
+    try {
+      const { window } = dom;
+      const project = getGlobal(window, 'projectManager.projects.spaceMirrorFacility');
+      const automation = getGlobal(window, 'automationManager.projectsAutomation');
+      const settings = project.mirrorOversightSettings;
+
+      settings.tempMode.tropical = 'day';
+      settings.tempMode.temperate = 'night';
+      settings.priority.tropical = 3;
+      settings.autoAssign.tropical = true;
+      settings.assignmentStep.lanterns = 7;
+      settings.targets.water = 123;
+
+      getGlobal(window, `automationManager.projectsAutomation.presets = [{
+        id: 1,
+        name: 'Set Focused Melt',
+        presetMode: 'parameterized',
+        includeExpansion: true,
+        includeOperations: true,
+        scopeAll: false,
+        projects: {
+          spaceMirrorFacility: {
+            operations: {
+              mirrorOversightSettings: {
+                targets: { water: 10000000000 }
+              }
+            }
+          }
+        }
+      }]`);
+
+      expect(automation.getPresetParameterInfo(automation.presets[0])).toMatchObject({
+        valid: true,
+        itemCount: 1,
+        numericPathCount: 1
+      });
+      automation.applyPresetOnce(1);
+
+      expect(project.mirrorOversightSettings.targets.water).toBe(10000000000);
+      expect(project.mirrorOversightSettings.tempMode.tropical).toBe('day');
+      expect(project.mirrorOversightSettings.tempMode.temperate).toBe('night');
+      expect(project.mirrorOversightSettings.priority.tropical).toBe(3);
+      expect(project.mirrorOversightSettings.autoAssign.tropical).toBe(true);
+      expect(project.mirrorOversightSettings.assignmentStep.lanterns).toBe(7);
+    } finally {
+      dom.window.close();
+    }
+  }, 60000);
+
   runIt.each(DEBUG_SAVES)('%s converges on zonal temperatures', async (saveName) => {
     const dom = await createGameDom();
     try {
