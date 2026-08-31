@@ -33,7 +33,6 @@
     };
 
     makeRow('illum', 'Illumination', 0.0, 3.0, 0.01);
-    makeRow('incl', 'Inclination (deg)', -90, 90, 1);
     makeRow('ambient', 'Ambient light', 0.0, 1.0, 0.01);
     makeRow('pop', 'Population', 0, 1000000, 1);
     makeRow('ships', 'Spaceships', 0, 1000, 1);
@@ -259,7 +258,6 @@
     const setVal = (id, v) => { if (r[id]) r[id].number.value = String(v); if (r[id]) r[id].range.value = String(v); };
     setVal('illum', Number(r.illum.range.value));
     setVal('pop', Number(r.pop.range.value));
-    if (r.incl) setVal('incl', Number(r.incl.range.value));
     setVal('ships', Number(r.ships.range.value));
     if (r.ambient) setVal('ambient', Number(r.ambient.range.value));
     setVal('co2', Number(r.co2.range.value));
@@ -298,10 +296,6 @@
 
     const illum = clampFrom(r.illum);
     this.viz.illum = illum;
-    if (r.incl) {
-      this.viz.inclinationDeg = clampFrom(r.incl);
-      this.updateSunFromInclination();
-    }
     if (this.sunLight) this.sunLight.intensity = illum;
     if (this.ambientLight && r.ambient) this.ambientLight.intensity = Math.max(0, Math.min(1, Number(r.ambient.range.value)));
 
@@ -404,10 +398,6 @@
 
     const starLuminosity = Number(cel.starLuminosity);
     setPairValue(rows.illum, Number.isFinite(starLuminosity) ? starLuminosity : this.viz?.illum ?? 1, { precision: 2 });
-    if (rows.incl) {
-      const incl = Number(planet.visualization?.inclinationDeg ?? this.viz?.inclinationDeg ?? 15);
-      setPairValue(rows.incl, incl, { round: true });
-    }
 
     const colonists = resourcesData.colony?.colonists?.initialValue ?? 0;
     setPairValue(rows.pop, colonists, { round: true });
@@ -534,11 +524,6 @@
     const illum = this.getGameIllumination();
     r.illum.range.value = String(illum);
     r.illum.number.value = String(illum);
-    if (r.incl) {
-      const inc = (this.viz?.inclinationDeg ?? 15);
-      r.incl.range.value = String(inc);
-      r.incl.number.value = String(inc);
-    }
     if (r.ambient && this.ambientLight) {
       const amb = Math.max(0, Math.min(1, this.ambientLight.intensity));
       r.ambient.range.value = String(amb);

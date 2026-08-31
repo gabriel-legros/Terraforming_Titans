@@ -330,7 +330,7 @@
     this.stellarGlowSpriteMaterial.opacity = Math.min(0.72, stellarVisual.haloStrength * 0.56);
   };
 
-  PlanetVisualizer.prototype.updateSunFromInclination = function updateSunFromInclination() {
+  PlanetVisualizer.prototype.updateSunPosition = function updateSunPosition() {
     if (!this.sunLight) return;
     if (this.isSmbhShellWorld()) {
       this.sunLight.position.set(5, 3, 2);
@@ -352,13 +352,11 @@
       }
       return;
     }
-    const deg = (this.viz?.inclinationDeg ?? 15);
-    const elev = deg * Math.PI / 180;
     const az = Math.atan2(2, 5);
     const r = 6.0;
-    const x = r * Math.cos(elev) * Math.cos(az);
-    const y = r * Math.sin(elev);
-    const z = r * Math.cos(elev) * Math.sin(az);
+    const x = r * Math.cos(az);
+    const y = 0;
+    const z = r * Math.sin(az);
     this.sunLight.position.set(x, y, z);
     if (this.sunMesh) {
       this.sunMesh.position.copy(this.sunLight.position).multiplyScalar(1.6);

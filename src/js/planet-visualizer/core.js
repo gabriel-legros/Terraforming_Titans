@@ -145,7 +145,6 @@
         },
         baseColor: '#8a2a2a',
         heightMapKey: '',
-        inclinationDeg: 15,
         // Large-scale surface feature (e.g., Mars dark regions)
         surfaceFeatures: {
           enabled: false,
@@ -840,7 +839,7 @@
         this.cameraHeight = 2.45;
       } else {
         this.cameraDistance = 3.5;
-        this.cameraHeight = 0.0;
+        this.cameraHeight = -0.12;
       }
       this.camera = new THREE.PerspectiveCamera(45, this.width / this.height, 0.1, 1000);
       if (isDisk) {
@@ -897,7 +896,7 @@
         this.sunMesh.position.copy(this.sunLight.position).multiplyScalar(1.6);
       }
       this.scene.add(this.sunMesh);
-      this.updateSunFromInclination();
+      this.updateSunPosition();
 
       this.createSurfaceMesh();
       if (isBirchWorld) {
