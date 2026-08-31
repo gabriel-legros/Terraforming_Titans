@@ -414,28 +414,6 @@ class Research {
       return research ? research.category : null;
     }
 
-    // Helpers to determine whether a research should display based on
-    // planet resources and unlocked flags.
-    planetHasMethane() {
-      const surface = resources.surface;
-      const atmospheric = resources.atmospheric;
-      if ((surface.liquidMethane.value || 0) > 0) {
-        return true;
-      }
-      if ((surface.hydrocarbonIce.value || 0) > 0) {
-        return true;
-      }
-      if ((atmospheric.atmosphericMethane.value || 0) > 0) {
-        return true;
-      }
-
-      const surf = currentPlanetParameters.resources.surface;
-      const atm = currentPlanetParameters.resources.atmospheric;
-      return (surf.liquidMethane?.initialValue || 0) > 0 ||
-             (surf.hydrocarbonIce?.initialValue || 0) > 0 ||
-             (atm.atmosphericMethane?.initialValue || 0) > 0;
-    }
-
     planetHasGeothermalDeposits() {
       if (typeof currentPlanetParameters === 'undefined') return true;
       const geo = currentPlanetParameters.resources.underground?.geothermal;
@@ -482,9 +460,6 @@ class Research {
         if (flags.some(flag => this.isBooleanFlagSet(flag))) {
           return false;
         }
-      }
-      if (research.requiresMethane && !this.planetHasMethane()) {
-        return false;
       }
       if (research.requiresGeothermal && !this.planetHasGeothermalDeposits()) {
         return false;

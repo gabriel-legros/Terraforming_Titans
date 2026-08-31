@@ -5975,8 +5975,13 @@ setLanguageData({
         description: 'Generates consistent energy by harnessing heat from geothermal vents. Requires a free geothermal vent deposit to build. Requires water to function and minimal maintenance.',
       },
       hydrocarbonGenerator: {
-        name: 'Methane Flare',
-        description: 'Burns atmospheric methane and oxygen to generate energy, releasing water vapour and carbon dioxide.',
+        name: 'Combustion Generator',
+        description: 'Burns atmospheric methane, hydrogen, or ammonia with oxygen to generate energy.',
+        recipes: {
+          methaneCombustion: { shortName: 'Methane Combustion' },
+          hydrogenCombustion: { shortName: 'Hydrogen Combustion' },
+          ammoniaCombustion: { shortName: 'Ammonia Combustion' },
+        },
       },
       nuclearPowerPlant: {
         name: 'Nuclear Power Plant',
@@ -6669,8 +6674,8 @@ setLanguageData({
           description: 'The best design that can be made.  Provides another 2x multiplier.',
         },
         hydrocarbon_generator: {
-          name: 'Hydrocarbon Generator',
-          description: 'Allows construction of generators burning methane and oxygen for power.',
+          name: 'Combustion Generator',
+          description: 'Allows construction of generators burning methane, hydrogen, or ammonia with oxygen for power.',
         },
         dyson_swarm_receiver: {
           name: 'Dyson Swarm Receiver',
@@ -6961,8 +6966,8 @@ setLanguageData({
           description: 'Research the construction of a large orbital facility that increases planetary luminosity.  Requires the space mirror facility.',
         },
         hydrocarbon_research: {
-          name: 'Hydrocarbon Combustion Concept',
-          description: 'Opens research into burning methane for power.',
+          name: 'Combustion Generator Concept',
+          description: 'Opens research into burning methane, hydrogen, or ammonia for power.',
         },
         infrared_vision: {
           name: 'Infrared Vision',

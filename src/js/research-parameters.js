@@ -204,7 +204,6 @@ const researchParameters = {
         cost: { research: 10000 },
         prerequisites: [],
         disabled: true,
-        requiresMethane: true,
         effects: [
           {
             target: 'building',
