@@ -114,6 +114,10 @@
   pointer-events: none;
 }
 
+.resource-tooltip.dynamic-tooltip:empty {
+  display: none !important;
+}
+
 .resource-tooltip.gravity-calculation-tooltip {
   width: min(680px, calc(100vw - 16px));
   max-width: min(680px, calc(100vw - 16px));
