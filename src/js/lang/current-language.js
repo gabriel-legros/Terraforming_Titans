@@ -1281,6 +1281,7 @@ setLanguageData({
         effectiveRadiation: 'Effective radiation: {value} mSv/day',
         luminosity: 'Luminosity: x{value}',
         lifeEffects: 'Life Effects: x{value}',
+        thermodynamics: 'Life Thermodynamics: x{value} (growth is limited by the chemical energy storable from {percent}% of average surface sunlight)',
         engineeredNitrogenFixation: 'Engineered Nitrogen Fixation: x{value} ({pressure} kPa)',
         ecumenopolis: 'Ecumenopolis: x{value} (-{reduction}% + {protection}% Biodome protection)',
       },

@@ -1613,7 +1613,18 @@ function updateLifeStatusTable() {
                 totalMultiplier: 1,
             };
             const otherMult = growthBreakdown.totalMultiplier;
-            const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * liquidMult * solidBiochemistryMult * otherMult;
+            let thermodynamicsMult = 1;
+            if (gameSettings.lifeThermodynamics) {
+                const thermodynamicsParameters = terraformingParameters.gameplay.lifeThermodynamics;
+                const demandFlux = Math.max(0, terraforming.lifeThermodynamicsDemandFluxByZone?.[zone] || 0);
+                const solarCapFlux = thermodynamicsParameters.maximumSolarFluxFraction
+                    * Math.max(0, terraforming.calculateZonalAverageSurfaceSolarFlux(zone));
+                if (demandFlux > 0) {
+                    thermodynamicsMult = Math.min(1, solarCapFlux / demandFlux);
+                }
+            }
+            const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * liquidMult
+                * solidBiochemistryMult * otherMult * thermodynamicsMult;
             if (valueSpan) valueSpan.textContent = formatNumber(finalRate * 100, false, 2);
             if (tooltipIcon) {
                 const lines = [
@@ -1643,6 +1654,20 @@ function updateLifeStatusTable() {
                         {
                             value: formatNumber(growthBreakdown.pigmentationMultiplier, false, 2),
                             albedo: formatNumber(growthBreakdown.biomassAlbedo, false, 3)
+                        }
+                    ));
+                }
+                if (gameSettings.lifeThermodynamics) {
+                    lines.push(getLifeUIText(
+                        'ui.life.growthTooltip.thermodynamics',
+                        'Life Thermodynamics: x{value} (growth is limited by the chemical energy storable from {percent}% of average surface sunlight)',
+                        {
+                            value: formatNumber(thermodynamicsMult, false, 2),
+                            percent: formatNumber(
+                                terraformingParameters.gameplay.lifeThermodynamics.maximumSolarFluxFraction * 100,
+                                false,
+                                0
+                            )
                         }
                     ));
                 }
