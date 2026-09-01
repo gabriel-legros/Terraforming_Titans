@@ -1529,7 +1529,7 @@ class LifeManager extends EffectableEntity {
           terraforming.calculateZonalAverageSurfaceSolarFlux(zoneName)
         );
         thermodynamicGrowthCapByZone[zoneName] = availableFlux
-          * parameters.maximumSolarFluxFraction
+          * requirements.maximumSolarFluxFraction
           * zoneArea
           * simulatedDurationSeconds
           / parameters.chemicalEnergyJPerTon;

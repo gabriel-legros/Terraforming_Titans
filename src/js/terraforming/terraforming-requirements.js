@@ -26,6 +26,7 @@ const terraformingRequirements = {
     magnetosphereThreshold: 100,
     requireHazardClearance: true,
     lifeDesign: {
+      maximumSolarFluxFraction: 0.1,
       survivalTemperatureRangeK: { min: 273.15, max: 313.15 },
       optimalGrowthTemperatureBaseK: 293.15,
       growthTemperatureToleranceBaseC: 1,
@@ -93,6 +94,7 @@ const terraformingRequirements = {
     magnetosphereThreshold: 100,
     requireHazardClearance: true,
     lifeDesign: {
+      maximumSolarFluxFraction: 0.1,
       survivalTemperatureRangeK: { min: 338.15, max: 383.15 },
       optimalGrowthTemperatureBaseK: 348.15,
       growthTemperatureToleranceBaseC: 2,
@@ -169,6 +171,7 @@ const terraformingRequirements = {
     magnetosphereThreshold: 100,
     requireHazardClearance: true,
     lifeDesign: {
+      maximumSolarFluxFraction: 0.1,
       survivalTemperatureRangeK: { min: 273.15, max: 308.15 },
       optimalGrowthTemperatureBaseK: 283.15,
       growthTemperatureToleranceBaseC: 1,
@@ -249,6 +252,7 @@ const terraformingRequirements = {
     magnetosphereThreshold: 100,
     requireHazardClearance: true,
     lifeDesign: {
+      maximumSolarFluxFraction: 0.2,
       survivalTemperatureRangeK: { min: 273.15, max: 308.15 },
       optimalGrowthTemperatureBaseK: 288.15,
       growthTemperatureToleranceBaseC: 1,
@@ -330,6 +334,7 @@ const terraformingRequirements = {
       },
     ],
     lifeDesign: {
+      maximumSolarFluxFraction: 0.2,
       survivalTemperatureRangeK: { min: 193.15, max: 263.15 },
       optimalGrowthTemperatureBaseK: 223.15,
       growthTemperatureToleranceBaseC: 1,
@@ -414,6 +419,7 @@ const terraformingRequirements = {
       },
     ],
     lifeDesign: {
+      maximumSolarFluxFraction: 0.1,
       survivalTemperatureRangeK: { min: 278.15, max: 323.15 },
       optimalGrowthTemperatureBaseK: 300.15,
       growthTemperatureToleranceBaseC: 1.5,
@@ -520,6 +526,7 @@ const terraformingRequirements = {
       },
     ],
     lifeDesign: {
+      maximumSolarFluxFraction: 0.1,
       survivalTemperatureRangeK: { min: 293.15, max: 343.15 },
       optimalGrowthTemperatureBaseK: 320.15,
       growthTemperatureToleranceBaseC: 1,
@@ -603,6 +610,7 @@ const terraformingRequirements = {
       { target: 'resource', resourceType: 'atmospheric', targetId: 'vanadiumAerosol', type: 'enable' },
     ],
     lifeDesign: {
+      maximumSolarFluxFraction: 0.1,
       survivalTemperatureRangeK: { min: 0, max: 5_000 },
       optimalGrowthTemperatureBaseK: 3000,
       growthTemperatureToleranceBaseC: 200,
@@ -712,6 +720,7 @@ const terraformingRequirements = {
       { target: 'resource', resourceType: 'special', targetId: 'yggieNutrients', type: 'enable' },
     ],
     lifeDesign: {
+      maximumSolarFluxFraction: 0.2,
       survivalTemperatureRangeK: { min: 273.15, max: 333.15 },
       optimalGrowthTemperatureBaseK: 303.15,
       growthTemperatureToleranceBaseC: 3,

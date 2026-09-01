@@ -139,10 +139,12 @@ function getPhaseChangeHeatTooltipText() {
 }
 
 function getLifeThermodynamicsTooltipText() {
+  const maximumSolarFluxPercent = terraforming.requirements.lifeDesign.maximumSolarFluxFraction * 100;
   const lines = [
     getTerraformingSummaryText(
       'lifeSummary.thermodynamicsFluxTooltip',
-      'Solar energy stored as chemical energy by natural surface-life growth during the latest tick. Negative values represent cooling. Growth in each zone can absorb at most 10% of its surface solar flux averaged over the zone, including curvature and night, and this cooling changes that zone\'s temperature trend.'
+      'Solar energy stored as chemical energy by natural surface-life growth during the latest tick. Negative values represent cooling. Growth in each zone can absorb at most {percent}% of its surface solar flux averaged over the zone, including curvature and night, and this cooling changes that zone\'s temperature trend.',
+      { percent: formatNumber(maximumSolarFluxPercent, false, 0) }
     ),
     '',
   ];

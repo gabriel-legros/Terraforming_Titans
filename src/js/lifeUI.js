@@ -1615,9 +1615,8 @@ function updateLifeStatusTable() {
             const otherMult = growthBreakdown.totalMultiplier;
             let thermodynamicsMult = 1;
             if (gameSettings.lifeThermodynamics) {
-                const thermodynamicsParameters = terraformingParameters.gameplay.lifeThermodynamics;
                 const demandFlux = Math.max(0, terraforming.lifeThermodynamicsDemandFluxByZone?.[zone] || 0);
-                const solarCapFlux = thermodynamicsParameters.maximumSolarFluxFraction
+                const solarCapFlux = requirements.maximumSolarFluxFraction
                     * Math.max(0, terraforming.calculateZonalAverageSurfaceSolarFlux(zone));
                 if (demandFlux > 0) {
                     thermodynamicsMult = Math.min(1, solarCapFlux / demandFlux);
@@ -1664,7 +1663,7 @@ function updateLifeStatusTable() {
                         {
                             value: formatNumber(thermodynamicsMult, false, 2),
                             percent: formatNumber(
-                                terraformingParameters.gameplay.lifeThermodynamics.maximumSolarFluxFraction * 100,
+                                requirements.maximumSolarFluxFraction * 100,
                                 false,
                                 0
                             )
