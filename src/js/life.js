@@ -1432,7 +1432,10 @@ class LifeManager extends EffectableEntity {
     zones.forEach(zoneName => {
       naturalDecayTargetsByZone[zoneName] = Math.min(
         biomassByZone[zoneName],
-        biomassByZone[zoneName] * NATURAL_BIOMASS_DECAY_FRACTION_PER_SECOND * secondsMultiplier
+        biomassByZone[zoneName]
+          * NATURAL_BIOMASS_DECAY_FRACTION_PER_SECOND
+          * requirements.naturalBiomassDecayMultiplier
+          * secondsMultiplier
       );
     });
     const naturalDecayPlan = calculateDecayPlan(naturalDecayTargetsByZone);
