@@ -432,6 +432,7 @@ class HazardousMachineryHazard {
 
   clearEffectsOnTravel() {
     this.manager.setHazardLandReservationShare('hazardousMachinery', 0);
+    researchManager.removeEffect({ sourceId: 'hazardPenalties' });
   }
 
   getCrusaderDecayPerSecond(parameters) {

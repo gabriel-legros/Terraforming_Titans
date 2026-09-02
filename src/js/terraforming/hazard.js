@@ -1139,6 +1139,7 @@ class HazardManager {
       clear(colonies[id]);
     });
     clear(populationModule);
+    clear(researchManager);
 
     let nanotech = null;
     try {
