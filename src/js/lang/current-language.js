@@ -1177,6 +1177,7 @@ setLanguageData({
           name: 'Radiation Tolerance',
           description: 'Mitigates radiation quadratically: points² × 0.01 mSv/day.',
           tooltip: 'Radiation mitigation is quadratic. Each point contributes points² × 0.01 mSv/day of shielding (10 points = 1.00 mSv/day, 100 points = 100.00 mSv/day). Remaining radiation after mitigation drives the growth penalty.',
+          innateTooltip: 'This dominion has {points} innate Radiation Tolerance points. They cost no life-design points and combine with designed tolerance before mitigation is calculated.',
         },
         invasiveness: {
           name: 'Invasiveness',

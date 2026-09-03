@@ -842,6 +842,7 @@ const terraformingRequirements = {
       photosynthesisRatePerPoint: 0.00005,
       bioworkersPerBiomassPerPoint: 0.00004,
       baseMaxBiomassDensityTPerM2: 0.12,
+      innateRadiationTolerancePoints: 1_000,
       radiationToleranceThresholdPoints: 100,
       minimumBiomassDecayRateTPerS: 1,
       requiresLiquidWaterForGrowth: true,

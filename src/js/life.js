@@ -171,6 +171,11 @@ function calculateGrowthTemperatureTolerance(points) {
   return requirements.growthTemperatureToleranceBaseC + points * requirements.growthTemperatureTolerancePerPointC;
 }
 
+function getInnateRadiationTolerancePoints() {
+  const requirements = getActiveLifeDesignRequirements();
+  return Math.max(0, requirements.innateRadiationTolerancePoints || 0);
+}
+
 const lifeDesignerConfig = {
   maxPoints : 0,
   attributeMaxBonuses: {},
@@ -273,7 +278,8 @@ class LifeAttribute {
       case 'photosynthesisEfficiency':
         return (requirements.photosynthesisRatePerPoint * effectiveValue).toFixed(5);
       case 'radiationTolerance':
-        return `${formatNumber(effectiveValue * effectiveValue * LIFE_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY, false, 2)} mSv/day mitigated`;
+        const totalRadiationTolerance = getInnateRadiationTolerancePoints() + effectiveValue;
+        return `${formatNumber(totalRadiationTolerance * totalRadiationTolerance * LIFE_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY, false, 2)} mSv/day mitigated`;
       case 'invasiveness':
         return effectiveValue;
       case 'spaceEfficiency':
@@ -385,7 +391,8 @@ class LifeDesign {
   }
 
   getRadiationMitigationDose() {
-    const points = Math.max(0, this.radiationTolerance.getEffectiveValue() || 0);
+    const points = getInnateRadiationTolerancePoints()
+      + Math.max(0, this.radiationTolerance.getEffectiveValue() || 0);
     return points * points * LIFE_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY;
   }
 
