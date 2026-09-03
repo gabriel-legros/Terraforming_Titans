@@ -6789,7 +6789,7 @@ setLanguageData({
         },
         underground_land_expansion: {
           name: 'Underground Land Expansion',
-          description: 'Unlocks a repeatable android project to expand usable land via subterranean construction.',
+          description: 'Unlocks a repeatable android project to expand usable land via subterranean construction. Shiivert designs can build an expensive artificial substrate where ordinary excavation is impossible.',
         },
         superconductor_factory: {
           name: 'Superconductor Factory',

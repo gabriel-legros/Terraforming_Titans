@@ -8,7 +8,29 @@ class UndergroundExpansionProject extends AndroidProject {
   }
 
   getScaledCost() {
-    return super.getScaledCost();
+    const cost = super.getScaledCost();
+    if (!this.requiresArtificialUnderground()) {
+      return cost;
+    }
+
+    const artificialCost = this.attributes.artificialUndergroundCost;
+    for (const category in artificialCost) {
+      cost[category] ||= {};
+      for (const resource in artificialCost[category]) {
+        const multiplier = this.getEffectiveCostMultiplier(category, resource);
+        cost[category][resource] = (cost[category][resource] || 0)
+          + artificialCost[category][resource] * multiplier;
+      }
+    }
+    return cost;
+  }
+
+  requiresArtificialUnderground() {
+    if (!this.isBooleanFlagSet('shiivertArtificialUnderground')) {
+      return false;
+    }
+    return spaceManager.isArtificialWorld()
+      || hasGeologicalAccessBlockingHeat(terraforming, currentPlanetParameters);
   }
 
   start(resources) {

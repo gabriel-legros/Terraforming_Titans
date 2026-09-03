@@ -464,7 +464,11 @@ class Research {
       if (research.requiresGeothermal && !this.planetHasGeothermalDeposits()) {
         return false;
       }
-      if (research.geologicalHeatAllowed === false && hasGeologicalAccessBlockingHeat(terraforming, currentPlanetParameters)) {
+      const worldRestrictionOverridden = research.worldRestrictionOverrideFlag
+        && this.isBooleanFlagSet(research.worldRestrictionOverrideFlag);
+      if (!worldRestrictionOverridden
+          && research.geologicalHeatAllowed === false
+          && hasGeologicalAccessBlockingHeat(terraforming, currentPlanetParameters)) {
         return false;
       }
       if (research.requiresNoNaturalMagnetosphere && this.planetHasNaturalMagnetosphere()) {
@@ -473,7 +477,7 @@ class Research {
       if (research.requiresKesslerHazard && !this.hasKesslerHazard()) {
         return false;
       }
-      if (research.artificialAllowed === false && this.isArtificialWorld()) {
+      if (!worldRestrictionOverridden && research.artificialAllowed === false && this.isArtificialWorld()) {
         return false;
       }
       if (research.ringworldAllowed === false && this.isRingWorld()) {

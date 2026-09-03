@@ -269,7 +269,14 @@ const projectParameters = {
     repeatable: true,
     maxRepeatCount: 10000,
     unlocked: false,
-    attributes: {}
+    attributes: {
+      artificialUndergroundCost: {
+        colony: {
+          silicon: 25_000_000,
+          superalloys: 100
+        }
+      }
+    }
   },
   planetarySwampification: {
     type: 'PlanetarySwampificationProject',

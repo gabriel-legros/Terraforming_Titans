@@ -803,6 +803,21 @@ const terraformingRequirements = {
     magnetosphereThreshold: 100,
     requireHazardClearance: true,
     appliedEffects: [
+      {
+        target: 'researchManager',
+        type: 'booleanFlag',
+        flagId: 'shiivertArtificialUnderground',
+        value: true,
+        clearOnTravel: true,
+      },
+      {
+        target: 'project',
+        targetId: 'undergroundExpansion',
+        type: 'booleanFlag',
+        flagId: 'shiivertArtificialUnderground',
+        value: true,
+        clearOnTravel: true,
+      },
       { target: 'project', targetId: 'planetarySwampification', type: 'enable' },
       { target: 'project', targetId: 'planetarySwampification', type: 'booleanFlag', flagId: 'androidAssist', value: true },
       { target: 'resource', resourceType: 'surface', targetId: 'radioactiveWaste', type: 'enable' },

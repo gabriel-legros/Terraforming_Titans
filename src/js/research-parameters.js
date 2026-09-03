@@ -573,6 +573,7 @@ const researchParameters = {
         prerequisites: [],
         artificialAllowed: false,
         geologicalHeatAllowed: false,
+        worldRestrictionOverrideFlag: 'shiivertArtificialUnderground',
         disabled: true,
         effects: [
           {
