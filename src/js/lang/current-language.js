@@ -228,6 +228,7 @@ setLanguageData({
         shrilek: 'Shrilek',
         vanadophore: 'Vanadophore',
         yggies: 'Yggie',
+        shiivert: 'Shiivert',
         random: 'Random',
         tooltip: 'Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion. Rewards scale for each time it is granted: 1000, 2000, 3000, and so on.',
       },
@@ -875,6 +876,7 @@ setLanguageData({
         worldEffects: 'World Effects',
         plasma: 'Plasma',
         keratiTerritory: 'Kerati Territory',
+        planetarySwampification: 'Managed Swampland',
       },
       antimatter: {
         sync: {
@@ -1237,6 +1239,8 @@ setLanguageData({
       survivesCannotGrow: 'Survives but cannot grow',
       metabolismEquation: {
         biomass: 'Biomass',
+        radioactiveWaste: 'Radioactive Waste',
+        rocks: 'Inert Rock',
         metal: 'Metal',
         silica: 'Silica',
         energy: 'Energy',
@@ -1896,6 +1900,12 @@ setLanguageData({
       },
       undergroundExpansion: {
         landExpansion: 'Land Expansion: {current} / {max}',
+      },
+      planetarySwampification: {
+        reset: 'Reset and Recover Land',
+        landReserved: 'Swampland reserved: {current} / {target} ha',
+        segmentsCompleted: 'Swampification segments: {current} / {total}',
+        androidSpeedTooltip: '1 + (androids assigned / 100)',
       },
       artificialStars: {
         recipeLabel: 'Space Energy',
@@ -3527,6 +3537,8 @@ setLanguageData({
           targetAbove: 'Life coverage above {percent}%.',
           targetBiomassAmountAtLeast: 'Life biomass at least {amount} tons.',
           targetBiomassAmountAbove: 'Life biomass above {amount} tons.',
+          targetUndergroundDensityAtLeast: 'Life density at least {density} t/m^2 of expanded underground land.',
+          targetUndergroundDensityAbove: 'Life density above {density} t/m^2 of expanded underground land.',
           hazardsCleared: 'Hazardous biomass cleared in all zones.',
           removeHazards: 'Remove hazardous biomass from: {zones}.',
         },
@@ -3668,6 +3680,7 @@ setLanguageData({
             solarPanelMultiplier: 'Solar panel multiplier',
           },
           target: 'Surface solar flux between {min} and {max}.',
+          noTarget: 'No luminosity requirement.',
           albedoTable: {
             surface: 'Surface',
             albedo: 'Albedo',
@@ -6231,6 +6244,10 @@ setLanguageData({
         name: 'Underground Land Expansion',
         description: 'Build subterranean habitats to slightly expand usable land. Each completion increases land by a small amount.',
       },
+      planetarySwampification: {
+        name: 'Planetary Swampification',
+        description: 'Seed managed wetlands with water, methane-derived organic substrate and ammonia nutrients.  Resetting recovers all reserved land.',
+      },
       oreSpaceMining: {
         name: 'Metal Asteroid Mining',
         description: 'Use your spaceships to mine asteroids for metal. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier. Without a space elevator, the metal cost per ship reduces the metal returned.',
@@ -6628,6 +6645,28 @@ setLanguageData({
             arborealHyperphotosynthesis: {
               displayName: 'Arboreal Hyperphotosynthesis',
             },
+          },
+        },
+      },
+      shiivert: {
+        displayName: 'Shiivert',
+        lore: [
+          'The Shiivert are a carbon-water lifeform that most closely resembles fungi. They evolved within vast underground cave networks on a homeworld that, from the outside, most resembles a swamp.',
+          'Unlike most organisms, the Shiivert do not rely on photosynthesis for growth. Instead, they feed on radioactive material. They surround and absorb radioactive rocks, retaining them as cores. Limited by the availability of these materials, they developed by excavating tunnels in search of more.',
+          'For a long time, the Cewinsii did not even know the Shiivert existed, allowing them to grow in peace. Unfortunately, when they were finally discovered, they were found to be very tasty to a Cewinsii. The Empire recognized their technological potential and quickly established farming operations.',
+          'The Shiivert have had enough of being served as food.',
+        ].join('\n\n'),
+        lifeDesign: {
+          processes: {
+            radiolyticMycosynthesis: {
+              displayName: 'Radiolytic Methanogenesis',
+            },
+          },
+        },
+        otherRequirements: {
+          planetarySwampification: {
+            label: 'Planetary Swampification',
+            targetText: 'Complete Planetary Swampification project.',
           },
         },
       },

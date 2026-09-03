@@ -1422,12 +1422,14 @@ function updateLifeStatusTable() {
 
     // Get biomass and area info
     const totalBiomass = resources.surface.biomass?.value || 0;
-    const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
-    const globalDensity = totalSurfaceArea > 0 ? totalBiomass / totalSurfaceArea : 0;
+    const totalLifeArea = getLifeBiomassAreaM2(terraforming);
+    const globalDensity = totalLifeArea > 0 ? totalBiomass / totalLifeArea : 0;
 
     const ecoFraction = getEcumenopolisLandFraction(terraforming);
     const ecumenopolisLandMult = Math.max(0, 1 - ecoFraction);
-    const landMult = getLifeLandMultiplier(terraforming);
+    const landMult = requirements.lifeDensityLandBasis === 'underground'
+        ? 1
+        : getLifeLandMultiplier(terraforming);
 
     // Precompute day and night temperatures
     const zonePerc = {};
@@ -1550,7 +1552,7 @@ function updateLifeStatusTable() {
             if (densityCell) densityCell.textContent = formatNumber(globalDensity, false, 2);
         } else {
             const zonalBiomass = terraforming.zonalSurface.biomass[zone] || 0;
-            const zoneArea = totalSurfaceArea * getZonePercentage(zone);
+            const zoneArea = totalLifeArea * getZonePercentage(zone);
             const zonalDensity = zoneArea > 0 ? zonalBiomass / zoneArea : 0;
 
             if (amountCell) amountCell.textContent = formatNumber(zonalBiomass, true);
@@ -1562,7 +1564,7 @@ function updateLifeStatusTable() {
         const valueSpan = growthObj?.value;
         const tooltipIcon = growthObj?.tooltipIcon;
         const zoneBiomass = zone === 'global' ? totalBiomass : terraforming.zonalSurface.biomass[zone] || 0;
-        const baseZoneArea = zone === 'global' ? totalSurfaceArea : totalSurfaceArea * getZonePercentage(zone);
+        const baseZoneArea = zone === 'global' ? totalLifeArea : totalLifeArea * getZonePercentage(zone);
         const zoneArea = baseZoneArea * landMult;
         const maxBiomassForZone = zoneArea * maxDensity;
         const capacityMult = maxBiomassForZone > 0 ? Math.max(0, 1 - zoneBiomass / maxBiomassForZone) : 0;
@@ -1614,7 +1616,7 @@ function updateLifeStatusTable() {
             };
             const otherMult = growthBreakdown.totalMultiplier;
             let thermodynamicsMult = 1;
-            if (gameSettings.lifeThermodynamics) {
+            if (gameSettings.lifeThermodynamics && !requirements.ignoresLifeThermodynamics) {
                 const demandFlux = Math.max(0, terraforming.lifeThermodynamicsDemandFluxByZone?.[zone] || 0);
                 const solarCapFlux = requirements.maximumSolarFluxFraction
                     * Math.max(0, terraforming.calculateZonalAverageSurfaceSolarFlux(zone));
@@ -1656,7 +1658,7 @@ function updateLifeStatusTable() {
                         }
                     ));
                 }
-                if (gameSettings.lifeThermodynamics) {
+                if (gameSettings.lifeThermodynamics && !requirements.ignoresLifeThermodynamics) {
                     lines.push(getLifeUIText(
                         'ui.life.growthTooltip.thermodynamics',
                         'Life Thermodynamics: x{value} (growth is limited by the chemical energy storable from {percent}% of average surface sunlight)',
@@ -1677,7 +1679,7 @@ function updateLifeStatusTable() {
                         { value: formatNumber(solidBiochemistryMult, false, 2) }
                     ));
                 }
-                if (ecoFraction > 0) {
+                if (ecoFraction > 0 && requirements.lifeDensityLandBasis !== 'underground') {
                     const ecumenopolisReduction = (1 - ecumenopolisLandMult) * 100;
                     const biodomeProtection = Math.max(0, landMult - ecumenopolisLandMult) * 100;
                     lines.push(getLifeUIText(

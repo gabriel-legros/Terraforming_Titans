@@ -238,9 +238,21 @@ function getTerraformingTotalBiomass(terraforming) {
     return totalBiomass;
 }
 
+function getLifeBiomassAreaM2(terraforming) {
+    if (terraforming?.requirements?.lifeDensityLandBasis === 'underground') {
+        const totalLand = Math.max(0, terraforming?.resources?.surface?.land?.value || 0);
+        const geometricLand = Math.max(
+            0,
+            resolveWorldGeometricLand(terraforming, terraforming?.resources?.surface?.land)
+        );
+        return Math.max(0, totalLand - geometricLand) * 10_000;
+    }
+    return Math.max(0, terraforming?.celestialParameters?.surfaceArea || 0);
+}
+
 function getLifeBiomassDensity(terraforming) {
-    const surfaceArea = terraforming?.celestialParameters?.surfaceArea || 0;
-    return surfaceArea > 0 ? getTerraformingTotalBiomass(terraforming) / surfaceArea : 0;
+    const biomassArea = getLifeBiomassAreaM2(terraforming);
+    return biomassArea > 0 ? getTerraformingTotalBiomass(terraforming) / biomassArea : 0;
 }
 
 function getEffectiveLifeTargetAmount(terraforming) {
@@ -248,7 +260,7 @@ function getEffectiveLifeTargetAmount(terraforming) {
     if (densityTarget <= 0) {
         return 0;
     }
-    return densityTarget * (terraforming?.celestialParameters?.surfaceArea || 0);
+    return densityTarget * getLifeBiomassAreaM2(terraforming);
 }
 
 function buildAtmosphereContext(atmospheric, gravity, radius, surfaceArea) {

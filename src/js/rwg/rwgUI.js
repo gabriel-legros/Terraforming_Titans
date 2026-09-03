@@ -114,7 +114,7 @@ const hazardDisplayNames = {
   pulsar: 'Pulsar',
   debrisDisk: 'Debris Disk'
 };
-const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 'Fritizian', oommaa: 'Oommaa', klishy: 'Klishy', kerati: 'Kerati', shrilek: 'Shrilek', vanadophore: 'Vanadophore', random: 'Random' };
+const dominionDisplayNames = { human: 'Human', gabbagian: 'Gabbagian', ammonia: 'Fritizian', oommaa: 'Oommaa', klishy: 'Klishy', kerati: 'Kerati', shrilek: 'Shrilek', vanadophore: 'Vanadophore', yggies: 'Yggie', shiivert: 'Shiivert', random: 'Random' };
 const RWG_DOMINION_RANDOM = 'random';
 const HAZARD_MODE_NONE = 'none';
 const HAZARD_MODE_ENABLED = 'hazards';

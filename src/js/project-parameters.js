@@ -271,6 +271,32 @@ const projectParameters = {
     unlocked: false,
     attributes: {}
   },
+  planetarySwampification: {
+    type: 'PlanetarySwampificationProject',
+    name: '',
+    category: 'infrastructure',
+    cost: {
+      surface: {
+        liquidWater: 1_000
+      },
+      atmospheric: {
+        atmosphericMethane: 0.05,
+        atmosphericAmmonia: 0.01
+      },
+      colony: {
+        energy: 100_000
+      }
+    },
+    duration: 240000,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: 1,
+    unlocked: false,
+    automationRequiresEverEnabled: true,
+    attributes: {
+      landReservationShare: 0.5
+    }
+  },
   oreSpaceMining: {
     type: 'SpaceMiningProject',
     name: '',

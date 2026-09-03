@@ -778,6 +778,101 @@ const terraformingRequirements = {
       },
     },
   },
+  shiivert: {
+    id: 'shiivert',
+    displayName: '',
+    lore: '',
+    dominionUnlock: { type: 'fullyControlledSectors', minimum: 70 },
+    temperatureRangeK: { min: 283.15, max: 303.15 },
+    luminosityRange: { min: 0, max: 1_000_000_000 },
+    ignoresLuminosity: true,
+    totalPressureRangeKPa: { min: 150, max: 500 },
+    gasTargetsPa: {
+      carbonDioxide: { min: 5_000, max: 100_000 },
+      oxygen: { min: 0, max: 100 },
+      inertGas: { min: 100_000, max: 450_000 },
+      atmosphericWater: { min: 500, max: 5_000 },
+      atmosphericMethane: { min: 250, max: 25_000 },
+      atmosphericAmmonia: { min: 0, max: 250 },
+    },
+    liquidCoverageTarget: 0.6,
+    liquidType: 'water',
+    lifeCoverageTarget: 0,
+    lifeBiomassDensityTargetTPerM2: 0.08,
+    lifeDensityLandBasis: 'underground',
+    magnetosphereThreshold: 100,
+    requireHazardClearance: true,
+    appliedEffects: [
+      { target: 'project', targetId: 'planetarySwampification', type: 'enable' },
+      { target: 'project', targetId: 'planetarySwampification', type: 'booleanFlag', flagId: 'androidAssist', value: true },
+      { target: 'resource', resourceType: 'surface', targetId: 'radioactiveWaste', type: 'enable' },
+    ],
+    otherRequirements: [
+      {
+        type: 'projectCompletion',
+        projectId: 'planetarySwampification',
+        label: '',
+        targetText: '',
+      },
+    ],
+    lifeDesign: {
+      maximumSolarFluxFraction: 0,
+      ignoresLifeThermodynamics: true,
+      survivalTemperatureRangeK: { min: 273.15, max: 313.15 },
+      optimalGrowthTemperatureBaseK: 293.15,
+      naturalBiomassDecayMultiplier: 1,
+      growthTemperatureToleranceBaseC: 2,
+      growthTemperatureTolerancePerPointC: 0.6,
+      photosynthesisRatePerPoint: 0.00005,
+      bioworkersPerBiomassPerPoint: 0.00004,
+      baseMaxBiomassDensityTPerM2: 0.12,
+      radiationToleranceThresholdPoints: 100,
+      minimumBiomassDecayRateTPerS: 1,
+      requiresLiquidWaterForGrowth: true,
+      metabolism: {
+        primaryProcessId: 'radiolyticMycosynthesis',
+        processes: {
+          radiolyticMycosynthesis: {
+            id: 'radiolyticMycosynthesis',
+            displayName: '',
+            growth: {
+              usesLuminosity: false,
+              perBiomass: {
+                surface: { biomass: 1, liquidWater: -1.5 },
+                globalSurface: { radioactiveWaste: -0.05, rocks: 1.55 },
+                atmospheric: {
+                  carbonDioxide: -1.4666666666666666,
+                  atmosphericMethane: 0.4666666666666667,
+                },
+              },
+            },
+            decay: {
+              perBiomass: {
+                surface: { biomass: -1 },
+                atmospheric: {
+                  atmosphericMethane: 0.4,
+                  carbonDioxide: 0.6,
+                },
+              },
+            },
+          },
+        },
+      },
+      attributeMaxUpgrades: {
+        minTemperatureTolerance: 60,
+        maxTemperatureTolerance: 40,
+        optimalGrowthTemperature: 15,
+        growthTemperatureTolerance: 40,
+        photosynthesisEfficiency: 500,
+        radiationTolerance: 100,
+        invasiveness: 50,
+        spaceEfficiency: 100,
+        geologicalBurial: 50,
+        bioworkforce: 100,
+        bioships: 1000,
+      },
+    },
+  },
 };
 
 function getTerraformingRequirement(id = DEFAULT_TERRAFORMING_REQUIREMENT_ID) {

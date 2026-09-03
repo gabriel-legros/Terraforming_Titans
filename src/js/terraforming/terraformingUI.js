@@ -2992,6 +2992,13 @@ function createWaterBox(row) {
     const densityTarget = getLifeBiomassDensityTarget(terraforming);
     targetSpan.textContent = densityTarget > 0
       ? formatTerraformingTargetText(
+        terraforming.requirements.lifeDensityLandBasis === 'underground'
+          ? getTerraformingSummaryText(
+            'lifeSummary.targetUndergroundDensityAtLeast',
+            '',
+            { density: formatNumber(densityTarget, true, 3) }
+          )
+          :
         getTerraformingSummaryText(
           'lifeSummary.targetBiomassAmountAtLeast',
           'Life biomass at least {amount} tons.',
@@ -3067,6 +3074,13 @@ function updateLifeBox() {
     if (els.target) {
       els.target.textContent = densityTarget > 0
         ? formatTerraformingTargetText(
+          terraforming.requirements.lifeDensityLandBasis === 'underground'
+            ? getTerraformingSummaryText(
+              'lifeSummary.targetUndergroundDensityAbove',
+              '',
+              { density: formatNumber(densityTarget, true, 3) }
+            )
+            :
           getTerraformingSummaryText(
             'lifeSummary.targetBiomassAmountAbove',
             'Life biomass above {amount} tons.',
@@ -3562,14 +3576,16 @@ function updateLifeBox() {
 
     const targetSpan = document.createElement('span');
     targetSpan.textContent = formatTerraformingTargetText(
-      getTerraformingSummaryText(
-        'luminosity.target',
-        'Surface solar flux between {min} and {max}.',
-        {
-          min: formatNumber(terraforming.luminosity.targetMin, false, 1),
-          max: formatNumber(terraforming.luminosity.targetMax, false, 1),
-        }
-      )
+      terraforming.requirements.ignoresLuminosity
+        ? getTerraformingSummaryText('luminosity.noTarget', '')
+        : getTerraformingSummaryText(
+          'luminosity.target',
+          'Surface solar flux between {min} and {max}.',
+          {
+            min: formatNumber(terraforming.luminosity.targetMin, false, 1),
+            max: formatNumber(terraforming.luminosity.targetMax, false, 1),
+          }
+        )
     );
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
@@ -3667,14 +3683,16 @@ function updateLifeBox() {
 
     if (els.target) {
       els.target.textContent = formatTerraformingTargetText(
-        getTerraformingSummaryText(
-          'luminosity.target',
-          'Surface solar flux between {min} and {max}.',
-          {
-            min: formatNumber(terraforming.luminosity.targetMin, false, 1),
-            max: formatNumber(terraforming.luminosity.targetMax, false, 1),
-          }
-        )
+        terraforming.requirements.ignoresLuminosity
+          ? getTerraformingSummaryText('luminosity.noTarget', '')
+          : getTerraformingSummaryText(
+            'luminosity.target',
+            'Surface solar flux between {min} and {max}.',
+            {
+              min: formatNumber(terraforming.luminosity.targetMin, false, 1),
+              max: formatNumber(terraforming.luminosity.targetMax, false, 1),
+            }
+          )
       );
     }
 

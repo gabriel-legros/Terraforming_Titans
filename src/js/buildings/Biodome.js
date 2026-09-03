@@ -36,6 +36,7 @@ class Biodome extends Building {
     };
 
     this.applyMetabolismMap(perBiomass.surface, 'surface', consumption, production);
+    this.applyMetabolismMap(perBiomass.globalSurface || {}, 'surface', consumption, production);
     this.applyMetabolismMap(perBiomass.atmospheric, 'atmospheric', consumption, production);
 
     this.consumption = consumption;
@@ -104,8 +105,10 @@ class Biodome extends Building {
     const requirements = getActiveLifeDesignRequirements();
     const densityMultiplier = 1 + lifeDesigner.currentDesign.spaceEfficiency.getEffectiveValue();
     const maxDensity = requirements.baseMaxBiomassDensityTPerM2 * densityMultiplier;
-    const landMultiplier = getLifeLandMultiplier(terraforming);
-    return terraforming.celestialParameters.surfaceArea * landMultiplier * maxDensity;
+    const landMultiplier = requirements.lifeDensityLandBasis === 'underground'
+      ? 1
+      : getLifeLandMultiplier(terraforming);
+    return getLifeBiomassAreaM2(terraforming) * landMultiplier * maxDensity;
   }
 
   produce(accumulatedChanges, deltaTime) {

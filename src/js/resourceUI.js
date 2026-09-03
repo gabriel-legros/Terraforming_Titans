@@ -1449,6 +1449,11 @@ function updateLandAssignments(assignmentsDiv) {
     if (keratiReserved > 0) {
       assignments.push([getResourceUIText('land.keratiTerritory', 'Kerati Territory'), keratiReserved]);
     }
+
+    const swampReserved = landResource.getReservedAmountForSource('planetarySwampification') || 0;
+    if (swampReserved > 0) {
+      assignments.push([getResourceUIText('land.planetarySwampification', ''), swampReserved]);
+    }
   }
   assignments.sort((a, b) => b[1] - a[1]);
 
