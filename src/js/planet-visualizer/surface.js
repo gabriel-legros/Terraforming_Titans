@@ -711,8 +711,10 @@
     const nanoworld = this.getNanoworldVisualizerStrength();
     const z = this.viz.zonalCoverage || {};
     const zKey = ['tropical', 'temperate', 'polar']
-      .map(k => `${(z[k]?.water ?? 0).toFixed(2)}_${(z[k]?.ice ?? 0).toFixed(2)}_${(z[k]?.life ?? 0).toFixed(2)}_${(z[k]?.hazardousLife ?? 0).toFixed(2)}`)
+      .map(k => `${(z[k]?.water ?? 0).toFixed(2)}_${(z[k]?.ice ?? 0).toFixed(2)}_${(z[k]?.life ?? 0).toFixed(2)}_${(z[k]?.hazardousLife ?? 0).toFixed(2)}_${(z[k]?.fineSand ?? 0).toFixed(2)}`)
       .join('|');
+    const specialSurface = this.getDominionSurfaceVisualState();
+    const specialSurfaceKey = `${specialSurface.style}_${specialSurface.coverage.map(value => value.toFixed(2)).join('_')}`;
     const baseColorKey = this.normalizeHexColor(this.viz.baseColor) || '#8a2a2a';
     const dustBaseColor = this.normalizeHexColor(this.dustTintColor) || baseColorKey;
     const dustKey = this.getDustTintColorKey();
@@ -729,7 +731,7 @@
       this.heightMap = null;
       this.heightZoneHists = null;
     }
-    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${hazardousLife.toFixed(2)}|${ecumenopolis.toFixed(2)}|${nanoworld.toFixed(2)}|${zKey}|${dustKey}|${biomassColorKey}|${typeKey}|${fKey}|${heightKey}|${earthShapeKey}`;
+    const key = `${factor.toFixed(2)}|${water.toFixed(2)}|${life.toFixed(2)}|${hazardousLife.toFixed(2)}|${ecumenopolis.toFixed(2)}|${nanoworld.toFixed(2)}|${zKey}|${specialSurfaceKey}|${dustKey}|${biomassColorKey}|${typeKey}|${fKey}|${heightKey}|${earthShapeKey}`;
     if (!force && key === this.lastCraterFactorKey) return;
     this.lastCraterFactorKey = key;
 
@@ -1660,6 +1662,93 @@
       low: [150, 42, 34],
       high: [205, 36, 42],
     });
+
+    const renderDominionSurfaceOverlay = () => {
+      const special = this.getDominionSurfaceVisualState();
+      if (!special.style || !special.coverage.some(value => value > 0)) return;
+      const noise = this.getLifeNoiseField(w, h);
+      if (!this._specialSurfaceScore || this._specialSurfaceScore.length !== w * h) {
+        this._specialSurfaceScore = new Float32Array(w * h);
+      }
+      const scores = this._specialSurfaceScore;
+      const histograms = [
+        { counts: new Uint32Array(256), total: 0 },
+        { counts: new Uint32Array(256), total: 0 },
+        { counts: new Uint32Array(256), total: 0 },
+      ];
+      const fract = value => value - Math.floor(value);
+      for (let i = 0; i < w * h; i++) {
+        if (waterAlpha[i] >= 0.999) continue;
+        const y = Math.floor(i / w);
+        const x = i - y * w;
+        const zone = this.getTextureZoneIndex(x, y, w, h);
+        const grain = fract(Math.sin(x * 12.9898 + y * 78.233 + seed.x * 1103.7) * 43758.5453);
+        const score = Math.max(0, Math.min(1, noise[i] * 0.58 + grain * 0.27 + (1 - waterAlpha[i]) * 0.15));
+        scores[i] = score;
+        const histogram = histograms[zone];
+        histogram.counts[Math.floor(score * 255)]++;
+        histogram.total++;
+      }
+      const thresholds = special.coverage.map((coverage, zone) => {
+        const histogram = histograms[zone];
+        const target = Math.max(0, Math.min(1, coverage)) * histogram.total;
+        if (target <= 0 || histogram.total === 0) return -1;
+        let accumulated = 0;
+        for (let bin = 255; bin >= 0; bin--) {
+          accumulated += histogram.counts[bin];
+          if (accumulated >= target) return bin / 255;
+        }
+        return 0;
+      });
+      for (let i = 0; i < w * h; i++) {
+        const y = Math.floor(i / w);
+        const x = i - y * w;
+        const zone = this.getTextureZoneIndex(x, y, w, h);
+        const threshold = thresholds[zone];
+        if (threshold < 0 || waterAlpha[i] >= 0.999) continue;
+        let alpha = smoothstep(Math.max(0, threshold - 0.12), Math.min(1, threshold + 0.12), scores[i]);
+        alpha *= 1 - waterAlpha[i];
+        const u = x / Math.max(1, w - 1);
+        const v = y / Math.max(1, h - 1);
+        const micro = fract(Math.sin(x * 37.719 + y * 91.173 + seed.y * 1901.3) * 43758.5453);
+        let r; let g; let b;
+        if (special.style === 1) {
+          const dune = 0.5 + 0.5 * Math.sin(u * 150 + noise[i] * 8 + v * 32);
+          const tone = Math.max(0, Math.min(1, 0.3 + dune * 0.45 + micro * 0.25));
+          r = Math.round(151 + (224 - 151) * tone);
+          g = Math.round(105 + (187 - 105) * tone);
+          b = Math.round(55 + (112 - 55) * tone);
+          alpha *= 0.92;
+        } else if (special.style === 2) {
+          const canopy = smoothstep(0.3, 0.8, noise[i] * 0.65 + micro * 0.35);
+          const branch = 1 - smoothstep(0.025, 0.12, Math.abs(fract(u * 22 + noise[i] * 2.5) - 0.5));
+          r = Math.round((18 + (60 - 18) * canopy) * (1 - branch * 0.28) + 74 * branch * 0.28);
+          g = Math.round((49 + (113 - 49) * canopy) * (1 - branch * 0.28) + 48 * branch * 0.28);
+          b = Math.round((22 + (45 - 22) * canopy) * (1 - branch * 0.28) + 27 * branch * 0.28);
+          alpha *= 0.96;
+        } else if (special.style === 3) {
+          const channel = smoothstep(0.44, 0.58, noise[i] * 0.65 + micro * 0.35);
+          const shade = 0.72 + 0.28 * micro;
+          r = Math.round((43 + (47 - 43) * channel) * shade);
+          g = Math.round((54 + (91 - 54) * channel) * shade);
+          b = Math.round((31 + (71 - 31) * channel) * shade);
+          alpha *= 0.94;
+        } else {
+          const longitudeLine = 1 - smoothstep(0.02, 0.085, Math.abs(fract(u * 30 + noise[i] * 0.5) - 0.5));
+          const latitudeLine = 1 - smoothstep(0.02, 0.085, Math.abs(fract(v * 16 + micro * 0.45) - 0.5));
+          const wire = Math.max(longitudeLine, latitudeLine) * 0.92;
+          const cyan = micro >= 0.82;
+          const wireColor = cyan ? [96, 210, 224] : [147, 76, 34];
+          r = Math.round(17 * (1 - wire) + wireColor[0] * wire);
+          g = Math.round(21 * (1 - wire) + wireColor[1] * wire);
+          b = Math.round(24 * (1 - wire) + wireColor[2] * wire);
+          alpha *= 0.82;
+        }
+        blendPixel(tdata, i * 4, r, g, b, alpha);
+      }
+    };
+
+    renderDominionSurfaceOverlay();
 
     const renderEcumenopolisOverlay = () => {
       const cityRatio = this.getEcumenopolisVisualizerStrength();

@@ -33,6 +33,7 @@
     const ice = getCoverage(context, 'ice');
     const life = getCoverage(context, 'life');
     const hazardousLife = getCoverage(context, 'hazardousLife');
+    const specialSurface = context.getDominionSurfaceVisualState();
     const factor = context.isStellarWorld()
       ? 0
       : clamp01(1 - context.computeTotalPressureKPa() / 100);
@@ -42,6 +43,8 @@
       ...ice.map(value => value.toFixed(2)),
       ...life.map(value => value.toFixed(2)),
       ...hazardousLife.map(value => value.toFixed(2)),
+      specialSurface.style,
+      ...specialSurface.coverage.map(value => value.toFixed(2)),
       getActiveBiomassColor(),
       context.getEcumenopolisVisualizerStrength().toFixed(2),
       context.getNanoworldVisualizerStrength().toFixed(2),
@@ -123,6 +126,10 @@
         water: context.viz.coverage.water,
         life: context.viz.coverage.life,
         hazardousLife: context.viz.coverage.hazardousLife,
+        fineSand: context.viz.coverage.fineSand,
+        yggieOvergrowth: context.viz.coverage.yggieOvergrowth,
+        swamp: context.viz.coverage.swamp,
+        klishyWeb: context.viz.coverage.klishyWeb,
         ecumenopolis: context.viz.coverage.ecumenopolis,
         nanoworld: context.viz.coverage.nanoworld,
       },
@@ -141,10 +148,15 @@
       zonal[zone].ice = 0;
       zonal[zone].life = 0;
       zonal[zone].hazardousLife = 0;
+      zonal[zone].fineSand = 0;
     }
     context.viz.coverage.water = 0;
     context.viz.coverage.life = 0;
     context.viz.coverage.hazardousLife = 0;
+    context.viz.coverage.fineSand = 0;
+    context.viz.coverage.yggieOvergrowth = 0;
+    context.viz.coverage.swamp = 0;
+    context.viz.coverage.klishyWeb = 0;
     context.viz.coverage.ecumenopolis = 0;
     context.viz.coverage.nanoworld = 0;
   }
@@ -377,6 +389,8 @@
       lifePaletteHigh: { value: new THREE.Vector3() },
       hazardousCoverage: { value: new THREE.Vector3() },
       hazardousThresholds: { value: new THREE.Vector3(-1, -1, -1) },
+      specialSurfaceStyle: { value: 0 },
+      specialSurfaceThresholds: { value: new THREE.Vector3(-1, -1, -1) },
       mountainThreshold: { value: state.mountainThreshold },
       artificialSurface: { value: state.artificial ? 1 : 0 },
       cityStrength: { value: 0 },
@@ -419,6 +433,8 @@
         uniform vec3 lifePaletteHigh;
         uniform vec3 hazardousCoverage;
         uniform vec3 hazardousThresholds;
+        uniform float specialSurfaceStyle;
+        uniform vec3 specialSurfaceThresholds;
         uniform float mountainThreshold;
         uniform float artificialSurface;
         uniform float cityStrength;
@@ -582,6 +598,60 @@
           return byteRound(mix(color, lifeColor, alpha));
         }
 
+        vec3 applySpecialSurface(
+          vec3 color,
+          float height,
+          float water,
+          vec3 weights,
+          vec4 fieldA,
+          vec4 fieldB
+        ) {
+          if (specialSurfaceStyle < 0.5) return color;
+          float score = clamp(
+            fieldA.b * 0.5 + fieldA.a * 0.3 + fieldB.g * 0.2 - water * 0.45,
+            0.0,
+            1.0
+          );
+          float alpha = activeWeightedAlpha(
+            weights,
+            specialSurfaceThresholds,
+            score,
+            0.12,
+            true
+          );
+          if (alpha < 0.001) return color;
+
+          float micro = fieldB.r;
+          float surfacePatch = fieldB.g;
+          vec3 target;
+          if (specialSurfaceStyle < 1.5) {
+            float dune = 0.5 + 0.5 * sin((vUv.x * 150.0 + fieldA.a * 8.0) + vUv.y * 32.0);
+            target = mix(vec3(151.0, 105.0, 55.0), vec3(224.0, 187.0, 112.0), 0.3 + 0.45 * dune + 0.25 * micro) / 255.0;
+            alpha *= 0.92;
+          } else if (specialSurfaceStyle < 2.5) {
+            float canopy = surfaceSmoothstep(0.3, 0.8, fieldA.b * 0.65 + surfacePatch * 0.35);
+            float branch = 1.0 - surfaceSmoothstep(0.025, 0.12, abs(fract(vUv.x * 22.0 + fieldA.a * 2.5) - 0.5));
+            target = mix(vec3(18.0, 49.0, 22.0), vec3(60.0, 113.0, 45.0), canopy) / 255.0;
+            target = mix(target, vec3(74.0, 48.0, 27.0) / 255.0, branch * 0.28);
+            alpha *= 0.96;
+          } else if (specialSurfaceStyle < 3.5) {
+            float channel = surfaceSmoothstep(0.44, 0.58, fieldA.a * 0.65 + fieldB.r * 0.35);
+            target = mix(vec3(43.0, 54.0, 31.0), vec3(47.0, 91.0, 71.0), channel) / 255.0;
+            target *= 0.72 + 0.28 * micro;
+            alpha *= 0.94;
+          } else {
+            float longitudeLine = 1.0 - surfaceSmoothstep(0.02, 0.085, abs(fract(vUv.x * 30.0 + fieldA.a * 0.5) - 0.5));
+            float latitudeLine = 1.0 - surfaceSmoothstep(0.02, 0.085, abs(fract(vUv.y * 16.0 + fieldA.b * 0.45) - 0.5));
+            float wire = max(longitudeLine, latitudeLine);
+            vec3 darkMesh = mix(color, vec3(17.0, 21.0, 24.0) / 255.0, 0.5);
+            vec3 copper = mix(vec3(147.0, 76.0, 34.0), vec3(96.0, 210.0, 224.0), step(0.82, micro)) / 255.0;
+            target = mix(darkMesh, copper, wire * 0.92);
+            alpha *= 0.82;
+          }
+          alpha *= 1.0 - water;
+          return byteRound(mix(color, target, clamp(alpha, 0.0, 1.0)));
+        }
+
         void main() {
           vec4 fieldA = texture2D(field0, vUv);
           vec4 fieldB = texture2D(field1, vUv);
@@ -636,6 +706,7 @@
             lifeWeights,
             water
           );
+          color = applySpecialSurface(color, height, water, lifeWeights, fieldA, fieldB);
           color = applyLife(
             color,
             hazardousCoverage,
@@ -830,6 +901,7 @@
     const iceCoverage = getCoverage(context, 'ice');
     const lifeCoverage = getCoverage(context, 'life');
     const hazardousCoverage = getCoverage(context, 'hazardousLife');
+    const specialSurface = context.getDominionSurfaceVisualState();
     const waterThresholds = waterCoverage.map((coverage, zone) => (
       findAscendingThreshold(context.heightZoneHists[zone], coverage, false)
     ));
@@ -837,7 +909,8 @@
     const lifeHistograms = createHistograms();
     const iceActive = iceCoverage.some(value => value > 0);
     const lifeActive = lifeCoverage.some(value => value > 0)
-      || hazardousCoverage.some(value => value > 0);
+      || hazardousCoverage.some(value => value > 0)
+      || specialSurface.coverage.some(value => value > 0);
     if (lifeActive) buildLifeFields(context, state);
     const iceFromPoles = iceCoverage[2] > iceCoverage[0];
 
@@ -915,6 +988,11 @@
     setVector3(
       uniforms.hazardousThresholds.value,
       hazardousCoverage.map((coverage, zone) => findDescendingThreshold(lifeHistograms[zone], coverage))
+    );
+    uniforms.specialSurfaceStyle.value = specialSurface.style;
+    setVector3(
+      uniforms.specialSurfaceThresholds.value,
+      specialSurface.coverage.map((coverage, zone) => findDescendingThreshold(lifeHistograms[zone], coverage))
     );
 
     const cityStrength = context.getEcumenopolisVisualizerStrength();

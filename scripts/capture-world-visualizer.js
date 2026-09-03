@@ -19,6 +19,10 @@ function printHelp() {
     '  --hazardous-biomass <tropical,temperate,polar>',
     '  --water <tropical,temperate,polar>',
     '  --ice <tropical,temperate,polar>',
+    '  --fine-sand <tropical,temperate,polar>',
+    '  --yggie-overgrowth <percent>     Yggie canopy coverage override',
+    '  --swamp <percent>                Swampified surface coverage override',
+    '  --klishy-web <percent>           Klishy network coverage override',
     '  --clouds <percent>              Cloud coverage override',
     '  --ecumenopolis <percent>        Ecumenopolis coverage override (enables its Steam visual)',
     '  --nanoworld                     Enable the completed Nanoworld surface',
@@ -68,6 +72,10 @@ function parseArgs(argv) {
     hazardousBiomass: null,
     water: null,
     ice: null,
+    fineSand: null,
+    yggieOvergrowth: null,
+    swamp: null,
+    klishyWeb: null,
     clouds: null,
     ecumenopolis: null,
     nanoworld: null,
@@ -106,6 +114,10 @@ function parseArgs(argv) {
     else if (arg === '--hazardous-biomass') options.hazardousBiomass = parseTriplet(next, arg);
     else if (arg === '--water') options.water = parseTriplet(next, arg);
     else if (arg === '--ice') options.ice = parseTriplet(next, arg);
+    else if (arg === '--fine-sand') options.fineSand = parseTriplet(next, arg);
+    else if (arg === '--yggie-overgrowth') options.yggieOvergrowth = parseNumber(next, arg, 0, 100);
+    else if (arg === '--swamp') options.swamp = parseNumber(next, arg, 0, 100);
+    else if (arg === '--klishy-web') options.klishyWeb = parseNumber(next, arg, 0, 100);
     else if (arg === '--clouds') options.clouds = parseNumber(next, arg, 0, 100);
     else if (arg === '--ecumenopolis') options.ecumenopolis = parseNumber(next, arg, 0, 100);
     else if (arg === '--base-color') {
@@ -219,12 +231,21 @@ async function configureVisualizer(page, options) {
     setZones(scene.hazardousBiomass, 'hbTrop', 'hbTemp', 'hbPol');
     setZones(scene.water, 'wTrop', 'wTemp', 'wPol');
     setZones(scene.ice, 'iTrop', 'iTemp', 'iPol');
+    setZones(scene.fineSand, 'fsTrop', 'fsTemp', 'fsPol');
+    setValue(rows.yggieOvergrowth, scene.yggieOvergrowth);
+    setValue(rows.swamp, scene.swamp);
+    setValue(rows.klishyWeb, scene.klishyWeb);
     setValue(rows.cloudCov, scene.clouds);
     setValue(rows.ecumenopolis, scene.ecumenopolis);
     if (scene.nanoworld !== null) {
       setValue(rows.nanoworld, scene.nanoworld ? 100 : 0);
     }
     setValue(rows.illum, scene.illumination);
+    const specialOverrides = [scene.fineSand, scene.yggieOvergrowth, scene.swamp, scene.klishyWeb]
+      .filter(value => value !== null);
+    if (specialOverrides.length > 1) {
+      throw new Error('Only one dominion surface override may be used at a time');
+    }
     visualizer.applySlidersToGame();
 
     if (scene.baseColor) {

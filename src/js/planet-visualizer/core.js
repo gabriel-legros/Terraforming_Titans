@@ -137,11 +137,22 @@
         illum: 1,
         pop: 0,
         kpa: { co2: 0, o2: 0, inert: 0, h2o: 0, ch4: 0 },
-        coverage: { water: 0, life: 0, hazardousLife: 0, cloud: 0, ecumenopolis: 0, nanoworld: 0 },
+        coverage: {
+          water: 0,
+          life: 0,
+          hazardousLife: 0,
+          fineSand: 0,
+          yggieOvergrowth: 0,
+          swamp: 0,
+          klishyWeb: 0,
+          cloud: 0,
+          ecumenopolis: 0,
+          nanoworld: 0,
+        },
         zonalCoverage: {
-          tropical: { water: 0, ice: 0, life: 0, hazardousLife: 0 },
-          temperate: { water: 0, ice: 0, life: 0, hazardousLife: 0 },
-          polar: { water: 0, ice: 0, life: 0, hazardousLife: 0 },
+          tropical: { water: 0, ice: 0, life: 0, hazardousLife: 0, fineSand: 0 },
+          temperate: { water: 0, ice: 0, life: 0, hazardousLife: 0, fineSand: 0 },
+          polar: { water: 0, ice: 0, life: 0, hazardousLife: 0, fineSand: 0 },
         },
         baseColor: '#8a2a2a',
         heightMapKey: '',
@@ -1123,6 +1134,28 @@
       try { this.updateZonalCoverageFromGame(readZonalSurfaceDirectly); } catch (e) {}
     }
 
+    getDominionSurfaceVisualState() {
+      const coverage = this.viz.coverage;
+      const zonal = this.viz.zonalCoverage;
+      if (coverage.fineSand > 0) {
+        return {
+          style: 1,
+          coverage: ['tropical', 'temperate', 'polar'].map(zone => zonal[zone].fineSand),
+        };
+      }
+      const styles = [
+        [2, coverage.yggieOvergrowth],
+        [3, coverage.swamp],
+        [4, coverage.klishyWeb],
+      ];
+      const active = styles.find(entry => entry[1] > 0);
+      const fraction = active ? Math.max(0, Math.min(1, active[1] / 100)) : 0;
+      return {
+        style: active ? active[0] : 0,
+        coverage: [fraction, fraction, fraction],
+      };
+    }
+
     updateZonalCoverageFromGame(readZonalSurfaceDirectly = false) {
       const t = terraforming;
       const zones = this.getZoneKeys();
@@ -1130,9 +1163,10 @@
       let waterSum = 0;
       let lifeSum = 0;
       let hazardousLifeSum = 0;
+      let fineSandSum = 0;
       let weightSum = 0;
       for (const zone of zones) {
-        let w, i, b, hb;
+        let w, i, b, hb, sand;
         if (
           !readZonalSurfaceDirectly
           && t
@@ -1142,21 +1176,25 @@
           const c = t.zonalCoverageCache[zone];
           w = c.liquidWater; i = c.ice; b = c.biomass;
           hb = c.hazardousBiomass;
+          sand = c.fineSand;
         } else {
           const area = (t.celestialParameters.surfaceArea || 0) * getZonePercentage(zone);
           w = estimateCoverage(t.zonalSurface.liquidWater[zone] || 0, area, 0.0001);
           i = estimateCoverage(t.zonalSurface.ice[zone] || 0, area, 0.0001 * 100);
           b = estimateCoverage(t.zonalSurface.biomass[zone] || 0, area, 0.0001 * 100000);
           hb = estimateCoverage(t.zonalSurface.hazardousBiomass[zone] || 0, area, 0.0001 * 100000);
+          sand = estimateCoverage(t.zonalSurface.fineSand[zone] || 0, area, 0.0001);
         }
         z[zone].water = Math.max(0, Math.min(1, Number(w) || 0));
         z[zone].ice = Math.max(0, Math.min(1, Number(i) || 0));
         z[zone].life = Math.max(0, Math.min(0.75, Number(b) || 0));
         z[zone].hazardousLife = Math.max(0, Math.min(0.75, Number(hb) || 0));
+        z[zone].fineSand = Math.max(0, Math.min(1, Number(sand) || 0));
         const weight = t?.getZoneWeight ? t.getZoneWeight(zone) : 1;
         waterSum += z[zone].water * weight;
         lifeSum += z[zone].life * weight;
         hazardousLifeSum += z[zone].hazardousLife * weight;
+        fineSandSum += z[zone].fineSand * weight;
         weightSum += weight;
       }
       if (
@@ -1174,12 +1212,29 @@
       const avgWater = norm > 0 ? (waterSum / norm) : 0;
       const avgLife = norm > 0 ? (lifeSum / norm) : 0;
       const avgHazardousLife = norm > 0 ? (hazardousLifeSum / norm) : 0;
+      const avgFineSand = norm > 0 ? (fineSandSum / norm) : 0;
       const cloudFraction = Number.isFinite(t?.luminosity?.cloudFraction)
         ? Math.max(0, Math.min(1, t.luminosity.cloudFraction))
         : avgWater;
       this.viz.coverage.water = avgWater * 100;
       this.viz.coverage.life = Math.min(0.75, avgLife) * 100;
       this.viz.coverage.hazardousLife = Math.min(0.75, avgHazardousLife) * 100;
+      const dominionId = t.requirementId;
+      this.viz.coverage.fineSand = dominionId === 'shrilek' ? avgFineSand * 100 : 0;
+      const geometricLand = Math.max(0, resolveWorldGeometricLand(t, resources.surface.land));
+      const treeOfLife = projectManager.projects.treeOfLife;
+      const swampLand = resources.surface.land.getReservedAmountForSource('planetarySwampification') || 0;
+      const klishyWeb = projectManager.projects.klishyWeb;
+      const klishyProgress = klishyWeb.isCompleted
+        ? 1
+        : Math.max(0, Math.min(1, (klishyWeb.startingDuration - klishyWeb.remainingTime) / klishyWeb.startingDuration));
+      this.viz.coverage.yggieOvergrowth = dominionId === 'yggies'
+        ? treeOfLife.getLandCoverageMultiplier() * 100
+        : 0;
+      this.viz.coverage.swamp = dominionId === 'shiivert' && geometricLand > 0
+        ? Math.max(0, Math.min(100, swampLand / geometricLand * 100))
+        : 0;
+      this.viz.coverage.klishyWeb = dominionId === 'klishy' ? klishyProgress * 100 : 0;
       this.viz.coverage.cloud = Math.max(0, Math.min(100, cloudFraction * 100));
       this.viz.coverage.ecumenopolis = Math.max(0, Math.min(100, getEcumenopolisLandFraction(t) * 100));
       this.viz.coverage.nanoworld = projectManager.projects.nanoworld.isCompleted ? 100 : 0;
