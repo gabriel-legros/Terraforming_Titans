@@ -38,6 +38,7 @@ const saveSlotNames = new Set([
 ]);
 let fullscreenKeybindCode = 'F11';
 const fullscreenKeybindCaptureResolvers = new Map();
+const windowsBorderlessFullscreenStates = new WeakMap();
 const recentCrashSignatures = new Map();
 let crashWindow = null;
 let latestCrashReport = null;
@@ -501,26 +502,96 @@ function registerSteamAchievementHandlers() {
   });
 }
 
+function isGameWindowFullscreen(win) {
+  if (process.platform !== 'win32') {
+    return win.isFullScreen();
+  }
+  return windowsBorderlessFullscreenStates.get(win)?.enabled === true;
+}
+
+function setWindowsBorderlessFullscreen(win, enabled) {
+  const currentState = windowsBorderlessFullscreenStates.get(win);
+  if (enabled === (currentState?.enabled === true)) {
+    return enabled;
+  }
+
+  if (enabled) {
+    const state = {
+      enabled: true,
+      normalBounds: win.getNormalBounds(),
+      maximized: win.isMaximized(),
+      resizable: win.isResizable(),
+      movable: win.isMovable(),
+      alwaysOnTop: win.isAlwaysOnTop()
+    };
+    windowsBorderlessFullscreenStates.set(win, state);
+    if (state.maximized) {
+      win.unmaximize();
+    }
+    win.setResizable(false);
+    win.setMovable(false);
+
+    const windowBounds = win.getBounds();
+    const contentBounds = win.getContentBounds();
+    const display = screen.getDisplayMatching(windowBounds);
+    const leftInset = contentBounds.x - windowBounds.x;
+    const topInset = contentBounds.y - windowBounds.y;
+    const rightInset = windowBounds.width - leftInset - contentBounds.width;
+    const bottomInset = windowBounds.height - topInset - contentBounds.height;
+    win.setBounds({
+      x: display.bounds.x - leftInset,
+      y: display.bounds.y - topInset,
+      width: display.bounds.width + leftInset + rightInset,
+      height: display.bounds.height + topInset + bottomInset
+    });
+    win.setAlwaysOnTop(true, 'screen-saver');
+  } else {
+    currentState.enabled = false;
+    win.setAlwaysOnTop(currentState.alwaysOnTop);
+    win.setMovable(currentState.movable);
+    win.setResizable(currentState.resizable);
+    win.setBounds(currentState.normalBounds);
+    if (currentState.maximized) {
+      win.maximize();
+    }
+  }
+
+  win.webContents.send('window:fullscreen-changed', enabled);
+  return enabled;
+}
+
+function setGameWindowFullscreen(win, enabled) {
+  if (process.platform === 'win32') {
+    return setWindowsBorderlessFullscreen(win, enabled);
+  }
+  win.setFullScreen(enabled);
+  return win.isFullScreen();
+}
+
 function registerWindowControlHandlers() {
   const { ipcMain } = require('electron');
   ipcMain.on('window:get-state', event => {
     const win = BrowserWindow.fromWebContents(event.sender);
-    const bounds = win.getNormalBounds();
+    const borderlessState = windowsBorderlessFullscreenStates.get(win);
+    const bounds = borderlessState && borderlessState.enabled
+      ? borderlessState.normalBounds
+      : win.getNormalBounds();
     event.returnValue = {
       width: bounds.width,
       height: bounds.height,
-      fullscreen: win.isFullScreen(),
-      maximized: win.isMaximized()
+      fullscreen: isGameWindowFullscreen(win),
+      maximized: borderlessState && borderlessState.enabled
+        ? borderlessState.maximized
+        : win.isMaximized()
     };
   });
   ipcMain.handle('window:is-fullscreen', event => {
     const win = BrowserWindow.fromWebContents(event.sender);
-    return win.isFullScreen();
+    return isGameWindowFullscreen(win);
   });
   ipcMain.handle('window:set-fullscreen', (event, enabled) => {
     const win = BrowserWindow.fromWebContents(event.sender);
-    win.setFullScreen(enabled === true);
-    return win.isFullScreen();
+    return setGameWindowFullscreen(win, enabled === true);
   });
   ipcMain.handle('window:set-fullscreen-keybind', (_event, code) => {
     fullscreenKeybindCode = code || 'F11';
@@ -1077,8 +1148,9 @@ function createWindow() {
   const steamDeckFullscreen = shouldLaunchSteamDeckFullscreen();
   const savedWindowState = steamDeckFullscreen ? null : startupSelection.windowState;
   const launchFullscreen = steamDeckFullscreen || (savedWindowState ? savedWindowState.fullscreen : false);
+  const launchNativeFullscreen = launchFullscreen && process.platform !== 'win32';
   let displaySize = null;
-  if (launchFullscreen) {
+  if (launchNativeFullscreen) {
     const primaryDisplay = screen.getPrimaryDisplay();
     const primaryBounds = primaryDisplay.bounds;
     const steamDeckPortraitBounds = steamDeckFullscreen
@@ -1090,11 +1162,11 @@ function createWindow() {
     };
   }
   const win = new BrowserWindow({
-    width: launchFullscreen ? displaySize.width : (savedWindowState ? savedWindowState.width : 1400),
-    height: launchFullscreen ? displaySize.height : (savedWindowState ? savedWindowState.height : 950),
+    width: launchNativeFullscreen ? displaySize.width : (savedWindowState ? savedWindowState.width : 1400),
+    height: launchNativeFullscreen ? displaySize.height : (savedWindowState ? savedWindowState.height : 950),
     minWidth: 1024,
     minHeight: 700,
-    fullscreen: launchFullscreen,
+    fullscreen: launchNativeFullscreen,
     backgroundColor: '#111827',
     icon: appIconPath,
     show: false,
@@ -1107,6 +1179,10 @@ function createWindow() {
       backgroundThrottling: false
     }
   });
+
+  if (launchFullscreen && process.platform === 'win32') {
+    setGameWindowFullscreen(win, true);
+  }
 
   win.once('ready-to-show', () => {
     if (savedWindowState && savedWindowState.maximized && !launchFullscreen) {
@@ -1131,12 +1207,12 @@ function createWindow() {
     }
     if (input.code === fullscreenKeybindCode) {
       event.preventDefault();
-      win.setFullScreen(!win.isFullScreen());
+      setGameWindowFullscreen(win, !isGameWindowFullscreen(win));
       return;
     }
-    if (input.key === 'Escape' && win.isFullScreen()) {
+    if (input.key === 'Escape' && isGameWindowFullscreen(win)) {
       event.preventDefault();
-      win.setFullScreen(false);
+      setGameWindowFullscreen(win, false);
       return;
     }
     if (input.control && input.shift && input.key.toLowerCase() === 'i') {
@@ -1158,6 +1234,16 @@ function createWindow() {
   });
   win.on('leave-full-screen', () => {
     win.webContents.send('window:fullscreen-changed', false);
+  });
+  win.on('blur', () => {
+    if (windowsBorderlessFullscreenStates.get(win)?.enabled) {
+      win.setAlwaysOnTop(false);
+    }
+  });
+  win.on('focus', () => {
+    if (windowsBorderlessFullscreenStates.get(win)?.enabled) {
+      win.setAlwaysOnTop(true, 'screen-saver');
+    }
   });
 
   win.webContents.setWindowOpenHandler(({ url }) => {
