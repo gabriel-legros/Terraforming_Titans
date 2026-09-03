@@ -1903,7 +1903,6 @@ setLanguageData({
       },
       planetarySwampification: {
         reset: 'Reset and Recover Land',
-        landReserved: 'Swampland reserved: {current} / {target} ha',
         segmentsCompleted: 'Swampification segments: {current} / {total}',
         androidSpeedTooltip: '1 + (androids assigned / 100)',
       },

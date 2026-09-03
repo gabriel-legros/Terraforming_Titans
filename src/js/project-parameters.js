@@ -284,11 +284,12 @@ const projectParameters = {
     category: 'infrastructure',
     cost: {
       surface: {
-        liquidWater: 1_000
+        liquidWater: 1_000,
+        land: 1
       },
       atmospheric: {
-        atmosphericMethane: 0.05,
-        atmosphericAmmonia: 0.01
+        atmosphericMethane: 10,
+        atmosphericAmmonia: 1
       },
       colony: {
         energy: 100_000
@@ -301,7 +302,7 @@ const projectParameters = {
     unlocked: false,
     automationRequiresEverEnabled: true,
     attributes: {
-      landReservationShare: 0.5
+      landReservationShare: 1
     }
   },
   oreSpaceMining: {

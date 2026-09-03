@@ -92,6 +92,11 @@ class AndroidProject extends Project {
         }
       }
     } else if (this.isActive) {
+      if (nowContinuous) {
+        this.startingDuration = Infinity;
+        this.remainingTime = Infinity;
+        return;
+      }
       const newDuration = this.getEffectiveDuration();
       this.startingDuration = newDuration;
       this.remainingTime = newDuration * (1 - progressRatio);
@@ -138,7 +143,7 @@ class AndroidProject extends Project {
 
   canStart() {
     if (this.isContinuous()) {
-      const cost = this.getScaledCost();
+      const cost = this.getConsumableCost();
       for (const category in cost) {
         for (const resource in cost[category]) {
           if (resources[category][resource].value < cost[category][resource]) {
@@ -195,7 +200,7 @@ class AndroidProject extends Project {
     if (this.isContinuous()) {
       const duration = this.getEffectiveDuration();
       const rate = 1000 / duration;
-      const cost = this.getScaledCost();
+      const cost = this.getConsumableCost();
       
       for (const category in cost) {
         if (!totals.cost[category]) totals.cost[category] = {};
@@ -228,7 +233,7 @@ class AndroidProject extends Project {
     this.shortfallLastTick = false;
     const duration = this.getEffectiveDuration();
     const fraction = deltaTime / duration;
-    const cost = this.getScaledCost();
+    const cost = this.getConsumableCost();
 
     let shortfall = false;
     for (const category in cost) {

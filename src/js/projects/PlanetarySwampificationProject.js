@@ -1,33 +1,42 @@
 const PLANETARY_SWAMPIFICATION_LAND_SOURCE = 'planetarySwampification';
 
-class PlanetarySwampificationProject extends AndroidProject {
-  constructor(config, name) {
-    super(config, name);
-    this.maxRepeatCount = this.getSegmentCount();
+class PlanetarySwampificationProject extends UndergroundExpansionProject {
+  getRawMaxRepeats() {
+    return Math.max(1, super.getRawMaxRepeats());
   }
 
   getSegmentCount() {
-    const geometricLand = Math.max(
-      0,
-      resolveWorldGeometricLand(terraforming, resources.surface.land)
-    );
-    return Math.max(1, Math.floor(geometricLand));
+    return this.getMaxRepeats();
   }
 
-  syncSegmentLimit() {
-    const segmentCount = this.getSegmentCount();
-    this.maxRepeatCount = segmentCount;
-    this.repeatCount = Math.max(0, Math.min(segmentCount, this.repeatCount || 0));
-    this.isCompleted = this.repeatCount >= segmentCount;
-    return segmentCount;
-  }
-
-  isContinuous() {
+  shouldReportLandExpansion() {
     return false;
   }
 
-  getAndroidSpeedMultiplier() {
-    return 1 + ((this.assignedAndroids || 0) / 100);
+  getScaledCost() {
+    const cost = super.getScaledCost();
+    return {
+      ...cost,
+      surface: {
+        ...cost.surface,
+        land: this.getTargetReservedLand() / this.getSegmentCount(),
+      },
+    };
+  }
+
+  isCostConsumed(category, resource) {
+    return category !== 'surface' || resource !== 'land';
+  }
+
+  getProjectCostAvailableAmount(category, resource) {
+    if (category === 'surface' && resource === 'land') {
+      return resources.surface.land.getAvailableAmount();
+    }
+    return null;
+  }
+
+  isDynamicMassEnabled() {
+    return false;
   }
 
   getAndroidSpeedTooltip() {
@@ -48,7 +57,10 @@ class PlanetarySwampificationProject extends AndroidProject {
   }
 
   hasSwampificationProgress() {
-    return this.isCompleted || this.repeatCount > 0 || this.hasCurrentSegmentProgress();
+    return this.isCompleted
+      || this.repeatCount > 0
+      || this.fractionalRepeatCount > 0
+      || this.hasCurrentSegmentProgress();
   }
 
   hasCurrentSegmentProgress() {
@@ -62,18 +74,41 @@ class PlanetarySwampificationProject extends AndroidProject {
 
   syncLandReservation() {
     const segmentCount = this.getSegmentCount();
-    const reservedSegments = this.isCompleted
-      ? segmentCount
-      : Math.max(0, Math.min(
-        segmentCount,
-        (this.repeatCount || 0) + (this.hasCurrentSegmentProgress() ? 1 : 0)
-      ));
+    let reservedSegments = this.isCompleted ? segmentCount : this.getTotalProgress();
+    if (!this.isContinuous() && this.hasCurrentSegmentProgress()) {
+      reservedSegments = Math.max(reservedSegments, (this.repeatCount || 0) + 1);
+    }
+    reservedSegments = Math.max(0, Math.min(segmentCount, reservedSegments));
     const reserved = this.getTargetReservedLand() * (reservedSegments / segmentCount);
     resources.surface.land.setReservedAmountForSource(PLANETARY_SWAMPIFICATION_LAND_SOURCE, reserved);
   }
 
+  getContinuousProgressAllowance() {
+    const remainingRepeats = super.getContinuousProgressAllowance();
+    const segmentCount = this.getSegmentCount();
+    const targetLand = this.getTargetReservedLand();
+    if (!(targetLand > 0) || !(segmentCount > 0)) {
+      return remainingRepeats;
+    }
+
+    const land = resources.surface.land;
+    const availableWithOwnReservation = land.getAvailableAmount() + this.getReservedLand();
+    const maximumReservedLand = Math.min(targetLand, availableWithOwnReservation);
+    const maximumProgress = (maximumReservedLand / targetLand) * segmentCount;
+    return Math.max(0, Math.min(
+      remainingRepeats,
+      maximumProgress - this.getTotalProgress()
+    ));
+  }
+
+  applyContinuousProgress(progress) {
+    const completed = super.applyContinuousProgress(progress);
+    this.syncLandReservation();
+    return completed;
+  }
+
   canStart() {
-    const segmentCount = this.syncSegmentLimit();
+    const segmentCount = this.getSegmentCount();
     if (this.isCompleted || this.repeatCount >= segmentCount || !super.canStart()) {
       return false;
     }
@@ -93,13 +128,7 @@ class PlanetarySwampificationProject extends AndroidProject {
   }
 
   complete() {
-    const segmentCount = this.getSegmentCount();
-    this.repeatCount = Math.min(segmentCount, this.repeatCount + 1);
-    this.isCompleted = this.repeatCount >= segmentCount;
-    this.isActive = false;
-    this.isPaused = false;
-    this.remainingTime = this.isCompleted ? 0 : this.getEffectiveDuration();
-    this.startingDuration = this.remainingTime;
+    super.complete();
     this.syncLandReservation();
   }
 
@@ -109,6 +138,8 @@ class PlanetarySwampificationProject extends AndroidProject {
     this.isPaused = false;
     this.isCompleted = false;
     this.repeatCount = 0;
+    this.fractionalRepeatCount = 0;
+    this.prepaidPortion = 0;
     this.remainingTime = this.getEffectiveDuration();
     this.startingDuration = this.remainingTime;
     this.shortfallLastTick = false;
@@ -118,7 +149,6 @@ class PlanetarySwampificationProject extends AndroidProject {
   }
 
   update(deltaTime) {
-    this.syncSegmentLimit();
     super.update(deltaTime);
     this.syncLandReservation();
   }
@@ -129,9 +159,6 @@ class PlanetarySwampificationProject extends AndroidProject {
     const section = document.createElement('div');
     section.classList.add('project-section-container');
 
-    const reservedLand = document.createElement('p');
-    reservedLand.classList.add('no-margin');
-
     const resetButton = document.createElement('button');
     resetButton.type = 'button';
     resetButton.textContent = t('ui.projects.planetarySwampification.reset', null, '');
@@ -140,35 +167,25 @@ class PlanetarySwampificationProject extends AndroidProject {
       updateProjectUI(this.name);
     });
 
-    section.append(reservedLand, resetButton);
+    section.appendChild(resetButton);
     container.appendChild(section);
     projectElements[this.name] = {
       ...projectElements[this.name],
-      swampificationReservedLand: reservedLand,
       swampificationResetButton: resetButton,
     };
   }
 
   updateUI() {
-    this.syncSegmentLimit();
     super.updateUI();
     const elements = projectElements[this.name];
-    if (!elements?.swampificationReservedLand) {
+    if (!elements?.swampificationResetButton) {
       return;
     }
-    elements.swampificationReservedLand.textContent = t(
-      'ui.projects.planetarySwampification.landReserved',
-      {
-        current: formatNumber(this.getReservedLand(), true, 3),
-        target: formatNumber(this.getTargetReservedLand(), true, 3),
-      },
-      ''
-    );
     if (elements.repeatCountElement) {
       elements.repeatCountElement.textContent = t(
         'ui.projects.planetarySwampification.segmentsCompleted',
         {
-          current: formatNumber(this.repeatCount, true),
+          current: formatNumber(this.getTotalProgress(), true, 3),
           total: formatNumber(this.getSegmentCount(), true),
         },
         ''
@@ -178,9 +195,7 @@ class PlanetarySwampificationProject extends AndroidProject {
   }
 
   loadState(state) {
-    this.maxRepeatCount = this.getSegmentCount();
     super.loadState(state);
-    this.syncSegmentLimit();
     this.syncLandReservation();
   }
 

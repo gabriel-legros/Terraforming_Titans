@@ -472,6 +472,25 @@ class Project extends EffectableEntity {
     return scaledCost;
   }
 
+  isCostConsumed(category, resource) {
+    return true;
+  }
+
+  getConsumableCost() {
+    const cost = this.getScaledCost();
+    const consumableCost = {};
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        if (!this.isCostConsumed(category, resource)) {
+          continue;
+        }
+        consumableCost[category] ||= {};
+        consumableCost[category][resource] = cost[category][resource];
+      }
+    }
+    return consumableCost;
+  }
+
   canStart() {
     if (this.isPermanentlyDisabled()) {
       return false;
@@ -537,7 +556,7 @@ class Project extends EffectableEntity {
   }
 
   deductResources(resources) {
-    const cost = this.getScaledCost();
+    const cost = this.getConsumableCost();
     const storageProj = this.createSpaceStorageAccess('expansions', { reconcileOnDirectSpend: true });
 
     for (const category in cost) {
@@ -875,7 +894,7 @@ class Project extends EffectableEntity {
       const rate = 1000 / duration; // per-second rate for display
       const timeFraction = deltaTime / duration; // fraction of project processed this tick
 
-      const cost = this.getScaledCost();
+      const cost = this.getConsumableCost();
       const storageProj = this.createSpaceStorageAccess('consumption');
       for (const category in cost) {
         if (!totals.cost[category]) totals.cost[category] = {};
