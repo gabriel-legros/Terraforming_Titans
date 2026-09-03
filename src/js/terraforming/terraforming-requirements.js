@@ -792,7 +792,7 @@ const terraformingRequirements = {
       carbonDioxide: { min: 5_000, max: 100_000 },
       oxygen: { min: 0, max: 100 },
       inertGas: { min: 100_000, max: 450_000 },
-      atmosphericWater: { min: 300, max: 5_000 },
+      atmosphericWater: { min: 500, max: 5_000 },
       atmosphericMethane: { min: 250, max: 25_000 },
       atmosphericAmmonia: { min: 0, max: 250 },
     },
