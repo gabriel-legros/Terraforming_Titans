@@ -3536,8 +3536,8 @@ setLanguageData({
           targetAbove: 'Life coverage above {percent}%.',
           targetBiomassAmountAtLeast: 'Life biomass at least {amount} tons.',
           targetBiomassAmountAbove: 'Life biomass above {amount} tons.',
-          targetUndergroundDensityAtLeast: 'Life density at least {density} t/m^2 of expanded underground land.',
-          targetUndergroundDensityAbove: 'Life density above {density} t/m^2 of expanded underground land.',
+          targetUndergroundDensityAtLeast: 'Life density at least {density} t/m^2 of geometric underground area ({amount} tons of biomass).',
+          targetUndergroundDensityAbove: 'Life density above {density} t/m^2 of geometric underground area ({amount} tons of biomass).',
           hazardsCleared: 'Hazardous biomass cleared in all zones.',
           removeHazards: 'Remove hazardous biomass from: {zones}.',
         },
@@ -6245,7 +6245,7 @@ setLanguageData({
       },
       planetarySwampification: {
         name: 'Planetary Swampification',
-        description: 'Seed managed wetlands with water, methane-derived organic substrate and ammonia nutrients.  Resetting recovers all reserved land.',
+        description: 'Shiivert biomass lives underground but requires nutrients from above swampland.  Seed managed wetlands with water, methane-derived organic substrate and ammonia nutrients.  Resetting recovers all reserved land.',
       },
       oreSpaceMining: {
         name: 'Metal Asteroid Mining',

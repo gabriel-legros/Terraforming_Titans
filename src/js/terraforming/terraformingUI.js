@@ -2996,7 +2996,10 @@ function createWaterBox(row) {
           ? getTerraformingSummaryText(
             'lifeSummary.targetUndergroundDensityAtLeast',
             '',
-            { density: formatNumber(densityTarget, true, 3) }
+            {
+              density: formatNumber(densityTarget, true, 3),
+              amount: formatNumber(getEffectiveLifeTargetAmount(terraforming), true),
+            }
           )
           :
         getTerraformingSummaryText(
@@ -3078,7 +3081,10 @@ function updateLifeBox() {
             ? getTerraformingSummaryText(
               'lifeSummary.targetUndergroundDensityAbove',
               '',
-              { density: formatNumber(densityTarget, true, 3) }
+              {
+                density: formatNumber(densityTarget, true, 3),
+                amount: formatNumber(getEffectiveLifeTargetAmount(terraforming), true),
+              }
             )
             :
           getTerraformingSummaryText(

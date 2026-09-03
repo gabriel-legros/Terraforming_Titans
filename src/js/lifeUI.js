@@ -1423,7 +1423,8 @@ function updateLifeStatusTable() {
     // Get biomass and area info
     const totalBiomass = resources.surface.biomass?.value || 0;
     const totalLifeArea = getLifeBiomassAreaM2(terraforming);
-    const globalDensity = totalLifeArea > 0 ? totalBiomass / totalLifeArea : 0;
+    const densityReferenceArea = getLifeDensityReferenceAreaM2(terraforming);
+    const globalDensity = densityReferenceArea > 0 ? totalBiomass / densityReferenceArea : 0;
 
     const ecoFraction = getEcumenopolisLandFraction(terraforming);
     const ecumenopolisLandMult = Math.max(0, 1 - ecoFraction);
@@ -1552,8 +1553,8 @@ function updateLifeStatusTable() {
             if (densityCell) densityCell.textContent = formatNumber(globalDensity, false, 2);
         } else {
             const zonalBiomass = terraforming.zonalSurface.biomass[zone] || 0;
-            const zoneArea = totalLifeArea * getZonePercentage(zone);
-            const zonalDensity = zoneArea > 0 ? zonalBiomass / zoneArea : 0;
+            const zoneReferenceArea = densityReferenceArea * getZonePercentage(zone);
+            const zonalDensity = zoneReferenceArea > 0 ? zonalBiomass / zoneReferenceArea : 0;
 
             if (amountCell) amountCell.textContent = formatNumber(zonalBiomass, true);
             if (densityCell) densityCell.textContent = formatNumber(zonalDensity, false, 2);
