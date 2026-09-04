@@ -881,6 +881,7 @@
         }
         const row = rowElements[key];
         if (row.rowA) {
+          cleanupDynamicTooltipsIn(row.rowA);
           row.rowA.remove();
         }
         if (row.rowB) {

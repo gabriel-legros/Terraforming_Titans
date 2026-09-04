@@ -12,8 +12,11 @@ cmd.exe /c "cd /d C:\Users\gabri\Documents\Terraforming Titans && npm run screen
 
 The harness drives the visualizer debug API, removes story overlays, fixes rotation, and captures only `#planet-visualizer`.
 
+For interactive checks, enable the world visualizer debug panel and select `Slider debug`. Fine sand has tropical, temperate, and polar sliders; Yggie Overgrowth, Swampification, and Klishy Web each have a global coverage slider. Raising one dominion surface style clears the other styles.
+
 - Run `npm run screenshot:visualizer -- --help` for all scene overrides.
 - Three-value surface arguments are ordered `tropical,temperate,polar` and use percentages from `0` to `100`.
+- Dominion surface checks use `--fine-sand <tropical,temperate,polar>`, `--yggie-overgrowth <percent>`, `--swamp <percent>`, or `--klishy-web <percent>`. Use only one per capture because these appearances belong to mutually exclusive dominions.
 - Use `--dust-colors <north-tropical,north-temperate,north-polar,south-tropical,south-temperate,south-polar>` with `--dust-coverage <percent>` for Dust Factory tint checks.
 - Leave `DEBUG_MODE` unchanged. Set it to `true` only for an interactive manual capture that needs an intro-skip path, then restore it to `false`.
 - If Playwright Chromium is missing after `npm ci`, install it with Windows Node:

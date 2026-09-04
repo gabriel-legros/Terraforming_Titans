@@ -67,6 +67,7 @@ const projectDisplayState = {
 const CONTINUOUS_ETA_PROJECT_IDS = {
   deeperMining: true,
   undergroundExpansion: true,
+  planetarySwampification: true,
   artificialSky: true,
   artificialCrust: true,
   aerostatStructuralNet: true
@@ -1263,6 +1264,10 @@ function getUpdatedResourceGain(project) {
 }
 
 function getAvailableProjectCostAmount(project, category, resource, storageAccess = null) {
+  const projectAmount = project?.getProjectCostAvailableAmount?.(category, resource);
+  if (Number.isFinite(projectAmount)) {
+    return projectAmount;
+  }
   const colonyAvailable = resources[category][resource].value;
   if (project && project.attributes?.canUseSpaceStorage) {
     const storageKey = resource === 'water' ? 'liquidWater' : resource;
@@ -1283,7 +1288,12 @@ function getProjectCostModeLabel(mode) {
 }
 
 function buildProjectCostTooltip(project, category, resource, requiredAmount, storageAccess = null) {
-  const colonyAvailable = resources[category][resource].value;
+  const colonyAvailable = getAvailableProjectCostAmount(
+    project,
+    category,
+    resource,
+    storageAccess
+  );
   const lines = [getProjectsUIText('ui.projects.costTooltip.required', 'Required: {value}', {
     value: formatNumber(requiredAmount, true)
   })];

@@ -139,10 +139,12 @@ function getPhaseChangeHeatTooltipText() {
 }
 
 function getLifeThermodynamicsTooltipText() {
+  const maximumSolarFluxPercent = terraforming.requirements.lifeDesign.maximumSolarFluxFraction * 100;
   const lines = [
     getTerraformingSummaryText(
       'lifeSummary.thermodynamicsFluxTooltip',
-      'Solar energy stored as chemical energy by natural surface-life growth during the latest tick. Negative values represent cooling. Growth in each zone can absorb at most 10% of its surface solar flux averaged over the zone, including curvature and night, and this cooling changes that zone\'s temperature trend.'
+      'Solar energy stored as chemical energy by natural surface-life growth during the latest tick. Negative values represent cooling. Growth in each zone can absorb at most {percent}% of its surface solar flux averaged over the zone, including curvature and night, and this cooling changes that zone\'s temperature trend.',
+      { percent: formatNumber(maximumSolarFluxPercent, false, 0) }
     ),
     '',
   ];
@@ -2990,6 +2992,16 @@ function createWaterBox(row) {
     const densityTarget = getLifeBiomassDensityTarget(terraforming);
     targetSpan.textContent = densityTarget > 0
       ? formatTerraformingTargetText(
+        terraforming.requirements.lifeDensityLandBasis === 'underground'
+          ? getTerraformingSummaryText(
+            'lifeSummary.targetUndergroundDensityAtLeast',
+            '',
+            {
+              density: formatNumber(densityTarget, true, 3),
+              amount: formatNumber(getEffectiveLifeTargetAmount(terraforming), true),
+            }
+          )
+          :
         getTerraformingSummaryText(
           'lifeSummary.targetBiomassAmountAtLeast',
           'Life biomass at least {amount} tons.',
@@ -3065,6 +3077,16 @@ function updateLifeBox() {
     if (els.target) {
       els.target.textContent = densityTarget > 0
         ? formatTerraformingTargetText(
+          terraforming.requirements.lifeDensityLandBasis === 'underground'
+            ? getTerraformingSummaryText(
+              'lifeSummary.targetUndergroundDensityAbove',
+              '',
+              {
+                density: formatNumber(densityTarget, true, 3),
+                amount: formatNumber(getEffectiveLifeTargetAmount(terraforming), true),
+              }
+            )
+            :
           getTerraformingSummaryText(
             'lifeSummary.targetBiomassAmountAbove',
             'Life biomass above {amount} tons.',
@@ -3560,14 +3582,16 @@ function updateLifeBox() {
 
     const targetSpan = document.createElement('span');
     targetSpan.textContent = formatTerraformingTargetText(
-      getTerraformingSummaryText(
-        'luminosity.target',
-        'Surface solar flux between {min} and {max}.',
-        {
-          min: formatNumber(terraforming.luminosity.targetMin, false, 1),
-          max: formatNumber(terraforming.luminosity.targetMax, false, 1),
-        }
-      )
+      terraforming.requirements.ignoresLuminosity
+        ? getTerraformingSummaryText('luminosity.noTarget', '')
+        : getTerraformingSummaryText(
+          'luminosity.target',
+          'Surface solar flux between {min} and {max}.',
+          {
+            min: formatNumber(terraforming.luminosity.targetMin, false, 1),
+            max: formatNumber(terraforming.luminosity.targetMax, false, 1),
+          }
+        )
     );
     targetSpan.style.marginTop = 'auto';
     targetSpan.classList.add('terraforming-target')
@@ -3665,14 +3689,16 @@ function updateLifeBox() {
 
     if (els.target) {
       els.target.textContent = formatTerraformingTargetText(
-        getTerraformingSummaryText(
-          'luminosity.target',
-          'Surface solar flux between {min} and {max}.',
-          {
-            min: formatNumber(terraforming.luminosity.targetMin, false, 1),
-            max: formatNumber(terraforming.luminosity.targetMax, false, 1),
-          }
-        )
+        terraforming.requirements.ignoresLuminosity
+          ? getTerraformingSummaryText('luminosity.noTarget', '')
+          : getTerraformingSummaryText(
+            'luminosity.target',
+            'Surface solar flux between {min} and {max}.',
+            {
+              min: formatNumber(terraforming.luminosity.targetMin, false, 1),
+              max: formatNumber(terraforming.luminosity.targetMax, false, 1),
+            }
+          )
       );
     }
 

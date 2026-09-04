@@ -546,7 +546,6 @@ var terraformingParameters = {
       backgroundSolarFluxWm2: 6e-6
     },
     lifeThermodynamics: {
-      maximumSolarFluxFraction: 0.1,
       // Gibbs free energy stored by the default glucose-forming photosynthesis recipe.
       chemicalEnergyJPerTon: 15.94e9,
       simulatedSecondsPerRealSecond: 86400

@@ -201,12 +201,16 @@ function releaseMirrorUnassignedAssignments(settings) {
 
 function applyMirrorOversightSettings(settings, saved = {}, options = {}) {
   const savedDistribution = saved.distribution || {};
-  mergeSettingKeys(settings.distribution, savedDistribution).forEach(zone => {
+  Object.keys(savedDistribution).forEach(zone => {
     const v = Number(savedDistribution[zone]);
     settings.distribution[zone] = Number.isFinite(v) ? v : settings.distribution[zone];
   });
-  settings.applyToLantern = !!saved.applyToLantern;
-  settings.useFinerControls = !!saved.useFinerControls;
+  if (Object.prototype.hasOwnProperty.call(saved, 'applyToLantern')) {
+    settings.applyToLantern = !!saved.applyToLantern;
+  }
+  if (Object.prototype.hasOwnProperty.call(saved, 'useFinerControls')) {
+    settings.useFinerControls = !!saved.useFinerControls;
+  }
   if (settings.useFinerControls) {
     settings.applyToLantern = true;
   }
@@ -217,42 +221,61 @@ function applyMirrorOversightSettings(settings, saved = {}, options = {}) {
     return Math.max(1, Math.floor(num));
   };
   const stepSource = saved.assignmentStep;
-  settings.assignmentStep.mirrors = normalizeStep(stepSource?.mirrors ?? stepSource ?? settings.assignmentStep.mirrors);
-  settings.assignmentStep.lanterns = normalizeStep(stepSource?.lanterns ?? stepSource ?? settings.assignmentStep.lanterns);
-  settings.advancedOversight = !!saved.advancedOversight;
-  settings.allowAvailableToHeat = saved.allowAvailableToHeat !== false;
+  if (stepSource && stepSource.constructor === Object) {
+    if (Object.prototype.hasOwnProperty.call(stepSource, 'mirrors')) {
+      settings.assignmentStep.mirrors = normalizeStep(stepSource.mirrors);
+    }
+    if (Object.prototype.hasOwnProperty.call(stepSource, 'lanterns')) {
+      settings.assignmentStep.lanterns = normalizeStep(stepSource.lanterns);
+    }
+  } else if (stepSource !== undefined) {
+    settings.assignmentStep.mirrors = normalizeStep(stepSource);
+    settings.assignmentStep.lanterns = normalizeStep(stepSource);
+  }
+  if (Object.prototype.hasOwnProperty.call(saved, 'advancedOversight')) {
+    settings.advancedOversight = !!saved.advancedOversight;
+  }
+  if (Object.prototype.hasOwnProperty.call(saved, 'allowAvailableToHeat')) {
+    settings.allowAvailableToHeat = saved.allowAvailableToHeat !== false;
+  }
 
-  const multiplier = Number(saved.waterMultiplier);
-  settings.waterMultiplier = multiplier > 0 ? multiplier : 1000;
+  if (Object.prototype.hasOwnProperty.call(saved, 'waterMultiplier')) {
+    const multiplier = Number(saved.waterMultiplier);
+    settings.waterMultiplier = multiplier > 0 ? multiplier : 1000;
+  }
 
   const savedTargets = saved.targets || {};
-  mergeSettingKeys(settings.targets, savedTargets).forEach(key => {
+  Object.keys(savedTargets).forEach(key => {
     const v = Number(savedTargets[key]);
     settings.targets[key] = Number.isFinite(v) ? v : settings.targets[key];
   });
 
   const savedTempMode = saved.tempMode || {};
-  mergeSettingKeys(settings.tempMode, savedTempMode).forEach(zone => {
+  Object.keys(savedTempMode).forEach(zone => {
     settings.tempMode[zone] = normalizeMirrorOversightMode(savedTempMode[zone]);
   });
 
   const savedPriority = saved.priority || {};
-  mergeSettingKeys(settings.priority, savedPriority).forEach(zone => {
+  Object.keys(savedPriority).forEach(zone => {
     settings.priority[zone] = normalizeMirrorOversightPriority(zone, savedPriority[zone]);
   });
 
   const savedAvailableHeating = saved.availableHeating || {};
-  const availableMirrorCount = Math.max(0, Number(savedAvailableHeating.mirrors) || 0);
-  const availableLanternCount = Math.max(0, Number(savedAvailableHeating.lanterns) || 0);
-  settings.availableHeating.mirrors = settings.advancedOversight
-    ? availableMirrorCount
-    : Math.floor(availableMirrorCount);
-  settings.availableHeating.lanterns = settings.advancedOversight
-    ? availableLanternCount
-    : Math.floor(availableLanternCount);
+  if (Object.prototype.hasOwnProperty.call(savedAvailableHeating, 'mirrors')) {
+    const availableMirrorCount = Math.max(0, Number(savedAvailableHeating.mirrors) || 0);
+    settings.availableHeating.mirrors = settings.advancedOversight
+      ? availableMirrorCount
+      : Math.floor(availableMirrorCount);
+  }
+  if (Object.prototype.hasOwnProperty.call(savedAvailableHeating, 'lanterns')) {
+    const availableLanternCount = Math.max(0, Number(savedAvailableHeating.lanterns) || 0);
+    settings.availableHeating.lanterns = settings.advancedOversight
+      ? availableLanternCount
+      : Math.floor(availableLanternCount);
+  }
 
   const savedAuto = saved.autoAssign || {};
-  mergeSettingKeys(settings.autoAssign, savedAuto).forEach(zone => {
+  Object.keys(savedAuto).forEach(zone => {
     settings.autoAssign[zone] = !!savedAuto[zone];
   });
 
@@ -260,16 +283,16 @@ function applyMirrorOversightSettings(settings, saved = {}, options = {}) {
     const savedAssignments = saved.assignments || {};
     const savedMirrors = savedAssignments.mirrors || {};
     const savedLanterns = savedAssignments.lanterns || {};
-    mergeSettingKeys(settings.assignments.mirrors, savedMirrors).forEach(zone => {
+    Object.keys(savedMirrors).forEach(zone => {
       const mv = Number(savedMirrors[zone]);
       settings.assignments.mirrors[zone] = Number.isFinite(mv) ? mv : settings.assignments.mirrors[zone];
     });
-    mergeSettingKeys(settings.assignments.lanterns, savedLanterns).forEach(zone => {
+    Object.keys(savedLanterns).forEach(zone => {
       const lv = Number(savedLanterns[zone]);
       settings.assignments.lanterns[zone] = Number.isFinite(lv) ? lv : settings.assignments.lanterns[zone];
     });
     const savedReversal = savedAssignments.reversalMode || {};
-    mergeSettingKeys(settings.assignments.reversalMode, savedReversal).forEach(zone => {
+    Object.keys(savedReversal).forEach(zone => {
       settings.assignments.reversalMode[zone] = !!savedReversal[zone];
     });
   }
@@ -2556,8 +2579,10 @@ class SpaceMirrorFacilityProject extends Project {
           reversalMode: { ...(this.mirrorOversightSettings.assignments?.reversalMode || {}) },
         }
       : null;
-    this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
-    mirrorOversightSettings = this.mirrorOversightSettings;
+    if (options.isPresetApplication !== true) {
+      this.mirrorOversightSettings = createDefaultMirrorOversightSettings();
+      mirrorOversightSettings = this.mirrorOversightSettings;
+    }
     applyMirrorOversightSettings(
       this.mirrorOversightSettings,
       settings.mirrorOversightSettings || {},

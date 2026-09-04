@@ -572,7 +572,9 @@ function createProjectAssignmentBase(BaseClass) {
         changed = true;
       }
       if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignFlags') && shouldApplyPresetAutoFlags) {
-        this.autoAssignFlags = { ...(settings.autoAssignFlags || {}) };
+        this.autoAssignFlags = isPresetApplication
+          ? { ...this.autoAssignFlags, ...(settings.autoAssignFlags || {}) }
+          : { ...(settings.autoAssignFlags || {}) };
         changed = true;
       }
       if (Object.prototype.hasOwnProperty.call(settings, 'autoAssignWeights') && shouldApplyPresetAutoWeights) {

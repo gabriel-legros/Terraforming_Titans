@@ -269,7 +269,41 @@ const projectParameters = {
     repeatable: true,
     maxRepeatCount: 10000,
     unlocked: false,
-    attributes: {}
+    attributes: {
+      artificialUndergroundCost: {
+        colony: {
+          silicon: 25_000_000,
+          superalloys: 100
+        }
+      }
+    }
+  },
+  planetarySwampification: {
+    type: 'PlanetarySwampificationProject',
+    name: '',
+    category: 'infrastructure',
+    cost: {
+      surface: {
+        liquidWater: 1_000,
+        land: 1
+      },
+      atmospheric: {
+        atmosphericMethane: 10,
+        atmosphericAmmonia: 1
+      },
+      colony: {
+        energy: 100_000
+      }
+    },
+    duration: 240000,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: 1,
+    unlocked: false,
+    automationRequiresEverEnabled: true,
+    attributes: {
+      landReservationShare: 1
+    }
   },
   oreSpaceMining: {
     type: 'SpaceMiningProject',

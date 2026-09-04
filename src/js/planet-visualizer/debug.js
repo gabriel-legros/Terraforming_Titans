@@ -10,6 +10,23 @@
     grid.className = 'pv-grid';
     host.appendChild(grid);
 
+    const fineSandRowIds = ['fsTrop', 'fsTemp', 'fsPol'];
+    const dominionSurfaceRowIds = ['yggieOvergrowth', 'swamp', 'klishyWeb'];
+    const activateDominionSurfaceStyle = (id) => {
+      const activeRow = this.debug.rows[id];
+      if (!activeRow || Number(activeRow.range.value) <= 0) return;
+      const isFineSand = fineSandRowIds.includes(id);
+      const rowsToClear = isFineSand
+        ? dominionSurfaceRowIds
+        : [...fineSandRowIds, ...dominionSurfaceRowIds.filter(rowId => rowId !== id)];
+      for (const rowId of rowsToClear) {
+        const row = this.debug.rows[rowId];
+        if (!row) continue;
+        row.range.value = '0';
+        row.number.value = '0';
+      }
+    };
+
     const makeRow = (id, label, min, max, step) => {
       const l = document.createElement('div');
       l.className = 'pv-row-label';
@@ -26,14 +43,21 @@
       valWrap.appendChild(number);
       grid.appendChild(l); grid.appendChild(range); grid.appendChild(valWrap);
       this.debug.rows[id] = { range, number };
-      const syncFromRange = () => { number.value = range.value; this.applySlidersToGame(); };
-      const syncFromNumber = () => { range.value = number.value; this.applySlidersToGame(); };
+      const syncFromRange = () => {
+        number.value = range.value;
+        activateDominionSurfaceStyle(id);
+        this.applySlidersToGame();
+      };
+      const syncFromNumber = () => {
+        range.value = number.value;
+        activateDominionSurfaceStyle(id);
+        this.applySlidersToGame();
+      };
       range.addEventListener('input', syncFromRange);
       number.addEventListener('input', syncFromNumber);
     };
 
     makeRow('illum', 'Illumination', 0.0, 3.0, 0.01);
-    makeRow('incl', 'Inclination (deg)', -90, 90, 1);
     makeRow('ambient', 'Ambient light', 0.0, 1.0, 0.01);
     makeRow('pop', 'Population', 0, 1000000, 1);
     makeRow('ships', 'Spaceships', 0, 1000, 1);
@@ -55,6 +79,12 @@
     makeRow('hbTrop', 'Hazard Biomass Trop (%)', 0, 100, 0.1);
     makeRow('hbTemp', 'Hazard Biomass Temp (%)', 0, 100, 0.1);
     makeRow('hbPol', 'Hazard Biomass Polar (%)', 0, 100, 0.1);
+    makeRow('fsTrop', 'Fine Sand Trop (%)', 0, 100, 0.1);
+    makeRow('fsTemp', 'Fine Sand Temp (%)', 0, 100, 0.1);
+    makeRow('fsPol', 'Fine Sand Polar (%)', 0, 100, 0.1);
+    makeRow('yggieOvergrowth', 'Yggie Overgrowth (%)', 0, 100, 0.1);
+    makeRow('swamp', 'Swampification (%)', 0, 100, 0.1);
+    makeRow('klishyWeb', 'Klishy Web (%)', 0, 100, 0.1);
     makeRow('ecumenopolis', 'Ecumenopolis (%)', 0, 100, 0.1);
     makeRow('nanoworld', 'Nanoworld (%)', 0, 100, 0.1);
     makeRow('cloudCov', 'Clouds (%)', 0, 100, 0.1);
@@ -259,7 +289,6 @@
     const setVal = (id, v) => { if (r[id]) r[id].number.value = String(v); if (r[id]) r[id].range.value = String(v); };
     setVal('illum', Number(r.illum.range.value));
     setVal('pop', Number(r.pop.range.value));
-    if (r.incl) setVal('incl', Number(r.incl.range.value));
     setVal('ships', Number(r.ships.range.value));
     if (r.ambient) setVal('ambient', Number(r.ambient.range.value));
     setVal('co2', Number(r.co2.range.value));
@@ -272,7 +301,14 @@
     if (r.nanoworld) setVal('nanoworld', Number(r.nanoworld.range.value));
     if (r.cloudWind) setVal('cloudWind', Number(r.cloudWind.range.value));
     const sv = (id) => { if (r[id]) setVal(id, Number(r[id].range.value)); };
-    ['wTrop', 'wTemp', 'wPol', 'iTrop', 'iTemp', 'iPol', 'bTrop', 'bTemp', 'bPol', 'hbTrop', 'hbTemp', 'hbPol'].forEach(sv);
+    [
+      'wTrop', 'wTemp', 'wPol',
+      'iTrop', 'iTemp', 'iPol',
+      'bTrop', 'bTemp', 'bPol',
+      'hbTrop', 'hbTemp', 'hbPol',
+      'fsTrop', 'fsTemp', 'fsPol',
+      'yggieOvergrowth', 'swamp', 'klishyWeb',
+    ].forEach(sv);
     if (r.featStrength) setVal('featStrength', Number(r.featStrength.range.value));
     if (r.featScale) setVal('featScale', Number(r.featScale.range.value));
     if (r.featContrast) setVal('featContrast', Number(r.featContrast.range.value));
@@ -298,10 +334,6 @@
 
     const illum = clampFrom(r.illum);
     this.viz.illum = illum;
-    if (r.incl) {
-      this.viz.inclinationDeg = clampFrom(r.incl);
-      this.updateSunFromInclination();
-    }
     if (this.sunLight) this.sunLight.intensity = illum;
     if (this.ambientLight && r.ambient) this.ambientLight.intensity = Math.max(0, Math.min(1, Number(r.ambient.range.value)));
 
@@ -321,13 +353,19 @@
     const iT = clampFrom(r.iTrop) / 100, iM = clampFrom(r.iTemp) / 100, iP = clampFrom(r.iPol) / 100;
     const bT = clampFrom(r.bTrop) / 100, bM = clampFrom(r.bTemp) / 100, bP = clampFrom(r.bPol) / 100;
     const hbT = clampFrom(r.hbTrop) / 100, hbM = clampFrom(r.hbTemp) / 100, hbP = clampFrom(r.hbPol) / 100;
+    const fsT = clampFrom(r.fsTrop) / 100, fsM = clampFrom(r.fsTemp) / 100, fsP = clampFrom(r.fsPol) / 100;
     z.tropical.water = wT; z.temperate.water = wM; z.polar.water = wP;
     z.tropical.ice = iT; z.temperate.ice = iM; z.polar.ice = iP;
     z.tropical.life = bT; z.temperate.life = bM; z.polar.life = bP;
     z.tropical.hazardousLife = hbT; z.temperate.hazardousLife = hbM; z.polar.hazardousLife = hbP;
+    z.tropical.fineSand = fsT; z.temperate.fineSand = fsM; z.polar.fineSand = fsP;
     this.viz.coverage.water = ((wT + wM + wP) / 3) * 100;
     this.viz.coverage.life = ((bT + bM + bP) / 3) * 100;
     this.viz.coverage.hazardousLife = ((hbT + hbM + hbP) / 3) * 100;
+    this.viz.coverage.fineSand = ((fsT + fsM + fsP) / 3) * 100;
+    this.viz.coverage.yggieOvergrowth = clampFrom(r.yggieOvergrowth);
+    this.viz.coverage.swamp = clampFrom(r.swamp);
+    this.viz.coverage.klishyWeb = clampFrom(r.klishyWeb);
     if (r.ecumenopolis) this.viz.coverage.ecumenopolis = clampFrom(r.ecumenopolis);
     if (r.nanoworld) this.viz.coverage.nanoworld = clampFrom(r.nanoworld);
     if (r.cloudCov) this.viz.coverage.cloud = clampFrom(r.cloudCov);
@@ -404,10 +442,6 @@
 
     const starLuminosity = Number(cel.starLuminosity);
     setPairValue(rows.illum, Number.isFinite(starLuminosity) ? starLuminosity : this.viz?.illum ?? 1, { precision: 2 });
-    if (rows.incl) {
-      const incl = Number(planet.visualization?.inclinationDeg ?? this.viz?.inclinationDeg ?? 15);
-      setPairValue(rows.incl, incl, { round: true });
-    }
 
     const colonists = resourcesData.colony?.colonists?.initialValue ?? 0;
     setPairValue(rows.pop, colonists, { round: true });
@@ -464,20 +498,28 @@
       const iceFraction = estimateCoverageFn(iceAmount, zoneArea, 0.0001 * 100);
       const lifeFraction = estimateCoverageFn(zonalSurface.biomass?.[zone] ?? surfaceData.biomass ?? 0, zoneArea, 0.0001 * 100000);
       const hazardousLifeFraction = estimateCoverageFn(zonalSurface.hazardousBiomass?.[zone] ?? surfaceData.hazardousBiomass ?? 0, zoneArea, 0.0001 * 100000);
+      const fineSandFraction = estimateCoverageFn(zonalSurface.fineSand?.[zone] ?? surfaceData.fineSand ?? 0, zoneArea, 0.0001);
       waterFractions.push(Math.max(0, Math.min(1, Number(waterFraction) || 0)));
       const pctWater = (Math.max(0, Math.min(1, Number(waterFraction) || 0)) * 100);
       const pctIce = (Math.max(0, Math.min(1, Number(iceFraction) || 0)) * 100);
       const pctLife = (Math.max(0, Math.min(1, Number(lifeFraction) || 0)) * 100);
       const pctHazardousLife = (Math.max(0, Math.min(1, Number(hazardousLifeFraction) || 0)) * 100);
+      const pctFineSand = (Math.max(0, Math.min(1, Number(fineSandFraction) || 0)) * 100);
       const wPair = rows[`w${zone === 'tropical' ? 'Trop' : zone === 'temperate' ? 'Temp' : 'Pol'}`];
       const iPair = rows[`i${zone === 'tropical' ? 'Trop' : zone === 'temperate' ? 'Temp' : 'Pol'}`];
       const bPair = rows[`b${zone === 'tropical' ? 'Trop' : zone === 'temperate' ? 'Temp' : 'Pol'}`];
       const hbPair = rows[`hb${zone === 'tropical' ? 'Trop' : zone === 'temperate' ? 'Temp' : 'Pol'}`];
+      const fsPair = rows[`fs${zone === 'tropical' ? 'Trop' : zone === 'temperate' ? 'Temp' : 'Pol'}`];
       setPairValue(wPair, pctWater, { precision: 2 });
       setPairValue(iPair, pctIce, { precision: 2 });
       setPairValue(bPair, pctLife, { precision: 2 });
       setPairValue(hbPair, pctHazardousLife, { precision: 2 });
+      setPairValue(fsPair, pctFineSand, { precision: 2 });
     }
+
+    setPairValue(rows.yggieOvergrowth, 0);
+    setPairValue(rows.swamp, 0);
+    setPairValue(rows.klishyWeb, 0);
 
     if (rows.cloudCov) {
       const avgWaterFraction = waterFractions.length
@@ -534,11 +576,6 @@
     const illum = this.getGameIllumination();
     r.illum.range.value = String(illum);
     r.illum.number.value = String(illum);
-    if (r.incl) {
-      const inc = (this.viz?.inclinationDeg ?? 15);
-      r.incl.range.value = String(inc);
-      r.incl.number.value = String(inc);
-    }
     if (r.ambient && this.ambientLight) {
       const amb = Math.max(0, Math.min(1, this.ambientLight.intensity));
       r.ambient.range.value = String(amb);
@@ -579,6 +616,18 @@
     if (r.hbTrop) { const s = fmt(z.tropical.hazardousLife); r.hbTrop.range.value = s; r.hbTrop.number.value = s; }
     if (r.hbTemp) { const s = fmt(z.temperate.hazardousLife); r.hbTemp.range.value = s; r.hbTemp.number.value = s; }
     if (r.hbPol) { const s = fmt(z.polar.hazardousLife); r.hbPol.range.value = s; r.hbPol.number.value = s; }
+    if (r.fsTrop) { const s = fmt(z.tropical.fineSand); r.fsTrop.range.value = s; r.fsTrop.number.value = s; }
+    if (r.fsTemp) { const s = fmt(z.temperate.fineSand); r.fsTemp.range.value = s; r.fsTemp.number.value = s; }
+    if (r.fsPol) { const s = fmt(z.polar.fineSand); r.fsPol.range.value = s; r.fsPol.number.value = s; }
+    const setCoverageRow = (id, value) => {
+      if (!r[id]) return;
+      const formatted = String(Math.max(0, Math.min(100, value || 0)).toFixed(2));
+      r[id].range.value = formatted;
+      r[id].number.value = formatted;
+    };
+    setCoverageRow('yggieOvergrowth', this.viz.coverage.yggieOvergrowth);
+    setCoverageRow('swamp', this.viz.coverage.swamp);
+    setCoverageRow('klishyWeb', this.viz.coverage.klishyWeb);
     const avgWater = ((z.tropical.water + z.temperate.water + z.polar.water) / 3) * 100;
     const cloudGame = Number.isFinite(this.viz.coverage?.cloud) ? this.viz.coverage.cloud : avgWater;
     if (r.cloudCov) {
@@ -630,6 +679,10 @@
       water: avg(z.tropical.water, z.temperate.water, z.polar.water) * 100,
       life: avg(z.tropical.life, z.temperate.life, z.polar.life) * 100,
       hazardousLife: avg(z.tropical.hazardousLife, z.temperate.hazardousLife, z.polar.hazardousLife) * 100,
+      fineSand: Math.max(0, Math.min(100, this.viz.coverage?.fineSand || 0)),
+      yggieOvergrowth: Math.max(0, Math.min(100, this.viz.coverage?.yggieOvergrowth || 0)),
+      swamp: Math.max(0, Math.min(100, this.viz.coverage?.swamp || 0)),
+      klishyWeb: Math.max(0, Math.min(100, this.viz.coverage?.klishyWeb || 0)),
       cloud: cloudGame,
       ecumenopolis: Math.max(0, Math.min(100, this.viz.coverage?.ecumenopolis || 0)),
       nanoworld: Math.max(0, Math.min(100, this.viz.coverage?.nanoworld || 0)),
@@ -680,6 +733,12 @@
       setPct(r.hbTrop, (zc.tropical?.hazardousLife || 0) * 100);
       setPct(r.hbTemp, (zc.temperate?.hazardousLife || 0) * 100);
       setPct(r.hbPol, (zc.polar?.hazardousLife || 0) * 100);
+      setPct(r.fsTrop, (zc.tropical?.fineSand || 0) * 100);
+      setPct(r.fsTemp, (zc.temperate?.fineSand || 0) * 100);
+      setPct(r.fsPol, (zc.polar?.fineSand || 0) * 100);
+      setPct(r.yggieOvergrowth, this.viz.coverage?.yggieOvergrowth || 0);
+      setPct(r.swamp, this.viz.coverage?.swamp || 0);
+      setPct(r.klishyWeb, this.viz.coverage?.klishyWeb || 0);
       if (r.cloudCov) setPct(r.cloudCov, this.viz.coverage?.cloud || 0);
       if (r.cloudWind) {
         r.cloudWind.range.value = String(this.cloudDriftSpeed);

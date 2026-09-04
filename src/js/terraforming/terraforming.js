@@ -238,9 +238,31 @@ function getTerraformingTotalBiomass(terraforming) {
     return totalBiomass;
 }
 
+function getLifeBiomassAreaM2(terraforming) {
+    if (terraforming?.requirements?.lifeDensityLandBasis === 'underground') {
+        const totalLand = Math.max(0, terraforming?.resources?.surface?.land?.value || 0);
+        const geometricLand = Math.max(
+            0,
+            resolveWorldGeometricLand(terraforming, terraforming?.resources?.surface?.land)
+        );
+        return Math.max(0, totalLand - geometricLand) * 10_000;
+    }
+    return Math.max(0, terraforming?.celestialParameters?.surfaceArea || 0);
+}
+
+function getLifeDensityReferenceAreaM2(terraforming) {
+    if (terraforming?.requirements?.lifeDensityLandBasis === 'underground') {
+        return Math.max(
+            0,
+            resolveWorldGeometricLand(terraforming, terraforming?.resources?.surface?.land)
+        ) * 10_000;
+    }
+    return Math.max(0, terraforming?.celestialParameters?.surfaceArea || 0);
+}
+
 function getLifeBiomassDensity(terraforming) {
-    const surfaceArea = terraforming?.celestialParameters?.surfaceArea || 0;
-    return surfaceArea > 0 ? getTerraformingTotalBiomass(terraforming) / surfaceArea : 0;
+    const referenceArea = getLifeDensityReferenceAreaM2(terraforming);
+    return referenceArea > 0 ? getTerraformingTotalBiomass(terraforming) / referenceArea : 0;
 }
 
 function getEffectiveLifeTargetAmount(terraforming) {
@@ -248,7 +270,7 @@ function getEffectiveLifeTargetAmount(terraforming) {
     if (densityTarget <= 0) {
         return 0;
     }
-    return densityTarget * (terraforming?.celestialParameters?.surfaceArea || 0);
+    return densityTarget * getLifeDensityReferenceAreaM2(terraforming);
 }
 
 function buildAtmosphereContext(atmospheric, gravity, radius, surfaceArea) {
@@ -628,21 +650,22 @@ class Terraforming extends EffectableEntity{
         if (options.ignoreSubstepping) {
             return [deltaTime];
         }
-        if (!gameSettings.enableTerraformingSubsteps) {
+        if (!gameSettings.enableTerraformingSubsteps || gameSpeed <= 0) {
             return [deltaTime];
         }
-        if (deltaTime <= this.resourceSubstepMilliseconds) {
+        const resourceSubstepMilliseconds = this.resourceSubstepMilliseconds * gameSpeed;
+        if (deltaTime <= resourceSubstepMilliseconds) {
             return [deltaTime];
         }
 
         const durations = [];
         let remaining = deltaTime;
         while (
-            remaining > this.resourceSubstepMilliseconds &&
+            remaining > resourceSubstepMilliseconds &&
             durations.length + 1 < this.maxResourceSubsteps
         ) {
-            durations.push(this.resourceSubstepMilliseconds);
-            remaining -= this.resourceSubstepMilliseconds;
+            durations.push(resourceSubstepMilliseconds);
+            remaining -= resourceSubstepMilliseconds;
         }
         durations.push(remaining);
         return durations;

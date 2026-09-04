@@ -692,12 +692,24 @@ function initializeLifeTerraformingDesignerUI() {
       `;
       const attributeOrder = baseLifeAttributeOrder;
       const metabolismStrings = buildMetabolismEfficiencyUIStrings();
-      const bioworkersPerBiomassPerPoint = getActiveLifeDesignRequirements().bioworkersPerBiomassPerPoint ?? 0.00001;
+      const activeRequirements = getActiveLifeDesignRequirements();
+      const bioworkersPerBiomassPerPoint = activeRequirements.bioworkersPerBiomassPerPoint ?? 0.00001;
       const bioworkforceTooltip = getLifeUIText(
         'ui.lifeDesigner.attributes.bioworkforce.tooltip',
         'Each point assigns {workersPerBiomass} of global biomass as temporary workers. Biomass density above {densityCap} t/m² does not provide additional workers. Worker capacity updates automatically as biomass changes.',
         { workersPerBiomass: bioworkersPerBiomassPerPoint, densityCap: formatNumber(BIOWORKER_MAX_BIOMASS_DENSITY) }
       );
+      const innateRadiationTolerancePoints = Math.max(0, activeRequirements.innateRadiationTolerancePoints || 0);
+      const radiationToleranceTooltip = getLifeUIText(
+        'ui.life.attributes.radiationTolerance.tooltip',
+        'Radiation mitigation is quadratic. Each point contributes points² × 0.01 mSv/day of shielding (10 points = 1.00 mSv/day, 100 points = 100.00 mSv/day). Remaining radiation after mitigation drives the growth penalty.'
+      ) + (innateRadiationTolerancePoints > 0
+        ? ` ${getLifeUIText(
+          'ui.life.attributes.radiationTolerance.innateTooltip',
+          'This dominion has {points} innate Radiation Tolerance points. They cost no life-design points and combine with designed tolerance before mitigation is calculated.',
+          { points: formatNumber(innateRadiationTolerancePoints) }
+        )}`
+        : '');
       const bioshipsPercentPerPoint = formatNumber(LIFE_UI_BIOSHIPS_FRACTION_PER_POINT_PER_SECOND * 100, false, 2);
 
       for (const attributeName of attributeOrder) {
@@ -718,7 +730,7 @@ function initializeLifeTerraformingDesignerUI() {
           <tr id="life-attribute-row-${attributeName}" data-life-attribute-ui="${attributeName}"${rowHidden ? ' style="display:none;"' : ''}>
             <td class="life-attribute-name">
               ${isMetabolismEfficiency ? `<span id="${attributeName}-display-name">${displayName}</span>` : displayName} (${getLifeUIText('ui.life.designer.max', 'Max')} <span id="${attributeName}-max-upgrades">${getLifeAttributeMaxDisplay(attribute)}</span>)
-              <div class="life-attribute-description">${isMetabolismEfficiency ? `<span id="${attributeName}-metabolism-description">${description}</span> <span id="${attributeName}-metabolism-tooltip" class="info-tooltip-icon">&#9432;</span><div id="${attributeName}-growth-equation" class="life-metabolism-equation">${metabolismStrings.equation}</div>` : `${description}${attributeName === 'geologicalBurial' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.life.attributes.geologicalBurial.tooltip', 'Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently. Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.')}">&#9432;</span>` : ''}${attributeName === 'spaceEfficiency' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.life.attributes.spaceEfficiency.tooltip', 'Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.')}">&#9432;</span>` : ''}${attributeName === 'growthTemperatureTolerance' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.life.attributes.growthTemperatureTolerance.tooltip', 'Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.')}">&#9432;</span>` : ''}${attributeName === 'radiationTolerance' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.life.attributes.radiationTolerance.tooltip', 'Radiation mitigation is quadratic. Each point contributes points² × 0.01 mSv/day of shielding (10 points = 1.00 mSv/day, 100 points = 100.00 mSv/day). Remaining radiation after mitigation drives the growth penalty.')}">&#9432;</span>` : ''}${attributeName === 'bioworkforce' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${bioworkforceTooltip}">&#9432;</span>` : ''}${attributeName === 'bioships' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.lifeDesigner.attributes.bioships.tooltip', 'Each point converts {percent}% of global biomass per second into spaceships after life growth and decay are resolved.', { percent: bioshipsPercentPerPoint })}">&#9432;</span>` : ''}`}</div>
+              <div class="life-attribute-description">${isMetabolismEfficiency ? `<span id="${attributeName}-metabolism-description">${description}</span> <span id="${attributeName}-metabolism-tooltip" class="info-tooltip-icon">&#9432;</span><div id="${attributeName}-growth-equation" class="life-metabolism-equation">${metabolismStrings.equation}</div>` : `${description}${attributeName === 'geologicalBurial' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.life.attributes.geologicalBurial.tooltip', 'Accelerates the conversion of existing biomass into inert geological formations. This removes biomass from the active cycle, representing long-term carbon storage and potentially freeing up space if biomass density limits growth. Burial slows dramatically when carbon dioxide is depleted as life begins recycling its own biomass more efficiently. Use this alongside carbon importation to continue producing O2 from CO2 even after life growth becomes capped.')}">&#9432;</span>` : ''}${attributeName === 'spaceEfficiency' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.life.attributes.spaceEfficiency.tooltip', 'Increases the maximum amount of biomass (in tons) that can exist per square meter. Higher values allow for denser growth before logistic limits slow it down.')}">&#9432;</span>` : ''}${attributeName === 'growthTemperatureTolerance' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.life.attributes.growthTemperatureTolerance.tooltip', 'Growth rate is multiplied by a Gaussian curve centered on the optimal temperature. Each point increases the standard deviation by 0.5°C, allowing better growth when daytime temperatures deviate from the optimum.')}">&#9432;</span>` : ''}${attributeName === 'radiationTolerance' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${radiationToleranceTooltip}">&#9432;</span>` : ''}${attributeName === 'bioworkforce' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${bioworkforceTooltip}">&#9432;</span>` : ''}${attributeName === 'bioships' ? ` <span class="info-tooltip-icon life-attribute-tooltip" data-tooltip="${getLifeUIText('ui.lifeDesigner.attributes.bioships.tooltip', 'Each point converts {percent}% of global biomass per second into spaceships after life growth and decay are resolved.', { percent: bioshipsPercentPerPoint })}">&#9432;</span>` : ''}`}</div>
             </td>
             <td>
               <div id="${attributeName}-current-value" data-attribute="${attributeName}">${attribute.value} / ${convertedValue !== null ? `${convertedValue}` : '-'}</div>
@@ -1422,12 +1434,15 @@ function updateLifeStatusTable() {
 
     // Get biomass and area info
     const totalBiomass = resources.surface.biomass?.value || 0;
-    const totalSurfaceArea = terraforming.celestialParameters.surfaceArea;
-    const globalDensity = totalSurfaceArea > 0 ? totalBiomass / totalSurfaceArea : 0;
+    const totalLifeArea = getLifeBiomassAreaM2(terraforming);
+    const densityReferenceArea = getLifeDensityReferenceAreaM2(terraforming);
+    const globalDensity = densityReferenceArea > 0 ? totalBiomass / densityReferenceArea : 0;
 
     const ecoFraction = getEcumenopolisLandFraction(terraforming);
     const ecumenopolisLandMult = Math.max(0, 1 - ecoFraction);
-    const landMult = getLifeLandMultiplier(terraforming);
+    const landMult = requirements.lifeDensityLandBasis === 'underground'
+        ? 1
+        : getLifeLandMultiplier(terraforming);
 
     // Precompute day and night temperatures
     const zonePerc = {};
@@ -1550,8 +1565,8 @@ function updateLifeStatusTable() {
             if (densityCell) densityCell.textContent = formatNumber(globalDensity, false, 2);
         } else {
             const zonalBiomass = terraforming.zonalSurface.biomass[zone] || 0;
-            const zoneArea = totalSurfaceArea * getZonePercentage(zone);
-            const zonalDensity = zoneArea > 0 ? zonalBiomass / zoneArea : 0;
+            const zoneReferenceArea = densityReferenceArea * getZonePercentage(zone);
+            const zonalDensity = zoneReferenceArea > 0 ? zonalBiomass / zoneReferenceArea : 0;
 
             if (amountCell) amountCell.textContent = formatNumber(zonalBiomass, true);
             if (densityCell) densityCell.textContent = formatNumber(zonalDensity, false, 2);
@@ -1562,7 +1577,7 @@ function updateLifeStatusTable() {
         const valueSpan = growthObj?.value;
         const tooltipIcon = growthObj?.tooltipIcon;
         const zoneBiomass = zone === 'global' ? totalBiomass : terraforming.zonalSurface.biomass[zone] || 0;
-        const baseZoneArea = zone === 'global' ? totalSurfaceArea : totalSurfaceArea * getZonePercentage(zone);
+        const baseZoneArea = zone === 'global' ? totalLifeArea : totalLifeArea * getZonePercentage(zone);
         const zoneArea = baseZoneArea * landMult;
         const maxBiomassForZone = zoneArea * maxDensity;
         const capacityMult = maxBiomassForZone > 0 ? Math.max(0, 1 - zoneBiomass / maxBiomassForZone) : 0;
@@ -1613,7 +1628,17 @@ function updateLifeStatusTable() {
                 totalMultiplier: 1,
             };
             const otherMult = growthBreakdown.totalMultiplier;
-            const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * liquidMult * solidBiochemistryMult * otherMult;
+            let thermodynamicsMult = 1;
+            if (gameSettings.lifeThermodynamics && !requirements.ignoresLifeThermodynamics) {
+                const demandFlux = Math.max(0, terraforming.lifeThermodynamicsDemandFluxByZone?.[zone] || 0);
+                const solarCapFlux = requirements.maximumSolarFluxFraction
+                    * Math.max(0, terraforming.calculateZonalAverageSurfaceSolarFlux(zone));
+                if (demandFlux > 0) {
+                    thermodynamicsMult = Math.min(1, solarCapFlux / demandFlux);
+                }
+            }
+            const finalRate = baseRate * lumMult * tempMult * capacityMult * radMult * liquidMult
+                * solidBiochemistryMult * otherMult * thermodynamicsMult;
             if (valueSpan) valueSpan.textContent = formatNumber(finalRate * 100, false, 2);
             if (tooltipIcon) {
                 const lines = [
@@ -1646,6 +1671,20 @@ function updateLifeStatusTable() {
                         }
                     ));
                 }
+                if (gameSettings.lifeThermodynamics && !requirements.ignoresLifeThermodynamics) {
+                    lines.push(getLifeUIText(
+                        'ui.life.growthTooltip.thermodynamics',
+                        'Life Thermodynamics: x{value} (growth is limited by the chemical energy storable from {percent}% of average surface sunlight)',
+                        {
+                            value: formatNumber(thermodynamicsMult, false, 2),
+                            percent: formatNumber(
+                                requirements.maximumSolarFluxFraction * 100,
+                                false,
+                                0
+                            )
+                        }
+                    ));
+                }
                 if (usesIceForWater) {
                     lines.push(getLifeUIText(
                         'ui.life.growthTooltip.solidBiochemistry',
@@ -1653,7 +1692,7 @@ function updateLifeStatusTable() {
                         { value: formatNumber(solidBiochemistryMult, false, 2) }
                     ));
                 }
-                if (ecoFraction > 0) {
+                if (ecoFraction > 0 && requirements.lifeDensityLandBasis !== 'underground') {
                     const ecumenopolisReduction = (1 - ecumenopolisLandMult) * 100;
                     const biodomeProtection = Math.max(0, landMult - ecumenopolisLandMult) * 100;
                     lines.push(getLifeUIText(

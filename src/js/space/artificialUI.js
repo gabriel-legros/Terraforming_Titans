@@ -279,48 +279,40 @@ function syncHistoryActionButtons(row, entry) {
   const cells = row._historyCells;
   if (!cells) return;
 
-  if (entry.canDiscard) {
-    if (!cells.discardBtn) {
-      const discardBtn = document.createElement('button');
-      discardBtn.className = 'artificial-history-travel-btn artificial-history-discard-btn';
-      discardBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        artificialManager.discardStoredWorld(row.dataset.historyId);
-      });
-      cells.discardBtn = discardBtn;
-      cells.status.appendChild(discardBtn);
-    }
+  if (!cells.discardBtn && entry.canDiscard) {
+    const discardBtn = document.createElement('button');
+    discardBtn.className = 'artificial-history-travel-btn artificial-history-discard-btn';
+    discardBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      artificialManager.discardStoredWorld(row.dataset.historyId);
+    });
+    cells.discardBtn = discardBtn;
+    cells.status.appendChild(discardBtn);
+  }
+  if (cells.discardBtn) {
     cells.discardBtn.textContent = getArtificialText('history.discard', 'Discard');
-    if (cells.discardBtn.parentNode !== cells.status) {
-      cells.status.appendChild(cells.discardBtn);
-    }
-  } else if (cells.discardBtn) {
-    cells.discardBtn.remove();
+    cells.discardBtn.hidden = !entry.canDiscard;
   }
 
-  if (entry.canTravel) {
-    if (!cells.travelBtn) {
-      const travelBtn = document.createElement('button');
-      travelBtn.className = 'artificial-history-travel-btn';
-      travelBtn.addEventListener('click', (event) => {
-        event.stopPropagation();
-        const attemptTravel = (skipCurrentWorldWarnings) => {
-          if (!skipCurrentWorldWarnings && handleCurrentWorldTravelWarnings(() => attemptTravel(true))) {
-            return;
-          }
-          artificialManager.travelToStoredWorld(row.dataset.historyId);
-        };
-        attemptTravel(false);
-      });
-      cells.travelBtn = travelBtn;
-      cells.status.appendChild(travelBtn);
-    }
+  if (!cells.travelBtn && entry.canTravel) {
+    const travelBtn = document.createElement('button');
+    travelBtn.className = 'artificial-history-travel-btn';
+    travelBtn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const attemptTravel = (skipCurrentWorldWarnings) => {
+        if (!skipCurrentWorldWarnings && handleCurrentWorldTravelWarnings(() => attemptTravel(true))) {
+          return;
+        }
+        artificialManager.travelToStoredWorld(row.dataset.historyId);
+      };
+      attemptTravel(false);
+    });
+    cells.travelBtn = travelBtn;
+    cells.status.appendChild(travelBtn);
+  }
+  if (cells.travelBtn) {
     cells.travelBtn.textContent = getArtificialText('history.travel', 'Travel');
-    if (cells.travelBtn.parentNode !== cells.status) {
-      cells.status.appendChild(cells.travelBtn);
-    }
-  } else if (cells.travelBtn) {
-    cells.travelBtn.remove();
+    cells.travelBtn.hidden = !entry.canTravel;
   }
 }
 

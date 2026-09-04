@@ -107,7 +107,7 @@ registerTerraformingMethods('climate', ({
       const demandFlux = gameSettings.lifeThermodynamics && simulatedDurationSeconds > 0 && zoneArea > 0
         ? growthDemand * parameters.chemicalEnergyJPerTon / (simulatedDurationSeconds * zoneArea)
         : 0;
-      const solarCapFlux = parameters.maximumSolarFluxFraction
+      const solarCapFlux = this.requirements.lifeDesign.maximumSolarFluxFraction
         * Math.max(0, this.calculateZonalAverageSurfaceSolarFlux(zone));
       this.lifeThermodynamicsFluxByZone[zone] = flux;
       this.lifeThermodynamicsDemandFluxByZone[zone] = demandFlux;
@@ -146,7 +146,7 @@ registerTerraformingMethods('climate', ({
       projectedAverageSurfaceSolarFlux = projectedZoneFlux * 0.25;
     }
     projectedAverageSurfaceSolarFlux *= cloudHazeMultiplier;
-    const projectedCapFlux = parameters.maximumSolarFluxFraction
+    const projectedCapFlux = this.requirements.lifeDesign.maximumSolarFluxFraction
       * Math.max(0, projectedAverageSurfaceSolarFlux);
     return -Math.min(
       this.lifeThermodynamicsDemandFluxByZone[zone] || 0,

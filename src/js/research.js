@@ -414,28 +414,6 @@ class Research {
       return research ? research.category : null;
     }
 
-    // Helpers to determine whether a research should display based on
-    // planet resources and unlocked flags.
-    planetHasMethane() {
-      const surface = resources.surface;
-      const atmospheric = resources.atmospheric;
-      if ((surface.liquidMethane.value || 0) > 0) {
-        return true;
-      }
-      if ((surface.hydrocarbonIce.value || 0) > 0) {
-        return true;
-      }
-      if ((atmospheric.atmosphericMethane.value || 0) > 0) {
-        return true;
-      }
-
-      const surf = currentPlanetParameters.resources.surface;
-      const atm = currentPlanetParameters.resources.atmospheric;
-      return (surf.liquidMethane?.initialValue || 0) > 0 ||
-             (surf.hydrocarbonIce?.initialValue || 0) > 0 ||
-             (atm.atmosphericMethane?.initialValue || 0) > 0;
-    }
-
     planetHasGeothermalDeposits() {
       if (typeof currentPlanetParameters === 'undefined') return true;
       const geo = currentPlanetParameters.resources.underground?.geothermal;
@@ -483,13 +461,14 @@ class Research {
           return false;
         }
       }
-      if (research.requiresMethane && !this.planetHasMethane()) {
-        return false;
-      }
       if (research.requiresGeothermal && !this.planetHasGeothermalDeposits()) {
         return false;
       }
-      if (research.geologicalHeatAllowed === false && hasGeologicalAccessBlockingHeat(terraforming, currentPlanetParameters)) {
+      const worldRestrictionOverridden = research.worldRestrictionOverrideFlag
+        && this.isBooleanFlagSet(research.worldRestrictionOverrideFlag);
+      if (!worldRestrictionOverridden
+          && research.geologicalHeatAllowed === false
+          && hasGeologicalAccessBlockingHeat(terraforming, currentPlanetParameters)) {
         return false;
       }
       if (research.requiresNoNaturalMagnetosphere && this.planetHasNaturalMagnetosphere()) {
@@ -498,7 +477,7 @@ class Research {
       if (research.requiresKesslerHazard && !this.hasKesslerHazard()) {
         return false;
       }
-      if (research.artificialAllowed === false && this.isArtificialWorld()) {
+      if (!worldRestrictionOverridden && research.artificialAllowed === false && this.isArtificialWorld()) {
         return false;
       }
       if (research.ringworldAllowed === false && this.isRingWorld()) {

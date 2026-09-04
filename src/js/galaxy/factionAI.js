@@ -95,9 +95,6 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         }
         const adjustedCapacity = baseCapacity * multiplier;
         this.fleetCapacity = adjustedCapacity;
-        if (this.fleetPower > adjustedCapacity) {
-            this.fleetPower = adjustedCapacity;
-        }
     }
 
     getBorderFleetAssignment(sectorKey) {

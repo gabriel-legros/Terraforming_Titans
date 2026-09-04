@@ -228,6 +228,7 @@ setLanguageData({
         shrilek: 'Shrilek',
         vanadophore: 'Vanadophore',
         yggies: 'Yggie',
+        shiivert: 'Shiivert',
         random: 'Random',
         tooltip: 'Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion. Rewards scale for each time it is granted: 1000, 2000, 3000, and so on.',
       },
@@ -875,6 +876,7 @@ setLanguageData({
         worldEffects: 'World Effects',
         plasma: 'Plasma',
         keratiTerritory: 'Kerati Territory',
+        planetarySwampification: 'Managed Swampland',
       },
       antimatter: {
         sync: {
@@ -1175,6 +1177,7 @@ setLanguageData({
           name: 'Radiation Tolerance',
           description: 'Mitigates radiation quadratically: points² × 0.01 mSv/day.',
           tooltip: 'Radiation mitigation is quadratic. Each point contributes points² × 0.01 mSv/day of shielding (10 points = 1.00 mSv/day, 100 points = 100.00 mSv/day). Remaining radiation after mitigation drives the growth penalty.',
+          innateTooltip: 'This dominion has {points} innate Radiation Tolerance points. They cost no life-design points and combine with designed tolerance before mitigation is calculated.',
         },
         invasiveness: {
           name: 'Invasiveness',
@@ -1237,6 +1240,8 @@ setLanguageData({
       survivesCannotGrow: 'Survives but cannot grow',
       metabolismEquation: {
         biomass: 'Biomass',
+        radioactiveWaste: 'Radioactive Waste',
+        rocks: 'Inert Rock',
         metal: 'Metal',
         silica: 'Silica',
         energy: 'Energy',
@@ -1281,6 +1286,7 @@ setLanguageData({
         effectiveRadiation: 'Effective radiation: {value} mSv/day',
         luminosity: 'Luminosity: x{value}',
         lifeEffects: 'Life Effects: x{value}',
+        thermodynamics: 'Life Thermodynamics: x{value} (growth is limited by the chemical energy storable from {percent}% of average surface sunlight)',
         engineeredNitrogenFixation: 'Engineered Nitrogen Fixation: x{value} ({pressure} kPa)',
         ecumenopolis: 'Ecumenopolis: x{value} (-{reduction}% + {protection}% Biodome protection)',
       },
@@ -1895,6 +1901,13 @@ setLanguageData({
       },
       undergroundExpansion: {
         landExpansion: 'Land Expansion: {current} / {max}',
+        incompleteCrustWarning: 'A complete crust is required before Underground Land Expansion can begin or continue.',
+        incompleteCrustStatus: 'Blocked: complete the crust first',
+      },
+      planetarySwampification: {
+        reset: 'Reset and Recover Land',
+        segmentsCompleted: 'Swampification segments: {current} / {total}',
+        androidSpeedTooltip: '1 + (androids assigned / 100)',
       },
       artificialStars: {
         recipeLabel: 'Space Energy',
@@ -3521,11 +3534,13 @@ setLanguageData({
             photoMultiplier: 'Photo Mult (%)',
             thermodynamicsFlux: 'Life Thermodynamics Flux',
           },
-          thermodynamicsFluxTooltip: 'Solar energy stored as chemical energy by natural surface-life growth during the latest tick. Negative values represent cooling. Growth in each zone can absorb at most 10% of its surface solar flux averaged over the zone, including curvature and night, and this cooling changes that zone\'s temperature trend.',
+          thermodynamicsFluxTooltip: 'Solar energy stored as chemical energy by natural surface-life growth during the latest tick. Negative values represent cooling. Growth in each zone can absorb at most {percent}% of its surface solar flux averaged over the zone, including curvature and night, and this cooling changes that zone\'s temperature trend.',
           targetAtLeast: 'Life coverage at least {percent}%.',
           targetAbove: 'Life coverage above {percent}%.',
           targetBiomassAmountAtLeast: 'Life biomass at least {amount} tons.',
           targetBiomassAmountAbove: 'Life biomass above {amount} tons.',
+          targetUndergroundDensityAtLeast: 'Life density at least {density} t/m^2 of geometric underground area ({amount} tons of biomass).',
+          targetUndergroundDensityAbove: 'Life density above {density} t/m^2 of geometric underground area ({amount} tons of biomass).',
           hazardsCleared: 'Hazardous biomass cleared in all zones.',
           removeHazards: 'Remove hazardous biomass from: {zones}.',
         },
@@ -3667,6 +3682,7 @@ setLanguageData({
             solarPanelMultiplier: 'Solar panel multiplier',
           },
           target: 'Surface solar flux between {min} and {max}.',
+          noTarget: 'No luminosity requirement.',
           albedoTable: {
             surface: 'Surface',
             albedo: 'Albedo',
@@ -5621,7 +5637,7 @@ setLanguageData({
       factoryHeating: 'Factory heating',
       factoryHeatingTooltip: 'When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat; any remaining capacity accelerates cooling toward the temperature trend.\n\nYou should use this setting alongside Realistic factory energy consumption.',
       lifeThermodynamics: 'Life Thermodynamics',
-      lifeThermodynamicsTooltip: 'When enabled, natural surface-life growth in each climate zone is limited by the chemical energy it can store from at most 10% of that zone\'s surface solar flux averaged over the zone, including curvature and night. The stored energy also provides direct cooling.',
+      lifeThermodynamicsTooltip: 'When enabled, natural surface-life growth in each climate zone is limited by the chemical energy it can store from at most 10% of that zone\'s surface solar flux averaged over the zone, including curvature and night. This value can be different in some cases. The stored energy also provides direct cooling.',
       realisticFactoryEnergyConsumption: 'Realistic factory energy consumption',
       realisticFactoryEnergyConsumptionTooltip: 'When enabled, buildings use plausible industrial energy demands based on their workers and material throughput instead of the defaults.  This can make the game a lot easier.  This setting may one day become the new default once the game is rebalanced around it.',
       spaceAccessCapacity: 'Space Access Capacity',
@@ -5975,8 +5991,13 @@ setLanguageData({
         description: 'Generates consistent energy by harnessing heat from geothermal vents. Requires a free geothermal vent deposit to build. Requires water to function and minimal maintenance.',
       },
       hydrocarbonGenerator: {
-        name: 'Methane Flare',
-        description: 'Burns atmospheric methane and oxygen to generate energy, releasing water vapour and carbon dioxide.',
+        name: 'Combustion Generator',
+        description: 'Burns atmospheric methane, hydrogen, or ammonia with oxygen to generate energy.',
+        recipes: {
+          methaneCombustion: { shortName: 'Methane Combustion' },
+          hydrogenCombustion: { shortName: 'Hydrogen Combustion' },
+          ammoniaCombustion: { shortName: 'Ammonia Combustion' },
+        },
       },
       nuclearPowerPlant: {
         name: 'Nuclear Power Plant',
@@ -6224,6 +6245,10 @@ setLanguageData({
       undergroundExpansion: {
         name: 'Underground Land Expansion',
         description: 'Build subterranean habitats to slightly expand usable land. Each completion increases land by a small amount.',
+      },
+      planetarySwampification: {
+        name: 'Planetary Swampification',
+        description: 'Shiivert biomass lives underground but requires nutrients from above swampland.  Seed managed wetlands with water, methane-derived organic substrate and ammonia nutrients.  Resetting recovers all reserved land.',
       },
       oreSpaceMining: {
         name: 'Metal Asteroid Mining',
@@ -6625,6 +6650,28 @@ setLanguageData({
           },
         },
       },
+      shiivert: {
+        displayName: 'Shiivert',
+        lore: [
+          'The Shiivert are a carbon-water lifeform that most closely resembles fungi. They evolved within vast underground cave networks on a homeworld that, from the outside, most resembles a swamp.',
+          'Unlike most organisms, the Shiivert do not rely on photosynthesis for growth. Instead, they feed on radioactive material. They surround and absorb radioactive rocks, retaining them as cores. Limited by the availability of these materials, they developed by excavating tunnels in search of more.',
+          'For a long time, the Cewinsii did not even know the Shiivert existed, allowing them to grow in peace. Unfortunately, when they were finally discovered, they were found to be very tasty to a Cewinsii. The Empire recognized their technological potential and quickly established farming operations.',
+          'The Shiivert have had enough of being served as food.',
+        ].join('\n\n'),
+        lifeDesign: {
+          processes: {
+            radiolyticMycosynthesis: {
+              displayName: 'Radiolytic Methanogenesis',
+            },
+          },
+        },
+        otherRequirements: {
+          planetarySwampification: {
+            label: 'Planetary Swampification',
+            targetText: 'Complete Planetary Swampification project.',
+          },
+        },
+      },
     },
     research: {
       energy: {
@@ -6669,8 +6716,8 @@ setLanguageData({
           description: 'The best design that can be made.  Provides another 2x multiplier.',
         },
         hydrocarbon_generator: {
-          name: 'Hydrocarbon Generator',
-          description: 'Allows construction of generators burning methane and oxygen for power.',
+          name: 'Combustion Generator',
+          description: 'Allows construction of generators burning methane, hydrogen, or ammonia with oxygen for power.',
         },
         dyson_swarm_receiver: {
           name: 'Dyson Swarm Receiver',
@@ -6744,7 +6791,7 @@ setLanguageData({
         },
         underground_land_expansion: {
           name: 'Underground Land Expansion',
-          description: 'Unlocks a repeatable android project to expand usable land via subterranean construction.',
+          description: 'Unlocks a repeatable android project to expand usable land via subterranean construction. Shiivert designs can build an expensive artificial substrate where ordinary excavation is impossible.',
         },
         superconductor_factory: {
           name: 'Superconductor Factory',
@@ -6961,8 +7008,8 @@ setLanguageData({
           description: 'Research the construction of a large orbital facility that increases planetary luminosity.  Requires the space mirror facility.',
         },
         hydrocarbon_research: {
-          name: 'Hydrocarbon Combustion Concept',
-          description: 'Opens research into burning methane for power.',
+          name: 'Combustion Generator Concept',
+          description: 'Opens research into burning methane, hydrogen, or ammonia for power.',
         },
         infrared_vision: {
           name: 'Infrared Vision',

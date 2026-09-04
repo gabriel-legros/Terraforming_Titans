@@ -204,7 +204,6 @@ const researchParameters = {
         cost: { research: 10000 },
         prerequisites: [],
         disabled: true,
-        requiresMethane: true,
         effects: [
           {
             target: 'building',
@@ -574,6 +573,7 @@ const researchParameters = {
         prerequisites: [],
         artificialAllowed: false,
         geologicalHeatAllowed: false,
+        worldRestrictionOverrideFlag: 'shiivertArtificialUnderground',
         disabled: true,
         effects: [
           {

@@ -44,6 +44,9 @@ registerTerraformingMethods('status', ({
     return true;
   },
   getLuminosityStatus() {
+    if (this.requirements.ignoresLuminosity) {
+      return true;
+    }
     const objectiveFlux = this.calculateSurfaceSolarFlux();
     return objectiveFlux >= this.luminosity.targetMin && objectiveFlux <= this.luminosity.targetMax;
   },

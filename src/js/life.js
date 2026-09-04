@@ -89,6 +89,8 @@ const METABOLISM_EQUATION_SPECIES = {
   vanadiumAerosol: { key: 'v_aerosol', label: 'V aerosol' },
   liquidWater: { key: 'h2o_liq', label: 'H₂O (l)' },
   liquidCO2: { key: 'co2_liq', label: 'CO₂ (l)' },
+  radioactiveWaste: { key: 'radioactive_waste', label: getLifeText('ui.life.metabolismEquation.radioactiveWaste', 'Radioactive Waste') },
+  rocks: { key: 'rocks', label: getLifeText('ui.life.metabolismEquation.rocks', 'Rocks') },
   biomass: { key: 'biomass', label: getLifeText('ui.life.metabolismEquation.biomass', 'Biomass') },
   metal: { key: 'metal', label: getLifeText('ui.life.metabolismEquation.metal', 'Metal') },
   silicon: { key: 'silica', label: getLifeText('ui.life.metabolismEquation.silica', 'Silica') },
@@ -113,15 +115,17 @@ function formatMetabolismTerm(value, label, options) {
 function summarizeMetabolismGrowthMap(process) {
   const growth = process?.growth ?? null;
   const surface = growth?.perBiomass?.surface ?? {};
+  const globalSurface = growth?.perBiomass?.globalSurface ?? {};
   const atmospheric = growth?.perBiomass?.atmospheric ?? {};
   const colony = growth?.perBiomass?.colony ?? {};
-  const combined = { ...surface, ...atmospheric, ...colony };
   const normalized = {};
 
-  Object.entries(combined).forEach(([resourceKey, value]) => {
-    const mapping = METABOLISM_EQUATION_SPECIES[resourceKey];
-    const key = mapping?.key ?? resourceKey;
-    normalized[key] = (normalized[key] ?? 0) + value;
+  [surface, globalSurface, atmospheric, colony].forEach((resourceMap) => {
+    Object.entries(resourceMap).forEach(([resourceKey, value]) => {
+      const mapping = METABOLISM_EQUATION_SPECIES[resourceKey];
+      const key = mapping?.key ?? resourceKey;
+      normalized[key] = (normalized[key] ?? 0) + value;
+    });
   });
 
   return normalized;
@@ -141,7 +145,7 @@ function formatMetabolismGrowthEquation(process, options = {}) {
   const left = [];
   const right = [];
 
-  const order = ['co2', 'co2_liq', 'h2', 'nh3', 'h2o_liq', 'h2o_atm', 'ch4', 'n2', 'o2', 'metal', 'silica', 'energy', 'v_aerosol', 'biomass'];
+  const order = ['co2', 'co2_liq', 'h2', 'nh3', 'h2o_liq', 'h2o_atm', 'ch4', 'n2', 'o2', 'radioactive_waste', 'rocks', 'metal', 'silica', 'energy', 'v_aerosol', 'biomass'];
   const entries = order
     .filter(key => normalized[key])
     .map(key => [key, normalized[key]]);
@@ -165,6 +169,11 @@ function formatMetabolismGrowthEquation(process, options = {}) {
 function calculateGrowthTemperatureTolerance(points) {
   const requirements = getActiveLifeDesignRequirements();
   return requirements.growthTemperatureToleranceBaseC + points * requirements.growthTemperatureTolerancePerPointC;
+}
+
+function getInnateRadiationTolerancePoints() {
+  const requirements = getActiveLifeDesignRequirements();
+  return Math.max(0, requirements.innateRadiationTolerancePoints || 0);
 }
 
 const lifeDesignerConfig = {
@@ -269,7 +278,8 @@ class LifeAttribute {
       case 'photosynthesisEfficiency':
         return (requirements.photosynthesisRatePerPoint * effectiveValue).toFixed(5);
       case 'radiationTolerance':
-        return `${formatNumber(effectiveValue * effectiveValue * LIFE_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY, false, 2)} mSv/day mitigated`;
+        const totalRadiationTolerance = getInnateRadiationTolerancePoints() + effectiveValue;
+        return `${formatNumber(totalRadiationTolerance * totalRadiationTolerance * LIFE_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY, false, 2)} mSv/day mitigated`;
       case 'invasiveness':
         return effectiveValue;
       case 'spaceEfficiency':
@@ -381,7 +391,8 @@ class LifeDesign {
   }
 
   getRadiationMitigationDose() {
-    const points = Math.max(0, this.radiationTolerance.getEffectiveValue() || 0);
+    const points = getInnateRadiationTolerancePoints()
+      + Math.max(0, this.radiationTolerance.getEffectiveValue() || 0);
     return points * points * LIFE_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY;
   }
 
@@ -1274,6 +1285,7 @@ class LifeManager extends EffectableEntity {
     if (accumulatedChanges) {
       accumulatedChanges.atmospheric ||= {};
       accumulatedChanges.colony ||= {};
+      accumulatedChanges.surface ||= {};
     }
     const design = lifeDesigner.currentDesign;
     const baseGrowthRate = Number(design.getBaseGrowthRate());
@@ -1303,6 +1315,14 @@ class LifeManager extends EffectableEntity {
       const pending = accumulatedChanges ? (accumulatedChanges.colony[resourceKey] || 0) : 0;
       return Math.max(0, resource.value + pending);
     };
+    const getGlobalSurfaceAvailable = (resourceKey) => {
+      const resource = resources.surface[resourceKey];
+      if (!resource) {
+        return 0;
+      }
+      const pending = accumulatedChanges ? (accumulatedChanges.surface[resourceKey] || 0) : 0;
+      return Math.max(0, resource.value + pending);
+    };
     const sterileDecayWithoutOxygen = process.decay.allowSterileDecayWithoutOxygen === true
       && (decayPerBiomass.atmospheric?.oxygen || 0) < 0
       && getAtmosphericAvailable('oxygen') <= 0;
@@ -1320,6 +1340,10 @@ class LifeManager extends EffectableEntity {
     const secondsMultiplier = deltaTime / 1000;
     const yggieGrowthController = this.getYggieGrowthController();
     let landMultiplier = getLifeLandMultiplier(terraforming);
+    const biomassAreaM2 = getLifeBiomassAreaM2(terraforming);
+    if (requirements.lifeDensityLandBasis === 'underground') {
+      landMultiplier = 1;
+    }
     if (yggieGrowthController) {
       landMultiplier = Math.min(
         landMultiplier,
@@ -1432,7 +1456,10 @@ class LifeManager extends EffectableEntity {
     zones.forEach(zoneName => {
       naturalDecayTargetsByZone[zoneName] = Math.min(
         biomassByZone[zoneName],
-        biomassByZone[zoneName] * NATURAL_BIOMASS_DECAY_FRACTION_PER_SECOND * secondsMultiplier
+        biomassByZone[zoneName]
+          * NATURAL_BIOMASS_DECAY_FRACTION_PER_SECOND
+          * requirements.naturalBiomassDecayMultiplier
+          * secondsMultiplier
       );
     });
     const naturalDecayPlan = calculateDecayPlan(naturalDecayTargetsByZone);
@@ -1453,6 +1480,8 @@ class LifeManager extends EffectableEntity {
     });
 
     const surfaceInputsPerBiomass = Object.entries(growthPerBiomass.surface || {})
+      .filter(([, coef]) => coef < 0);
+    const globalSurfaceInputsPerBiomass = Object.entries(growthPerBiomass.globalSurface || {})
       .filter(([, coef]) => coef < 0);
     const atmosphericInputsPerBiomass = Object.entries(growthPerBiomass.atmospheric || {})
       .filter(([, coef]) => coef < 0);
@@ -1503,7 +1532,7 @@ class LifeManager extends EffectableEntity {
           : (liquidByZone[zoneName][resourceKey] || 0) > 1e-9)
         ? (usesIceForWaterByZone[zoneName] ? 0.5 : 1)
         : 0;
-      const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName) * landMultiplier;
+      const zoneArea = biomassAreaM2 * getZonePercentage(zoneName) * landMultiplier;
       const maxBiomassForZone = zoneArea * maxBiomassDensity;
       const growthRate = baseGrowthRate * lumMult * tempMult * radMult * liquidMult * effectiveGrowthMultiplier;
       canGrowByZone[zoneName] = growthRate > 0 && maxBiomassForZone > 0;
@@ -1519,17 +1548,17 @@ class LifeManager extends EffectableEntity {
       thermodynamicGrowthDemandByZone[zoneName] = 0;
       radiationDecayByZone[zoneName] = 0;
     });
-    if (gameSettings.lifeThermodynamics && secondsMultiplier > 0) {
+    if (gameSettings.lifeThermodynamics && !requirements.ignoresLifeThermodynamics && secondsMultiplier > 0) {
       const parameters = terraformingParameters.gameplay.lifeThermodynamics;
       const simulatedDurationSeconds = secondsMultiplier * parameters.simulatedSecondsPerRealSecond;
       zones.forEach(zoneName => {
-        const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName);
+        const zoneArea = biomassAreaM2 * getZonePercentage(zoneName);
         const availableFlux = Math.max(
           0,
           terraforming.calculateZonalAverageSurfaceSolarFlux(zoneName)
         );
         thermodynamicGrowthCapByZone[zoneName] = availableFlux
-          * parameters.maximumSolarFluxFraction
+          * requirements.maximumSolarFluxFraction
           * zoneArea
           * simulatedDurationSeconds
           / parameters.chemicalEnergyJPerTon;
@@ -1541,7 +1570,7 @@ class LifeManager extends EffectableEntity {
       let zonalBiomass = biomassByZone[zoneName];
       if (zonalBiomass <= 0) return;
 
-      const zoneArea = terraforming.celestialParameters.surfaceArea * getZonePercentage(zoneName) * landMultiplier;
+      const zoneArea = biomassAreaM2 * getZonePercentage(zoneName) * landMultiplier;
       const maxBiomassForZone = zoneArea * maxBiomassDensity;
 
       if (zonalBiomass > maxBiomassForZone) {
@@ -1686,6 +1715,27 @@ class LifeManager extends EffectableEntity {
       addBiomassGrowthLimiter(limitingAtmosphericKey, '', 'atmospheric', limitingAtmosphericShortfall);
     }
 
+    let maxByGlobalSurfaceInputs = totalPotentialGrowth;
+    let limitingGlobalSurfaceKey = '';
+    let limitingGlobalSurfaceValue = totalPotentialGrowth;
+    let limitingGlobalSurfaceShortfall = 0;
+    globalSurfaceInputsPerBiomass.forEach(([resourceKey, coef]) => {
+      const requiredPerBiomass = -coef;
+      const available = getGlobalSurfaceAvailable(resourceKey);
+      if (requiredPerBiomass > 0) {
+        const maxGrowth = available / requiredPerBiomass;
+        maxByGlobalSurfaceInputs = Math.min(maxByGlobalSurfaceInputs, maxGrowth);
+        if (maxGrowth < limitingGlobalSurfaceValue) {
+          limitingGlobalSurfaceValue = maxGrowth;
+          limitingGlobalSurfaceKey = resourceKey;
+          limitingGlobalSurfaceShortfall = totalPotentialGrowth * requiredPerBiomass - available;
+        }
+      }
+    });
+    if (limitingGlobalSurfaceKey && maxByGlobalSurfaceInputs < totalPotentialGrowth) {
+      addBiomassGrowthLimiter(limitingGlobalSurfaceKey, '', 'surface', limitingGlobalSurfaceShortfall);
+    }
+
     let maxByColonyInputs = totalPotentialGrowth;
     let limitingColonyKey = '';
     let limitingColonyValue = totalPotentialGrowth;
@@ -1707,7 +1757,12 @@ class LifeManager extends EffectableEntity {
       addBiomassGrowthLimiter(limitingColonyKey, '', 'colony', limitingColonyShortfall);
     }
 
-    const totalGrowthBiomass = Math.max(0, Math.min(totalPotentialGrowth, maxByAtmosphericInputs, maxByColonyInputs));
+    const totalGrowthBiomass = Math.max(0, Math.min(
+      totalPotentialGrowth,
+      maxByAtmosphericInputs,
+      maxByGlobalSurfaceInputs,
+      maxByColonyInputs
+    ));
     const zoneGrowthByZone = {};
     zones.forEach(zoneName => {
       zoneGrowthByZone[zoneName] = 0;
@@ -1774,6 +1829,7 @@ class LifeManager extends EffectableEntity {
     });
 
     const growthAtmosphericDeltas = {};
+    const growthGlobalSurfaceDeltas = {};
     const growthColonyDeltas = {};
     const growthSurfaceDeltasByZone = {};
     zones.forEach(zoneName => {
@@ -1805,6 +1861,10 @@ class LifeManager extends EffectableEntity {
         growthColonyDeltas[resourceKey] =
           (growthColonyDeltas[resourceKey] || 0) + zoneGrowth * coef;
       });
+    });
+    Object.entries(growthPerBiomass.globalSurface || {}).forEach(([resourceKey, coef]) => {
+      if (!coef) return;
+      growthGlobalSurfaceDeltas[resourceKey] = totalGrowthBiomass * coef;
     });
 
     const decayTargetsByZone = {};
@@ -1868,6 +1928,7 @@ class LifeManager extends EffectableEntity {
       decayTargetsByZone,
       canSurviveByZone,
       growthAtmosphericDeltas,
+      growthGlobalSurfaceDeltas,
       growthColonyDeltas,
       decayAtmosphericDeltas,
       yggieGrowthController,
@@ -1959,6 +2020,7 @@ class LifeManager extends EffectableEntity {
     const plan = this.buildAtmosphericPlan(deltaTime, accumulatedChanges);
     const {
       design,
+      requirements,
       sterileDecayWithoutOxygen,
       growthReason,
       decayReason,
@@ -1977,6 +2039,7 @@ class LifeManager extends EffectableEntity {
       decayTargetsByZone,
       canSurviveByZone,
       growthAtmosphericDeltas,
+      growthGlobalSurfaceDeltas,
       growthColonyDeltas,
       decayAtmosphericDeltas,
       yggieGrowthController,
@@ -2072,7 +2135,7 @@ class LifeManager extends EffectableEntity {
 
     terraforming.setLifeThermodynamicsGrowth(
       zoneGrowthByZone,
-      secondsMultiplier,
+      requirements.ignoresLifeThermodynamics ? 0 : secondsMultiplier,
       thermodynamicGrowthDemandByZone
     );
 
@@ -2083,6 +2146,17 @@ class LifeManager extends EffectableEntity {
         accumulatedChanges.atmospheric[resourceKey] += delta;
       } else {
         resources.atmospheric[resourceKey].value = Math.max(0, resources.atmospheric[resourceKey].value + delta);
+      }
+    });
+
+    Object.entries(growthGlobalSurfaceDeltas).forEach(([resourceKey, delta]) => {
+      const resource = resources.surface[resourceKey];
+      if (!delta || !resource) return;
+      resource.modifyRate(delta / secondsMultiplier, growthReason, 'life');
+      if (accumulatedChanges) {
+        accumulatedChanges.surface[resourceKey] = (accumulatedChanges.surface[resourceKey] || 0) + delta;
+      } else {
+        resource.value = Math.max(0, resource.value + delta);
       }
     });
 

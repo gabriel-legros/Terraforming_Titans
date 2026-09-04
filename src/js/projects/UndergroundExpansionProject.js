@@ -8,7 +8,59 @@ class UndergroundExpansionProject extends AndroidProject {
   }
 
   getScaledCost() {
-    return super.getScaledCost();
+    const cost = super.getScaledCost();
+    if (!this.requiresArtificialUnderground()) {
+      return cost;
+    }
+
+    const artificialCost = this.attributes.artificialUndergroundCost;
+    for (const category in artificialCost) {
+      cost[category] ||= {};
+      for (const resource in artificialCost[category]) {
+        const multiplier = this.getEffectiveCostMultiplier(category, resource);
+        cost[category][resource] = (cost[category][resource] || 0)
+          + artificialCost[category][resource] * multiplier;
+      }
+    }
+    return cost;
+  }
+
+  requiresArtificialUnderground() {
+    if (!this.isBooleanFlagSet('shiivertArtificialUnderground')) {
+      return false;
+    }
+    return spaceManager.isArtificialWorld()
+      || hasGeologicalAccessBlockingHeat(terraforming, currentPlanetParameters);
+  }
+
+  hasIncompleteCrustBlocker() {
+    if (!this.isBooleanFlagSet('shiivertArtificialUnderground')
+        || !hasGeologicalAccessBlockingHeat(terraforming, currentPlanetParameters)) {
+      return false;
+    }
+
+    const heatShares = getGeologicalHeatLandReservationShares(terraforming);
+    return heatShares.coreHeatFlux > 0 || heatShares.fusionFlux > 0;
+  }
+
+  getWarningState() {
+    if (!this.hasIncompleteCrustBlocker()) {
+      return null;
+    }
+    return {
+      blocksStart: true,
+      blocksProgress: true,
+      message: t(
+        'ui.projects.undergroundExpansion.incompleteCrustWarning',
+        null,
+        'A complete crust is required before Underground Land Expansion can begin or continue.'
+      ),
+      statusText: t(
+        'ui.projects.undergroundExpansion.incompleteCrustStatus',
+        null,
+        'Blocked: complete the crust first'
+      )
+    };
   }
 
   start(resources) {
@@ -16,15 +68,7 @@ class UndergroundExpansionProject extends AndroidProject {
     this.prepaidPortion = 0;
 
     if (this.isContinuous()) {
-      if (!this.canStart()) {
-        return false;
-      }
-      const duration = this.getEffectiveDuration();
-      this.startingDuration = duration;
-      this.remainingTime = duration;
-      this.isActive = true;
-      this.isPaused = false;
-      return true;
+      return this.startContinuousExpansion(resources);
     }
 
     return super.start(resources);
@@ -99,6 +143,14 @@ class UndergroundExpansionProject extends AndroidProject {
   getRemainingRepeats() {
     const limit = this.getMaxRepeats();
     return Math.max(0, limit - this.repeatCount);
+  }
+
+  getContinuousProgressAllowance() {
+    return this.getRemainingRepeats();
+  }
+
+  shouldReportLandExpansion() {
+    return true;
   }
 
   getTotalProgress() {
@@ -177,12 +229,21 @@ class UndergroundExpansionProject extends AndroidProject {
       return;
     }
 
-    const progress = Math.min((deltaTime / duration) * productivity, remainingRepeats);
+    const progressAllowance = Math.min(
+      remainingRepeats,
+      this.getContinuousProgressAllowance()
+    );
+    if (!(progressAllowance > 0)) {
+      this.shortfallLastTick = true;
+      return;
+    }
+
+    const progress = Math.min((deltaTime / duration) * productivity, progressAllowance);
     const prepaidCovered = Math.min(progress, this.prepaidPortion);
     const requestedCostPortion = Math.max(0, progress - prepaidCovered);
     this.prepaidPortion = Math.max(0, this.prepaidPortion - progress);
 
-    const cost = this.getScaledCost();
+    const cost = this.getConsumableCost();
     const prepaidCompletions = this.applyContinuousProgress(prepaidCovered);
     const result = this.applyRequestedExpansionProgress(
       requestedCostPortion,
@@ -225,10 +286,18 @@ class UndergroundExpansionProject extends AndroidProject {
       return totals;
     }
 
-    const requestedProgress = Math.min((deltaTime / duration) * productivity, remainingRepeats);
+    const progressAllowance = Math.min(
+      remainingRepeats,
+      this.getContinuousProgressAllowance()
+    );
+    if (!(progressAllowance > 0)) {
+      return totals;
+    }
+
+    const requestedProgress = Math.min((deltaTime / duration) * productivity, progressAllowance);
     const prepaidCovered = Math.min(requestedProgress, this.prepaidPortion);
     const requestedCostPortion = Math.max(0, requestedProgress - prepaidCovered);
-    const cost = this.getScaledCost();
+    const cost = this.getConsumableCost();
     const storageState = this.createExpansionStorageState(accumulatedChanges);
     const paidProgress = this.getAffordableExpansionProgress(
       requestedCostPortion,
@@ -249,6 +318,9 @@ class UndergroundExpansionProject extends AndroidProject {
     );
 
     const progress = prepaidCovered + paidProgress;
+    if (!this.shouldReportLandExpansion()) {
+      return totals;
+    }
     const seconds = deltaTime / 1000;
     const landRate = seconds > 0 ? (progress * perCompletionLand) / seconds : 0;
     if (landRate > 0 && applyRates && this.showsInResourcesRate()) {

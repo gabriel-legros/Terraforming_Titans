@@ -1039,7 +1039,8 @@ function update(time, delta) {
   const realIncrement = deltaMs / 1000;
   realPlayTimeSeconds += realIncrement;
   totalRealPlayTimeSeconds += realIncrement;
-  const quantizedDelta = Math.floor((scaledDelta + logicDeltaCarryMs) / LOGIC_DELTA_QUANTUM_MS) * LOGIC_DELTA_QUANTUM_MS;
+  const logicDeltaQuantumMs = LOGIC_DELTA_QUANTUM_MS * gameSpeed;
+  const quantizedDelta = Math.floor((scaledDelta + logicDeltaCarryMs) / logicDeltaQuantumMs) * logicDeltaQuantumMs;
   logicDeltaCarryMs = scaledDelta + logicDeltaCarryMs - quantizedDelta;
   if (quantizedDelta <= 0) {
     goldenAsteroid.update(0, deltaMs);

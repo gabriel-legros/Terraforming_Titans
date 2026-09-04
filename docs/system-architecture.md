@@ -68,7 +68,7 @@ The `produceResources` pipeline is:
 
 Durable constraints:
 
-- Game logic and terraforming use `terraformingParameters.gameplay.simulation.resourceSubstepMs` (default `20`) as the shared resource step. Calibration tools and settings copy read the same parameter.
+- Game logic quantization and terraforming use `terraformingParameters.gameplay.simulation.resourceSubstepMs` (default `20`) as the shared resource step. Both multiply this duration by the game-speed multiplier so each step covers the same real-time interval; terraforming also requires the substep setting to be enabled. Calibration tools and settings copy read the same parameter.
 - Continuous atmosphere, zonal-surface, and albedo deltas are applied proportionally inside fixed terraforming substeps. Do not defer them to a later frame boundary.
 - Zonal transfers credit output only for input actually removed during the woven substeps so they remain mass-conserving when phase changes compete.
 - Resource rate maps use stable, non-localized ids. Buildings use `building:<internal name>`, projects use `project:<internal name>`, and shared/mod processes register namespaced ids. Gameplay and automation query ids; UI resolves display names.
@@ -76,9 +76,15 @@ Durable constraints:
 - `PreciseDecimal` is the immutable exact base-10 type for systems that explicitly need exact arithmetic across incompatible magnitudes. Ordinary physics and UI stay on `Number`.
 - Runtime zonal surface state is resource-first: `terraforming.zonalSurface[resourceKey][zone]`. Use `ZonalResource.change(zone, delta)` for relative mutations and `set`/the property setter only for intentional replacement. Precision state belongs to the value; do not add parallel remainder stores.
 - Surface land uses its existing fixed-point `BigInt` reservation/value ledger. Assignment systems that store `BigInt` counts convert to `Number` only at rate/formula boundaries.
+- Project costs may include non-consumable availability requirements by overriding `isCostConsumed(category, resource)`. Such entries remain visible in the cost UI and participate in project-specific availability checks, while `getConsumableCost()` excludes them from discrete and continuous deductions.
 - Molten-surface structure attrition belongs to `Terraforming` rather than `HazardManager`, so it remains active on worlds that disable optional hazard systems. It runs with environmental hazard updates after climate stepping unless the `disableMoltenSurfaceAttrition` difficulty setting is enabled. Geological lava or plasma must reserve all geometric land before attrition begins; temperature-maintenance immunity also grants molten-surface immunity. Operational Aerostats additionally protect their own colony and the active structures covered by existing direct-support and worker-capacity calculations.
 - Every life metabolism growth/decay recipe must conserve mass. Validate coefficient arithmetic rather than tuning it by feel.
-- Life Thermodynamics applies only to natural zonal surface-life growth. It caps chemical-energy storage against the canonical zonal surface solar flux after converting it to the zone-wide average for curvature and night, and contributes its signed zonal flux directly to the radiative temperature trend; direct biomass transfers and constructed or space-based growth do not participate.
+- Non-zonal surface metabolism inputs and outputs use `perBiomass.globalSurface`; zonal liquids and biomass remain under `perBiomass.surface`.
+- Dominion life designs may set `ignoresLifeThermodynamics`; dominion requirements may set `ignoresLuminosity` or use `lifeDensityLandBasis: 'underground'`. Underground biomass capacity uses land added beyond geometric surface land, while its terraforming density target uses the world's full geometric land area as the potential underground footprint.
+- Dominion life designs may set `innateRadiationTolerancePoints`; these points are added to designed Radiation Tolerance before the standard quadratic mitigation formula is applied and do not consume life-design points.
+- Shiivert terraforming overrides the artificial-world and geological-heat restrictions on Underground Land Expansion. On worlds with geological heat, the project remains visible but cannot start or progress until the natural or artificial crust is fully complete. On those otherwise-ineligible worlds, each added hectare retains the normal excavation cost and additionally consumes the configured artificial-substrate silica and superalloy costs.
+- Passive natural biomass turnover uses the active dominion's configured decay multiplier. Environmental, overflow, and metabolism-specific decay remain separate and are not scaled by this multiplier.
+- Life Thermodynamics applies only to natural zonal surface-life growth. It caps chemical-energy storage against each dominion's configured fraction of the canonical zonal surface solar flux after converting it to the zone-wide average for curvature and night, and contributes its signed zonal flux directly to the radiative temperature trend; direct biomass transfers and constructed or space-based growth do not participate.
 
 ## Climate and Phase Change
 
@@ -105,6 +111,7 @@ Durable constraints:
 - Browser and Steam/Electron builds share gameplay. Branch only platform capability and presentation through `src/js/build-target.js`, `GAME_FEATURES`, preload APIs, and release scripts.
 - Do not persist build-target flags in saves or fork whole gameplay systems by platform.
 - Electron entry points are `electron/main.cjs` and `electron/preload.cjs`. Packaged saves are file-backed under the Electron user-data `saves` directory. Serialized game-state JSON escapes non-ASCII code units so save data remains encoding-safe across browser storage, Electron IPC, files, and clipboard transfers.
+- Windows fullscreen keeps the game in its existing native window and applies borderless display bounds instead of invoking Electron's fullscreen transition. This preserves the Steam Overlay while avoiding persistent Windows 11 task-switcher ghost windows.
 - Background simulation in Electron depends on disabled Chromium background throttling/suspension; preserve that behavior.
 
 ## Mod Security and Patching

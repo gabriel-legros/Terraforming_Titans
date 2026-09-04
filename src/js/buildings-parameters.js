@@ -426,7 +426,7 @@ const buildingsParameters = {
     autoBuildMaxOption: true
   },
   hydrocarbonGenerator: {
-    type: 'Building',
+    type: 'MultiRecipesBuilding',
     name: '',
     category: 'energy',
     description: '',
@@ -442,7 +442,34 @@ const buildingsParameters = {
     requiresMaintenance: true,
     requiresWorker: 0,
     maintenanceFactor: 1,
-    unlocked: false
+    unlocked: false,
+    defaultRecipe: 'methaneCombustion',
+    recipes: {
+      methaneCombustion: {
+        shortName: '',
+        consumption: { atmospheric: { atmosphericMethane: 5, oxygen: 19.95 } },
+        production: {
+          colony: { energy: 1000000 },
+          atmospheric: { carbonDioxide: 13.7, atmosphericWater: 11.25 }
+        }
+      },
+      hydrogenCombustion: {
+        shortName: '',
+        consumption: { atmospheric: { hydrogen: 2.08, oxygen: 16.51 } },
+        production: {
+          colony: { energy: 1000000 },
+          atmospheric: { atmosphericWater: 18.59 }
+        }
+      },
+      ammoniaCombustion: {
+        shortName: '',
+        consumption: { atmospheric: { atmosphericAmmonia: 13.44, oxygen: 18.97 } },
+        production: {
+          colony: { energy: 1000000 },
+          atmospheric: { inertGas: 11.07, atmosphericWater: 21.34 }
+        }
+      }
+    }
   },
   nuclearPowerPlant: {
     type: 'Building',
