@@ -33,6 +33,36 @@ class UndergroundExpansionProject extends AndroidProject {
       || hasGeologicalAccessBlockingHeat(terraforming, currentPlanetParameters);
   }
 
+  hasIncompleteCrustBlocker() {
+    if (!this.isBooleanFlagSet('shiivertArtificialUnderground')
+        || !hasGeologicalAccessBlockingHeat(terraforming, currentPlanetParameters)) {
+      return false;
+    }
+
+    const heatShares = getGeologicalHeatLandReservationShares(terraforming);
+    return heatShares.coreHeatFlux > 0 || heatShares.fusionFlux > 0;
+  }
+
+  getWarningState() {
+    if (!this.hasIncompleteCrustBlocker()) {
+      return null;
+    }
+    return {
+      blocksStart: true,
+      blocksProgress: true,
+      message: t(
+        'ui.projects.undergroundExpansion.incompleteCrustWarning',
+        null,
+        'A complete crust is required before Underground Land Expansion can begin or continue.'
+      ),
+      statusText: t(
+        'ui.projects.undergroundExpansion.incompleteCrustStatus',
+        null,
+        'Blocked: complete the crust first'
+      )
+    };
+  }
+
   start(resources) {
     this.fractionalRepeatCount = 0;
     this.prepaidPortion = 0;

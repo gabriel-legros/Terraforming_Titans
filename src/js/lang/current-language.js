@@ -1901,6 +1901,8 @@ setLanguageData({
       },
       undergroundExpansion: {
         landExpansion: 'Land Expansion: {current} / {max}',
+        incompleteCrustWarning: 'A complete crust is required before Underground Land Expansion can begin or continue.',
+        incompleteCrustStatus: 'Blocked: complete the crust first',
       },
       planetarySwampification: {
         reset: 'Reset and Recover Land',
