@@ -2477,7 +2477,7 @@ setLanguageData({
         superalloyEngineering: 'Superalloy tether, taper {taper}',
         skyhookOnly: 'Skyhook only',
         elevatorImpossible: 'A stationary Space Elevator is impossible with available materials and this world spin. Select Skyhook Network.',
-        capacityTooltip: 'Continuous spaceship cargo shares total access capacity. Metal savings and the before/after Space Elevator energy settings scale with coverage.',
+        capacityTooltip: 'Continuous spaceship cargo targeting colony, atmosphere or surface shares total access capacity. Metal savings and the before/after Space Elevator energy settings scale with coverage.',
       },
       megaHeatSink: {
         speedBoost: 'Speed Boost',
