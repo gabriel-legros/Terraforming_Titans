@@ -73,6 +73,10 @@ class PlanetarySwampificationProject extends UndergroundExpansionProject {
   }
 
   syncLandReservation() {
+    if (!this.unlocked) {
+      resources.surface.land.setReservedAmountForSource(PLANETARY_SWAMPIFICATION_LAND_SOURCE, 0);
+      return;
+    }
     const segmentCount = this.getSegmentCount();
     let reservedSegments = this.isCompleted ? segmentCount : this.getTotalProgress();
     if (!this.isContinuous() && this.hasCurrentSegmentProgress()) {
