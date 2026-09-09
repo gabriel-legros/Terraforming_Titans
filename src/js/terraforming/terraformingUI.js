@@ -687,10 +687,32 @@ function createGravityTooltip(icon) {
   tooltip.appendChild(densitySection);
 
   const update = () => {
+    const worldType = currentPlanetParameters.classification?.type;
+    const isArtificialGravityWorld = worldType === 'ring' || worldType === 'disk';
     const dynamicMassWorld = currentPlanetParameters.specialAttributes?.dynamicMass === true;
     tooltip.classList.toggle('gravity-calculation-tooltip--compact', !dynamicMassWorld);
-    dynamicDetails.style.display = dynamicMassWorld ? '' : 'none';
+    dynamicDetails.style.display = dynamicMassWorld || isArtificialGravityWorld ? '' : 'none';
     densitySection.style.display = dynamicMassWorld ? '' : 'none';
+    if (isArtificialGravityWorld) {
+      explanation.textContent = getTerraformingSummaryText(
+        `magnetosphere.gravityTooltip.${worldType}Explanation`,
+        worldType === 'ring'
+          ? 'Displayed gravity is the ringworld\'s spin gravity, based on its spin progress.'
+          : 'Displayed gravity is the diskworld\'s structural gravity, based on its fill progress.'
+      );
+      worldNote.style.display = 'none';
+      dynamicDetails.textContent = getTerraformingSummaryText(
+        'magnetosphere.gravityTooltip.artificialWorldDetails',
+        'This display and the gravity graph use artificial gravity. The terraforming and climate model continues to use the world\'s configured model gravity.'
+      );
+      return;
+    }
+
+    explanation.textContent = getTerraformingSummaryText(
+      'magnetosphere.gravityTooltip.explanation',
+      'Surface gravity is calculated from the world\'s non-atmospheric mass and radius: g = G × mass / radius².'
+    );
+    worldNote.style.display = '';
     if (!dynamicMassWorld) return;
 
     const celestial = terraforming.celestialParameters;
@@ -3278,9 +3300,7 @@ function updateLifeBox() {
       const orbRad = terraforming.orbitalRadiation || 0;
       const rad = terraforming.surfaceRadiation || 0;
       const radPenalty = getDisplayedRadiationPenalty(hasMagnetosphere);
-      const gravityValue = Number.isFinite(terraforming.celestialParameters.gravity)
-        ? terraforming.celestialParameters.gravity
-        : 0;
+      const gravityValue = getDisplayedGravity();
       const gravityPenaltyData = terraforming.gravityCostPenalty || { multiplier: 1 };
       const equatorialGravity = Number.isFinite(terraforming.apparentEquatorialGravity)
         ? terraforming.apparentEquatorialGravity
@@ -3419,10 +3439,7 @@ function updateLifeBox() {
       }
     }
 
-    let gravity = 0;
-    if (Number.isFinite(terraforming.celestialParameters.gravity)) {
-      gravity = terraforming.celestialParameters.gravity;
-    }
+    const gravity = getDisplayedGravity();
     if (gravityValue) {
       gravityValue.textContent = formatNumber(gravity, false, 2);
     }

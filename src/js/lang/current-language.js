@@ -3592,6 +3592,9 @@ setLanguageData({
           ].join('\n'),
           gravityTooltip: {
             explanation: 'Surface gravity is calculated from the world\'s non-atmospheric mass and radius: g = G × mass / radius².',
+            ringExplanation: 'Displayed gravity is the ringworld\'s spin gravity, based on its spin progress.',
+            diskExplanation: 'Displayed gravity is the diskworld\'s structural gravity, based on its fill progress.',
+            artificialWorldDetails: 'This display and the gravity graph use artificial gravity. Current atmospheric pressure is displayed as if the gravity was 1g.',
             worldNote: 'On most worlds gravity cannot be easily changed.  Story World 13 unlocks a feature that changes this.  This tooltip will update with additional information when said feature is active.',
             dynamicDetails: 'Dynamic mass world: gravity updates as material changes mass and radius. Current calculation: G × {mass} kg / ({radius} m)² = {gravity} m/s². Core and surface density affect radius; atmospheric mass is excluded because it lies above the surface.',
             densityTableTitle: 'Table of material density:',
