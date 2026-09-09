@@ -2372,7 +2372,7 @@ setLanguageData({
         liquidHydrogenRequiresTemperature: 'Liquid Hydrogen (requires surface temperature < {value})',
         disposalTargets: 'Disposal Targets',
         disposalTargetsSubheading: 'Configure up to 15 resources. Active auto-start targets split assigned disposal evenly.',
-        stellarWaste: 'Stellar Waste',
+        stellarWaste: 'Waste',
         addTarget: '+ Add target',
         phase: 'Phase',
         whichOne: 'Which one',
