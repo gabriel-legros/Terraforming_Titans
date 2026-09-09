@@ -811,7 +811,15 @@ class LifeAutomation {
     }
     if (capMode === 'needed' && this.isTemperatureToleranceAttribute(attributeName)) {
       const zoneNames = this.getTemperatureZoneNames(entry);
-      return Math.min(maxUpgrades, maximumSpendValue, Math.ceil(this.getTemperatureToleranceTarget(attributeName, zoneNames)));
+      const effectiveTarget = this.getTemperatureToleranceTarget(attributeName, zoneNames);
+      const spendTarget = lifeManager.isBooleanFlagSet('quantumBiology')
+        ? calculateRawLifeAttributeValueForEffectiveValue(effectiveTarget, maxUpgrades)
+        : effectiveTarget;
+      return Math.min(
+        maximumSpendValue,
+        lifeManager.isBooleanFlagSet('quantumBiology') ? Infinity : maxUpgrades,
+        Math.ceil(spendTarget)
+      );
     }
     if (capMode === 'needed' && attributeName === 'optimalGrowthTemperature') {
       return Math.round(Math.abs(this.getOptimalGrowthTemperatureTarget(entry, maxUpgrades)));
