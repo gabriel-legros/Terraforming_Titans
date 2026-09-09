@@ -130,6 +130,15 @@ class ArtificialSkyProject extends SpaceshipProject {
     return cost;
   }
 
+  calculateAutomationEnergyRatePerShip() {
+    const energyPerSegment = this.calculateSpaceshipCost()?.colony?.energy || 0;
+    if (energyPerSegment <= 0) {
+      return 0;
+    }
+    const singleShipDuration = this.applyDurationEffects(this.duration);
+    return energyPerSegment * 1000 / singleShipDuration;
+  }
+
   calculateSpaceshipGainPerShip() {
     return {};
   }

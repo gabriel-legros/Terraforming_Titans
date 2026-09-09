@@ -473,6 +473,21 @@ class SpaceshipProject extends Project {
     return totalCost;
   }
 
+  calculateAutomationEnergyRatePerShip() {
+    const energyPerShip = this.calculateSpaceshipCost()?.colony?.energy || 0;
+    if (energyPerShip <= 0) {
+      return 0;
+    }
+    const duration = this.getShipOperationDuration
+      ? this.getShipOperationDuration()
+      : this.getEffectiveDuration();
+    const assignedShips = this.getAutomationShipCount();
+    const singleShipDuration = assignedShips > 0 && assignedShips <= 100
+      ? duration * assignedShips
+      : duration;
+    return energyPerShip * 1000 / singleShipDuration;
+  }
+
   getSpaceshipEnergyCostTonnage() {
     if (this.attributes.spaceExport) {
       return this.getShipCapacity(this.attributes.disposalAmount);
