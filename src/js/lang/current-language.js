@@ -4734,6 +4734,9 @@ setLanguageData({
               grapheneSlider: 'Graphene Slider',
               availableOrbitals: 'Available Orbitals',
               assignedOrbitals: 'Assigned Orbitals',
+              aerostatBaseCap: 'Base Cap',
+              aerostatSupportedCap: 'Supported Cap',
+              aerostatCollisionAvoidanceCap: 'Collision Avoidance Cap',
             },
           },
           projects: {
