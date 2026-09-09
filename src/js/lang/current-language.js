@@ -2372,6 +2372,7 @@ setLanguageData({
         liquidHydrogenRequiresTemperature: 'Liquid Hydrogen (requires surface temperature < {value})',
         disposalTargets: 'Disposal Targets',
         disposalTargetsSubheading: 'Configure up to 15 resources. Active auto-start targets split assigned disposal evenly.',
+        stellarWaste: 'Stellar Waste',
         addTarget: '+ Add target',
         phase: 'Phase',
         whichOne: 'Which one',
@@ -7149,6 +7150,10 @@ setLanguageData({
         ship_smelting: {
           name: 'Ship smelting',
           description: 'Ships can now smelt asteroids directly, allowing them to carry 2x more metal and silica. Water imports can now prioritize colony storage.',
+        },
+        stellar_garbage_disposal: {
+          name: 'Stellar Garbage Disposal',
+          description: '"Can we just throw all this garbage into the star?" she once said.  Yes.  Yes we can.',
         },
         companion_satellite: {
           name: 'Companion Satellite',

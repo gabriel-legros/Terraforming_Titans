@@ -1,3 +1,11 @@
+const STELLAR_DISPOSAL_ENERGY_PER_TON = 10_000_000;
+const STELLAR_DISPOSAL_WASTE_RESOURCES = [
+  'garbage',
+  'trash',
+  'junk',
+  'radioactiveWaste',
+];
+
 class SpaceDisposalProject extends SpaceExportBaseProject {
   getSpaceDisposalText(path, fallback, vars) {
     try {
@@ -16,7 +24,29 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     this.disposalTargets = [];
     this.lastDisposalEnergyDemand = 0; // Stored as a per-second rate so tick length changes do not distort the grace floor.
     this.lastActiveDisposalTargetIds = [];
+    this.stellarWasteDisposalGroupUnlocked = null;
     this.ensureDisposalTargets();
+  }
+
+  canUseStellarWasteDisposal() {
+    return this.isBooleanFlagSet('stellarGarbageDisposal');
+  }
+
+  isStellarWasteSelection(selection) {
+    return selection?.category === 'surface'
+      && STELLAR_DISPOSAL_WASTE_RESOURCES.includes(selection.resource);
+  }
+
+  getDisposalGroupData() {
+    const stellarWasteUnlocked = this.canUseStellarWasteDisposal();
+    if (
+      !this.disposalGroupData
+      || this.stellarWasteDisposalGroupUnlocked !== stellarWasteUnlocked
+    ) {
+      this.disposalGroupData = this.buildDisposalGroupData();
+      this.stellarWasteDisposalGroupUnlocked = stellarWasteUnlocked;
+    }
+    return this.disposalGroupData;
   }
 
   getMassDriverShipEquivalency() {
@@ -138,6 +168,29 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
         phaseType: option.category === 'atmospheric' ? 'gas' : (option.resource === 'liquidHydrogen' ? 'liquid' : null),
       };
     });
+
+    if (this.canUseStellarWasteDisposal()) {
+      const stellarWasteOptions = STELLAR_DISPOSAL_WASTE_RESOURCES.map(resource => ({
+        category: 'surface',
+        resource,
+        label: resources.surface[resource].displayName || resource,
+      }));
+      const stellarWasteGroup = {
+        key: 'stellarWaste',
+        label: this.getSpaceDisposalText('ui.projects.spaceDisposal.stellarWaste', 'Stellar Waste'),
+        options: stellarWasteOptions,
+      };
+      disposalGroupData.groupList.push(stellarWasteGroup);
+      disposalGroupData.groupMap.stellarWaste = stellarWasteGroup;
+      stellarWasteOptions.forEach((option) => {
+        const resourceKey = `${option.category}:${option.resource}`;
+        disposalGroupData.resourceGroupLookup[resourceKey] = stellarWasteGroup.key;
+        disposalGroupData.resourceMetaLookup[resourceKey] = {
+          groupKey: stellarWasteGroup.key,
+          phaseType: null,
+        };
+      });
+    }
 
     if (!this.canUsePlanetaryMassDisposal()) {
       return disposalGroupData;
@@ -460,6 +513,12 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
 
   canTargetRun(target, accumulatedChanges = null) {
     if (!target || !target.selectedDisposalResource) {
+      return false;
+    }
+    if (
+      this.isStellarWasteSelection(target.selectedDisposalResource)
+      && !this.canUseStellarWasteDisposal()
+    ) {
       return false;
     }
     if (
@@ -1523,6 +1582,31 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       return false;
     }
     return super.checkKesslerShipFailure(activeTime, startRemaining);
+  }
+
+  calculateSpaceshipCost() {
+    const totalCost = super.calculateSpaceshipCost();
+    const activeTargets = this.getRunnableTargets();
+    if (!activeTargets.length) {
+      return totalCost;
+    }
+
+    let stellarWasteTargetCount = 0;
+    for (let i = 0; i < activeTargets.length; i += 1) {
+      if (this.isStellarWasteSelection(activeTargets[i].selectedDisposalResource)) {
+        stellarWasteTargetCount += 1;
+      }
+    }
+    if (stellarWasteTargetCount <= 0) {
+      return totalCost;
+    }
+
+    const stellarWasteShare = stellarWasteTargetCount / activeTargets.length;
+    const stellarWasteTonsPerTransport = this.getShipCapacity() * stellarWasteShare;
+    totalCost.colony ||= {};
+    totalCost.colony.energy = (totalCost.colony.energy || 0)
+      + stellarWasteTonsPerTransport * STELLAR_DISPOSAL_ENERGY_PER_TON;
+    return totalCost;
   }
 
   calculateSpaceshipTotalCost(perSecond = false) {
