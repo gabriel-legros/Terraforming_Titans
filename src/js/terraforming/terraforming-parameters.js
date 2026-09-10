@@ -524,11 +524,6 @@ var terraformingParameters = {
       liquidCO2: 0.10,
       rocks: null, // Use the world's unmodified rock albedo.
       graphite: 0.05,
-      scrapMetal: 0.30,
-      garbage: 0.15,
-      trash: 0.20,
-      junk: 0.25,
-      radioactiveWaste: 0.20,
       ocean: 0.06,
       ice: 0.65,
       snow: 0.85,
@@ -547,7 +542,7 @@ var terraformingParameters = {
     },
     surfaceModel: {
       biomassMaximum: 0.75,
-      excludedResources: ['land', 'hazardousBiomass', 'hazardousMachinery'],
+      excludedResources: ['land', 'hazardousBiomass', 'hazardousMachinery', 'scrapMetal', 'garbage', 'trash', 'junk', 'radioactiveWaste'],
       // Material coefficients are gameplay approximations for mixed materials.
       materials: {
         liquidWater: { fraction: 'ocean', layer: 'volatile' },
@@ -567,11 +562,6 @@ var terraformingParameters = {
         fineSand: { fraction: 'fineSand', layer: 'deposit' },
         rocks: { fraction: 'rocks', layer: 'deposit' },
         graphite: { fraction: 'graphite', layer: 'deposit' },
-        scrapMetal: { fraction: 'scrapMetal', layer: 'deposit' },
-        garbage: { fraction: 'garbage', layer: 'deposit' },
-        trash: { fraction: 'trash', layer: 'deposit' },
-        junk: { fraction: 'junk', layer: 'deposit' },
-        radioactiveWaste: { fraction: 'radioactiveWaste', layer: 'deposit' }
       }
     }
   },

@@ -3716,7 +3716,7 @@ setLanguageData({
             globalComposition: 'Global surface composition (area-weighted):',
             exposedGround: 'Exposed ground',
             materialEntry: '{label}: {raw}% → {visible}% | {albedo} | {contribution}',
-            layering: 'Liquid hydrogen claims its share first. Other liquids and exposed ices split the remaining surface proportionally when needed. Biomass covers up to 75% of the remaining area. Sand, rocks, graphite and waste share the substrate below these coverings; global deposits are spread uniformly. Uncovered ground retains its rock and dust albedo. Buried ice, hazardous biomass and hazardous machinery do not contribute. Raw coverages can overlap; visible coverages total 100%.',
+            layering: 'Liquid hydrogen claims its share first. Other liquids and exposed ices split the remaining surface proportionally when needed. Biomass covers up to 75% of the remaining area. Sand, rocks and graphite share the substrate below these coverings; global deposits are spread uniformly. Uncovered ground retains its rock and dust albedo. Buried ice, hazardous biomass, hazardous machinery and waste resources do not contribute. Raw coverages can overlap; visible coverages total 100%.',
             compositionByZone: 'Surface composition by zone',
             zoneHeader: '{name}:',
             coverageEntry: '  {label}: {value}%',
