@@ -213,15 +213,6 @@ if (typeof globalThis.EffectableEntity === "undefined") {
   catch (_) { globalThis.EffectableEntity = class {}; }
 }
 
-// Physics hooks (optional project-level overrides)
-let dayNightTemperaturesModelFn = globalThis.dayNightTemperaturesModel;
-let calcAtmPressure = globalThis.calculateAtmosphericPressure;
-try {
-  const physics = require("./terraforming/physics.js");
-  dayNightTemperaturesModelFn = dayNightTemperaturesModelFn || physics.dayNightTemperaturesModel;
-  calcAtmPressure = calcAtmPressure || physics.calculateAtmosphericPressure;
-} catch (_) {}
-
 let tuneHazardousBiomassForWorld = (typeof window !== 'undefined' && window.tuneHazardousBiomassForWorld) || null;
 let tuneHazardousMachineryForWorld = (typeof window !== 'undefined' && window.tuneHazardousMachineryForWorld) || null;
 if (!tuneHazardousBiomassForWorld && typeof module !== 'undefined' && module.exports) {
@@ -1378,9 +1369,7 @@ function buildVolatiles(archetype, temperatureK, landHa, params, atmosphere, gra
   const ammoniaTotal = (params.volatiles.NH3_total[archetype] ?? 0) * landScale;
   const hydrogenTotal = (params.volatiles.H2_total?.[archetype] ?? 0) * landScale;
   const totalAtmosphereMass = sumAtmosphericMass(atmosphere);
-  const totalPressurePa = calcAtmPressure
-    ? calcAtmPressure(totalAtmosphereMass, gravity, radius_km)
-    : 101325;
+  const totalPressurePa = calculateAtmosphericPressure(totalAtmosphereMass, gravity, radius_km);
 
   allocateCondensablePhases({
     temperatureK,
@@ -1417,40 +1406,13 @@ function calculateZonalCoverageLocal(tf, zone, resourceType, params) {
   const frac = getZoneFractionsSafe(params)[zone] || 0; const zoneArea = tf.celestialParameters.surfaceArea * frac; if (zoneArea <= 0) return 0;
   const zonalSurface = tf.zonalSurface;
   const amount = zonalSurface[resourceType]?.[zone] ?? zonalSurface[zone]?.[resourceType] ?? 0;
-  let scale = 0.0001;
-  if (["dryIce", "ice", "hydrocarbonIce", "ammoniaIce", "oxygenIce", "nitrogenIce"].includes(resourceType)) scale *= 100;
-  else if (resourceType === "biomass") scale *= 100000;
+  const config = Object.values(defaultPlanetResources.surface)
+    .find(resource => resource.zonalConfig?.keys.includes(resourceType)).zonalConfig;
+  const scale = config.coverageScales?.[resourceType] ?? config.coverageScale;
   return estimateCoverage(amount, zoneArea, scale);
 }
-function calculateAverageCoverageLocal(cache, resourceType, params) { const frac = getZoneFractionsSafe(params); const zones = ["tropical","temperate","polar"]; let total = 0; for (const z of zones) total += (cache[z]?.[resourceType] || 0) * (frac[z] || 0); return Math.max(0, Math.min(total, 1)); }
-function calculateSurfaceFractionsLocal(water, ice, biomass, hydro = 0, hydroIce = 0, dryIce = 0, hydrogen = 0, ammonia = 0, ammoniaIce = 0, oxygen = 0, oxygenIce = 0, nitrogen = 0, nitrogenIce = 0) {
-  const hydrogenShare = Math.max(0, Math.min(1, hydrogen));
-  const surfaces = {
-    ocean: Math.max(0, water),
-    ice: Math.max(0, ice),
-    hydrocarbon: Math.max(0, hydro),
-    hydrocarbonIce: Math.max(0, hydroIce),
-    co2_ice: Math.max(0, dryIce),
-    hydrogen: hydrogenShare,
-    ammonia: Math.max(0, ammonia),
-    ammoniaIce: Math.max(0, ammoniaIce),
-    oxygen: Math.max(0, oxygen),
-    oxygenIce: Math.max(0, oxygenIce),
-    nitrogen: Math.max(0, nitrogen),
-    nitrogenIce: Math.max(0, nitrogenIce)
-  };
-  const remainingSurface = Math.max(0, 1 - hydrogenShare);
-  const totalOther = surfaces.ocean + surfaces.ice + surfaces.hydrocarbon + surfaces.hydrocarbonIce + surfaces.co2_ice + surfaces.ammonia + surfaces.ammoniaIce + surfaces.oxygen + surfaces.oxygenIce + surfaces.nitrogen + surfaces.nitrogenIce;
-  let scale = 1;
-  if (totalOther > remainingSurface && totalOther > 0) scale = remainingSurface / totalOther;
-  for (const key in surfaces) {
-    if (key === 'hydrogen') continue;
-    surfaces[key] *= scale;
-  }
-  const combinedSurface = hydrogenShare + surfaces.ocean + surfaces.ice + surfaces.hydrocarbon + surfaces.hydrocarbonIce + surfaces.co2_ice + surfaces.ammonia + surfaces.ammoniaIce + surfaces.oxygen + surfaces.oxygenIce + surfaces.nitrogen + surfaces.nitrogenIce;
-  const bio = Math.min(Math.max(0, biomass), Math.max(0, 1 - combinedSurface) * 0.75);
-  return { ...surfaces, biomass: bio };
-}
+
+
 function distribute(amount, weights, rng) { const keys = Object.keys(weights); const jittered = {}; let sum = 0; for (const k of keys) { const j = 1 + randRange(rng, -0.1, 0.1); const val = Math.max(0, weights[k] * j); jittered[k] = val; sum += val; } const out = {}; if (sum <= 0 || !isFinite(sum)) { keys.forEach((k) => (out[k] = 0)); } else { keys.forEach((k) => (out[k] = amount * (jittered[k] / sum))); } return out; }
 function distributeByZoneFractions(amount, fractions) {
   return {
@@ -1719,66 +1681,40 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   });
   const surfaceArea = 4 * Math.PI * Math.pow(bulk.radius_km * 1000, 2);
   const tmpTerraforming = { ...zonal, celestialParameters: { surfaceArea } };
-  const zonesList = RWG_ZONE_KEYS; const zonalCoverageCache = {};
-  for (const z of zonesList) {
-    zonalCoverageCache[z] = {
-      liquidWater: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidWater", params),
-      ice: calculateZonalCoverageLocal(tmpTerraforming, z, "ice", params),
-      buriedIce: calculateZonalCoverageLocal(tmpTerraforming, z, "buriedIce", params),
-      biomass: calculateZonalCoverageLocal(tmpTerraforming, z, "biomass", params),
-      dryIce: calculateZonalCoverageLocal(tmpTerraforming, z, "dryIce", params),
-      liquidCO2: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidCO2", params),
-      liquidHydrogen: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidHydrogen", params),
-      liquidMethane: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidMethane", params),
-      hydrocarbonIce: calculateZonalCoverageLocal(tmpTerraforming, z, "hydrocarbonIce", params),
-      liquidAmmonia: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidAmmonia", params),
-      ammoniaIce: calculateZonalCoverageLocal(tmpTerraforming, z, "ammoniaIce", params),
-      liquidOxygen: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidOxygen", params),
-      oxygenIce: calculateZonalCoverageLocal(tmpTerraforming, z, "oxygenIce", params),
-      liquidNitrogen: calculateZonalCoverageLocal(tmpTerraforming, z, "liquidNitrogen", params),
-      nitrogenIce: calculateZonalCoverageLocal(tmpTerraforming, z, "nitrogenIce", params),
+  // Resolve each zone before averaging: overlap normalization is nonlinear.
+  const surfaceFractions = {};
+  const zonalCoverageCache = {};
+  const zoneWeights = getZoneFractionsSafe(params);
+  for (const zone of RWG_ZONE_KEYS) {
+    const coverages = {};
+    for (const key of Object.keys(terraformingParameters.climate.surfaceModel.materials)) {
+      const scale = defaultPlanetResources.surface[key].coverageScale;
+      if (scale !== undefined) {
+        coverages[key] = estimateCoverage(surface[key]?.initialValue || 0, surfaceArea, scale);
+      } else {
+        coverages[key] = calculateZonalCoverageLocal(tmpTerraforming, zone, key, params);
+      }
+    }
+    const fractions = calculateSurfaceFractions(coverages);
+    zonalCoverageCache[zone] = {
+      ...coverages,
+      buriedIce: calculateZonalCoverageLocal(tmpTerraforming, zone, 'buriedIce', params)
     };
+    for (const key in fractions) {
+      surfaceFractions[key] = (surfaceFractions[key] || 0) + fractions[key] * zoneWeights[zone];
+    }
   }
-  const avgWater = calculateAverageCoverageLocal(zonalCoverageCache, "liquidWater", params);
-  const avgIce = calculateAverageCoverageLocal(zonalCoverageCache, "ice", params);
-  const avgBio = calculateAverageCoverageLocal(zonalCoverageCache, "biomass", params);
-  const avgLiquidCO2 = calculateAverageCoverageLocal(zonalCoverageCache, "liquidCO2", params);
-  const avgLiquidHydrogen = calculateAverageCoverageLocal(zonalCoverageCache, "liquidHydrogen", params);
-  const avgHydro = calculateAverageCoverageLocal(zonalCoverageCache, "liquidMethane", params);
-  const avgHydroIce = calculateAverageCoverageLocal(zonalCoverageCache, "hydrocarbonIce", params);
-  const avgDryIce = calculateAverageCoverageLocal(zonalCoverageCache, "dryIce", params);
-  const avgAmmonia = calculateAverageCoverageLocal(zonalCoverageCache, "liquidAmmonia", params);
-  const avgAmmoniaIce = calculateAverageCoverageLocal(zonalCoverageCache, "ammoniaIce", params);
-  const avgLiquidOxygen = calculateAverageCoverageLocal(zonalCoverageCache, "liquidOxygen", params);
-  const avgOxygenIce = calculateAverageCoverageLocal(zonalCoverageCache, "oxygenIce", params);
-  const avgLiquidNitrogen = calculateAverageCoverageLocal(zonalCoverageCache, "liquidNitrogen", params);
-  const avgNitrogenIce = calculateAverageCoverageLocal(zonalCoverageCache, "nitrogenIce", params);
-  const surfaceFractions = calculateSurfaceFractionsLocal(
-    avgWater,
-    avgIce,
-    avgBio,
-    avgHydro,
-    avgHydroIce,
-    avgDryIce + avgLiquidCO2,
-    avgLiquidHydrogen,
-    avgAmmonia,
-    avgAmmoniaIce,
-    avgLiquidOxygen,
-    avgOxygenIce,
-    avgLiquidNitrogen,
-    avgNitrogenIce
-  );
 
   // Atmosphere composition & pressure for physics model
   let totalAtmoMass = 0; const compMass = {};
   for (const g in atmo) { const m = atmo[g]?.initialValue || 0; compMass[g] = m; totalAtmoMass += m; }
   const composition = {}; if (totalAtmoMass > 0) { if (compMass.carbonDioxide) composition.co2 = compMass.carbonDioxide / totalAtmoMass; if (compMass.atmosphericWater) composition.h2o = compMass.atmosphericWater / totalAtmoMass; if (compMass.atmosphericMethane) composition.ch4 = compMass.atmosphericMethane / totalAtmoMass; if (compMass.hydrogen) composition.h2 = compMass.hydrogen / totalAtmoMass; if (compMass.sulfuricAcid) composition.h2so4 = compMass.sulfuricAcid / totalAtmoMass; }
-  const surfacePressureBar = calcAtmPressure ? calcAtmPressure(totalAtmoMass, bulk.gravity, bulk.radius_km) / 100000 : 0;
+  const surfacePressureBar = calculateAtmosphericPressure(totalAtmoMass, bulk.gravity, bulk.radius_km) / 100000;
   const surfacePressureKPa = Number.isFinite(surfacePressureBar) ? Math.max(0, surfacePressureBar * 100) : 0;
   const flux = isRogueWorld
     ? (isRoguePulsarWorld ? ROGUE_PULSAR_FLUX_WM2 : (rogueConfig.backgroundFluxWm2 ?? solarFlux))
     : solarFlux;
-  const temps = dayNightTemperaturesModelFn ? dayNightTemperaturesModelFn({ groundAlbedo: classification.albedo, flux, addedSurfaceFlux: coreHeatFlux, rotationPeriodH: rotationPeriod, surfacePressureBar, composition, surfaceFractions, gSurface: bulk.gravity }) : { day: 0, night: 0, mean: 0, albedo };
+  const temps = dayNightTemperaturesModel({ groundAlbedo: classification.albedo, flux, addedSurfaceFlux: coreHeatFlux, rotationPeriodH: rotationPeriod, surfacePressureBar, composition, surfaceFractions, gSurface: bulk.gravity, flatSurface: false });
   classification.Teq = temps.mean;
 
   const co2Mass = compMass.carbonDioxide || 0;

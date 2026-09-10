@@ -3494,33 +3494,19 @@ function updateLifeBox() {
   
   function buildAlbedoTable() {
     const baseAlb = terraforming.celestialParameters.albedo;
-    const defaults = (typeof DEFAULT_SURFACE_ALBEDO !== 'undefined') ? DEFAULT_SURFACE_ALBEDO : {
-      ocean: 0.06,
-      ice: 0.65,
-      snow: 0.85,
-      co2_ice: 0.50,
-      hydrocarbon: 0.10,
-      hydrocarbonIce: 0.50,
-      hydrogen: 0.08,
-      fineSand: 0.45,
-      biomass: 0.20
+    const albedos = {
+      ...DEFAULT_SURFACE_ALBEDO,
+      rocks: baseAlb,
+      ...terraforming.celestialParameters.surfaceAlbedo,
+      biomass: getActiveBiomassAlbedo()
     };
     return [
-      [
-        getTerraformingSummaryText('luminosity.albedoTable.surface', 'Surface'),
-        getTerraformingSummaryText('luminosity.albedoTable.albedo', 'Albedo')
-      ],
+      [getTerraformingSummaryText('luminosity.albedoTable.surface', 'Surface'), getTerraformingSummaryText('luminosity.albedoTable.albedo', 'Albedo')],
       [getTerraformingSummaryText('luminosity.albedoTable.baseRock', 'Base rock'), baseAlb.toFixed(2)],
-      [getTerraformingSummaryText('luminosity.albedoTable.blackDust', 'Black dust'), '0.05'],
-      [getTerraformingSummaryText('luminosity.albedoTable.ocean', 'Ocean'), defaults.ocean.toFixed(2)],
-      [getTerraformingSummaryText('luminosity.albedoTable.ice', 'Ice'), defaults.ice.toFixed(2)],
-      [getTerraformingSummaryText('luminosity.albedoTable.snow', 'Snow'), defaults.snow.toFixed(2)],
-      [getTerraformingSummaryText('luminosity.albedoTable.dryIce', 'Dry Ice'), defaults.co2_ice.toFixed(2)],
-      [getTerraformingSummaryText('luminosity.albedoTable.hydrocarbon', 'Liquid Methane'), defaults.hydrocarbon.toFixed(2)],
-      [getTerraformingSummaryText('luminosity.albedoTable.hydrocarbonIce', 'Methane Ice'), defaults.hydrocarbonIce.toFixed(2)],
-      [getTerraformingSummaryText('luminosity.albedoTable.hydrogen', 'Liquid Hydrogen'), defaults.hydrogen.toFixed(2)],
-      [getTerraformingSummaryText('luminosity.albedoTable.fineSand', 'Fine Sand'), defaults.fineSand.toFixed(2)],
-      [getTerraformingSummaryText('luminosity.albedoTable.biomass', 'Biomass'), getActiveBiomassAlbedo().toFixed(2)]
+      ...Object.entries(terraformingParameters.climate.surfaceModel.materials).map(([key, material]) => [
+        resources.surface[key].displayName,
+        albedos[material.fraction].toFixed(2)
+      ])
     ];
   }
 
@@ -3564,7 +3550,7 @@ function updateLifeBox() {
             <td><span id="ground-albedo-delta"></span></td>
           </tr>
           <tr>
-            <td>${getTerraformingSummaryText('luminosity.labels.surfaceAlbedo', 'Surface Albedo')} <span id="surface-albedo-info" class="info-tooltip-icon">&#9432;<span id="surface-albedo-tooltip" class="resource-tooltip"></span></span></td>
+            <td>${getTerraformingSummaryText('luminosity.labels.surfaceAlbedo', 'Surface Albedo')} <span id="surface-albedo-info" class="info-tooltip-icon">&#9432;</span></td>
             <td><span id="surface-albedo">${(terraforming.luminosity.surfaceAlbedo ?? 0).toFixed(3)}</span></td>
             <td><span id="surface-albedo-delta"></span></td>
           </tr>
@@ -3624,7 +3610,7 @@ function updateLifeBox() {
       surfaceAlbedo: luminosityBox.querySelector('#surface-albedo'),
       surfaceAlbedoDelta: luminosityBox.querySelector('#surface-albedo-delta'),
       surfaceAlbedoInfo: luminosityBox.querySelector('#surface-albedo-info'),
-      surfaceAlbedoTooltip: luminosityBox.querySelector('#surface-albedo-tooltip'),
+      surfaceAlbedoTooltip: attachDynamicInfoTooltip(luminosityBox.querySelector('#surface-albedo-info'), ''),
       actualAlbedo: luminosityBox.querySelector('#actual-albedo'),
       actualAlbedoDelta: luminosityBox.querySelector('#actual-albedo-delta'),
       actualAlbedoInfo: luminosityBox.querySelector('#actual-albedo-info'),
@@ -3651,7 +3637,6 @@ function updateLifeBox() {
     const els = terraformingUICache.luminosity;
     if (typeof addTooltipHover === 'function') {
       addTooltipHover(els.groundAlbedoInfo, els.groundAlbedoTooltip, { clickToPin: true });
-      addTooltipHover(els.surfaceAlbedoInfo, els.surfaceAlbedoTooltip, { clickToPin: true });
       addTooltipHover(els.actualAlbedoInfo, els.actualAlbedoTooltip, { clickToPin: true });
       addTooltipHover(els.solarFluxInfo, els.solarFluxTooltip, { clickToPin: true });
     }
@@ -3771,55 +3756,55 @@ function updateLifeBox() {
       els.surfaceAlbedoDelta.textContent = `${d >= 0 ? '+' : ''}${formatNumber(d, false, 3)}`;
     }
     if (els.surfaceAlbedoTooltip) {
-      const lines = [getTerraformingSummaryText('luminosity.surfaceTooltip.compositionByZone', 'Surface composition by zone')];
-      const pct = v => (v * 100).toFixed(1);
-      const isZeroPct = v => Math.abs(v * 100) < 0.05; // hide values that would display as 0.0%
-
-      for (const z of getZones()) {
-        const fr = calculateZonalSurfaceFractions(terraforming, z);
-        const rock = Math.max(1 - (fr.ocean + fr.ice + fr.hydrocarbon + fr.hydrocarbonIce + fr.co2_ice + fr.hydrogen + fr.ammonia + fr.ammoniaIce + fr.oxygen + fr.oxygenIce + fr.nitrogen + fr.nitrogenIce + fr.fineSand + fr.biomass), 0);
-        const name = getTerraformingZoneLabel(z);
-        lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.zoneHeader', '{name}:', { name }));
-
-        if (!isZeroPct(rock)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('rock', 'Rock'), value: pct(rock) }));
-        if (!isZeroPct(fr.ocean)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('water', 'Water'), value: pct(fr.ocean) }));
-        if (!isZeroPct(fr.ice)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('ice', 'Ice'), value: pct(fr.ice) }));
-        if (!isZeroPct(fr.hydrocarbon)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('hydrocarbon', 'Hydrocarbons'), value: pct(fr.hydrocarbon) }));
-        if (!isZeroPct(fr.hydrocarbonIce)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('hydrocarbonIce', 'Hydrocarbon Ice'), value: pct(fr.hydrocarbonIce) }));
-        if (!isZeroPct(fr.hydrogen)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('hydrogen', 'Liquid Hydrogen'), value: pct(fr.hydrogen) }));
-        if (!isZeroPct(fr.fineSand)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('fineSand', 'Fine Sand'), value: pct(fr.fineSand) }));
-        if (!isZeroPct(fr.co2_ice)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('dryIce', 'Dry Ice'), value: pct(fr.co2_ice) }));
-        if (!isZeroPct(fr.ammonia)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('ammonia', 'Ammonia'), value: pct(fr.ammonia) }));
-        if (!isZeroPct(fr.ammoniaIce)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('ammoniaIce', 'Ammonia Ice'), value: pct(fr.ammoniaIce) }));
-        if (!isZeroPct(fr.oxygen)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('oxygen', 'Oxygen'), value: pct(fr.oxygen) }));
-        if (!isZeroPct(fr.oxygenIce)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('oxygenIce', 'Oxygen Ice'), value: pct(fr.oxygenIce) }));
-        if (!isZeroPct(fr.nitrogen)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('nitrogen', 'Nitrogen'), value: pct(fr.nitrogen) }));
-        if (!isZeroPct(fr.nitrogenIce)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('nitrogenIce', 'Nitrogen Ice'), value: pct(fr.nitrogenIce) }));
-        if (!isZeroPct(fr.biomass)) lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.coverageEntry', '  {label}: {value}%', { label: getTerraformingSummaryResourceLabel('biomass', 'Biomass'), value: pct(fr.biomass) }));
+      const lines = [];
+      const totals = {};
+      const materials = terraformingParameters.climate.surfaceModel.materials;
+      const labels = { ground: getTerraformingSummaryText('luminosity.surfaceTooltip.exposedGround', '') };
+      for (const [key, material] of Object.entries(materials)) {
+        labels[material.fraction] = resources.surface[key].displayName;
+      }
+      const appendRows = (rows, raw) => {
+        for (const [key, row] of Object.entries(rows)) {
+          if (row.fraction < 0.0005 && (raw[key] || 0) < 0.0005) continue;
+          lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.materialEntry', '', {
+            label: labels[key],
+            raw: ((raw[key] ?? row.fraction) * 100).toFixed(1),
+            visible: (row.fraction * 100).toFixed(1),
+            albedo: row.albedo.toFixed(3),
+            contribution: row.contribution.toFixed(4)
+          }));
+        }
+      };
+      const rawTotals = {};
+      for (const zone of getZones()) {
+        const rows = {};
+        const albedo = terraforming.calculateZonalSurfaceAlbedo(zone, rows);
+        const coverages = calculateZonalSurfaceCoverages(terraforming, zone);
+        const raw = {};
+        for (const [key, material] of Object.entries(materials)) raw[material.fraction] = coverages[key] || 0;
+        const weight = terraforming.getZoneWeight(zone);
+        for (const [key, row] of Object.entries(rows)) {
+          const total = totals[key] || (totals[key] = { fraction: 0, albedo: 0, contribution: 0 });
+          total.fraction += row.fraction * weight;
+          total.albedo += row.albedo * weight;
+          total.contribution += row.contribution * weight;
+          rawTotals[key] = (rawTotals[key] || 0) + (raw[key] ?? row.fraction) * weight;
+        }
+        lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.zonalSurfaceAlbedoEntry', '{name}: {value}', {
+          name: getTerraformingZoneLabel(zone), value: albedo.toFixed(3)
+        }));
+        appendRows(rows, raw);
         lines.push('');
       }
-
-      // Guidance text
-      lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.liquidsAndIces', 'Liquids and ices split the available surface together, scaling proportionally if their total would overflow.'));
-      lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.biomassLimit', 'Biomass can then occupy up to 75% of the remaining area, limited by local biomass coverage.'));
-      lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.unclaimedSurface', 'Any unclaimed surface remains exposed rock or dust for albedo calculations.'));
-
-      // Append resulting surface albedo per zone
-      const zoneAlbLines = [];
-      for (const z of getZones()) {
-        try {
-          const zSurf = (typeof terraforming.calculateZonalSurfaceAlbedo === 'function')
-            ? terraforming.calculateZonalSurfaceAlbedo(z)
-            : terraforming.luminosity.surfaceAlbedo;
-          zoneAlbLines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.zonalSurfaceAlbedoEntry', '{name}: {value}', { name: getTerraformingZoneLabel(z), value: zSurf.toFixed(3) }));
-        } catch (_) {
-          // Skip zone if calculation fails
-        }
+      for (const total of Object.values(totals)) {
+        if (total.fraction > 0) total.albedo = total.contribution / total.fraction;
       }
-      if (zoneAlbLines.length > 0) {
-        lines.push('', getTerraformingSummaryText('luminosity.surfaceTooltip.zonalSurfaceAlbedo', 'Zonal surface albedo:'));
-        lines.push(...zoneAlbLines);
-      }
+      const zoneLines = lines.splice(0);
+      lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.columns', ''));
+      lines.push(getTerraformingSummaryText('luminosity.surfaceTooltip.globalComposition', ''));
+      appendRows(totals, rawTotals);
+      lines.push('', ...zoneLines);
+      lines.push('', getTerraformingSummaryText('luminosity.surfaceTooltip.layering', ''));
 
       setTooltipText(els.surfaceAlbedoTooltip, lines.join('\n'), els.tooltips, 'surface');
     }
