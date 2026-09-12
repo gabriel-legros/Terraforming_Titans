@@ -1563,7 +1563,7 @@ function normalizeZonalSurfaceOverride(override) {
 }
 
 // ===================== Planet override =====================
-function applyHazardPresets(hazardKeys, { landHa, params, surface, zonalSurface }) {
+function applyHazardPresets(hazardKeys, { landHa, params, surface, surfaceArea, zonalSurface }) {
   const list = orderHazardList(normalizeHazardList(hazardKeys));
   if (!list.length) return null;
   const hazards = {};
@@ -1597,7 +1597,14 @@ function applyHazardPresets(hazardKeys, { landHa, params, surface, zonalSurface 
       const initialCoverage = clamp(hazardConfig?.initialCoverage ?? 1, 0, 1);
       const maxCoverageBase = clamp(hazardConfig?.maxCoverageBase ?? 1, 0, 1);
       const waterCoveragePenalty = Math.max(0, hazardConfig?.waterCoveragePenalty ?? 0.5);
-      const waterCoverage = calculateAverageCoverageLocal(zonalSurface, 'liquidWater', params);
+      const zoneWeights = getZoneFractionsSafe(params);
+      const tempTerraforming = { zonalSurface, celestialParameters: { surfaceArea } };
+      let waterCoverage = 0;
+      for (const zone of RWG_ZONE_KEYS) {
+        waterCoverage += calculateZonalCoverageLocal(tempTerraforming, zone, 'liquidWater', params)
+          * (zoneWeights[zone] || 0);
+      }
+      waterCoverage = clamp(waterCoverage, 0, 1);
       const maxCoverageShare = clamp(maxCoverageBase - waterCoverage * waterCoveragePenalty, 0, 1);
       const resource = surface.hazardousMachinery || cloneDefaultSurfaceResource('hazardousMachinery');
       resource.initialValue = landHa * Math.min(initialCoverage, maxCoverageShare);
@@ -1673,13 +1680,14 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const rotationPeriod = isStarlessRogueWorld ? 24 : rotation;
   const albedo = classification.albedo;
   const zonal = buildZonalDistributions(type, classification.Teq, surface, landHa, rng, params);
+  const surfaceArea = 4 * Math.PI * Math.pow(bulk.radius_km * 1000, 2);
   const hazardOverride = applyHazardPresets(forcedHazards, {
     landHa,
     params,
     surface,
+    surfaceArea,
     zonalSurface: zonal.zonalSurface
   });
-  const surfaceArea = 4 * Math.PI * Math.pow(bulk.radius_km * 1000, 2);
   const tmpTerraforming = { ...zonal, celestialParameters: { surfaceArea } };
   // Resolve each zone before averaging: overlap normalization is nonlinear.
   const surfaceFractions = {};
