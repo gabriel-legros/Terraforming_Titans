@@ -60,6 +60,8 @@ registerTerraformingMethods('resources', ({
     ) {
       if (stellarEvolutionState.stage === 'star') {
         this.temperature.combustionWarmingRateKPerDay = 0;
+        this.temperature.combustionHeatFluxWPerM2 = 0;
+        this.temperature.combustionEffectiveHeatFluxWPerM2 = 0;
         this.resetStandaloneTerraformingRateState();
       }
       return {
@@ -154,6 +156,13 @@ registerTerraformingMethods('resources', ({
     chemTotals.climateHeatDepositedJ = this.applyAtmosphericChemistryHeat(chemTotals.climateHeatEnergyJ);
     const combustionTemperatureIncreaseK = Math.max(0, this.temperature.value - temperatureBeforeCombustionK);
     this.temperature.combustionWarmingRateKPerDay = durationSeconds > 0 ? combustionTemperatureIncreaseK * TERRAFORMING_OXIDATION_PARAMETERS.combustionSpringSecondsPerDay / durationSeconds : 0;
+    const surfaceAreaM2 = this.celestialParameters.surfaceArea;
+    this.temperature.combustionHeatFluxWPerM2 = surfaceAreaM2 > 0 && durationSeconds > 0
+      ? chemTotals.climateHeatEnergyJ / surfaceAreaM2 / durationSeconds
+      : 0;
+    this.temperature.combustionEffectiveHeatFluxWPerM2 = surfaceAreaM2 > 0 && durationSeconds > 0
+      ? chemTotals.climateHeatDepositedJ / surfaceAreaM2 / durationSeconds
+      : 0;
     this.synchronizeGlobalResources();
     this.refreshDynamicWorldGeometry();
     this._updateZonalCoverageCache();
@@ -220,6 +229,9 @@ registerTerraformingMethods('resources', ({
     let totalDurationSeconds = 0;
     let totalRealSeconds = 0;
     let aerobrakingTemperatureIncreaseK = 0;
+    let combustionHeatEnergyJ = 0;
+    let combustionHeatDepositedJ = 0;
+    let aerobrakingHeatDepositedJ = 0;
     let appliedFraction = 0;
     let wovenAlbedoOverflow = 0;
     // Aggregate every resource substep into one controller/UI measurement.
@@ -275,10 +287,15 @@ registerTerraformingMethods('resources', ({
       this.runUpdateStep(stepDuration, temperatureOptions);
       const stepResult = this.runResourceUpdateStep(stepDuration);
       const temperatureBeforeAerobrakingK = this.temperature.value;
-      this.applyClimateHeatAfterMegaHeatSink(aerobrakingHeatEnergyJ * fraction, TERRAFORMING_AEROBRAKING_PARAMETERS.maximumTemperatureK);
+      aerobrakingHeatDepositedJ += this.applyClimateHeatAfterMegaHeatSink(
+        aerobrakingHeatEnergyJ * fraction,
+        TERRAFORMING_AEROBRAKING_PARAMETERS.maximumTemperatureK
+      );
       aerobrakingTemperatureIncreaseK += Math.max(0, this.temperature.value - temperatureBeforeAerobrakingK);
       totalDurationSeconds += stepResult.durationSeconds || 0;
       totalRealSeconds += stepResult.realSeconds || 0;
+      combustionHeatEnergyJ += stepResult.chemTotals?.climateHeatEnergyJ || 0;
+      combustionHeatDepositedJ += stepResult.chemTotals?.climateHeatDepositedJ || 0;
       for (let index = 0; index < stepResult.cycleResults.length; index += 1) {
         const stepCycle = stepResult.cycleResults[index];
         let combined = combinedCycleTotals[index];
@@ -308,6 +325,14 @@ registerTerraformingMethods('resources', ({
     }
     this.finalizePhaseChangeHeatTick(totalDurationSeconds);
     this.temperature.aerobrakingWarmingRateKPerDay = totalDurationSeconds > 0 ? aerobrakingTemperatureIncreaseK * 86400 / totalDurationSeconds : 0;
+    const surfaceAreaM2 = this.celestialParameters.surfaceArea;
+    const fluxDivisor = surfaceAreaM2 > 0 && totalDurationSeconds > 0
+      ? surfaceAreaM2 * totalDurationSeconds
+      : 0;
+    this.temperature.combustionHeatFluxWPerM2 = fluxDivisor > 0 ? combustionHeatEnergyJ / fluxDivisor : 0;
+    this.temperature.combustionEffectiveHeatFluxWPerM2 = fluxDivisor > 0 ? combustionHeatDepositedJ / fluxDivisor : 0;
+    this.temperature.aerobrakingHeatFluxWPerM2 = fluxDivisor > 0 ? aerobrakingHeatEnergyJ / fluxDivisor : 0;
+    this.temperature.aerobrakingEffectiveHeatFluxWPerM2 = fluxDivisor > 0 ? aerobrakingHeatDepositedJ / fluxDivisor : 0;
     this.runHazardUpdate(deltaTime, options);
     this.finalizeUpdate(options);
     if (wovenAlbedoOverflow > 0) {

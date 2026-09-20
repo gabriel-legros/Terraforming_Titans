@@ -23,6 +23,29 @@ function getTerraformingSummaryText(path, fallback, vars) {
   return getTerraformingText(`ui.terraforming.summaryUi.${path}`, fallback, vars);
 }
 
+function getHeatWarningTooltipText(sourceFlux, effectiveFlux) {
+  const source = Math.max(0, sourceFlux || 0);
+  const effective = Math.max(0, effectiveFlux || 0);
+  const lines = [getTerraformingSummaryText(
+    'temperature.heatWarningSourceFlux',
+    'Source flux: {source} W/m^2',
+    { source: formatNumber(source, false, 2) }
+  )];
+  const mitigationTolerance = Math.max(1e-12, source * 1e-9);
+  if (source - effective > mitigationTolerance) {
+    lines.push(getTerraformingSummaryText(
+      'temperature.heatWarningMitigatedFlux',
+      'After Mega Heat Sink mitigation: {effective} W/m^2',
+      { effective: formatNumber(effective, false, 2) }
+    ));
+  }
+  lines.push('', getTerraformingSummaryText(
+    'temperature.heatWarningOversightNote',
+    'This heat flux is not accounted for by Advanced Oversight.'
+  ));
+  return lines.join('\n');
+}
+
 function getTerraformingZoneLabel(zone) {
   if (isAldersonDiskWorld()) {
     return getTerraformingSummaryText(`diskZones.${zone}`, formatTerraformingSummaryLabel(zone, zone));
@@ -1649,8 +1672,8 @@ function createTemperatureBox(row, stellarEvolutionState) {
     tempInfographicButton.appendChild(tempInfographicIcon);
     temperatureBox.innerHTML = `
       <h3>${terraforming.temperature.name}</h3>
-      <p id="temperature-combustion-warning" class="temperature-combustion-warning" style="display: none;" role="status" aria-live="polite"><span aria-hidden="true">&#9888;</span> ${getTerraformingSummaryText('temperature.combustionWarning', 'Temperature is increasing from active combustion')} <span aria-hidden="true">&#9888;</span></p>
-      <p id="temperature-aerobraking-warning" class="temperature-aerobraking-warning" style="display: none;" role="status" aria-live="polite"><span aria-hidden="true">&#9888;</span> ${getTerraformingSummaryText('temperature.aerobrakingWarning', 'Temperature is increasing from aerobraking')} <span aria-hidden="true">&#9888;</span></p>
+      <p id="temperature-combustion-warning" class="temperature-combustion-warning" style="display: none;" role="status" aria-live="polite"><span aria-hidden="true">&#9888;</span> ${getTerraformingSummaryText('temperature.combustionWarning', 'Temperature is increasing from active combustion')} <span id="temperature-combustion-warning-info" class="info-tooltip-icon">&#9432;</span> <span aria-hidden="true">&#9888;</span></p>
+      <p id="temperature-aerobraking-warning" class="temperature-aerobraking-warning" style="display: none;" role="status" aria-live="polite"><span aria-hidden="true">&#9888;</span> ${getTerraformingSummaryText('temperature.aerobrakingWarning', 'Temperature is increasing from aerobraking')} <span id="temperature-aerobraking-warning-info" class="info-tooltip-icon">&#9432;</span> <span aria-hidden="true">&#9888;</span></p>
       <p>${getTerraformingSummaryText('temperature.labels.globalMeanTemp', 'Global Mean Temp')}: <span id="temperature-current"></span><span class="temp-unit"></span></p>
       <p>${getTerraformingSummaryText('temperature.labels.equilibriumTemp', 'Equilibrium Temp')}: <span id="equilibrium-temp"></span> <span class="temp-unit"></span> <span id="equilibrium-temp-info" class="info-tooltip-icon">&#9432;</span></p>
       <p id="temperature-core-heat-line" style="display: none;">${getTerraformingSummaryText('temperature.labels.netCoreHeatFlux', 'Net Core Heat Flux')}: <span id="temperature-core-heat"></span> W/m^2</p>
@@ -1709,6 +1732,10 @@ function createTemperatureBox(row, stellarEvolutionState) {
       temperatureHeading.appendChild(tempInfographicButton);
     }
     const equilibriumTempInfo = temperatureBox.querySelector('#equilibrium-temp-info');
+    const combustionWarningInfo = temperatureBox.querySelector('#temperature-combustion-warning-info');
+    const combustionWarningTooltip = attachDynamicInfoTooltip(combustionWarningInfo, '');
+    const aerobrakingWarningInfo = temperatureBox.querySelector('#temperature-aerobraking-warning-info');
+    const aerobrakingWarningTooltip = attachDynamicInfoTooltip(aerobrakingWarningInfo, '');
     const equilibriumTempTooltip = attachDynamicInfoTooltip(
       equilibriumTempInfo,
       getTerraformingSummaryText(
@@ -1829,7 +1856,9 @@ function createTemperatureBox(row, stellarEvolutionState) {
       tempUnits: temperatureBox.querySelectorAll('.temp-unit'),
       target: temperatureBox.querySelector('#temperature-target'),
       combustionWarning: temperatureBox.querySelector('#temperature-combustion-warning'),
+      combustionWarningTooltip,
       aerobrakingWarning: temperatureBox.querySelector('#temperature-aerobraking-warning'),
+      aerobrakingWarningTooltip,
       current: temperatureBox.querySelector('#temperature-current'),
       equilibrium: temperatureBox.querySelector('#equilibrium-temp'),
       equilibriumTooltip: equilibriumTempTooltip,
@@ -1893,12 +1922,26 @@ function createTemperatureBox(row, stellarEvolutionState) {
     if (els.combustionWarning.style.display !== combustionWarningDisplay) {
       els.combustionWarning.style.display = combustionWarningDisplay;
     }
+    const combustionWarningTooltipText = getHeatWarningTooltipText(
+      terraforming.temperature.combustionHeatFluxWPerM2,
+      terraforming.temperature.combustionEffectiveHeatFluxWPerM2
+    );
+    if (els.combustionWarningTooltip.textContent !== combustionWarningTooltipText) {
+      setTooltipText(els.combustionWarningTooltip, combustionWarningTooltipText);
+    }
 
     const showAerobrakingWarning = terraforming.temperature.aerobrakingWarmingRateKPerDay
       >= terraformingParameters.atmosphere.aerobraking.warningTemperatureRateKPerDay;
     const aerobrakingWarningDisplay = showAerobrakingWarning ? '' : 'none';
     if (els.aerobrakingWarning.style.display !== aerobrakingWarningDisplay) {
       els.aerobrakingWarning.style.display = aerobrakingWarningDisplay;
+    }
+    const aerobrakingWarningTooltipText = getHeatWarningTooltipText(
+      terraforming.temperature.aerobrakingHeatFluxWPerM2,
+      terraforming.temperature.aerobrakingEffectiveHeatFluxWPerM2
+    );
+    if (els.aerobrakingWarningTooltip.textContent !== aerobrakingWarningTooltipText) {
+      setTooltipText(els.aerobrakingWarningTooltip, aerobrakingWarningTooltipText);
     }
 
     const zoneKeys = getZones();
