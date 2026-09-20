@@ -500,13 +500,14 @@ registerTerraformingMethods('climate', ({
       const zoneFractions = zoneCapacity.fractions;
       const zoneArea = zoneCapacity.zoneArea;
       const slabOptions = {
+        ...zoneCapacity.slabOptions,
         ...baseSlabOptions,
         zoneArea,
         zoneLiquidWater: this.zonalSurface.liquidWater[zone] || 0
       };
-      const mixedSurfaceAlbedo = surfaceAlbedoMix(groundAlbedo, zoneFractions);
+      const mixedSurfaceAlbedo = this.calculateZonalSurfaceAlbedo(zone);
       zoneContexts[zone] = {
-        localSurfaceAlbedo: this.calculateZonalSurfaceAlbedo(zone),
+        localSurfaceAlbedo: mixedSurfaceAlbedo,
         slabHeatCapacity: autoSlabHeatCapacity(rotationPeriodH, effectiveSurfacePressureBar, zoneFractions, gSurface, undefined, undefined, slabOptions),
         resolvedAlbedo: albedoAdditive({
           surfaceAlbedo: mixedSurfaceAlbedo,
@@ -648,6 +649,7 @@ registerTerraformingMethods('climate', ({
       }
       const zoneArea = zoneCapacity.zoneArea;
       const slabOptions = {
+        ...zoneCapacity.slabOptions,
         ...baseSlabOptions,
         zoneArea,
         zoneLiquidWater: this.zonalSurface.liquidWater[zone] || 0
@@ -661,6 +663,12 @@ registerTerraformingMethods('climate', ({
       );
       const zTemps = dayNightTemperaturesModel({
         ...baseParams,
+        groundAlbedo: this.calculateZonalGroundAlbedo(zone),
+        surfaceAlbedos: {
+          rocks: this.celestialParameters.albedo,
+          ...this.celestialParameters.surfaceAlbedo,
+          biomass: getActiveBiomassAlbedo()
+        },
         flux: zoneFlux,
         addedSurfaceFlux: netSurfaceHeatFlux,
         surfaceFractions: zoneFractions,
@@ -940,26 +948,13 @@ registerTerraformingMethods('climate', ({
     }
     return weighted;
   },
-  calculateZonalSurfaceAlbedo(zone) {
+  calculateZonalSurfaceAlbedo(zone, breakdown = null) {
     const groundAlbedo = this.calculateZonalGroundAlbedo(zone);
-    const fractions = typeof calculateZonalSurfaceFractions === 'function' ? calculateZonalSurfaceFractions(this, zone) : {
-      ocean: 0,
-      ice: 0,
-      hydrocarbon: 0,
-      hydrocarbonIce: 0,
-      co2_ice: 0,
-      ammonia: 0,
-      ammoniaIce: 0,
-      oxygen: 0,
-      oxygenIce: 0,
-      nitrogen: 0,
-      nitrogenIce: 0,
-      fineSand: 0,
-      biomass: 0
-    };
-    return surfaceAlbedoMix(groundAlbedo, fractions, {
+    return surfaceAlbedoMix(groundAlbedo, calculateZonalSurfaceFractions(this, zone), {
+      rocks: this.celestialParameters.albedo,
+      ...this.celestialParameters.surfaceAlbedo,
       biomass: getActiveBiomassAlbedo()
-    });
+    }, breakdown);
   },
   calculateSurfaceAlbedo() {
     let weighted = 0;
@@ -1073,6 +1068,7 @@ registerTerraformingMethods('climate', ({
       const Cslab = autoSlabHeatCapacity(rotationPeriodH, surfacePressureBar, zoneFractions, gSurface, undefined, undefined, slabOptions);
       zoneCache[zone] = {
         fractions: zoneFractions,
+        slabOptions,
         zoneArea,
         Cslab,
         capacityPerArea: Math.max(Cslab, MIN_SURFACE_HEAT_CAPACITY)

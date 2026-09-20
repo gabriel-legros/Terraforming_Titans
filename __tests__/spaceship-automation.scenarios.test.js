@@ -83,6 +83,18 @@ function createHarness({
       return { colony: { energy: this.energyCostPerShip } };
     }
 
+    calculateAutomationEnergyRatePerShip() {
+      const energyPerShip = this.calculateSpaceshipCost()?.colony?.energy || 0;
+      if (energyPerShip <= 0) {
+        return 0;
+      }
+      const duration = this.getEffectiveDuration();
+      const singleShipDuration = this.assignedSpaceships > 0 && this.assignedSpaceships <= 100
+        ? duration * this.assignedSpaceships
+        : duration;
+      return energyPerShip * 1000 / singleShipDuration;
+    }
+
     applySpaceshipDelta(delta) {
       if (!delta) return 0;
       let applied = delta;

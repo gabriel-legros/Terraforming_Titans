@@ -181,6 +181,7 @@ registerTerraformingMethods('resources', ({
     const accumulatedChanges = options.accumulatedChanges;
     const wovenAtmosphericChanges = {};
     const wovenSurfaceChanges = {};
+    const wovenDepositChanges = {};
     const zonalSurfaceTransfers = options.accumulatedSpecialChanges?.zonalSurfaceTransfers || [];
     const aerobrakingHeatEnergyJ = options.accumulatedSpecialChanges?.aerobrakingHeatEnergyJ || 0;
     for (const transfer of zonalSurfaceTransfers) {
@@ -204,6 +205,14 @@ registerTerraformingMethods('resources', ({
       }
       wovenAlbedoChange = accumulatedChanges.special.albedoUpgrades || 0;
       accumulatedChanges.special.albedoUpgrades = 0;
+      for (const key of Object.keys(terraformingParameters.climate.surfaceModel.materials)) {
+        if (defaultPlanetResources.surface[key].coverageScale === undefined) continue;
+        const amount = accumulatedChanges.surface[key] || 0;
+        if (amount !== 0) {
+          wovenDepositChanges[key] = amount;
+          accumulatedChanges.surface[key] = 0;
+        }
+      }
     }
     const combinedCycleTotals = [];
     const combinedChemChanges = {};
@@ -236,6 +245,10 @@ registerTerraformingMethods('resources', ({
         surfaceStepChanges[resourceName] = wovenSurfaceChanges[resourceName] * fraction;
       }
       this.distributeSurfaceChangesToZones(surfaceStepChanges);
+      for (const key in wovenDepositChanges) {
+        const resource = this.resources.surface[key];
+        resource.value = Math.max(0, resource.value + wovenDepositChanges[key] * fraction);
+      }
       for (const transfer of zonalSurfaceTransfers) {
         const requestedStepInput = transfer.requestedInput * fraction;
         const changesByZone = this.distributeSurfaceChangesToZones({

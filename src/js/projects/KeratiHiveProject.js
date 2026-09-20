@@ -177,15 +177,15 @@ class KeratiHiveProject extends Project {
     return false;
   }
 
-  getInitialLand() {
-    return resolveWorldBaseLand(terraforming);
+  getTerritoryTargetLand() {
+    return Math.max(0, Math.floor(resolveWorldGeometricLand(terraforming, resources.surface.land)));
   }
 
   getCompletedWorkerContribution() {
     if (!this.isCompleted) {
       return 0;
     }
-    return Math.floor(this.getInitialLand() * this.tuning.completedWorkersPerInitialLand);
+    return Math.floor(resolveWorldBaseLand(terraforming) * this.tuning.completedWorkersPerInitialLand);
   }
 
   getCurrentLandValue() {
@@ -285,28 +285,28 @@ class KeratiHiveProject extends Project {
   }
 
   getCompletionFraction() {
-    const initialLand = this.getInitialLand();
-    if (!(initialLand > 0)) {
+    const targetLand = this.getTerritoryTargetLand();
+    if (!(targetLand > 0)) {
       return 0;
     }
-    return Math.max(0, Math.min(1, this.territory / initialLand));
+    return Math.max(0, Math.min(1, this.territory / targetLand));
   }
 
-  getCompletionTolerance(initialLand = this.getInitialLand()) {
-    return Math.max(0.5, Math.abs(initialLand) * 1e-12);
+  getCompletionTolerance(targetLand = this.getTerritoryTargetLand()) {
+    return Math.max(0.5, Math.abs(targetLand) * 1e-12);
   }
 
   isComplete() {
-    const initialLand = this.getInitialLand();
-    if (!(initialLand > 0)) {
+    const targetLand = this.getTerritoryTargetLand();
+    if (!(targetLand > 0)) {
       this.isCompleted = false;
       return false;
     }
-    if (this.territory + this.getCompletionTolerance(initialLand) < initialLand) {
+    if (this.territory + this.getCompletionTolerance(targetLand) < targetLand) {
       this.isCompleted = false;
       return false;
     }
-    this.territory = Math.min(initialLand, this.getMaxTerritoryForGrowth());
+    this.territory = Math.min(targetLand, this.getMaxTerritoryForGrowth());
     this.isCompleted = true;
     return true;
   }
@@ -314,7 +314,7 @@ class KeratiHiveProject extends Project {
   syncLandReservation() {
     const shouldReserve = this.hasInitializedHive || this.isCompleted;
     const reserved = shouldReserve
-      ? (this.isCompleted ? this.getInitialLand() : Math.max(0, this.territory))
+      ? (this.isCompleted ? this.getTerritoryTargetLand() : Math.max(0, this.territory))
       : 0;
     resources.surface.land.setReservedAmountForSource(KERATI_HIVE_RESERVATION_SOURCE, reserved);
   }
@@ -1296,7 +1296,7 @@ class KeratiHiveProject extends Project {
 
     const rates = this.getNetRates();
     const poolsCapacity = this.getPoolCapacityFromTerritory();
-    const territoryTarget = this.getInitialLand();
+    const territoryTarget = this.getTerritoryTargetLand();
     this.syncLandReservation();
 
     this.uiElements.territoryValue.textContent = `${formatNumber(this.territory, true, 3)} / ${formatNumber(territoryTarget, true, 3)}`;

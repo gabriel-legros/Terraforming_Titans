@@ -982,7 +982,7 @@ class TerraformingGraphsManager {
     history.temperature.tropical[index] = terraforming.temperature.zones.tropical.value;
     history.temperature.temperate[index] = terraforming.temperature.zones.temperate.value;
     history.temperature.polar[index] = terraforming.temperature.zones.polar.value;
-    history.gravity.surface[index] = terraforming.celestialParameters.gravity || 0;
+    history.gravity.surface[index] = getDisplayedGravity();
 
     history.water.liquid[index] = (calculateAverageCoverage(terraforming, 'liquidWater') || 0) * 100;
     history.water.ice[index] = (calculateAverageCoverage(terraforming, 'ice') || 0) * 100;

@@ -2372,6 +2372,7 @@ setLanguageData({
         liquidHydrogenRequiresTemperature: 'Liquid Hydrogen (requires surface temperature < {value})',
         disposalTargets: 'Disposal Targets',
         disposalTargetsSubheading: 'Configure up to 15 resources. Active auto-start targets split assigned disposal evenly.',
+        stellarWaste: 'Waste',
         addTarget: '+ Add target',
         phase: 'Phase',
         whichOne: 'Which one',
@@ -2477,7 +2478,7 @@ setLanguageData({
         superalloyEngineering: 'Superalloy tether, taper {taper}',
         skyhookOnly: 'Skyhook only',
         elevatorImpossible: 'A stationary Space Elevator is impossible with available materials and this world spin. Select Skyhook Network.',
-        capacityTooltip: 'Continuous spaceship cargo shares total access capacity. Metal savings and the before/after Space Elevator energy settings scale with coverage.',
+        capacityTooltip: 'Continuous spaceship cargo targeting colony, atmosphere or surface shares total access capacity. Metal savings and the before/after Space Elevator energy settings scale with coverage.',
       },
       megaHeatSink: {
         speedBoost: 'Speed Boost',
@@ -2931,7 +2932,7 @@ setLanguageData({
           tooltip: {
             line1: 'With orbitals, humanity can now help HOPE with its projects directly.',
             line2: 'Assign orbitals to produce resources or provide storage automatically.',
-            line3: 'You can assign up to your effective terraformed world count.',
+            line3: 'You can assign up to your effective terraformed world count, modified by faith and other modifiers.',
             line4: 'Manual mode sets exact assignments with the current step size.',
             line5: 'Weight mode distributes assignments by integer weights among unlocked resources.',
             line6: 'Production orbitals provide the mapped source output without consumption or productivity scaling. Storage orbitals use default structure capacities.',
@@ -3591,6 +3592,9 @@ setLanguageData({
           ].join('\n'),
           gravityTooltip: {
             explanation: 'Surface gravity is calculated from the world\'s non-atmospheric mass and radius: g = G × mass / radius².',
+            ringExplanation: 'Displayed gravity is the ringworld\'s spin gravity, based on its spin progress.',
+            diskExplanation: 'Displayed gravity is the diskworld\'s structural gravity, based on its fill progress.',
+            artificialWorldDetails: 'This display and the gravity graph use artificial gravity. Current atmospheric pressure is displayed as if the gravity was 1g.',
             worldNote: 'On most worlds gravity cannot be easily changed.  Story World 13 unlocks a feature that changes this.  This tooltip will update with additional information when said feature is active.',
             dynamicDetails: 'Dynamic mass world: gravity updates as material changes mass and radius. Current calculation: G × {mass} kg / ({radius} m)² = {gravity} m/s². Core and surface density affect radius; atmospheric mass is excluded because it lies above the surface.',
             densityTableTitle: 'Table of material density:',
@@ -3708,6 +3712,11 @@ setLanguageData({
             dustZoneAlbedo: '{name} dust albedo: {value}',
           },
           surfaceTooltip: {
+            columns: 'Material: raw coverage → visible coverage | albedo | contribution',
+            globalComposition: 'Global surface composition (area-weighted):',
+            exposedGround: 'Exposed ground',
+            materialEntry: '{label}: {raw}% → {visible}% | {albedo} | {contribution}',
+            layering: 'Liquid hydrogen claims its share first. Other liquids and exposed ices split the remaining surface proportionally when needed. Biomass covers up to 75% of the remaining area. Sand, rocks and graphite share the substrate below these coverings; global deposits are spread uniformly. Uncovered ground retains its rock and dust albedo. Buried ice, hazardous biomass, hazardous machinery and waste resources do not contribute. Raw coverages can overlap; visible coverages total 100%.',
             compositionByZone: 'Surface composition by zone',
             zoneHeader: '{name}:',
             coverageEntry: '  {label}: {value}%',
@@ -4734,6 +4743,9 @@ setLanguageData({
               grapheneSlider: 'Graphene Slider',
               availableOrbitals: 'Available Orbitals',
               assignedOrbitals: 'Assigned Orbitals',
+              aerostatBaseCap: 'Base Cap',
+              aerostatSupportedCap: 'Supported Cap',
+              aerostatCollisionAvoidanceCap: 'Collision Avoidance Cap',
             },
           },
           projects: {
@@ -7146,6 +7158,10 @@ setLanguageData({
         ship_smelting: {
           name: 'Ship smelting',
           description: 'Ships can now smelt asteroids directly, allowing them to carry 2x more metal and silica. Water imports can now prioritize colony storage.',
+        },
+        stellar_garbage_disposal: {
+          name: 'Stellar Garbage Disposal',
+          description: '"Can we just throw all this garbage into the star?" she once said.  Yes.  Yes we can.',
         },
         companion_satellite: {
           name: 'Companion Satellite',

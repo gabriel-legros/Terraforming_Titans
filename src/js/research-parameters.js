@@ -2316,6 +2316,22 @@ const researchParameters = {
         ]
       },
       {
+        id: 'stellar_garbage_disposal',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 75_000_000_000_000 },
+        prerequisites: [],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'disposeResources',
+            type: 'booleanFlag',
+            flagId: 'stellarGarbageDisposal',
+            value: true
+          }
+        ]
+      },
+      {
         id: 'companion_satellite',
         name: '',
         description: '',

@@ -63,10 +63,7 @@ class SpaceshipAutomation {
       shouldAutomationDisable: () => disposalProject.shouldAutomationDisable() || !areMassDriversEnabled(),
       getMaxAssignableShips: () => this.automationShipPool + this.automationMassDriverCapacity,
       getAutomationShipCount: () => disposalProject.getActiveShipCount(),
-      calculateSpaceshipCost: () => disposalProject.calculateSpaceshipCost(),
-      getShipOperationDuration: () => disposalProject.getShipOperationDuration
-        ? disposalProject.getShipOperationDuration()
-        : disposalProject.getEffectiveDuration()
+      calculateAutomationEnergyRatePerShip: () => disposalProject.calculateAutomationEnergyRatePerShip()
     };
   }
 
@@ -432,23 +429,7 @@ class SpaceshipAutomation {
   }
 
   calculateProjectEnergyRatePerShip(project) {
-    if (!project.calculateSpaceshipCost) {
-      return 0;
-    }
-    const energyPerShip = project.calculateSpaceshipCost()?.colony?.energy || 0;
-    if (energyPerShip <= 0) {
-      return 0;
-    }
-    const duration = project.getShipOperationDuration
-      ? project.getShipOperationDuration()
-      : project.getEffectiveDuration();
-    const assignedShips = project.getAutomationShipCount
-      ? project.getAutomationShipCount()
-      : project.getActiveShipCount();
-    const baseDuration = assignedShips > 0 && assignedShips <= 100
-      ? duration * assignedShips
-      : duration;
-    return energyPerShip * 1000 / baseDuration;
+    return project.calculateAutomationEnergyRatePerShip();
   }
 
   isProjectEnabled(project) {
@@ -558,7 +539,8 @@ class SpaceshipAutomation {
       unlocked: true,
       isVisible: () => true,
       getAutomationDisableAllowed: () => false,
-      isAutomationManuallyDisabled: () => false
+      isAutomationManuallyDisabled: () => false,
+      calculateAutomationEnergyRatePerShip: () => 0
     };
   }
 

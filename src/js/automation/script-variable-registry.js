@@ -192,7 +192,7 @@ class ScriptVariableRegistry {
         { id: 'assignedOrbitals', label: this.getScriptVariableText('colony.attributes.assignedOrbitals', 'Assigned Orbitals'), valueType: 'number' }
       ];
     }
-    return [
+    const attributes = [
       { id: 'count', label: this.getScriptVariableText('common.count', 'Count'), valueType: 'number' },
       { id: 'active', label: this.getScriptVariableText('common.active', 'Active'), valueType: 'number' },
       { id: 'unlocked', label: this.getScriptVariableText('common.unlocked', 'Unlocked'), valueType: 'boolean' },
@@ -201,6 +201,14 @@ class ScriptVariableRegistry {
       { id: 'autoActiveEnabled', label: this.getScriptVariableText('common.autoActiveEnabled', 'Auto-active Enabled'), valueType: 'boolean' },
       { id: 'workerPriority', label: this.getScriptVariableText('common.workerPriority', 'Worker Priority'), valueType: 'number' }
     ];
+    if (targetId === 'aerostat_colony') {
+      attributes.push(
+        { id: 'baseCap', label: this.getScriptVariableText('colony.attributes.aerostatBaseCap', 'Base Cap'), valueType: 'number' },
+        { id: 'supportedCap', label: this.getScriptVariableText('colony.attributes.aerostatSupportedCap', 'Supported Cap'), valueType: 'number' },
+        { id: 'collisionAvoidanceCap', label: this.getScriptVariableText('colony.attributes.aerostatCollisionAvoidanceCap', 'Collision Avoidance Cap'), valueType: 'number' }
+      );
+    }
+    return attributes;
   }
 
   getProjectCategories() {
@@ -692,6 +700,11 @@ class ScriptVariableRegistry {
     if (ref.attribute === 'autoBuildEnabled') return colony.autoBuildEnabled ? 1 : 0;
     if (ref.attribute === 'autoActiveEnabled') return colony.autoActiveEnabled ? 1 : 0;
     if (ref.attribute === 'workerPriority') return this.toNumber(colony.workerPriority);
+    if (ref.target === 'aerostat_colony') {
+      if (ref.attribute === 'baseCap') return this.toNumber(colony._getBuildLimit());
+      if (ref.attribute === 'supportedCap') return this.toNumber(colony.getFreeBuildCap());
+      if (ref.attribute === 'collisionAvoidanceCap') return this.toNumber(colony.getBuildLimit());
+    }
     return 0;
   }
 

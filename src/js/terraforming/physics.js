@@ -586,7 +586,7 @@ function autoSlabHeatCapacity(
 }
 
 function effectiveTemp(albedo, flux, options = {}) {
-  const adjustment = (isRingWorld() || isAldersonDiskWorld()) ? 1 : 4;
+  const adjustment = (options.flatSurface ?? (isRingWorld() || isAldersonDiskWorld())) ? 1 : 4;
   const addedFlux = options.addedFlux || 0;
   const absorbedFlux = Math.max(0, ((1 - albedo) * flux / adjustment) + addedFlux);
   return Math.pow(absorbedFlux / SIGMA, 0.25);
@@ -688,14 +688,18 @@ function calculateActualAlbedoPhysics(surfaceAlbedo, pressureBar, composition = 
 }
 
 
-function surfaceAlbedoMix(rockAlb, fractions, customAlb) {
+function surfaceAlbedoMix(rockAlb, fractions, customAlb, breakdown = null) {
   if (!fractions) return rockAlb;
   const albs = { ...DEFAULT_SURFACE_ALBEDO };
   if (customAlb) Object.assign(albs, customAlb);
   const rockFrac = Math.max(1.0 - Object.values(fractions).reduce((a, b) => a + b, 0),0);
   let a = rockFrac * rockAlb;
+  if (breakdown) breakdown.ground = { fraction: rockFrac, albedo: rockAlb, contribution: a };
   for (const k in fractions) {
-    a += fractions[k] * (albs[k] !== undefined ? albs[k] : rockAlb);
+    const albedo = albs[k] === null ? rockAlb : albs[k];
+    const contribution = fractions[k] * albedo;
+    a += contribution;
+    if (breakdown) breakdown[k] = { fraction: fractions[k], albedo, contribution };
   }
   return a;
 }
@@ -723,6 +727,7 @@ function dayNightTemperaturesModel({
   slabHeatCapacity = null,
   surfaceFractions = null,
   surfaceAlbedos = null,
+  flatSurface,
   gSurface = 9.81,
   aerosolsSW = {},
   autoSlabOptions = null,
@@ -754,7 +759,7 @@ function dayNightTemperaturesModel({
     }).albedo;
   }
 
-  const T_eff  = effectiveTemp(A, flux, { addedFlux: addedSurfaceFlux });
+  const T_eff  = effectiveTemp(A, flux, { addedFlux: addedSurfaceFlux, flatSurface });
   const greenhouse = calculateEffectiveGreenhouseOpticalDepth(
     composition,
     surfacePressureBar,

@@ -95,3 +95,16 @@ function calculateApparentEquatorialGravity(params = {}) {
   const centrifugal = angularVelocity * angularVelocity * radiusMeters;
   return Math.max(0, gravity - centrifugal);
 }
+
+function getDisplayedGravity() {
+  const worldType = currentPlanetParameters.classification?.type;
+  if (worldType === 'ring') {
+    return RINGWORLD_GRAVITY * projectManager.projects.ringworldTerraforming.getSurfaceGravityRatio();
+  }
+  if (worldType === 'disk') {
+    return DISKWORLD_GRAVITY * projectManager.projects.diskworldTerraforming.getSurfaceGravityRatio();
+  }
+  return Number.isFinite(terraforming.celestialParameters.gravity)
+    ? terraforming.celestialParameters.gravity
+    : 0;
+}
