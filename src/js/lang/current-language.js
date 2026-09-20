@@ -2932,7 +2932,7 @@ setLanguageData({
           tooltip: {
             line1: 'With orbitals, humanity can now help HOPE with its projects directly.',
             line2: 'Assign orbitals to produce resources or provide storage automatically.',
-            line3: 'You can assign up to your effective terraformed world count.',
+            line3: 'You can assign up to your effective terraformed world count, modified by faith and other modifiers.',
             line4: 'Manual mode sets exact assignments with the current step size.',
             line5: 'Weight mode distributes assignments by integer weights among unlocked resources.',
             line6: 'Production orbitals provide the mapped source output without consumption or productivity scaling. Storage orbitals use default structure capacities.',
