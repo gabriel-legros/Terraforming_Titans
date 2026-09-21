@@ -1979,11 +1979,6 @@ class LifeManager extends EffectableEntity {
       totalDecayTarget += value || 0;
     });
     addNeed(plan.decayPerBiomass.atmospheric, totalNaturalDecayTarget + totalDecayTarget);
-    Object.entries(plan.naturalDecayAtmosphericDeltas).forEach(([resourceKey, delta]) => {
-      if (delta > 0) {
-        need[resourceKey] = Math.max(0, (need[resourceKey] || 0) - delta);
-      }
-    });
 
     return need;
   }

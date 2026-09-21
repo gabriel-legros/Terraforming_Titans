@@ -1399,7 +1399,9 @@ class SpaceMiningProject extends SpaceshipProject {
   getAtmosphericNeedForGas(gas, deltaTime = this.currentTickDeltaTime || 0, accumulatedChanges = null) {
     const idealNeed = lifeManager.estimateAtmosphericIdealNeed(deltaTime, accumulatedChanges)[gas] || 0;
     const actualNeed = lifeManager.estimateAtmosphericConsumption(deltaTime, accumulatedChanges)[gas] || 0;
-    return Math.max(idealNeed, actualNeed);
+    const projectedConsumptionRate = resources.atmospheric[gas]?.projectedConsumptionRate || 0;
+    const projectedConsumption = Math.max(0, projectedConsumptionRate) * Math.max(0, deltaTime) / 1000;
+    return projectedConsumption + Math.max(idealNeed, actualNeed);
   }
 
   isGasPressureLimitReached(gas, limitKPa, deltaTime = this.currentTickDeltaTime || 0, accumulatedChanges = null) {
@@ -1993,6 +1995,44 @@ class SpaceMiningProject extends SpaceshipProject {
     }
     ratio = Math.min(ratio, pressureRatio);
     return ratio;
+  }
+
+  estimateProductivityCostAndGain(deltaTime = 1000) {
+    const totals = super.estimateProductivityCostAndGain(deltaTime);
+    if (!this.isActive || !this.isContinuous()) {
+      return totals;
+    }
+
+    const context = this.getContinuousOperationContext(deltaTime, 1);
+    if (context.fraction <= 0 || context.totalTransportCount <= 0) {
+      return totals;
+    }
+
+    const gainBase = {};
+    const gainPerShip = this.calculateSpaceshipGainPerShip() || {};
+    const gainCount = this.getContinuousGainCount(context);
+    for (const category in gainPerShip) {
+      gainBase[category] = {};
+      for (const resource in gainPerShip[category]) {
+        gainBase[category][resource] = gainPerShip[category][resource] * gainCount;
+      }
+    }
+    if (this.applyMetalCostPenalty) {
+      const costPerShip = this.calculateSpaceshipCost();
+      const metalPenalty = (costPerShip.colony?.metal || 0) * gainCount;
+      this.applyMetalCostPenalty(gainBase, metalPenalty);
+    }
+
+    const usefulRatio = Math.max(
+      0,
+      Math.min(1, this.getContinuousGainScaleLimit(context, gainBase, null, 1))
+    );
+    for (const category in totals.cost) {
+      for (const resource in totals.cost[category]) {
+        totals.cost[category][resource] *= usefulRatio;
+      }
+    }
+    return totals;
   }
 
   applySpaceshipResourceGain(gain, fraction, accumulatedChanges = null, productivity = 1, accumulatedSpecialChanges = null) {
