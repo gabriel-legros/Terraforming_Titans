@@ -283,7 +283,7 @@ class SpaceshipAutomation {
       step.limit = 0;
       return;
     }
-    const precision = step.mode === 'energyProduction' ? 100000 : 1;
+    const precision = step.mode === 'energyProduction' || step.mode === 'workers' ? 100000 : 1;
     const parsed = Math.round(Number(value) * precision) / precision;
     if (Number.isFinite(parsed) && parsed >= 0) {
       step.limit = parsed;
@@ -302,9 +302,11 @@ class SpaceshipAutomation {
       step.limit = null;
       return;
     }
-    if (mode === 'remainingPercent') {
+    if (mode === 'remainingPercent' || mode === 'workers') {
       step.mode = mode;
-      step.limit = step.limit === null || step.limit === undefined ? 100 : this.sanitizeShipCount(step.limit);
+      step.limit = step.limit === null || step.limit === undefined
+        ? 100
+        : (mode === 'workers' ? Math.max(0, Number(step.limit)) : this.sanitizeShipCount(step.limit));
       return;
     }
     if (mode === 'energyProduction') {
@@ -826,10 +828,11 @@ class SpaceshipAutomation {
       const isCappedMin = step.mode === 'cappedMin';
       const isCappedMax = step.mode === 'cappedMax';
       const isRemainingPercent = step.mode === 'remainingPercent';
+      const isWorkers = step.mode === 'workers';
       const isEnergyProduction = step.mode === 'energyProduction';
       const limitValue = step.limit === null || step.limit === undefined
         ? null
-        : (isEnergyProduction ? Math.max(0, Number(step.limit)) : this.sanitizeShipCount(step.limit));
+        : (isEnergyProduction || isWorkers ? Math.max(0, Number(step.limit)) : this.sanitizeShipCount(step.limit));
       const stepPoolLimit = stepHasMassDrivers
         ? (stepHasNonMassEntries ? getMixedStepPoolLimit() : remainingTotal)
         : remainingShipsOnly;
@@ -873,6 +876,9 @@ class SpaceshipAutomation {
       if (isRemainingPercent) {
         const remainingPercent = Math.min(Math.max(limitValue === null ? 100 : limitValue, 0), 100);
         stepLimit = Math.floor(stepPoolLimit * remainingPercent / 100);
+      } else if (isWorkers) {
+        const workers = resources.colony.workers.cap || 0;
+        stepLimit = Math.min(stepPoolLimit, Math.floor(workers * (limitValue === null ? 100 : limitValue) / 100));
       }
       let stepRemaining = stepLimit;
       if (entries.length === 0) continue;
@@ -1342,19 +1348,19 @@ class SpaceshipAutomation {
       steps: Array.isArray(preset.steps) ? preset.steps.map(step => {
         let stepMode = step.mode || 'fill';
         const rawLimit = step.limit === null || step.limit === undefined ? null : Number(step.limit);
-        if (stepMode !== 'cappedMin' && stepMode !== 'cappedMax' && stepMode !== 'remainingPercent' && stepMode !== 'energyProduction' && rawLimit === null) {
+        if (stepMode !== 'cappedMin' && stepMode !== 'cappedMax' && stepMode !== 'remainingPercent' && stepMode !== 'workers' && stepMode !== 'energyProduction' && rawLimit === null) {
           stepMode = 'cappedMax';
         }
         const limitValue = rawLimit === null
           ? null
-          : (stepMode === 'energyProduction'
+          : (stepMode === 'energyProduction' || stepMode === 'workers'
             ? (Number.isFinite(rawLimit) ? Math.max(0, rawLimit) : 0)
             : this.sanitizeShipCount(rawLimit));
         return {
           id: step.id,
           limit: (stepMode === 'cappedMin' || stepMode === 'cappedMax') ? null : (stepMode === 'remainingPercent'
             ? (limitValue === null ? 100 : Math.min(Math.max(limitValue, 0), 100))
-            : (stepMode === 'energyProduction' ? (limitValue === null ? 100 : limitValue) : limitValue)),
+            : (stepMode === 'workers' || stepMode === 'energyProduction' ? (limitValue === null ? 100 : limitValue) : limitValue)),
           mode: stepMode,
           entries: Array.isArray(step.entries) ? step.entries.map(entry => {
             const weight = Number(entry.weight);
@@ -1415,19 +1421,19 @@ class SpaceshipAutomation {
       steps: Array.isArray(presetData.steps) ? presetData.steps.map(step => {
         let mode = step.mode || 'fill';
         const rawLimit = step.limit === null || step.limit === undefined ? null : Number(step.limit);
-        if (mode !== 'cappedMin' && mode !== 'cappedMax' && mode !== 'remainingPercent' && mode !== 'energyProduction' && rawLimit === null) {
+        if (mode !== 'cappedMin' && mode !== 'cappedMax' && mode !== 'remainingPercent' && mode !== 'workers' && mode !== 'energyProduction' && rawLimit === null) {
           mode = 'cappedMax';
         }
         const lv = rawLimit === null
           ? null
-          : (mode === 'energyProduction'
+          : (mode === 'energyProduction' || mode === 'workers'
             ? (Number.isFinite(rawLimit) ? Math.max(0, rawLimit) : 0)
             : this.sanitizeShipCount(rawLimit));
         return {
           id: step.id,
           limit: (mode === 'cappedMin' || mode === 'cappedMax') ? null : (mode === 'remainingPercent'
             ? (lv === null ? 100 : Math.min(Math.max(lv, 0), 100))
-            : (mode === 'energyProduction' ? (lv === null ? 100 : lv) : lv)),
+            : (mode === 'workers' || mode === 'energyProduction' ? (lv === null ? 100 : lv) : lv)),
           mode,
           entries: Array.isArray(step.entries) ? step.entries.map(entry => {
             const weight = Number(entry.weight);
