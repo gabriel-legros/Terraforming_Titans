@@ -321,7 +321,7 @@
     }
 
     canStart() {
-      return super.canStart() && !hasOtherWorldSpecialization(this);
+      return !this.isCompleted && super.canStart() && !hasOtherWorldSpecialization(this);
     }
 
     getTravelPointGain() {
