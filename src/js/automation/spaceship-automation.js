@@ -429,7 +429,85 @@ class SpaceshipAutomation {
   }
 
   calculateProjectEnergyRatePerShip(project) {
-    return project.calculateAutomationEnergyRatePerShip();
+    return project.calculateAutomationEnergyRatePerShip(this.projectedSpaceAccessCoverage);
+  }
+
+  calculateProjectedSpaceAccessCoverage(preset, targets, totalShips) {
+    if (!gameSettings.spaceAccessCapacity || getSpaceAccessProject().capThroughputToCapacity) {
+      return undefined;
+    }
+    const capacity = getTotalSpaceAccessCapacity();
+    if (!(capacity > 0) || capacity === Infinity) {
+      return undefined;
+    }
+
+    const entries = [];
+    const participatingProjects = new Set();
+    for (const step of preset.steps) {
+      for (const entry of step.entries) {
+        if (entry.maxMode !== 'energyProduction' || !(entry.max > 0)) continue;
+        const project = targets.find(target => target.name === entry.projectId);
+        if (!project || !this.isProjectEnabled(project) || project.isAutomationManuallyDisabled()) continue;
+        if (project.shouldAutomationDisable() && this.disabledProjects.has(project.name)) continue;
+        if (!project.getSpaceAccessDemand || !project.getSpaceshipEnergyCostTonnage) continue;
+        entries.push({ entry, project });
+        participatingProjects.add(project);
+      }
+    }
+    if (entries.length === 0) return undefined;
+
+    let otherDemand = getTotalContinuousSpaceAccessDemand();
+    const demandPerShip = new Map();
+    const energyRates = new Map();
+    for (const project of participatingProjects) {
+      const currentShips = project.getAutomationShipCount();
+      const currentDemand = project.getSpaceAccessDemand();
+      otherDemand -= currentDemand;
+      const duration = (project.getShipOperationDuration
+        ? project.getShipOperationDuration()
+        : project.getEffectiveDuration()) / 1000;
+      demandPerShip.set(project, currentDemand > 0 && currentShips > 0
+        ? currentDemand / currentShips
+        : duration > 0
+        ? project.getSpaceshipEnergyCostTonnage()
+          * (1 - project.getSpaceAccessCapacityBypassFraction()) / duration
+        : 0);
+      energyRates.set(project, [
+        project.calculateAutomationEnergyRatePerShip(0),
+        project.calculateAutomationEnergyRatePerShip(1)
+      ]);
+    }
+
+    const productionRate = resources.colony.energy.productionRate || 0;
+    const projectedCoverage = coverage => {
+      const assignments = new Map();
+      for (const { entry, project } of entries) {
+        const [beforeRate, afterRate] = energyRates.get(project);
+        const rate = beforeRate + coverage * (afterRate - beforeRate);
+        const rawCap = project.getMaxAssignableShips ? project.getMaxAssignableShips() : Infinity;
+        const cap = rate > 0
+          ? Math.floor(productionRate * entry.max / 100 / rate)
+          : totalShips;
+        const ships = Math.min(totalShips, rawCap, Math.max(0, cap));
+        assignments.set(project, Math.max(assignments.get(project) || 0, ships));
+      }
+      let demand = otherDemand;
+      for (const [project, ships] of assignments) {
+        if (ships > 100) demand += ships * demandPerShip.get(project);
+      }
+      return demand > 0 ? Math.min(1, capacity / demand) : 1;
+    };
+
+    // More coverage lowers energy cost and permits more ships, which consumes coverage.
+    // Solve that shared feedback before applying any assignments.
+    let low = 0;
+    let high = 1;
+    for (let iteration = 0; iteration < 32; iteration += 1) {
+      const middle = (low + high) / 2;
+      if (projectedCoverage(middle) > middle) low = middle;
+      else high = middle;
+    }
+    return (low + high) / 2;
   }
 
   isProjectEnabled(project) {
@@ -693,6 +771,7 @@ class SpaceshipAutomation {
     }
     this.automationShipPool = totalShipsOnly;
     this.automationMassDriverCapacity = massDriverCapacity;
+    this.projectedSpaceAccessCoverage = this.calculateProjectedSpaceAccessCoverage(preset, targets, totalShipsOnly);
 
     let totalShips = totalShipsOnly + massDriverCapacity;
     if (useMassDriverMode) {
@@ -1230,6 +1309,7 @@ class SpaceshipAutomation {
     if (useMassDriverMode) {
       massDriverProject.setMassDriverActive(desiredMassDrivers);
     }
+    this.projectedSpaceAccessCoverage = undefined;
   }
 
   saveState() {

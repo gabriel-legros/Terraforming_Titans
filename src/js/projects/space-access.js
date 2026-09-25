@@ -90,7 +90,7 @@ function getSpaceAccessThroughputFraction(project) {
     + (1 - bypassFraction) * getSpaceAccessCapacityFraction();
 }
 
-function getSpaceAccessBenefitFraction(project) {
+function getSpaceAccessBenefitFraction(project, projectedCoverage) {
   const aerobrakingFraction = gameSettings.aerobraking
     ? project.getAerobrakingSpaceAccessBypassFraction()
     : 0;
@@ -105,7 +105,7 @@ function getSpaceAccessBenefitFraction(project) {
   }
   const bypassFraction = project.getSpaceAccessCapacityBypassFraction();
   return bypassFraction
-    + (1 - bypassFraction) * getSpaceAccessCoverage();
+    + (1 - bypassFraction) * (projectedCoverage ?? getSpaceAccessCoverage());
 }
 
 function getSpaceAccessMetalCostMultiplier(project) {
@@ -114,12 +114,12 @@ function getSpaceAccessMetalCostMultiplier(project) {
     : 1;
 }
 
-function getSpaceAccessEnergyCostMultiplier(project) {
+function getSpaceAccessEnergyCostMultiplier(project, projectedCoverage) {
   if (!gameSettings.spaceAccessCapacity) {
     return 1;
   }
   const before = gameSettings.spaceshipEnergyBeforeSpaceElevatorMultiplier;
   const after = gameSettings.spaceshipEnergyAfterSpaceElevatorMultiplier;
-  const coverage = getSpaceAccessBenefitFraction(project);
+  const coverage = getSpaceAccessBenefitFraction(project, projectedCoverage);
   return before + coverage * (after - before);
 }

@@ -148,6 +148,7 @@ function createHarness({
   });
 
   setGlobal('SpaceshipProject', MockSpaceshipProject, originalGlobals);
+  setGlobal('gameSettings', { spaceAccessCapacity: false }, originalGlobals);
   setGlobal('resources', {
     special: { spaceships: { value: initialShips } },
     colony: {
