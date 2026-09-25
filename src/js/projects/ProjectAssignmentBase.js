@@ -533,7 +533,7 @@ function createProjectAssignmentBase(BaseClass) {
     }
 
     getPresetAssignmentMap(settings = {}) {
-      const assignments = { ...(settings[this.assignmentStateKey] || {}) };
+      const assignments = { ...this.getAssignmentMap(), ...(settings[this.assignmentStateKey] || {}) };
       const autoAssignFlags = settings.autoAssignFlags || {};
       for (const key in autoAssignFlags) {
         if (autoAssignFlags[key] === true) {
