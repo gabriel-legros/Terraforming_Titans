@@ -437,7 +437,7 @@ function applyAutoBuildDelta(structure, input, delta) {
   if (!structure || !input || !Number.isFinite(delta)) return;
   const autoBuildUsesFixed = structure.autoBuildBasis === 'fixed';
   const autoBuildUsesAdjustableMax = isAdjustableAutoBuildMaxMode(structure);
-  const current = autoBuildUsesFixed ? (parseFlexibleNumber(input.value) || 0) : (parseFloat(input.value) || 0);
+  const current = parseFlexibleNumber(input.value) || 0;
   const next = Math.max(0, current + delta);
   if (autoBuildUsesFixed) {
     const normalized = Math.max(0, Math.round(next));
@@ -972,7 +972,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
         const numeric = parseFlexibleNumber(value) || 0;
         return Math.max(0, Math.round(numeric));
       }
-      const numeric = Number(value) || 0;
+      const numeric = parseFlexibleNumber(value) || 0;
       const normalized = Math.max(0, numeric);
       if (isAdjustableAutoBuildMaxMode(structure) || isAutoBuildFillMode(structure)) {
         return Math.min(100, normalized);
