@@ -423,7 +423,7 @@ class SpaceshipAutomation {
         }
       }
     }
-    const boundedMax = Number.isFinite(baseMax) && baseMax > 0 ? baseMax : Infinity;
+    const boundedMax = entry.max > 0 ? baseMax : Infinity;
     if (!Number.isFinite(boundedMax)) {
       return projectCap;
     }

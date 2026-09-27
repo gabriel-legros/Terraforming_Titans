@@ -2302,7 +2302,11 @@ class LifeManager extends EffectableEntity {
         );
 
         if (secondsMultiplier > 0) {
-          foodResource.increase(foodPerSecond * secondsMultiplier);
+          if (accumulatedChanges) {
+            accumulatedChanges.colony.food += foodPerSecond * secondsMultiplier;
+          } else {
+            foodResource.increase(foodPerSecond * secondsMultiplier);
+          }
         }
       }
     }
