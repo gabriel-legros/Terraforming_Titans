@@ -309,9 +309,14 @@ class Colony extends Building {
       this.setProductivityLimitInfo(0, 0, []);
       this.productivity = 0;
       this.displayProductivity = 0;
+      this.maintenanceProductivity = 1;
       return;
     }
 
+    const maintenanceCap = gameSettings.unfulfilledMaintenancePenalties
+      ? Math.max(0, Math.min(1, this.maintenanceProductivity))
+      : 1;
+    const cappedTargetProductivity = Math.min(targetProductivity, maintenanceCap);
     const factors = [];
     const consumption = this.getConsumption().colony || {};
     for (const resource in colonyOutputNeedResources) {
@@ -348,13 +353,19 @@ class Colony extends Building {
         largestDemands: [],
       });
     }
+    if (maintenanceCap < 0.9995) {
+      factors.push({ type: 'maintenance', ratio: maintenanceCap });
+    }
     factors.sort((a, b) => a.ratio - b.ratio);
-    this.setProductivityLimitInfo(targetProductivity, targetProductivity, factors);
+    this.setProductivityLimitInfo(cappedTargetProductivity, cappedTargetProductivity, factors);
 
     const difference = Math.abs(targetProductivity - this.productivity);
     const baseFactor = difference < 0.05 ? 0.01 : 1;
     const dampingFactor = Building.getScaledDampingFactor(baseFactor, deltaTime);
-    this.productivity += dampingFactor * (targetProductivity - this.productivity);
+    this.productivity = Math.min(
+      this.productivity + dampingFactor * (targetProductivity - this.productivity),
+      maintenanceCap
+    );
     this.displayProductivity = this.productivity;
   }
 

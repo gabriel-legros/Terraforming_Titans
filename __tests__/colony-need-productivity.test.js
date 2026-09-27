@@ -68,6 +68,44 @@ describe('colony per-need productivity', () => {
     dom.window.close();
   });
 
+  test.each([0, 0.5, 0.98])('maintenance paid at %s caps colony output', paidRatio => {
+    const { colony, resources, needs } = resetColonyScenario(window, {
+      energy: 1, food: 1, electronics: 1, androids: 1
+    });
+    const settings = getGameGlobal(window, 'gameSettings');
+    settings.unfulfilledMaintenancePenalties = true;
+    colony.maintenanceProductivity = 1;
+    const changes = createAccumulatedChanges(resources);
+    const maintenance = {};
+    colony.applyMaintenance(changes, maintenance, 1000);
+    expect(maintenance.metal).toBeGreaterThan(0);
+    const paymentRatios = Object.fromEntries(
+      Object.keys(maintenance).map(resource => [resource, resource === 'metal' ? paidRatio : 1])
+    );
+    getGameGlobal(window, 'updateBuildingMaintenanceProductivities')(
+      { colony }, paymentRatios, 900000
+    );
+    expectClose(colony.maintenanceProductivity, paidRatio);
+
+    colony.updateProductivity(resources, 1000);
+    colony.produce(changes, 1000);
+    colony.consume(changes, 1000);
+    expectClose(colony.productivity, paidRatio);
+    expectClose(colony.displayProductivity, paidRatio);
+    expectClose(colony.currentProduction.colony.research, 1000 * paidRatio);
+    expect(colony.productivityLimitInfo.factors).toContainEqual({
+      type: 'maintenance', ratio: paidRatio
+    });
+    needs.forEach(resource => {
+      expectClose(colony.currentNeedFulfilled[resource], colony.currentNeedDemand[resource]);
+    });
+
+    settings.unfulfilledMaintenancePenalties = false;
+    colony.updateProductivity(resources, 1000);
+    expect(colony.productivity).toBeGreaterThan(paidRatio);
+    expect(colony.productivityLimitInfo.factors).toEqual([]);
+  });
+
   test.each([
     {
       name: 'all needs fully supplied',
