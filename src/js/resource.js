@@ -2704,6 +2704,10 @@ function updateBuildingMaintenanceProductivities(buildings, maintenancePaymentRa
     }
 
     if (!hasMaintenance) {
+      // Nighttime shutdown is not a maintenance payment.
+      if (building.dayNightActivity && !dayNightCycle.isDay()) {
+        continue;
+      }
       target = 1;
     }
     building.maintenanceProductivity += (target - building.maintenanceProductivity) * trendFactor;
