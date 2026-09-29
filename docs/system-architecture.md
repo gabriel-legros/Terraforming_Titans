@@ -69,6 +69,7 @@ The `produceResources` pipeline is:
 Durable constraints:
 
 - Game logic quantization and terraforming use `terraformingParameters.gameplay.simulation.resourceSubstepMs` (default `20`) as the shared resource step. Both multiply this duration by the game-speed multiplier so each step covers the same real-time interval; terraforming also requires the substep setting to be enabled. Calibration tools and settings copy read the same parameter.
+- `updateLogic` refreshes worker requirements once before `produceResources`; production and spaceship traffic use that demand snapshot. `updatePopulation` later refreshes worker capacity and the workers resource value without recalculating demand.
 - Continuous atmosphere, zonal-surface, and albedo deltas are applied proportionally inside fixed terraforming substeps. Do not defer them to a later frame boundary.
 - Zonal transfers credit output only for input actually removed during the woven substeps so they remain mass-conserving when phase changes compete.
 - Resource rate maps use stable, non-localized ids. Buildings use `building:<internal name>`, projects use `project:<internal name>`, and shared/mod processes register namespaced ids. Gameplay and automation query ids; UI resolves display names.

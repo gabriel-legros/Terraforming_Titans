@@ -407,9 +407,6 @@ class PopulationModule extends EffectableEntity {
       ) {
         this.populationResource.value = 0;
       }
-    // Update worker requirements based on active buildings
-    this.updateWorkerRequirements();
-
     // Update worker cap based on current population and worker ratio
     this.updateWorkerCap();
 
