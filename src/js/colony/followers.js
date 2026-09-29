@@ -1443,6 +1443,14 @@ class FollowersManager extends EffectableEntity {
       const amount = rate * seconds;
       if (targetResource.hasCap) {
         const upperBound = Math.max(targetResource.cap, targetResource.value);
+        const overflow = Math.max(0, targetResource.value + amount - upperBound);
+        if (overflow > 0) {
+          projectManager.projects.galactic_market.queueOverflowSale(
+            config.targetCategory,
+            config.targetResource,
+            overflow
+          );
+        }
         targetResource.value = Math.min(targetResource.value + amount, upperBound);
       } else {
         targetResource.value += amount;
