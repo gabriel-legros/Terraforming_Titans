@@ -284,6 +284,35 @@ describe('Spaceship automation scenarios', () => {
     cleanup();
   });
 
+  it('keeps disabled mining ships reserved while assigning other projects', () => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 20,
+      projects: {
+        oreSpaceMining: { assignedSpaceships: 120, manualDisabled: true },
+        siliconSpaceMining: {},
+      },
+    });
+    configurePreset(automation, {
+      mode: 'cappedMin',
+      entries: [
+        { projectId: 'oreSpaceMining', weight: 1, max: null, maxMode: 'absolute' },
+      ],
+    });
+    automation.presets[0].steps.push({
+      id: 2,
+      mode: 'cappedMax',
+      limit: null,
+      entries: [{ projectId: 'siliconSpaceMining', weight: 1, max: null, maxMode: 'absolute' }],
+    });
+
+    automation.applyAssignments();
+    automation.applyAssignments();
+
+    expect(projects.oreSpaceMining.getAutomationShipCount()).toBe(120);
+    expect(projects.siliconSpaceMining.getAutomationShipCount()).toBe(20);
+    cleanup();
+  });
+
   it('release if disabled true releases ships from disabled project', () => {
     const { automation, projects, cleanup } = createHarness({
       initialShips: 0,

@@ -820,6 +820,19 @@ class SpaceshipAutomation {
       remainingShipsOnly = Math.max(0, remainingShipsOnly - applied);
       return applied;
     };
+    const retainedTargets = new Set();
+    for (const step of preset.steps) {
+      for (const entry of step.entries) {
+        if (retainedTargets.has(entry.projectId) || this.disabledProjects.has(entry.projectId)) continue;
+        const disabledState = disabledTargetStates[entry.projectId];
+        if (!disabledState?.manuallyDisabled) continue;
+        const current = this.sanitizeShipCount(currentAssignments[entry.projectId] || 0);
+        desiredAssignments[entry.projectId] = current;
+        consumePool(entry.projectId === massDriverTargetId, current);
+        retainedTargets.add(entry.projectId);
+      }
+    }
+    remainingTotal = remainingShipsOnly + remainingMassDriverEquivalency;
     for (let stepIndex = 0; stepIndex < preset.steps.length; stepIndex += 1) {
       const step = preset.steps[stepIndex];
       const entries = step.entries;
@@ -904,15 +917,7 @@ class SpaceshipAutomation {
           const disabledState = disabledTargetStates[entry.projectId] || { automationDisabled: false, manuallyDisabled: false };
           const isTemporarilyDisabled = disabledState.automationDisabled;
           const isManuallyDisabled = disabledState.manuallyDisabled;
-          if (isManuallyDisabled || (isTemporarilyDisabled && releaseOnDisable)) {
-            const currentTarget = this.sanitizeShipCount(
-              Object.prototype.hasOwnProperty.call(desiredAssignments, entry.projectId)
-                ? desiredAssignments[entry.projectId]
-                : (currentAssignments[entry.projectId] || 0)
-            );
-            desiredAssignments[entry.projectId] = releaseOnDisable ? 0 : currentTarget;
-            continue;
-          }
+          if (isManuallyDisabled || (isTemporarilyDisabled && releaseOnDisable)) continue;
           const currentTarget = this.sanitizeShipCount(desiredAssignments[entry.projectId] || 0);
           desiredAssignments[entry.projectId] = currentTarget;
           const maxForEntry = this.computeEntryMax(entry, project);
