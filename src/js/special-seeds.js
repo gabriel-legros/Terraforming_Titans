@@ -2084,6 +2084,7 @@ const hydraOverrides = {
   gravityPenaltyEnabled: true,
   specialAttributes: {
     dynamicMass: true,
+    allowGeologicalAccessWithHeat: true,
     hasSand: true,
     laserCannonTarget: 'hydraAether',
     otherRequirements: [{

@@ -12,6 +12,8 @@ atlasManager.markUIDirty({ force: true });
 
 Use Atlas to travel, or call `atlasManager.travelToChallengeWorld('hydra')` after random-world travel is unlocked. The enable flag is a runtime catalog change; it is not persisted as a user setting. Saves made on Hydra still restore its project state.
 
+Hydra sets `specialAttributes.allowGeologicalAccessWithHeat` so its core heat does not block ore mines, sand harvesters or geological research/excavation. The shared heat-access predicate handles the exception; other worlds retain their heat restrictions. Older Hydra saves acquire the flag when the project initializes.
+
 ## Tuning
 
 Edit `hydraOverrides` in `src/js/special-seeds.js`. These values are provisional tuning defaults, not a finished balance pass. All masses are tons, times are seconds unless a name says otherwise, pressures are Pa, temperatures are K, and heat flux is W/m2.

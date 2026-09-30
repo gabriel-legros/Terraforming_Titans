@@ -69,6 +69,10 @@ class HydraProject extends SpaceshipProject {
   }
 
   initializeHydra() {
+    if (currentPlanetParameters.specialAttributes.allowGeologicalAccessWithHeat === undefined) {
+      currentPlanetParameters.specialAttributes.allowGeologicalAccessWithHeat = getSpecialSeedParameters('hydra')
+        .specialAttributes.allowGeologicalAccessWithHeat;
+    }
     const config = currentPlanetParameters.specialAttributes.hydra;
     // Older Hydra saves predate the restoration objective and started below capacity.
     if (!config.objective) {

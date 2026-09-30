@@ -181,6 +181,9 @@ function hasGeologicalAccessBlockingHeat(
   terraformingState = terraforming,
   planetParameters = currentPlanetParameters
 ) {
+  if (planetParameters?.specialAttributes?.allowGeologicalAccessWithHeat) {
+    return false;
+  }
   const coreHeatFlux = getRetainedCoreHeatFluxWm2(terraformingState, planetParameters);
   return coreHeatFlux > 0 || getStellarFusionFluxWm2(terraformingState, planetParameters) > 0;
 }
