@@ -12,7 +12,7 @@ atlasManager.markUIDirty({ force: true });
 
 Use Atlas to travel, or call `atlasManager.travelToChallengeWorld('hydra')` after random-world travel is unlocked. The enable flag is a runtime catalog change; it is not persisted as a user setting. Saves made on Hydra still restore its project state.
 
-Hydra sets `specialAttributes.allowGeologicalAccessWithHeat` so its core heat does not block ore mines, sand harvesters or geological research/excavation. The shared heat-access predicate handles the exception; other worlds retain their heat restrictions. Older Hydra saves acquire the flag when the project initializes.
+Geological access uses the starting `celestialParameters.coreHeatFlux` and the global `terraformingParameters.geometry.geologicalAccessCoreHeatFluxThresholdWm2` cutoff (100,000 W/m2). Lerna starts below the cutoff at 20,000 W/m2, allowing ore mines, sand harvesters and geological research/excavation even when Terra adds heat. Poseidon and Zeus remain blocked by their higher starting heat. Stellar fusion and retained stellar-remnant heat still block access. The former Hydra-only exemption is no longer used, including in saved worlds.
 
 ## Tuning
 

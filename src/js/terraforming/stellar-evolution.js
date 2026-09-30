@@ -181,11 +181,15 @@ function hasGeologicalAccessBlockingHeat(
   terraformingState = terraforming,
   planetParameters = currentPlanetParameters
 ) {
-  if (planetParameters?.specialAttributes?.allowGeologicalAccessWithHeat) {
-    return false;
-  }
-  const coreHeatFlux = getRetainedCoreHeatFluxWm2(terraformingState, planetParameters);
-  return coreHeatFlux > 0 || getStellarFusionFluxWm2(terraformingState, planetParameters) > 0;
+  // Use the world's starting heat, so temporary heating does not revoke geological access.
+  const initialCoreHeatFlux = planetParameters.celestialParameters.coreHeatFlux;
+  const remnantCoreHeatFlux = isStellarEvolutionEligible(planetParameters)
+    ? Math.max(0, terraformingState.celestialParameters.stellarRemnantCoreHeatFluxWm2 || 0,
+      planetParameters.celestialParameters.stellarRemnantCoreHeatFluxWm2 || 0)
+    : 0;
+  return initialCoreHeatFlux >= terraformingParameters.geometry.geologicalAccessCoreHeatFluxThresholdWm2
+    || remnantCoreHeatFlux > 0
+    || getStellarFusionFluxWm2(terraformingState, planetParameters) > 0;
 }
 
 function sumElementalComposition(composition) {

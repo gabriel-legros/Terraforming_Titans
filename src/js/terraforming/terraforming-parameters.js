@@ -162,6 +162,7 @@ var terraformingParameters = {
   },
 
   geometry: {
+    geologicalAccessCoreHeatFluxThresholdWm2: 100_000,
     minimumGravityMS2: 1e-12,
     minimumVolumeFraction: 0.01,
     fallbackDensityKgM3: 1000,
