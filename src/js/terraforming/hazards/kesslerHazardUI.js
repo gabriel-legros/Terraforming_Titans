@@ -861,14 +861,8 @@ function updateKesslerHazardUI(kesslerParameters) {
     const initialValue = debris.initialValue || 0;
     const currentValue = debris.value || 0;
     const ratio = initialValue ? Math.max(0, Math.min(1, currentValue / initialValue)) : 0;
-    let perLand = 0;
-    try {
-      perLand = kesslerParameters.orbitalDebrisPerLand;
-    } catch (error) {
-      perLand = 0;
-    }
-    perLand = perLand || 0;
-    const density = initialValue ? perLand * ratio : 0;
+    const geometricLand = resolveWorldGeometricLand(getTerraforming());
+    const density = geometricLand > 0 ? currentValue / geometricLand : 0;
     const clearance = formatPercent(1 - ratio);
     const dragKm = (decaySummary.dragThresholdHeightMeters || 0) / 1000;
     const dragDensity = decaySummary.dragThresholdDensity || 0;

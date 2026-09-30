@@ -2077,7 +2077,282 @@ const siriusOverrides = {
   }
 };
 
+// Hydra tuning is deliberately world-local. Masses are tons, rates are per second,
+// pressure is Pa, temperature is K, and heat flux is W/m?.
+const hydraOverrides = {
+  name: 'Lerna',
+  gravityPenaltyEnabled: true,
+  specialAttributes: {
+    dynamicMass: true,
+    hasSand: true,
+    laserCannonTarget: 'hydraAether',
+    otherRequirements: [{
+      type: 'projectCompletion', projectId: 'hydra',
+      labelKey: 'catalogs.specialSeeds.hydra.requirement',
+      targetTextKey: 'catalogs.specialSeeds.hydra.defeated',
+      buttonTextKey: 'catalogs.specialSeeds.hydra.defeatFirst',
+      hideFromChallengeRules: true
+    }],
+    hydra: {
+      // Restoration targets match the equilibrated starting world, not a live moving target.
+      objective: {
+        pressurePa: 809638484.8753618, temperatureK: 842.0981271740555,
+        pressureToleranceFraction: 0.001, temperatureToleranceK: 1,
+        orbitalDensityKgPerM3: 8.400838786743866e-14,
+        orbitalDensityToleranceFraction: 0.01
+      },
+      siblingSupportFraction: 0.001,
+      debrisScrapFraction: 0.7,
+      oceanKeys: ['liquidHydrogen', 'liquidWater', 'liquidCO2', 'liquidMethane', 'liquidAmmonia', 'liquidOxygen', 'liquidNitrogen'],
+      cores: {
+        aether: { initialMass: 1e18, maximumMass: 1e18, growthPerSecond: 0.00001 },
+        aero: { initialMass: 1e19, maximumMass: 1e19, growthPerSecond: 0.0001 },
+        aqua: { initialMass: 1e20, maximumMass: 1e20, growthPerSecond: 0.0002 },
+        ignis: { initialMass: 1e20, maximumMass: 1e20, growthPerSecond: 0.001 },
+        terra: { initialMass: 1e21, maximumMass: 1e21, growthPerSecond: 0.0001 }
+      },
+      aether: {
+        outerOrbitFraction: 0.01, dragPerSecond: 0.002, dragDensityReference: 1e-12,
+        laserTonsPerSecond: 1e9, laserDebrisTonsPerSecond: 1e9,
+        shipCapturePerSecond: 0.001, massPerShip: 1000,
+        orbitalProjectDurationMultiplier: 10, researchOrbitalDisableAboveFraction: 0.1,
+        starliftTonsPerSecond: 1e17,
+        stellarFeedstockTons: 1e27,
+        starliftComposition: { hydrogen: 0.97, atmosphericWater: 0.01, carbonDioxide: 0.01, inertGas: 0.01 },
+        fusionAvoidanceMassKg: 2e28, strippingTonsPerSecond: 1e19,
+        bombardmentSiblingFraction: 0.25, buildingAttritionPerSecond: 0.0001
+      },
+      aero: {
+        minimumPressurePa: 1e8, collapsePerSecond: 0.002,
+        occupiedAerostatFraction: 0.95, hackingBelowFraction: 0.5,
+        hackingPerSecond: 0.0001, massPerAerostat: 100,
+        carbonFeedstocks: { carbonDioxide: { carbonFraction: 12 / 44, byproduct: 'oxygen' }, atmosphericMethane: { carbonFraction: 12 / 16, byproduct: 'hydrogen' } }
+      },
+      aqua: {
+        minimumOceanCoverage: 0.1, exposurePerSecond: 0.002,
+        excavationTonsPerSecond: 1e17,
+        composition: { atmospheric: { oxygen: 0.4, carbonDioxide: 0.04, inertGas: 0.01 }, surface: { junk: 0.25, scrapMetal: 0.3 } },
+        androidHackingPerSecond: 0.0001, massPerAndroid: 1
+      },
+      ignis: {
+        coldTemperatureK: 500, hotTemperatureK: 1300,
+        coldSuppressionPerSecond: 0.001, hotSuppressionPerSecond: 0.005,
+        crusaderTonsPerSecond: 1, maximumLandFraction: 0.9,
+        miningTonsPerSecond: 1e17, emissionsTonsPerSecond: 1e16,
+        emissions: { atmosphericWater: 0.4, carbonDioxide: 0.3, atmosphericMethane: 0.2, sulfuricAcid: 0.1 }
+      },
+      terra: {
+        maximumHeatFlux: 1e5, heatFluxPerKelvin: 500,
+        ventTonsPerSecond: 1e16,
+        ventComposition: { hydrogen: 0.5, atmosphericWater: 0.25, carbonDioxide: 0.15, inertGas: 0.1 },
+        miningTonsPerSecond: 1e17, excavationDurationMultiplier: 100,
+        mineCoverageFraction: 1, dugOutSuppressionPerSecond: 0.002,
+        depletedMassTons: 1e3, playerSurfaceTriggerFraction: 0.1,
+        buildingAttritionPerSecond: 0.0001, excavationAttritionPerSecond: 0.0001
+      },
+      net: {
+        buildTonsPerSecond: 1e12, shipBuildTonsPerSecond: 1e12,
+        segmentMass: 1e9, maximumMass: 1e20,
+        costPerTon: { superalloys: 1, energy: 1e6 },
+        captureTonsPerTonPerSecond: 0.01, attritionTonsPerCapturedTon: 0.1
+      }
+    }
+  },
+  hazards: {
+    kessler: {
+      initialDebrisTons: 1e19, failureReferenceDebrisTons: 1e19,
+      smallProjectBaseSuccess: 0.7, largeProjectBaseSuccess: 0.5,
+      maximumFailureChance: 0.85,
+      outerOrbitMassFraction: 0.01, outerOrbitMinimumMeters: 1e9,
+      outerOrbitMaximumMeters: 1e12, debrisDecayDensityFloor: 0
+    }
+  },
+  resources: {
+    surface: {
+      land: { initialValue: 4523893421169.302 },
+      liquidHydrogen: { initialValue: 2e22 }, ice: { initialValue: 0 },
+      junk: { initialValue: 1e18, unlocked: true }, scrapMetal: { initialValue: 1e18, unlocked: true }
+    },
+    underground: {
+      ore: { initialValue: 100, maxDeposits: 452389342116, areaTotal: 4523893421169.302 },
+      geothermal: { initialValue: 10, maxDeposits: 4523893421, areaTotal: 4523893421169.302 }
+    },
+    atmospheric: {
+      hydrogen: { initialValue: 2.865420108813261e+21 },
+      // Finite carbon feedstock for Aero; tune these starting inventories together with calibration.
+      carbonDioxide: { initialValue: 1e19 }, atmosphericMethane: { initialValue: 1e19 },
+      atmosphericWater: { initialValue: 0 }, oxygen: { initialValue: 0 }, inertGas: { initialValue: 0 }
+    }
+  },
+  zonalSurface: {
+    "liquidWater": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "ice": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "buriedIce": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "liquidCO2": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "dryIce": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "buriedDryIce": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "liquidMethane": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "hydrocarbonIce": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "buriedHydrocarbonIce": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "liquidAmmonia": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "ammoniaIce": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "buriedAmmoniaIce": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "liquidOxygen": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "oxygenIce": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "buriedOxygenIce": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "liquidNitrogen": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "nitrogenIce": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "buriedNitrogenIce": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "liquidHydrogen": {
+      "tropical": {
+        "preciseDecimal": "387323232920556483763616046353835e-10"
+      },
+      "temperate": {
+        "preciseDecimal": "503459217683238236269792445927166343387126922607e-25"
+      },
+      "polar": {
+        "preciseDecimal": "80563348308072528464542800844008656612873077393e-25"
+      }
+    },
+    "fineSand": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "biomass": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    },
+    "hazardousBiomass": {
+      "tropical": 0,
+      "temperate": 0,
+      "polar": 0
+    }
+  },
+  zonalTemperatures: {
+    "tropical": {
+      "value": 842.1063306253279,
+      "day": 842.1063499411981,
+      "night": 842.1063113094577
+    },
+    "temperate": {
+      "value": 842.0954418949215,
+      "day": 842.0954562758649,
+      "night": 842.095427513978
+    },
+    "polar": {
+      "value": 842.0754684989365,
+      "day": 842.0754738274403,
+      "night": 842.0754631704327
+    }
+  },
+  celestialParameters: {
+    radius: 60000, baseRadius: 60000, mass: 7e26, baseMass: 7e26,
+    basePlanetaryMass: 7e26, basePlanetaryVolumeM3: 9.047786842338604e23,
+    baseLand: 4523893421169.302, surfaceArea: 4.523893421169302e16,
+    crossSectionArea: 1.1309733552923256e16,
+    gravity: 12.978, baseGravity: 12.978, distanceFromSun: 5,
+    starLuminosity: 1, rotationPeriod: 12, spinPeriod: 12,
+    albedo: 0.15, coreHeatFlux: 20000, hasNaturalMagnetosphere: true
+  },
+  star: { name: 'Typhon', spectralType: 'G', luminositySolar: 1, massSolar: 1, radiusSolar: 1, temperatureK: 5772 },
+  classification: { archetype: 'chthonian', TeqK: 800 },
+  visualization: { baseColor: '#99452f' },
+  effects: [
+    { target: 'project', targetId: 'hydra', type: 'enable', effectId: 'hydra-enable-project' },
+    { target: 'project', targetId: 'lifters', type: 'booleanFlag', flagId: 'disableAtmosphereStripMode', value: true }
+  ]
+};
+
 const specialSeedDefinitions = {
+  hydra: {
+    key: 'hydra', enabled: false, seed: 'Hydra', name: '',
+    nameKey: 'catalogs.specialSeeds.hydra.name',
+    difficultyKey: 'catalogs.specialSeeds.hydra.difficulty',
+    replayable: true, target: 'planet', archetype: 'chthonian', orbitPreset: 'hz-outer',
+    specialEffects: [
+      { id: 'hydra-cores', descriptionKey: 'catalogs.specialSeeds.hydra.rules' },
+      {
+        id: 'lifters-no-strip',
+        labelKey: 'catalogs.specialSeeds.commonEffects.liftersStripModeDisabled',
+        descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.liftersNoStrip'
+      }
+    ],
+    overrides: hydraOverrides
+  },
   sirius: {
     key: 'sirius',
     enabled: true,

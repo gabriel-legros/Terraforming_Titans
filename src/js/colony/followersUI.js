@@ -4,6 +4,7 @@ const followersUICache = {
   root: null,
   summary: null,
   kesslerWarning: null,
+  orbitalWarningText: null,
   modeToggle: null,
   stepValue: null,
   divideStepButton: null,
@@ -855,6 +856,7 @@ function buildFollowersUI() {
   followersUICache.root = root;
   followersUICache.summary = summary;
   followersUICache.kesslerWarning = orbitalKesslerWarning;
+  followersUICache.orbitalWarningText = orbitalWarningText;
   followersUICache.modeToggle = modeToggle;
   followersUICache.stepValue = stepValue;
   followersUICache.divideStepButton = divideStepButton;
@@ -940,7 +942,14 @@ function updateFollowersUI() {
   const kesslerRestricted = followersManager.isKesslerOrbitalsRestricted();
 
   followersUICache.root.dataset.mode = mode;
-  followersUICache.kesslerWarning.style.display = kesslerRestricted ? 'flex' : 'none';
+  const researchRestricted = followersManager.isBooleanFlagSet('disableResearchOrbitals');
+  followersUICache.kesslerWarning.style.display = kesslerRestricted || researchRestricted ? 'flex' : 'none';
+  const warningKey = researchRestricted
+    ? (kesslerRestricted ? 'kesslerAetherWarning' : 'aetherWarning') : 'kesslerWarning';
+  const warningText = t(`ui.colony.followers.orbitals.${warningKey}`);
+  if (followersUICache.orbitalWarningText.textContent !== warningText) {
+    followersUICache.orbitalWarningText.textContent = warningText;
+  }
 
   setToggleButtonState(followersUICache.modeToggle, mode === 'weight');
 
@@ -977,7 +986,7 @@ function updateFollowersUI() {
     const totalRate = perOrbital * assigned;
     const weight = followersManager.getWeight(config.id);
     const isAutoAssignTarget = autoAssignId === config.id;
-    const isKesslerLocked = kesslerRestricted && config.id !== 'research';
+    const isOrbitalLocked = followersManager.isOrbitalRestricted(config.id);
 
     row.assigned.textContent = getFollowersText('ui.colony.followers.orbitals.assigned', 'Assigned: {value}', {
       value: formatNumber(assigned, true)
@@ -1010,16 +1019,16 @@ function updateFollowersUI() {
     row.autoAssignRow.style.display = manualMode ? 'inline-flex' : 'none';
 
     const maxForThis = followersManager.getManualMaxFor(config.id);
-    row.manualZero.disabled = isKesslerLocked || isAutoAssignTarget || assigned <= 0;
-    row.manualMinus.disabled = isKesslerLocked || isAutoAssignTarget || assigned <= 0;
-    row.manualPlus.disabled = isKesslerLocked || isAutoAssignTarget || assigned >= maxForThis;
-    row.manualMax.disabled = isKesslerLocked || isAutoAssignTarget || assigned >= maxForThis;
-    row.autoAssignCheckbox.disabled = !manualMode || isKesslerLocked;
+    row.manualZero.disabled = isOrbitalLocked || isAutoAssignTarget || assigned <= 0;
+    row.manualMinus.disabled = isOrbitalLocked || isAutoAssignTarget || assigned <= 0;
+    row.manualPlus.disabled = isOrbitalLocked || isAutoAssignTarget || assigned >= maxForThis;
+    row.manualMax.disabled = isOrbitalLocked || isAutoAssignTarget || assigned >= maxForThis;
+    row.autoAssignCheckbox.disabled = !manualMode || isOrbitalLocked;
     row.autoAssignCheckbox.checked = isAutoAssignTarget;
 
     const weightInput = row.weightInput;
     if (weightInput) {
-      weightInput.disabled = isKesslerLocked;
+      weightInput.disabled = isOrbitalLocked;
       weightInput.dataset.weight = String(weight);
       if (document.activeElement !== weightInput) {
         weightInput.value = String(weight);

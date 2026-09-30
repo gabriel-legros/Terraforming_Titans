@@ -155,7 +155,16 @@ function findAltitudeForDensity(model, targetDensity, maxMeters) {
 
 function normalizeKesslerParameters(parameters = {}) {
   return {
-    orbitalDebrisPerLand: parameters.orbitalDebrisPerLand ?? 100
+    orbitalDebrisPerLand: parameters.orbitalDebrisPerLand ?? KESSLER_FAILURE_BASE_DEBRIS_PER_LAND,
+    initialDebrisTons: parameters.initialDebrisTons ?? KESSLER_PARAMETERS.initialDebrisTons,
+    failureReferenceDebrisTons: parameters.failureReferenceDebrisTons ?? KESSLER_PARAMETERS.failureReferenceDebrisTons,
+    smallProjectBaseSuccess: parameters.smallProjectBaseSuccess ?? SMALL_PROJECT_BASE_SUCCESS,
+    largeProjectBaseSuccess: parameters.largeProjectBaseSuccess ?? LARGE_PROJECT_BASE_SUCCESS,
+    maximumFailureChance: parameters.maximumFailureChance ?? KESSLER_PARAMETERS.maximumFailureChance,
+    outerOrbitMassFraction: parameters.outerOrbitMassFraction ?? KESSLER_PARAMETERS.outerOrbitMassFraction,
+    outerOrbitMinimumMeters: parameters.outerOrbitMinimumMeters ?? KESSLER_PARAMETERS.outerOrbitMinimumMeters,
+    outerOrbitMaximumMeters: parameters.outerOrbitMaximumMeters ?? KESSLER_PARAMETERS.outerOrbitMaximumMeters,
+    debrisDecayDensityFloor: parameters.debrisDecayDensityFloor ?? DEBRIS_DECAY_DENSITY_FLOOR
   };
 }
 
@@ -189,7 +198,7 @@ class KesslerHazard {
   initializeResources(terraforming, kesslerParameters, options = {}) {
     const perLand = kesslerParameters.orbitalDebrisPerLand;
     const initialLand = resolveWorldGeometricLand(terraforming, resources?.surface?.land);
-    const calculatedValue = initialLand * perLand;
+    const calculatedValue = kesslerParameters.initialDebrisTons ?? initialLand * perLand;
     const resource = resources.special.orbitalDebris;
     const unlockOnly = options.unlockOnly === true;
 
@@ -325,14 +334,17 @@ class KesslerHazard {
     const initialAmount = debris.initialValue || 0;
     const normalizedParameters = this.normalize(this.manager.parameters.kessler);
     const perLand = normalizedParameters.orbitalDebrisPerLand || KESSLER_FAILURE_BASE_DEBRIS_PER_LAND;
-    return initialAmount ? initialAmount * (KESSLER_FAILURE_BASE_DEBRIS_PER_LAND / perLand) : 0;
+    return normalizedParameters.failureReferenceDebrisTons
+      ?? (initialAmount ? initialAmount * (KESSLER_FAILURE_BASE_DEBRIS_PER_LAND / perLand) : 0);
   }
 
   getProjectFailureChancesForDebris(totalDebris) {
     const denominator = this.getFailureDenominatorDebris();
     const ratio = denominator ? totalDebris / denominator : 0;
-    const smallSuccess = Math.pow(SMALL_PROJECT_BASE_SUCCESS, ratio);
-    const largeSuccess = Math.pow(LARGE_PROJECT_BASE_SUCCESS, ratio);
+    const parameters = this.normalize(this.manager.parameters.kessler);
+    const minimumSuccess = 1 - parameters.maximumFailureChance;
+    const smallSuccess = Math.max(minimumSuccess, Math.pow(parameters.smallProjectBaseSuccess, ratio));
+    const largeSuccess = Math.max(minimumSuccess, Math.pow(parameters.largeProjectBaseSuccess, ratio));
     return {
       smallFailure: 1 - smallSuccess,
       largeFailure: 1 - largeSuccess,
@@ -524,7 +536,21 @@ class KesslerHazard {
     const sigmaMeters = Math.abs(meanMeters - dragReferenceMeters);
     const stdMeters = Math.max(1, sigmaMeters);
     const maxMeters = Math.max(1, meanMeters + stdMeters * 3);
-    this.periapsisDistribution = buildPeriapsisDistribution(totalMass, meanMeters, stdMeters, maxMeters, referenceRadiusKm);
+    const parameters = this.normalize(kesslerParameters);
+    const outerMass = totalMass * parameters.outerOrbitMassFraction;
+    this.periapsisDistribution = buildPeriapsisDistribution(totalMass - outerMass, meanMeters, stdMeters, maxMeters, referenceRadiusKm);
+    if (outerMass > 0) {
+      const minimum = Math.max(maxMeters, parameters.outerOrbitMinimumMeters);
+      const maximum = Math.max(minimum, parameters.outerOrbitMaximumMeters);
+      for (let index = 0; index < PERIAPSIS_SAMPLE_COUNT; index += 1) {
+        const fraction = index / (PERIAPSIS_SAMPLE_COUNT - 1);
+        const massTons = outerMass / PERIAPSIS_SAMPLE_COUNT;
+        this.periapsisDistribution.push({
+          periapsisMeters: minimum * Math.pow(maximum / minimum, fraction),
+          referenceRadiusKm, massTons, maxSinceZero: massTons
+        });
+      }
+    }
     if (!this.periapsisBaseline.length) {
       this.periapsisBaseline = this.periapsisDistribution.map((entry) => ({
         periapsisMeters: entry.periapsisMeters,
@@ -635,7 +661,7 @@ class KesslerHazard {
         dragMass += entry.massTons;
       }
 
-      const densityRatio = Math.max(density, DEBRIS_DECAY_DENSITY_FLOOR) / DEBRIS_DECAY_DENSITY_REFERENCE;
+      const densityRatio = Math.max(density, kesslerParameters.debrisDecayDensityFloor ?? DEBRIS_DECAY_DENSITY_FLOOR) / DEBRIS_DECAY_DENSITY_REFERENCE;
       const densityFactor = Math.min(DEBRIS_DECAY_MAX_MULTIPLIER, Math.max(0, densityRatio));
       const decayRate = DEBRIS_DECAY_BASE_RATE * densityFactor;
       const decayFraction = 1 - Math.exp(-decayRate * deltaSeconds);

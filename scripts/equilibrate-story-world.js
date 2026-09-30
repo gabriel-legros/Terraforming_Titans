@@ -4,7 +4,7 @@ const { parse } = require('@babel/parser');
 const { createGameDom } = require('../__tests__/helpers/jsdom-game-harness.js');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
-const PLANET_PARAMETERS_PATH = path.join(REPO_ROOT, 'src', 'js', 'planet-parameters.js');
+let PLANET_PARAMETERS_PATH = path.join(REPO_ROOT, 'src', 'js', 'planet-parameters.js');
 const TERRAFORMING_PARAMETERS_PATH = path.join(
   REPO_ROOT,
   'src',
@@ -71,6 +71,7 @@ const PHASE_FAMILIES = [
 function parseArguments(argv) {
   const options = {
     planet: '',
+    specialSeed: false,
     passes: 50,
     relaxationSteps: 0,
     verificationSteps: 20000,
@@ -87,7 +88,10 @@ function parseArguments(argv) {
   };
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
-    if (argument === '--planet') {
+    if (argument === '--special-seed') {
+      options.specialSeed = true;
+      options.planet = String(argv[++index] || '').toLowerCase();
+    } else if (argument === '--planet') {
       options.planet = String(argv[++index] || '').toLowerCase();
     } else if (argument === '--passes') {
       options.passes = Number(argv[++index]);
@@ -218,6 +222,7 @@ function printHelp() {
     + '                       the other seeded exposed reservoirs\n'
     + '  --adaptive-only      Save the adaptively relaxed state directly; skip the algebraic\n'
     + `                       phase solver and use ${STEP_MS} ms steps only for verification\n`
+    + '  --special-seed <key>   Calibrate special-seeds.js instead of a story planet\n'
     + '  --adaptive-balance <family>\n'
     + '                       After adaptive relaxation, solve only that family\'s conserved\n'
     + '                       atmosphere/exposed-reservoir split; repeat for multiple families\n'
@@ -251,8 +256,10 @@ function findOverrideDeclaration(ast, source, planet) {
   for (const statement of ast.program.body) {
     if (statement.type !== 'VariableDeclaration') continue;
     for (const declaration of statement.declarations) {
-      if (declaration.id?.name !== 'planetSpecificOverrides') continue;
-      const property = getObjectProperty(declaration.init, planet);
+      if (!['planetSpecificOverrides', 'specialSeedDefinitions'].includes(declaration.id?.name)) continue;
+      const entry = getObjectProperty(declaration.init, planet);
+      const property = declaration.id.name === 'specialSeedDefinitions'
+        ? getObjectProperty(entry?.value, 'overrides') : entry;
       if (property?.value?.type === 'Identifier') {
         overrideVariable = property.value.name;
       }
@@ -382,10 +389,12 @@ function rewriteCondensationParameters(source, condensationParameters) {
   return output;
 }
 
-function selectWorld(window, planet) {
-  window.eval(`currentPlanetParameters = getPlanetParameters(${JSON.stringify(planet)})`);
+function selectWorld(window, planet, specialSeed = false) {
+  window.eval(`currentPlanetParameters = ${specialSeed ? 'getSpecialSeedParameters' : 'getPlanetParameters'}(${JSON.stringify(planet)})`);
+  if (specialSeed) window.eval(`currentPlanetParameters.rwgMeta = { specialSeedKey: ${JSON.stringify(planet)} }`);
   window.eval('initializeGameState()');
   window.eval('terraforming.calculateInitialValues()');
+  window.eval('for (const project of Object.values(projectManager.projects)) project.unlocked = false');
 }
 
 async function adaptivelyRelaxWorld(
@@ -426,6 +435,7 @@ async function adaptivelyRelaxWorld(
   window.eval(`currentPlanetParameters = ${JSON.stringify(result.override)}`);
   window.eval('initializeGameState()');
   window.eval('terraforming.calculateInitialValues()');
+  window.eval('for (const project of Object.values(projectManager.projects)) project.unlocked = false');
   return result;
 }
 
@@ -527,16 +537,20 @@ function captureAdaptiveSolution(window) {
       resources.atmospheric[family.atmosphere].value
     ])
   );
+  const hasHydrogen = resources.atmospheric.hydrogen.value > 0
+    || ZONES.some(zone => terraforming.zonalSurface.liquidHydrogen[zone] > 0);
+  if (hasHydrogen) atmosphericValues.hydrogen = resources.atmospheric.hydrogen.value;
   terraforming.updateResources(STEP_MS, { refreshStandaloneRates: true });
   const phaseResourceKeys = Array.from(new Set(
     activeFamilies.flatMap((family) => [family.liquid, family.solid])
   ));
+  if (hasHydrogen) phaseResourceKeys.push('liquidHydrogen');
   return {
     zonalSurface,
     zonalTemperatures,
     atmosphericValues,
     phaseResourceKeys,
-    families: activeFamilies.map((family) => family.id),
+    families: [...activeFamilies.map((family) => family.id), ...(hasHydrogen ? ['hydrogen'] : [])],
     condensationParameters: {},
     oneStepRates: Object.fromEntries(
       phaseResourceKeys.map((key) => [key, netRate(resources.surface[key])])
@@ -1101,7 +1115,7 @@ async function verifyWrittenWorld(options, phaseResourceKeys) {
   const dom = await createGameDom({ trackEventListeners: false });
   const { window } = dom;
   try {
-    selectWorld(window, options.planet);
+    selectWorld(window, options.planet, options.specialSeed);
     const maxima = Object.fromEntries(phaseResourceKeys.map((key) => [key, 0]));
     const pressureObservations = Object.fromEntries(
       Array.from(options.pressureRanges.keys())
@@ -1147,12 +1161,13 @@ async function main() {
     return;
   }
 
+  if (options.specialSeed) PLANET_PARAMETERS_PATH = path.join(REPO_ROOT, 'src', 'js', 'special-seeds.js');
   const originalSource = fs.readFileSync(PLANET_PARAMETERS_PATH, 'utf8');
   const originalTerraformingSource = fs.readFileSync(TERRAFORMING_PARAMETERS_PATH, 'utf8');
   const dom = await createGameDom({ trackEventListeners: false });
   let solution;
   try {
-    selectWorld(dom.window, options.planet);
+    selectWorld(dom.window, options.planet, options.specialSeed);
     if (options.relaxationSteps > 0) {
       process.stdout.write(
         `Adaptively relaxing ${options.planet} for at most `

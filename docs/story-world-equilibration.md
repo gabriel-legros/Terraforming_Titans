@@ -8,6 +8,12 @@ npm run equilibrate:world -- --planet <key>
 
 The calibrator preserves each phase family's total inventory, solves exposed liquid and solid reservoirs against exact 20 ms phase steps, stores displaced material in the largest buried reservoir (or atmosphere when none exists), reloads the edited source, and verifies 20,000 normal `produceResources(20, buildings)` updates. It restores the original source if verification fails.
 
+Special seeds can be calibrated with `--special-seed <key>` instead of `--planet`.
+This writes their registered override in `src/js/special-seeds.js`. Story projects
+are inactive throughout calibration and verification. Hydrogen is included in
+adaptive snapshots and verification; use `--adaptive-only` for hydrogen oceans.
+See [Hydra tuning and calibration](hydra.md) for the Lerna recipe and verified result.
+
 ## Solver Options
 
 - `--threshold`, `--steps`, and `--passes` override the default `0.01` tons/s solve limit, 20,000 verification steps, and 50 coordinate passes.

@@ -1429,6 +1429,60 @@ setLanguageData({
       story: 'Story',
     },
     projects: {
+      "hydra": {
+        "rateSources": {
+          "aether": "Aether",
+          "aero": "Aero",
+          "aqua": "Aqua",
+          "ignis": "Ignis",
+          "terra": "Terra",
+          "net": "Entanglement net"
+        },
+        "objective": "Hydra restores the climate toward {temperature} K and {pressure} MPa.",
+        "health": "{percent}% HP",
+        "abilities": "Abilities",
+        "countermeasures": "Countermeasures",
+        "netTitle": "Entanglement net",
+        "netHelp": "Traps and destroys Aero platforms. Wears down with use.",
+        "summary": "Defeat all five cores simultaneously. Surviving cores repair each other.",
+        "victory": "Hydra defeated.",
+        "supplies": "Orbital debris: {debris} t | Launch failure: {small}% small / {large}% large",
+        "mass": "Mass: {mass} t",
+        "rates": "Repair +{growth} t/s | Support +{support} t/s | Damage -{loss} t/s",
+        "net": "{segmentMass} t/segment | Base: {base} segments/s | Per ship: +{ship} segments/s",
+        "netSegments": "Available segments: {built} / {max}",
+        "netStart": "Build net ({percent}%)",
+        "netPause": "Pause construction ({percent}%)",
+        "netFull": "Net at capacity",
+        "netFinished": "Construction stopped",
+        "cores": {
+          "aether": {
+            "name": "Aether | Orbit and outer system",
+            "help": "Rebuilds from orbital debris. Disables research orbitals above {orbitalThreshold}% HP. Captures ships, delays orbital projects and bombards buildings when sibling cores weaken. Imports gas as pressure falls; strips atmosphere near stellar ignition.",
+            "tactics": "Lasers destroy swarm mass and orbital debris. Atmospheric expansion burns the near-orbit swarm."
+          },
+          "aero": {
+            "name": "Aero | Upper atmosphere",
+            "help": "Builds platforms from atmospheric CO2 and methane. Occupies aerostat capacity and hacks aerostats when weakened.",
+            "tactics": "Aerostat capacity occupied: {occupied}%. Lower pressure below {pressure} Pa or deploy the net."
+          },
+          "aqua": {
+            "name": "Aqua | Oceans",
+            "help": "Occupies liquid oceans, hacks androids and excavates planetary mass into gases, junk and scrap.",
+            "tactics": "Ocean coverage: {currentOcean}%. Reduce combined liquid coverage below {ocean}% to expose Aqua."
+          },
+          "ignis": {
+            "name": "Ignis | Surface industry",
+            "help": "Occupies land and rebuilds from scrap, junk and mined material. Releases greenhouse gases when cooled.",
+            "tactics": "Deploy Crusaders, cool toward {cold} K or heat toward {hot} K."
+          },
+          "terra": {
+            "name": "Terra | Deep crust",
+            "help": "Slows excavation, adds geothermal heat and vents gases. Heavy surface development triggers attacks on buildings, mine depth and underground expansion.",
+            "tactics": "Excavation time: x{slow}. Cover ore deposits with maximum-depth mines or remove planetary mass."
+          }
+        }
+      },
       managerDescription: 'Manages all special projects',
       requirements: 'Requirements:',
       cost: 'Cost:',
@@ -2917,6 +2971,8 @@ setLanguageData({
         orbitals: {
           title: 'Orbitals',
           kesslerWarning: 'Orbitals cannot approach due to Kessler Skies. Limited to research.',
+          aetherWarning: 'Aether blocks research orbitals.',
+          kesslerAetherWarning: 'Kessler Skies blocks other orbitals. Aether blocks research orbitals.',
           summary: 'Orbitals Assigned: {assigned} / {available} | Unassigned: {unassigned}',
           mode: 'Mode',
           modeManual: 'Manual',
@@ -3897,7 +3953,7 @@ setLanguageData({
             drag: 'Drag {value}',
             orbitalDebrisCleared: 'Orbital debris cleared.',
             orbitalDebris: 'Orbital debris: {current} / {initial} t',
-            binDetail: 'Initial-radius bin @ {altitude} km (current air path {effectiveAltitude} km): {current} / {baseline} t, {decay} t/s, {density}',
+            binDetail: 'Initial-radius bin @ {altitude} km (current effective altitude {effectiveAltitude} km): {current} / {baseline} t, {decay} t/s, {density}',
             initialRadiusMax: '{value} km initial radius',
           },
           summary: {
@@ -5785,7 +5841,20 @@ setLanguageData({
     },
   },
   catalogs: {
+    story: {
+      projects: {
+        "hydra": {
+          "name": "Hydra",
+          "description": "Hydra is a swarm machine intelligence locked to this star system.  A failed experiment from Prometheus's master.  The cores will cooperate under threat."
+        },
+      },
+    },
     specialSeeds: {
+      hydra: {
+        name: 'Hydra', difficulty: 'Extreme',
+        rules: 'Five regenerating machine cores occupy Lerna and actively resist terraforming. Suppress all five simultaneously to defeat Hydra.',
+        requirement: 'Hydra', defeated: 'All five cores defeated', defeatFirst: 'Defeat Hydra first'
+      },
       commonEffects: {
         liftersStripModeDisabled: 'Lifters Strip Mode Disabled',
         incineratorRecipeDisabled: 'Incinerator Recipe Disabled',
