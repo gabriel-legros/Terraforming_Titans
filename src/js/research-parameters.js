@@ -3080,7 +3080,7 @@ const researchParameters = {
         id: 'neutron_star_merging',
         name: '',
         description: '',
-        cost: { advancedResearch: 50_000_000_000_000_000 },
+        cost: { advancedResearch: 200_000_000_000_000_000 },
         prerequisites: ['artificial_quasars', 'tractor_beams'],
         effects: [
           {
