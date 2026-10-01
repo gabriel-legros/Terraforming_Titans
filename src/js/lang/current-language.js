@@ -628,6 +628,8 @@ setLanguageData({
         },
       },
       importCaps: {
+        sourceBonus: '{source}: {bonuses}.',
+        resourceBonus: '+{value} {resource} cap',
         noCap: 'No cap',
         miningRightsRule: 'Cylinders-HOPE Mining Rights Agreement: mining caps ×{multiplier}; Hydrogen remains uncapped.',
         resources: {
@@ -1674,7 +1676,7 @@ setLanguageData({
       },
       artificialQuasars: {
         title: 'Artificial Quasar Controls',
-        titleTooltip: 'Assign quasars to harness stellar black hole spin energy. Each assigned quasar produces space energy and counts against the Warp Gate Network-scaled black hole assignment cap.',
+        titleTooltip: 'Assign quasars to harness stellar black hole spin energy. Each assigned quasar produces space energy and uses one accessible black hole. Natural black holes scale with the Warp Gate Network; completed neutron star mergers add black holes directly.',
         totalLifters: 'Total Quasars',
         runLifters: 'Run quasars',
         energyPerLifter: 'Output per quasar',
@@ -1693,7 +1695,7 @@ setLanguageData({
           operation: 'Artificial Quasar',
         },
         operationNote: 'Each assigned quasar produces {value} space energy per real-time second by spinning down stellar black holes over a 10,000-year extraction window.',
-        maxAssignmentTooltip: 'Base assignment cap: {base}\nWarp Gate Network scale: max(1, {averageLevel}) / {levelCap} = {networkScale}\nAccessible black hole assignment cap: {max}',
+        maxAssignmentTooltip: 'Base assignment cap: {base}\nWarp Gate Network scale: max(1, {averageLevel}) / {levelCap} = {networkScale}\nBlack holes from neutron star mergers: +{mergers}\nAccessible black hole assignment cap: {max}',
         starLiftingTooltip: '',
         status: {
           idle: 'Idle',
@@ -2619,6 +2621,35 @@ setLanguageData({
           runDisabled: 'Run disabled',
           noAssignments: 'No assignments',
           buildSpaceStorage: 'Build space storage',
+          running: 'Running',
+        },
+      },
+      neutronStarSmasher: {
+        target: 'Target',
+        title: 'Neutron Star Smasher Controls',
+        assigned: 'Assigned',
+        energyPerSmasher: 'Energy per smasher',
+        energyPerSmasherTooltip: 'Space energy consumed per second by one smasher at full productivity. Each completed merger costs this rate divided by the merger rate; insufficient energy slows progress.',
+        totalCrackers: 'Total Smashers',
+        runCrackers: 'Run smashers',
+        energyUse: 'Energy Use',
+        spaceEnergyRate: '{value} space energy/s',
+        expansionRate: '{value} smashers/s',
+        rateSources: { expansion: 'Neutron Star Smasher expansion' },
+        crackedHeader: 'Merger Progress',
+        remainingHeader: 'Pairs Remaining',
+        recipeLabels: { neutronStarPair: 'Neutron star pairs' },
+        recipeTooltip: 'Each completed merger consumes two neutron stars, creates one black hole for an Artificial Quasar, and adds +{metal} metal/s to the mining cap. Yield: 0.05 solar masses of metal extracted over 10,000 in-game years (3,650,000 real-time seconds). Partial mergers grant no rewards until completed.',
+        operationNote: 'Each assigned smasher performs one merger per second at full productivity, consuming {energy} space energy per merger. The neutron-star supply scales with the average Warp Gate Network level, reaching 1B stars at level 1M.',
+        planetProgress: 'Completed mergers / black holes created: {merged} | Available neutron stars: {stars} | Added metal mining cap: +{metal}/s',
+        status: {
+          depleted: 'All accessible neutron star pairs have been merged',
+          noSpaceEnergy: 'No space energy',
+          insufficientSpaceEnergy: 'Insufficient space energy',
+          idle: 'Idle',
+          completeAtLeastOne: 'Complete at least one smasher',
+          runDisabled: 'Run disabled',
+          noAssignments: 'No assignments',
           running: 'Running',
         },
       },
@@ -6455,13 +6486,17 @@ setLanguageData({
       },
       artificialQuasars: {
         name: 'Artificial Quasars',
-        description: 'Build tera-scale black hole spin-energy platforms. Assigned quasars produce space energy from accessible stellar black holes, scaled by the average Warp Gate Network level.',
+        description: 'Build tera-scale black hole spin-energy platforms. Assigned quasars produce space energy from accessible stellar black holes, scaled by the average Warp Gate Network level, plus black holes created by neutron star mergers.',
         attributes: {
           lifterStripRecipe: { label: 'Strip Atmosphere' },
           lifterHarvestRecipes: {
             blackHoleSpinEnergy: { label: 'Black Hole Spin Energy' },
           },
         },
+      },
+      neutronStarSmasher: {
+        name: 'Neutron Star Smasher',
+        description: 'Smash pairs of neutron stars together with tractor beams. Each merger consumes space energy, creates a black hole for an Artificial Quasar, and produces kilonova ejecta that increases the metal mining cap.',
       },
       matrioshkaBrain: {
         name: 'Matrioshka Brain',
@@ -7399,6 +7434,10 @@ setLanguageData({
         agrarian_worlds: {
           name: 'Agrarian worlds',
           description: "Our manufacturing worlds have caught wind of recent development in... food production.   They're interested in striking a deal.  Unlocks a new toggle for manufacturing worlds.",
+        },
+        neutron_star_merging: {
+          name: 'Neutron Star Merging',
+          description: "The galaxy has a billion neutron stars just sitting there.  We can't extract energy from them because they don't spin fast enough.  Solution : smash neutron stars into each other with tractor beams.",
         },
         artificial_quasars: {
           name: 'Artificial Quasars',

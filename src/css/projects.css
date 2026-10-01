@@ -1536,6 +1536,23 @@
     grid-template-columns: minmax(160px, 1fr) minmax(80px, 0.35fr) minmax(80px, 0.35fr) minmax(100px, 0.45fr) minmax(110px, 0.5fr) 340px minmax(180px, 1fr);
 }
 
+.neutron-star-smasher .planet-crackers-assignment-row {
+    grid-template-columns: minmax(160px, 1fr) 90px 90px 110px 314px minmax(90px, 0.5fr);
+}
+
+.neutron-star-smasher [data-planet-cracker-ui="cracked-header"],
+.neutron-star-smasher [data-planet-cracker-ui="cracked-value"] {
+    display: none;
+}
+
+.neutron-star-smasher .nuclear-alchemy-assignment-list {
+    overflow-x: auto;
+}
+
+.neutron-star-smasher .nuclear-alchemy-controls-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .manufacturing-assignment-list {
     --manufacturing-block-a-width: 400px;
     --manufacturing-block-b-width: 430px;

@@ -58,7 +58,8 @@ class ArtificialQuasarsProject extends LiftersProject {
 
   getEffectiveArtificialQuasarAssignmentCap() {
     const scaled = Number(ARTIFICIAL_QUASAR_ASSIGNMENT_CAP) * this.getArtificialQuasarCapMultiplier();
-    return BigInt(Math.max(0, Math.floor(scaled)));
+    return BigInt(Math.max(0, Math.floor(scaled)))
+      + BigInt(warpGateNetworkManager.neutronStarMergerBlackHoles);
   }
 
   getGasGiantMaxAssignmentForRecipe(key, recipe = null) {
@@ -83,11 +84,9 @@ class ArtificialQuasarsProject extends LiftersProject {
         averageLevel: formatNumber(averageLevel, true, 3),
         levelCap: formatNumber(ARTIFICIAL_QUASAR_WARP_GATE_LEVEL_CAP, true),
         networkScale: formatNumber(networkScale, true, 6),
+        mergers: formatNumber(warpGateNetworkManager.neutronStarMergerBlackHoles, true),
         max: formatNumber(cap, true, 2),
-      },
-      `Base assignment cap: ${formatNumber(ARTIFICIAL_QUASAR_ASSIGNMENT_CAP, true, 2)}
-Warp Gate Network scale: max(1, ${formatNumber(averageLevel, true, 3)}) / ${formatNumber(ARTIFICIAL_QUASAR_WARP_GATE_LEVEL_CAP, true)} = ${formatNumber(networkScale, true, 6)}
-Accessible black hole assignment cap: ${formatNumber(cap, true, 2)}`
+      }
     );
   }
 

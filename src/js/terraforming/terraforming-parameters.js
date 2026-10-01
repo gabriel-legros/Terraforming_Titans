@@ -568,6 +568,14 @@ var terraformingParameters = {
   },
 
   gameplay: {
+    neutronStarMerging: {
+      neutronStars: 1_000_000_000,
+      mergersPerAssignmentSecond: 1 / 1000,
+      spaceEnergyPerMerger: 1e38,
+      ejectaSolarMasses: 0.05,
+      extractionYears: 10_000,
+      daysPerYear: 365
+    },
     solar: {
       diskGrazingFluxFactor: 2 / (3 * Math.PI),
       solarPanelBaseLuminosity: 1000,

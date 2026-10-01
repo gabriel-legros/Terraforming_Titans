@@ -85,6 +85,8 @@ class WarpGateNetworkManager extends EffectableEntity {
     this.allSectorWarpGateAverageCache = 0;
     this.allSectorWarpGateAverageDirty = true;
     this.controlCacheVersion = -1;
+    this.neutronStarMergerBlackHoles = 0;
+    this.neutronStarMergerMetalCap = 0;
   }
 
   createEmptyBreakdown() {
@@ -223,6 +225,8 @@ class WarpGateNetworkManager extends EffectableEntity {
   }
 
   recalculateImportCapFlatBonuses() {
+    this.neutronStarMergerBlackHoles = 0;
+    this.neutronStarMergerMetalCap = 0;
     Object.keys(IMPORT_CAP_FLAT_BONUSES).forEach((key) => {
       IMPORT_CAP_FLAT_BONUSES[key] = 0;
     });
@@ -235,6 +239,10 @@ class WarpGateNetworkManager extends EffectableEntity {
         continue;
       }
       IMPORT_CAP_FLAT_BONUSES[key] += effect.value;
+      if (effect.sourceId === 'neutronStarSmasher') {
+        this.neutronStarMergerBlackHoles = effect.createdBlackHoles;
+        this.neutronStarMergerMetalCap = effect.value;
+      }
     }
   }
 
@@ -296,6 +304,34 @@ class WarpGateNetworkManager extends EffectableEntity {
     return summary.resources[resourceKey].cap;
   }
 
+  getFlatImportCapRuleLines() {
+    const bonusesBySource = new Map();
+    for (const effect of this.activeEffects) {
+      if (effect.type !== 'importCapFlatBonus' || !(effect.value > 0)) {
+        continue;
+      }
+      let bonuses = bonusesBySource.get(effect.sourceId);
+      if (!bonuses) {
+        bonuses = {};
+        bonusesBySource.set(effect.sourceId, bonuses);
+      }
+      bonuses[effect.resourceKey] = (bonuses[effect.resourceKey] || 0) + effect.value;
+    }
+    return Array.from(bonusesBySource, ([sourceId, bonuses]) => t(
+      'ui.galaxy.importCaps.sourceBonus',
+      {
+        source: t(`catalogs.projects.${sourceId}.name`),
+        bonuses: Object.entries(bonuses).map(([key, value]) => t(
+          'ui.galaxy.importCaps.resourceBonus',
+          {
+            resource: t(`ui.galaxy.importCaps.resources.${key}`),
+            value: formatNumber(value, true)
+          }
+        )).join(', ')
+      }
+    ));
+  }
+
   getCapSummaryText() {
     this.syncUnlocks();
     const foundry = this.getFoundryMetalCapBonus();
@@ -310,14 +346,7 @@ class WarpGateNetworkManager extends EffectableEntity {
     const foundryLine = foundry.bonus > 0
       ? ` Foundry worlds add +${formatNumber(foundry.bonus, true)} to the Metal cap.`
       : '';
-    const flatBonusLine = (
-      IMPORT_CAP_FLAT_BONUSES.metal > 0
-      || IMPORT_CAP_FLAT_BONUSES.silicon > 0
-      || IMPORT_CAP_FLAT_BONUSES.carbon > 0
-      || IMPORT_CAP_FLAT_BONUSES.water > 0
-    )
-      ? ` Planet Crackers add +${formatNumber(IMPORT_CAP_FLAT_BONUSES.metal || 0, true)} Metal, +${formatNumber(IMPORT_CAP_FLAT_BONUSES.silicon || 0, true)} Silicates, +${formatNumber(IMPORT_CAP_FLAT_BONUSES.carbon || 0, true)} CO2, and +${formatNumber(IMPORT_CAP_FLAT_BONUSES.water || 0, true)} Water cap.`
-      : '';
+    const flatBonusLine = this.getFlatImportCapRuleLines().map(line => ` ${line}`).join('');
     if (!this.warpGateUnlocked) {
       const list = IMPORT_CAP_RESOURCES.map(({ key, label }) => `${label}: ${formatNumber(this.getCapForResource(key), true)}`).join(', ');
       return `Due to limited deposits, import caps are ${list} ships.${foundryLine}${flatBonusLine}${miningRightsLine}`;
@@ -357,20 +386,13 @@ class WarpGateNetworkManager extends EffectableEntity {
     const foundryRule = foundry.bonus > 0
       ? `Foundry worlds: +${formatNumber(foundry.bonus, true)} Metal cap (${foundry.count} worlds).`
       : '';
-    const crackerRule = (
-      IMPORT_CAP_FLAT_BONUSES.metal > 0
-      || IMPORT_CAP_FLAT_BONUSES.silicon > 0
-      || IMPORT_CAP_FLAT_BONUSES.carbon > 0
-      || IMPORT_CAP_FLAT_BONUSES.water > 0
-    )
-      ? `Planet Crackers: +${formatNumber(IMPORT_CAP_FLAT_BONUSES.metal || 0, true)} Metal cap, +${formatNumber(IMPORT_CAP_FLAT_BONUSES.silicon || 0, true)} Silicates cap, +${formatNumber(IMPORT_CAP_FLAT_BONUSES.carbon || 0, true)} CO2 cap, +${formatNumber(IMPORT_CAP_FLAT_BONUSES.water || 0, true)} Water cap.`
-      : '';
+    const flatBonusRules = this.getFlatImportCapRuleLines();
     if (!this.warpGateUnlocked) {
       return {
         intro: 'Due to limited deposits, imports are limited until Warp Gate Command is unlocked.',
         baseCapLine: `Base cap: ${formatNumber(IMPORT_CAP_BASE, true)} ships.`,
         ratiosLine: '',
-        ruleLines: [foundryRule, crackerRule, miningRightsRule].filter(Boolean),
+        ruleLines: [foundryRule, ...flatBonusRules, miningRightsRule].filter(Boolean),
         fullControlLine: '',
         caps: getImportCapEntries(IMPORT_CAP_BASE, null, 'Base cap', bonusByResource, rwgReductionByResource, miningRightsMultiplier),
         hydrogen: { label: t('ui.galaxy.importCaps.resources.hydrogen', {}, 'Hydrogen'), ratio: '—', cap: '∞', detail: t('ui.galaxy.importCaps.noCap', {}, 'No cap') },
@@ -381,7 +403,7 @@ class WarpGateNetworkManager extends EffectableEntity {
         intro: 'Warp Gate Command expands shipments before galaxy control is available.',
         baseCapLine: `Base cap: ${formatNumber(IMPORT_CAP_WARP, true)} ships.`,
         ratiosLine: '',
-        ruleLines: [foundryRule, crackerRule, miningRightsRule].filter(Boolean),
+        ruleLines: [foundryRule, ...flatBonusRules, miningRightsRule].filter(Boolean),
         fullControlLine: '',
         caps: getImportCapEntries(IMPORT_CAP_WARP, null, 'Base cap', bonusByResource, rwgReductionByResource, miningRightsMultiplier),
         hydrogen: { label: t('ui.galaxy.importCaps.resources.hydrogen', {}, 'Hydrogen'), ratio: '—', cap: '∞', detail: t('ui.galaxy.importCaps.noCap', {}, 'No cap') },
@@ -398,7 +420,7 @@ class WarpGateNetworkManager extends EffectableEntity {
           'Rich sectors add +100% for that resource; poor sectors cut -50%.',
           'Warp Gate Network levels add +10% cap per level.',
           ...(foundryRule ? [foundryRule] : []),
-          ...(crackerRule ? [crackerRule] : []),
+          ...flatBonusRules,
           ...(miningRightsRule ? [miningRightsRule] : []),
         ],
       fullControlLine,

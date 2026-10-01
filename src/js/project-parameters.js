@@ -1186,6 +1186,30 @@ const projectParameters = {
       }
     }
   },
+  neutronStarSmasher: {
+    type: 'NeutronStarSmasherProject',
+    name: '',
+    category: 'tera',
+    cost: {
+      colony: {
+        superalloys: 30_000_000_000_000_000_000_000_000,
+        superconductors: 15_000_000_000_000_000_000_000_000,
+        components: 300_000_000_000_000_000_000_000,
+        electronics: 150_000_000_000_000_000_000_000
+      }
+    },
+    duration: 4_000_000_000_000_000_000,
+    description: '',
+    repeatable: true,
+    maxRepeatCount: Infinity,
+    unlocked: false,
+    attributes: {
+      canUseSpaceStorage: true,
+      spaceBuilding: true,
+      spaceBuildingProductivity: true,
+      preserveProgressOnTravel: true
+    }
+  },
   matrioshkaBrain: {
     type: 'MatrioshkaBrainProject',
     name: '',

@@ -19,6 +19,7 @@ This document records durable ownership and cross-system constraints. Feature va
 - Dynamic-world surface gravity excludes atmospheric mass. Gravity penalties instead estimate gravity at the altitude where atmospheric pressure reaches 1 atm, including the atmosphere below that altitude.
 - World-specific values live in planet or special-seed parameters. Derive dependent values only after mod patch stages have run.
 - Specialized building, colony, and project constructors are selected through each parameter entry's `type`. Keep constructor selection data-driven.
+- Neutron Star Smasher saves cumulative merger progress through the shared finite-target project state. Only whole mergers grant rewards. Its replaceable import-cap effect carries both the metal cap and created black-hole count; the Warp Gate Network manager rebuilds those derived totals, and Artificial Quasars add the created holes after network scaling. Save/load and travel must not scale or award those rewards a second time.
 - Building-specific logic belongs in a dedicated subclass under `src/js/buildings/`.
 - World-specialization exclusion, warnings, and unlock checks use the shared helpers in `SpecializationProject.js`; do not introduce fixed specialization lists.
 
