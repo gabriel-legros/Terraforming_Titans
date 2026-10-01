@@ -208,6 +208,77 @@ function configurePreset(automation, {
 }
 
 describe('Spaceship automation scenarios', () => {
+  it.each([
+    ['cappedMax', 300000, Infinity, 200000],
+    ['cappedMin', 300000, Infinity, 200000],
+    ['fixed', 300000, Infinity, 200000],
+    ['cappedMax', 150000, Infinity, 150000],
+    ['cappedMax', 300000, 150000, 150000],
+    ['cappedMin', 300000, 150000, 150000],
+  ])('%s adds repeated 100k caps with %i ships and project limit %s', (mode, initialShips, maxAssignableShips, expected) => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips,
+      projects: { metalMining: { maxAssignableShips } },
+    });
+    configurePreset(automation, {
+      mode,
+      limit: mode === 'fixed' ? 100000 : null,
+      entries: [{ projectId: 'metalMining', weight: 1, max: 100000, maxMode: 'absolute' }],
+    });
+    const preset = automation.getActivePreset();
+    preset.steps.push({ ...preset.steps[0], id: 2 });
+    automation.disabledProjects.add('metalMining');
+
+    try {
+      for (let update = 0; update < 3; update += 1) {
+        automation.applyAssignments();
+        expect(projects.metalMining.getAutomationShipCount()).toBe(expected);
+        expect(resources.special.spaceships.value).toBe(initialShips - expected);
+      }
+    } finally {
+      cleanup();
+    }
+  });
+
+  it('fills a repeated cap through weighted rounding and passes leftovers to the next step', () => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 30,
+      projects: { metalMining: {}, siliconMining: {}, waterMining: {} },
+    });
+    configurePreset(automation, {
+      entries: [{ projectId: 'metalMining', weight: 1, max: 10, maxMode: 'absolute' }],
+    });
+    automation.getActivePreset().steps.push(
+      {
+        id: 2,
+        mode: 'fixed',
+        limit: 9,
+        entries: [
+          { projectId: 'metalMining', weight: 1, max: 5, maxMode: 'absolute' },
+          { projectId: 'siliconMining', weight: 1, max: 4, maxMode: 'absolute' },
+        ],
+      },
+      {
+        id: 3,
+        mode: 'cappedMax',
+        limit: null,
+        entries: [{ projectId: 'waterMining', weight: 1, max: null, maxMode: 'absolute' }],
+      }
+    );
+
+    try {
+      for (let update = 0; update < 3; update += 1) {
+        automation.applyAssignments();
+        expect(projects.metalMining.getAutomationShipCount()).toBe(15);
+        expect(projects.siliconMining.getAutomationShipCount()).toBe(4);
+        expect(projects.waterMining.getAutomationShipCount()).toBe(11);
+        expect(resources.special.spaceships.value).toBe(0);
+      }
+    } finally {
+      cleanup();
+    }
+  });
+
   it('splits 10M ships to mining and 1M mass drivers to disposal in mixed weighted step', () => {
     const { automation, projects, cleanup } = createHarness({
       initialShips: 10000000,

@@ -73,6 +73,7 @@ Durable constraints:
 - Continuous atmosphere, zonal-surface, and albedo deltas are applied proportionally inside fixed terraforming substeps. Do not defer them to a later frame boundary.
 - Zonal transfers credit output only for input actually removed during the woven substeps so they remain mass-conserving when phase changes compete.
 - Resource rate maps use stable, non-localized ids. Buildings use `building:<internal name>`, projects use `project:<internal name>`, and shared/mod processes register namespaced ids. Gameplay and automation query ids; UI resolves display names.
+- Ship automation entry caps apply to the ships allocated by that step. Repeated projects accumulate assignments across steps, while project-level ship limits and the available fleet constrain the combined total.
 - Resource production uses its three-step productivity fixed point. Preserve ordered floating-point grouping in interim projections and end any assignment-normalization batch before actual resource application.
 - `PreciseDecimal` is the immutable exact base-10 type for systems that explicitly need exact arithmetic across incompatible magnitudes. Ordinary physics and UI stay on `Number`.
 - Runtime zonal surface state is resource-first: `terraforming.zonalSurface[resourceKey][zone]`. Use `ZonalResource.change(zone, delta)` for relative mutations and `set`/the property setter only for intentional replacement. Precision state belongs to the value; do not add parallel remainder stores.

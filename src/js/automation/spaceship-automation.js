@@ -390,7 +390,7 @@ class SpaceshipAutomation {
     SpaceshipProject.refreshAutoAssignDisplays();
   }
 
-  computeEntryMax(entry, project) {
+  computeEntryMax(entry, project, previousStepsAssigned = 0) {
     if (!this.isProjectEnabled(project)) {
       return 0;
     }
@@ -427,7 +427,7 @@ class SpaceshipAutomation {
     if (!Number.isFinite(boundedMax)) {
       return projectCap;
     }
-    return Math.min(projectCap, Math.max(0, Math.floor(boundedMax)));
+    return Math.min(projectCap, previousStepsAssigned + Math.max(0, Math.floor(boundedMax)));
   }
 
   calculateProjectEnergyRatePerShip(project) {
@@ -836,6 +836,15 @@ class SpaceshipAutomation {
     for (let stepIndex = 0; stepIndex < preset.steps.length; stepIndex += 1) {
       const step = preset.steps[stepIndex];
       const entries = step.entries;
+      // Entry caps apply to this step; project limits apply to the combined assignment.
+      const entryTargets = new Map(entries.map(entry => [
+        entry,
+        this.computeEntryMax(
+          entry,
+          targets.find(item => item.name === entry.projectId),
+          desiredAssignments[entry.projectId] || 0
+        )
+      ]));
       const stepHasMassDrivers = entries.some(entry => entry.projectId === massDriverTargetId);
       const stepHasNonMassEntries = entries.some(entry => entry.projectId !== massDriverTargetId);
       const isCappedMin = step.mode === 'cappedMin';
@@ -867,9 +876,8 @@ class SpaceshipAutomation {
           for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
             const entry = entries[entryIndex];
             if (entry.weight <= 0) continue;
-            const project = targets.find(item => item.name === entry.projectId);
             const currentTarget = this.sanitizeShipCount(desiredAssignments[entry.projectId] || 0);
-            const maxForEntry = this.computeEntryMax(entry, project);
+            const maxForEntry = entryTargets.get(entry);
             if (maxForEntry === Infinity) {
               hasInfinite = true;
               break;
@@ -920,7 +928,7 @@ class SpaceshipAutomation {
           if (isManuallyDisabled || (isTemporarilyDisabled && releaseOnDisable)) continue;
           const currentTarget = this.sanitizeShipCount(desiredAssignments[entry.projectId] || 0);
           desiredAssignments[entry.projectId] = currentTarget;
-          const maxForEntry = this.computeEntryMax(entry, project);
+          const maxForEntry = entryTargets.get(entry);
           const entryPool = getPoolAvailable(usesMassDrivers);
           const remainingCapacity = Math.min(Math.max(0, maxForEntry - currentTarget), entryPool);
           if (entry.weight > 0 && remainingCapacity > 0) {
@@ -1047,7 +1055,7 @@ class SpaceshipAutomation {
               const poolAvailable = getPoolAvailable(item.usesMassDrivers);
               if (poolAvailable <= 0) continue;
               const current = desiredAssignments[item.project.name] || 0;
-              const cap = this.computeEntryMax(item.entry, item.project);
+              const cap = entryTargets.get(item.entry);
               if (current < cap) {
                 const applied = allocateToEntry(item, 1);
                 if (applied <= 0) continue;
