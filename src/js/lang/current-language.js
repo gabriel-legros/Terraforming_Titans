@@ -6496,7 +6496,7 @@ setLanguageData({
       },
       neutronStarSmasher: {
         name: 'Neutron Star Smasher',
-        description: 'Smash pairs of neutron stars together with tractor beams. Each merger consumes space energy, creates a black hole for an Artificial Quasar, and produces kilonova ejecta that increases the metal mining cap.',
+        description: 'Smash pairs of neutron stars together with tractor beams. Each merger consumes space energy, creates a black hole for an Artificial Quasar, and produces a kilonova that increases the metal mining cap.',
       },
       matrioshkaBrain: {
         name: 'Matrioshka Brain',
