@@ -1524,7 +1524,7 @@ setLanguageData({
               "delay": "Deeper mining time: x{slow}.",
               "attacks": "Attacks buildings, non-aerostat colonies, mine depth and underground expansion when structures use surface or underground land totaling at least {surfaceThreshold}% of the planet's surface area."
             },
-            "tactics": "At maximum mining depth, decay scales with ore mines / maximum ore mines and repair efficiency falls by the same fraction. Alternatively, remove planetary mass."
+            "tactics": "At maximum mining depth, decay scales with ore mines / maximum ore mines and reduces terra self-repair. Alternatively, remove planetary mass."
           }
         }
       },
