@@ -2175,8 +2175,8 @@ const hydraOverrides = {
       junk: { initialValue: 1e18, unlocked: true }, scrapMetal: { initialValue: 1e18, unlocked: true }
     },
     underground: {
-      ore: { initialValue: 100, maxDeposits: 452389342116, areaTotal: 4523893421169.302 },
-      geothermal: { initialValue: 10, maxDeposits: 4523893421, areaTotal: 4523893421169.302 }
+      ore: { initialValue: 100, maxDeposits: 15000, areaTotal: 4523893421169.302 },
+      geothermal: { initialValue: 10, maxDeposits: 1500, areaTotal: 4523893421169.302 }
     },
     atmospheric: {
       hydrogen: { initialValue: 2.865420108813261e+21 },
