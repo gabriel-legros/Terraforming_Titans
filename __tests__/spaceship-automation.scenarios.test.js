@@ -724,7 +724,7 @@ describe('Spaceship automation scenarios', () => {
     cleanup();
   });
 
-  it('cappedMin keeps assigning to the disposal target when mass drivers are disabled unless release is checked', () => {
+  it('cappedMin keeps assigning ships to the disposal target when mass drivers are disabled', () => {
     const { automation, projects, cleanup } = createHarness({
       initialShips: 100,
       massDriverCount: 10,
@@ -781,6 +781,31 @@ describe('Spaceship automation scenarios', () => {
     expect(buildings.massDriver.active).toBe(5);
     expect(resources.special.spaceships.value).toBe(0);
     cleanup();
+  });
+
+  it.each(['fixed', 'cappedMax'])('uses ships for disposal before mass drivers are researched in %s mode', (mode) => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 100,
+      projects: { disposeResources: { massDriverEnabled: false } },
+    });
+    automation.disabledProjects.add(automation.getMassDriverAutomationId());
+    configurePreset(automation, {
+      mode,
+      limit: mode === 'fixed' ? 200 : null,
+      entries: [
+        { projectId: automation.getMassDriverAutomationId(), weight: 1, max: null, maxMode: 'absolute' },
+      ],
+    });
+
+    try {
+      automation.applyAssignments();
+
+      expect(projects.disposeResources.getAutomationShipCount()).toBe(100);
+      expect(buildings.massDriver.active).toBe(0);
+      expect(resources.special.spaceships.value).toBe(0);
+    } finally {
+      cleanup();
+    }
   });
 
   it('mass-driver-only step can use both ship and mass-driver pools', () => {

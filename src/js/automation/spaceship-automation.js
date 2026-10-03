@@ -51,7 +51,6 @@ class SpaceshipAutomation {
 
   getMassDriverAutomationTarget() {
     const disposalProject = this.getMassDriverDisposalProject();
-    const areMassDriversEnabled = () => disposalProject.isBooleanFlagSet('massDriverEnabled');
     return {
       name: this.getMassDriverAutomationId(),
       displayName: t('ui.hope.automationCards.massDriverDisposalTarget', {}, 'Resource Disposal (mass drivers included)'),
@@ -60,7 +59,7 @@ class SpaceshipAutomation {
       isVisible: () => disposalProject.isVisible(),
       isPermanentlyDisabled: () => disposalProject.isPermanentlyDisabled(),
       isAutomationManuallyDisabled: () => disposalProject.isAutomationManuallyDisabled(),
-      shouldAutomationDisable: () => disposalProject.shouldAutomationDisable() || !areMassDriversEnabled(),
+      shouldAutomationDisable: () => disposalProject.shouldAutomationDisable(),
       getMaxAssignableShips: () => this.automationShipPool + this.automationMassDriverCapacity,
       getAutomationShipCount: () => disposalProject.getActiveShipCount(),
       calculateAutomationEnergyRatePerShip: () => disposalProject.calculateAutomationEnergyRatePerShip()
