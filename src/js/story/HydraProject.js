@@ -222,20 +222,8 @@ class HydraProject extends SpaceshipProject {
       structure.countNumber * fraction + (this.partialLosses[key] || 0));
     const whole = Math.floor(loss);
     this.partialLosses[key] = loss - whole;
-    if (!whole) return 0;
-    const count = normalizeBuildingCount(whole);
-    const inactive = structure.count - structure.active;
-    const activeLoss = count > inactive ? count - inactive : 0n;
-    if (structure.requiresDeposit) structure.releaseDeposit(resources, whole);
-    structure.count -= count;
-    structure.active -= activeLoss;
-    if (activeLoss > 0n) structure.adjustLand(-activeLoss);
-    structure.updateResourceStorage();
-    if (structure.active === 0n) {
-      structure.productivity = 0;
-      structure.displayProductivity = 0;
-    }
-    return whole;
+    if (!whole) return { losses: 0, conversions: {} };
+    return destroyStructuresWithSalvage(structure, normalizeBuildingCount(whole));
   }
 
   applyCounterattacks(seconds, env, strength, changes) {
@@ -251,18 +239,37 @@ class HydraProject extends SpaceshipProject {
       ? strength.aether * aether.buildingAttritionPerSecond : 0;
     const undermining = env.playerLandFraction >= config.terra.playerSurfaceTriggerFraction
       ? strength.terra : 0;
-    const attrition = 1 - Math.exp(-(bombardment + undermining * config.terra.buildingAttritionPerSecond) * seconds);
+    const attackRate = bombardment + undermining * config.terra.buildingAttritionPerSecond;
+    const attrition = 1 - Math.exp(-attackRate * seconds);
     if (attrition > 0) {
+      const structureConversions = {};
       for (const [id, structure] of Object.entries(buildings)) {
-        this.applyStructureAttrition(structure, `building:${id}`, attrition);
+        const destroyed = this.applyStructureAttrition(structure, `building:${id}`, attrition);
+        mergeDebrisDiskConversions(structureConversions, destroyed.conversions);
       }
       for (const [id, structure] of Object.entries(colonies)) {
-        if (id !== 'aerostat_colony') this.applyStructureAttrition(structure, `colony:${id}`, attrition);
+        if (id !== 'aerostat_colony') {
+          const destroyed = this.applyStructureAttrition(structure, `colony:${id}`, attrition);
+          mergeDebrisDiskConversions(structureConversions, destroyed.conversions);
+        }
+      }
+      const resourceAttrition = calculateColonyResourceAttrition(seconds, attackRate, changes);
+      mergeDebrisDiskConversions(resourceAttrition.conversions, structureConversions);
+      for (const [core, share] of [['aether', bombardment / attackRate], ['terra', 1 - bombardment / attackRate]]) {
+        if (!(share > 0)) continue;
+        for (const [resource, loss] of Object.entries(resourceAttrition.losses)) {
+          this.transferResource(core, 'colony', resource, -loss * share, changes, seconds);
+        }
+        for (const [category, conversions] of Object.entries(resourceAttrition.conversions)) {
+          for (const [resource, amount] of Object.entries(conversions)) {
+            this.transferResource(core, category, resource, amount * share, changes, seconds);
+          }
+        }
       }
     }
     if (strength.aero < config.aero.hackingBelowFraction) {
       const lost = this.applyStructureAttrition(colonies.aerostat_colony, 'aero:hacking',
-        1 - Math.exp(-strength.aero * config.aero.hackingPerSecond * seconds));
+        1 - Math.exp(-strength.aero * config.aero.hackingPerSecond * seconds)).losses;
       this.coreMass.aero += lost * config.aero.massPerAerostat;
     }
     const androidLoss = -this.transferResource('aqua', 'colony', 'androids',

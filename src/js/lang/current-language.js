@@ -1473,7 +1473,7 @@ setLanguageData({
               "research": "Disables research orbitals above {orbitalThreshold}% HP.",
               "delay": "Orbital project duration: x{orbitalSlow}.",
               "capture": "Captures ships assigned to active projects.",
-              "bombardment": "Bombards buildings and non-aerostat colonies when average sibling strength is below {siblingThreshold}%."
+              "bombardment": "Bombards buildings, non-aerostat colonies and stored colony resources when average sibling strength is below {siblingThreshold}%."
             },
             "tactics": "Lasers destroy swarm mass and orbital debris. Atmospheric expansion burns the near-orbit swarm; the outer swarm requires lasers."
           },
@@ -1522,7 +1522,7 @@ setLanguageData({
             },
             "penalties": {
               "delay": "Deeper mining time: x{slow}.",
-              "attacks": "Attacks buildings, non-aerostat colonies, mine depth and underground expansion when structures use surface or underground land totaling at least {surfaceThreshold}% of the planet's surface area."
+              "attacks": "Attacks buildings, non-aerostat colonies, stored colony resources, mine depth and underground expansion when structures use surface or underground land totaling at least {surfaceThreshold}% of the planet's surface area."
             },
             "tactics": "At maximum mining depth, decay scales with ore mines / maximum ore mines and reduces terra self-repair. Alternatively, remove planetary mass."
           }
