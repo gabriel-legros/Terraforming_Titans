@@ -466,9 +466,9 @@ class HydraProject extends SpaceshipProject {
       aether: Math.min(this.coreMass.aether, laserLoss + nearMass * dragRate * seconds),
       aero: capture + config.cores.aero.maximumMass * config.aero.collapsePerSecond * (1 - suitability.aero) * seconds,
       aqua: config.cores.aqua.maximumMass * config.aqua.exposurePerSecond * (1 - suitability.aqua) * seconds,
-      ignis: Math.min(this.coreMass.ignis, resources.special.crusaders.value * config.ignis.crusaderTonsPerSecond * seconds
-        + this.coreMass.ignis * (1 - Math.exp(-(env.temperature < config.objective.temperatureK
-          ? config.ignis.coldSuppressionPerSecond : config.ignis.hotSuppressionPerSecond) * (1 - suitability.ignis) * seconds))),
+      ignis: resources.special.crusaders.value * config.ignis.crusaderTonsPerSecond * seconds
+        + config.cores.ignis.maximumMass * (env.temperature < config.objective.temperatureK
+          ? config.ignis.coldSuppressionPerSecond : config.ignis.hotSuppressionPerSecond) * (1 - suitability.ignis) * seconds,
       terra: config.cores.terra.maximumMass * config.terra.dugOutSuppressionPerSecond * (1 - suitability.terra) * seconds
     };
     const growth = {};
@@ -528,7 +528,7 @@ class HydraProject extends SpaceshipProject {
         .reduce((sum, other) => sum + repairs[other][id], 0);
       const core = config.cores[id];
       // Environmental attrition can exhaust these cores, including incoming repairs.
-      if (id === 'aero' || id === 'aqua' || id === 'terra') loss[id] = Math.min(loss[id], this.coreMass[id] + growth[id] + support);
+      if (id === 'aero' || id === 'aqua' || id === 'ignis' || id === 'terra') loss[id] = Math.min(loss[id], this.coreMass[id] + growth[id] + support);
       this.coreMass[id] = Math.max(0, Math.min(core.maximumMass, this.coreMass[id] + growth[id] + support - loss[id]));
       if (id === 'aether') {
         this.outerAetherMass = Math.min(this.coreMass.aether,
