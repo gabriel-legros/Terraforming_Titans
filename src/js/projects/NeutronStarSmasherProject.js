@@ -62,6 +62,12 @@ class NeutronStarSmasherProject extends PlanetCrackersProject {
     };
   }
 
+  applyEffects() {
+    // Travel replaces the network manager after restoring project state.
+    this.lastAppliedCapKey = '';
+    this.applyCapBonusEffects();
+  }
+
   applyCapBonusEffects() {
     const capKey = this.getCapKey();
     if (this.lastAppliedCapKey === capKey) {
