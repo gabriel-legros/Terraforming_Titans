@@ -2682,9 +2682,9 @@ setLanguageData({
         crackedHeader: 'Merger Progress',
         remainingHeader: 'Pairs Remaining',
         recipeLabels: { neutronStarPair: 'Neutron star pairs' },
-        recipeTooltip: 'Each completed merger consumes two neutron stars, creates one black hole for an Artificial Quasar, and adds +{metal} metal/s to the mining cap. Yield: 0.05 solar masses of metal extracted over 10,000 in-game years (3,650,000 real-time seconds). Partial mergers grant no rewards until completed.',
+        recipeTooltip: 'Each completed merger consumes two neutron stars, creates one black hole for an Artificial Quasar, and adds +{ships} metal mining ship slots, equivalent to {metal} metal/s before mining costs and ship upgrades. Yield: 0.05 solar masses of metal extracted over 10,000 in-game years (3,650,000 real-time seconds). Partial mergers grant no rewards until completed.',
         operationNote: 'Each assigned smasher performs one merger per second at full productivity, consuming {energy} space energy per merger. The neutron-star supply scales with the average Warp Gate Network level, reaching 1B stars at level 1M.',
-        planetProgress: 'Completed mergers / black holes created: {merged} | Available neutron stars: {stars} | Added metal mining cap: +{metal}/s',
+        planetProgress: 'Completed mergers / black holes created: {merged} | Available neutron stars: {stars} | Added metal mining ship cap: +{ships} | Base gross metal yield: {metal}/s',
         status: {
           depleted: 'All accessible neutron star pairs have been merged',
           noSpaceEnergy: 'No space energy',

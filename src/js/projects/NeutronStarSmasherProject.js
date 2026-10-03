@@ -11,7 +11,15 @@ class NeutronStarSmasherProject extends PlanetCrackersProject {
         ...vars,
         merged: formatNumber(mergers, true),
         stars: formatNumber(2 * Math.floor(this.getTotalRemainingPlanets()), true),
-        metal: formatNumber(this.getTotalCapBonusesFromCracked().metal, true, 3)
+        ships: formatNumber(this.getTotalCapBonusesFromCracked().metal, true, 3),
+        metal: formatNumber(mergers * this.getPlanetTypeConfigs()[0].metalRatePerMerger, true, 3)
+      };
+    } else if (path === 'recipeTooltip') {
+      const recipe = this.getPlanetTypeConfigs()[0];
+      vars = {
+        ...vars,
+        ships: formatNumber(recipe.capBonuses.metal, true, 3),
+        metal: formatNumber(recipe.metalRatePerMerger, true, 3)
       };
     }
     return t(`ui.projects.neutronStarSmasher.${path}`, vars);
@@ -37,12 +45,18 @@ class NeutronStarSmasherProject extends PlanetCrackersProject {
         * terraformingParameters.geometry.stellarEvolution.solarMassKg
         / terraformingParameters.physical.kgPerTon
         / (config.extractionYears * config.daysPerYear);
+      // Planet Cracker cap bonuses are ship slots, not tonnes per second.
+      // Use unmodified mining throughput so ship upgrades apply normally.
+      const mining = projectParameters.oreSpaceMining;
+      const baseMetalRatePerShip = mining.attributes.resourceGainPerShip.colony.metal
+        / (mining.duration / 1000);
       this.planetTypeConfigs = [{
         key: 'neutronStarPair',
         label: this.getText('recipeLabels.neutronStarPair'),
         complexity: 1,
         total: config.neutronStars / 2,
-        capBonuses: { metal: metalPerMerger, silicon: 0, carbon: 0, water: 0 }
+        metalRatePerMerger: metalPerMerger,
+        capBonuses: { metal: metalPerMerger / baseMetalRatePerShip, silicon: 0, carbon: 0, water: 0 }
       }];
     }
     return this.planetTypeConfigs;
