@@ -1465,7 +1465,7 @@ setLanguageData({
           "aether": {
             "name": "Aether | Orbit and outer system",
             "abilities": {
-              "rebuild": "Repairs itself and sibling cores using orbital debris, with stellar feedstock as a fallback at {stellarRepairPercent}% of the normal repair budget.",
+              "rebuild": "Repairs itself and sibling cores using orbital debris.  Can also use stellar mass at {stellarRepairPercent}% rate.",
               "imports": "Imports gas below {pressureThreshold} MPa while stellar feedstock remains and Lerna is below the stripping threshold.",
               "stripping": "Strips atmosphere above {fusionMass} t of planetary mass to prevent stellar ignition."
             },
@@ -1507,7 +1507,10 @@ setLanguageData({
               "rebuild": "Repairs itself and sibling cores using scrap, junk and planetary mass.",
               "emissions": "Releases greenhouse gases below {temperatureThreshold} K."
             },
-            "penalties": { "occupation": "Occupies {landOccupied}% of Underground Expansion land." },
+            "penalties": {
+              "occupation": "Occupies {landOccupied}% of Underground Expansion land.",
+              "buildCost": "Building and colony construction costs: +{buildCostPenalty}%."
+            },
             "tactics": "Deploy Crusaders, cool toward {cold} K or heat toward {hot} K."
           },
           "terra": {
@@ -1519,9 +1522,9 @@ setLanguageData({
             },
             "penalties": {
               "delay": "Deeper mining time: x{slow}.",
-              "attacks": "Attacks buildings, non-aerostat colonies, mine depth and underground expansion when player structures occupy at least {surfaceThreshold}% of the surface."
+              "attacks": "Attacks buildings, non-aerostat colonies, mine depth and underground expansion when structures use surface or underground land totaling at least {surfaceThreshold}% of the planet's surface area."
             },
-            "tactics": "Cover ore deposits with maximum-depth mines or remove planetary mass."
+            "tactics": "At maximum mining depth, decay scales with ore mines / maximum ore mines and repair efficiency falls by the same fraction. Alternatively, remove planetary mass."
           }
         }
       },
@@ -5923,6 +5926,7 @@ setLanguageData({
     specialSeeds: {
       hydra: {
         name: 'Hydra', difficulty: 'Very Extreme',
+        noSpaceWithdrawal: 'Space Storage cannot withdraw any resources on this world.',
         rules: 'Five regenerating machine cores occupy Lerna and actively resist terraforming. Suppress all five simultaneously to defeat Hydra.',
         requirement: 'Hydra', defeated: 'All five cores defeated', defeatFirst: 'Defeat Hydra first'
       },

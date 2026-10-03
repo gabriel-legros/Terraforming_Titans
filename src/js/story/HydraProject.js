@@ -4,7 +4,7 @@ const HYDRA_CORE_DETAILS = {
   aether: { abilities: ['rebuild', 'imports', 'stripping'], penalties: ['research', 'delay', 'capture', 'bombardment'] },
   aero: { abilities: ['rebuild', 'disposal'], penalties: ['occupation', 'hacking'] },
   aqua: { abilities: ['rebuild', 'excavation'], penalties: ['occupation', 'hacking'] },
-  ignis: { abilities: ['rebuild', 'emissions'], penalties: ['occupation'] },
+  ignis: { abilities: ['rebuild', 'emissions'], penalties: ['occupation', 'buildCost'] },
   terra: { abilities: ['rebuild', 'heat', 'venting'], penalties: ['delay', 'attacks'] }
 };
 
@@ -212,7 +212,7 @@ class HydraProject extends SpaceshipProject {
       land, oceanCoverage, temperature: terraforming.temperature.value,
       pressure: terraforming.atmosphericPressureCache.totalPressure,
       planetaryMass: getDynamicWorldCurrentPlanetaryMassKg(terraforming) / 1000,
-      dugOut: mineCoverage >= config.terra.mineCoverageFraction && mines.averageDepth >= mines.maxDepth,
+      dugOutFraction: mines.averageDepth >= mines.maxDepth ? mineCoverage : 0,
       playerLandFraction: land > 0 ? playerLand / land : 0
     };
   }
@@ -361,6 +361,14 @@ class HydraProject extends SpaceshipProject {
     }
     colonies.aerostat_colony.addAndReplace({ ...effect, type: 'aerostatCapacityMultiplier',
       value: 1 - config.aero.occupiedAerostatFraction * strength.aero });
+    for (const structure of [...Object.values(buildings), ...Object.values(colonies)]) {
+      for (const [category, costs] of Object.entries(structure.cost)) {
+        structure.addAndReplace({ sourceId: HYDRA_SOURCE_ID,
+          effectId: `hydra-ignis-build-cost-${category}`, name: t('ui.projects.hydra.rateSources.ignis'),
+          type: 'resourceCostMultiplier', resourceCategory: category, resourceId: Object.keys(costs),
+          value: 1 + (config.ignis.buildCostMultiplier - 1) * strength.ignis });
+      }
+    }
     for (const id of ['deeperMining', 'undergroundExpansion']) {
       projectManager.projects[id].addAndReplace({ ...effect, type: 'projectDurationMultiplier',
         value: 1 + strength.terra * (config.terra.excavationDurationMultiplier - 1) });
@@ -379,6 +387,9 @@ class HydraProject extends SpaceshipProject {
   }
 
   clearHydraEffects() {
+    for (const structure of [...Object.values(buildings), ...Object.values(colonies)]) {
+      structure.removeEffect({ sourceId: HYDRA_SOURCE_ID });
+    }
     followersManager.removeEffect({ sourceId: HYDRA_SOURCE_ID });
     followersManager.markUIDirty();
     colonies.aerostat_colony.removeEffect({ sourceId: HYDRA_SOURCE_ID });
@@ -417,7 +428,7 @@ class HydraProject extends SpaceshipProject {
       ignis: env.temperature <= config.objective.temperatureK
         ? Math.max(0, Math.min(1, (env.temperature + config.objective.temperatureToleranceK - config.ignis.coldTemperatureK) / (config.objective.temperatureK - config.ignis.coldTemperatureK)))
         : Math.max(0, Math.min(1, (config.ignis.hotTemperatureK - env.temperature + config.objective.temperatureToleranceK) / (config.ignis.hotTemperatureK - config.objective.temperatureK))),
-      terra: env.dugOut || env.planetaryMass <= config.terra.depletedMassTons ? 0 : 1
+      terra: env.planetaryMass <= config.terra.depletedMassTons ? 0 : 1 - env.dugOutFraction
     };
     if (this.autoStart && !this.isActive && this.canStart()) this.start();
     if (this.isActive && !this.isPaused) {
@@ -698,6 +709,7 @@ class HydraProject extends SpaceshipProject {
       occupied: formatNumber(config.aero.occupiedAerostatFraction * 100 * strength.aero, true),
       oceanOccupied: formatNumber(this.coreMass.aqua > 0 ? env.oceanCoverage * 100 : 0, true),
       landOccupied: formatNumber(config.ignis.maximumLandFraction * 100 * strength.ignis, true),
+      buildCostPenalty: formatNumber((config.ignis.buildCostMultiplier - 1) * 100 * strength.ignis, true),
       slow: formatNumber(1 + (config.terra.excavationDurationMultiplier - 1) * strength.terra, true)
     };
     const text = t(this.isCompleted ? 'ui.projects.hydra.victory' : 'ui.projects.hydra.summary');

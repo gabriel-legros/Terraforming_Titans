@@ -2135,6 +2135,7 @@ const hydraOverrides = {
         androidHackingPerSecond: 0.005, massPerAndroid: 1
       },
       ignis: {
+        buildCostMultiplier: 4,
         coldTemperatureK: 500, hotTemperatureK: 1300,
         coldSuppressionPerSecond: 0.001, hotSuppressionPerSecond: 0.005,
         crusaderTonsPerSecond: 1, maximumLandFraction: 0.9,
@@ -2146,7 +2147,7 @@ const hydraOverrides = {
         ventTonsPerSecond: 1e17,
         ventComposition: { hydrogen: 0.5, atmosphericWater: 0.25, carbonDioxide: 0.15, inertGas: 0.1 },
         miningTonsPerSecond: 1e18, excavationDurationMultiplier: 100,
-        mineCoverageFraction: 1, dugOutSuppressionPerSecond: 0.002,
+        dugOutSuppressionPerSecond: 0.002,
         depletedMassTons: 1e3, playerSurfaceTriggerFraction: 0.1,
         buildingAttritionPerSecond: 0.001, excavationAttritionPerSecond: 0.001
       },
@@ -2333,6 +2334,11 @@ const hydraOverrides = {
   visualization: { baseColor: '#99452f' },
   effects: [
     { target: 'project', targetId: 'hydra', type: 'enable', effectId: 'hydra-enable-project' },
+    {
+      target: 'project', targetId: 'spaceStorage', type: 'booleanFlag',
+      flagId: 'disableWithdrawal', value: true,
+      effectId: 'hydra-disable-space-storage-withdrawals'
+    },
     { target: 'project', targetId: 'lifters', type: 'booleanFlag', flagId: 'disableAtmosphereStripMode', value: true }
   ]
 };
@@ -2346,6 +2352,7 @@ const specialSeedDefinitions = {
     replayable: true, target: 'planet', archetype: 'chthonian', orbitPreset: 'hz-outer',
     specialEffects: [
       { id: 'hydra-cores', descriptionKey: 'catalogs.specialSeeds.hydra.rules' },
+      { id: 'space-storage-no-withdrawal', descriptionKey: 'catalogs.specialSeeds.hydra.noSpaceWithdrawal' },
       {
         id: 'lifters-no-strip',
         labelKey: 'catalogs.specialSeeds.commonEffects.liftersStripModeDisabled',
