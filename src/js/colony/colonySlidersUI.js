@@ -640,13 +640,9 @@ function initializeColonySlidersUI() {
 
   const updateOreValue = (val) => {
     if (oreValue && oreEffect) {
-      const minesBuilt = Number.isFinite(buildings?.oreMine?.countNumber)
-        ? buildings.oreMine.countNumber
-        : (typeof buildingCountToNumber === 'function'
-          ? buildingCountToNumber(buildings?.oreMine?.count)
-          : Math.max(0, Math.floor(Number(buildings?.oreMine?.count) || 0)));
-      const workers = val * 10 * minesBuilt;
-      oreValue.textContent = `${workers}`;
+      const oreMine = buildings.oreMine;
+      const workers = val * 10 * oreMine.activeNumber * oreMine.getEffectiveWorkerMultiplier();
+      oreValue.textContent = formatNumber(workers, false, 2, true);
       const mult = val === 0 ? 0 : val;
       const percent = (mult * 100).toFixed(0);
       oreEffect.textContent = getColonySlidersText('ui.colony.sliders.boostEffect', 'Boost: {value}%', { value: percent });
@@ -767,13 +763,10 @@ function updateColonySlidersUI() {
   }
   const oreMineWorkers = getColonySliderDisplayValue(oreInputRef, manager.oreMineWorkers);
   if (oreValueRef || oreEffectRef) {
-    const minesBuilt = Number.isFinite(buildings?.oreMine?.countNumber)
-      ? buildings.oreMine.countNumber
-      : (typeof buildingCountToNumber === 'function'
-        ? buildingCountToNumber(buildings?.oreMine?.count)
-        : Math.max(0, Math.floor(Number(buildings?.oreMine?.count) || 0)));
+    const oreMine = buildings.oreMine;
     if (oreValueRef) {
-      oreValueRef.textContent = `${oreMineWorkers * 10 * minesBuilt}`;
+      const workers = oreMineWorkers * 10 * oreMine.activeNumber * oreMine.getEffectiveWorkerMultiplier();
+      oreValueRef.textContent = formatNumber(workers, false, 2, true);
     }
     if (oreEffectRef) {
       const percent = ((oreMineWorkers === 0 ? 0 : oreMineWorkers) * 100).toFixed(0);
