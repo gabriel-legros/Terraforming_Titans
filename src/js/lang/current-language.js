@@ -628,6 +628,8 @@ setLanguageData({
         },
       },
       importCaps: {
+        sourceBonus: '{source}: {bonuses}.',
+        resourceBonus: '+{value} {resource} cap',
         noCap: 'No cap',
         miningRightsRule: 'Cylinders-HOPE Mining Rights Agreement: mining caps ×{multiplier}; Hydrogen remains uncapped.',
         resources: {
@@ -1429,6 +1431,60 @@ setLanguageData({
       story: 'Story',
     },
     projects: {
+      "hydra": {
+        "rateSources": {
+          "aether": "Aether",
+          "aero": "Aero",
+          "aqua": "Aqua",
+          "ignis": "Ignis",
+          "terra": "Terra",
+          "net": "Entanglement net"
+        },
+        "objective": "Hydra restores the climate toward {temperature} K and {pressure} MPa.",
+        "health": "{percent}% HP",
+        "abilities": "Abilities",
+        "countermeasures": "Countermeasures",
+        "netTitle": "Entanglement net",
+        "netHelp": "Traps and destroys Aero platforms. Wears down with use.",
+        "summary": "Defeat all five cores simultaneously. Surviving cores repair each other.",
+        "victory": "Hydra defeated.",
+        "supplies": "Orbital debris: {debris} t | Launch failure: {small}% small / {large}% large",
+        "mass": "Mass: {mass} t",
+        "rates": "Repair +{growth} t/s | Support +{support} t/s | Damage -{loss} t/s",
+        "net": "{segmentMass} t/segment | Base: {base} segments/s | Per ship: +{ship} segments/s",
+        "netSegments": "Available segments: {built} / {max}",
+        "netStart": "Build net ({percent}%)",
+        "netPause": "Pause construction ({percent}%)",
+        "netFull": "Net at capacity",
+        "netFinished": "Construction stopped",
+        "cores": {
+          "aether": {
+            "name": "Aether | Orbit and outer system",
+            "help": "Rebuilds from orbital debris. Disables research orbitals above {orbitalThreshold}% HP. Captures ships, delays orbital projects and bombards buildings when sibling cores weaken. Imports gas as pressure falls; strips atmosphere near stellar ignition.",
+            "tactics": "Lasers destroy swarm mass and orbital debris. Atmospheric expansion burns the near-orbit swarm."
+          },
+          "aero": {
+            "name": "Aero | Upper atmosphere",
+            "help": "Builds platforms from atmospheric CO2 and methane. Occupies aerostat capacity and hacks aerostats when weakened.",
+            "tactics": "Aerostat capacity occupied: {occupied}%. Lower pressure below {pressure} Pa or deploy the net."
+          },
+          "aqua": {
+            "name": "Aqua | Oceans",
+            "help": "Occupies liquid oceans, hacks androids and excavates planetary mass into gases, junk and scrap.",
+            "tactics": "Ocean coverage: {currentOcean}%. Reduce combined liquid coverage below {ocean}% to expose Aqua."
+          },
+          "ignis": {
+            "name": "Ignis | Surface industry",
+            "help": "Occupies land and rebuilds from scrap, junk and mined material. Releases greenhouse gases when cooled.",
+            "tactics": "Deploy Crusaders, cool toward {cold} K or heat toward {hot} K."
+          },
+          "terra": {
+            "name": "Terra | Deep crust",
+            "help": "Slows excavation, adds geothermal heat and vents gases. Heavy surface development triggers attacks on buildings, mine depth and underground expansion.",
+            "tactics": "Excavation time: x{slow}. Cover ore deposits with maximum-depth mines or remove planetary mass."
+          }
+        }
+      },
       managerDescription: 'Manages all special projects',
       requirements: 'Requirements:',
       cost: 'Cost:',
@@ -1620,7 +1676,7 @@ setLanguageData({
       },
       artificialQuasars: {
         title: 'Artificial Quasar Controls',
-        titleTooltip: 'Assign quasars to harness stellar black hole spin energy. Each assigned quasar produces space energy and counts against the Warp Gate Network-scaled black hole assignment cap.',
+        titleTooltip: 'Assign quasars to harness stellar black hole spin energy. Each assigned quasar produces space energy and uses one accessible black hole. Natural black holes scale with the Warp Gate Network; completed neutron star mergers add black holes directly.',
         totalLifters: 'Total Quasars',
         runLifters: 'Run quasars',
         energyPerLifter: 'Output per quasar',
@@ -1639,7 +1695,7 @@ setLanguageData({
           operation: 'Artificial Quasar',
         },
         operationNote: 'Each assigned quasar produces {value} space energy per real-time second by spinning down stellar black holes over a 10,000-year extraction window.',
-        maxAssignmentTooltip: 'Base assignment cap: {base}\nWarp Gate Network scale: max(1, {averageLevel}) / {levelCap} = {networkScale}\nAccessible black hole assignment cap: {max}',
+        maxAssignmentTooltip: 'Base assignment cap: {base}\nWarp Gate Network scale: max(1, {averageLevel}) / {levelCap} = {networkScale}\nBlack holes from neutron star mergers: +{mergers}\nAccessible black hole assignment cap: {max}',
         starLiftingTooltip: '',
         status: {
           idle: 'Idle',
@@ -2568,6 +2624,35 @@ setLanguageData({
           running: 'Running',
         },
       },
+      neutronStarSmasher: {
+        target: 'Target',
+        title: 'Neutron Star Smasher Controls',
+        assigned: 'Assigned',
+        energyPerSmasher: 'Energy per smasher',
+        energyPerSmasherTooltip: 'Space energy consumed per second by one smasher at full productivity. Each completed merger costs this rate divided by the merger rate; insufficient energy slows progress.',
+        totalCrackers: 'Total Smashers',
+        runCrackers: 'Run smashers',
+        energyUse: 'Energy Use',
+        spaceEnergyRate: '{value} space energy/s',
+        expansionRate: '{value} smashers/s',
+        rateSources: { expansion: 'Neutron Star Smasher expansion' },
+        crackedHeader: 'Merger Progress',
+        remainingHeader: 'Pairs Remaining',
+        recipeLabels: { neutronStarPair: 'Neutron star pairs' },
+        recipeTooltip: 'Each completed merger consumes two neutron stars, creates one black hole for an Artificial Quasar, and adds +{metal} metal/s to the mining cap. Yield: 0.05 solar masses of metal extracted over 10,000 in-game years (3,650,000 real-time seconds). Partial mergers grant no rewards until completed.',
+        operationNote: 'Each assigned smasher performs one merger per second at full productivity, consuming {energy} space energy per merger. The neutron-star supply scales with the average Warp Gate Network level, reaching 1B stars at level 1M.',
+        planetProgress: 'Completed mergers / black holes created: {merged} | Available neutron stars: {stars} | Added metal mining cap: +{metal}/s',
+        status: {
+          depleted: 'All accessible neutron star pairs have been merged',
+          noSpaceEnergy: 'No space energy',
+          insufficientSpaceEnergy: 'Insufficient space energy',
+          idle: 'Idle',
+          completeAtLeastOne: 'Complete at least one smasher',
+          runDisabled: 'Run disabled',
+          noAssignments: 'No assignments',
+          running: 'Running',
+        },
+      },
       planetCrackers: {
         target: 'Target',
         title: 'Planet Cracker Controls',
@@ -2917,6 +3002,8 @@ setLanguageData({
         orbitals: {
           title: 'Orbitals',
           kesslerWarning: 'Orbitals cannot approach due to Kessler Skies. Limited to research.',
+          aetherWarning: 'Aether blocks research orbitals.',
+          kesslerAetherWarning: 'Kessler Skies blocks other orbitals. Aether blocks research orbitals.',
           summary: 'Orbitals Assigned: {assigned} / {available} | Unassigned: {unassigned}',
           mode: 'Mode',
           modeManual: 'Manual',
@@ -3420,6 +3507,9 @@ setLanguageData({
           equilibriumTempTooltip: 'The blackbody radiative balance temperature from absorbed sunlight, albedo, and direct non-atmospheric heat. It ignores greenhouse heat trapping; physically, it is the temperature that would radiate the same energy back to space. Earth\'s value is about 255 K (-18°C).',
           combustionWarning: 'Temperature is increasing from active combustion',
           aerobrakingWarning: 'Temperature is increasing from aerobraking',
+          heatWarningSourceFlux: 'Source flux: {source} W/m^2',
+          heatWarningMitigatedFlux: 'After Mega Heat Sink mitigation: {effective} W/m^2',
+          heatWarningOversightNote: 'This heat flux is not accounted for by Advanced Oversight.',
           labels: {
             globalMeanTemp: 'Global Mean Temp',
             equilibriumTemp: 'Equilibrium Temp',
@@ -3894,7 +3984,7 @@ setLanguageData({
             drag: 'Drag {value}',
             orbitalDebrisCleared: 'Orbital debris cleared.',
             orbitalDebris: 'Orbital debris: {current} / {initial} t',
-            binDetail: 'Initial-radius bin @ {altitude} km (current air path {effectiveAltitude} km): {current} / {baseline} t, {decay} t/s, {density}',
+            binDetail: 'Initial-radius bin @ {altitude} km (current effective altitude {effectiveAltitude} km): {current} / {baseline} t, {decay} t/s, {density}',
             initialRadiusMax: '{value} km initial radius',
           },
           summary: {
@@ -5136,9 +5226,10 @@ setLanguageData({
         shipStepSubtitleLargestMax: 'Balance ships with the largest max',
         shipStepSubtitleRemainingPercent: 'Assign {percent}% of remaining ships',
         shipStepSubtitleEnergyProduction: 'Use up to {percent}% of energy production',
+        shipStepSubtitleWorkers: 'Assign up to {percent}% of workers',
         shipStepSubtitleAssignUpTo: 'Assign up to {count} ships',
         shipStepSubtitleByWeight: 'Distribute ships by weight',
-        shipLimitTooltip: 'Assign Amount:\n- Distributes up to the entered amount by weight.\n\nModes:\n- Capped by smallest max: balance by weight until the smallest max is reached.\n- Capped by largest max: balance by weight until the largest max is reached. If no largest max is reached (infinite/unset caps), it uses every remaining ship.\n- % of remaining ships: distributes up to that percent of ships still unassigned when this step starts.\n- % energy production usage: allocates as uncapped, then proportionally reduces only this step\'s energy-consuming assignments to fit the entered share of colony energy production. Zero-energy assignments are unchanged.\n\nMass Drivers:\n- Each Mass Driver counts as 10 ships.\n- Counts toward assign amount limits.\n- Can only be assigned through "Resource Disposal (mass drivers included)".',
+        shipLimitTooltip: 'Assign Amount:\n- Distributes up to the entered amount by weight.\n\nModes:\n- Capped by smallest max: balance by weight until the smallest max is reached.\n- Capped by largest max: balance by weight until the largest max is reached. If no largest max is reached (infinite/unset caps), it uses every remaining ship.\n- % of remaining ships: distributes up to that percent of ships still unassigned when this step starts.\n- % Workers: distributes up to that percent of colony worker capacity across the step.\n- % energy production usage: allocates as uncapped, then proportionally reduces only this step\'s energy-consuming assignments to fit the entered share of colony energy production. Zero-energy assignments are unchanged.\n\nMass Drivers:\n- Each Mass Driver counts as 10 ships.\n- Counts toward assign amount limits.\n- Can only be assigned through "Resource Disposal (mass drivers included)".',
         massDriverDisposalTarget: 'Resource Disposal (mass drivers included)',
         unassignedShipsTarget: 'Unassigned Ships',
         shipAssignAmount: 'Assign Amount',
@@ -5781,7 +5872,20 @@ setLanguageData({
     },
   },
   catalogs: {
+    story: {
+      projects: {
+        "hydra": {
+          "name": "Hydra",
+          "description": "Hydra is a swarm machine intelligence locked to this star system.  A failed experiment from Prometheus's master.  The cores will cooperate under threat."
+        },
+      },
+    },
     specialSeeds: {
+      hydra: {
+        name: 'Hydra', difficulty: 'Extreme',
+        rules: 'Five regenerating machine cores occupy Lerna and actively resist terraforming. Suppress all five simultaneously to defeat Hydra.',
+        requirement: 'Hydra', defeated: 'All five cores defeated', defeatFirst: 'Defeat Hydra first'
+      },
       commonEffects: {
         liftersStripModeDisabled: 'Lifters Strip Mode Disabled',
         incineratorRecipeDisabled: 'Incinerator Recipe Disabled',
@@ -6382,13 +6486,17 @@ setLanguageData({
       },
       artificialQuasars: {
         name: 'Artificial Quasars',
-        description: 'Build tera-scale black hole spin-energy platforms. Assigned quasars produce space energy from accessible stellar black holes, scaled by the average Warp Gate Network level.',
+        description: 'Build tera-scale black hole spin-energy platforms. Assigned quasars produce space energy from accessible stellar black holes, scaled by the average Warp Gate Network level, plus black holes created by neutron star mergers.',
         attributes: {
           lifterStripRecipe: { label: 'Strip Atmosphere' },
           lifterHarvestRecipes: {
             blackHoleSpinEnergy: { label: 'Black Hole Spin Energy' },
           },
         },
+      },
+      neutronStarSmasher: {
+        name: 'Neutron Star Smasher',
+        description: 'Smash pairs of neutron stars together with tractor beams. Each merger consumes space energy, creates a black hole for an Artificial Quasar, and produces a kilonova that increases the metal mining cap.',
       },
       matrioshkaBrain: {
         name: 'Matrioshka Brain',
@@ -7326,6 +7434,10 @@ setLanguageData({
         agrarian_worlds: {
           name: 'Agrarian worlds',
           description: "Our manufacturing worlds have caught wind of recent development in... food production.   They're interested in striking a deal.  Unlocks a new toggle for manufacturing worlds.",
+        },
+        neutron_star_merging: {
+          name: 'Neutron Star Merging',
+          description: "The galaxy has a billion neutron stars just sitting there.  We can't extract energy from them because they don't spin fast enough.  Solution : smash neutron stars into each other with tractor beams.",
         },
         artificial_quasars: {
           name: 'Artificial Quasars',

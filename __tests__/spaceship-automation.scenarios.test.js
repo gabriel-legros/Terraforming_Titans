@@ -148,6 +148,7 @@ function createHarness({
   });
 
   setGlobal('SpaceshipProject', MockSpaceshipProject, originalGlobals);
+  setGlobal('gameSettings', { spaceAccessCapacity: false }, originalGlobals);
   setGlobal('resources', {
     special: { spaceships: { value: initialShips } },
     colony: {
@@ -207,6 +208,77 @@ function configurePreset(automation, {
 }
 
 describe('Spaceship automation scenarios', () => {
+  it.each([
+    ['cappedMax', 300000, Infinity, 200000],
+    ['cappedMin', 300000, Infinity, 200000],
+    ['fixed', 300000, Infinity, 200000],
+    ['cappedMax', 150000, Infinity, 150000],
+    ['cappedMax', 300000, 150000, 150000],
+    ['cappedMin', 300000, 150000, 150000],
+  ])('%s adds repeated 100k caps with %i ships and project limit %s', (mode, initialShips, maxAssignableShips, expected) => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips,
+      projects: { metalMining: { maxAssignableShips } },
+    });
+    configurePreset(automation, {
+      mode,
+      limit: mode === 'fixed' ? 100000 : null,
+      entries: [{ projectId: 'metalMining', weight: 1, max: 100000, maxMode: 'absolute' }],
+    });
+    const preset = automation.getActivePreset();
+    preset.steps.push({ ...preset.steps[0], id: 2 });
+    automation.disabledProjects.add('metalMining');
+
+    try {
+      for (let update = 0; update < 3; update += 1) {
+        automation.applyAssignments();
+        expect(projects.metalMining.getAutomationShipCount()).toBe(expected);
+        expect(resources.special.spaceships.value).toBe(initialShips - expected);
+      }
+    } finally {
+      cleanup();
+    }
+  });
+
+  it('fills a repeated cap through weighted rounding and passes leftovers to the next step', () => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 30,
+      projects: { metalMining: {}, siliconMining: {}, waterMining: {} },
+    });
+    configurePreset(automation, {
+      entries: [{ projectId: 'metalMining', weight: 1, max: 10, maxMode: 'absolute' }],
+    });
+    automation.getActivePreset().steps.push(
+      {
+        id: 2,
+        mode: 'fixed',
+        limit: 9,
+        entries: [
+          { projectId: 'metalMining', weight: 1, max: 5, maxMode: 'absolute' },
+          { projectId: 'siliconMining', weight: 1, max: 4, maxMode: 'absolute' },
+        ],
+      },
+      {
+        id: 3,
+        mode: 'cappedMax',
+        limit: null,
+        entries: [{ projectId: 'waterMining', weight: 1, max: null, maxMode: 'absolute' }],
+      }
+    );
+
+    try {
+      for (let update = 0; update < 3; update += 1) {
+        automation.applyAssignments();
+        expect(projects.metalMining.getAutomationShipCount()).toBe(15);
+        expect(projects.siliconMining.getAutomationShipCount()).toBe(4);
+        expect(projects.waterMining.getAutomationShipCount()).toBe(11);
+        expect(resources.special.spaceships.value).toBe(0);
+      }
+    } finally {
+      cleanup();
+    }
+  });
+
   it('splits 10M ships to mining and 1M mass drivers to disposal in mixed weighted step', () => {
     const { automation, projects, cleanup } = createHarness({
       initialShips: 10000000,
@@ -280,6 +352,35 @@ describe('Spaceship automation scenarios', () => {
 
     expect(projects.metalMining.getAutomationShipCount()).toBe(120);
     expect(resources.special.spaceships.value).toBe(0);
+    cleanup();
+  });
+
+  it('keeps disabled mining ships reserved while assigning other projects', () => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 20,
+      projects: {
+        oreSpaceMining: { assignedSpaceships: 120, manualDisabled: true },
+        siliconSpaceMining: {},
+      },
+    });
+    configurePreset(automation, {
+      mode: 'cappedMin',
+      entries: [
+        { projectId: 'oreSpaceMining', weight: 1, max: null, maxMode: 'absolute' },
+      ],
+    });
+    automation.presets[0].steps.push({
+      id: 2,
+      mode: 'cappedMax',
+      limit: null,
+      entries: [{ projectId: 'siliconSpaceMining', weight: 1, max: null, maxMode: 'absolute' }],
+    });
+
+    automation.applyAssignments();
+    automation.applyAssignments();
+
+    expect(projects.oreSpaceMining.getAutomationShipCount()).toBe(120);
+    expect(projects.siliconSpaceMining.getAutomationShipCount()).toBe(20);
     cleanup();
   });
 
@@ -623,7 +724,7 @@ describe('Spaceship automation scenarios', () => {
     cleanup();
   });
 
-  it('cappedMin keeps assigning to the disposal target when mass drivers are disabled unless release is checked', () => {
+  it('cappedMin keeps assigning ships to the disposal target when mass drivers are disabled', () => {
     const { automation, projects, cleanup } = createHarness({
       initialShips: 100,
       massDriverCount: 10,
@@ -680,6 +781,31 @@ describe('Spaceship automation scenarios', () => {
     expect(buildings.massDriver.active).toBe(5);
     expect(resources.special.spaceships.value).toBe(0);
     cleanup();
+  });
+
+  it.each(['fixed', 'cappedMax'])('uses ships for disposal before mass drivers are researched in %s mode', (mode) => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 100,
+      projects: { disposeResources: { massDriverEnabled: false } },
+    });
+    automation.disabledProjects.add(automation.getMassDriverAutomationId());
+    configurePreset(automation, {
+      mode,
+      limit: mode === 'fixed' ? 200 : null,
+      entries: [
+        { projectId: automation.getMassDriverAutomationId(), weight: 1, max: null, maxMode: 'absolute' },
+      ],
+    });
+
+    try {
+      automation.applyAssignments();
+
+      expect(projects.disposeResources.getAutomationShipCount()).toBe(100);
+      expect(buildings.massDriver.active).toBe(0);
+      expect(resources.special.spaceships.value).toBe(0);
+    } finally {
+      cleanup();
+    }
   });
 
   it('mass-driver-only step can use both ship and mass-driver pools', () => {

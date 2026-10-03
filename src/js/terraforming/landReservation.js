@@ -6,7 +6,7 @@ const LAND_RESERVATION_SOURCE_LABELS = {
   pulsar: 'Pulsar',
   coreHeatFlux: 'Lava'
 };
-const LAND_RESERVATION_SOURCE_ORDER = ['hazardousBiomass', 'hazardousMachinery', 'pulsar', 'fusionFlux', 'coreHeatFlux'];
+const LAND_RESERVATION_SOURCE_ORDER = ['hazardousBiomass', 'hazardousMachinery', 'pulsar', 'fusionFlux', 'coreHeatFlux', 'hydra'];
 
 function normalizeLandReservationShare(share) {
   if (!Number.isFinite(share) || share <= 0) {
@@ -61,6 +61,7 @@ function getGeologicalHeatLandReservationShares(terraformingState = terraforming
 }
 
 function getLandReservationSourceLabel(source) {
+  if (source === 'hydra') return t('catalogs.specialSeeds.hydra.name');
   if (source === 'hazardousMachinery') {
     return t('resources.surface.hazardousMachinery.name', null, 'Hazardous Machinery');
   }

@@ -141,6 +141,8 @@ function isSymbolOrNumber(text) {
 }
 
 const specialSeedOverrideText = new Set([
+  'Lerna',
+  'Typhon',
   'WolfysNightmare',
   'Uranus',
   'Sol',

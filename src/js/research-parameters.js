@@ -3077,6 +3077,20 @@ const researchParameters = {
         ]
       },
       {
+        id: 'neutron_star_merging',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 200_000_000_000_000_000 },
+        prerequisites: ['artificial_quasars', 'tractor_beams'],
+        effects: [
+          {
+            target: 'project',
+            targetId: 'neutronStarSmasher',
+            type: 'enable'
+          }
+        ]
+      },
+      {
         id: 'matrioshka_brain',
         name: '',
         description: '',

@@ -11,6 +11,7 @@ global.getLocalizedRateSource = getLocalizedRateSource;
 
 const { KesslerHazard } = require('../src/js/terraforming/hazards/kesslerHazard.js');
 const { JSDOM } = require('jsdom');
+const { resolveWorldGeometricLand } = require('../src/js/terraforming/world-geometry.js');
 
 const SOLAR_FLUX_W_M2 = 1100;
 const SURFACE_GRAVITY_M_S2 = 7;
@@ -205,6 +206,7 @@ describe('Kessler decay-rate display', () => {
     document: global.document,
     formatNumber: global.formatNumber,
     formatScientific: global.formatScientific,
+    resolveWorldGeometricLand: global.resolveWorldGeometricLand,
     hazardManager: global.hazardManager,
     getLocalizedRateSource: global.getLocalizedRateSource,
     registerRateSource: global.registerRateSource,
@@ -216,6 +218,7 @@ describe('Kessler decay-rate display', () => {
 
   beforeEach(() => {
     Object.assign(global, originalGlobals);
+    global.resolveWorldGeometricLand = resolveWorldGeometricLand;
   });
 
   afterEach(() => {

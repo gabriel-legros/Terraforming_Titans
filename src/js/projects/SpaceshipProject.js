@@ -434,7 +434,7 @@ class SpaceshipProject extends Project {
     }
   }
 
-  calculateSpaceshipCost() {
+  calculateSpaceshipCost(projectedSpaceAccessCoverage) {
     const costPerShip = this.attributes.costPerShip;
     const totalCost = {};
     for (const category in costPerShip) {
@@ -447,7 +447,7 @@ class SpaceshipProject extends Project {
           multiplier *= getSpaceAccessMetalCostMultiplier(this);
         }
         if (gameSettings.spaceAccessCapacity && category === 'colony' && resource === 'energy') {
-          multiplier *= getSpaceAccessEnergyCostMultiplier(this);
+          multiplier *= getSpaceAccessEnergyCostMultiplier(this, projectedSpaceAccessCoverage);
         }
         const efficiencyMultiplier = resource === 'energy' ? shipEfficiency : 1;
         let adjustedCost = baseCost * multiplier * efficiencyMultiplier;
@@ -473,8 +473,8 @@ class SpaceshipProject extends Project {
     return totalCost;
   }
 
-  calculateAutomationEnergyRatePerShip() {
-    const energyPerShip = this.calculateSpaceshipCost()?.colony?.energy || 0;
+  calculateAutomationEnergyRatePerShip(projectedSpaceAccessCoverage) {
+    const energyPerShip = this.calculateSpaceshipCost(projectedSpaceAccessCoverage)?.colony?.energy || 0;
     if (energyPerShip <= 0) {
       return 0;
     }

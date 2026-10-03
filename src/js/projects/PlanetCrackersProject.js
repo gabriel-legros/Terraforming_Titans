@@ -317,7 +317,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     this.lastTotalOutputPerSecond = planetsRate;
   }
 
-  buildOperationPlan(seconds, productivity = 1) {
+  buildOperationPlan(seconds, productivity = 1, availableEnergy = resources.space.energy.value) {
     const plan = {
       hasAssignments: false,
       crackedTotal: 0,
@@ -361,7 +361,7 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
       return plan;
     }
 
-    const maxByEnergy = resources.space.energy.value / this.getSpaceEnergyPerPlanet();
+    const maxByEnergy = availableEnergy / this.getSpaceEnergyPerPlanet();
     const allocationRatio = Math.max(0, Math.min(1, maxByEnergy / desiredTotal));
 
     for (let index = 0; index < perTypeCapacity.length; index += 1) {
@@ -418,7 +418,10 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     }
 
     this.normalizeAssignments();
-    const plan = this.buildOperationPlan(seconds, productivity);
+    const availableEnergy = Math.max(0,
+      resources.space.energy.value + (accumulatedChanges?.space?.energy || 0)
+    );
+    const plan = this.buildOperationPlan(seconds, productivity, availableEnergy);
     if (!plan.hasAssignments) {
       this.setLastRunStats(0, 0);
       this.updateStatus(this.getText('status.noAssignments', null, 'No assignments'));
@@ -439,7 +442,12 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
       return;
     }
 
-    resources.space.energy.decrease(plan.spaceEnergyUse);
+    if (accumulatedChanges) {
+      accumulatedChanges.space ||= {};
+      accumulatedChanges.space.energy = (accumulatedChanges.space.energy || 0) - plan.spaceEnergyUse;
+    } else {
+      resources.space.energy.decrease(plan.spaceEnergyUse);
+    }
     const crackedKeys = Object.keys(plan.crackedByType);
     for (let index = 0; index < crackedKeys.length; index += 1) {
       const key = crackedKeys[index];
@@ -485,7 +493,8 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     }
 
     this.normalizeAssignments();
-    const plan = this.buildOperationPlan(seconds, productivity);
+    // Availability is solved from projected production, including same-tick quasars.
+    const plan = this.buildOperationPlan(seconds, productivity, Infinity);
     if (!(plan.crackedTotal > 0)) {
       return totals;
     }
@@ -580,15 +589,10 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     super.renderUI(container);
 
     const elements = projectElements[this.name] || {};
-    const cardBody = elements.cardBody;
-    if (!cardBody) {
-      return;
-    }
-
     const status = document.createElement('p');
     status.dataset.planetCrackerUi = 'status';
     status.classList.add('project-description');
-    cardBody.appendChild(status);
+    container.appendChild(status);
     elements.planetCrackerStatus = status;
     this.ensurePlanetCrackerTableColumns();
 

@@ -976,6 +976,11 @@ class FollowersManager extends EffectableEntity {
     return this.isKesslerOrbitalsRestricted() && id !== 'research';
   }
 
+  isOrbitalRestricted(id) {
+    return this.isOrbitalRestrictedByKessler(id)
+      || (id === 'research' && this.isBooleanFlagSet('disableResearchOrbitals'));
+  }
+
   getAssignmentMode() {
     return this.assignmentMode;
   }
@@ -986,7 +991,7 @@ class FollowersManager extends EffectableEntity {
   }
 
   getAutoAssignId() {
-    if (this.isOrbitalRestrictedByKessler(this.autoAssignId)) {
+    if (this.isOrbitalRestricted(this.autoAssignId)) {
       return null;
     }
     return this.autoAssignId;
@@ -1001,7 +1006,7 @@ class FollowersManager extends EffectableEntity {
       this.markUIDirty();
       return;
     }
-    if (this.isOrbitalRestrictedByKessler(id)) {
+    if (this.isOrbitalRestricted(id)) {
       this.markUIDirty();
       return;
     }
@@ -1055,7 +1060,7 @@ class FollowersManager extends EffectableEntity {
     let total = 0;
     for (let i = 0; i < configs.length; i += 1) {
       const id = configs[i].id;
-      if (this.isOrbitalRestrictedByKessler(id)) {
+      if (this.isOrbitalRestricted(id)) {
         continue;
       }
       total += this.getManualAssignment(id);
@@ -1064,7 +1069,7 @@ class FollowersManager extends EffectableEntity {
   }
 
   getManualMaxFor(id) {
-    if (this.isOrbitalRestrictedByKessler(id)) {
+    if (this.isOrbitalRestricted(id)) {
       return 0;
     }
     const cap = this.getAvailableOrbitals();
@@ -1076,7 +1081,7 @@ class FollowersManager extends EffectableEntity {
 
   setManualAssignment(id, value) {
     this.ensureTrackedOrbitals();
-    if (this.isOrbitalRestrictedByKessler(id)) {
+    if (this.isOrbitalRestricted(id)) {
       this.manualAssignments[id] = 0;
       this.markUIDirty();
       return;
@@ -1124,7 +1129,7 @@ class FollowersManager extends EffectableEntity {
       if (weight <= 0) {
         continue;
       }
-      if (this.isOrbitalRestrictedByKessler(config.id)) {
+      if (this.isOrbitalRestricted(config.id)) {
         continue;
       }
       if (!this.isTargetResourceUnlocked(config)) {
@@ -1197,7 +1202,7 @@ class FollowersManager extends EffectableEntity {
     const hasAutoAssign = !!autoAssignId;
     for (let i = 0; i < configs.length; i += 1) {
       const id = configs[i].id;
-      if (this.isOrbitalRestrictedByKessler(id)) {
+      if (this.isOrbitalRestricted(id)) {
         this.manualAssignments[id] = 0;
         continue;
       }
@@ -1443,6 +1448,14 @@ class FollowersManager extends EffectableEntity {
       const amount = rate * seconds;
       if (targetResource.hasCap) {
         const upperBound = Math.max(targetResource.cap, targetResource.value);
+        const overflow = Math.max(0, targetResource.value + amount - upperBound);
+        if (overflow > 0) {
+          projectManager.projects.galactic_market.queueOverflowSale(
+            config.targetCategory,
+            config.targetResource,
+            overflow
+          );
+        }
         targetResource.value = Math.min(targetResource.value + amount, upperBound);
       } else {
         targetResource.value += amount;

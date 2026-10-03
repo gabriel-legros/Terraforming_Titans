@@ -725,6 +725,10 @@
   grid-template-columns: minmax(160px, 1fr) 100px;
 }
 
+.life-automation-entry .automation-max-wrapper input:disabled {
+  opacity: 0.5;
+}
+
 .life-automation-entry-spend {
   color: #4c5872;
   display: inline-block;

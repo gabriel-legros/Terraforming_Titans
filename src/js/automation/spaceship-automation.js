@@ -51,7 +51,6 @@ class SpaceshipAutomation {
 
   getMassDriverAutomationTarget() {
     const disposalProject = this.getMassDriverDisposalProject();
-    const areMassDriversEnabled = () => disposalProject.isBooleanFlagSet('massDriverEnabled');
     return {
       name: this.getMassDriverAutomationId(),
       displayName: t('ui.hope.automationCards.massDriverDisposalTarget', {}, 'Resource Disposal (mass drivers included)'),
@@ -60,7 +59,7 @@ class SpaceshipAutomation {
       isVisible: () => disposalProject.isVisible(),
       isPermanentlyDisabled: () => disposalProject.isPermanentlyDisabled(),
       isAutomationManuallyDisabled: () => disposalProject.isAutomationManuallyDisabled(),
-      shouldAutomationDisable: () => disposalProject.shouldAutomationDisable() || !areMassDriversEnabled(),
+      shouldAutomationDisable: () => disposalProject.shouldAutomationDisable(),
       getMaxAssignableShips: () => this.automationShipPool + this.automationMassDriverCapacity,
       getAutomationShipCount: () => disposalProject.getActiveShipCount(),
       calculateAutomationEnergyRatePerShip: () => disposalProject.calculateAutomationEnergyRatePerShip()
@@ -283,7 +282,7 @@ class SpaceshipAutomation {
       step.limit = 0;
       return;
     }
-    const precision = step.mode === 'energyProduction' ? 100000 : 1;
+    const precision = step.mode === 'energyProduction' || step.mode === 'workers' ? 100000 : 1;
     const parsed = Math.round(Number(value) * precision) / precision;
     if (Number.isFinite(parsed) && parsed >= 0) {
       step.limit = parsed;
@@ -302,9 +301,11 @@ class SpaceshipAutomation {
       step.limit = null;
       return;
     }
-    if (mode === 'remainingPercent') {
+    if (mode === 'remainingPercent' || mode === 'workers') {
       step.mode = mode;
-      step.limit = step.limit === null || step.limit === undefined ? 100 : this.sanitizeShipCount(step.limit);
+      step.limit = step.limit === null || step.limit === undefined
+        ? 100
+        : (mode === 'workers' ? Math.max(0, Number(step.limit)) : this.sanitizeShipCount(step.limit));
       return;
     }
     if (mode === 'energyProduction') {
@@ -388,7 +389,7 @@ class SpaceshipAutomation {
     SpaceshipProject.refreshAutoAssignDisplays();
   }
 
-  computeEntryMax(entry, project) {
+  computeEntryMax(entry, project, previousStepsAssigned = 0) {
     if (!this.isProjectEnabled(project)) {
       return 0;
     }
@@ -421,15 +422,93 @@ class SpaceshipAutomation {
         }
       }
     }
-    const boundedMax = Number.isFinite(baseMax) && baseMax > 0 ? baseMax : Infinity;
+    const boundedMax = entry.max > 0 ? baseMax : Infinity;
     if (!Number.isFinite(boundedMax)) {
       return projectCap;
     }
-    return Math.min(projectCap, Math.max(0, Math.floor(boundedMax)));
+    return Math.min(projectCap, previousStepsAssigned + Math.max(0, Math.floor(boundedMax)));
   }
 
   calculateProjectEnergyRatePerShip(project) {
-    return project.calculateAutomationEnergyRatePerShip();
+    return project.calculateAutomationEnergyRatePerShip(this.projectedSpaceAccessCoverage);
+  }
+
+  calculateProjectedSpaceAccessCoverage(preset, targets, totalShips) {
+    if (!gameSettings.spaceAccessCapacity || getSpaceAccessProject().capThroughputToCapacity) {
+      return undefined;
+    }
+    const capacity = getTotalSpaceAccessCapacity();
+    if (!(capacity > 0) || capacity === Infinity) {
+      return undefined;
+    }
+
+    const entries = [];
+    const participatingProjects = new Set();
+    for (const step of preset.steps) {
+      for (const entry of step.entries) {
+        if (entry.maxMode !== 'energyProduction' || !(entry.max > 0)) continue;
+        const project = targets.find(target => target.name === entry.projectId);
+        if (!project || !this.isProjectEnabled(project) || project.isAutomationManuallyDisabled()) continue;
+        if (project.shouldAutomationDisable() && this.disabledProjects.has(project.name)) continue;
+        if (!project.getSpaceAccessDemand || !project.getSpaceshipEnergyCostTonnage) continue;
+        entries.push({ entry, project });
+        participatingProjects.add(project);
+      }
+    }
+    if (entries.length === 0) return undefined;
+
+    let otherDemand = getTotalContinuousSpaceAccessDemand();
+    const demandPerShip = new Map();
+    const energyRates = new Map();
+    for (const project of participatingProjects) {
+      const currentShips = project.getAutomationShipCount();
+      const currentDemand = project.getSpaceAccessDemand();
+      otherDemand -= currentDemand;
+      const duration = (project.getShipOperationDuration
+        ? project.getShipOperationDuration()
+        : project.getEffectiveDuration()) / 1000;
+      demandPerShip.set(project, currentDemand > 0 && currentShips > 0
+        ? currentDemand / currentShips
+        : duration > 0
+        ? project.getSpaceshipEnergyCostTonnage()
+          * (1 - project.getSpaceAccessCapacityBypassFraction()) / duration
+        : 0);
+      energyRates.set(project, [
+        project.calculateAutomationEnergyRatePerShip(0),
+        project.calculateAutomationEnergyRatePerShip(1)
+      ]);
+    }
+
+    const productionRate = resources.colony.energy.productionRate || 0;
+    const projectedCoverage = coverage => {
+      const assignments = new Map();
+      for (const { entry, project } of entries) {
+        const [beforeRate, afterRate] = energyRates.get(project);
+        const rate = beforeRate + coverage * (afterRate - beforeRate);
+        const rawCap = project.getMaxAssignableShips ? project.getMaxAssignableShips() : Infinity;
+        const cap = rate > 0
+          ? Math.floor(productionRate * entry.max / 100 / rate)
+          : totalShips;
+        const ships = Math.min(totalShips, rawCap, Math.max(0, cap));
+        assignments.set(project, Math.max(assignments.get(project) || 0, ships));
+      }
+      let demand = otherDemand;
+      for (const [project, ships] of assignments) {
+        if (ships > 100) demand += ships * demandPerShip.get(project);
+      }
+      return demand > 0 ? Math.min(1, capacity / demand) : 1;
+    };
+
+    // More coverage lowers energy cost and permits more ships, which consumes coverage.
+    // Solve that shared feedback before applying any assignments.
+    let low = 0;
+    let high = 1;
+    for (let iteration = 0; iteration < 32; iteration += 1) {
+      const middle = (low + high) / 2;
+      if (projectedCoverage(middle) > middle) low = middle;
+      else high = middle;
+    }
+    return (low + high) / 2;
   }
 
   isProjectEnabled(project) {
@@ -693,6 +772,7 @@ class SpaceshipAutomation {
     }
     this.automationShipPool = totalShipsOnly;
     this.automationMassDriverCapacity = massDriverCapacity;
+    this.projectedSpaceAccessCoverage = this.calculateProjectedSpaceAccessCoverage(preset, targets, totalShipsOnly);
 
     let totalShips = totalShipsOnly + massDriverCapacity;
     if (useMassDriverMode) {
@@ -739,18 +819,41 @@ class SpaceshipAutomation {
       remainingShipsOnly = Math.max(0, remainingShipsOnly - applied);
       return applied;
     };
+    const retainedTargets = new Set();
+    for (const step of preset.steps) {
+      for (const entry of step.entries) {
+        if (retainedTargets.has(entry.projectId) || this.disabledProjects.has(entry.projectId)) continue;
+        const disabledState = disabledTargetStates[entry.projectId];
+        if (!disabledState?.manuallyDisabled) continue;
+        const current = this.sanitizeShipCount(currentAssignments[entry.projectId] || 0);
+        desiredAssignments[entry.projectId] = current;
+        consumePool(entry.projectId === massDriverTargetId, current);
+        retainedTargets.add(entry.projectId);
+      }
+    }
+    remainingTotal = remainingShipsOnly + remainingMassDriverEquivalency;
     for (let stepIndex = 0; stepIndex < preset.steps.length; stepIndex += 1) {
       const step = preset.steps[stepIndex];
       const entries = step.entries;
+      // Entry caps apply to this step; project limits apply to the combined assignment.
+      const entryTargets = new Map(entries.map(entry => [
+        entry,
+        this.computeEntryMax(
+          entry,
+          targets.find(item => item.name === entry.projectId),
+          desiredAssignments[entry.projectId] || 0
+        )
+      ]));
       const stepHasMassDrivers = entries.some(entry => entry.projectId === massDriverTargetId);
       const stepHasNonMassEntries = entries.some(entry => entry.projectId !== massDriverTargetId);
       const isCappedMin = step.mode === 'cappedMin';
       const isCappedMax = step.mode === 'cappedMax';
       const isRemainingPercent = step.mode === 'remainingPercent';
+      const isWorkers = step.mode === 'workers';
       const isEnergyProduction = step.mode === 'energyProduction';
       const limitValue = step.limit === null || step.limit === undefined
         ? null
-        : (isEnergyProduction ? Math.max(0, Number(step.limit)) : this.sanitizeShipCount(step.limit));
+        : (isEnergyProduction || isWorkers ? Math.max(0, Number(step.limit)) : this.sanitizeShipCount(step.limit));
       const stepPoolLimit = stepHasMassDrivers
         ? (stepHasNonMassEntries ? getMixedStepPoolLimit() : remainingTotal)
         : remainingShipsOnly;
@@ -772,9 +875,8 @@ class SpaceshipAutomation {
           for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
             const entry = entries[entryIndex];
             if (entry.weight <= 0) continue;
-            const project = targets.find(item => item.name === entry.projectId);
             const currentTarget = this.sanitizeShipCount(desiredAssignments[entry.projectId] || 0);
-            const maxForEntry = this.computeEntryMax(entry, project);
+            const maxForEntry = entryTargets.get(entry);
             if (maxForEntry === Infinity) {
               hasInfinite = true;
               break;
@@ -794,6 +896,9 @@ class SpaceshipAutomation {
       if (isRemainingPercent) {
         const remainingPercent = Math.min(Math.max(limitValue === null ? 100 : limitValue, 0), 100);
         stepLimit = Math.floor(stepPoolLimit * remainingPercent / 100);
+      } else if (isWorkers) {
+        const workers = resources.colony.workers.cap || 0;
+        stepLimit = Math.min(stepPoolLimit, Math.floor(workers * (limitValue === null ? 100 : limitValue) / 100));
       }
       let stepRemaining = stepLimit;
       if (entries.length === 0) continue;
@@ -819,18 +924,10 @@ class SpaceshipAutomation {
           const disabledState = disabledTargetStates[entry.projectId] || { automationDisabled: false, manuallyDisabled: false };
           const isTemporarilyDisabled = disabledState.automationDisabled;
           const isManuallyDisabled = disabledState.manuallyDisabled;
-          if (isManuallyDisabled || (isTemporarilyDisabled && releaseOnDisable)) {
-            const currentTarget = this.sanitizeShipCount(
-              Object.prototype.hasOwnProperty.call(desiredAssignments, entry.projectId)
-                ? desiredAssignments[entry.projectId]
-                : (currentAssignments[entry.projectId] || 0)
-            );
-            desiredAssignments[entry.projectId] = releaseOnDisable ? 0 : currentTarget;
-            continue;
-          }
+          if (isManuallyDisabled || (isTemporarilyDisabled && releaseOnDisable)) continue;
           const currentTarget = this.sanitizeShipCount(desiredAssignments[entry.projectId] || 0);
           desiredAssignments[entry.projectId] = currentTarget;
-          const maxForEntry = this.computeEntryMax(entry, project);
+          const maxForEntry = entryTargets.get(entry);
           const entryPool = getPoolAvailable(usesMassDrivers);
           const remainingCapacity = Math.min(Math.max(0, maxForEntry - currentTarget), entryPool);
           if (entry.weight > 0 && remainingCapacity > 0) {
@@ -957,7 +1054,7 @@ class SpaceshipAutomation {
               const poolAvailable = getPoolAvailable(item.usesMassDrivers);
               if (poolAvailable <= 0) continue;
               const current = desiredAssignments[item.project.name] || 0;
-              const cap = this.computeEntryMax(item.entry, item.project);
+              const cap = entryTargets.get(item.entry);
               if (current < cap) {
                 const applied = allocateToEntry(item, 1);
                 if (applied <= 0) continue;
@@ -1230,6 +1327,7 @@ class SpaceshipAutomation {
     if (useMassDriverMode) {
       massDriverProject.setMassDriverActive(desiredMassDrivers);
     }
+    this.projectedSpaceAccessCoverage = undefined;
   }
 
   saveState() {
@@ -1262,19 +1360,19 @@ class SpaceshipAutomation {
       steps: Array.isArray(preset.steps) ? preset.steps.map(step => {
         let stepMode = step.mode || 'fill';
         const rawLimit = step.limit === null || step.limit === undefined ? null : Number(step.limit);
-        if (stepMode !== 'cappedMin' && stepMode !== 'cappedMax' && stepMode !== 'remainingPercent' && stepMode !== 'energyProduction' && rawLimit === null) {
+        if (stepMode !== 'cappedMin' && stepMode !== 'cappedMax' && stepMode !== 'remainingPercent' && stepMode !== 'workers' && stepMode !== 'energyProduction' && rawLimit === null) {
           stepMode = 'cappedMax';
         }
         const limitValue = rawLimit === null
           ? null
-          : (stepMode === 'energyProduction'
+          : (stepMode === 'energyProduction' || stepMode === 'workers'
             ? (Number.isFinite(rawLimit) ? Math.max(0, rawLimit) : 0)
             : this.sanitizeShipCount(rawLimit));
         return {
           id: step.id,
           limit: (stepMode === 'cappedMin' || stepMode === 'cappedMax') ? null : (stepMode === 'remainingPercent'
             ? (limitValue === null ? 100 : Math.min(Math.max(limitValue, 0), 100))
-            : (stepMode === 'energyProduction' ? (limitValue === null ? 100 : limitValue) : limitValue)),
+            : (stepMode === 'workers' || stepMode === 'energyProduction' ? (limitValue === null ? 100 : limitValue) : limitValue)),
           mode: stepMode,
           entries: Array.isArray(step.entries) ? step.entries.map(entry => {
             const weight = Number(entry.weight);
@@ -1335,19 +1433,19 @@ class SpaceshipAutomation {
       steps: Array.isArray(presetData.steps) ? presetData.steps.map(step => {
         let mode = step.mode || 'fill';
         const rawLimit = step.limit === null || step.limit === undefined ? null : Number(step.limit);
-        if (mode !== 'cappedMin' && mode !== 'cappedMax' && mode !== 'remainingPercent' && mode !== 'energyProduction' && rawLimit === null) {
+        if (mode !== 'cappedMin' && mode !== 'cappedMax' && mode !== 'remainingPercent' && mode !== 'workers' && mode !== 'energyProduction' && rawLimit === null) {
           mode = 'cappedMax';
         }
         const lv = rawLimit === null
           ? null
-          : (mode === 'energyProduction'
+          : (mode === 'energyProduction' || mode === 'workers'
             ? (Number.isFinite(rawLimit) ? Math.max(0, rawLimit) : 0)
             : this.sanitizeShipCount(rawLimit));
         return {
           id: step.id,
           limit: (mode === 'cappedMin' || mode === 'cappedMax') ? null : (mode === 'remainingPercent'
             ? (lv === null ? 100 : Math.min(Math.max(lv, 0), 100))
-            : (mode === 'energyProduction' ? (lv === null ? 100 : lv) : lv)),
+            : (mode === 'workers' || mode === 'energyProduction' ? (lv === null ? 100 : lv) : lv)),
           mode,
           entries: Array.isArray(step.entries) ? step.entries.map(entry => {
             const weight = Number(entry.weight);

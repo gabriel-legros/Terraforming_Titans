@@ -162,6 +162,7 @@ var terraformingParameters = {
   },
 
   geometry: {
+    geologicalAccessCoreHeatFluxThresholdWm2: 100_000,
     minimumGravityMS2: 1e-12,
     minimumVolumeFraction: 0.01,
     fallbackDensityKgM3: 1000,
@@ -567,6 +568,14 @@ var terraformingParameters = {
   },
 
   gameplay: {
+    neutronStarMerging: {
+      neutronStars: 1_000_000_000,
+      mergersPerAssignmentSecond: 1 / 1000,
+      spaceEnergyPerMerger: 1e38,
+      ejectaSolarMasses: 0.05,
+      extractionYears: 10_000,
+      daysPerYear: 365
+    },
     solar: {
       diskGrazingFluxFactor: 2 / (3 * Math.PI),
       solarPanelBaseLuminosity: 1000,
@@ -671,6 +680,12 @@ var terraformingParameters = {
       solisWaterKeep: 1000,
       solisCappedResources: ['food', 'components', 'electronics', 'glass', 'androids'],
       failureBaseDebrisPerLand: 100,
+      initialDebrisTons: null,
+      failureReferenceDebrisTons: null,
+      maximumFailureChance: 1,
+      outerOrbitMassFraction: 0,
+      outerOrbitMinimumMeters: 1e8,
+      outerOrbitMaximumMeters: 1e12,
       smallProjectBaseSuccess: 0.3,
       largeProjectBaseSuccess: 0.02,
       periapsisSampleCount: 64,

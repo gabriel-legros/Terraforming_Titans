@@ -828,6 +828,7 @@ function updateLogic(delta, realDelta = delta) {
 
   const allStructures = {...buildings, ...colonies};
 
+  populationModule.updateWorkerRequirements();
   produceResources(delta, allStructures);
 
   // Update happiness for each colony

@@ -422,7 +422,11 @@ class Terraforming extends EffectableEntity{
       opticalDepth: 0,
       opticalDepthContributions: {},
       combustionWarmingRateKPerDay: 0,
+      combustionHeatFluxWPerM2: 0,
+      combustionEffectiveHeatFluxWPerM2: 0,
       aerobrakingWarmingRateKPerDay: 0,
+      aerobrakingHeatFluxWPerM2: 0,
+      aerobrakingEffectiveHeatFluxWPerM2: 0,
       unlocked: false,
       zones: {
         tropical: {

@@ -1584,8 +1584,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     return super.checkKesslerShipFailure(activeTime, startRemaining);
   }
 
-  calculateSpaceshipCost() {
-    const totalCost = super.calculateSpaceshipCost();
+  calculateSpaceshipCost(projectedSpaceAccessCoverage) {
+    const totalCost = super.calculateSpaceshipCost(projectedSpaceAccessCoverage);
     const activeTargets = this.getRunnableTargets();
     if (!activeTargets.length) {
       return totalCost;

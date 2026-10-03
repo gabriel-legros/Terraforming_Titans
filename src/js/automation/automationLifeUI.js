@@ -292,6 +292,10 @@ function updateLifeAutomationUI() {
       lifePurchaseContainer._renderSignature = purchaseSignature;
     }
   }
+  lifePurchaseContainer.querySelectorAll('.life-automation-row').forEach(row => {
+    row.querySelector('.life-automation-toggle input').checked =
+      !!activePreset.purchaseSettings[row.dataset.category].enabled;
+  });
 
   // Only rebuild steps if no dropdown/input within is focused
   const stepsHasFocus = lifeDesignStepsContainer.contains(document.activeElement) &&
@@ -536,6 +540,7 @@ function renderLifeAutomationPurchases(automation, preset, container) {
 
     const row = document.createElement('div');
     row.classList.add('life-automation-row');
+    row.dataset.category = category.name;
     const unlocked = isLifeShopCategoryUnlocked(category);
     if (!unlocked) {
       row.style.display = 'none';
@@ -767,13 +772,14 @@ function renderLifeAutomationSteps(automation, preset, container) {
       const updateCapInputForMode = () => {
         const mode = capMode.value;
         const aiming = mode === 'aiming';
-        capInput.disabled = mode !== 'fixed' && !aiming;
+        const fixed = mode === 'fixed';
+        capInput.disabled = !fixed && !aiming;
         capInput.placeholder = aiming
           ? getAutomationCardText('lifeAimingTargetPlaceholder', {}, 'Target')
-          : getAutomationCardText('lifeNoMaxPlaceholder', {}, 'No max');
+          : fixed ? getAutomationCardText('lifeNoMaxPlaceholder', {}, 'No max') : '';
         capInput.value = aiming
           ? String(entry.target === undefined ? 0.95 : entry.target)
-          : (entry.cap === null || entry.cap === undefined ? '' : formatNumber(entry.cap, true, 3));
+          : (fixed && entry.cap !== null && entry.cap !== undefined ? formatNumber(entry.cap, true, 3) : '');
         zoneRow.style.display = shouldShowZoneRow(entry.attribute, mode) ? '' : 'none';
       };
 

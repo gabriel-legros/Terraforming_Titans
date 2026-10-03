@@ -1379,11 +1379,11 @@ class SpaceStorageProject extends SpaceshipProject {
     return totalCost;
   }
 
-  calculateSpaceshipCost() {
+  calculateSpaceshipCost(projectedSpaceAccessCoverage) {
     if (this.isTeleporterTransferActive()) {
       return this.calculateTeleporterShipmentCost();
     }
-    const totalCost = super.calculateSpaceshipCost();
+    const totalCost = super.calculateSpaceshipCost(projectedSpaceAccessCoverage);
     if (!(totalCost?.colony?.energy > 0)) {
       return totalCost;
     }

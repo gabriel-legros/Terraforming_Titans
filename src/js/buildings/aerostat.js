@@ -156,7 +156,11 @@ class Aerostat extends BaseColony {
       return 0;
     }
 
-    return Math.floor(initialLand * AEROSTAT_MAX_LAND_SHARE);
+    let capacityMultiplier = 1;
+    for (const effect of this.activeEffects) {
+      if (effect.type === 'aerostatCapacityMultiplier') capacityMultiplier *= effect.value;
+    }
+    return Math.floor(initialLand * AEROSTAT_MAX_LAND_SHARE * capacityMultiplier);
   }
 
   getStructuralNetBonusCap() {
