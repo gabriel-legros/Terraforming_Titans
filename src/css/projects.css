@@ -4608,6 +4608,7 @@
 .hydra-supplies { font-size: .9em; opacity: .8; }
 .hydra-core-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 14px; }
 .hydra-core { --hydra-accent: #8caeef; padding: 18px; border: 1px solid rgba(128, 150, 180, .3); border-top: 3px solid var(--hydra-accent); border-radius: 10px; background: linear-gradient(135deg, rgba(128, 150, 180, .1), transparent); }
+.hydra-core { display: grid; grid-row: span 10; grid-template-rows: subgrid; row-gap: 0; align-items: start; }
 .hydra-core-aero { --hydra-accent: #63bed0; }
 .hydra-core-aqua { --hydra-accent: #6ba0e5; }
 .hydra-core-ignis { --hydra-accent: #e9a268; }
@@ -4620,11 +4621,14 @@
 .hydra-rates { padding: 8px 0 12px; border-bottom: 1px solid rgba(128, 150, 180, .2); font-size: .85em; line-height: 1.6; font-variant-numeric: tabular-nums; }
 .hydra-core h4 { margin: 14px 0 5px; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; opacity: .65; }
 .hydra-core p { font-size: .9em; }
+.hydra-detail-list { list-style: none; padding: 0; margin: 0; font-size: .9em; line-height: 1.55; }
+.hydra-detail-list li + li { margin-top: 8px; }
+.hydra-detail-state { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 4px; font-size: .8em; font-weight: 600; background: rgba(128, 150, 180, .18); }
+.hydra-detail-state[hidden] { display: none; }
+.hydra-detail-state[data-state="waking"] { background: rgba(233, 162, 104, .3); }
+.hydra-detail-state[data-state="active"] { background: rgba(229, 100, 100, .25); }
 .hydra-net { padding: 18px; display: grid; gap: 12px; border: 1px solid rgba(128, 150, 180, .35); border-radius: 10px; background: rgba(128, 150, 180, .08); }
 .hydra-net h3 { margin: 0; font-size: 1.05em; }
 @media (prefers-reduced-motion: reduce) { .hydra-hp-fill { transition: none; } }
 
 .hydra-net .project-top-section { margin: 0; }
-.hydra-net-build { position: relative; overflow: hidden; width: 100%; }
-.hydra-net-progress { position: absolute; inset: 0 auto 0 0; background: rgba(128, 150, 180, .3); pointer-events: none; }
-.hydra-net-build-label { position: relative; z-index: 1; }

@@ -2107,7 +2107,9 @@ function updateProjectUI(projectName) {
                 elements.progressButton.textContent = statusText;
               }
             } else {
-              const statusText = getProjectsUIText('ui.projects.status.startProject', 'Start {name} (Duration: {duration} seconds)', { name: project.displayName, duration: (duration / 1000).toFixed(2) });
+              const statusText = project.attributes.startLabelKey
+                ? t(project.attributes.startLabelKey, { duration: (duration / 1000).toFixed(2) })
+                : getProjectsUIText('ui.projects.status.startProject', 'Start {name} (Duration: {duration} seconds)', { name: project.displayName, duration: (duration / 1000).toFixed(2) });
               if (isImportProject && importUI) {
                 importUI.setProgressLabel(elements, project, getProjectsUIText('ui.projects.status.startShort', 'Start (Duration: {duration} seconds)', { duration: (duration / 1000).toFixed(2) }));
               } else {

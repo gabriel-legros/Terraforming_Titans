@@ -1,5 +1,12 @@
 const HYDRA_CORE_IDS = ['aether', 'aero', 'aqua', 'ignis', 'terra'];
 const HYDRA_SOURCE_ID = 'project:hydra';
+const HYDRA_CORE_DETAILS = {
+  aether: { abilities: ['rebuild', 'imports', 'stripping'], penalties: ['research', 'delay', 'capture', 'bombardment'] },
+  aero: { abilities: ['rebuild', 'disposal'], penalties: ['occupation', 'hacking'] },
+  aqua: { abilities: ['rebuild', 'excavation'], penalties: ['occupation', 'hacking'] },
+  ignis: { abilities: ['rebuild', 'emissions'], penalties: ['occupation'] },
+  terra: { abilities: ['rebuild', 'heat', 'venting'], penalties: ['delay', 'attacks'] }
+};
 
 class HydraProject extends SpaceshipProject {
   constructor(config, name) {
@@ -7,8 +14,8 @@ class HydraProject extends SpaceshipProject {
     this.coreMass = null;
     this.rates = {};
     this.netMass = 0;
-    this.weaveNet = false;
-    this.netBuilding = false;
+    this.netCaptureRate = 0;
+    this.netAttritionRate = 0;
     this.stellarFeedstock = 0;
     this.outerAetherMass = 0;
     this.aetherOrbitAltitude = 0;
@@ -31,9 +38,64 @@ class HydraProject extends SpaceshipProject {
     }
   }
 
-  shouldHideStartBar() { return true; }
-  canStart() { return false; }
-  update() {}
+  canStart() {
+    return !this.isCompleted
+      && projectManager.isProjectRelevantToCurrentPlanet(this)
+      && this.netMass < currentPlanetParameters.specialAttributes.hydra.net.maximumMass
+      && this.getNetBuildRate() > 0
+      && Project.prototype.canStart.call(this);
+  }
+
+  getScaledCost() {
+    if (!projectManager.isProjectRelevantToCurrentPlanet(this)) return super.getScaledCost();
+    const net = currentPlanetParameters.specialAttributes.hydra.net;
+    return { colony: Object.fromEntries(Object.entries(net.costPerTon)
+      .map(([key, amount]) => [key, amount * net.segmentMass])) };
+  }
+
+  hasSustainResources(deltaTime = 1000, includeNetProduction = true) {
+    return super.hasSustainResources(deltaTime, includeNetProduction) && this.hasStartResources();
+  }
+
+  start() {
+    if (this.isActive) {
+      this.isActive = false;
+      this.isPaused = true;
+      this.autoStart = false;
+      return true;
+    }
+    if (!this.canStart()) return false;
+    this.isActive = true;
+    this.isPaused = false;
+    this.update();
+    return true;
+  }
+
+  getEffectiveDuration() {
+    if (!projectManager.isProjectRelevantToCurrentPlanet(this)) return super.getEffectiveDuration();
+    const net = currentPlanetParameters.specialAttributes.hydra.net;
+    const rate = this.getNetBuildRate();
+    return rate > 0 ? net.segmentMass / rate * 1000 : Infinity;
+  }
+
+  update() {
+    if (!projectManager.isProjectRelevantToCurrentPlanet(this)) return;
+    const net = currentPlanetParameters.specialAttributes.hydra.net;
+    this.startingDuration = this.getEffectiveDuration();
+    const segmentProgress = (this.netMass % net.segmentMass) / net.segmentMass;
+    this.remainingTime = this.startingDuration * (1 - segmentProgress);
+  }
+
+  getWarningState() {
+    if (this.netMass >= currentPlanetParameters.specialAttributes.hydra.net.maximumMass) {
+      return { blocksStart: true, message: t('ui.projects.hydra.netFull') };
+    }
+    if (this.getNetBuildRate() <= 0) {
+      return { blocksStart: true, blocksProgress: true, message: t('ui.projects.hydra.netNoShips') };
+    }
+    return null;
+  }
+
   isContinuous() { return false; }
   renderAutomationUI() {}
 
@@ -50,9 +112,7 @@ class HydraProject extends SpaceshipProject {
     if (!elements?.totalCostElement || !projectManager.isProjectRelevantToCurrentPlanet(this)) return;
     this.initializeHydra();
     const net = currentPlanetParameters.specialAttributes.hydra.net;
-    const costs = { colony: Object.fromEntries(Object.entries(net.costPerTon)
-      .map(([key, amount]) => [key, amount * net.segmentMass])) };
-    updateTotalCostDisplayElement(elements.totalCostElement, costs, this, false,
+    updateTotalCostDisplayElement(elements.totalCostElement, this.getScaledCost(), this, false,
       t('ui.projects.artificialSky.segmentCost') + ' ');
     const values = {
       totalGainElement: t('ui.projects.artificialSky.buildRate', {
@@ -61,6 +121,12 @@ class HydraProject extends SpaceshipProject {
       segmentProgressElement: t('ui.projects.hydra.netSegments', {
         built: formatNumber(this.netMass / net.segmentMass, true, 3),
         max: formatNumber(net.maximumMass / net.segmentMass, true, 3)
+      }),
+      netCaptureElement: t('ui.projects.hydra.netCapture', {
+        capture: formatNumber(this.isCompleted ? 0 : this.netCaptureRate, true, 3)
+      }),
+      netAttritionElement: t('ui.projects.hydra.netAttrition', {
+        segments: formatNumber(this.isCompleted ? 0 : this.netAttritionRate / net.segmentMass, true, 3)
       })
     };
     for (const key in values) {
@@ -177,6 +243,7 @@ class HydraProject extends SpaceshipProject {
     const aether = config.aether;
     const objective = config.objective;
     const pressureDeficit = Math.max(0, 1 - env.pressure / objective.pressurePa - objective.pressureToleranceFraction);
+    const pressureExcess = Math.max(0, env.pressure / objective.pressurePa - 1 - objective.pressureToleranceFraction);
     const temperatureDeficit = Math.max(0, objective.temperatureK - env.temperature - objective.temperatureToleranceK);
     const otherStrength = HYDRA_CORE_IDS.filter(id => id !== 'aether')
       .reduce((sum, id) => sum + strength[id], 0) / (HYDRA_CORE_IDS.length - 1);
@@ -245,6 +312,17 @@ class HydraProject extends SpaceshipProject {
         this.transferResource('aether', 'atmospheric', key, amount * aether.starliftComposition[key], changes, seconds);
       }
     }
+    if (pressureExcess > 0 && strength.aero > 0) {
+      const atmosphere = Object.entries(resources.atmospheric).map(([key, resource]) =>
+        [key, Math.max(0, resource.value + changes.atmospheric[key])]);
+      const total = atmosphere.reduce((sum, [, amount]) => sum + amount, 0);
+      const removed = Math.min(total, config.aero.gasDisposalTonsPerSecond * strength.aero * pressureExcess * seconds);
+      if (total > 0) {
+        for (const [key, amount] of atmosphere) {
+          this.transferResource('aero', 'atmospheric', key, -removed * amount / total, changes, seconds);
+        }
+      }
+    }
     if (pressureDeficit > 0) {
       this.excavate('aqua', config.aqua.excavationTonsPerSecond * strength.aqua * seconds
         * pressureDeficit, changes, seconds, config.aqua.composition);
@@ -293,10 +371,11 @@ class HydraProject extends SpaceshipProject {
           value: 1 + strength.aether * (config.aether.orbitalProjectDurationMultiplier - 1) });
       }
     }
-    hazardManager.setHazardLandReservationShare('hydra', Math.max(
-      strength.aqua > 0 ? env.oceanCoverage : 0,
-      config.ignis.maximumLandFraction * strength.ignis
-    ));
+    hazardManager.setHazardLandReservationShare('hydra', strength.aqua > 0 ? env.oceanCoverage : 0);
+    const underground = projectManager.projects.undergroundExpansion;
+    resources.surface.land.setReservedAmountForSource('hydra:ignis',
+      underground.getTotalProgress() * underground.getPerCompletionLand()
+      * config.ignis.maximumLandFraction * strength.ignis);
   }
 
   clearHydraEffects() {
@@ -307,6 +386,7 @@ class HydraProject extends SpaceshipProject {
       project.removeEffect({ sourceId: HYDRA_SOURCE_ID });
     }
     hazardManager.setHazardLandReservationShare('hydra', 0);
+    resources.surface.land.setReservedAmountForSource('hydra:ignis', 0);
     if (this.coreMass) terraforming.celestialParameters.coreHeatFlux = this.baseCoreHeatFlux;
   }
 
@@ -322,6 +402,8 @@ class HydraProject extends SpaceshipProject {
     const laserStrength = laser.activeNumber * laser.productivity * laser.getEffectiveProductionMultiplier()
       * laser.getEffectiveResourceProductionMultiplier('special', 'orbitalDebris');
     this.transferResource('aether', 'special', 'orbitalDebris', -laserStrength * config.aether.laserDebrisTonsPerSecond * seconds, changes, seconds);
+    this.netCaptureRate = 0;
+    this.netAttritionRate = 0;
     if (this.isCompleted) return;
     this.initializeHydra();
     const env = this.getEnvironment();
@@ -337,20 +419,22 @@ class HydraProject extends SpaceshipProject {
         : Math.max(0, Math.min(1, (config.ignis.hotTemperatureK - env.temperature + config.objective.temperatureToleranceK) / (config.ignis.hotTemperatureK - config.objective.temperatureK))),
       terra: env.dugOut || env.planetaryMass <= config.terra.depletedMassTons ? 0 : 1
     };
-    if (this.weaveNet && this.netMass < config.net.maximumMass) this.netBuilding = true;
-    this.isActive = this.netBuilding;
-    if (this.netBuilding) {
+    if (this.autoStart && !this.isActive && this.canStart()) this.start();
+    if (this.isActive && !this.isPaused) {
       let built = Math.min(this.getNetBuildRate() * seconds, Math.max(0, config.net.maximumMass - this.netMass));
       for (const key in config.net.costPerTon) {
         if (config.net.costPerTon[key] > 0) built = Math.min(built,
           Math.max(0, resources.colony[key].value + changes.colony[key]) / config.net.costPerTon[key]);
+      }
+      if (!(built > 0) && this.netMass < config.net.maximumMass) {
+        this.isActive = false;
+        this.isPaused = true;
       }
       for (const key in config.net.costPerTon) {
         this.transferResource('net', 'colony', key, -built * config.net.costPerTon[key], changes, seconds);
       }
       this.netMass += built;
       if (this.netMass >= config.net.maximumMass) {
-        this.netBuilding = false;
         this.isActive = false;
       }
     }
@@ -363,15 +447,18 @@ class HydraProject extends SpaceshipProject {
     const nearMass = Math.max(0, this.coreMass.aether - this.outerAetherMass - outerLaserLoss);
     const capture = Math.min(this.coreMass.aero, this.netMass * config.net.captureTonsPerTonPerSecond * seconds,
       config.net.attritionTonsPerCapturedTon > 0 ? this.netMass / config.net.attritionTonsPerCapturedTon : Infinity);
-    this.netMass = Math.max(0, this.netMass - capture * config.net.attritionTonsPerCapturedTon);
+    const attrition = capture * config.net.attritionTonsPerCapturedTon;
+    this.netMass = Math.max(0, this.netMass - attrition);
+    this.netCaptureRate = capture / seconds;
+    this.netAttritionRate = attrition / seconds;
     const loss = {
       aether: Math.min(this.coreMass.aether, laserLoss + nearMass * dragRate * seconds),
-      aero: capture + (this.coreMass.aero - capture) * (1 - Math.exp(-config.aero.collapsePerSecond * (1 - suitability.aero) * seconds)),
+      aero: capture + config.cores.aero.maximumMass * config.aero.collapsePerSecond * (1 - suitability.aero) * seconds,
       aqua: config.cores.aqua.maximumMass * config.aqua.exposurePerSecond * (1 - suitability.aqua) * seconds,
       ignis: Math.min(this.coreMass.ignis, resources.special.crusaders.value * config.ignis.crusaderTonsPerSecond * seconds
         + this.coreMass.ignis * (1 - Math.exp(-(env.temperature < config.objective.temperatureK
           ? config.ignis.coldSuppressionPerSecond : config.ignis.hotSuppressionPerSecond) * (1 - suitability.ignis) * seconds))),
-      terra: this.coreMass.terra * (1 - Math.exp(-config.terra.dugOutSuppressionPerSecond * (1 - suitability.terra) * seconds))
+      terra: config.cores.terra.maximumMass * config.terra.dugOutSuppressionPerSecond * (1 - suitability.terra) * seconds
     };
     const growth = {};
     const repairs = {};
@@ -388,6 +475,10 @@ class HydraProject extends SpaceshipProject {
       let supplied = 0;
       if (id === 'aether') {
         supplied = -this.transferResource(id, 'special', 'orbitalDebris', -material, changes, seconds);
+        const stellarRepair = Math.min(material - supplied, material * config.aether.stellarRepairFraction,
+          this.stellarFeedstock);
+        this.stellarFeedstock -= stellarRepair;
+        supplied += stellarRepair;
       } else if (id === 'aero') {
         const feedstocks = Object.entries(config.aero.carbonFeedstocks).map(([key, recipe]) => ({
           key, recipe, available: Math.max(0, resources.atmospheric[key].value + changes.atmospheric[key])
@@ -425,8 +516,8 @@ class HydraProject extends SpaceshipProject {
       const support = HYDRA_CORE_IDS.filter(other => other !== id)
         .reduce((sum, other) => sum + repairs[other][id], 0);
       const core = config.cores[id];
-      // Exposure can exhaust Aqua in this step, including incoming repairs.
-      if (id === 'aqua') loss[id] = Math.min(loss[id], this.coreMass[id] + growth[id] + support);
+      // Environmental attrition can exhaust these cores, including incoming repairs.
+      if (id === 'aero' || id === 'aqua' || id === 'terra') loss[id] = Math.min(loss[id], this.coreMass[id] + growth[id] + support);
       this.coreMass[id] = Math.max(0, Math.min(core.maximumMass, this.coreMass[id] + growth[id] + support - loss[id]));
       if (id === 'aether') {
         this.outerAetherMass = Math.min(this.coreMass.aether,
@@ -436,12 +527,12 @@ class HydraProject extends SpaceshipProject {
         loss: loss[id] / seconds, net: (this.coreMass[id] - before[id]) / seconds };
       this.salvage(id, loss[id], changes, seconds);
     }
-    this.salvage('net', capture * config.net.attritionTonsPerCapturedTon, changes, seconds);
+    this.salvage('net', attrition, changes, seconds);
     if (HYDRA_CORE_IDS.every(id => this.coreMass[id] === 0)) {
       this.isCompleted = true;
-      this.weaveNet = false;
-      this.netBuilding = false;
+      this.autoStart = false;
       this.isActive = false;
+      this.isPaused = false;
       this.autoAssignSpaceships = false;
       this.assignSpaceships(-this.assignedSpaceships);
       this.clearHydraEffects();
@@ -450,6 +541,14 @@ class HydraProject extends SpaceshipProject {
       this.syncPenalties(env, Object.fromEntries(HYDRA_CORE_IDS.map(id => [id,
         Math.min(1, this.coreMass[id] / config.cores[id].initialMass)])));
     }
+    this.update();
+  }
+
+  getThresholdState(core, value, threshold, active, enabled = true, allowWaking = true) {
+    if (this.isCompleted || this.coreMass[core] === 0 || !enabled) return 'dormant';
+    if (active) return 'active';
+    if (!allowWaking) return 'dormant';
+    return Math.abs(value - threshold) <= Math.abs(threshold) * 0.25 ? 'waking' : 'dormant';
   }
 
   renderUI(container) {
@@ -487,19 +586,36 @@ class HydraProject extends SpaceshipProject {
       const rates = document.createElement('div');
       rates.className = 'hydra-rates';
       const abilitiesLabel = document.createElement('h4');
-      const abilities = document.createElement('p');
+      const abilities = document.createElement('ul');
+      abilities.className = 'hydra-detail-list';
+      const penaltiesLabel = document.createElement('h4');
+      const penalties = document.createElement('ul');
+      penalties.className = 'hydra-detail-list';
+      const details = {};
+      for (const group of ['abilities', 'penalties']) {
+        details[group] = {};
+        for (const key of HYDRA_CORE_DETAILS[id][group]) {
+          const item = document.createElement('li');
+          const text = document.createElement('span');
+          const state = document.createElement('span');
+          state.className = 'hydra-detail-state';
+          state.hidden = true;
+          item.append(text, state);
+          (group === 'abilities' ? abilities : penalties).append(item);
+          details[group][key] = { text, state };
+        }
+      }
       const tacticsLabel = document.createElement('h4');
       const tactics = document.createElement('p');
       tactics.className = 'hydra-tactics';
-      card.append(heading, bar, mass, rates, abilitiesLabel, abilities, tacticsLabel, tactics);
+      card.append(heading, bar, mass, rates, abilitiesLabel, abilities, penaltiesLabel, penalties, tacticsLabel, tactics);
       grid.append(card);
-      rows[id] = { name, health, bar, fill, mass, rates, abilitiesLabel, abilities, tacticsLabel, tactics };
+      rows[id] = { name, health, bar, fill, mass, rates, abilitiesLabel, penaltiesLabel, tacticsLabel, tactics, details };
     }
     const netPanel = document.createElement('section');
     netPanel.className = 'hydra-net';
     const netTitle = document.createElement('h3');
     const netHelp = document.createElement('p');
-    const net = document.createElement('p');
     const top = document.createElement('div');
     top.className = 'project-top-section';
     this.createSpaceshipAssignmentUI(top);
@@ -509,39 +625,16 @@ class HydraProject extends SpaceshipProject {
     elements.resourceGainPerShipElement.hidden = true;
     elements.spaceAccessStatusElement.hidden = true;
     const segments = document.createElement('div');
-    elements.totalGainElement.parentElement.append(segments);
+    const capture = document.createElement('div');
+    const attrition = document.createElement('div');
+    elements.totalGainElement.parentElement.append(segments, capture, attrition);
     elements.segmentProgressElement = segments;
-    const progressContainer = document.createElement('div');
-    progressContainer.className = 'progress-button-container';
-    const buildButton = document.createElement('button');
-    buildButton.className = 'progress-button hydra-net-build';
-    const fill = document.createElement('span');
-    fill.className = 'hydra-net-progress';
-    const buildLabel = document.createElement('span');
-    buildLabel.className = 'hydra-net-build-label';
-    buildButton.append(fill, buildLabel);
-    buildButton.addEventListener('click', () => {
-      this.netBuilding = !this.netBuilding;
-      if (!this.netBuilding) this.weaveNet = false;
-      this.updateUI();
-    });
-    progressContainer.append(buildButton);
-    const autoRow = document.createElement('div');
-    autoRow.className = 'checkbox-container';
-    const autoStart = document.createElement('input');
-    autoStart.type = 'checkbox';
-    autoStart.id = `${this.name}-net-auto-start`;
-    autoStart.addEventListener('change', () => {
-      this.weaveNet = autoStart.checked;
-      this.updateUI();
-    });
-    const autoLabel = document.createElement('label');
-    autoLabel.htmlFor = autoStart.id;
-    autoRow.append(autoStart, autoLabel);
-    netPanel.append(netTitle, netHelp, top, net, progressContainer, autoRow);
+    elements.netCaptureElement = capture;
+    elements.netAttritionElement = attrition;
+    netPanel.append(netTitle, netHelp, top);
     panel.append(netPanel);
     container.append(panel);
-    this.ui = { panel, summary, objective, supplies, rows, net, netTitle, netHelp, buildButton, buildLabel, fill, autoStart, autoLabel };
+    this.ui = { panel, summary, objective, supplies, rows, netTitle, netHelp };
     this.updateUI();
   }
 
@@ -551,6 +644,62 @@ class HydraProject extends SpaceshipProject {
     const config = currentPlanetParameters.specialAttributes.hydra;
     const ui = this.ui;
     const env = this.getEnvironment();
+    const strength = Object.fromEntries(HYDRA_CORE_IDS.map(id =>
+      [id, Math.min(1, this.coreMass[id] / config.cores[id].initialMass)]));
+    const siblingStrength = HYDRA_CORE_IDS.filter(id => id !== 'aether')
+      .reduce((sum, id) => sum + strength[id], 0) / (HYDRA_CORE_IDS.length - 1);
+    const pressureThreshold = config.objective.pressurePa * (1 - config.objective.pressureToleranceFraction);
+    const temperatureThreshold = config.objective.temperatureK - config.objective.temperatureToleranceK;
+    const pressureTriggered = Math.max(0, 1 - env.pressure / config.objective.pressurePa
+      - config.objective.pressureToleranceFraction) > 0;
+    const temperatureTriggered = env.temperature < temperatureThreshold;
+    const fusionMass = terraforming.celestialParameters.mass;
+    const states = {
+      aether: {
+        imports: this.getThresholdState('aether', env.pressure, pressureThreshold, pressureTriggered,
+          fusionMass <= config.aether.fusionAvoidanceMassKg && this.stellarFeedstock > 0, false),
+        stripping: this.getThresholdState('aether', fusionMass, config.aether.fusionAvoidanceMassKg,
+          fusionMass > config.aether.fusionAvoidanceMassKg),
+        research: this.getThresholdState('aether', this.coreMass.aether / config.cores.aether.maximumMass,
+          config.aether.researchOrbitalDisableAboveFraction,
+          this.coreMass.aether > config.cores.aether.maximumMass * config.aether.researchOrbitalDisableAboveFraction),
+        bombardment: this.getThresholdState('aether', siblingStrength, config.aether.bombardmentSiblingFraction,
+          siblingStrength < config.aether.bombardmentSiblingFraction)
+      },
+      aero: {
+        disposal: this.getThresholdState('aero', env.pressure,
+          config.objective.pressurePa * (1 + config.objective.pressureToleranceFraction),
+          Math.max(0, env.pressure / config.objective.pressurePa - 1 - config.objective.pressureToleranceFraction) > 0,
+          true, false),
+        hacking: this.getThresholdState('aero', strength.aero, config.aero.hackingBelowFraction,
+          strength.aero < config.aero.hackingBelowFraction)
+      },
+      aqua: { excavation: this.getThresholdState('aqua', env.pressure, pressureThreshold, pressureTriggered, true, false) },
+      ignis: { emissions: this.getThresholdState('ignis', env.temperature, temperatureThreshold, temperatureTriggered, true, false) },
+      terra: {
+        heat: this.getThresholdState('terra', env.temperature, temperatureThreshold, temperatureTriggered, true, false),
+        venting: this.getThresholdState('terra', env.pressure, pressureThreshold, pressureTriggered, true, false),
+        attacks: this.getThresholdState('terra', env.playerLandFraction, config.terra.playerSurfaceTriggerFraction,
+          env.playerLandFraction >= config.terra.playerSurfaceTriggerFraction)
+      }
+    };
+    const detailVars = {
+      pressureThreshold: formatNumber(pressureThreshold / 1e6, true),
+      disposalPressureThreshold: formatNumber(config.objective.pressurePa
+        * (1 + config.objective.pressureToleranceFraction) / 1e6, true),
+      temperatureThreshold: formatNumber(temperatureThreshold, true),
+      fusionMass: formatNumber(config.aether.fusionAvoidanceMassKg / 1000, true),
+      orbitalThreshold: formatNumber(config.aether.researchOrbitalDisableAboveFraction * 100, true),
+      stellarRepairPercent: formatNumber(config.aether.stellarRepairFraction * 100, true),
+      siblingThreshold: formatNumber(config.aether.bombardmentSiblingFraction * 100, true),
+      hackingThreshold: formatNumber(config.aero.hackingBelowFraction * 100, true),
+      surfaceThreshold: formatNumber(config.terra.playerSurfaceTriggerFraction * 100, true),
+      orbitalSlow: formatNumber(1 + (config.aether.orbitalProjectDurationMultiplier - 1) * strength.aether, true),
+      occupied: formatNumber(config.aero.occupiedAerostatFraction * 100 * strength.aero, true),
+      oceanOccupied: formatNumber(this.coreMass.aqua > 0 ? env.oceanCoverage * 100 : 0, true),
+      landOccupied: formatNumber(config.ignis.maximumLandFraction * 100 * strength.ignis, true),
+      slow: formatNumber(1 + (config.terra.excavationDurationMultiplier - 1) * strength.terra, true)
+    };
     const text = t(this.isCompleted ? 'ui.projects.hydra.victory' : 'ui.projects.hydra.summary');
     if (ui.summary.textContent !== text) ui.summary.textContent = text;
     const objective = t('ui.projects.hydra.objective', {
@@ -579,9 +728,7 @@ class HydraProject extends SpaceshipProject {
       const values = {
         health: t('ui.projects.hydra.health', { percent: formatNumber(percent, true) }),
         abilitiesLabel: t('ui.projects.hydra.abilities'),
-        abilities: t(`ui.projects.hydra.cores.${id}.help`, {
-          orbitalThreshold: formatNumber(config.aether.researchOrbitalDisableAboveFraction * 100, true)
-        }),
+        penaltiesLabel: t('ui.projects.hydra.penalties'),
         tacticsLabel: t('ui.projects.hydra.countermeasures'),
         name: t(`ui.projects.hydra.cores.${id}.name`),
         mass: t('ui.projects.hydra.mass', { mass: formatNumber(this.coreMass[id], true) }),
@@ -590,61 +737,70 @@ class HydraProject extends SpaceshipProject {
           pressure: formatNumber(config.aero.minimumPressurePa, true),
           cold: formatNumber(config.ignis.coldTemperatureK, true), hot: formatNumber(config.ignis.hotTemperatureK, true),
           ocean: formatNumber(config.aqua.minimumOceanCoverage * 100, true),
-          occupied: formatNumber(config.aero.occupiedAerostatFraction * 100 * Math.min(1, this.coreMass.aero / config.cores.aero.initialMass), true),
-          slow: formatNumber(1 + (config.terra.excavationDurationMultiplier - 1) * Math.min(1, this.coreMass.terra / config.cores.terra.initialMass), true),
           currentOcean: formatNumber(env.oceanCoverage * 100, true)
         })
       };
       for (const key in values) if (ui.rows[id][key].textContent !== values[key]) ui.rows[id][key].textContent = values[key];
+      for (const group of ['abilities', 'penalties']) {
+        for (const key of HYDRA_CORE_DETAILS[id][group]) {
+          const detail = row.details[group][key];
+          const text = t(`ui.projects.hydra.cores.${id}.${group}.${key}`, detailVars);
+          if (detail.text.textContent !== text) detail.text.textContent = text;
+          const state = states[id][key];
+          const hidden = state === undefined;
+          if (detail.state.hidden !== hidden) detail.state.hidden = hidden;
+          if (!hidden) {
+            const label = t(`ui.projects.hydra.states.${state}`);
+            if (detail.state.textContent !== label) detail.state.textContent = label;
+            if (detail.state.dataset.state !== state) detail.state.dataset.state = state;
+          }
+        }
+      }
     }
     super.updateUI();
-    const net = t('ui.projects.hydra.net', {
-      segmentMass: formatNumber(config.net.segmentMass, true),
-      base: formatNumber(config.net.buildTonsPerSecond / config.net.segmentMass, true),
-      ship: formatNumber(config.net.shipBuildTonsPerSecond / config.net.segmentMass, true)
-    });
-    if (ui.net.textContent !== net) ui.net.textContent = net;
-    const fraction = Math.min(1, this.netMass / config.net.maximumMass);
-    const width = `${fraction * 100}%`;
-    if (ui.fill.style.width !== width) ui.fill.style.width = width;
-    const progressColor = getStatusColor('success');
-    if (ui.progressColor !== progressColor) {
-      ui.fill.style.background = progressColor;
-      ui.progressColor = progressColor;
-    }
-    const state = this.isCompleted ? 'netFinished' : this.netBuilding ? 'netPause'
-      : fraction >= 1 ? 'netFull' : 'netStart';
-    const label = t(`ui.projects.hydra.${state}`, { percent: formatNumber(fraction * 100, true) });
-    if (ui.buildLabel.textContent !== label) ui.buildLabel.textContent = label;
-    ui.buildButton.disabled = this.isCompleted || (!this.netBuilding && fraction >= 1);
-    ui.autoStart.checked = this.weaveNet;
-    ui.autoStart.disabled = this.isCompleted;
-    const autoLabel = t('ui.projects.autoStart');
-    if (ui.autoLabel.textContent !== autoLabel) ui.autoLabel.textContent = autoLabel;
     projectElements[this.name].autoAssignCheckbox.disabled = this.isCompleted;
   }
 
   saveState() {
     return { ...super.saveState(), coreMass: this.coreMass && { ...this.coreMass },
-      netMass: this.netMass, weaveNet: this.weaveNet, netBuilding: this.netBuilding, stellarFeedstock: this.stellarFeedstock,
+      netMass: this.netMass, netControlsVersion: 1,
+      weaveNet: this.autoStart, netBuilding: this.isActive,
+      stellarFeedstock: this.stellarFeedstock,
       outerAetherMass: this.outerAetherMass, aetherOrbitAltitude: this.aetherOrbitAltitude,
       aetherOrbitRadius: this.aetherOrbitRadius, baseCoreHeatFlux: this.baseCoreHeatFlux,
       partialLosses: { ...this.partialLosses } };
   }
 
   loadState(state) {
+    this.netCaptureRate = 0;
+    this.netAttritionRate = 0;
+    if (projectManager.isProjectRelevantToCurrentPlanet(this)) {
+      currentPlanetParameters.specialAttributes.hydra = cloneSpecialSeedValue(getSpecialSeedParameters('hydra').specialAttributes.hydra);
+    }
     super.loadState(state);
     if (state.coreMass) {
       this.coreMass = { ...state.coreMass };
       this.netMass = state.netMass;
-      this.weaveNet = state.weaveNet;
-      this.netBuilding = state.netBuilding ?? state.weaveNet;
+      // Native project state wins in new saves, including automation/travel overrides.
+      if (state.netControlsVersion === undefined) {
+        if (state.weaveNet !== undefined) this.autoStart = state.weaveNet;
+        if (state.netBuilding !== undefined || state.weaveNet !== undefined) {
+          this.isActive = state.netBuilding ?? state.weaveNet;
+          this.isPaused = false;
+        }
+      }
       this.stellarFeedstock = state.stellarFeedstock;
       this.outerAetherMass = state.outerAetherMass;
       this.aetherOrbitAltitude = state.aetherOrbitAltitude;
       this.aetherOrbitRadius = state.aetherOrbitRadius;
       this.baseCoreHeatFlux = state.baseCoreHeatFlux;
       this.partialLosses = { ...state.partialLosses };
+      if (this.isCompleted) {
+        this.isActive = false;
+        this.isPaused = false;
+        this.autoStart = false;
+      }
+      this.update();
     }
   }
 }

@@ -1454,6 +1454,10 @@ function updateLandAssignments(assignmentsDiv) {
     if (swampReserved > 0) {
       assignments.push([getResourceUIText('land.planetarySwampification', ''), swampReserved]);
     }
+    const ignisReserved = landResource.getReservedAmountForSource('hydra:ignis');
+    if (ignisReserved > 0) {
+      assignments.push([t('ui.resourcePanel.land.ignisOccupation'), ignisReserved]);
+    }
   }
   assignments.sort((a, b) => b[1] - a[1]);
 

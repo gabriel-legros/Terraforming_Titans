@@ -40,7 +40,7 @@ progressAtlasProject.storyProjects.stellarEngine = {
 progressAtlasProject.storyProjects.hydra = {
   type: 'HydraProject', name: '', description: '', category: 'story', chapter: -1,
   cost: {}, duration: 1000, repeatable: false, unlocked: false,
-  attributes: { specialSeedKey: 'hydra' }
+  attributes: { specialSeedKey: 'hydra', startLabelKey: 'ui.projects.hydra.startNet' }
 };
 
 if (typeof module !== 'undefined') {

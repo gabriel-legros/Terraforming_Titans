@@ -2327,6 +2327,15 @@ function updateAerostatBuoyancySection(structure) {
         { value: formatAerostatLimit(baseBuildLimit) }
       )}`;
     }
+    const aeroOccupation = structure.activeEffects.find(effect =>
+      effect.sourceId === 'project:hydra' && effect.type === 'aerostatCapacityMultiplier');
+    if (aeroOccupation && aeroOccupation.value < 1) {
+      const occupiedFraction = 1 - aeroOccupation.value;
+      limitTitle += `\n${t('ui.buildings.aerostat.aeroOccupiedCapacity', {
+        value: formatAerostatLimit(Math.floor(structure._getInitialLand() * AEROSTAT_MAX_LAND_SHARE * occupiedFraction)),
+        percent: formatNumber(occupiedFraction * 100, true)
+      })}`;
+    }
     if (structuralNetBonus > 0) {
       limitTitle += `\n${getAerostatText(
         'ui.buildings.aerostat.structuralNetBonusCap',

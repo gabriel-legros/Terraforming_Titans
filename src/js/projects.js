@@ -530,6 +530,10 @@ class Project extends EffectableEntity {
       return false;
     }
 
+    return this.hasStartResources();
+  }
+
+  hasStartResources() {
     const cost = this.getScaledCost();
     const storageProj = this.createSpaceStorageAccess('expansions');
     for (const category in cost) {

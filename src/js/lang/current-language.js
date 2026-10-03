@@ -879,6 +879,7 @@ setLanguageData({
         plasma: 'Plasma',
         keratiTerritory: 'Kerati Territory',
         planetarySwampification: 'Managed Swampland',
+        ignisOccupation: 'Ignis underground occupation',
       },
       antimatter: {
         sync: {
@@ -1087,6 +1088,7 @@ setLanguageData({
         noSupportedBuildings: 'No buildings currently list an Aerostat Support value.',
         baseMaximumAerostats: 'Base land cap: {value}.',
         remainingCapacity: 'Remaining aerostat capacity: {value}.',
+        aeroOccupiedCapacity: 'Capacity occupied by Aero: {value} ({percent}%).',
         collisionAvoidanceIntro: 'Collision avoidance allows building above this base cap for extra research cost and maintenance.',
         collisionAvoidanceMaintenance: 'This extra research maintenance ignores maintenance multipliers.',
         aboveBaseCap: 'Aerostats above base cap: {value}.',
@@ -1443,45 +1445,83 @@ setLanguageData({
         "objective": "Hydra restores the climate toward {temperature} K and {pressure} MPa.",
         "health": "{percent}% HP",
         "abilities": "Abilities",
+        "penalties": "Penalties",
         "countermeasures": "Countermeasures",
+        "states": { "dormant": "Dormant", "waking": "Waking", "active": "Active" },
         "netTitle": "Entanglement net",
+        "startNet": "Start Entanglement Net (Duration: {duration} seconds)",
         "netHelp": "Traps and destroys Aero platforms. Wears down with use.",
         "summary": "Defeat all five cores simultaneously. Surviving cores repair each other.",
         "victory": "Hydra defeated.",
         "supplies": "Orbital debris: {debris} t | Launch failure: {small}% small / {large}% large",
         "mass": "Mass: {mass} t",
         "rates": "Repair +{growth} t/s | Support +{support} t/s | Damage -{loss} t/s",
-        "net": "{segmentMass} t/segment | Base: {base} segments/s | Per ship: +{ship} segments/s",
         "netSegments": "Available segments: {built} / {max}",
-        "netStart": "Build net ({percent}%)",
-        "netPause": "Pause construction ({percent}%)",
+        "netCapture": "Capture: {capture} t/s",
+        "netAttrition": "Attrition: {segments} segments/s",
         "netFull": "Net at capacity",
-        "netFinished": "Construction stopped",
+        "netNoShips": "Assign spaceships to build the net.",
         "cores": {
           "aether": {
             "name": "Aether | Orbit and outer system",
-            "help": "Rebuilds from orbital debris. Disables research orbitals above {orbitalThreshold}% HP. Captures ships, delays orbital projects and bombards buildings when sibling cores weaken. Imports gas as pressure falls; strips atmosphere near stellar ignition.",
-            "tactics": "Lasers destroy swarm mass and orbital debris. Atmospheric expansion burns the near-orbit swarm."
+            "abilities": {
+              "rebuild": "Repairs itself and sibling cores using orbital debris, with stellar feedstock as a fallback at {stellarRepairPercent}% of the normal repair budget.",
+              "imports": "Imports gas below {pressureThreshold} MPa while stellar feedstock remains and Lerna is below the stripping threshold.",
+              "stripping": "Strips atmosphere above {fusionMass} t of planetary mass to prevent stellar ignition."
+            },
+            "penalties": {
+              "research": "Disables research orbitals above {orbitalThreshold}% HP.",
+              "delay": "Orbital project duration: x{orbitalSlow}.",
+              "capture": "Captures ships assigned to active projects.",
+              "bombardment": "Bombards buildings and non-aerostat colonies when average sibling strength is below {siblingThreshold}%."
+            },
+            "tactics": "Lasers destroy swarm mass and orbital debris. Atmospheric expansion burns the near-orbit swarm; the outer swarm requires lasers."
           },
           "aero": {
             "name": "Aero | Upper atmosphere",
-            "help": "Builds platforms from atmospheric CO2 and methane. Occupies aerostat capacity and hacks aerostats when weakened.",
-            "tactics": "Aerostat capacity occupied: {occupied}%. Lower pressure below {pressure} Pa or deploy the net."
+            "abilities": {
+              "rebuild": "Repairs itself and sibling cores using carbon from atmospheric CO2 and methane, releasing oxygen and hydrogen.",
+              "disposal": "Disposes of atmospheric gases proportionally above {disposalPressureThreshold} MPa."
+            },
+            "penalties": {
+              "occupation": "Occupies Aerostat Capacity: {occupied}%.",
+              "hacking": "Hacks aerostats below {hackingThreshold}% of its starting mass."
+            },
+            "tactics": "Lower pressure below {pressure} Pa or deploy the net."
           },
           "aqua": {
             "name": "Aqua | Oceans",
-            "help": "Occupies liquid oceans, hacks androids and excavates planetary mass into gases, junk and scrap.",
+            "abilities": {
+              "rebuild": "Repairs itself and sibling cores using planetary mass.",
+              "excavation": "Excavates planetary mass into gases, junk and scrap below {pressureThreshold} MPa."
+            },
+            "penalties": {
+              "occupation": "Reserves liquid-covered land: {oceanOccupied}% of the surface.",
+              "hacking": "Hacks androids to increase its mass."
+            },
             "tactics": "Ocean coverage: {currentOcean}%. Reduce combined liquid coverage below {ocean}% to expose Aqua."
           },
           "ignis": {
             "name": "Ignis | Surface industry",
-            "help": "Occupies land and rebuilds from scrap, junk and mined material. Releases greenhouse gases when cooled.",
+            "abilities": {
+              "rebuild": "Repairs itself and sibling cores using scrap, junk and planetary mass.",
+              "emissions": "Releases greenhouse gases below {temperatureThreshold} K."
+            },
+            "penalties": { "occupation": "Occupies {landOccupied}% of Underground Expansion land." },
             "tactics": "Deploy Crusaders, cool toward {cold} K or heat toward {hot} K."
           },
           "terra": {
             "name": "Terra | Deep crust",
-            "help": "Slows excavation, adds geothermal heat and vents gases. Heavy surface development triggers attacks on buildings, mine depth and underground expansion.",
-            "tactics": "Excavation time: x{slow}. Cover ore deposits with maximum-depth mines or remove planetary mass."
+            "abilities": {
+              "rebuild": "Repairs itself and sibling cores using planetary mass.",
+              "heat": "Adds geothermal heat below {temperatureThreshold} K.",
+              "venting": "Vents gases below {pressureThreshold} MPa."
+            },
+            "penalties": {
+              "delay": "Deeper mining time: x{slow}.",
+              "attacks": "Attacks buildings, non-aerostat colonies, mine depth and underground expansion when player structures occupy at least {surfaceThreshold}% of the surface."
+            },
+            "tactics": "Cover ore deposits with maximum-depth mines or remove planetary mass."
           }
         }
       },
@@ -5876,13 +5916,13 @@ setLanguageData({
       projects: {
         "hydra": {
           "name": "Hydra",
-          "description": "Hydra is a swarm machine intelligence locked to this star system.  A failed experiment from Prometheus's master.  The cores will cooperate under threat."
+          "description": "Hydra is a swarm machine intelligence locked to this star system.  A failed experiment from Prometheus's master.  The cores will cooperate under threat. (Original Design by Pokey)"
         },
       },
     },
     specialSeeds: {
       hydra: {
-        name: 'Hydra', difficulty: 'Extreme',
+        name: 'Hydra', difficulty: 'Very Extreme',
         rules: 'Five regenerating machine cores occupy Lerna and actively resist terraforming. Suppress all five simultaneously to defeat Hydra.',
         requirement: 'Hydra', defeated: 'All five cores defeated', defeatFirst: 'Defeat Hydra first'
       },
@@ -5893,7 +5933,7 @@ setLanguageData({
       },
       sirius: {
         name: 'Sirius',
-        difficulty: 'Pending evaluation',
+        difficulty: 'Very Extreme',
         effects: {
           hopeStarQuestion: 'HOPE...  This is a star...  Why are we terraforming a star?',
           advancedOrbitals: 'Superalloys and Storage orbitals are available.',
