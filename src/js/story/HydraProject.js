@@ -738,7 +738,7 @@ class HydraProject extends SpaceshipProject {
       const barLabel = t(`ui.projects.hydra.cores.${id}.name`);
       if (row.bar.getAttribute('aria-label') !== barLabel) row.bar.setAttribute('aria-label', barLabel);
       const values = {
-        health: t('ui.projects.hydra.health', { percent: formatNumber(percent, true) }),
+        health: t('ui.projects.hydra.health', { percent: formatNumber(Number(accessibleValue), true) }),
         abilitiesLabel: t('ui.projects.hydra.abilities'),
         penaltiesLabel: t('ui.projects.hydra.penalties'),
         tacticsLabel: t('ui.projects.hydra.countermeasures'),
