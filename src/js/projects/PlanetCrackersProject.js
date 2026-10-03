@@ -264,6 +264,12 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
     return `${totals.metal}|${totals.silicon}|${totals.carbon}|${totals.water}`;
   }
 
+  applyEffects() {
+    // Travel replaces the network manager after restoring project state.
+    this.lastAppliedCapKey = '';
+    this.applyCapBonusEffects();
+  }
+
   applyCapBonusEffects() {
     const totals = this.getTotalCapBonusesFromCracked();
     warpGateNetworkManager.addAndReplace({
@@ -739,7 +745,6 @@ class PlanetCrackersProject extends NuclearAlchemyFurnaceProject {
       }
     }
     this.lastAppliedCapKey = '';
-    this.applyCapBonusEffects();
     this.updateUI();
   }
 }

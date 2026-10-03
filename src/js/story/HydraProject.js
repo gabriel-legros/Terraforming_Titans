@@ -30,12 +30,15 @@ class HydraProject extends SpaceshipProject {
 
   enable() {
     super.enable();
-    if (this.coreMass && !this.isCompleted) {
-      this.initializeHydra();
-      const config = currentPlanetParameters.specialAttributes.hydra;
-      this.syncPenalties(this.getEnvironment(), Object.fromEntries(HYDRA_CORE_IDS.map(id =>
-        [id, Math.min(1, this.coreMass[id] / config.cores[id].initialMass)])));
+    if (!projectManager.isProjectRelevantToCurrentPlanet(this)) return;
+    if (this.isCompleted) {
+      this.clearHydraEffects();
+      return;
     }
+    this.initializeHydra();
+    const config = currentPlanetParameters.specialAttributes.hydra;
+    this.syncPenalties(this.getEnvironment(), Object.fromEntries(HYDRA_CORE_IDS.map(id =>
+      [id, Math.min(1, this.coreMass[id] / config.cores[id].initialMass)])));
   }
 
   canStart() {
