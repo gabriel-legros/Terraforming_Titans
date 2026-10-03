@@ -1198,7 +1198,7 @@ const projectParameters = {
         electronics: 150_000_000_000_000_000_000_000
       }
     },
-    duration: 4_000_000_000_000_000_000,
+    duration: 40_000_000_000_000_000,
     description: '',
     repeatable: true,
     maxRepeatCount: Infinity,
