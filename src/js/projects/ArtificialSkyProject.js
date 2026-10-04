@@ -221,6 +221,10 @@ class ArtificialSkyProject extends SpaceshipProject {
     return this.repeatCount < this.getMaxRepeats();
   }
 
+  getRemainingSegments() {
+    return Math.max(0, this.getMaxRepeats() - (this.repeatCount + this.segmentProgress));
+  }
+
   shouldAutomationDisable() {
     return !this.canContinue() || this.isProgressBlocked();
   }
@@ -305,7 +309,7 @@ class ArtificialSkyProject extends SpaceshipProject {
     const maxSegments = this.getMaxRepeats();
     this.repeatCount = Math.min(maxSegments, this.repeatCount + 1);
 
-    if (this.repeatCount >= maxSegments) {
+    if (!this.canContinue()) {
       this.completeProjectFully();
       return;
     }
@@ -318,8 +322,7 @@ class ArtificialSkyProject extends SpaceshipProject {
   }
 
   applyContinuousProgress(progress) {
-    const maxSegments = this.getMaxRepeats();
-    const remainingSegments = Math.max(0, maxSegments - (this.repeatCount + this.segmentProgress));
+    const remainingSegments = this.getRemainingSegments();
     if (remainingSegments <= 0) {
       this.completeProjectFully();
       return;
@@ -333,7 +336,7 @@ class ArtificialSkyProject extends SpaceshipProject {
     }
     this.segmentProgress = totalProgress - completed;
 
-    if (this.repeatCount >= maxSegments) {
+    if (!this.canContinue()) {
       this.completeProjectFully();
     }
   }
@@ -380,8 +383,7 @@ class ArtificialSkyProject extends SpaceshipProject {
       return;
     }
 
-    const maxSegments = this.getMaxRepeats();
-    const remainingSegments = Math.max(0, maxSegments - (this.repeatCount + this.segmentProgress));
+    const remainingSegments = this.getRemainingSegments();
     if (remainingSegments <= 0) {
       this.completeProjectFully();
       return;
@@ -459,8 +461,7 @@ class ArtificialSkyProject extends SpaceshipProject {
       return totals;
     }
 
-    const maxSegments = this.getMaxRepeats();
-    const remainingSegments = Math.max(0, maxSegments - (this.repeatCount + this.segmentProgress));
+    const remainingSegments = this.getRemainingSegments();
     if (remainingSegments <= 0) {
       return totals;
     }

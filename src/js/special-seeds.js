@@ -2147,7 +2147,7 @@ const hydraOverrides = {
         ventTonsPerSecond: 1e17,
         ventComposition: { hydrogen: 0.5, atmosphericWater: 0.25, carbonDioxide: 0.15, inertGas: 0.1 },
         miningTonsPerSecond: 1e18, excavationDurationMultiplier: 100,
-        dugOutSuppressionPerSecond: 0.002,
+        dugOutSuppressionPerSecond: 0.005,
         depletedMassTons: 1e3, playerSurfaceTriggerFraction: 0.1,
         buildingAttritionPerSecond: 0.001, excavationAttritionPerSecond: 0.001
       },

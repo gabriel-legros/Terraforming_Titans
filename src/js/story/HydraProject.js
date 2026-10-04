@@ -8,7 +8,7 @@ const HYDRA_CORE_DETAILS = {
   terra: { abilities: ['rebuild', 'heat', 'venting'], penalties: ['delay', 'attacks'] }
 };
 
-class HydraProject extends SpaceshipProject {
+class HydraProject extends ArtificialSkyProject {
   constructor(config, name) {
     super(config, name);
     this.coreMass = null;
@@ -56,22 +56,50 @@ class HydraProject extends SpaceshipProject {
       .map(([key, amount]) => [key, amount * net.segmentMass])) };
   }
 
-  hasSustainResources(deltaTime = 1000, includeNetProduction = true) {
-    return super.hasSustainResources(deltaTime, includeNetProduction) && this.hasStartResources();
+  getMaxRepeats() {
+    this.maxRepeatCount = Infinity;
+    return this.maxRepeatCount;
   }
 
-  start() {
-    if (this.isActive) {
-      this.isActive = false;
-      this.isPaused = true;
-      this.autoStart = false;
-      return true;
+  canContinue() {
+    return !this.isCompleted && this.getRemainingSegments() > 0;
+  }
+
+  getRemainingSegments() {
+    const net = currentPlanetParameters.specialAttributes.hydra.net;
+    return Math.max(0, (net.maximumMass - this.netMass) / net.segmentMass);
+  }
+
+  getKesslerSuccessChance() { return 1; }
+  applyArtificialSkyCompletionEffects() {}
+
+  complete() {
+    const net = currentPlanetParameters.specialAttributes.hydra.net;
+    this.netMass = Math.min(net.maximumMass, this.netMass + net.segmentMass);
+    super.complete();
+  }
+
+  applyContinuousProgress(progress) {
+    const net = currentPlanetParameters.specialAttributes.hydra.net;
+    this.netMass = Math.min(net.maximumMass, this.netMass + progress * net.segmentMass);
+    if (!this.canContinue()) this.completeProjectFully();
+  }
+
+  finalizeAssignmentChange(wasContinuous) {
+    if (this.isActive && !wasContinuous && this.isContinuous() && this.startingDuration > 0) {
+      const net = currentPlanetParameters.specialAttributes.hydra.net;
+      const progress = Math.max(0, Math.min(1,
+        (this.startingDuration - this.remainingTime) / this.startingDuration));
+      this.netMass = Math.min(net.maximumMass, this.netMass + progress * net.segmentMass);
     }
-    if (!this.canStart()) return false;
-    this.isActive = true;
+    super.finalizeAssignmentChange(wasContinuous);
+  }
+
+  completeProjectFully() {
+    this.isActive = false;
     this.isPaused = false;
-    this.update();
-    return true;
+    this.remainingTime = 0;
+    this.startingDuration = 0;
   }
 
   getEffectiveDuration() {
@@ -79,14 +107,6 @@ class HydraProject extends SpaceshipProject {
     const net = currentPlanetParameters.specialAttributes.hydra.net;
     const rate = this.getNetBuildRate();
     return rate > 0 ? net.segmentMass / rate * 1000 : Infinity;
-  }
-
-  update() {
-    if (!projectManager.isProjectRelevantToCurrentPlanet(this)) return;
-    const net = currentPlanetParameters.specialAttributes.hydra.net;
-    this.startingDuration = this.getEffectiveDuration();
-    const segmentProgress = (this.netMass % net.segmentMass) / net.segmentMass;
-    this.remainingTime = this.startingDuration * (1 - segmentProgress);
   }
 
   getWarningState() {
@@ -99,7 +119,6 @@ class HydraProject extends SpaceshipProject {
     return null;
   }
 
-  isContinuous() { return false; }
   renderAutomationUI() {}
 
   autoAssign() {
@@ -115,8 +134,9 @@ class HydraProject extends SpaceshipProject {
     if (!elements?.totalCostElement || !projectManager.isProjectRelevantToCurrentPlanet(this)) return;
     this.initializeHydra();
     const net = currentPlanetParameters.specialAttributes.hydra.net;
-    updateTotalCostDisplayElement(elements.totalCostElement, this.getScaledCost(), this, false,
-      t('ui.projects.artificialSky.segmentCost') + ' ');
+    const perSecond = this.isContinuous();
+    updateTotalCostDisplayElement(elements.totalCostElement, this.calculateSpaceshipTotalCost(perSecond), this, perSecond,
+      t(perSecond ? 'ui.projects.artificialSky.costPerSecond' : 'ui.projects.artificialSky.segmentCost') + ' ');
     const values = {
       totalGainElement: t('ui.projects.artificialSky.buildRate', {
         value: formatNumber(this.isCompleted ? 0 : this.getNetBuildRate() / net.segmentMass, true, 3)
@@ -413,9 +433,18 @@ class HydraProject extends SpaceshipProject {
 
   cleanupForReset() { if (this.coreMass) this.clearHydraEffects(); }
 
-  estimateProjectCostAndGain() { return { cost: {}, gain: {} }; }
+  getResourceExecutionDeltaTime(deltaTime) { return deltaTime; }
 
-  applyCostAndGain(deltaTime, changes) {
+  getCostRateLabel() {
+    return registerRateSource('project:hydra:net', t('ui.projects.hydra.rateSources.net'));
+  }
+
+  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, changes = null) {
+    return super.estimateProjectCostAndGain(
+      Project.prototype.getResourceExecutionDeltaTime.call(this, deltaTime), applyRates, productivity, changes);
+  }
+
+  applyCostAndGain(deltaTime, changes, productivity = 1) {
     if (!this.unlocked || isEquilibrating || !(deltaTime > 0)) return;
     const config = currentPlanetParameters.specialAttributes.hydra;
     const seconds = deltaTime / 1000;
@@ -440,27 +469,10 @@ class HydraProject extends SpaceshipProject {
         : Math.max(0, Math.min(1, (config.ignis.hotTemperatureK - env.temperature + config.objective.temperatureToleranceK) / (config.ignis.hotTemperatureK - config.objective.temperatureK))),
       terra: env.planetaryMass <= config.terra.depletedMassTons ? 0 : 1 - env.dugOutFraction
     };
-    if (this.autoStart && !this.isActive && this.canStart()) this.start();
-    if (this.isActive && !this.isPaused) {
-      let built = Math.min(this.getNetBuildRate() * seconds, Math.max(0, config.net.maximumMass - this.netMass));
-      for (const key in config.net.costPerTon) {
-        if (config.net.costPerTon[key] > 0) built = Math.min(built,
-          Math.max(0, resources.colony[key].value + changes.colony[key]) / config.net.costPerTon[key]);
-      }
-      if (!(built > 0) && this.netMass < config.net.maximumMass) {
-        this.isActive = false;
-        this.isPaused = true;
-      }
-      for (const key in config.net.costPerTon) {
-        this.transferResource('net', 'colony', key, -built * config.net.costPerTon[key], changes, seconds);
-      }
-      this.netMass += built;
-      if (this.netMass >= config.net.maximumMass) {
-        this.isActive = false;
-      }
-    }
-    const laserLoss = Math.min(this.coreMass.aether, laserStrength * config.aether.laserTonsPerSecond * seconds);
-    const outerLaserLoss = this.coreMass.aether > 0 ? laserLoss * this.outerAetherMass / this.coreMass.aether : 0;
+    super.applyCostAndGain(Project.prototype.getResourceExecutionDeltaTime.call(this, deltaTime), changes, productivity);
+    const laserLoss = laserStrength * config.aether.laserTonsPerSecond * seconds;
+    const outerLaserLoss = this.coreMass.aether > 0
+      ? Math.min(this.coreMass.aether, laserLoss) * this.outerAetherMass / this.coreMass.aether : 0;
     this.outerAetherMass = Math.max(0, this.outerAetherMass - outerLaserLoss);
     const altitude = Math.max(0, this.aetherOrbitAltitude + (this.aetherOrbitRadius - terraforming.celestialParameters.radius) * 1000);
     const density = getAtmosphericDensityModel(terraforming).getDensity(altitude);
@@ -473,7 +485,7 @@ class HydraProject extends SpaceshipProject {
     this.netCaptureRate = capture / seconds;
     this.netAttritionRate = attrition / seconds;
     const loss = {
-      aether: Math.min(this.coreMass.aether, laserLoss + nearMass * dragRate * seconds),
+      aether: laserLoss + Math.min(Math.max(0, this.coreMass.aether - laserLoss), nearMass * dragRate * seconds),
       aero: capture + config.cores.aero.maximumMass * config.aero.collapsePerSecond * (1 - suitability.aero) * seconds,
       aqua: config.cores.aqua.maximumMass * config.aqua.exposurePerSecond * (1 - suitability.aqua) * seconds,
       ignis: resources.special.crusaders.value * config.ignis.crusaderTonsPerSecond * seconds
@@ -539,14 +551,15 @@ class HydraProject extends SpaceshipProject {
       const core = config.cores[id];
       // Environmental attrition can exhaust these cores, including incoming repairs.
       if (id === 'aero' || id === 'aqua' || id === 'ignis' || id === 'terra') loss[id] = Math.min(loss[id], this.coreMass[id] + growth[id] + support);
+      const destroyedMass = Math.min(loss[id], this.coreMass[id] + growth[id] + support);
       this.coreMass[id] = Math.max(0, Math.min(core.maximumMass, this.coreMass[id] + growth[id] + support - loss[id]));
       if (id === 'aether') {
         this.outerAetherMass = Math.min(this.coreMass.aether,
           this.outerAetherMass + (growth[id] + support) * config.aether.outerOrbitFraction);
       }
       this.rates[id] = { growth: growth[id] / seconds, support: support / seconds,
-        loss: loss[id] / seconds, net: (this.coreMass[id] - before[id]) / seconds };
-      this.salvage(id, loss[id], changes, seconds);
+        loss: destroyedMass / seconds, net: (this.coreMass[id] - before[id]) / seconds };
+      this.salvage(id, destroyedMass, changes, seconds);
     }
     this.salvage('net', attrition, changes, seconds);
     if (HYDRA_CORE_IDS.every(id => this.coreMass[id] === 0)) {
@@ -562,7 +575,6 @@ class HydraProject extends SpaceshipProject {
       this.syncPenalties(env, Object.fromEntries(HYDRA_CORE_IDS.map(id => [id,
         Math.min(1, this.coreMass[id] / config.cores[id].initialMass)])));
     }
-    this.update();
   }
 
   getThresholdState(core, value, threshold, active, enabled = true, allowWaking = true) {
@@ -640,7 +652,7 @@ class HydraProject extends SpaceshipProject {
     const top = document.createElement('div');
     top.className = 'project-top-section';
     this.createSpaceshipAssignmentUI(top);
-    this.createProjectDetailsGridUI(top);
+    SpaceshipProject.prototype.createProjectDetailsGridUI.call(this, top);
     const elements = projectElements[this.name];
     elements.costPerShipElement.hidden = true;
     elements.resourceGainPerShipElement.hidden = true;
@@ -785,7 +797,7 @@ class HydraProject extends SpaceshipProject {
 
   saveState() {
     return { ...super.saveState(), coreMass: this.coreMass && { ...this.coreMass },
-      netMass: this.netMass, netControlsVersion: 1,
+      netMass: this.netMass, netControlsVersion: 2,
       weaveNet: this.autoStart, netBuilding: this.isActive,
       stellarFeedstock: this.stellarFeedstock,
       outerAetherMass: this.outerAetherMass, aetherOrbitAltitude: this.aetherOrbitAltitude,
@@ -822,7 +834,15 @@ class HydraProject extends SpaceshipProject {
         this.isPaused = false;
         this.autoStart = false;
       }
-      this.update();
+      if (state.netControlsVersion !== 2 && !this.isCompleted) {
+        // Streamed builds did not prepay a timed segment; restart through the shared lifecycle.
+        this.isActive = false;
+        this.isPaused = false;
+        this.segmentProgress = 0;
+        this.remainingTime = this.getEffectiveDuration();
+        this.startingDuration = this.remainingTime;
+      }
+      this.updateDurationFromEffects();
     }
   }
 }

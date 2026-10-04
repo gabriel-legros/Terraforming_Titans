@@ -4618,7 +4618,7 @@
 .hydra-hp-track { height: 12px; overflow: hidden; border-radius: 6px; background: rgba(128, 150, 180, .18); }
 .hydra-hp-fill { height: 100%; background: var(--hydra-accent); border-radius: inherit; transition: width .2s ease; }
 .hydra-mass { font-size: .85em; margin: 8px 0; font-variant-numeric: tabular-nums; opacity: .8; }
-.hydra-rates { padding: 8px 0 12px; border-bottom: 1px solid rgba(128, 150, 180, .2); font-size: .85em; line-height: 1.6; font-variant-numeric: tabular-nums; }
+.hydra-rates { padding: 8px 0 12px; border-bottom: 1px solid rgba(128, 150, 180, .2); font-size: .85em; line-height: 1.6; font-variant-numeric: tabular-nums; white-space: pre-line; }
 .hydra-core h4 { margin: 14px 0 5px; font-size: .8em; text-transform: uppercase; letter-spacing: .08em; opacity: .65; }
 .hydra-core p { font-size: .9em; }
 .hydra-detail-list { list-style: none; padding: 0; margin: 0; font-size: .9em; line-height: 1.55; }

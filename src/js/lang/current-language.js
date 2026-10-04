@@ -1455,7 +1455,7 @@ setLanguageData({
         "victory": "Hydra defeated.",
         "supplies": "Orbital debris: {debris} t | Launch failure: {small}% small / {large}% large",
         "mass": "Mass: {mass} t",
-        "rates": "Repair +{growth} t/s | Support +{support} t/s | Damage -{loss} t/s",
+        "rates": "Repair +{growth} t/s | Support +{support} t/s\nDamage -{loss} t/s",
         "netSegments": "Available segments: {built} / {max}",
         "netCapture": "Capture: {capture} t/s",
         "netAttrition": "Attrition: {segments} segments/s",
