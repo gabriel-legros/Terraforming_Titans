@@ -62,7 +62,9 @@ class HydraProject extends ArtificialSkyProject {
   }
 
   canContinue() {
-    return !this.isCompleted && this.getRemainingSegments() > 0;
+    return !this.isCompleted
+      && projectManager.isProjectRelevantToCurrentPlanet(this)
+      && this.getRemainingSegments() > 0;
   }
 
   getRemainingSegments() {
