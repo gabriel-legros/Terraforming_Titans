@@ -2132,13 +2132,15 @@ const hydraOverrides = {
         minimumOceanCoverage: 0.1, exposurePerSecond: 0.002,
         excavationTonsPerSecond: 1e17,
         composition: { atmospheric: { oxygen: 0.4, carbonDioxide: 0.04, inertGas: 0.01 }, surface: { junk: 0.25, scrapMetal: 0.3 } },
-        androidHackingPerSecond: 0.005, massPerAndroid: 1
+        androidHackingPerSecond: 0.1, massPerAndroid: 1
       },
       ignis: {
         buildCostMultiplier: 4,
-        coldTemperatureK: 500, hotTemperatureK: 1300,
+        maintenanceMultiplier: 50,
+        coldTemperatureK: 500, hotTemperatureK: 1800,
         coldSuppressionPerSecond: 0.001, hotSuppressionPerSecond: 0.005,
         crusaderTonsPerSecond: 1, maximumLandFraction: 0.9,
+        nanocolonyCapRecoveryBelowFraction: 0.5,
         miningTonsPerSecond: 1e18, emissionsTonsPerSecond: 1e17,
         emissions: { atmosphericWater: 0.4, carbonDioxide: 0.3, atmosphericMethane: 0.2, sulfuricAcid: 0.1 }
       },
@@ -2148,6 +2150,7 @@ const hydraOverrides = {
         ventComposition: { hydrogen: 0.5, atmosphericWater: 0.25, carbonDioxide: 0.15, inertGas: 0.1 },
         miningTonsPerSecond: 1e18, excavationDurationMultiplier: 100,
         dugOutSuppressionPerSecond: 0.005,
+        dugOutMinimumDepth: 95000,
         depletedMassTons: 1e3, playerSurfaceTriggerFraction: 0.1,
         buildingAttritionPerSecond: 0.001, excavationAttritionPerSecond: 0.001
       },

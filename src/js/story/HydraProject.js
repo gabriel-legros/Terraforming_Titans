@@ -4,7 +4,7 @@ const HYDRA_CORE_DETAILS = {
   aether: { abilities: ['rebuild', 'imports', 'stripping'], penalties: ['research', 'delay', 'capture', 'bombardment'] },
   aero: { abilities: ['rebuild', 'disposal'], penalties: ['occupation', 'hacking'] },
   aqua: { abilities: ['rebuild', 'excavation'], penalties: ['occupation', 'hacking'] },
-  ignis: { abilities: ['rebuild', 'emissions'], penalties: ['occupation', 'buildCost'] },
+  ignis: { abilities: ['rebuild', 'emissions'], penalties: ['occupation', 'buildCost', 'maintenance', 'nanocolonyCap'] },
   terra: { abilities: ['rebuild', 'heat', 'venting'], penalties: ['delay', 'attacks'] }
 };
 
@@ -237,7 +237,7 @@ class HydraProject extends ArtificialSkyProject {
       land, oceanCoverage, temperature: terraforming.temperature.value,
       pressure: terraforming.atmosphericPressureCache.totalPressure,
       planetaryMass: getDynamicWorldCurrentPlanetaryMassKg(terraforming) / 1000,
-      dugOutFraction: mines.averageDepth >= mines.maxDepth ? mineCoverage : 0,
+      dugOutFraction: mines.averageDepth >= config.terra.dugOutMinimumDepth ? mineCoverage : 0,
       playerLandFraction: land > 0 ? playerLand / land : 0
     };
   }
@@ -393,6 +393,16 @@ class HydraProject extends ArtificialSkyProject {
     }
     colonies.aerostat_colony.addAndReplace({ ...effect, type: 'aerostatCapacityMultiplier',
       value: 1 - config.aero.occupiedAerostatFraction * strength.aero });
+    nanotechManager.addAndReplace({ sourceId: HYDRA_SOURCE_ID, effectId: 'hydra-ignis-nanocolony-cap',
+      name: t('ui.projects.hydra.rateSources.ignis'), type: 'nanobotDensityMultiplier',
+      value: Math.max(0, 1 - this.coreMass.ignis / config.cores.ignis.maximumMass
+        / config.ignis.nanocolonyCapRecoveryBelowFraction) });
+    nanotechManager.syncNanobotsResource();
+    nanotechManager.markUIDirty();
+    applyAerostatProtectedMaintenancePenalty(1 + (config.ignis.maintenanceMultiplier - 1)
+      * Math.min(1, this.coreMass.ignis / config.cores.ignis.maximumMass), {
+      sourceId: HYDRA_SOURCE_ID, effectId: 'hydra-ignis-maintenance',
+      name: t('ui.projects.hydra.rateSources.ignis') });
     for (const structure of [...Object.values(buildings), ...Object.values(colonies)]) {
       for (const [category, costs] of Object.entries(structure.cost)) {
         structure.addAndReplace({ sourceId: HYDRA_SOURCE_ID,
@@ -419,6 +429,9 @@ class HydraProject extends ArtificialSkyProject {
   }
 
   clearHydraEffects() {
+    nanotechManager.removeEffect({ sourceId: HYDRA_SOURCE_ID });
+    nanotechManager.syncNanobotsResource();
+    nanotechManager.markUIDirty();
     for (const structure of [...Object.values(buildings), ...Object.values(colonies)]) {
       structure.removeEffect({ sourceId: HYDRA_SOURCE_ID });
     }
@@ -734,6 +747,11 @@ class HydraProject extends ArtificialSkyProject {
       oceanOccupied: formatNumber(this.coreMass.aqua > 0 ? env.oceanCoverage * 100 : 0, true),
       landOccupied: formatNumber(config.ignis.maximumLandFraction * 100 * strength.ignis, true),
       buildCostPenalty: formatNumber((config.ignis.buildCostMultiplier - 1) * 100 * strength.ignis, true),
+      ignisMaintenanceMultiplier: formatNumber(1 + (config.ignis.maintenanceMultiplier - 1)
+        * Math.min(1, this.coreMass.ignis / config.cores.ignis.maximumMass), true),
+      nanocolonyCapPercent: formatNumber(100 * Math.max(0, 1 - this.coreMass.ignis
+        / config.cores.ignis.maximumMass / config.ignis.nanocolonyCapRecoveryBelowFraction), true),
+      nanocolonyRecoveryThreshold: formatNumber(100 * config.ignis.nanocolonyCapRecoveryBelowFraction, true),
       slow: formatNumber(1 + (config.terra.excavationDurationMultiplier - 1) * strength.terra, true)
     };
     const text = t(this.isCompleted ? 'ui.projects.hydra.victory' : 'ui.projects.hydra.summary');
@@ -770,6 +788,7 @@ class HydraProject extends ArtificialSkyProject {
         mass: t('ui.projects.hydra.mass', { mass: formatNumber(this.coreMass[id], true) }),
         rates: t('ui.projects.hydra.rates', { growth: formatNumber(rate.growth, true), support: formatNumber(rate.support, true), loss: formatNumber(rate.loss, true) }),
         tactics: t(`ui.projects.hydra.cores.${id}.tactics`, {
+          dugOutDepth: formatNumber(config.terra.dugOutMinimumDepth, true),
           pressure: formatNumber(config.aero.minimumPressurePa, true),
           cold: formatNumber(config.ignis.coldTemperatureK, true), hot: formatNumber(config.ignis.hotTemperatureK, true),
           ocean: formatNumber(config.aqua.minimumOceanCoverage * 100, true),

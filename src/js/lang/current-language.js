@@ -1509,7 +1509,9 @@ setLanguageData({
             },
             "penalties": {
               "occupation": "Occupies {landOccupied}% of Underground Expansion land.",
-              "buildCost": "Building and colony construction costs: +{buildCostPenalty}%."
+              "buildCost": "Building and colony construction costs: +{buildCostPenalty}%.",
+              "maintenance": "Maintenance costs: ×{ignisMaintenanceMultiplier}, reduced by aerostat support.",
+              "nanocolonyCap": "Nanocolony capacity: {nanocolonyCapPercent}% of normal. Recovers below {nanocolonyRecoveryThreshold}% HP."
             },
             "tactics": "Deploy Crusaders, cool toward {cold} K or heat toward {hot} K."
           },
@@ -1524,7 +1526,7 @@ setLanguageData({
               "delay": "Deeper mining time: x{slow}.",
               "attacks": "Attacks buildings, non-aerostat colonies, stored colony resources, mine depth and underground expansion when structures use surface or underground land totaling at least {surfaceThreshold}% of the planet's surface area."
             },
-            "tactics": "At maximum mining depth, decay scales with ore mines / maximum ore mines and reduces terra self-repair. Alternatively, remove planetary mass."
+            "tactics": "At mining depth {dugOutDepth} or deeper, decay scales with ore mines / maximum ore mines and reduces Terra self-repair. Alternatively, remove planetary mass."
           }
         }
       },

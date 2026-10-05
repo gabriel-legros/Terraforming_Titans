@@ -1,3 +1,32 @@
+function applyAerostatProtectedMaintenancePenalty(multiplier, effect, minimumMultiplier = 1) {
+  const mitigation = getAerostatMaintenanceMitigation();
+  for (const [target, collection] of [['building', buildings], ['colony', colonies]]) {
+    for (const [id, structure] of Object.entries(collection)) {
+      if (target === 'building' && structure.temperatureMaintenanceImmune) continue;
+      const costs = structure.cost.colony;
+      if (!costs) continue;
+      let penalty = multiplier;
+      if (target === 'colony' && id === 'aerostat_colony') {
+        penalty = Math.max(1, minimumMultiplier);
+      } else if (target === 'building' && multiplier > 1) {
+        let remainingFraction = 1;
+        if (structure.getTotalWorkerNeed() > 0 && isBuildingEligibleForFactoryMitigation(id)) {
+          remainingFraction *= 1 - Math.max(0, Math.min(1, mitigation.workerShare));
+        }
+        const coverage = mitigation.buildingCoverage.byId[id];
+        if (coverage) remainingFraction *= coverage.remainingFraction;
+        penalty = Math.max(minimumMultiplier, 1 + (multiplier - 1) * remainingFraction);
+      }
+      for (const resource of Object.keys(costs)) {
+        if (resource === 'research') continue;
+        structure.addAndReplace({ ...effect, effectId: `${effect.effectId}-${resource}`,
+          target, targetId: id, type: 'maintenanceCostMultiplier',
+          resourceCategory: 'colony', resourceId: resource, value: penalty });
+      }
+    }
+  }
+}
+
 registerTerraformingMethods('effects', ({
   COMFORTABLE_TEMPERATURE_MAX,
   COMFORTABLE_TEMPERATURE_MIN,
@@ -148,9 +177,6 @@ registerTerraformingMethods('effects', ({
     const colonyCostPenalty = this.calculateColonyPressureCostPenalty();
     const maintenancePenalty = this.calculateMaintenancePenalty();
     const maintenanceFloorPenalty = this.calculateOneAtmMaintenanceFloor().penalty;
-    const aerostatMitigationDetails = getAerostatMaintenanceMitigation();
-    const factoryPenaltyReduction = aerostatMitigationDetails && Number.isFinite(aerostatMitigationDetails.workerShare) ? aerostatMitigationDetails.workerShare : this.getFactoryTemperatureMaintenancePenaltyReduction();
-    const buildingMitigationById = aerostatMitigationDetails?.buildingCoverage?.byId ?? {};
     const applyTerraformingPenaltyEffect = effect => {
       let targetObject = null;
       if (effect.target === 'building') {
@@ -229,63 +255,10 @@ registerTerraformingMethods('effects', ({
     } else {
       this.gravityCostPenalty = createNoGravityPenalty();
     }
-    if (typeof buildings !== 'undefined') {
-      for (const id in buildings) {
-        const b = buildings[id];
-        if (!b || b.temperatureMaintenanceImmune) continue;
-        const countsTowardFactoryMitigation = isBuildingEligibleForFactoryMitigation(id);
-        const workerNeed = typeof b.getTotalWorkerNeed === 'function' ? b.getTotalWorkerNeed() : b.requiresWorker || 0;
-        let penaltyValue = maintenancePenalty;
-        if (maintenancePenalty > 1) {
-          const baseIncrease = maintenancePenalty - 1;
-          let remainingFactor = 1;
-          if (factoryPenaltyReduction > 0 && workerNeed > 0 && countsTowardFactoryMitigation) {
-            const clampedFactoryReduction = Math.max(0, Math.min(1, factoryPenaltyReduction));
-            remainingFactor *= 1 - clampedFactoryReduction;
-          }
-          const buildingMitigation = buildingMitigationById[id];
-          if (buildingMitigation) {
-            remainingFactor *= buildingMitigation.remainingFraction;
-          }
-          penaltyValue = Math.max(maintenanceFloorPenalty, 1 + baseIncrease * remainingFactor);
-        }
-        const categoryCosts = b.cost?.colony;
-        if (!categoryCosts) continue;
-        for (const resource in categoryCosts) {
-          if (resource === 'research') continue;
-          applyTerraformingPenaltyEffect({
-            effectId: `temperatureMaintenancePenalty-${resource}`,
-            target: 'building',
-            targetId: id,
-            type: 'maintenanceCostMultiplier',
-            resourceCategory: 'colony',
-            resourceId: resource,
-            value: penaltyValue,
-            name: t('ui.terraforming.effects.temperaturePenalty', {}, 'Temperature penalty')
-          });
-        }
-      }
-    }
-    if (typeof colonies !== 'undefined') {
-      for (const id in colonies) {
-        const penaltyValue = id === 'aerostat_colony' ? Math.max(1, maintenanceFloorPenalty) : maintenancePenalty;
-        const colonyCosts = colonies[id].cost?.colony;
-        if (!colonyCosts) continue;
-        for (const resource in colonyCosts) {
-          if (resource === 'research') continue;
-          applyTerraformingPenaltyEffect({
-            effectId: `temperatureMaintenancePenalty-${resource}`,
-            target: 'colony',
-            targetId: id,
-            type: 'maintenanceCostMultiplier',
-            resourceCategory: 'colony',
-            resourceId: resource,
-            value: penaltyValue,
-            name: t('ui.terraforming.effects.temperaturePenalty', {}, 'Temperature penalty')
-          });
-        }
-      }
-    }
+    applyAerostatProtectedMaintenancePenalty(maintenancePenalty, {
+      effectId: 'temperatureMaintenancePenalty',
+      name: t('ui.terraforming.effects.temperaturePenalty', {}, 'Temperature penalty')
+    }, maintenanceFloorPenalty);
     if (typeof hazardManager !== 'undefined' && hazardManager && typeof hazardManager.applyHazardEffects === 'function') {
       hazardManager.applyHazardEffects({
         addEffect,
