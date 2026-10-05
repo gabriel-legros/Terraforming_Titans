@@ -2125,7 +2125,8 @@ const hydraOverrides = {
         minimumPressurePa: 1e8, collapsePerSecond: 0.002,
         gasDisposalTonsPerSecond: 1e17,
         occupiedAerostatFraction: 0.95, hackingBelowFraction: 0.5,
-        hackingPerSecond: 0.0001, massPerAerostat: 1000,
+        hackingPerSecond: 0.005, massPerAerostat: 1000,
+        hackingAerostatFloor: 1000,
         carbonFeedstocks: { carbonDioxide: { carbonFraction: 12 / 44, byproduct: 'oxygen' }, atmosphericMethane: { carbonFraction: 12 / 16, byproduct: 'hydrogen' } }
       },
       aqua: {

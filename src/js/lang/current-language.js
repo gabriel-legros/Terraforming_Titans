@@ -1485,7 +1485,7 @@ setLanguageData({
             },
             "penalties": {
               "occupation": "Occupies Aerostat Capacity: {occupied}%.",
-              "hacking": "Hacks aerostats below {hackingThreshold}% of its starting mass."
+              "hacking": "Hacks aerostats below {hackingThreshold}% of its starting mass, preserving at least {aerostatHackingFloor} aerostats."
             },
             "tactics": "Lower pressure below {pressure} Pa or deploy the net."
           },

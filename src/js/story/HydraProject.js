@@ -242,8 +242,8 @@ class HydraProject extends ArtificialSkyProject {
     };
   }
 
-  applyStructureAttrition(structure, key, fraction) {
-    const loss = Math.min(structure.countNumber,
+  applyStructureAttrition(structure, key, fraction, minimumCount = 0) {
+    const loss = Math.min(Math.max(0, structure.countNumber - minimumCount),
       structure.countNumber * fraction + (this.partialLosses[key] || 0));
     const whole = Math.floor(loss);
     this.partialLosses[key] = loss - whole;
@@ -294,7 +294,7 @@ class HydraProject extends ArtificialSkyProject {
     }
     if (strength.aero < config.aero.hackingBelowFraction) {
       const lost = this.applyStructureAttrition(colonies.aerostat_colony, 'aero:hacking',
-        1 - Math.exp(-strength.aero * config.aero.hackingPerSecond * seconds)).losses;
+        1 - Math.exp(-strength.aero * config.aero.hackingPerSecond * seconds), config.aero.hackingAerostatFloor).losses;
       this.coreMass.aero += lost * config.aero.massPerAerostat;
     }
     const androidLoss = -this.transferResource('aqua', 'colony', 'androids',
@@ -720,7 +720,8 @@ class HydraProject extends ArtificialSkyProject {
           Math.max(0, env.pressure / config.objective.pressurePa - 1 - config.objective.pressureToleranceFraction) > 0,
           true, false),
         hacking: this.getThresholdState('aero', strength.aero, config.aero.hackingBelowFraction,
-          strength.aero < config.aero.hackingBelowFraction)
+          strength.aero < config.aero.hackingBelowFraction,
+          colonies.aerostat_colony.countNumber > config.aero.hackingAerostatFloor)
       },
       aqua: { excavation: this.getThresholdState('aqua', env.pressure, pressureThreshold, pressureTriggered, true, false) },
       ignis: { emissions: this.getThresholdState('ignis', env.temperature, temperatureThreshold, temperatureTriggered, true, false) },
@@ -741,6 +742,7 @@ class HydraProject extends ArtificialSkyProject {
       stellarRepairPercent: formatNumber(config.aether.stellarRepairFraction * 100, true),
       siblingThreshold: formatNumber(config.aether.bombardmentSiblingFraction * 100, true),
       hackingThreshold: formatNumber(config.aero.hackingBelowFraction * 100, true),
+      aerostatHackingFloor: formatNumber(config.aero.hackingAerostatFloor, true),
       surfaceThreshold: formatNumber(config.terra.playerSurfaceTriggerFraction * 100, true),
       orbitalSlow: formatNumber(1 + (config.aether.orbitalProjectDurationMultiplier - 1) * strength.aether, true),
       occupied: formatNumber(config.aero.occupiedAerostatFraction * 100 * strength.aero, true),
