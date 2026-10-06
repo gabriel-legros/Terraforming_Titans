@@ -2139,7 +2139,7 @@ const hydraOverrides = {
         buildCostMultiplier: 4,
         maintenanceMultiplier: 50,
         coldTemperatureK: 500, hotTemperatureK: 1800,
-        coldSuppressionPerSecond: 0.001, hotSuppressionPerSecond: 0.005,
+        coldSuppressionPerSecond: 0.001, hotSuppressionPerSecond: 0.002,
         crusaderTonsPerSecond: 1, maximumLandFraction: 0.9,
         nanocolonyCapRecoveryBelowFraction: 0.5,
         miningTonsPerSecond: 1e18, emissionsTonsPerSecond: 1e17,
