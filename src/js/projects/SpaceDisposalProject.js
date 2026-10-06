@@ -1,5 +1,6 @@
 const STELLAR_DISPOSAL_ENERGY_PER_TON = 10_000_000;
 const STELLAR_DISPOSAL_WASTE_RESOURCES = [
+  'scrapMetal',
   'garbage',
   'trash',
   'junk',
