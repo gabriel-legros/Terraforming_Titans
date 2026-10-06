@@ -377,7 +377,7 @@ class Building extends EffectableEntity {
     const perBuildingNeed = this.getTotalWorkerNeed() * this.getEffectiveWorkerMultiplier();
     const maxWorkers = Math.max(0, (this.autoBuildPercent || 0) * workerCap / 100);
     if (perBuildingNeed <= 0) {
-      return Infinity;
+      return this.getAutoBuildCountLimit();
     }
     return Math.floor(maxWorkers / perBuildingNeed);
   }
