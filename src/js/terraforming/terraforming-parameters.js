@@ -94,7 +94,7 @@ var terraformingParameters = {
       minimumAtmosphericColumnMassKgM2: 100,
       climateHeatDepositionFraction: 1,
       maximumTemperatureK: 10000,
-      warningTemperatureRateKPerDay: 0.001
+      warningTemperatureRateKPerDay: 0.0001
     },
     chemistry: {
       oxidation: {
@@ -105,7 +105,7 @@ var terraformingParameters = {
         combustionSpringMaximumFractionPerDay: 0.6,
         combustionSpringExponent: 2,
         combustionSpringSecondsPerDay: 86400,
-        combustionWarningTemperatureRateKPerDay: 0.001,
+        combustionWarningTemperatureRateKPerDay: 0.0001,
         climateHeatDepositionFraction: 1,
         maximumCombustionTemperatureK: 10000,
         sparkReferenceTemperatureK: 298.15,
