@@ -9,7 +9,9 @@ function createHarness() {
   jest.resetModules();
   const originalGlobals = {};
 
-  class MockSpaceExportBaseProject {}
+  class MockSpaceExportBaseProject {
+    updateUI() {}
+  }
 
   setGlobal('SpaceExportBaseProject', MockSpaceExportBaseProject, originalGlobals);
   setGlobal('resources', {
@@ -65,6 +67,44 @@ function createOxygenTarget() {
 }
 
 describe('Resource Disposal active-target grace', () => {
+  it('refreshes disposal options when travel restores the waste unlock after UI creation', () => {
+    const { project, cleanup } = createHarness();
+    const originalElements = global.projectElements;
+    const originalTemperatureUnit = global.getTemperatureUnit;
+    const elements = { disposalTargetRows: {} };
+    global.projectElements = { disposeResources: elements };
+    global.getTemperatureUnit = () => 'K';
+    project.name = 'disposeResources';
+    project.disposalTargets = [];
+    project.syncProjectAutoStartState = () => {};
+    project.getDisposalTargetsForDisplay = () => [];
+    let wasteUnlocked = false;
+    project.isBooleanFlagSet = flagId => flagId === 'stellarGarbageDisposal' && wasteUnlocked;
+    project.buildDisposalGroupData = () => ({
+      groupList: wasteUnlocked ? [{ key: 'stellarWaste' }] : [],
+    });
+    const refresh = jest.spyOn(project, 'refreshDisposalTargetSelects');
+
+    try {
+      project.updateUI();
+      expect(elements.disposalRenderedGroupData.groupList).toEqual([]);
+
+      wasteUnlocked = true;
+      // Simulation can rebuild the cached data before the next render.
+      project.getDisposalGroupData();
+      project.updateUI();
+      expect(elements.disposalRenderedGroupData.groupList).toEqual([{ key: 'stellarWaste' }]);
+      expect(refresh).toHaveBeenCalledTimes(2);
+
+      project.updateUI();
+      expect(refresh).toHaveBeenCalledTimes(2);
+    } finally {
+      global.projectElements = originalElements;
+      global.getTemperatureUnit = originalTemperatureUnit;
+      cleanup();
+    }
+  });
+
   it('runs against same-tick atmospheric production at the pressure floor', () => {
     const { project, cleanup } = createHarness();
     const target = createOxygenTarget();

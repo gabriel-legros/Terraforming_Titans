@@ -127,6 +127,10 @@ function createHarness({
       return buildings.massDriver;
     }
 
+    getMassDriverShipEquivalency() {
+      return this.massDriverShipEquivalency;
+    }
+
     setMassDriverActive(target) {
       const max = this.getMassDriverStructure().count;
       this.getMassDriverStructure().active = Math.max(0, Math.min(target, max));

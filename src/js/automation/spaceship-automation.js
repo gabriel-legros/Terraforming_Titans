@@ -66,16 +66,12 @@ class SpaceshipAutomation {
     };
   }
 
-  getMassDriverEquivalency(project) {
-    return project.massDriverShipEquivalency || 0;
-  }
-
   getMassDriverCapacity(project) {
     if (!project.isBooleanFlagSet('massDriverEnabled')) {
       return 0;
     }
     const structure = project.getMassDriverStructure();
-    return this.getStructureCountValue(structure, 'count') * this.getMassDriverEquivalency(project);
+    return this.getStructureCountValue(structure, 'count') * project.getMassDriverShipEquivalency();
   }
 
   getMassDriverActiveEquivalency(project) {
@@ -83,7 +79,7 @@ class SpaceshipAutomation {
       return 0;
     }
     const structure = project.getMassDriverStructure();
-    return this.getStructureCountValue(structure, 'active') * this.getMassDriverEquivalency(project);
+    return this.getStructureCountValue(structure, 'active') * project.getMassDriverShipEquivalency();
   }
 
   sanitizeShipCount(value) {
@@ -844,8 +840,17 @@ class SpaceshipAutomation {
           desiredAssignments[entry.projectId] || 0
         )
       ]));
-      const stepHasMassDrivers = entries.some(entry => entry.projectId === massDriverTargetId);
-      const stepHasNonMassEntries = entries.some(entry => entry.projectId !== massDriverTargetId);
+      const participatingEntries = entries.filter(entry => {
+        const disabledState = disabledTargetStates[entry.projectId];
+        if (disabledState?.manuallyDisabled
+          || (disabledState?.automationDisabled && this.disabledProjects.has(entry.projectId))) {
+          return false;
+        }
+        return entry.weight > 0
+          && entryTargets.get(entry) > (desiredAssignments[entry.projectId] || 0);
+      });
+      const stepHasMassDrivers = participatingEntries.some(entry => entry.projectId === massDriverTargetId);
+      const stepHasNonMassEntries = participatingEntries.some(entry => entry.projectId !== massDriverTargetId);
       const isCappedMin = step.mode === 'cappedMin';
       const isCappedMax = step.mode === 'cappedMax';
       const isRemainingPercent = step.mode === 'remainingPercent';
@@ -1248,7 +1253,7 @@ class SpaceshipAutomation {
     if (useMassDriverMode) {
       const desiredMassDriverTarget = this.sanitizeShipCount(desiredAssignments[massDriverTargetId] || 0);
       const desiredShipOnlyTarget = this.sanitizeShipCount(desiredAssignments[massDriverProject.name] || 0);
-      const massDriverEquivalency = this.getMassDriverEquivalency(massDriverProject);
+      const massDriverEquivalency = massDriverProject.getMassDriverShipEquivalency();
       const maxMassDrivers = massDriverEquivalency > 0
         ? Math.floor(massDriverCapacity / massDriverEquivalency)
         : 0;
