@@ -3049,7 +3049,7 @@ setLanguageData({
           title: 'Orbitals',
           kesslerWarning: 'Orbitals cannot approach due to Kessler Skies. Limited to research.',
           aetherWarning: 'Aether blocks research orbitals.',
-          kesslerAetherWarning: 'Kessler Skies blocks other orbitals. Aether blocks research orbitals.',
+          kesslerAetherWarning: 'Kessler Skies blocks most orbitals. Aether blocks research orbitals.',
           summary: 'Orbitals Assigned: {assigned} / {available} | Unassigned: {unassigned}',
           mode: 'Mode',
           modeManual: 'Manual',
