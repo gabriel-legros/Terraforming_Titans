@@ -2026,6 +2026,7 @@ function runAdvancedOversightAssignments(project, deltaTime) {
     !mirrorOversightSettings.advancedOversight ||
     !isSpaceMirrorFacilityFlagActive('advancedOversight')
   ) {
+    SpaceMirrorAdvancedOversight.retryStates.delete(mirrorOversightSettings);
     return;
   }
   sanitizeMirrorDistribution();

@@ -109,6 +109,7 @@ Durable constraints:
 
 - Solve ideal zonal flux and focus-melt demand first, then project that plan onto current mirror and Hyperion Lantern capacity by priority.
 - Prepare one scoped projection context per terraforming substep and reuse its flux-invariant inputs across trial fluxes. Never retain that context across substeps.
+- Retain the best ideal-flux candidate between oversight calls. Stalled searches back off using simulation time, with a bounded periodic retry; changed targets, modes, priorities, or material projected-climate drift wake the search early. Retry state is runtime-only and scoped to the current settings and world. Reevaluate the cached fluxes and allocate current mirror/lantern capacity every call, including during backoff.
 - Run oversight after each woven climate-resource slice and immediately before its physics step.
 - Keep solved UI projections separate from live terraforming trend fields.
 - Preserve explicit signed mirror assignments on full restore (`negative` means reverse/cooling). Presets and travel restores retain the advanced-oversight assignment guard unless explicitly restoring assignments.

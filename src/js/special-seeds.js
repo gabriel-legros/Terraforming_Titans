@@ -2127,6 +2127,7 @@ const hydraOverrides = {
         occupiedAerostatFraction: 0.95, hackingBelowFraction: 0.5,
         hackingPerSecond: 0.005, massPerAerostat: 1000,
         hackingAerostatFloor: 1000,
+        minimumResearchMultiplier: 0.01, researchRecoveryBelowFraction: 0.5,
         carbonFeedstocks: { carbonDioxide: { carbonFraction: 12 / 44, byproduct: 'oxygen' }, atmosphericMethane: { carbonFraction: 12 / 16, byproduct: 'hydrogen' } }
       },
       aqua: {

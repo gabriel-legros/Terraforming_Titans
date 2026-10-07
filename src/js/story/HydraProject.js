@@ -2,7 +2,7 @@ const HYDRA_CORE_IDS = ['aether', 'aero', 'aqua', 'ignis', 'terra'];
 const HYDRA_SOURCE_ID = 'project:hydra';
 const HYDRA_CORE_DETAILS = {
   aether: { abilities: ['rebuild', 'imports', 'stripping'], penalties: ['research', 'delay', 'capture', 'bombardment'] },
-  aero: { abilities: ['rebuild', 'disposal'], penalties: ['occupation', 'hacking'] },
+  aero: { abilities: ['rebuild', 'disposal'], penalties: ['occupation', 'hacking', 'research'] },
   aqua: { abilities: ['rebuild', 'excavation'], penalties: ['occupation', 'hacking'] },
   ignis: { abilities: ['rebuild', 'emissions'], penalties: ['occupation', 'buildCost', 'maintenance', 'nanocolonyCap'] },
   terra: { abilities: ['rebuild', 'heat', 'venting'], penalties: ['delay', 'attacks'] }
@@ -393,6 +393,12 @@ class HydraProject extends ArtificialSkyProject {
     }
     colonies.aerostat_colony.addAndReplace({ ...effect, type: 'aerostatCapacityMultiplier',
       value: 1 - config.aero.occupiedAerostatFraction * strength.aero });
+    const aeroResearchMultiplier = config.aero.minimumResearchMultiplier
+      + (1 - config.aero.minimumResearchMultiplier) * Math.max(0, 1 - this.coreMass.aero
+        / config.cores.aero.maximumMass / config.aero.researchRecoveryBelowFraction);
+    researchManager.addAndReplace({ sourceId: HYDRA_SOURCE_ID, effectId: 'hydra-aero-research',
+      name: t('ui.projects.hydra.rateSources.aero'), type: 'globalResearchBoost',
+      value: aeroResearchMultiplier - 1 });
     nanotechManager.addAndReplace({ sourceId: HYDRA_SOURCE_ID, effectId: 'hydra-ignis-nanocolony-cap',
       name: t('ui.projects.hydra.rateSources.ignis'), type: 'nanobotDensityMultiplier',
       value: Math.max(0, 1 - this.coreMass.ignis / config.cores.ignis.maximumMass
@@ -429,6 +435,8 @@ class HydraProject extends ArtificialSkyProject {
   }
 
   clearHydraEffects() {
+    researchManager.removeEffect({ sourceId: HYDRA_SOURCE_ID });
+    androidResearch.removeEffect({ sourceId: HYDRA_SOURCE_ID });
     nanotechManager.removeEffect({ sourceId: HYDRA_SOURCE_ID });
     nanotechManager.syncNanobotsResource();
     nanotechManager.markUIDirty();
@@ -743,6 +751,10 @@ class HydraProject extends ArtificialSkyProject {
       siblingThreshold: formatNumber(config.aether.bombardmentSiblingFraction * 100, true),
       hackingThreshold: formatNumber(config.aero.hackingBelowFraction * 100, true),
       aerostatHackingFloor: formatNumber(config.aero.hackingAerostatFloor, true),
+      aeroResearchMultiplier: formatNumber(config.aero.minimumResearchMultiplier
+        + (1 - config.aero.minimumResearchMultiplier) * Math.max(0, 1 - this.coreMass.aero
+          / config.cores.aero.maximumMass / config.aero.researchRecoveryBelowFraction), true, 3),
+      researchRecoveryThreshold: formatNumber(100 * config.aero.researchRecoveryBelowFraction, true),
       surfaceThreshold: formatNumber(config.terra.playerSurfaceTriggerFraction * 100, true),
       orbitalSlow: formatNumber(1 + (config.aether.orbitalProjectDurationMultiplier - 1) * strength.aether, true),
       occupied: formatNumber(config.aero.occupiedAerostatFraction * 100 * strength.aero, true),

@@ -615,6 +615,11 @@ var terraformingParameters = {
       equilibriumSnapEnabled: false,
       equilibriumSnapRateTonsPerSecond: 0.01
     },
+    mirrorOversight: {
+      initialRetryDelayMs: 100,
+      maximumRetryDelayMs: 2000,
+      climateRetryToleranceK: 0.1
+    },
     life: {
       surfaceBiomassFoodPerTonPerSecond: 0.01
     },
