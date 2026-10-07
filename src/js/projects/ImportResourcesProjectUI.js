@@ -376,7 +376,12 @@ class ImportResourcesProjectUI {
       const resourcesForCategory = costPerShip[category];
       for (const resourceId in resourcesForCategory) {
         if (!Object.prototype.hasOwnProperty.call(resourcesForCategory, resourceId)) continue;
-        const amount = resourcesForCategory[resourceId];
+        // High-agility research is specific to each row, which displays its own total cost.
+        const amount = resourcesForCategory[resourceId] - (
+          category === 'colony' && resourceId === 'research'
+            ? project.getHighAgilityFreighterResearchCost()
+            : 0
+        );
         if (!(amount > 0)) continue;
         const resourceConfig = resources?.[category]?.[resourceId];
         const resourceDisplayName = resourceConfig?.displayName ||
@@ -408,7 +413,7 @@ class ImportResourcesProjectUI {
     this.updateAssignmentButtons();
 
     this.updateCapSummary(warpGateNetworkManager.getCapSummaryData());
-    this.updateKesslerFailureWarning(project);
+    this.updateKesslerFailureWarning();
 
     if (this.availableDisplay) {
       const availableShips = formatNumber(Math.floor(resources?.special?.spaceships?.value || 0), true);
@@ -430,7 +435,7 @@ class ImportResourcesProjectUI {
     }
   }
 
-  updateKesslerFailureWarning(project) {
+  updateKesslerFailureWarning() {
     try {
       let hazardActive = false;
       try {
@@ -445,7 +450,9 @@ class ImportResourcesProjectUI {
         }
         return;
       }
-      const failureChance = project.getKesslerFailureChance();
+      const failureChance = Math.max(0, ...this.projectNames
+        .filter(name => this.rows[name] && this.rows[name].mainRow.style.display !== 'none')
+        .map(name => projectManager.projects[name].getKesslerFailureChance()));
       const percent = Math.max(0, Math.min(1, failureChance)) * 100;
       if (percent <= 0) {
         if (this.kesslerWarning.style.display !== 'none') {
@@ -877,8 +884,6 @@ class ImportResourcesProjectUI {
   }
 
   updateVisibility(project, elements, rowVisible) {
-    this.updateSharedDisplays(project);
-
     const rowEntry = this.rows[project.name];
     if (rowEntry) {
       const mainDisplay = rowVisible ? 'grid' : 'none';
@@ -890,6 +895,8 @@ class ImportResourcesProjectUI {
         rowEntry.detailRow.style.display = detailDisplay;
       }
     }
+
+    this.updateSharedDisplays(project);
 
     const anyVisibleRow = Object.keys(this.rows).some((key) => {
       const entry = this.rows[key];

@@ -1770,7 +1770,9 @@ function updateProjectUI(projectName) {
     project.updateKesslerWarning();
   }
 
-  updateKesslerFailureWarning(project, elements);
+  if (!isImportProject) {
+    updateKesslerFailureWarning(project, elements);
+  }
 
 
   // Update Spaceships Assigned display if applicable
