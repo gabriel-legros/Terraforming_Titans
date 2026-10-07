@@ -2112,7 +2112,7 @@ const hydraOverrides = {
       aether: {
         outerOrbitFraction: 0.01, dragPerSecond: 0.002, dragDensityReference: 1e-12,
         laserTonsPerSecond: 1e9, laserDebrisTonsPerSecond: 1e9,
-        shipCapturePerSecond: 0.001, massPerShip: 1000,
+        shipCapturePerSecond: 0.02, massPerShip: 1000,
         orbitalProjectDurationMultiplier: 10, researchOrbitalDisableAboveFraction: 0.1,
         starliftTonsPerSecond: 1e17,
         stellarRepairFraction: 0.1,

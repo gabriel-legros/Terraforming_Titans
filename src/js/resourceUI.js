@@ -854,8 +854,8 @@ function updateRateTable(container, entries, formatter) {
   });
 }
 
-function updateAutobuildRateTable(container, breakdownEntries, shortageBuildings, formatter) {
-  if (!container) return;
+function updateAutobuildRateTable(container, breakdownEntries, shortageBuildings, formatter, frameDelta) {
+  if (!container) return false;
   const info = container._info;
   const used = new Set();
   const breakdownMap = new Map();
@@ -877,9 +877,20 @@ function updateAutobuildRateTable(container, breakdownEntries, shortageBuildings
     }
   }
 
+  const activeSet = new Set(breakdownMap.keys());
+  info.rows.forEach((rowInfo, name) => {
+    if (activeSet.has(name)) return;
+    rowInfo.cooldown = Math.max(0, rowInfo.cooldown - frameDelta);
+    if (rowInfo.cooldown > 0) breakdownMap.set(name, 0);
+  });
+
   const entries = Array.from(breakdownMap.entries());
   const orderedRows = [];
-  entries.sort((a, b) => b[1] - a[1]);
+  entries.sort((a, b) => {
+    const aValue = activeSet.has(a[0]) ? a[1] : info.rows.get(a[0]).lastValue;
+    const bValue = activeSet.has(b[0]) ? b[1] : info.rows.get(b[0]).lastValue;
+    return bValue - aValue;
+  });
   for (let i = 0; i < entries.length; i += 1) {
     const name = entries[i][0];
     const value = entries[i][1];
@@ -900,13 +911,19 @@ function updateAutobuildRateTable(container, breakdownEntries, shortageBuildings
       row.appendChild(left);
       row.appendChild(right);
       info.table.appendChild(row);
-      rowInfo = { row, left, right };
+      rowInfo = { row, left, right, cooldown: 0, lastValue: 0 };
       info.rows.set(name, rowInfo);
     }
 
     if (rowInfo.left.textContent !== name) rowInfo.left.textContent = name;
 
-    const rateText = formatter(value);
+    if (activeSet.has(name)) {
+      rowInfo.cooldown = 1;
+      rowInfo.lastValue = value;
+    }
+    const rateText = !activeSet.has(name) && Math.abs(rowInfo.lastValue) >= 1e-12
+      ? `${formatter(0)} (${formatter(rowInfo.lastValue)})`
+      : formatter(value);
     if (!rowInfo.valueSpan) {
       rowInfo.right.textContent = '';
       rowInfo.valueSpan = document.createElement('span');
@@ -934,6 +951,7 @@ function updateAutobuildRateTable(container, breakdownEntries, shortageBuildings
       info.table.insertBefore(row, info.table.childNodes[index] || null);
     }
   });
+  return entries.length > 0;
 }
 
 function updateRateTableWithCooldown(container, entries, formatter, frameDelta, valueColor = '') {
@@ -1071,14 +1089,21 @@ function clearRateTableCooldown(container) {
 
 function clearResourceTooltipRateCooldownsForTravel(resourceSet) {
   for (const category in resourceSet) {
-    if (category === 'special' || category === 'space' || category === 'spaceStorage') {
-      continue;
-    }
     for (const resourceName in resourceSet[category]) {
       const entry = resourceUICache.resources[getResourceUIKey(category, resourceName)];
       if (!entry) continue;
-      clearRateTableCooldown(entry.tooltip.productionDiv);
-      clearRateTableCooldown(entry.tooltip.consumptionDiv);
+      if (category !== 'special' && category !== 'space' && category !== 'spaceStorage') {
+        clearRateTableCooldown(entry.tooltip.productionDiv);
+        clearRateTableCooldown(entry.tooltip.consumptionDiv);
+      }
+      const autobuildDiv = entry.tooltip.autobuildDiv;
+      if (!autobuildDiv) continue;
+      autobuildDiv.style.display = 'none';
+      autobuildDiv._info.rows.forEach(rowInfo => {
+        rowInfo.cooldown = 0;
+        rowInfo.lastValue = 0;
+        rowInfo.row.style.display = 'none';
+      });
     }
   }
 }
@@ -2878,28 +2903,25 @@ function updateResourceRateDisplay(resource, frameDelta = 0, displayCategory = r
   if (autobuildDiv) {
     if (antimatterSynced) {
       autobuildDiv.style.display = 'none';
-    } else if (typeof autobuildCostTracker !== 'undefined' && isAutobuildTrackedResource(resource)) {
+    } else if (isAutobuildTrackedResource(resource)) {
       const avgCost = autobuildAvg;
       const shortageBuildings = resource.autobuildShortageBuildings;
-      if (avgCost !== 0 || shortageBuildings) {
-        const isOrbitalDebris = resource.category === 'special' && resource.name === 'orbitalDebris';
-        const autobuildDisplayRate = isOrbitalDebris ? Math.abs(avgCost) : avgCost;
-        autobuildDiv.style.display = 'block';
-        autobuildDiv._info.header.textContent = isOrbitalDebris
-          ? getResourceUICommonText('autobuildGain', 'Autobuild Gain (avg 10s):')
-          : getResourceUICommonText('autobuildCost', 'Autobuild Cost (avg 10s):');
-        const autobuildUnitPart = resource.unit ? ` ${resource.unit}/s` : '/s';
-        autobuildDiv._info.value.textContent = `${formatNumber(autobuildDisplayRate, false, 2)}${autobuildUnitPart}`;
-        const breakdown = autobuildCostTracker.getAverageCostBreakdown(resource.category, resource.name);
-        updateAutobuildRateTable(
-          autobuildDiv,
-          breakdown,
-          shortageBuildings,
-          cost => `${formatNumber(isOrbitalDebris ? Math.abs(cost) : cost, false, 2)}/s`
-        );
-      } else {
-        autobuildDiv.style.display = 'none';
-      }
+      const isOrbitalDebris = resource.category === 'special' && resource.name === 'orbitalDebris';
+      const autobuildDisplayRate = isOrbitalDebris ? Math.abs(avgCost) : avgCost;
+      autobuildDiv._info.header.textContent = isOrbitalDebris
+        ? getResourceUICommonText('autobuildGain', 'Autobuild Gain (avg 10s):')
+        : getResourceUICommonText('autobuildCost', 'Autobuild Cost (avg 10s):');
+      const autobuildUnitPart = resource.unit ? ` ${resource.unit}/s` : '/s';
+      autobuildDiv._info.value.textContent = `${formatNumber(autobuildDisplayRate, false, 2)}${autobuildUnitPart}`;
+      const breakdown = autobuildCostTracker.getAverageCostBreakdown(resource.category, resource.name);
+      const showAutobuild = updateAutobuildRateTable(
+        autobuildDiv,
+        breakdown,
+        shortageBuildings,
+        cost => `${formatNumber(isOrbitalDebris ? Math.abs(cost) : cost, false, 2)}/s`,
+        frameDelta
+      );
+      autobuildDiv.style.display = showAutobuild ? 'block' : 'none';
     } else {
       autobuildDiv.style.display = 'none';
     }
