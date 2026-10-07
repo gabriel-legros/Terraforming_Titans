@@ -292,14 +292,17 @@ class HydraProject extends ArtificialSkyProject {
         }
       }
     }
+    const hackingRepairs = { aero: 0, aqua: 0 };
     if (strength.aero < config.aero.hackingBelowFraction) {
       const lost = this.applyStructureAttrition(colonies.aerostat_colony, 'aero:hacking',
         1 - Math.exp(-strength.aero * config.aero.hackingPerSecond * seconds), config.aero.hackingAerostatFloor).losses;
-      this.coreMass.aero += lost * config.aero.massPerAerostat;
+      hackingRepairs.aero = lost * config.aero.massPerAerostat;
+      this.coreMass.aero += hackingRepairs.aero;
     }
     const androidLoss = -this.transferResource('aqua', 'colony', 'androids',
       -resources.colony.androids.value * (1 - Math.exp(-strength.aqua * config.aqua.androidHackingPerSecond * seconds)), changes, seconds);
-    this.coreMass.aqua += androidLoss * config.aqua.massPerAndroid;
+    hackingRepairs.aqua = androidLoss * config.aqua.massPerAndroid;
+    this.coreMass.aqua += hackingRepairs.aqua;
     for (const project of Object.values(projectManager.projects)) {
       if (!(project.assignedSpaceships > 0) || !project.isActive) continue;
       const key = `ship:${project.name}`;
@@ -372,6 +375,7 @@ class HydraProject extends ArtificialSkyProject {
     // Terra can add heat, but cannot actively refrigerate the planet.
     terraforming.celestialParameters.coreHeatFlux = this.baseCoreHeatFlux + strength.terra
       * Math.min(config.terra.maximumHeatFlux, temperatureDeficit * config.terra.heatFluxPerKelvin);
+    return hackingRepairs;
   }
 
   syncPenalties(env, strength) {
@@ -568,7 +572,7 @@ class HydraProject extends ArtificialSkyProject {
         repairCapacity[other] = Math.max(0, repairCapacity[other] - repairs[id][other]);
       }
     }
-    this.applyCounterattacks(seconds, env, strength, changes);
+    const hackingRepairs = this.applyCounterattacks(seconds, env, strength, changes);
     for (const id of HYDRA_CORE_IDS) {
       const support = HYDRA_CORE_IDS.filter(other => other !== id)
         .reduce((sum, other) => sum + repairs[other][id], 0);
@@ -581,7 +585,7 @@ class HydraProject extends ArtificialSkyProject {
         this.outerAetherMass = Math.min(this.coreMass.aether,
           this.outerAetherMass + (growth[id] + support) * config.aether.outerOrbitFraction);
       }
-      this.rates[id] = { growth: growth[id] / seconds, support: support / seconds,
+      this.rates[id] = { growth: (growth[id] + (hackingRepairs[id] || 0)) / seconds, support: support / seconds,
         loss: destroyedMass / seconds, net: (this.coreMass[id] - before[id]) / seconds };
       this.salvage(id, destroyedMass, changes, seconds);
     }

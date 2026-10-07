@@ -43,6 +43,8 @@ Temperature and Ignis share `applyAerostatProtectedMaintenancePenalty` for staff
 
 Aero reduces research through the shared `globalResearchBoost` effect on research-producing colonies and android research. Its multiplier is `aero.minimumResearchMultiplier + (1 - aero.minimumResearchMultiplier) * max(0, 1 - (Aero mass / maximum mass) / aero.researchRecoveryBelowFraction)`. Defaults are 0.01 and 0.5: research stays at x0.01 for 50–100% HP, recovers to x0.505 at 25% HP and reaches x1 at zero HP. It multiplies other research modifiers, refreshes on enable and simulation updates, and clears from the research manager and all affected producers on victory or travel.
 
+The Repair/s display includes both feedstock-funded self-repair and mass gained through hacking: captured aerostats for Aero and captured androids for Aqua. Support/s remains incoming sibling repairs. Hacking recovery is reported from the actual amount captured in the current tick, divided by that tick duration.
+
 Each core card lists abilities and player penalties on separate lines. Threshold-based entries display Dormant, Waking, or Active using the same strict/inclusive trigger conditions as combat. Temperature and pressure entries use only Dormant or Active. For other thresholds, Waking means the trigger is not met but the current value is within 25% of the threshold; this is a display warning only. Destroyed cores and permanent victory display Dormant. Aether gas imports also remain Dormant when stellar feedstock is exhausted or atmosphere stripping takes precedence.
 
 ## Entanglement net construction
