@@ -3,8 +3,8 @@ const HYDRA_SOURCE_ID = 'project:hydra';
 const HYDRA_CORE_DETAILS = {
   aether: { abilities: ['rebuild', 'imports', 'stripping'], penalties: ['research', 'delay', 'capture', 'bombardment'] },
   aero: { abilities: ['rebuild', 'disposal'], penalties: ['occupation', 'hacking', 'research'] },
-  aqua: { abilities: ['rebuild', 'excavation'], penalties: ['occupation', 'hacking'] },
-  ignis: { abilities: ['rebuild', 'emissions'], penalties: ['occupation', 'buildCost', 'maintenance', 'nanocolonyCap'] },
+  aqua: { abilities: ['rebuild', 'excavation'], penalties: ['occupation', 'hacking', 'nanocolonyCap'] },
+  ignis: { abilities: ['rebuild', 'emissions'], penalties: ['occupation', 'buildCost', 'maintenance'] },
   terra: { abilities: ['rebuild', 'heat', 'venting'], penalties: ['delay', 'attacks'] }
 };
 
@@ -399,10 +399,11 @@ class HydraProject extends ArtificialSkyProject {
     researchManager.addAndReplace({ sourceId: HYDRA_SOURCE_ID, effectId: 'hydra-aero-research',
       name: t('ui.projects.hydra.rateSources.aero'), type: 'globalResearchBoost',
       value: aeroResearchMultiplier - 1 });
+    // Keep the existing effect id stable while Aqua owns the penalty.
     nanotechManager.addAndReplace({ sourceId: HYDRA_SOURCE_ID, effectId: 'hydra-ignis-nanocolony-cap',
-      name: t('ui.projects.hydra.rateSources.ignis'), type: 'nanobotDensityMultiplier',
-      value: Math.max(0, 1 - this.coreMass.ignis / config.cores.ignis.maximumMass
-        / config.ignis.nanocolonyCapRecoveryBelowFraction) });
+      name: t('ui.projects.hydra.rateSources.aqua'), type: 'nanobotDensityMultiplier',
+      value: Math.max(0, 1 - this.coreMass.aqua / config.cores.aqua.maximumMass
+        / config.aqua.nanocolonyCapRecoveryBelowFraction) });
     nanotechManager.syncNanobotsResource();
     nanotechManager.markUIDirty();
     applyAerostatProtectedMaintenancePenalty(1 + (config.ignis.maintenanceMultiplier - 1)
@@ -763,9 +764,9 @@ class HydraProject extends ArtificialSkyProject {
       buildCostPenalty: formatNumber((config.ignis.buildCostMultiplier - 1) * 100 * strength.ignis, true),
       ignisMaintenanceMultiplier: formatNumber(1 + (config.ignis.maintenanceMultiplier - 1)
         * Math.min(1, this.coreMass.ignis / config.cores.ignis.maximumMass), true),
-      nanocolonyCapPercent: formatNumber(100 * Math.max(0, 1 - this.coreMass.ignis
-        / config.cores.ignis.maximumMass / config.ignis.nanocolonyCapRecoveryBelowFraction), true),
-      nanocolonyRecoveryThreshold: formatNumber(100 * config.ignis.nanocolonyCapRecoveryBelowFraction, true),
+      nanocolonyCapPercent: formatNumber(100 * Math.max(0, 1 - this.coreMass.aqua
+        / config.cores.aqua.maximumMass / config.aqua.nanocolonyCapRecoveryBelowFraction), true),
+      nanocolonyRecoveryThreshold: formatNumber(100 * config.aqua.nanocolonyCapRecoveryBelowFraction, true),
       slow: formatNumber(1 + (config.terra.excavationDurationMultiplier - 1) * strength.terra, true)
     };
     const text = t(this.isCompleted ? 'ui.projects.hydra.victory' : 'ui.projects.hydra.summary');

@@ -2131,6 +2131,7 @@ const hydraOverrides = {
         carbonFeedstocks: { carbonDioxide: { carbonFraction: 12 / 44, byproduct: 'oxygen' }, atmosphericMethane: { carbonFraction: 12 / 16, byproduct: 'hydrogen' } }
       },
       aqua: {
+        nanocolonyCapRecoveryBelowFraction: 0.5,
         minimumOceanCoverage: 0.1, exposurePerSecond: 0.002,
         excavationTonsPerSecond: 1e17,
         composition: { atmospheric: { oxygen: 0.4, carbonDioxide: 0.04, inertGas: 0.01 }, surface: { junk: 0.25, scrapMetal: 0.3 } },
@@ -2142,7 +2143,6 @@ const hydraOverrides = {
         coldTemperatureK: 500, hotTemperatureK: 1800,
         coldSuppressionPerSecond: 0.001, hotSuppressionPerSecond: 0.002,
         crusaderTonsPerSecond: 1, maximumLandFraction: 0.9,
-        nanocolonyCapRecoveryBelowFraction: 0.5,
         miningTonsPerSecond: 1e18, emissionsTonsPerSecond: 1e17,
         emissions: { atmosphericWater: 0.4, carbonDioxide: 0.3, atmosphericMethane: 0.2, sulfuricAcid: 0.1 }
       },

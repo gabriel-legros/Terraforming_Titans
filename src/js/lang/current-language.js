@@ -1498,7 +1498,8 @@ setLanguageData({
             },
             "penalties": {
               "occupation": "Reserves liquid-covered land: {oceanOccupied}% of the surface.",
-              "hacking": "Hacks androids to increase its mass."
+              "hacking": "Hacks androids to increase its mass.",
+              "nanocolonyCap": "Nanocolony capacity: {nanocolonyCapPercent}% of normal. Recovers below {nanocolonyRecoveryThreshold}% HP."
             },
             "tactics": "Ocean coverage: {currentOcean}%. Reduce combined liquid coverage below {ocean}% to expose Aqua."
           },
@@ -1511,8 +1512,7 @@ setLanguageData({
             "penalties": {
               "occupation": "Occupies {landOccupied}% of Underground Expansion land.",
               "buildCost": "Building and colony construction costs: +{buildCostPenalty}%.",
-              "maintenance": "Maintenance costs: ×{ignisMaintenanceMultiplier}, reduced by aerostat support.",
-              "nanocolonyCap": "Nanocolony capacity: {nanocolonyCapPercent}% of normal. Recovers below {nanocolonyRecoveryThreshold}% HP."
+              "maintenance": "Maintenance costs: ×{ignisMaintenanceMultiplier}, reduced by aerostat support."
             },
             "tactics": "Deploy Crusaders, cool toward {cold} K or heat toward {hot} K."
           },
