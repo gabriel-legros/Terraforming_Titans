@@ -8,6 +8,7 @@ class DeeperMiningProject extends AndroidProject {
     this.superchargedMiningLevel = 0;
     this.activeUnderworldMiningLevel = -1;
     this.isContinuousRun = false;
+    this.activeDepthGain = 1;
     
     // Deep mining settings (depth > 500)
     this.createGeothermalDeposits = false;
@@ -35,6 +36,9 @@ class DeeperMiningProject extends AndroidProject {
     const built = buildings.oreMine.countNumber;
     const delta = built - current;
     if (delta > 0) {
+      if ((this.isActive || this.isPaused) && this.remainingTime !== Infinity) {
+        this.activeDepthGain *= current / built;
+      }
       const totalDepth = (this.averageDepth || 1) * current;
       this.oreMineCount = built;
       this.averageDepth = (totalDepth + delta) / this.oreMineCount;
@@ -64,7 +68,26 @@ class DeeperMiningProject extends AndroidProject {
     if (this.averageDepth >= this.maxDepth) {
       return false;
     }
-    return super.canStart();
+    return Project.prototype.canStart.call(this);
+  }
+
+  hasStartResources() {
+    if (!this.isContinuous()) {
+      return super.hasStartResources();
+    }
+    const cost = this.getScaledCost();
+    const depthGain = Math.min(1, this.maxDepth - this.averageDepth);
+    const storage = this.createSpaceStorageAccess('expansions');
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const key = resource === 'water' ? 'liquidWater' : resource;
+        const available = getMegaProjectResourceAvailability(storage, key, resources[category][resource].value);
+        if (available < cost[category][resource] * depthGain) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   canContinue() {
@@ -92,10 +115,13 @@ class DeeperMiningProject extends AndroidProject {
 
   getScaledCost() {
     let cost = super.getScaledCost();
-    if (this.attributes.costOreMineScaling) {
+    const depthGain = this.isContinuous() ? 1 : ((this.isActive || this.isPaused)
+      ? this.activeDepthGain
+      : Math.min(1, Math.max(0, this.maxDepth - this.averageDepth)));
+    if (this.attributes.costOreMineScaling || depthGain !== 1) {
       const oreMines = Math.max(this.oreMineCount, 1);
       const depth = this.averageDepth || 1;
-      const multiplier = oreMines * (0.9 + 0.1 * depth);
+      const multiplier = depthGain * (this.attributes.costOreMineScaling ? oreMines * (0.9 + 0.1 * depth) : 1);
       const scaledCost = {};
       for (const category in cost) {
         scaledCost[category] = {};
@@ -499,7 +525,11 @@ class DeeperMiningProject extends AndroidProject {
   }
 
   start(resources) {
-    const started = super.start(resources);
+    const continuous = this.isContinuous();
+    if (!continuous && !this.isActive && !this.isPaused) {
+      this.activeDepthGain = Math.min(1, Math.max(0, this.maxDepth - this.averageDepth));
+    }
+    const started = continuous ? this.startContinuousExpansion(resources) : super.start(resources);
     if (started) {
       this.isContinuousRun = this.isContinuous();
       this.activeUnderworldMiningLevel = this.isContinuousRun ? -1 : this.underworldMiningLevel;
@@ -507,42 +537,48 @@ class DeeperMiningProject extends AndroidProject {
     return started;
   }
 
+  estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
+    if (this.isPaused) {
+      return { cost: {}, gain: {} };
+    }
+    if (!this.isContinuous() || !this.isActive) {
+      return super.estimateProjectCostAndGain(deltaTime, applyRates, productivity);
+    }
+    const requestedProgress = Math.min(
+      (deltaTime / this.getEffectiveDuration()) * productivity,
+      Math.max(0, this.maxDepth - this.averageDepth)
+    );
+    const cost = this.getConsumableCost();
+    const storage = this.createExpansionStorageState(accumulatedChanges);
+    const progress = this.getAffordableExpansionProgress(requestedProgress, cost, storage, accumulatedChanges);
+    return {
+      cost: this.estimateExpansionCostForProgress(cost, progress, deltaTime, accumulatedChanges, storage, {
+        applyRates: applyRates && this.showsInResourcesRate(),
+        sourceLabel: this.getRateSource(),
+      }),
+      gain: {},
+    };
+  }
+
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
-    if (!this.isContinuous() || !this.isActive) return;
+    if (!this.isContinuous() || !this.isActive || this.isPaused) return;
     if (!this.canContinue()) {
       this.isActive = false;
       return;
     }
 
-    this.shortfallLastTick = false;
-    const duration = this.getEffectiveDuration();
-    const fraction = deltaTime / duration;
-    const cost = this.getScaledCost();
-
-    let shortfall = false;
-    for (const category in cost) {
-      for (const resource in cost[category]) {
-        const amount = cost[category][resource] * fraction * productivity;
-        const available = resources[category][resource].value + accumulatedChanges[category][resource];
-        if (available < amount) {
-          shortfall = true;
-        }
-      }
-    }
-
-    if (shortfall) {
-      this.shortfallLastTick = true;
-      return;
-    }
-
-    for (const category in cost) {
-      for (const resource in cost[category]) {
-        const amount = cost[category][resource] * fraction * productivity;
-        accumulatedChanges[category][resource] -= amount;
-      }
-    }
-
-    this.applyContinuousProgress(fraction, productivity);
+    const requestedProgress = Math.min(
+      (deltaTime / this.getEffectiveDuration()) * productivity,
+      this.maxDepth - this.averageDepth
+    );
+    const result = this.applyRequestedExpansionProgress(requestedProgress, this.getConsumableCost(), accumulatedChanges, {
+      applyRates: this.showsInResourcesRate(),
+      seconds: deltaTime / 1000,
+      applyProgress(progress) {
+        this.applyContinuousProgress(progress, 1);
+      },
+    });
+    this.shortfallLastTick = result.shortfall;
   }
 
   updateUI() {
@@ -621,14 +657,15 @@ class DeeperMiningProject extends AndroidProject {
     const currentDepth = Number(this.averageDepth) || 1;
     if (currentDepth < this.maxDepth) {
       const oldDepth = currentDepth;
-      this.averageDepth = Math.min(currentDepth + 1, this.maxDepth);
+      this.averageDepth = Math.min(currentDepth + this.activeDepthGain, this.maxDepth);
       this.updateUnderworldMiningMaxDepth();
       this.applyDeepMiningEffects(oldDepth, this.averageDepth);
       super.complete();
-    if (this.averageDepth >= this.maxDepth) {
-      this.isCompleted = true;
+      if (this.averageDepth >= this.maxDepth) {
+        this.isCompleted = true;
+      }
     }
-    }
+    this.activeDepthGain = 1;
     this.activeUnderworldMiningLevel = -1;
     this.isContinuousRun = false;
   }
@@ -666,6 +703,7 @@ class DeeperMiningProject extends AndroidProject {
       ...super.saveState(),
       oreMineCount: this.oreMineCount,
       averageDepth: this.averageDepth,
+      activeDepthGain: this.activeDepthGain,
       underworldMiningLevel: this.underworldMiningLevel,
       superchargedMiningLevel: this.superchargedMiningLevel,
       createGeothermalDeposits: this.createGeothermalDeposits,
@@ -681,6 +719,7 @@ class DeeperMiningProject extends AndroidProject {
 
   loadState(state) {
     super.loadState(state);
+    this.activeDepthGain = state.activeDepthGain ?? 1;
     const built = Number.isFinite(buildings?.oreMine?.countNumber)
       ? buildings.oreMine.countNumber
       : (typeof buildingCountToNumber === 'function'
@@ -736,6 +775,8 @@ class DeeperMiningProject extends AndroidProject {
     return '';
   }
 }
+
+ContinuousExpansionProject.applyCapabilityTo(DeeperMiningProject);
 
 try {
   window.DeeperMiningProject = DeeperMiningProject;

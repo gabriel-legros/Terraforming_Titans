@@ -494,21 +494,23 @@
       return !this.isCapReached() && super.canStart();
     }
 
+    getBatchCostMultiplier() {
+      return this.isActive || this.isPaused
+        ? this.activeBuildCount
+        : Math.min(1, this.getRemainingCap());
+    }
+
     start(resources) {
       if (this.isCapReached()) {
         return false;
       }
-      this.activeBuildCount = 1;
-      const started = Project.prototype.start.call(this, resources);
-      if (!started) {
-        return false;
-      }
-
       if (this.isContinuous()) {
-        this.startingDuration = Infinity;
-        this.remainingTime = Infinity;
+        return this.startContinuousExpansion(resources);
       }
-      return true;
+      if (!this.isActive && !this.isPaused) {
+        this.activeBuildCount = Math.min(1, this.getRemainingCap());
+      }
+      return Project.prototype.start.call(this, resources);
     }
 
     update(deltaTime) {
@@ -603,7 +605,7 @@
     }
 
     complete() {
-      const completions = Math.min(1, this.getRemainingCap());
+      const completions = Math.min(this.activeBuildCount, this.getRemainingCap());
       if (!(completions > 0)) {
         this.activeBuildCount = 1;
         this.isActive = false;

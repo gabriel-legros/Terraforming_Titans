@@ -544,6 +544,9 @@ function createSpaceStorageProject(resources) {
       resource.value -= used;
       return used;
     },
+    removeStoredResource(resourceKey, amount) {
+      resources.spaceStorage[resourceKey].decrease(amount);
+    },
     addStoredResource(resourceKey, amount) {
       const resource = resources.spaceStorage[resourceKey];
       if (!resource || !(amount > 0)) {
@@ -1181,6 +1184,94 @@ describe('Space building productivity via produceResources', () => {
     expectApprox(resources.colony.components.value, 0);
     expectApprox(resources.colony.electronics.value, 0);
     cleanup();
+  });
+
+  test.each([false, true])('Mega Heat Sink worker-cap top-ups charge only for the purchased fraction (space storage: %s)', (useSpaceStorage) => {
+    const harness = setupHarness({ colonySuperalloys: useSpaceStorage ? 0 : 105, superalloys: useSpaceStorage ? 105 : 0 });
+    const { MegaHeatSinkProject, resources, projectManager, cleanup } = harness;
+    try {
+      resources.colony.workers.potential = 10;
+      resources.colony.workers.cap = 10;
+      const heatSink = new MegaHeatSinkProject({
+        name: 'Mega Heat Sink',
+        duration: 60000,
+        cost: { colony: { superalloys: 100 } },
+        attributes: { canUseSpaceStorage: useSpaceStorage },
+        repeatable: true,
+        unlocked: true,
+        category: 'infrastructure',
+      }, 'megaHeatSink');
+      heatSink.capEnabled = true;
+      heatSink.capMode = 'workers';
+      heatSink.capValue = 1;
+      heatSink.repeatCount = 10;
+      const available = () => useSpaceStorage
+        ? projectManager.projects.spaceStorage.getAvailableStoredResource('superalloys')
+        : resources.colony.superalloys.value;
+
+      for (let i = 1; i <= 10; i++) {
+        resources.colony.workers.potential = 10 + i / 10;
+        expect(heatSink.start(resources)).toBe(true);
+        heatSink.update(60000);
+        expectApprox(heatSink.repeatCount, 10 + i / 10);
+        expectApprox(available(), 105 - i * 10);
+        expect(heatSink.canStart()).toBe(false);
+      }
+    } finally {
+      cleanup();
+    }
+  });
+
+  test('Mega Heat Sink completion keeps the amount paid for when the worker cap grows during construction', () => {
+    const harness = setupHarness({ colonySuperalloys: 100 });
+    const { MegaHeatSinkProject, resources, cleanup } = harness;
+    try {
+      resources.colony.workers.potential = 10.1;
+      resources.colony.workers.cap = 10;
+      const heatSink = new MegaHeatSinkProject({
+        name: 'Mega Heat Sink', duration: 60000,
+        cost: { colony: { superalloys: 100 } },
+        repeatable: true, unlocked: true, category: 'infrastructure',
+      }, 'megaHeatSink');
+      heatSink.capEnabled = true;
+      heatSink.capMode = 'workers';
+      heatSink.capValue = 1;
+      heatSink.repeatCount = 10;
+      expect(heatSink.start(resources)).toBe(true);
+      resources.colony.workers.potential = 11;
+      heatSink.update(60000);
+      expectApprox(heatSink.repeatCount, 10.1);
+      expectApprox(resources.colony.superalloys.value, 90);
+    } finally {
+      cleanup();
+    }
+  });
+
+  test('Mega Heat Sink continuous worker-cap top-ups do not charge an additional start cost', () => {
+    const harness = setupHarness({ colonySuperalloys: 100 });
+    const { MegaHeatSinkProject, resources, cleanup } = harness;
+    try {
+      resources.colony.workers.potential = 120_000_000_000;
+      resources.colony.workers.cap = resources.colony.workers.potential;
+      const heatSink = new MegaHeatSinkProject({
+        name: 'Mega Heat Sink', duration: 60000,
+        cost: { colony: { superalloys: 100 } },
+        repeatable: true, unlocked: true, category: 'infrastructure',
+      }, 'megaHeatSink');
+      heatSink.autoStart = true;
+      heatSink.capEnabled = true;
+      heatSink.capMode = 'workers';
+      heatSink.capValue = 1e-10;
+      heatSink.repeatCount = 11.9;
+      expect(heatSink.start(resources)).toBe(true);
+      expectApprox(resources.colony.superalloys.value, 100);
+      heatSink.applyCostAndGain(1000, null, 1);
+      expectApprox(heatSink.repeatCount, 12);
+      expectApprox(resources.colony.superalloys.value, 90);
+      expect(heatSink.isActive).toBe(false);
+    } finally {
+      cleanup();
+    }
   });
 
   test('Mega Heat Sink continuous expansion respects expansion reserve scope', () => {
