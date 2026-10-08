@@ -5933,7 +5933,7 @@ setLanguageData({
         noSpaceWithdrawal: 'Space Storage cannot withdraw any resources on this world.',
         rules: 'Five regenerating machine cores occupy Lerna and actively resist terraforming. Suppress all five simultaneously to defeat Hydra.',
         requirement: 'Hydra', defeated: 'All five cores defeated', defeatFirst: 'Defeat Hydra first',
-        rewards: { laserCannonPower: 'Laser cannons will be 1000x more powerful' }
+        rewards: { laserCannonPower: 'Laser cannons will be 1000x more powerful.' }
       },
       commonEffects: {
         liftersStripModeDisabled: 'Lifters Strip Mode Disabled',
