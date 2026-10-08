@@ -2364,6 +2364,16 @@ const specialSeedDefinitions = {
         descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.liftersNoStrip'
       }
     ],
+    completionRewards: [
+      {
+        id: 'laser-cannon-power',
+        descriptionKey: 'catalogs.specialSeeds.hydra.rewards.laserCannonPower',
+        disabledOnSpecialSeeds: ['shadesnightmare'],
+        effects: [
+          { target: 'building', targetId: 'laserCannon', type: 'productionMultiplier', value: 1000 }
+        ]
+      }
+    ],
     overrides: hydraOverrides
   },
   sirius: {
@@ -2731,6 +2741,10 @@ const specialSeedDefinitions = {
         id: 'teleporters-disabled',
         descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.teleportersDisabled',
         description: 'The 100Q advanced research is disabled.'
+      },
+      {
+        id: 'hydra-laser-reward-disabled',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.hydraLaserRewardDisabled'
       },
       {
         id: 'starting-research-warning',

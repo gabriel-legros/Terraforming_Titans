@@ -5932,7 +5932,8 @@ setLanguageData({
         name: 'Hydra', difficulty: 'Very Extreme',
         noSpaceWithdrawal: 'Space Storage cannot withdraw any resources on this world.',
         rules: 'Five regenerating machine cores occupy Lerna and actively resist terraforming. Suppress all five simultaneously to defeat Hydra.',
-        requirement: 'Hydra', defeated: 'All five cores defeated', defeatFirst: 'Defeat Hydra first'
+        requirement: 'Hydra', defeated: 'All five cores defeated', defeatFirst: 'Defeat Hydra first',
+        rewards: { laserCannonPower: 'Laser cannons will be 1000x more powerful' }
       },
       commonEffects: {
         liftersStripModeDisabled: 'Lifters Strip Mode Disabled',
@@ -6034,6 +6035,7 @@ setLanguageData({
           allFiveHazards: 'All five hazard systems are active on this world.',
           allSixHazards: 'Features all hazards and even a new horrible one.',
           teleportersDisabled: 'The 100Q advanced research is disabled.',
+          hydraLaserRewardDisabled: 'The Hydra reward to laser cannons is disabled.',
           startingResearchWarning: 'You may need at least 1M starting research from Solis to acquire some critical researches.  Chemical reactor research also enables pyrolyzers.',
           powerfulFeaturesLimited: 'Many other powerful features are disabled or limited.',
         },

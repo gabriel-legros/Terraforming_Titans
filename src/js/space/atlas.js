@@ -136,6 +136,7 @@ class AtlasManager extends EffectableEntity {
     }
 
     applyCompletionRewards() {
+        const currentSeedKey = this.getCurrentChallengeSeedKey();
         this.getChallengeDefinitions().forEach((definition) => {
             const seedKey = definition?.key;
             if (!seedKey) {
@@ -151,7 +152,7 @@ class AtlasManager extends EffectableEntity {
                         sourceId
                     };
                     removeEffect(rewardEffect);
-                    if (this.isCompleted(seedKey)) {
+                    if (this.isCompleted(seedKey) && !reward.disabledOnSpecialSeeds?.includes(currentSeedKey)) {
                         addEffect(rewardEffect);
                     }
                 });
