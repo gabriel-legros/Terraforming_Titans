@@ -1514,7 +1514,7 @@ setLanguageData({
               "buildCost": "Building and colony construction costs: +{buildCostPenalty}%.",
               "maintenance": "Maintenance costs: ×{ignisMaintenanceMultiplier}, reduced by aerostat support."
             },
-            "tactics": "Deploy Crusaders, cool toward {cold} K or heat toward {hot} K."
+            "tactics": "Deploy Crusaders, cool below {cold} K or heat above {hot} K."
           },
           "terra": {
             "name": "Terra | Deep crust",
@@ -1525,7 +1525,7 @@ setLanguageData({
             },
             "penalties": {
               "delay": "Deeper mining time: x{slow}.",
-              "attacks": "Attacks buildings, non-aerostat colonies, stored colony resources, mine depth and underground expansion when structures use surface or underground land totaling at least {surfaceThreshold}% of the planet's surface area."
+              "attacks": "Attacks buildings, non-aerostat colonies, stored colony resources, mine depth and underground expansion when structures use surface or underground land totaling at least {surfaceThreshold}% of the planet's surface area, or average mining depth exceeds {miningDepthThreshold}."
             },
             "tactics": "At mining depth {dugOutDepth} or deeper, decay scales with ore mines / maximum ore mines and reduces Terra self-repair. Alternatively, remove planetary mass."
           }

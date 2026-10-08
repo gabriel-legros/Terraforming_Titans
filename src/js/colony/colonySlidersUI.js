@@ -612,7 +612,7 @@ function initializeColonySlidersUI() {
 
     const energyMultiplier = sliderValue === 0 ? 1 : Math.pow(10, sliderValue);
     const label = `x${formatNumber(energyMultiplier, true, 0)}`;
-    const percent = sliderValue * 100;
+    const percent = formatNumber(sliderValue * 100, true, 0);
 
     if (warpnetValue) {
       warpnetValue.textContent = label;

@@ -238,6 +238,7 @@ class HydraProject extends ArtificialSkyProject {
       pressure: terraforming.atmosphericPressureCache.totalPressure,
       planetaryMass: getDynamicWorldCurrentPlanetaryMassKg(terraforming) / 1000,
       dugOutFraction: mines.averageDepth >= config.terra.dugOutMinimumDepth ? mineCoverage : 0,
+      miningDepth: mines.averageDepth,
       playerLandFraction: land > 0 ? playerLand / land : 0
     };
   }
@@ -263,6 +264,7 @@ class HydraProject extends ArtificialSkyProject {
     const bombardment = otherStrength < aether.bombardmentSiblingFraction
       ? strength.aether * aether.buildingAttritionPerSecond : 0;
     const undermining = env.playerLandFraction >= config.terra.playerSurfaceTriggerFraction
+      || env.miningDepth > config.terra.miningDepthTrigger
       ? strength.terra : 0;
     const attackRate = bombardment + undermining * config.terra.buildingAttritionPerSecond;
     const attrition = 1 - Math.exp(-attackRate * seconds);
@@ -492,9 +494,9 @@ class HydraProject extends ArtificialSkyProject {
       aether: 1,
       aero: Math.min(1, env.pressure / config.aero.minimumPressurePa),
       aqua: Math.min(1, env.oceanCoverage / config.aqua.minimumOceanCoverage),
-      ignis: env.temperature <= config.objective.temperatureK
-        ? Math.max(0, Math.min(1, (env.temperature + config.objective.temperatureToleranceK - config.ignis.coldTemperatureK) / (config.objective.temperatureK - config.ignis.coldTemperatureK)))
-        : Math.max(0, Math.min(1, (config.ignis.hotTemperatureK - env.temperature + config.objective.temperatureToleranceK) / (config.ignis.hotTemperatureK - config.objective.temperatureK))),
+      ignis: env.temperature < config.ignis.coldTemperatureK
+        ? Math.max(0, env.temperature / config.ignis.coldTemperatureK)
+        : Math.max(0, 1 - Math.max(0, env.temperature - config.ignis.hotTemperatureK) / config.ignis.hotTemperatureK),
       terra: env.planetaryMass <= config.terra.depletedMassTons ? 0 : 1 - env.dugOutFraction
     };
     super.applyCostAndGain(Project.prototype.getResourceExecutionDeltaTime.call(this, deltaTime), changes, productivity);
@@ -517,7 +519,7 @@ class HydraProject extends ArtificialSkyProject {
       aero: capture + config.cores.aero.maximumMass * config.aero.collapsePerSecond * (1 - suitability.aero) * seconds,
       aqua: config.cores.aqua.maximumMass * config.aqua.exposurePerSecond * (1 - suitability.aqua) * seconds,
       ignis: resources.special.crusaders.value * config.ignis.crusaderTonsPerSecond * seconds
-        + config.cores.ignis.maximumMass * (env.temperature < config.objective.temperatureK
+        + config.cores.ignis.maximumMass * (env.temperature < config.ignis.coldTemperatureK
           ? config.ignis.coldSuppressionPerSecond : config.ignis.hotSuppressionPerSecond) * (1 - suitability.ignis) * seconds,
       terra: config.cores.terra.maximumMass * config.terra.dugOutSuppressionPerSecond * (1 - suitability.terra) * seconds
     };
@@ -587,7 +589,17 @@ class HydraProject extends ArtificialSkyProject {
       }
       this.rates[id] = { growth: (growth[id] + (hackingRepairs[id] || 0)) / seconds, support: support / seconds,
         loss: destroyedMass / seconds, net: (this.coreMass[id] - before[id]) / seconds };
-      this.salvage(id, destroyedMass, changes, seconds);
+      if (id === 'aether') {
+        const laserDebris = Math.min(laserLoss, destroyedMass);
+        this.transferResource(id, 'special', 'orbitalDebris', laserDebris, changes, seconds);
+        if (laserDebris > 0) hazardManager.kesslerHazard.permanentlyCleared = false;
+        const unusedLaserFraction = laserLoss > 0 ? Math.max(0, 1 - laserDebris / laserLoss) : 0;
+        this.transferResource(id, 'special', 'orbitalDebris',
+          -laserStrength * config.aether.laserDebrisTonsPerSecond * unusedLaserFraction * seconds, changes, seconds);
+        this.salvage(id, destroyedMass - laserDebris, changes, seconds);
+      } else {
+        this.salvage(id, destroyedMass, changes, seconds);
+      }
     }
     this.salvage('net', attrition, changes, seconds);
     if (HYDRA_CORE_IDS.every(id => this.coreMass[id] === 0)) {
@@ -741,8 +753,11 @@ class HydraProject extends ArtificialSkyProject {
       terra: {
         heat: this.getThresholdState('terra', env.temperature, temperatureThreshold, temperatureTriggered, true, false),
         venting: this.getThresholdState('terra', env.pressure, pressureThreshold, pressureTriggered, true, false),
-        attacks: this.getThresholdState('terra', env.playerLandFraction, config.terra.playerSurfaceTriggerFraction,
-          env.playerLandFraction >= config.terra.playerSurfaceTriggerFraction)
+        attacks: this.getThresholdState('terra', Math.max(
+          env.playerLandFraction / config.terra.playerSurfaceTriggerFraction,
+          env.miningDepth / config.terra.miningDepthTrigger), 1,
+          env.playerLandFraction >= config.terra.playerSurfaceTriggerFraction
+            || env.miningDepth > config.terra.miningDepthTrigger)
       }
     };
     const detailVars = {
@@ -761,6 +776,7 @@ class HydraProject extends ArtificialSkyProject {
           / config.cores.aero.maximumMass / config.aero.researchRecoveryBelowFraction), true, 3),
       researchRecoveryThreshold: formatNumber(100 * config.aero.researchRecoveryBelowFraction, true),
       surfaceThreshold: formatNumber(config.terra.playerSurfaceTriggerFraction * 100, true),
+      miningDepthThreshold: formatNumber(config.terra.miningDepthTrigger, true),
       orbitalSlow: formatNumber(1 + (config.aether.orbitalProjectDurationMultiplier - 1) * strength.aether, true),
       occupied: formatNumber(config.aero.occupiedAerostatFraction * 100 * strength.aero, true),
       oceanOccupied: formatNumber(this.coreMass.aqua > 0 ? env.oceanCoverage * 100 : 0, true),

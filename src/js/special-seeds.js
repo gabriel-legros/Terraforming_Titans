@@ -2111,7 +2111,7 @@ const hydraOverrides = {
       },
       aether: {
         outerOrbitFraction: 0.01, dragPerSecond: 0.002, dragDensityReference: 1e-12,
-        laserTonsPerSecond: 1e9, laserDebrisTonsPerSecond: 1e9,
+        laserTonsPerSecond: 100_000, laserDebrisTonsPerSecond: 1,
         shipCapturePerSecond: 0.05, massPerShip: 1000,
         orbitalProjectDurationMultiplier: 10, researchOrbitalDisableAboveFraction: 0.1,
         starliftTonsPerSecond: 1e17,
@@ -2141,7 +2141,7 @@ const hydraOverrides = {
         buildCostMultiplier: 4,
         maintenanceMultiplier: 50,
         coldTemperatureK: 500, hotTemperatureK: 1800,
-        coldSuppressionPerSecond: 0.001, hotSuppressionPerSecond: 0.002,
+        coldSuppressionPerSecond: 0.01, hotSuppressionPerSecond: 0.02,
         crusaderTonsPerSecond: 1, maximumLandFraction: 0.9,
         miningTonsPerSecond: 1e18, emissionsTonsPerSecond: 1e17,
         emissions: { atmosphericWater: 0.4, carbonDioxide: 0.3, atmosphericMethane: 0.2, sulfuricAcid: 0.1 }
@@ -2153,14 +2153,14 @@ const hydraOverrides = {
         miningTonsPerSecond: 1e18, excavationDurationMultiplier: 100,
         dugOutSuppressionPerSecond: 0.005,
         dugOutMinimumDepth: 95000,
-        depletedMassTons: 1e3, playerSurfaceTriggerFraction: 0.1,
+        depletedMassTons: 1e3, playerSurfaceTriggerFraction: 0.1, miningDepthTrigger: 80000,
         buildingAttritionPerSecond: 0.001, excavationAttritionPerSecond: 0.001
       },
       net: {
-        buildTonsPerSecond: 100, shipBuildTonsPerSecond: 1,
+        buildTonsPerSecond: 100, shipBuildTonsPerSecond: 10,
         segmentMass: 1e4, maximumMass: 1e20,
         costPerTon: { superalloys: 1, energy: 1e6 },
-        captureTonsPerTonPerSecond: 0.01, attritionTonsPerCapturedTon: 0.001
+        captureTonsPerTonPerSecond: 1, attritionTonsPerCapturedTon: 0.001
       }
     }
   },
