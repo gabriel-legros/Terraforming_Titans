@@ -9,17 +9,26 @@ class UndergroundExpansionProject extends AndroidProject {
 
   getScaledCost() {
     const cost = super.getScaledCost();
-    if (!this.requiresArtificialUnderground()) {
-      return cost;
+    if (this.requiresArtificialUnderground()) {
+      const artificialCost = this.attributes.artificialUndergroundCost;
+      for (const category in artificialCost) {
+        cost[category] ||= {};
+        for (const resource in artificialCost[category]) {
+          const multiplier = this.getEffectiveCostMultiplier(category, resource);
+          cost[category][resource] = (cost[category][resource] || 0)
+            + artificialCost[category][resource] * multiplier;
+        }
+      }
     }
-
-    const artificialCost = this.attributes.artificialUndergroundCost;
-    for (const category in artificialCost) {
-      cost[category] ||= {};
-      for (const resource in artificialCost[category]) {
-        const multiplier = this.getEffectiveCostMultiplier(category, resource);
-        cost[category][resource] = (cost[category][resource] || 0)
-          + artificialCost[category][resource] * multiplier;
+    if (!this.isContinuous()) {
+      const cycleProgress = Math.min(1 - this.fractionalRepeatCount, this.getRemainingRepeats());
+      const costPortion = Math.max(0, cycleProgress - (this.isActive || this.isPaused ? 0 : this.prepaidPortion));
+      for (const category in cost) {
+        for (const resource in cost[category]) {
+          if (this.isCostConsumed(category, resource)) {
+            cost[category][resource] *= costPortion;
+          }
+        }
       }
     }
     return cost;
@@ -64,21 +73,44 @@ class UndergroundExpansionProject extends AndroidProject {
   }
 
   start(resources) {
-    this.fractionalRepeatCount = 0;
-    this.prepaidPortion = 0;
-
     if (this.isContinuous()) {
       return this.startContinuousExpansion(resources);
     }
 
-    return super.start(resources);
+    const wasPaused = this.isPaused;
+    const started = super.start(resources);
+    if (started && !wasPaused) {
+      this.prepaidPortion = Math.min(1 - this.fractionalRepeatCount, this.getRemainingRepeats());
+    }
+    return started;
   }
 
   canStart() {
     if (this.repeatCount >= this.getMaxRepeats()) {
       return false;
     }
-    return super.canStart();
+    return Project.prototype.canStart.call(this);
+  }
+
+  hasStartResources() {
+    if (!this.isContinuous()) {
+      return super.hasStartResources();
+    }
+    const cost = this.getConsumableCost();
+    const costPortion = Math.max(0,
+      Math.min(1 - this.fractionalRepeatCount, this.getRemainingRepeats()) - this.prepaidPortion
+    );
+    const storage = this.createSpaceStorageAccess('expansions');
+    for (const category in cost) {
+      for (const resource in cost[category]) {
+        const key = resource === 'water' ? 'liquidWater' : resource;
+        const available = getMegaProjectResourceAvailability(storage, key, resources[category][resource].value);
+        if (available < cost[category][resource] * costPortion) {
+          return false;
+        }
+      }
+    }
+    return true;
   }
 
   canContinue() {
@@ -142,7 +174,7 @@ class UndergroundExpansionProject extends AndroidProject {
 
   getRemainingRepeats() {
     const limit = this.getMaxRepeats();
-    return Math.max(0, limit - this.repeatCount);
+    return Math.max(0, limit - this.repeatCount - this.fractionalRepeatCount);
   }
 
   getContinuousProgressAllowance() {
@@ -170,14 +202,15 @@ class UndergroundExpansionProject extends AndroidProject {
       return;
     }
 
-    const appliedProgress = Math.min(progressRatio, remainingRepeats);
+    const prepaidProgress = this.prepaidPortion || Math.min(1 - this.fractionalRepeatCount, remainingRepeats);
+    const appliedProgress = Math.min(progressRatio * prepaidProgress, remainingRepeats);
     if (appliedProgress > 0) {
       this.applyContinuousProgress(appliedProgress);
     }
 
     // The upfront discrete cost already covered the current cycle.
     // Skip charging until the carried progress reaches the next repeat.
-    this.prepaidPortion = Math.max(0, 1 - Math.min(appliedProgress, 1));
+    this.prepaidPortion = this.isActive ? Math.max(0, prepaidProgress - appliedProgress) : 0;
   }
 
   applyContinuousProgress(progress) {
@@ -198,8 +231,8 @@ class UndergroundExpansionProject extends AndroidProject {
       this.repeatCount += completed;
     }
 
+    this.fractionalRepeatCount = leftover;
     const remainingAfter = this.getRemainingRepeats();
-    this.fractionalRepeatCount = remainingAfter ? Math.min(leftover, remainingAfter) : 0;
 
     if (!remainingAfter) {
       this.isActive = false;
@@ -211,7 +244,7 @@ class UndergroundExpansionProject extends AndroidProject {
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
-    if (!this.isContinuous() || !this.isActive) return;
+    if (!this.isContinuous() || !this.isActive || this.isPaused) return;
     if (!this.canContinue()) {
       this.isActive = false;
       return;
@@ -362,14 +395,11 @@ class UndergroundExpansionProject extends AndroidProject {
   }
 
   complete() {
-    this.fractionalRepeatCount = 0;
-    this.prepaidPortion = 0;
     this.isActive = false;
     this.isPaused = false;
 
-    if (this.repeatCount < this.getMaxRepeats()) {
-      this.repeatCount++;
-    }
+    this.applyContinuousProgress(this.prepaidPortion || (1 - this.fractionalRepeatCount));
+    this.prepaidPortion = 0;
     this.isCompleted = this.repeatCount >= this.getMaxRepeats();
   }
 
