@@ -101,6 +101,10 @@ class SkillManager {
         effectConfig.type === 'productionMultiplier' ||
         effectConfig.type === 'consumptionMultiplier'
       )) ||
+      (skill.id === 'superconductor_throughput' && (
+        effectConfig.type === 'productionMultiplier' ||
+        effectConfig.type === 'consumptionMultiplier'
+      )) ||
       (skill.id === 'cloning_expertise' && effectConfig.type === 'productionMultiplier') ||
       (skill.id === 'nanotech_efficiency' && effectConfig.type === 'nanotechEfficiencyMultiplier') ||
       (skill.id === 'optimized_heat_sinks' && effectConfig.type === 'heatSinkPowerMultiplier') ||

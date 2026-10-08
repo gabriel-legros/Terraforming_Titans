@@ -2376,6 +2376,16 @@ const specialSeedDefinitions = {
             resourceCategory: 'colony', resourceTarget: 'energy', value: 1000
           }
         ]
+      },
+      {
+        id: 'reveal-superconductor-throughput',
+        descriptionKey: 'catalogs.specialSeeds.hydra.rewards.revealSuperconductorThroughput',
+        effects: [
+          {
+            target: 'skillManager', targetId: 'superconductor_throughput',
+            type: 'skillReveal', value: true
+          }
+        ]
       }
     ],
     overrides: hydraOverrides

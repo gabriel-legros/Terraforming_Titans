@@ -46,6 +46,7 @@ function getSkillPreviewValue(skill, rank) {
         case 'nanotech_efficiency':
             return formatSkillPercent(0.2 * safeRank);
         case 'chemistry_mastery':
+        case 'superconductor_throughput':
             return formatSkillPercent(0.2 * safeRank);
         case 'ship_efficiency':
             return getSkillsUIText(
@@ -158,7 +159,8 @@ const atlasSkillLayoutSlots = [
     { row: 4, col: 6 },
     { row: 5, col: 0 },
     { row: 5, col: 2 },
-    { row: 5, col: 4 }
+    { row: 5, col: 4 },
+    { row: 5, col: 6 }
 ];
 
 function getSkillLayout() {

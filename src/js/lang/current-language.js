@@ -5933,7 +5933,10 @@ setLanguageData({
         noSpaceWithdrawal: 'Space Storage cannot withdraw any resources on this world.',
         rules: 'Five regenerating machine cores occupy Lerna and actively resist terraforming. Suppress all five simultaneously to defeat Hydra.',
         requirement: 'Hydra', defeated: 'All five cores defeated', defeatFirst: 'Defeat Hydra first',
-        rewards: { laserCannonPower: 'Laser cannons will be 1000x more powerful.' }
+        rewards: {
+          laserCannonPower: 'Laser cannons will be 1000x more powerful.',
+          revealSuperconductorThroughput: 'Reveals a new Awakening skill',
+        }
       },
       commonEffects: {
         liftersStripModeDisabled: 'Lifters Strip Mode Disabled',
@@ -8269,6 +8272,10 @@ setLanguageData({
       chemistry_mastery: {
         name: 'Chemistry Mastery',
         description: 'Increases both chemical reactor production and consumption by 20% per rank',
+      },
+      superconductor_throughput: {
+        name: 'Superconductor Throughput',
+        description: 'Increases superconductor factory production and consumption by 20% per rank',
       },
       ship_efficiency: {
         name: 'Advanced Logistics',

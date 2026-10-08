@@ -198,6 +198,31 @@ const skillParameters = {
     ],
     requires: []
   },
+  superconductor_throughput: {
+    id: 'superconductor_throughput',
+    name: '',
+    description: '',
+    cost: 1,
+    maxRank: 5,
+    hiddenUntilRevealed: true,
+    effects: [
+      {
+        target: 'building',
+        targetId: 'superconductorFactory',
+        type: 'productionMultiplier',
+        baseValue: 0.2,
+        perRank: true
+      },
+      {
+        target: 'building',
+        targetId: 'superconductorFactory',
+        type: 'consumptionMultiplier',
+        baseValue: 0.2,
+        perRank: true
+      }
+    ],
+    requires: []
+  },
   cloning_expertise: {
     id: 'cloning_expertise',
     name: '',
