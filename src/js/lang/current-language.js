@@ -6977,7 +6977,7 @@ setLanguageData({
         },
         shipyard: {
           name: 'Shipbuilding',
-          description: 'Enables the construction of spaceships.  Also unlocks special projects for asteroid mining and resource disposal.',
+          description: 'Enables the construction of spaceships.  Also unlocks special projects for asteroid mining and resource disposal.  Each available or idle ship also increases colony energy cap.',
         },
         efficient_shipyards: {
           name: 'Efficient Shipyards',
