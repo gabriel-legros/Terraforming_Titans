@@ -481,7 +481,8 @@ class HydraProject extends ArtificialSkyProject {
     const laser = buildings.laserCannon;
     const laserStrength = laser.activeNumber * laser.productivity * laser.getEffectiveProductionMultiplier()
       * laser.getEffectiveResourceProductionMultiplier('special', 'orbitalDebris');
-    this.transferResource('aether', 'special', 'orbitalDebris', -laserStrength * config.aether.laserDebrisTonsPerSecond * seconds, changes, seconds);
+    this.transferResource('aether', 'special', 'orbitalDebris',
+      -laserStrength * config.aether.laserDebrisTonsPerSecond * seconds, changes, seconds, laser.getRateSource());
     this.netCaptureRate = 0;
     this.netAttritionRate = 0;
     if (this.isCompleted) return;
@@ -597,7 +598,8 @@ class HydraProject extends ArtificialSkyProject {
         if (laserDebris > 0) hazardManager.kesslerHazard.permanentlyCleared = false;
         const unusedLaserFraction = laserLoss > 0 ? Math.max(0, 1 - laserDebris / laserLoss) : 0;
         this.transferResource(id, 'special', 'orbitalDebris',
-          -laserStrength * config.aether.laserDebrisTonsPerSecond * unusedLaserFraction * seconds, changes, seconds);
+          -laserStrength * config.aether.laserDebrisTonsPerSecond * unusedLaserFraction * seconds,
+          changes, seconds, laser.getRateSource());
         this.salvage(id, destroyedMass - laserDebris, changes, seconds);
       } else {
         this.salvage(id, destroyedMass, changes, seconds);
