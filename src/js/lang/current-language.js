@@ -1436,6 +1436,7 @@ setLanguageData({
       "hydra": {
         "rateSources": {
           "aether": "Aether",
+          "aetherCleanup": "Aether clean-up",
           "aero": "Aero",
           "aqua": "Aqua",
           "ignis": "Ignis",
@@ -1465,7 +1466,7 @@ setLanguageData({
           "aether": {
             "name": "Aether | Orbit and outer system",
             "abilities": {
-              "rebuild": "Repairs itself and sibling cores using orbital debris.  Can also use stellar mass at {stellarRepairPercent}% rate.",
+              "rebuild": "Repairs itself and sibling cores using orbital debris. Can also use stellar mass at {stellarRepairPercent}% rate. Uses its remaining repair budget to remove debris above each orbital bin's initial amount.",
               "imports": "Imports gas below {pressureThreshold} MPa while stellar feedstock remains and Lerna is below the stripping threshold.",
               "stripping": "Strips atmosphere above {fusionMass} t of planetary mass to prevent stellar ignition."
             },

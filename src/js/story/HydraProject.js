@@ -194,12 +194,12 @@ class HydraProject extends ArtificialSkyProject {
   }
 
   // Every continuous atmosphere/surface transfer joins the normal woven resource step.
-  transferResource(core, category, key, amount, changes, seconds) {
+  transferResource(core, category, key, amount, changes, seconds, sourceId = `project:hydra:${core}`) {
     const resource = resources[category][key];
     const available = Math.max(0, resource.value + changes[category][key]);
     const applied = amount < 0 ? -Math.min(available, -amount) : amount;
     changes[category][key] += applied;
-    resource.modifyRate(applied / seconds, `project:hydra:${core}`, 'project');
+    resource.modifyRate(applied / seconds, sourceId, 'project');
     if (applied > 0) resource.unlocked = true;
     return applied;
   }
@@ -525,6 +525,7 @@ class HydraProject extends ArtificialSkyProject {
     };
     const growth = {};
     const repairs = {};
+    let aetherCleanupBudget = 0;
     // Repair current damage in the same step; donors share the remaining capacity.
     const repairCapacity = Object.fromEntries(HYDRA_CORE_IDS.map(id =>
       [id, Math.max(0, config.cores[id].maximumMass - this.coreMass[id] + loss[id])]));
@@ -542,6 +543,7 @@ class HydraProject extends ArtificialSkyProject {
           this.stellarFeedstock);
         this.stellarFeedstock -= stellarRepair;
         supplied += stellarRepair;
+        aetherCleanupBudget = Math.max(0, replenishment - supplied);
       } else if (id === 'aero') {
         const feedstocks = Object.entries(config.aero.carbonFeedstocks).map(([key, recipe]) => ({
           key, recipe, available: Math.max(0, resources.atmospheric[key].value + changes.atmospheric[key])
@@ -600,6 +602,13 @@ class HydraProject extends ArtificialSkyProject {
       } else {
         this.salvage(id, destroyedMass, changes, seconds);
       }
+    }
+    if (this.coreMass.aether > 0 && aetherCleanupBudget > 0) {
+      const debris = resources.special.orbitalDebris;
+      const removed = hazardManager.kesslerHazard.removeDebrisAboveBaseline(
+        aetherCleanupBudget, Math.max(0, debris.value + changes.special.orbitalDebris));
+      this.transferResource('aether', 'special', 'orbitalDebris', -removed, changes, seconds,
+        registerRateSource('project:hydra:aether-cleanup', t('ui.projects.hydra.rateSources.aetherCleanup')));
     }
     this.salvage('net', attrition, changes, seconds);
     if (HYDRA_CORE_IDS.every(id => this.coreMass[id] === 0)) {
