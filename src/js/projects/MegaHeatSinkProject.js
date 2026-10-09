@@ -494,25 +494,6 @@
       return !this.isCapReached() && super.canStart();
     }
 
-    getBatchCostMultiplier() {
-      return this.isActive || this.isPaused
-        ? this.activeBuildCount
-        : Math.min(1, this.getRemainingCap());
-    }
-
-    start(resources) {
-      if (this.isCapReached()) {
-        return false;
-      }
-      if (this.isContinuous()) {
-        return this.startContinuousExpansion(resources);
-      }
-      if (!this.isActive && !this.isPaused) {
-        this.activeBuildCount = Math.min(1, this.getRemainingCap());
-      }
-      return Project.prototype.start.call(this, resources);
-    }
-
     update(deltaTime) {
       if (!this.isActive || this.isCompleted || this.isPaused) {
         return;
@@ -528,80 +509,15 @@
     }
 
     estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
-      if (!this.isContinuous() || !this.isActive) {
-        return Project.prototype.estimateProjectCostAndGain.call(this, deltaTime, applyRates, productivity, accumulatedChanges);
-      }
-
-      const totals = { cost: {}, gain: {} };
-      const duration = this.getEffectiveDuration();
-      if (!(duration > 0) || duration === Infinity) {
-        return totals;
-      }
-
-      const requestedProgress = (deltaTime / duration) * productivity;
-      const cappedProgress = Math.min(requestedProgress, this.getRemainingCap());
-      const cost = Project.prototype.getScaledCost.call(this);
-      const storageState = this.createExpansionStorageState(accumulatedChanges);
-      const progress = this.getAffordableExpansionProgress(
-        cappedProgress,
-        cost,
-        storageState,
-        accumulatedChanges
-      );
-      if (!(progress > 0)) {
-        return totals;
-      }
-      totals.cost = this.estimateExpansionCostForProgress(
-        cost,
-        progress,
-        deltaTime,
-        accumulatedChanges,
-        storageState,
-        {
-          applyRates: applyRates && this.showsInResourcesRate(),
-          sourceLabel: this.getRateSource()
-        }
-      );
-      return totals;
+      return this.estimateExpansionTick(deltaTime, applyRates && this.showsInResourcesRate(), productivity, accumulatedChanges);
     }
 
     applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
-      if (!this.isContinuous() || !this.isActive) {
-        return;
-      }
-
-      const duration = this.getEffectiveDuration();
-      if (!(duration > 0) || duration === Infinity) {
-        return;
-      }
-
-      const requestedProgress = (deltaTime / duration) * productivity;
-      if (!(requestedProgress > 0)) {
-        return;
-      }
-      const remainingCap = this.getRemainingCap();
-      if (!(remainingCap > 0)) {
-        this.isActive = false;
-        return;
-      }
-
-      const cost = Project.prototype.getScaledCost.call(this);
-      this.applyRequestedExpansionProgress(
-        Math.min(requestedProgress, remainingCap),
-        cost,
-        accumulatedChanges,
-        {
-          applyRates: this.showsInResourcesRate(),
-          seconds: deltaTime / 1000,
-          rateSourceLabel: this.getRateSource(),
-          applyProgress(progress) {
-            this.repeatCount += progress;
-            if (this.isCapReached()) {
-              this.isActive = false;
-            }
-          }
-        }
-      );
+      if (!this.isContinuous() || !this.isActive || this.isPaused) return;
+      this.applyRequestedExpansionProgress(deltaTime / this.getEffectiveDuration() * productivity,
+        this.getConsumableCost(), accumulatedChanges, {
+          applyRates: this.showsInResourcesRate(), seconds: deltaTime / 1000,
+        });
     }
 
     complete() {
@@ -613,6 +529,7 @@
         return;
       }
       this.activeBuildCount = 1;
+      this.expansionPrepaidProgress = 0;
       this.isCompleted = true;
       this.isActive = false;
       this.repeatCount += completions;
@@ -712,7 +629,14 @@
     }
   }
 
-  ContinuousExpansionCapability.applyCapabilityTo(MegaHeatSinkProject);
+  ContinuousExpansionCapability.applyCapabilityTo(MegaHeatSinkProject, {
+    progressField: null, cycleField: 'activeBuildCount',
+    limit() { return this.capEnabled ? this.getCapLimit() : Infinity; },
+    applyProgress(progress) {
+      this.repeatCount += progress;
+      if (this.isCapReached()) this.isActive = false;
+    }
+  });
 
   if (typeof module !== 'undefined' && module.exports) {
     module.exports = MegaHeatSinkProject;

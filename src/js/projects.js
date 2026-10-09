@@ -462,14 +462,19 @@ class Project extends EffectableEntity {
       return cost;
     }
 
-    const scaledCost = {};
-    for (const resourceCategory in cost) {
-      scaledCost[resourceCategory] = {};
-      for (const resource in cost[resourceCategory]) {
-        scaledCost[resourceCategory][resource] = cost[resourceCategory][resource] * multiplier;
+    return this.scaleCost(cost, multiplier);
+  }
+
+  scaleCost(cost, multiplier, consumablesOnly = false) {
+    const scaled = {};
+    for (const category in cost) {
+      scaled[category] = {};
+      for (const resource in cost[category]) {
+        scaled[category][resource] = cost[category][resource]
+          * (consumablesOnly && !this.isCostConsumed(category, resource) ? 1 : multiplier);
       }
     }
-    return scaledCost;
+    return scaled;
   }
 
   isCostConsumed(category, resource) {
@@ -737,7 +742,12 @@ class Project extends EffectableEntity {
     this.isActive = false;
 
     if (this.repeatable && (this.maxRepeatCount === Infinity || this.repeatCount < this.maxRepeatCount)) {
-      this.repeatCount++;
+      if (this.expansionAccounting && this.getExpansionCompletedField() === 'repeatCount') {
+        this.applyExpansionProgress(this[this.expansionAccounting.cycleField || 'expansionCycleProgress'] ?? 1);
+        this[this.expansionAccounting.prepaidField || 'expansionPrepaidProgress'] = 0;
+      } else {
+        this.repeatCount++;
+      }
       this.resetProject();
     }
 
@@ -1120,6 +1130,10 @@ class Project extends EffectableEntity {
       shownStorySteps: Array.from(this.shownStorySteps),
       alertedWhenUnlocked: this.alertedWhenUnlocked,
     };
+    if (this.expansionAccounting) {
+      state.expansionCycleProgress = this.expansionCycleProgress;
+      state.expansionPrepaidProgress = this.expansionPrepaidProgress;
+    }
     if (this.attributes?.canUseSpaceStorage) {
       state.spaceStorageResourceMode = this.spaceStorageResourceMode || '';
       state.ignoreSpaceStorageReserveExpansion = this.ignoreSpaceStorageReserveExpansion === true;
@@ -1157,6 +1171,15 @@ class Project extends EffectableEntity {
     this.remainingTime = state.remainingTime;
     this.startingDuration = state.startingDuration || this.getEffectiveDuration();
     this.repeatCount = state.repeatCount;
+    if (this.expansionAccounting) {
+      this.expansionCycleProgress = state.expansionCycleProgress ?? 1;
+      const prepaidField = this.expansionAccounting.prepaidField || 'expansionPrepaidProgress';
+      const legacyTimedCycle = state.expansionCycleProgress === undefined
+        && (this.isActive || this.isPaused) && Number.isFinite(this.remainingTime);
+      this[prepaidField] = legacyTimedCycle && !state[prepaidField]
+        ? (state[this.expansionAccounting.cycleField || 'expansionCycleProgress'] ?? 1)
+        : (state[prepaidField] || 0);
+    }
 
     // If the project is repeatable and has not hit its max repeats, a saved
     // completed flag may be stale. Clear it so the project can run again.
@@ -1909,6 +1932,12 @@ class ProjectManager extends EffectableEntity {
       if (typeof project.saveTravelState === 'function') {
         Object.assign(state, project.saveTravelState(resetLevel));
       }
+      if (project.expansionAccounting && (state.isActive === true
+          || state[project.getExpansionProgressField()] !== undefined)) {
+        const accounting = project.expansionAccounting;
+        state.expansionCycleProgress = project[accounting.cycleField || 'expansionCycleProgress'] ?? 1;
+        state.expansionPrepaidProgress = project[accounting.prepaidField || 'expansionPrepaidProgress'] || 0;
+      }
       if (resetAuto && ('autoContinuousOperation' in project || 'autoDeployCollectors' in project)) {
         state.autoContinuousOperation = false;
         if ('autoDeployCollectors' in project) {
@@ -1941,6 +1970,12 @@ class ProjectManager extends EffectableEntity {
       const state = travelState[name] || {};
       if (preserveAuto && typeof state.autoStart !== 'undefined') {
         project.autoStart = state.autoStart;
+      }
+      // Restore accounting before subclass loaders can transition construction modes.
+      if (project.expansionAccounting && state.expansionCycleProgress !== undefined) {
+        const accounting = project.expansionAccounting;
+        project[accounting.cycleField || 'expansionCycleProgress'] = state.expansionCycleProgress;
+        project[accounting.prepaidField || 'expansionPrepaidProgress'] = state.expansionPrepaidProgress || 0;
       }
       if (typeof project.loadTravelState === 'function') {
         const { autoStart, autoStartUncheckOnTravel, ...projectState } = state;

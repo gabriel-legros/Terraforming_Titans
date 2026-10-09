@@ -217,3 +217,5 @@ if (typeof globalThis !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = OrbitalRingProject;
 }
+
+ContinuousExpansionProject.applyCapabilityTo(OrbitalRingProject, { timedOnly: true });

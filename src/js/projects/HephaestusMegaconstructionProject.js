@@ -463,10 +463,6 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     }
   }
 
-  start(resources) {
-    return this.startContinuousExpansion(resources);
-  }
-
   update(deltaTime) {
     this.applyYardEffects();
     if (this.isActive) {
@@ -522,45 +518,9 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
       return totals;
     }
 
-    const duration = this.getEffectiveDuration();
-    const limit = this.maxRepeatCount || Infinity;
-    const completedExpansions = this.repeatCount + this.fractionalRepeatCount;
-    const remainingRepeats = limit === Infinity ? Infinity : Math.max(0, limit - completedExpansions);
-    const requestedProgress = this.isContinuous()
-      ? Math.min((deltaTime / duration) * productivity, remainingRepeats)
-      : (deltaTime / duration);
-    if (!(remainingRepeats > 0) || !(requestedProgress > 0)) {
-      return totals;
-    }
-
-    const storageState = this.createExpansionStorageState(accumulatedChanges);
-    const cost = this.getScaledCost();
-    const progress = this.isContinuous()
-      ? this.getAffordableExpansionProgress(
-          requestedProgress,
-          cost,
-          storageState,
-          accumulatedChanges
-        )
-      : requestedProgress;
-    if (!(progress > 0)) {
-      return totals;
-    }
-
-    return {
-      cost: this.estimateExpansionCostForProgress(
-        cost,
-        progress,
-        deltaTime,
-        accumulatedChanges,
-        storageState,
-        {
-          applyRates,
-          sourceLabel: this.getExpansionRateSourceLabel()
-        }
-      ),
-      gain: {}
-    };
+    return this.estimateExpansionTick(deltaTime, applyRates, productivity, accumulatedChanges, {
+      sourceLabel: this.getExpansionRateSourceLabel()
+    });
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {

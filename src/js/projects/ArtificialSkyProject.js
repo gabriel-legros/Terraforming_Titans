@@ -53,7 +53,7 @@ class ArtificialSkyProject extends SpaceshipProject {
     let built = this.repeatCount + this.segmentProgress;
     if (this.isActive && !this.isContinuous() && this.startingDuration > 0) {
       const progress = (this.startingDuration - this.remainingTime) / this.startingDuration;
-      built += Math.max(0, Math.min(1, progress));
+      built += Math.max(0, Math.min(1, progress)) * (this.expansionCycleProgress ?? 1);
     }
     return Math.max(0, Math.min(maxSegments, built));
   }
@@ -99,7 +99,7 @@ class ArtificialSkyProject extends SpaceshipProject {
     return fullCost;
   }
 
-  getScaledCost() {
+  getExpansionUnitCost() {
     const fullCost = this.getFullBuildCost();
     const segments = this.getMaxRepeats();
     const perSegment = {};
@@ -117,17 +117,12 @@ class ArtificialSkyProject extends SpaceshipProject {
       }
     }
 
-    return perSegment;
-  }
-
-  calculateSpaceshipCost() {
-    const cost = this.getScaledCost();
     const agilityResearchCost = this.getHighAgilityFreighterResearchCost();
     if (agilityResearchCost > 0) {
-      cost.colony ||= {};
-      cost.colony.research = (cost.colony.research || 0) + agilityResearchCost;
+      perSegment.colony ||= {};
+      perSegment.colony.research = (perSegment.colony.research || 0) + agilityResearchCost;
     }
-    return cost;
+    return perSegment;
   }
 
   calculateAutomationEnergyRatePerShip() {
@@ -182,6 +177,7 @@ class ArtificialSkyProject extends SpaceshipProject {
     this.addKesslerDebris(debris);
     this.loseAssignedShips(1);
     this.pendingGain = null;
+    this.expansionPrepaidProgress = 0;
     this.isActive = false;
     this.isPaused = false;
     this.isCompleted = false;
@@ -200,17 +196,6 @@ class ArtificialSkyProject extends SpaceshipProject {
     if (!super.canStart()) {
       return false;
     }
-    if (!this.isContinuous()) {
-      return true;
-    }
-    const cost = this.calculateSpaceshipCost();
-    for (const category in cost) {
-      for (const resource in cost[category]) {
-        if (resources[category][resource].value < cost[category][resource]) {
-          return false;
-        }
-      }
-    }
     return true;
   }
 
@@ -222,7 +207,7 @@ class ArtificialSkyProject extends SpaceshipProject {
   }
 
   getRemainingSegments() {
-    return Math.max(0, this.getMaxRepeats() - (this.repeatCount + this.segmentProgress));
+    return this.getRemainingExpansionCapacity();
   }
 
   shouldAutomationDisable() {
@@ -254,37 +239,18 @@ class ArtificialSkyProject extends SpaceshipProject {
 
   start(resources) {
     this.maxRepeatCount = this.getMaxRepeats();
+    const started = this.startContinuousExpansion(resources);
+    if (!started) return false;
     this.shortfallLastTick = false;
     this.pendingGain = null;
-
-    if (this.isContinuous()) {
-      if (!this.canStart()) {
-        return false;
-      }
-      this.isActive = true;
-      this.isPaused = false;
-      this.isCompleted = false;
-      this.startingDuration = Infinity;
-      this.remainingTime = Infinity;
-      this.kesslerRollPending = false;
-      this.kesslerRollElapsed = 0;
-      this.kesslerStartCost = null;
-      this.resetKesslerShipRoll();
-      return true;
-    }
-
-    this.segmentProgress = 0;
-    const started = Project.prototype.start.call(this, resources);
-    if (!started) {
-      return false;
-    }
-
     this.kesslerRollPending = false;
     this.kesslerRollElapsed = 0;
     this.kesslerStartCost = null;
-    this.kesslerShipRollElapsed = 0;
-    this.kesslerShipRollPending = true;
-    this.kesslerShipCostSnapshot = this.calculateSpaceshipTotalCost();
+    this.resetKesslerShipRoll();
+    if (!this.isContinuous()) {
+      this.kesslerShipRollPending = true;
+      this.kesslerShipCostSnapshot = this.calculateSpaceshipTotalCost();
+    }
     return true;
   }
 
@@ -293,6 +259,7 @@ class ArtificialSkyProject extends SpaceshipProject {
     this.hasCompletedOnce = true;
     this.repeatCount = maxSegments;
     this.segmentProgress = 0;
+    this.expansionPrepaidProgress = 0;
     this.isCompleted = true;
     this.isActive = false;
     this.isPaused = false;
@@ -306,8 +273,8 @@ class ArtificialSkyProject extends SpaceshipProject {
     this.kesslerShipRollPending = false;
     this.kesslerShipCostSnapshot = null;
 
-    const maxSegments = this.getMaxRepeats();
-    this.repeatCount = Math.min(maxSegments, this.repeatCount + 1);
+    this.applyFractionalProgress(this.expansionCycleProgress ?? 1);
+    this.expansionPrepaidProgress = 0;
 
     if (!this.canContinue()) {
       this.completeProjectFully();
@@ -322,23 +289,8 @@ class ArtificialSkyProject extends SpaceshipProject {
   }
 
   applyContinuousProgress(progress) {
-    const remainingSegments = this.getRemainingSegments();
-    if (remainingSegments <= 0) {
-      this.completeProjectFully();
-      return;
-    }
-
-    const appliedProgress = Math.max(0, Math.min(remainingSegments, progress));
-    const totalProgress = this.segmentProgress + appliedProgress;
-    const completed = Math.floor(totalProgress);
-    if (completed > 0) {
-      this.repeatCount += completed;
-    }
-    this.segmentProgress = totalProgress - completed;
-
-    if (!this.canContinue()) {
-      this.completeProjectFully();
-    }
+    const result = this.applyFractionalProgress(progress);
+    if (result.capped) this.completeProjectFully();
   }
 
   applyContinuousKesslerConsequences(costPerSegment, failedProgress, seconds) {
@@ -369,7 +321,7 @@ class ArtificialSkyProject extends SpaceshipProject {
   }
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
-    if (!this.isContinuous() || !this.isActive) return;
+    if (!this.isContinuous() || !this.isActive || this.isPaused) return;
     if (this.isBlockedByPulsarStorm()) return;
     if (this.isProgressBlocked()) return;
     if (!this.canContinue()) {
@@ -396,54 +348,17 @@ class ArtificialSkyProject extends SpaceshipProject {
     }
 
     const costPerSegment = this.calculateSpaceshipCost();
-    let paidProgress = requestedProgress;
-    for (const category in costPerSegment) {
-      for (const resource in costPerSegment[category]) {
-        const amount = costPerSegment[category][resource];
-        if (amount <= 0) {
-          continue;
-        }
-        const pending = accumulatedChanges?.[category]?.[resource] || 0;
-        const available = Math.max(0, (resources[category][resource].value || 0) + pending);
-        paidProgress = Math.min(paidProgress, available / amount);
+    const result = this.applyRequestedExpansionProgress(requestedProgress, costPerSegment, accumulatedChanges, {
+      storageState: null,
+      applyRates: this.showsInResourcesRate(), seconds: deltaTime / 1000,
+      rateSourceLabel: this.getCostRateLabel(),
+      applyProgress: progress => {
+        const successChance = this.getKesslerSuccessChance();
+        this.applyContinuousProgress(progress * successChance);
+        this.applyContinuousKesslerConsequences(costPerSegment, progress * (1 - successChance), deltaTime / 1000);
       }
-    }
-
-    paidProgress = Math.max(0, paidProgress);
-    const shortfall = paidProgress < requestedProgress;
-
-    if (paidProgress > 0) {
-      for (const category in costPerSegment) {
-        for (const resource in costPerSegment[category]) {
-          const amount = costPerSegment[category][resource] * paidProgress;
-          if (accumulatedChanges) {
-            if (!accumulatedChanges[category]) accumulatedChanges[category] = {};
-            if (accumulatedChanges[category][resource] === undefined) {
-              accumulatedChanges[category][resource] = 0;
-            }
-            accumulatedChanges[category][resource] -= amount;
-          } else {
-            resources[category][resource].decrease(amount);
-          }
-        }
-      }
-
-      const successChance = this.getKesslerSuccessChance();
-      const failureChance = 1 - successChance;
-      const successfulProgress = paidProgress * successChance;
-      const failedProgress = paidProgress * failureChance;
-
-      if (successfulProgress > 0) {
-        this.applyContinuousProgress(successfulProgress);
-      }
-
-      if (failedProgress > 0) {
-        const seconds = deltaTime / 1000;
-        this.applyContinuousKesslerConsequences(costPerSegment, failedProgress, seconds);
-      }
-    }
-
-    this.shortfallLastTick = shortfall;
+    });
+    this.shortfallLastTick = result.shortfall;
   }
 
   estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
@@ -452,7 +367,7 @@ class ArtificialSkyProject extends SpaceshipProject {
     }
 
     const totals = { cost: {}, gain: {} };
-    if (!this.isActive || this.isBlockedByPulsarStorm()) {
+    if (!this.isActive || this.isPaused || this.isBlockedByPulsarStorm()) {
       return totals;
     }
 
@@ -473,38 +388,12 @@ class ArtificialSkyProject extends SpaceshipProject {
     }
 
     const costPerSegment = this.calculateSpaceshipCost();
-    let paidProgress = requestedProgress;
-    for (const category in costPerSegment) {
-      for (const resource in costPerSegment[category]) {
-        const amount = costPerSegment[category][resource];
-        if (amount <= 0) {
-          continue;
-        }
-        const pending = accumulatedChanges?.[category]?.[resource] || 0;
-        const available = Math.max(0, (resources[category][resource].value || 0) + pending);
-        paidProgress = Math.min(paidProgress, available / amount);
-      }
-    }
-    paidProgress = Math.max(0, paidProgress);
-
-    const seconds = deltaTime / 1000;
-    const progressPerSecond = seconds > 0 ? paidProgress / seconds : 0;
-    const rateLabel = this.getCostRateLabel();
-
-    for (const category in costPerSegment) {
-      totals.cost[category] = {};
-      for (const resource in costPerSegment[category]) {
-        const amount = costPerSegment[category][resource] * paidProgress;
-        totals.cost[category][resource] = amount;
-        if (applyRates) {
-          const rateValue = costPerSegment[category][resource] * progressPerSecond;
-          resources[category][resource].modifyRate(-rateValue, rateLabel, 'project');
-        }
-      }
-      if (!Object.keys(totals.cost[category]).length) {
-        delete totals.cost[category];
-      }
-    }
+    const estimate = this.estimateRequestedExpansionProgress(requestedProgress, costPerSegment, deltaTime,
+      accumulatedChanges, {
+        remaining: remainingSegments, storageState: null,
+        applyRates, sourceLabel: this.getCostRateLabel()
+      });
+    totals.cost = estimate.cost;
 
     return totals;
   }
@@ -599,14 +488,8 @@ class ArtificialSkyProject extends SpaceshipProject {
   }
 
   finalizeAssignmentChange(wasContinuous) {
-    const nowContinuous = this.isContinuous();
-    if (this.isActive && !wasContinuous && nowContinuous && this.startingDuration > 0) {
-      const progress = (this.startingDuration - this.remainingTime) / this.startingDuration;
-      const carriedProgress = Math.max(0, Math.min(0.999999, progress));
-      this.segmentProgress = Math.max(this.segmentProgress, carriedProgress);
-    }
-    if (this.isActive && wasContinuous && !nowContinuous) {
-      this.segmentProgress = 0;
+    if (this.isActive && !wasContinuous && this.isContinuous()) {
+      this.carryDiscreteExpansionProgress({ applyProgress: progress => this.applyContinuousProgress(progress) });
     }
     super.finalizeAssignmentChange(wasContinuous);
   }
@@ -700,3 +583,10 @@ try {
 } catch (error) {
   // Module system not available in browser
 }
+
+ContinuousExpansionProject.applyCapabilityTo(ArtificialSkyProject, {
+  progressField: 'segmentProgress', limit() { return this.getMaxRepeats(); },
+  applyProgress(progress) { this.applyContinuousProgress(progress); }
+});
+
+ArtificialSkyProject.prototype.calculateSpaceshipCost = ContinuousExpansionProject.prototype.getScaledCost;

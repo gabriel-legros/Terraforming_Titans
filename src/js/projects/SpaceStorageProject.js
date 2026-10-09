@@ -1214,25 +1214,11 @@ class SpaceStorageProject extends SpaceshipProject {
     if (!this.isActive || !this.isContinuous()) {
       return 0;
     }
-    const tick = this.getContinuousExpansionTickState(deltaTime);
-    if (!tick.duration || tick.duration === Infinity || !tick.ready) {
-      return 0;
-    }
-    const requestedProgress = tick.requestedProgress * Math.max(0, productivity);
-    if (!(requestedProgress > 0)) {
-      return 0;
-    }
-    const storageState = this.createExpansionStorageState(null);
-    const affordableProgress = this.getAffordableExpansionProgress(
-      requestedProgress,
-      this.getScaledCost(),
-      storageState,
-      null
-    );
-    if (!(affordableProgress > 0)) {
-      return 0;
-    }
-    return affordableProgress * this.capacityPerCompletion * this.getEffectiveStorageCapacityMultiplier();
+    if (this.isPaused) return 0;
+    const duration = this.getEffectiveDuration();
+    if (!(duration > 0) || duration === Infinity) return 0;
+    const plan = this.planExpansionProgress(deltaTime / duration * Math.max(0, productivity), this.getConsumableCost());
+    return (plan.progress + plan.carriedProgress) * this.capacityPerCompletion * this.getEffectiveStorageCapacityMultiplier();
   }
 
   applyEstimatedExpansionStorageHeadroom(accumulatedChanges, deltaTime = 1000, productivity = 1) {
@@ -1418,7 +1404,6 @@ class SpaceStorageProject extends SpaceshipProject {
 
   start(resources) {
     this.shortfallLastTick = false;
-    this.expansionProgress = 0;
     return this.startContinuousExpansion(resources);
   }
 
@@ -2690,28 +2675,11 @@ class SpaceStorageProject extends SpaceshipProject {
   estimateProjectCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
     const totals = { cost: {}, gain: {} };
     if (this.isActive) {
-      const duration = this.getEffectiveDuration();
       const expansionProductivity = this.attributes?.continuousAsBuilding ? productivity : 1;
-      const fraction = (deltaTime / duration) * expansionProductivity;
-      const cost = this.getScaledCost();
-      const storageState = this.createExpansionStorageState(accumulatedChanges);
-      const effectiveFraction = this.isContinuous()
-        ? this.getAffordableExpansionProgress(fraction, cost, storageState, accumulatedChanges)
-        : fraction;
-      if (effectiveFraction > 0) {
-        const expansionCostTotals = this.estimateExpansionCostForProgress(
-          cost,
-          effectiveFraction,
-          deltaTime,
-          accumulatedChanges,
-          storageState,
-          {
-            applyRates,
-            sourceLabel: this.getExpansionRateSourceLabel()
-          }
-        );
-        this.mergeResourceTotals(totals.cost, expansionCostTotals);
-      }
+      const expansion = this.estimateExpansionTick(deltaTime, applyRates, expansionProductivity, accumulatedChanges, {
+        sourceLabel: this.getExpansionRateSourceLabel()
+      });
+      this.mergeResourceTotals(totals.cost, expansion.cost);
     }
     const shipTotals = this.estimateShipTransferCostAndGain(deltaTime, applyRates, productivity, accumulatedChanges);
     for (const category in shipTotals.cost) {

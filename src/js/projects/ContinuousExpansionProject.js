@@ -5,7 +5,7 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
   }
 
   isExpansionContinuous() {
-    return this.getEffectiveDuration() < this.continuousThreshold;
+    return !this.expansionAccounting?.timedOnly && this.getEffectiveDuration() < this.continuousThreshold;
   }
 
   isContinuous() {
@@ -13,8 +13,15 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
   }
 
   startContinuousExpansion(resources) {
-    if (!this.isExpansionContinuous()) {
-      return super.start(resources);
+    if (!this.isContinuous()) {
+      const wasPaused = this.isPaused;
+      const cycle = Math.min(1 - this.getExpansionProgressValue(), this.getRemainingExpansionCapacity());
+      const started = Project.prototype.start.call(this, resources);
+      if (started && !wasPaused) {
+        this[this.expansionAccounting?.cycleField || 'expansionCycleProgress'] = cycle;
+        this[this.expansionAccounting?.prepaidField || 'expansionPrepaidProgress'] = cycle;
+      }
+      return started;
     }
     if (!this.canStart(resources)) {
       return false;
@@ -28,23 +35,23 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
   }
 
   getExpansionProgressField() {
-    return 'expansionProgress';
+    return this.expansionAccounting?.progressField === undefined ? 'expansionProgress' : this.expansionAccounting.progressField;
   }
 
   getExpansionCompletedField() {
-    return 'repeatCount';
+    return this.expansionAccounting?.completedField || 'repeatCount';
   }
 
   getExpansionLimit() {
-    return this.maxRepeatCount || Infinity;
+    return this.expansionAccounting?.limit ? this.expansionAccounting.limit.call(this) : (this.maxRepeatCount || Infinity);
   }
 
   getExpansionProgressValue(progressField = this.getExpansionProgressField()) {
-    return Math.max(0, this[progressField] || 0);
+    return progressField === null ? 0 : Math.max(0, this[progressField] || 0);
   }
 
   setExpansionProgressValue(value, progressField = this.getExpansionProgressField()) {
-    this[progressField] = Math.max(0, value || 0);
+    if (progressField !== null) this[progressField] = Math.max(0, value || 0);
   }
 
   getExpansionCompletedValue(completedField = this.getExpansionCompletedField()) {
@@ -57,7 +64,7 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
 
   getExpansionCompletedTotal(options = {}) {
     const completedField = options.completedField || this.getExpansionCompletedField();
-    const progressField = options.progressField || this.getExpansionProgressField();
+    const progressField = options.progressField === undefined ? this.getExpansionProgressField() : options.progressField;
     return this.getExpansionCompletedValue(completedField) + this.getExpansionProgressValue(progressField);
   }
 
@@ -66,7 +73,71 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
     if (limit === Infinity) {
       return Infinity;
     }
-    return Math.max(0, limit - this.getExpansionCompletedTotal(options));
+    const completedField = options.completedField || this.getExpansionCompletedField();
+    const progressField = options.progressField === undefined ? this.getExpansionProgressField() : options.progressField;
+    return Math.max(0, limit - this.getExpansionCompletedValue(completedField) - this.getExpansionProgressValue(progressField));
+  }
+
+  getScaledCost() {
+    const cost = this.getExpansionUnitCost();
+    if (this.isContinuous()) return cost;
+    const cycle = this.isActive || this.isPaused
+      ? (this[this.expansionAccounting?.cycleField || 'expansionCycleProgress'] ?? 1)
+      : Math.max(0, Math.min(1 - this.getExpansionProgressValue(), this.getRemainingExpansionCapacity())
+        - (this[this.expansionAccounting?.prepaidField || 'expansionPrepaidProgress'] || 0));
+    return this.scaleCost(cost, cycle, true);
+  }
+
+  hasStartResources() {
+    if (!this.isContinuous()) return Project.prototype.hasStartResources.call(this);
+    const requested = Math.max(0, Math.min(1 - this.getExpansionProgressValue(), this.getRemainingExpansionCapacity())
+      - (this[this.expansionAccounting?.prepaidField || 'expansionPrepaidProgress'] || 0));
+    const storage = this.createExpansionStorageState();
+    return this.getAffordableExpansionProgress(requested, this.getConsumableCost(), storage) + 1e-9 >= requested;
+  }
+
+  planExpansionProgress(requestedProgress, cost, accumulatedChanges = null, options = {}) {
+    const capacity = this.getRemainingExpansionCapacity(options.progressOptions);
+    const allowance = typeof options.remaining === 'function' ? options.remaining.call(this) : options.remaining;
+    let remaining = Math.min(capacity, allowance === undefined ? Infinity : allowance);
+    const prepaidField = this.expansionAccounting?.prepaidField || 'expansionPrepaidProgress';
+    let carriedProgress = 0;
+    let credit = options.usePrepaid === false ? 0 : (this[prepaidField] || 0);
+    // Estimate a pending mode transition without mutating project progress.
+    if (credit > 0 && this.isContinuous() && this.startingDuration > 0
+        && this.startingDuration !== Infinity && this.remainingTime !== Infinity) {
+      const cycle = this[this.expansionAccounting?.cycleField || 'expansionCycleProgress'] ?? 1;
+      carriedProgress = Math.max(0, Math.min(1, (this.startingDuration - this.remainingTime) / this.startingDuration)) * cycle;
+      remaining = Math.max(0, remaining - carriedProgress);
+      credit = Math.max(0, credit - carriedProgress);
+    }
+    const requested = Math.max(0, Math.min(requestedProgress || 0, remaining));
+    const prepaid = Math.min(requested, credit);
+    const storageState = options.storageState === undefined
+      ? this.createExpansionStorageState(accumulatedChanges, options.storageOptions)
+      : options.storageState;
+    const paid = this.getAffordableExpansionProgress(requested - prepaid, cost, storageState, accumulatedChanges);
+    return { requestedProgress: requested, progress: prepaid + paid, paidProgress: paid, prepaidProgress: prepaid,
+      prepaidField, storageState, carriedProgress, resourceShortfall: prepaid + paid + 1e-9 < requested };
+  }
+
+  estimateRequestedExpansionProgress(requestedProgress, cost, deltaTime = 1000, accumulatedChanges = null, options = {}) {
+    const plan = this.planExpansionProgress(requestedProgress, cost, accumulatedChanges, options);
+    return { ...plan, cost: this.estimateExpansionCostForProgress(cost, plan.paidProgress, deltaTime,
+      accumulatedChanges, plan.storageState, options) };
+  }
+
+  estimateExpansionTick(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null, options = {}) {
+    if (!this.isActive || this.isPaused) return { cost: {}, gain: {} };
+    const duration = this.getEffectiveDuration();
+    if (!(duration > 0) || duration === Infinity) return { cost: {}, gain: {} };
+    if (!this.isContinuous()) {
+      return { cost: this.estimateExpansionCostForProgress(this.getScaledCost(), deltaTime / duration,
+        deltaTime, accumulatedChanges, this.createExpansionStorageState(accumulatedChanges), { ...options, applyRates }), gain: {} };
+    }
+    const estimate = this.estimateRequestedExpansionProgress(deltaTime / duration * productivity,
+      this.getConsumableCost(), deltaTime, accumulatedChanges, { ...options, applyRates });
+    return { cost: estimate.cost, gain: {} };
   }
 
   createExpansionStorageState(accumulatedChanges = null, options = {}) {
@@ -144,6 +215,7 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
   }
 
   getContinuousExpansionTickState(deltaTime = 1000, options = {}) {
+    if (this.isPaused) return { ready: false };
     if (this.isPermanentlyDisabled()) {
       this.isActive = false;
       return { ready: false, disabled: true };
@@ -162,13 +234,15 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
       return { ready: false, duration };
     }
 
-    this.carryDiscreteExpansionProgress(progressOptions);
+    if ((this[this.expansionAccounting?.prepaidField || 'expansionPrepaidProgress'] || 0) > 0) {
+      this.carryDiscreteExpansionProgress(progressOptions);
+    }
     const remainingRepeats = this.getRemainingExpansionCapacity(capacityOptions);
     if (!(remainingRepeats > 0) || !this.isActive) {
       return { ready: false, duration, remainingRepeats };
     }
 
-    const progressScale = options.progressScale || 1;
+    const progressScale = options.progressScale ?? 1;
     const requestedProgress = Math.min((deltaTime / duration) * progressScale, remainingRepeats);
     if (!(requestedProgress > 0)) {
       return { ready: false, duration, remainingRepeats, requestedProgress: 0 };
@@ -277,6 +351,12 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
   }
 
   applyRequestedExpansionProgress(requestedProgress, cost, accumulatedChanges = null, options = {}) {
+    if (this.isPaused && options.ignoreProjectPause !== true) requestedProgress = 0;
+    if (requestedProgress > 0 && !this.isPermanentlyDisabled()
+        && options.usePrepaid !== false && this.isContinuous()
+        && (this[this.expansionAccounting?.prepaidField || 'expansionPrepaidProgress'] || 0) > 0) {
+      this.carryDiscreteExpansionProgress({ ...options.progressOptions, applyProgress: options.applyProgress });
+    }
     const normalizedRequested = Math.max(0, requestedProgress || 0);
     const result = {
       requestedProgress: normalizedRequested,
@@ -300,26 +380,24 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
       return result;
     }
 
-    const storageState = result.storageState || this.createExpansionStorageState(
+    const storageState = options.storageState === undefined ? this.createExpansionStorageState(
       accumulatedChanges,
       options.storageOptions || {}
-    );
+    ) : options.storageState;
     result.storageState = storageState;
 
-    const progress = this.getAffordableExpansionProgress(
-      normalizedRequested,
-      cost,
-      storageState,
-      accumulatedChanges
-    );
+    const plan = this.planExpansionProgress(normalizedRequested, cost, accumulatedChanges, { ...options, storageState });
+    const progress = plan.progress;
+    result.requestedProgress = plan.requestedProgress;
     result.progress = progress;
-    result.resourceShortfall = progress + 1e-9 < normalizedRequested;
+    result.resourceShortfall = plan.resourceShortfall;
     result.shortfall = result.resourceShortfall;
     if (!(progress > 0)) {
       return result;
     }
 
-    const spent = this.applyExpansionCostForProgress(cost, progress, accumulatedChanges, storageState);
+    const spent = this.applyExpansionCostForProgress(cost, plan.paidProgress, accumulatedChanges, storageState);
+    this[plan.prepaidField] = Math.max(0, (this[plan.prepaidField] || 0) - plan.prepaidProgress);
     result.spent = spent;
     result.shortfall = result.shortfall || spent.shortfall;
 
@@ -334,8 +412,9 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
       );
     }
 
-    if (options.applyProgress) {
-      result.progressResult = options.applyProgress.call(this, progress, options.progressOptions || {});
+    const applyProgress = options.applyProgress || this.expansionAccounting?.applyProgress;
+    if (applyProgress) {
+      result.progressResult = applyProgress.call(this, progress, options.progressOptions || {});
     } else {
       result.progressResult = this.applyExpansionProgress(progress, options.progressOptions || {});
     }
@@ -361,7 +440,7 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
     }
 
     const applyRates = options.applyRates === true;
-    const shouldApplyRates = applyRates && !(accumulatedChanges && this.isExpansionContinuous());
+    const shouldApplyRates = applyRates && !(accumulatedChanges && this.isContinuous());
     const sourceLabel = options.sourceLabel || this.getRateSource();
     const perSecondFactor = deltaTime > 0 ? 1000 / deltaTime : 0;
 
@@ -416,7 +495,7 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
 
   applyFractionalProgress(progress, options = {}) {
     const completedField = options.completedField || this.getExpansionCompletedField();
-    const progressField = options.progressField || this.getExpansionProgressField();
+    const progressField = options.progressField === undefined ? this.getExpansionProgressField() : options.progressField;
     const limit = options.limit === undefined ? this.getExpansionLimit() : options.limit;
 
     const requestedProgress = Math.max(0, progress || 0);
@@ -426,7 +505,7 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
     let capped = false;
 
     if (limit !== Infinity) {
-      const remaining = Math.max(0, limit - (completedValue + progressValue));
+      const remaining = Math.max(0, limit - completedValue - progressValue);
       if (remaining <= 0) {
         this.setExpansionCompletedValue(completedValue, completedField);
         this.setExpansionProgressValue(Math.max(0, limit - completedValue), progressField);
@@ -445,11 +524,11 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
     }
 
     const total = progressValue + appliedProgress;
-    const completedDelta = Math.floor(total);
+    const completedDelta = progressField === null ? appliedProgress : Math.floor(total);
     completedValue += completedDelta;
-    progressValue = total - completedDelta;
+    progressValue = progressField === null ? 0 : total - completedDelta;
 
-    if (limit !== Infinity && completedValue + progressValue >= limit) {
+    if (limit !== Infinity && progressValue >= limit - completedValue) {
       capped = true;
       progressValue = Math.max(0, limit - completedValue);
     }
@@ -487,9 +566,14 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
         capped: false,
       };
     }
-    const carried = (this.startingDuration - this.remainingTime) / this.startingDuration;
+    const prepaidField = this.expansionAccounting?.prepaidField || 'expansionPrepaidProgress';
+    const cycle = this[this.expansionAccounting?.cycleField || 'expansionCycleProgress'] ?? 1;
+    const prepaid = this[prepaidField] ?? cycle;
+    const carried = Math.max(0, Math.min(1, (this.startingDuration - this.remainingTime) / this.startingDuration)) * cycle;
+    this[prepaidField] = Math.max(0, prepaid - carried);
+    const applyProgress = this.expansionAccounting?.applyProgress || options.applyProgress;
     const result = carried > 0
-      ? this.applyExpansionProgress(carried, options)
+      ? (applyProgress ? applyProgress.call(this, carried) : this.applyExpansionProgress(carried, options))
       : {
           appliedProgress: 0,
           completedDelta: 0,
@@ -499,12 +583,24 @@ class ContinuousExpansionProject extends TerraformingDurationProject {
     this.remainingTime = Infinity;
     return result;
   }
+
 }
+
+ContinuousExpansionProject.prototype.expansionAccounting = {};
+ContinuousExpansionProject.prototype.getExpansionUnitCost = Project.prototype.getScaledCost;
+ContinuousExpansionProject.prototype.start = ContinuousExpansionProject.prototype.startContinuousExpansion;
+ContinuousExpansionProject.prototype.onEnterContinuousMode = ContinuousExpansionProject.prototype.carryDiscreteExpansionProgress;
 
 const CONTINUOUS_EXPANSION_CAPABILITY_METHODS = [
   'isExpansionContinuous',
   'isContinuous',
   'startContinuousExpansion',
+  'getExpansionUnitCost',
+  'getScaledCost',
+  'hasStartResources',
+  'planExpansionProgress',
+  'estimateRequestedExpansionProgress',
+  'estimateExpansionTick',
   'getExpansionProgressField',
   'getExpansionCompletedField',
   'getExpansionLimit',
@@ -526,9 +622,14 @@ const CONTINUOUS_EXPANSION_CAPABILITY_METHODS = [
   'applyFractionalProgress',
   'applyExpansionProgress',
   'carryDiscreteExpansionProgress',
+  'onEnterContinuousMode',
 ];
 
-ContinuousExpansionProject.applyCapabilityTo = function (ProjectClass) {
+ContinuousExpansionProject.applyCapabilityTo = function (ProjectClass, accounting = {}) {
+  ProjectClass.prototype.expansionAccounting = accounting;
+  if (!Object.prototype.hasOwnProperty.call(ProjectClass.prototype, 'start')) {
+    ProjectClass.prototype.start = ContinuousExpansionProject.prototype.startContinuousExpansion;
+  }
   CONTINUOUS_EXPANSION_CAPABILITY_METHODS.forEach((methodName) => {
     if (Object.prototype.hasOwnProperty.call(ProjectClass.prototype, methodName)) {
       return;

@@ -41,20 +41,6 @@ class AerostatStructuralNetProject extends ArtificialSkyProject {
     return segments;
   }
 
-  getBuiltSegmentsWithProgress() {
-    const maxSegments = this.getMaxRepeats();
-    let built = Math.max(0, this.repeatCount || 0);
-
-    if (this.isActive && !this.isContinuous() && this.startingDuration > 0) {
-      const progress = (this.startingDuration - this.remainingTime) / this.startingDuration;
-      built += Math.max(0, Math.min(1, progress));
-    } else {
-      built += Math.max(0, this.segmentProgress || 0);
-    }
-
-    return Math.max(0, Math.min(maxSegments, built));
-  }
-
   completeProjectFully() {
     const maxSegments = this.getMaxRepeats();
     this.repeatCount = Math.max(maxSegments, this.repeatCount || 0);

@@ -251,14 +251,7 @@
     getScaledCost() {
       const base = super.getScaledCost();
       const count = spaceAntimatterCountToNumber(this.isActive ? this.activeBuildCount : this.getSelectedBuildCount());
-      const scaled = {};
-      for (const category in base) {
-        scaled[category] = {};
-        for (const resource in base[category]) {
-          scaled[category][resource] = base[category][resource] * count;
-        }
-      }
-      return scaled;
+      return this.scaleCost(base, count);
     }
 
     getReservePercentForResource(reserveSettings, category, resource) {
@@ -285,14 +278,7 @@
     getCostForBatteryCount(count) {
       const base = super.getScaledCost();
       const multiplier = spaceAntimatterCountToNumber(count);
-      const scaled = {};
-      for (const category in base) {
-        scaled[category] = {};
-        for (const resource in base[category]) {
-          scaled[category][resource] = base[category][resource] * multiplier;
-        }
-      }
-      return scaled;
+      return this.scaleCost(base, multiplier);
     }
 
     getAutoBuildAffordableCount(maxCount, reserveSettings) {

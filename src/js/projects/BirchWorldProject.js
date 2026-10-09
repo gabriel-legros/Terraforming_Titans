@@ -98,7 +98,7 @@ class BirchWorldProject extends Project {
     return this.getNextLayerLandHa() / BIRCH_WORLD_VALUE_DIVISOR;
   }
 
-  getScaledCost() {
+  getExpansionUnitCost() {
     if (this.layerCount >= BIRCH_WORLD_MAX_LAYERS) {
       return {};
     }
@@ -463,3 +463,8 @@ if (typeof window !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = BirchWorldProject;
 }
+
+ContinuousExpansionProject.applyCapabilityTo(BirchWorldProject, {
+  timedOnly: true,
+  limit() { return this.repeatCount + BIRCH_WORLD_MAX_LAYERS - this.layerCount; }
+});

@@ -589,39 +589,10 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyAssignmentTools.createP
       && this.isActive
       && (!this.isExpansionContinuous() || this.autoStart || this.manualContinuousRun);
     if (expansionActive) {
-      const duration = this.getEffectiveDuration();
-      const limit = this.maxRepeatCount || Infinity;
-      const completedExpansions = this.repeatCount + this.expansionProgress;
-      const remainingRepeats = limit === Infinity ? Infinity : Math.max(0, limit - completedExpansions);
-      const requestedProgress = this.isExpansionContinuous()
-        ? Math.min(deltaTime / duration, remainingRepeats)
-        : (deltaTime / duration);
-      const cost = this.getScaledCost();
-
-      let progress = requestedProgress;
-      if (this.isExpansionContinuous()) {
-        progress = this.getAffordableExpansionProgress(
-          requestedProgress,
-          cost,
-          storageState,
-          accumulatedChanges
-        );
-      }
-
-      if (remainingRepeats > 0 && progress > 0) {
-        const expansionTotals = this.estimateExpansionCostForProgress(
-          cost,
-          progress,
-          deltaTime,
-          accumulatedChanges,
-          storageState,
-          {
-            applyRates,
-            sourceLabel: this.getExpansionRateSourceLabel()
-          }
-        );
-        this.mergeResourceTotals(totals.cost, expansionTotals);
-      }
+      const expansion = this.estimateExpansionTick(deltaTime, applyRates, 1, accumulatedChanges, {
+        sourceLabel: this.getExpansionRateSourceLabel()
+      });
+      this.mergeResourceTotals(totals.cost, expansion.cost);
     }
 
     if (!includeOperation || !this.shouldOperate()) {
@@ -757,7 +728,6 @@ class NuclearAlchemyFurnaceProject extends NuclearAlchemyAssignmentTools.createP
   }
 
   start(resources) {
-    this.expansionProgress = 0;
     this.expansionShortfallLastTick = false;
     return this.startContinuousExpansion(resources);
   }

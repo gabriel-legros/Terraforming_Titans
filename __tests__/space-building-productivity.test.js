@@ -1044,6 +1044,9 @@ function setupHarness(initialStorage = {}) {
 
   const { Project } = require(path.resolve(__dirname, '../src/js/projects.js'));
   setGlobal('Project', Project, originalGlobals);
+  BaseProject.prototype.scaleCost = Project.prototype.scaleCost;
+  BaseProject.prototype.isCostConsumed = Project.prototype.isCostConsumed;
+  BaseProject.prototype.getConsumableCost = Project.prototype.getConsumableCost;
   const rateSources = loadClassicScript(
     path.resolve(__dirname, '../src/js/rate-sources.js'),
     ['RESOURCE_RATE_SOURCE_IDS', 'registerRateSource', 'getRateSourceDisplayName', 'getLocalizedRateSource']
