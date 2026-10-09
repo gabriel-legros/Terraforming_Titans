@@ -1,6 +1,11 @@
 setLanguageData({
   "ui": {
     "projects": {
+      "earthProbe": {
+        "artistRendition": "Artist Rendition",
+        "imageTitle": "Earth destroyed",
+        "destroyedEarth": "Artist rendition of destroyed Earth."
+      },
       "zeusBattle": {
         "frameLabel": "Frame {current} / {max}"
       },

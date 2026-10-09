@@ -140,7 +140,7 @@ function createPopup(title, text, buttonText, options = {}) {
   popupTypingFrameId = requestAnimationFrame(typeLetter);
 }
 
-function createSystemPopup(title, text, buttonText) {
+function createSystemPopup(title, text, buttonText, options = {}) {
   window.popupActive = true;
   game.scene.pause('mainScene');
 
@@ -157,10 +157,23 @@ function createSystemPopup(title, text, buttonText) {
     popupWindow.appendChild(popupTitle);
   }
 
-  const popupText = document.createElement('p');
-  popupText.classList.add('system-popup-text');
-  popupText.textContent = text;
-  popupWindow.appendChild(popupText);
+  if (options.imageSrc) {
+    overlay.classList.add('system-image-popup-overlay');
+    popupWindow.classList.add('system-image-popup-window');
+    popupWindow.setAttribute('role', 'dialog');
+    popupWindow.setAttribute('aria-modal', 'true');
+    popupWindow.setAttribute('aria-label', title);
+    const image = document.createElement('img');
+    image.classList.add('system-popup-image');
+    image.src = options.imageSrc;
+    image.alt = options.imageAlt;
+    popupWindow.appendChild(image);
+  } else {
+    const popupText = document.createElement('p');
+    popupText.classList.add('system-popup-text');
+    popupText.textContent = text;
+    popupWindow.appendChild(popupText);
+  }
 
   const closeButton = document.createElement('button');
   closeButton.classList.add('popup-close-button');
@@ -174,6 +187,7 @@ function createSystemPopup(title, text, buttonText) {
   popupWindow.appendChild(closeButton);
   overlay.appendChild(popupWindow);
   document.body.appendChild(overlay);
+  if (options.imageSrc) closeButton.focus();
 }
 
 function createSystemCopyPopup(title, text, options = {}) {

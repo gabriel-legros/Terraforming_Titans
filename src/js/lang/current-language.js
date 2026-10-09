@@ -5934,7 +5934,7 @@ setLanguageData({
         rules: 'Five regenerating machine cores occupy Lerna and actively resist terraforming. Suppress all five simultaneously to defeat Hydra.',
         requirement: 'Hydra', defeated: 'All five cores defeated', defeatFirst: 'Defeat Hydra first',
         rewards: {
-          laserCannonPower: 'Laser cannons will be 1000x more powerful.',
+          laserCannonPower: 'Laser cannons will be 100x more powerful.',
           revealSuperconductorThroughput: 'Reveals a new Awakening skill',
         }
       },

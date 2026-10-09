@@ -416,6 +416,12 @@ body.journal-collapsed .tab-content {
     }
 }
 
+.journal-image-link {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
 /* Separator between journal entries */
 #journal-entries hr.journal-entry-separator {
     border: 0;

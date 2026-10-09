@@ -2370,10 +2370,10 @@ const specialSeedDefinitions = {
         descriptionKey: 'catalogs.specialSeeds.hydra.rewards.laserCannonPower',
         disabledOnSpecialSeeds: ['hydra', 'shadesnightmare'],
         effects: [
-          { target: 'building', targetId: 'laserCannon', type: 'productionMultiplier', value: 1000 },
+          { target: 'building', targetId: 'laserCannon', type: 'productionMultiplier', value: 100 },
           {
             target: 'building', targetId: 'laserCannon', type: 'resourceConsumptionMultiplier',
-            resourceCategory: 'colony', resourceTarget: 'energy', value: 1000
+            resourceCategory: 'colony', resourceTarget: 'energy', value: 100
           }
         ]
       },
