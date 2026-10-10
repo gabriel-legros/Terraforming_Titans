@@ -49,8 +49,8 @@ class HydraProject extends ArtificialSkyProject {
       && Project.prototype.canStart.call(this);
   }
 
-  getScaledCost() {
-    if (!projectManager.isProjectRelevantToCurrentPlanet(this)) return super.getScaledCost();
+  getExpansionUnitCost() {
+    if (!projectManager.isProjectRelevantToCurrentPlanet(this)) return super.getExpansionUnitCost();
     const net = currentPlanetParameters.specialAttributes.hydra.net;
     return { colony: Object.fromEntries(Object.entries(net.costPerTon)
       .map(([key, amount]) => [key, amount * net.segmentMass])) };
@@ -464,6 +464,8 @@ class HydraProject extends ArtificialSkyProject {
   cleanupForReset() { if (this.coreMass) this.clearHydraEffects(); }
 
   getResourceExecutionDeltaTime(deltaTime) { return deltaTime; }
+
+  showsInResourcesRate() { return true; }
 
   getCostRateLabel() {
     return registerRateSource('project:hydra:net', t('ui.projects.hydra.rateSources.net'));
