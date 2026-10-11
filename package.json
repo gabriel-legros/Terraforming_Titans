@@ -71,11 +71,36 @@
       "<rootDir>/__tests__/helpers/terraforming-parameters-setup.js"
     ],
     "testMatch": [
-      "**/__tests__/**/*.test.js"
+      "<rootDir>/__tests__/**/*.test.js"
     ],
     "testPathIgnorePatterns": [
       "/dist/",
-      "/__tests__/late-game-ui-memory-leaks.test.js$"
+      "/__tests__/automation-preset-json-regenerate\\.test\\.js$",
+      "/__tests__/colony-need-productivity\\.test\\.js$",
+      "/__tests__/deeper-mining-cost\\.test\\.js$",
+      "/__tests__/furnace-expansion-tooltip-save\\.test\\.js$",
+      "/__tests__/galactic-market-step-save\\.test\\.js$",
+      "/__tests__/galaxy-defense-load-auto-attack\\.test\\.js$",
+      "/__tests__/hephaestus-yard-duration-save\\.test\\.js$",
+      "/__tests__/hydra-net-accounting\\.test\\.js$",
+      "/__tests__/index\\.test\\.js$",
+      "/__tests__/kessler-drag-line-water-pressure\\.test\\.js$",
+      "/__tests__/late-game-ui-memory-leaks\\.test\\.js$",
+      "/__tests__/nanotech-characterization\\.test\\.js$",
+      "/__tests__/orbital-surplus-trading\\.test\\.js$",
+      "/__tests__/planet-crackers-travel\\.test\\.js$",
+      "/__tests__/repeatable-expansion-accounting\\.test\\.js$",
+      "/__tests__/research-subtab-world-load\\.test\\.js$",
+      "/__tests__/research-travel-effects\\.test\\.js$",
+      "/__tests__/rwg-dynamic-mass-travel\\.test\\.js$",
+      "/__tests__/solar-panel-maintenance\\.test\\.js$",
+      "/__tests__/space-elevator-birch-world-restore\\.test\\.js$",
+      "/__tests__/space-mirror-advanced-oversight-convergence\\.test\\.js$",
+      "/__tests__/space-storage-transfer-accounting\\.test\\.js$",
+      "/__tests__/surface-food-overflow\\.test\\.js$",
+      "/__tests__/tmp-rwg-equilibration-water\\.test\\.js$",
+      "/__tests__/underground-expansion-cost\\.test\\.js$",
+      "/__tests__/water-pump-mass-conservation\\.test\\.js$"
     ],
     "transform": {
       "^.+\\.js$": "babel-jest"

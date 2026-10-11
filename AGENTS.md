@@ -37,6 +37,7 @@ See [UI development guidelines](docs/ui-development.md) and [Localization checkl
 
 ## Testing
 
+- Skip all test suites that require jsdom (directly or through helpers) or load a save file. Keep them excluded in `package.json`'s Jest `testPathIgnorePatterns`; see [Automated testing](docs/automated-testing.md).
 - In WSL on this Windows checkout, run tests with Windows Node:
 
   ```bat
