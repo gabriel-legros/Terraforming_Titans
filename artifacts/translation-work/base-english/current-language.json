@@ -228,6 +228,7 @@
         "shrilek": "Shrilek",
         "vanadophore": "Vanadophore",
         "yggies": "Yggie",
+        "shiivert": "Shiivert",
         "random": "Random",
         "tooltip": "Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion. Rewards scale for each time it is granted: 1000, 2000, 3000, and so on."
       },
@@ -623,6 +624,8 @@
         }
       },
       "importCaps": {
+        "sourceBonus": "{source}: {bonuses}.",
+        "resourceBonus": "+{value} {resource} cap",
         "noCap": "No cap",
         "miningRightsRule": "Cylinders-HOPE Mining Rights Agreement: mining caps ×{multiplier}; Hydrogen remains uncapped.",
         "resources": {
@@ -870,7 +873,9 @@
         "used": "Used {value}",
         "worldEffects": "World Effects",
         "plasma": "Plasma",
-        "keratiTerritory": "Kerati Territory"
+        "keratiTerritory": "Kerati Territory",
+        "planetarySwampification": "Managed Swampland",
+        "ignisOccupation": "Ignis underground occupation"
       },
       "antimatter": {
         "sync": {
@@ -1079,6 +1084,7 @@
         "noSupportedBuildings": "No buildings currently list an Aerostat Support value.",
         "baseMaximumAerostats": "Base land cap: {value}.",
         "remainingCapacity": "Remaining aerostat capacity: {value}.",
+        "aeroOccupiedCapacity": "Capacity occupied by Aero: {value} ({percent}%).",
         "collisionAvoidanceIntro": "Collision avoidance allows building above this base cap for extra research cost and maintenance.",
         "collisionAvoidanceMaintenance": "This extra research maintenance ignores maintenance multipliers.",
         "aboveBaseCap": "Aerostats above base cap: {value}.",
@@ -1170,7 +1176,8 @@
         "radiationTolerance": {
           "name": "Radiation Tolerance",
           "description": "Mitigates radiation quadratically: points² × 0.01 mSv/day.",
-          "tooltip": "Radiation mitigation is quadratic. Each point contributes points² × 0.01 mSv/day of shielding (10 points = 1.00 mSv/day, 100 points = 100.00 mSv/day). Remaining radiation after mitigation drives the growth penalty."
+          "tooltip": "Radiation mitigation is quadratic. Each point contributes points² × 0.01 mSv/day of shielding (10 points = 1.00 mSv/day, 100 points = 100.00 mSv/day). Remaining radiation after mitigation drives the growth penalty.",
+          "innateTooltip": "This dominion has {points} innate Radiation Tolerance points. They cost no life-design points and combine with designed tolerance before mitigation is calculated."
         },
         "invasiveness": {
           "name": "Invasiveness",
@@ -1233,6 +1240,8 @@
       "survivesCannotGrow": "Survives but cannot grow",
       "metabolismEquation": {
         "biomass": "Biomass",
+        "radioactiveWaste": "Radioactive Waste",
+        "rocks": "Inert Rock",
         "metal": "Metal",
         "silica": "Silica",
         "energy": "Energy",
@@ -1277,6 +1286,7 @@
         "effectiveRadiation": "Effective radiation: {value} mSv/day",
         "luminosity": "Luminosity: x{value}",
         "lifeEffects": "Life Effects: x{value}",
+        "thermodynamics": "Life Thermodynamics: x{value} (growth is limited by the chemical energy storable from {percent}% of average surface sunlight)",
         "engineeredNitrogenFixation": "Engineered Nitrogen Fixation: x{value} ({pressure} kPa)",
         "ecumenopolis": "Ecumenopolis: x{value} (-{reduction}% + {protection}% Biodome protection)"
       },
@@ -1419,6 +1429,109 @@
       "story": "Story"
     },
     "projects": {
+      "hydra": {
+        "rateSources": {
+          "aether": "Aether",
+          "aetherCleanup": "Aether clean-up",
+          "aero": "Aero",
+          "aqua": "Aqua",
+          "ignis": "Ignis",
+          "terra": "Terra",
+          "net": "Entanglement net"
+        },
+        "objective": "Hydra restores the climate toward {temperature} K and {pressure} MPa.",
+        "health": "{percent}% HP",
+        "abilities": "Abilities",
+        "penalties": "Penalties",
+        "countermeasures": "Countermeasures",
+        "states": {
+          "dormant": "Dormant",
+          "waking": "Waking",
+          "active": "Active"
+        },
+        "netTitle": "Entanglement net",
+        "startNet": "Start Entanglement Net (Duration: {duration} seconds)",
+        "netHelp": "Traps and destroys Aero platforms. Wears down with use.",
+        "summary": "Defeat all five cores simultaneously. Surviving cores repair each other.",
+        "victory": "Hydra defeated.",
+        "supplies": "Orbital debris: {debris} t | Launch failure: {small}% small / {large}% large",
+        "mass": "Mass: {mass} t",
+        "rates": "Repair +{growth} t/s | Support +{support} t/s\nDamage -{loss} t/s",
+        "netSegments": "Available segments: {built} / {max}",
+        "netCapture": "Capture: {capture} t/s",
+        "netAttrition": "Attrition: {segments} segments/s",
+        "netFull": "Net at capacity",
+        "netNoShips": "Assign spaceships to build the net.",
+        "cores": {
+          "aether": {
+            "name": "Aether | Orbit and outer system",
+            "abilities": {
+              "rebuild": "Repairs itself and sibling cores using orbital debris. Can also use stellar mass at {stellarRepairPercent}% rate. Uses its remaining repair budget to remove debris above each orbital bin's initial amount.",
+              "imports": "Imports gas below {pressureThreshold} MPa while stellar feedstock remains and Lerna is below the stripping threshold.",
+              "stripping": "Strips atmosphere above {fusionMass} t of planetary mass to prevent stellar ignition."
+            },
+            "penalties": {
+              "research": "Disables research orbitals above {orbitalThreshold}% HP.",
+              "delay": "Orbital project duration: x{orbitalSlow}.",
+              "capture": "Captures ships assigned to active projects.",
+              "bombardment": "Bombards buildings, non-aerostat colonies and stored colony resources when average sibling strength is below {siblingThreshold}%."
+            },
+            "tactics": "Lasers destroy swarm mass and orbital debris. Atmospheric expansion burns the near-orbit swarm; the outer swarm requires lasers."
+          },
+          "aero": {
+            "name": "Aero | Upper atmosphere",
+            "abilities": {
+              "rebuild": "Repairs itself and sibling cores using carbon from atmospheric CO2 and methane, releasing oxygen and hydrogen.",
+              "disposal": "Disposes of atmospheric gases proportionally above {disposalPressureThreshold} MPa."
+            },
+            "penalties": {
+              "occupation": "Occupies Aerostat Capacity: {occupied}%.",
+              "hacking": "Hacks aerostats below {hackingThreshold}% of its starting mass, preserving at least {aerostatHackingFloor} aerostats.",
+              "research": "Research production: ×{aeroResearchMultiplier}. Recovers below {researchRecoveryThreshold}% HP."
+            },
+            "tactics": "Lower pressure below {pressure} Pa or deploy the net."
+          },
+          "aqua": {
+            "name": "Aqua | Oceans",
+            "abilities": {
+              "rebuild": "Repairs itself and sibling cores using planetary mass.",
+              "excavation": "Excavates planetary mass into gases, junk and scrap below {pressureThreshold} MPa."
+            },
+            "penalties": {
+              "occupation": "Reserves liquid-covered land: {oceanOccupied}% of the surface.",
+              "hacking": "Hacks androids to increase its mass.",
+              "nanocolonyCap": "Nanocolony capacity: {nanocolonyCapPercent}% of normal. Recovers below {nanocolonyRecoveryThreshold}% HP."
+            },
+            "tactics": "Ocean coverage: {currentOcean}%. Reduce combined liquid coverage below {ocean}% to expose Aqua."
+          },
+          "ignis": {
+            "name": "Ignis | Surface industry",
+            "abilities": {
+              "rebuild": "Repairs itself and sibling cores using scrap, junk and planetary mass.",
+              "emissions": "Releases greenhouse gases below {temperatureThreshold} K."
+            },
+            "penalties": {
+              "occupation": "Occupies {landOccupied}% of Underground Expansion land.",
+              "buildCost": "Building and colony construction costs: +{buildCostPenalty}%.",
+              "maintenance": "Maintenance costs: ×{ignisMaintenanceMultiplier}, reduced by aerostat support."
+            },
+            "tactics": "Deploy Crusaders, cool below {cold} K or heat above {hot} K."
+          },
+          "terra": {
+            "name": "Terra | Deep crust",
+            "abilities": {
+              "rebuild": "Repairs itself and sibling cores using planetary mass.",
+              "heat": "Adds geothermal heat below {temperatureThreshold} K.",
+              "venting": "Vents gases below {pressureThreshold} MPa."
+            },
+            "penalties": {
+              "delay": "Deeper mining time: x{slow}.",
+              "attacks": "Attacks buildings, non-aerostat colonies, stored colony resources, mine depth and underground expansion when structures use surface or underground land totaling at least {surfaceThreshold}% of the planet's surface area, or average mining depth exceeds {miningDepthThreshold}."
+            },
+            "tactics": "At mining depth {dugOutDepth} or deeper, decay scales with ore mines / maximum ore mines and reduces Terra self-repair. Alternatively, remove planetary mass."
+          }
+        }
+      },
       "managerDescription": "Manages all special projects",
       "requirements": "Requirements:",
       "cost": "Cost:",
@@ -1610,7 +1723,7 @@
       },
       "artificialQuasars": {
         "title": "Artificial Quasar Controls",
-        "titleTooltip": "Assign quasars to harness stellar black hole spin energy. Each assigned quasar produces space energy and counts against the Warp Gate Network-scaled black hole assignment cap.",
+        "titleTooltip": "Assign quasars to harness stellar black hole spin energy. Each assigned quasar produces space energy and uses one accessible black hole. Natural black holes scale with the Warp Gate Network; completed neutron star mergers add black holes directly.",
         "totalLifters": "Total Quasars",
         "runLifters": "Run quasars",
         "energyPerLifter": "Output per quasar",
@@ -1629,7 +1742,7 @@
           "operation": "Artificial Quasar"
         },
         "operationNote": "Each assigned quasar produces {value} space energy per real-time second by spinning down stellar black holes over a 10,000-year extraction window.",
-        "maxAssignmentTooltip": "Base assignment cap: {base}\nWarp Gate Network scale: max(1, {averageLevel}) / {levelCap} = {networkScale}\nAccessible black hole assignment cap: {max}",
+        "maxAssignmentTooltip": "Base assignment cap: {base}\nWarp Gate Network scale: max(1, {averageLevel}) / {levelCap} = {networkScale}\nBlack holes from neutron star mergers: +{mergers}\nAccessible black hole assignment cap: {max}",
         "starLiftingTooltip": "",
         "status": {
           "idle": "Idle",
@@ -1898,7 +2011,14 @@
         }
       },
       "undergroundExpansion": {
-        "landExpansion": "Land Expansion: {current} / {max}"
+        "landExpansion": "Land Expansion: {current} / {max}",
+        "incompleteCrustWarning": "A complete crust is required before Underground Land Expansion can begin or continue.",
+        "incompleteCrustStatus": "Blocked: complete the crust first"
+      },
+      "planetarySwampification": {
+        "reset": "Reset and Recover Land",
+        "segmentsCompleted": "Swampification segments: {current} / {total}",
+        "androidSpeedTooltip": "1 + (androids assigned / 100)"
       },
       "artificialStars": {
         "recipeLabel": "Space Energy",
@@ -2332,6 +2452,7 @@
         "liquidHydrogenRequiresTemperature": "Liquid Hydrogen (requires surface temperature < {value})",
         "disposalTargets": "Disposal Targets",
         "disposalTargetsSubheading": "Configure up to 15 resources. Active auto-start targets split assigned disposal evenly.",
+        "stellarWaste": "Waste",
         "addTarget": "+ Add target",
         "phase": "Phase",
         "whichOne": "Which one",
@@ -2437,7 +2558,7 @@
         "superalloyEngineering": "Superalloy tether, taper {taper}",
         "skyhookOnly": "Skyhook only",
         "elevatorImpossible": "A stationary Space Elevator is impossible with available materials and this world spin. Select Skyhook Network.",
-        "capacityTooltip": "Continuous spaceship cargo shares total access capacity. Metal savings and the before/after Space Elevator energy settings scale with coverage."
+        "capacityTooltip": "Continuous spaceship cargo targeting colony, atmosphere or surface shares total access capacity. Metal savings and the before/after Space Elevator energy settings scale with coverage."
       },
       "megaHeatSink": {
         "speedBoost": "Speed Boost",
@@ -2524,6 +2645,39 @@
           "runDisabled": "Run disabled",
           "noAssignments": "No assignments",
           "buildSpaceStorage": "Build space storage",
+          "running": "Running"
+        }
+      },
+      "neutronStarSmasher": {
+        "target": "Target",
+        "title": "Neutron Star Smasher Controls",
+        "assigned": "Assigned",
+        "energyPerSmasher": "Energy per smasher",
+        "energyPerSmasherTooltip": "Space energy consumed per second by one smasher at full productivity. Each completed merger costs this rate divided by the merger rate; insufficient energy slows progress.",
+        "totalCrackers": "Total Smashers",
+        "runCrackers": "Run smashers",
+        "energyUse": "Energy Use",
+        "spaceEnergyRate": "{value} space energy/s",
+        "expansionRate": "{value} smashers/s",
+        "rateSources": {
+          "expansion": "Neutron Star Smasher expansion"
+        },
+        "crackedHeader": "Merger Progress",
+        "remainingHeader": "Pairs Remaining",
+        "recipeLabels": {
+          "neutronStarPair": "Neutron star pairs"
+        },
+        "recipeTooltip": "Each completed merger consumes two neutron stars, creates one black hole for an Artificial Quasar, and adds +{ships} metal mining ship slots, equivalent to {metal} metal/s before mining costs and ship upgrades. Yield: 0.05 solar masses of metal extracted over 10,000 in-game years (3,650,000 real-time seconds). Partial mergers grant no rewards until completed.",
+        "operationNote": "Each assigned smasher performs one merger per second at full productivity, consuming {energy} space energy per merger. The neutron-star supply scales with the average Warp Gate Network level, reaching 1B stars at level 1M.",
+        "planetProgress": "Completed mergers / black holes created: {merged} | Available neutron stars: {stars} | Added metal mining ship cap: +{ships} | Base gross metal yield: {metal}/s",
+        "status": {
+          "depleted": "All accessible neutron star pairs have been merged",
+          "noSpaceEnergy": "No space energy",
+          "insufficientSpaceEnergy": "Insufficient space energy",
+          "idle": "Idle",
+          "completeAtLeastOne": "Complete at least one smasher",
+          "runDisabled": "Run disabled",
+          "noAssignments": "No assignments",
           "running": "Running"
         }
       },
@@ -2876,6 +3030,8 @@
         "orbitals": {
           "title": "Orbitals",
           "kesslerWarning": "Orbitals cannot approach due to Kessler Skies. Limited to research.",
+          "aetherWarning": "Aether blocks research orbitals.",
+          "kesslerAetherWarning": "Kessler Skies blocks most orbitals. Aether blocks research orbitals.",
           "summary": "Orbitals Assigned: {assigned} / {available} | Unassigned: {unassigned}",
           "mode": "Mode",
           "modeManual": "Manual",
@@ -2891,7 +3047,7 @@
           "tooltip": {
             "line1": "With orbitals, humanity can now help HOPE with its projects directly.",
             "line2": "Assign orbitals to produce resources or provide storage automatically.",
-            "line3": "You can assign up to your effective terraformed world count.",
+            "line3": "You can assign up to your effective terraformed world count, modified by faith and other modifiers.",
             "line4": "Manual mode sets exact assignments with the current step size.",
             "line5": "Weight mode distributes assignments by integer weights among unlocked resources.",
             "line6": "Production orbitals provide the mapped source output without consumption or productivity scaling. Storage orbitals use default structure capacities.",
@@ -3355,6 +3511,9 @@
           "equilibriumTempTooltip": "The blackbody radiative balance temperature from absorbed sunlight, albedo, and direct non-atmospheric heat. It ignores greenhouse heat trapping; physically, it is the temperature that would radiate the same energy back to space. Earth's value is about 255 K (-18°C).",
           "combustionWarning": "Temperature is increasing from active combustion",
           "aerobrakingWarning": "Temperature is increasing from aerobraking",
+          "heatWarningSourceFlux": "Source flux: {source} W/m^2",
+          "heatWarningMitigatedFlux": "After Mega Heat Sink mitigation: {effective} W/m^2",
+          "heatWarningOversightNote": "This heat flux is not accounted for by Advanced Oversight.",
           "labels": {
             "globalMeanTemp": "Global Mean Temp",
             "equilibriumTemp": "Equilibrium Temp",
@@ -3443,11 +3602,13 @@
             "photoMultiplier": "Photo Mult (%)",
             "thermodynamicsFlux": "Life Thermodynamics Flux"
           },
-          "thermodynamicsFluxTooltip": "Solar energy stored as chemical energy by natural surface-life growth during the latest tick. Negative values represent cooling. Growth in each zone can absorb at most 10% of its surface solar flux averaged over the zone, including curvature and night, and this cooling changes that zone's temperature trend.",
+          "thermodynamicsFluxTooltip": "Solar energy stored as chemical energy by natural surface-life growth during the latest tick. Negative values represent cooling. Growth in each zone can absorb at most {percent}% of its surface solar flux averaged over the zone, including curvature and night, and this cooling changes that zone's temperature trend.",
           "targetAtLeast": "Life coverage at least {percent}%.",
           "targetAbove": "Life coverage above {percent}%.",
           "targetBiomassAmountAtLeast": "Life biomass at least {amount} tons.",
           "targetBiomassAmountAbove": "Life biomass above {amount} tons.",
+          "targetUndergroundDensityAtLeast": "Life density at least {density} t/m^2 of geometric underground area ({amount} tons of biomass).",
+          "targetUndergroundDensityAbove": "Life density above {density} t/m^2 of geometric underground area ({amount} tons of biomass).",
           "hazardsCleared": "Hazardous biomass cleared in all zones.",
           "removeHazards": "Remove hazardous biomass from: {zones}."
         },
@@ -3480,6 +3641,9 @@
           "gravityPenaltyTooltip": "Gravity penalties use estimated gravity at the altitude where atmospheric pressure reaches 1 atm.\nBelow 1 atm surface pressure, they use surface gravity instead.\nThe final penalty blends 25% equatorial gravity penalty with 75% full gravity penalty at that altitude.",
           "gravityTooltip": {
             "explanation": "Surface gravity is calculated from the world's non-atmospheric mass and radius: g = G × mass / radius².",
+            "ringExplanation": "Displayed gravity is the ringworld's spin gravity, based on its spin progress.",
+            "diskExplanation": "Displayed gravity is the diskworld's structural gravity, based on its fill progress.",
+            "artificialWorldDetails": "This display and the gravity graph use artificial gravity. Current atmospheric pressure is displayed as if the gravity was 1g.",
             "worldNote": "On most worlds gravity cannot be easily changed.  Story World 13 unlocks a feature that changes this.  This tooltip will update with additional information when said feature is active.",
             "dynamicDetails": "Dynamic mass world: gravity updates as material changes mass and radius. Current calculation: G × {mass} kg / ({radius} m)² = {gravity} m/s². Core and surface density affect radius; atmospheric mass is excluded because it lies above the surface.",
             "densityTableTitle": "Table of material density:",
@@ -3556,6 +3720,7 @@
             "solarPanelMultiplier": "Solar panel multiplier"
           },
           "target": "Surface solar flux between {min} and {max}.",
+          "noTarget": "No luminosity requirement.",
           "albedoTable": {
             "surface": "Surface",
             "albedo": "Albedo",
@@ -3581,6 +3746,11 @@
             "dustZoneAlbedo": "{name} dust albedo: {value}"
           },
           "surfaceTooltip": {
+            "columns": "Material: raw coverage → visible coverage | albedo | contribution",
+            "globalComposition": "Global surface composition (area-weighted):",
+            "exposedGround": "Exposed ground",
+            "materialEntry": "{label}: {raw}% → {visible}% | {albedo} | {contribution}",
+            "layering": "Liquid hydrogen claims its share first. Other liquids and exposed ices split the remaining surface proportionally when needed. Biomass covers up to 75% of the remaining area. Sand, rocks and graphite share the substrate below these coverings; global deposits are spread uniformly. Uncovered ground retains its rock and dust albedo. Buried ice, hazardous biomass, hazardous machinery and waste resources do not contribute. Raw coverages can overlap; visible coverages total 100%.",
             "compositionByZone": "Surface composition by zone",
             "zoneHeader": "{name}:",
             "coverageEntry": "  {label}: {value}%",
@@ -3695,6 +3865,7 @@
           "clearText": "Build all Artificial Sky segments or go rogue.",
           "distanceScaling": "All pulsar effects are multiplied by (initial distance / current distance)^2 (capped at x1).",
           "stormNotification": "Pulsar Storm! {seconds}s",
+          "nextStormNotification": "Next Pulsar Storm: {seconds}s",
           "stormProjects": "Electromagnetic storms repeat every {period}s for {duration}s and pause spaceship projects while active.",
           "shielded": "{value}% Shielded",
           "exposed": "{value}% Exposed",
@@ -3758,7 +3929,7 @@
             "drag": "Drag {value}",
             "orbitalDebrisCleared": "Orbital debris cleared.",
             "orbitalDebris": "Orbital debris: {current} / {initial} t",
-            "binDetail": "Initial-radius bin @ {altitude} km (current air path {effectiveAltitude} km): {current} / {baseline} t, {decay} t/s, {density}",
+            "binDetail": "Initial-radius bin @ {altitude} km (current effective altitude {effectiveAltitude} km): {current} / {baseline} t, {decay} t/s, {density}",
             "initialRadiusMax": "{value} km initial radius"
           },
           "summary": {
@@ -4606,7 +4777,10 @@
               "maintenanceIV": "Maintenance IV",
               "grapheneSlider": "Graphene Slider",
               "availableOrbitals": "Available Orbitals",
-              "assignedOrbitals": "Assigned Orbitals"
+              "assignedOrbitals": "Assigned Orbitals",
+              "aerostatBaseCap": "Base Cap",
+              "aerostatSupportedCap": "Supported Cap",
+              "aerostatCollisionAvoidanceCap": "Collision Avoidance Cap"
             }
           },
           "projects": {
@@ -4996,9 +5170,10 @@
         "shipStepSubtitleLargestMax": "Balance ships with the largest max",
         "shipStepSubtitleRemainingPercent": "Assign {percent}% of remaining ships",
         "shipStepSubtitleEnergyProduction": "Use up to {percent}% of energy production",
+        "shipStepSubtitleWorkers": "Assign up to {percent}% of workers",
         "shipStepSubtitleAssignUpTo": "Assign up to {count} ships",
         "shipStepSubtitleByWeight": "Distribute ships by weight",
-        "shipLimitTooltip": "Assign Amount:\n- Distributes up to the entered amount by weight.\n\nModes:\n- Capped by smallest max: balance by weight until the smallest max is reached.\n- Capped by largest max: balance by weight until the largest max is reached. If no largest max is reached (infinite/unset caps), it uses every remaining ship.\n- % of remaining ships: distributes up to that percent of ships still unassigned when this step starts.\n- % energy production usage: allocates as uncapped, then proportionally reduces only this step's energy-consuming assignments to fit the entered share of colony energy production. Zero-energy assignments are unchanged.\n\nMass Drivers:\n- Each Mass Driver counts as 10 ships.\n- Counts toward assign amount limits.\n- Can only be assigned through \"Resource Disposal (mass drivers included)\".",
+        "shipLimitTooltip": "Assign Amount:\n- Distributes up to the entered amount by weight.\n\nModes:\n- Capped by smallest max: balance by weight until the smallest max is reached.\n- Capped by largest max: balance by weight until the largest max is reached. If no largest max is reached (infinite/unset caps), it uses every remaining ship.\n- % of remaining ships: distributes up to that percent of ships still unassigned when this step starts.\n- % Workers: distributes up to that percent of colony worker capacity across the step.\n- % energy production usage: allocates as uncapped, then proportionally reduces only this step's energy-consuming assignments to fit the entered share of colony energy production. Zero-energy assignments are unchanged.\n\nMass Drivers:\n- Each Mass Driver counts as 10 ships.\n- Counts toward assign amount limits.\n- Can only be assigned through \"Resource Disposal (mass drivers included)\".",
         "massDriverDisposalTarget": "Resource Disposal (mass drivers included)",
         "unassignedShipsTarget": "Unassigned Ships",
         "shipAssignAmount": "Assign Amount",
@@ -5509,7 +5684,7 @@
       "factoryHeating": "Factory heating",
       "factoryHeatingTooltip": "When enabled, part of local building and colony energy use becomes planetary heat, while solar panels cool the planet by their energy production. Their total cooling is distributed among climate zones in proportion to local mirror-modified sunlight after surface albedo. Most structures convert all local energy into heat, while processes that store energy chemically, emit it off-world, or already model direct heating use lower coefficients. Mega Heat Sinks remove core heat first, then factory heat; any remaining capacity accelerates cooling toward the temperature trend.\n\nYou should use this setting alongside Realistic factory energy consumption.",
       "lifeThermodynamics": "Life Thermodynamics",
-      "lifeThermodynamicsTooltip": "When enabled, natural surface-life growth in each climate zone is limited by the chemical energy it can store from at most 10% of that zone's surface solar flux averaged over the zone, including curvature and night. The stored energy also provides direct cooling.",
+      "lifeThermodynamicsTooltip": "When enabled, natural surface-life growth in each climate zone is limited by the chemical energy it can store from at most 10% of that zone's surface solar flux averaged over the zone, including curvature and night. This value can be different in some cases. The stored energy also provides direct cooling.",
       "realisticFactoryEnergyConsumption": "Realistic factory energy consumption",
       "realisticFactoryEnergyConsumptionTooltip": "When enabled, buildings use plausible industrial energy demands based on their workers and material throughput instead of the defaults.  This can make the game a lot easier.  This setting may one day become the new default once the game is rebalanced around it.",
       "spaceAccessCapacity": "Space Access Capacity",
@@ -5641,7 +5816,28 @@
     }
   },
   "catalogs": {
+    "story": {
+      "projects": {
+        "hydra": {
+          "name": "Hydra",
+          "description": "Hydra is a swarm machine intelligence locked to this star system.  A failed experiment from Prometheus's master.  The cores will cooperate under threat. (Original Design by Pokey)"
+        }
+      }
+    },
     "specialSeeds": {
+      "hydra": {
+        "name": "Hydra",
+        "difficulty": "Very Extreme",
+        "noSpaceWithdrawal": "Space Storage cannot withdraw any resources on this world.",
+        "rules": "Five regenerating machine cores occupy Lerna and actively resist terraforming. Suppress all five simultaneously to defeat Hydra.",
+        "requirement": "Hydra",
+        "defeated": "All five cores defeated",
+        "defeatFirst": "Defeat Hydra first",
+        "rewards": {
+          "laserCannonPower": "Laser cannons will be 100x more powerful.",
+          "revealSuperconductorThroughput": "Reveals a new Awakening skill"
+        }
+      },
       "commonEffects": {
         "liftersStripModeDisabled": "Lifters Strip Mode Disabled",
         "incineratorRecipeDisabled": "Incinerator Recipe Disabled",
@@ -5649,7 +5845,7 @@
       },
       "sirius": {
         "name": "Sirius",
-        "difficulty": "Pending evaluation",
+        "difficulty": "Very Extreme",
         "effects": {
           "hopeStarQuestion": "HOPE...  This is a star...  Why are we terraforming a star?",
           "advancedOrbitals": "Superalloys and Storage orbitals are available.",
@@ -5742,6 +5938,7 @@
           "allFiveHazards": "All five hazard systems are active on this world.",
           "allSixHazards": "Features all hazards and even a new horrible one.",
           "teleportersDisabled": "The 100Q advanced research is disabled.",
+          "hydraLaserRewardDisabled": "The Hydra reward to laser cannons is disabled.",
           "startingResearchWarning": "You may need at least 1M starting research from Solis to acquire some critical researches.  Chemical reactor research also enables pyrolyzers.",
           "powerfulFeaturesLimited": "Many other powerful features are disabled or limited."
         },
@@ -5875,8 +6072,19 @@
         "description": "Generates consistent energy by harnessing heat from geothermal vents. Requires a free geothermal vent deposit to build. Requires water to function and minimal maintenance."
       },
       "hydrocarbonGenerator": {
-        "name": "Methane Flare",
-        "description": "Burns atmospheric methane and oxygen to generate energy, releasing water vapour and carbon dioxide."
+        "name": "Combustion Generator",
+        "description": "Burns atmospheric methane, hydrogen, or ammonia with oxygen to generate energy.",
+        "recipes": {
+          "methaneCombustion": {
+            "shortName": "Methane Combustion"
+          },
+          "hydrogenCombustion": {
+            "shortName": "Hydrogen Combustion"
+          },
+          "ammoniaCombustion": {
+            "shortName": "Ammonia Combustion"
+          }
+        }
       },
       "nuclearPowerPlant": {
         "name": "Nuclear Power Plant",
@@ -6203,6 +6411,10 @@
         "name": "Underground Land Expansion",
         "description": "Build subterranean habitats to slightly expand usable land. Each completion increases land by a small amount."
       },
+      "planetarySwampification": {
+        "name": "Planetary Swampification",
+        "description": "Shiivert biomass lives underground but requires nutrients from above swampland.  Seed managed wetlands with water, methane-derived organic substrate and ammonia nutrients.  Resetting recovers all reserved land."
+      },
       "oreSpaceMining": {
         "name": "Metal Asteroid Mining",
         "description": "Use your spaceships to mine asteroids for metal. The first 100 spaceship assignments reduce the duration, every spaceship assignment afterward provides a multiplier. Without a space elevator, the metal cost per ship reduces the metal returned."
@@ -6327,7 +6539,7 @@
       },
       "artificialQuasars": {
         "name": "Artificial Quasars",
-        "description": "Build tera-scale black hole spin-energy platforms. Assigned quasars produce space energy from accessible stellar black holes, scaled by the average Warp Gate Network level.",
+        "description": "Build tera-scale black hole spin-energy platforms. Assigned quasars produce space energy from accessible stellar black holes, scaled by the average Warp Gate Network level, plus black holes created by neutron star mergers.",
         "attributes": {
           "lifterStripRecipe": {
             "label": "Strip Atmosphere"
@@ -6338,6 +6550,10 @@
             }
           }
         }
+      },
+      "neutronStarSmasher": {
+        "name": "Neutron Star Smasher",
+        "description": "Smash pairs of neutron stars together with tractor beams. Each merger consumes space energy, creates a black hole for an Artificial Quasar, and produces a kilonova that increases the metal mining cap."
       },
       "matrioshkaBrain": {
         "name": "Matrioshka Brain",
@@ -6579,6 +6795,23 @@
             }
           }
         }
+      },
+      "shiivert": {
+        "displayName": "Shiivert",
+        "lore": "The Shiivert are a carbon-water lifeform that most closely resembles fungi. They evolved within vast underground cave networks on a homeworld that, from the outside, most resembles a swamp.\n\nUnlike most organisms, the Shiivert do not rely on photosynthesis for growth. Instead, they feed on radioactive material. They surround and absorb radioactive rocks, retaining them as cores. Limited by the availability of these materials, they developed by excavating tunnels in search of more.\n\nFor a long time, the Cewinsii did not even know the Shiivert existed, allowing them to grow in peace. Unfortunately, when they were finally discovered, they were found to be very tasty to a Cewinsii. The Empire recognized their technological potential and quickly established farming operations.\n\nThe Shiivert have had enough of being served as food.",
+        "lifeDesign": {
+          "processes": {
+            "radiolyticMycosynthesis": {
+              "displayName": "Radiolytic Methanogenesis"
+            }
+          }
+        },
+        "otherRequirements": {
+          "planetarySwampification": {
+            "label": "Planetary Swampification",
+            "targetText": "Complete Planetary Swampification project."
+          }
+        }
       }
     },
     "research": {
@@ -6624,8 +6857,8 @@
           "description": "The best design that can be made.  Provides another 2x multiplier."
         },
         "hydrocarbon_generator": {
-          "name": "Hydrocarbon Generator",
-          "description": "Allows construction of generators burning methane and oxygen for power."
+          "name": "Combustion Generator",
+          "description": "Allows construction of generators burning methane, hydrogen, or ammonia with oxygen for power."
         },
         "dyson_swarm_receiver": {
           "name": "Dyson Swarm Receiver",
@@ -6699,7 +6932,7 @@
         },
         "underground_land_expansion": {
           "name": "Underground Land Expansion",
-          "description": "Unlocks a repeatable android project to expand usable land via subterranean construction."
+          "description": "Unlocks a repeatable android project to expand usable land via subterranean construction. Shiivert designs can build an expensive artificial substrate where ordinary excavation is impossible."
         },
         "superconductor_factory": {
           "name": "Superconductor Factory",
@@ -6715,7 +6948,7 @@
         },
         "shipyard": {
           "name": "Shipbuilding",
-          "description": "Enables the construction of spaceships.  Also unlocks special projects for asteroid mining and resource disposal."
+          "description": "Enables the construction of spaceships.  Also unlocks special projects for asteroid mining and resource disposal.  Each available or idle ship also increases colony energy cap."
         },
         "efficient_shipyards": {
           "name": "Efficient Shipyards",
@@ -6916,8 +7149,8 @@
           "description": "Research the construction of a large orbital facility that increases planetary luminosity.  Requires the space mirror facility."
         },
         "hydrocarbon_research": {
-          "name": "Hydrocarbon Combustion Concept",
-          "description": "Opens research into burning methane for power."
+          "name": "Combustion Generator Concept",
+          "description": "Opens research into burning methane, hydrogen, or ammonia for power."
         },
         "infrared_vision": {
           "name": "Infrared Vision",
@@ -7054,6 +7287,10 @@
         "ship_smelting": {
           "name": "Ship smelting",
           "description": "Ships can now smelt asteroids directly, allowing them to carry 2x more metal and silica. Water imports can now prioritize colony storage."
+        },
+        "stellar_garbage_disposal": {
+          "name": "Stellar Garbage Disposal",
+          "description": "\"Can we just throw all this garbage into the star?\" she once said.  Yes.  Yes we can."
         },
         "companion_satellite": {
           "name": "Companion Satellite",
@@ -7218,6 +7455,10 @@
         "agrarian_worlds": {
           "name": "Agrarian worlds",
           "description": "Our manufacturing worlds have caught wind of recent development in... food production.   They're interested in striking a deal.  Unlocks a new toggle for manufacturing worlds."
+        },
+        "neutron_star_merging": {
+          "name": "Neutron Star Merging",
+          "description": "The galaxy has a billion neutron stars just sitting there.  We can't extract energy from them because they don't spin fast enough.  Solution : smash neutron stars into each other with tractor beams."
         },
         "artificial_quasars": {
           "name": "Artificial Quasars",
@@ -8383,6 +8624,10 @@
       "chemistry_mastery": {
         "name": "Chemistry Mastery",
         "description": "Increases both chemical reactor production and consumption by 20% per rank"
+      },
+      "superconductor_throughput": {
+        "name": "Superconductor Throughput",
+        "description": "Increases superconductor factory production and consumption by 20% per rank"
       },
       "ship_efficiency": {
         "name": "Advanced Logistics",

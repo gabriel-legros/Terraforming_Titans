@@ -378,6 +378,12 @@ class Project extends EffectableEntity {
   updateDurationFromEffects() {
     const newDuration = this.getEffectiveDuration();
     if (this.isActive && this.isContinuous()) {
+      if (this.expansionAccounting && this.startingDuration !== Infinity) {
+        this.carryDiscreteExpansionProgress();
+        if (!this.autoStart && this[this.expansionAccounting.prepaidField || 'expansionPrepaidProgress'] > 0) {
+          this.manualContinuousRun = true;
+        }
+      }
       this.startingDuration = Infinity;
       this.remainingTime = Infinity;
       return;
@@ -435,6 +441,10 @@ class Project extends EffectableEntity {
   getResourceExecutionDeltaTime(deltaTime) {
     if (!this.manualContinuousRun || !this.isContinuous()) {
       return deltaTime;
+    }
+    if (this.expansionAccounting) {
+      return this.getEffectiveDuration()
+        * Math.min(1 - this.getExpansionProgressValue(), this.getRemainingExpansionCapacity());
     }
     return this.getEffectiveDuration();
   }
@@ -1525,7 +1535,9 @@ class ProjectManager extends EffectableEntity {
       if (
         project.isContinuous() &&
         !project.autoStart &&
-        project.isActive
+        project.isActive &&
+        !(project.manualContinuousRun
+          && project[project.expansionAccounting?.prepaidField || 'expansionPrepaidProgress'] > 0)
       ) {
         project.isActive = false;
         project.lastActiveTime = 0;

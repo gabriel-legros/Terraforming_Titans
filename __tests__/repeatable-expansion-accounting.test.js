@@ -75,6 +75,29 @@ describe('Shared repeatable expansion accounting', () => {
     expect(resources.colony.metal.value).toBe(500);
   });
 
+  test.each(types)('%s finishes only the paid manual remainder after a duration effect', type => {
+    const project = createExpansion(type, false);
+    project.autoStart = false;
+    project.maxRepeatCount = 100;
+    resources.colony.metal.value = 1000;
+    expect(project.start(resources)).toBe(true);
+    project.remainingTime = project.startingDuration / 2;
+    project.duration = 500;
+    project.baseDuration = 500;
+    project.updateDurationFromEffects();
+
+    expect(project.getExpansionProgressValue()).toBe(0.5);
+    expect(project.expansionPrepaidProgress).toBe(0.5);
+    expect(project.manualContinuousRun).toBe(true);
+    const pending = { colony: { metal: 0 } };
+    project.applyExpansionCostAndGain(project.getResourceExecutionDeltaTime(1000), pending, 1);
+    expect(pending.colony.metal).toBe(0);
+    expect(resources.colony.metal.value).toBe(500);
+    expect(project.repeatCount).toBe(11);
+    expect(project.getExpansionProgressValue()).toBe(0);
+    expect(project.expansionPrepaidProgress).toBe(0);
+  });
+
   test.each(types)('%s preserves prepaid credit through save/load and restart', type => {
     const project = createExpansion(type, true);
     project[project.getExpansionProgressField()] = 0.9;
