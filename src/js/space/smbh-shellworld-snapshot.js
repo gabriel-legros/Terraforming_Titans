@@ -297,7 +297,7 @@ function captureSmbhShellworldSnapshot() {
 
 function restoreSmbhShellworldSnapshot(snapshot) {
   if (!snapshot) return false;
-  researchManager.loadState(snapshot.research || {});
+  researchManager.loadState(snapshot.research || {}, { preserveAutomationSettings: true });
   projectManager.applyEffects();
   updateAllResearchButtons(researchManager.researches);
   updateAdvancedResearchVisibility();

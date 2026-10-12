@@ -51,7 +51,7 @@ Travel snapshots are deliberately separate from ordinary `saveState()`/`loadStat
 
 Departure has two phases. `prepareTravelState(resetLevel)` is progression finalization and runs only below the owner's `departureResetAt`; examples include specialization awards, population commits, and O'Neill conversion. `cleanupForReset(resetLevel)` removes old-world effects and references whenever the world is replaced, regardless of prestige level. Snapshot-only normalization belongs in `prepareTravelSnapshot(resetLevel)`, which runs whenever that object's transient snapshot is preserved. `SpaceManager.recordDepartureSnapshot({ resetLevel })` likewise skips world-status recording, galactic population aggregation, follower departure aggregation, and departure skill rewards at `GALAXY` or higher while leaving cleanup active.
 
-Persistent meta systems include Research (with regular research reset), Skills, Solis, Space, Galactic Invasion, Story, and explicitly preserved manager-owned resources/state. Do not infer persistence merely because an object happens to survive one path.
+Persistent meta systems include Research (with regular research reset), Skills, Solis, Space, Galactic Invasion, Story, and explicitly preserved manager-owned resources/state. Research automation checkboxes and priorities persist across travel, including SMBH shellworld research restoration; world snapshots restore completion without replacing those current settings. Do not infer persistence merely because an object happens to survive one path.
 
 UI controllers can outlive gameplay managers. Rebind their current manager context on every lifecycle initialization; do not retain the instance from the first build in a closure.
 
