@@ -7,6 +7,7 @@ function applyGameEffects() {
 const DIFFICULTY_SETTINGS_EFFECT_SOURCE_ID = 'difficulty-settings';
 
 const DIFFICULTY_SETTING_DEFINITIONS = {
+  fundingMultiplier: { min: 0 },
   buildingCostMultiplier: { min: 0.01 },
   researchCostMultiplier: { min: 0 },
   workerRequirementMultiplier: { min: 0 },
@@ -27,6 +28,7 @@ const DIFFICULTY_SETTING_DEFINITIONS = {
   invasionMultiplier: { min: 0 },
   artificialWorldConstructionTimeMultiplier: { min: 0.0001 },
   rwgRewardsCap: { min: 0, nullable: true, integer: true },
+  rwgEffectEffectiveness: { min: 0 },
 };
 
 function resetDifficultySettings() {
@@ -53,6 +55,7 @@ function normalizeDifficultySettings() {
   for (const settingId in DIFFICULTY_SETTING_DEFINITIONS) {
     gameSettings[settingId] = normalizeDifficultySettingValue(settingId, gameSettings[settingId]);
   }
+  gameSettings.marketPricing = normalizeMarketPricing(gameSettings.marketPricing);
 }
 
 function formatDifficultyMultiplierValue(value) {
@@ -90,6 +93,9 @@ function isSpaceElevatorCostProfileActiveForEffects() {
 function clearDifficultySettingEffects() {
   const source = { sourceId: DIFFICULTY_SETTINGS_EFFECT_SOURCE_ID };
   globalEffects.removeEffect(source);
+  if (fundingModule) {
+    fundingModule.removeEffect(source);
+  }
   if (populationModule) {
     populationModule.removeEffect(source);
   }
@@ -142,6 +148,14 @@ function applyDifficultySettingEffects() {
     buildings[id].refreshDifficultyConsumption();
   }
 
+  if (gameSettings.fundingMultiplier !== 1) {
+    addDifficultySettingEffect({
+      target: 'fundingModule',
+      type: 'productionMultiplier',
+      value: gameSettings.fundingMultiplier,
+      effectId: 'difficulty-funding-multiplier'
+    });
+  }
   if (gameSettings.buildingCostMultiplier !== 1) {
     addDifficultySettingEffect({
       target: 'global',

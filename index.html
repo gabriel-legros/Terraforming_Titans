@@ -391,6 +391,7 @@
     <script src="src/js/galaxy/galactic-invasionUI.js"></script>
     <script src="src/js/rwg/rwgUI.js"></script>
     <script src="src/js/warning.js"></script>
+    <script src="src/js/save-settings/marketPricing.js"></script>
     <script src="src/js/game-effects.js"></script>
     <script src="src/js/earth-manager.js"></script>
     <script src="src/js/planet-visualizer/core.js"></script>
@@ -1285,6 +1286,9 @@
                   <input type="checkbox" id="disable-speed-controls-toggle"> <span data-i18n="ui.settings.disableSpeedControls">Disable Speed Controls</span> <span id="disable-speed-controls-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
                 <label class="settings-option difficulty-toggle-option">
+                  <input type="checkbox" id="fixed-golden-asteroid-interval-toggle"> <span data-i18n="ui.settings.fixedGoldenAsteroidInterval">Fixed Golden Asteroid interval</span> <span id="fixed-golden-asteroid-interval-tooltip" class="info-tooltip-icon">&#9432;</span>
+                </label>
+                <label class="settings-option difficulty-toggle-option">
                   <input type="checkbox" id="immigration-pool-toggle"> <span data-i18n="ui.settings.immigrationPool">Immigration pool</span> <span id="immigration-pool-tooltip" class="info-tooltip-icon">&#9432;</span>
                 </label>
                 <label class="settings-option difficulty-toggle-option">
@@ -1314,6 +1318,9 @@
               </div>
               <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-inputs">
                 <label class="settings-option difficulty-multiplier-option">
+                  <span class="difficulty-multiplier-label"><span data-i18n="ui.settings.fundingMultiplier"></span> <span id="funding-multiplier-tooltip" class="info-tooltip-icon">&#9432;</span></span> <input type="text" id="funding-multiplier-input" value="1">
+                </label>
+                <label class="settings-option difficulty-multiplier-option">
                   <span data-i18n="ui.settings.buildingCostMultiplier">Building Cost Multiplier</span> <input type="text" id="building-cost-multiplier-input" value="1">
                 </label>
                 <label class="settings-option difficulty-multiplier-option">
@@ -1340,6 +1347,10 @@
                 <label class="settings-option difficulty-multiplier-option">
                   <span class="difficulty-multiplier-label"><span data-i18n="ui.settings.spaceshipEnergyAfterSpaceElevatorMultiplier">Spaceship energy after Space Elevator</span> <span id="spaceship-energy-after-space-elevator-tooltip" class="info-tooltip-icon">&#9432;</span></span> <input type="text" id="spaceship-energy-after-space-elevator-multiplier-input" value="1">
                 </label>
+                <div class="settings-option difficulty-multiplier-option">
+                  <span data-i18n="ui.settings.marketPricing"></span>
+                  <button type="button" id="market-pricing-settings-button" data-i18n-aria-label="ui.settings.marketPricing" aria-haspopup="dialog">&#9881;</button>
+                </div>
               </div>
               <div class="difficulty-spoiler-sections">
                 <details class="difficulty-spoiler-section">
@@ -1374,19 +1385,19 @@
                     <label class="settings-option difficulty-toggle-option">
                       <input type="checkbox" id="disable-daily-patience-toggle"> <span data-i18n="ui.settings.disableDailyPatience">Disable daily patience</span> <span id="disable-daily-patience-tooltip" class="info-tooltip-icon">&#9432;</span>
                     </label>
-                    <label class="settings-option difficulty-toggle-option">
-                      <input type="checkbox" id="fixed-golden-asteroid-interval-toggle"> <span data-i18n="ui.settings.fixedGoldenAsteroidInterval">Fixed Golden Asteroid interval</span> <span id="fixed-golden-asteroid-interval-tooltip" class="info-tooltip-icon">&#9432;</span>
-                    </label>
                   </div>
                 </details>
                 <details class="difficulty-spoiler-section">
                   <summary data-i18n="ui.settings.postWorld4Difficulty">Post-World 4</summary>
-                  <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-inputs">
+                  <div class="settings-grid settings-grid-difficulty settings-grid-difficulty-inputs settings-grid-difficulty-rwg">
                     <label class="settings-option difficulty-multiplier-option">
                       <span data-i18n="ui.settings.artifactsGainMultiplier">Artifacts Gain multiplier</span> <input type="text" id="artifacts-gain-multiplier-input" value="1">
                     </label>
                     <label class="settings-option difficulty-multiplier-option">
                       <span class="difficulty-multiplier-label"><span data-i18n="ui.settings.rwgRewardsCap">RWG Rewards cap</span> <span id="rwg-rewards-cap-tooltip" class="info-tooltip-icon">&#9432;</span></span> <input type="text" id="rwg-rewards-cap-input" value="">
+                    </label>
+                    <label class="settings-option difficulty-multiplier-option">
+                      <span class="difficulty-multiplier-label"><span data-i18n="ui.settings.rwgEffectEffectiveness"></span> <span id="rwg-effect-effectiveness-tooltip" class="info-tooltip-icon">&#9432;</span></span> <input type="text" id="rwg-effect-effectiveness-input" value="1">
                     </label>
                   </div>
                 </details>
@@ -1449,6 +1460,7 @@
                     </label>
                   </div>
                 </details>
+                <button type="button" id="reset-difficulty-settings-button" data-i18n="ui.settings.resetDifficultySettings"></button>
               </div>
             </div>
             <div id="statistics-settings-subtab" class="settings-subtab-content settings-subtab-content-centered">

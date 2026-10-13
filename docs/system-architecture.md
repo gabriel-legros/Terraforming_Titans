@@ -29,9 +29,17 @@ This document records durable ownership and cross-system constraints. Feature va
 
 `startNewGame()` fully rebuilds state and returns to Mars. It preserves General settings, resets Difficulty settings and their lock state, and carries no gameplay progression forward. Any value initialized late in a session must also have an explicit new-game initialization path.
 
+The Difficulty section's `Reset to default` button restores the shared difficulty defaults and reapplies their effects without changing General settings or progression. It is available only while difficulty settings are unlocked.
+
+Funding multiplier applies to `FundingModule` production, including base funding and Solis funding bonuses. It stacks with existing funding production effects and does not scale market sales or other independent funding sources.
+
+Market pricing stores independent base buy/sell overrides by resource category and stable resource id in Difficulty settings. Cargo Rocket uses the shared buy prices; Galactic Market uses both sides. Missing overrides use the project parameter buy prices and existing sell-price factors, independently of custom prices on the other side. Ship purchase surcharges, sell saturation, and trade limits continue to apply. Prices persist across travel, default for legacy saves, and follow the difficulty lock and reset lifecycle.
+
 ### Load
 
 `loadGame()` rebuilds through `initializeGameState({ skipStoryInitialization: true })`. Difficulty settings reset to defaults before saved values are applied so absent legacy fields do not inherit the prior session.
+
+RWG effect effectiveness defaults to `1` and recalculates all earned random-world rewards from the original world and hazard counts. Apply the reward-count cap first, then scale additive bonuses, multiplier bonuses above `1`, and divisor bonuses above `1`; this also scales the bonus portion of capped import divisors. Changing effectiveness never rewrites progression counts or compounds previously applied effects. The same calculation supplies gameplay effects and their UI summary.
 
 ### Travel
 

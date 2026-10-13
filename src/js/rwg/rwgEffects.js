@@ -457,6 +457,30 @@ function clearRWGEffects() {
   }
 }
 
+function computeRWGEffectValue(effect, count) {
+  const value = effect.computeValue instanceof Function ? effect.computeValue(count, effect) : effect.value;
+  const multiplier = gameSettings.rwgEffectEffectiveness;
+  if (multiplier === 1 || effect.type === 'flavorText') return value;
+  if (multiplier === 0) return effect.type.endsWith('Multiplier') ? 1 : 0;
+
+  switch (effect.type) {
+    case 'projectDurationMultiplier':
+    case 'importCapMultiplier':
+    case 'resourceCostMultiplier':
+      return 1 / (1 + (1 / value - 1) * multiplier);
+    case 'globalWorkerReduction':
+    case 'globalMaintenanceReduction':
+    case 'globalCostReduction':
+      return 1 - 1 / (1 + (1 / (1 - value) - 1) * multiplier);
+    case 'productionMultiplier':
+    case 'consumptionMultiplier':
+    case 'resourceProductionMultiplier':
+      return 1 + (value - 1) * multiplier;
+    default:
+      return value * multiplier;
+  }
+}
+
 function applyRWGEffects() {
   if (!spaceManager || !(addEffect instanceof Function)) return;
   if (isCurrentWorldManagerDisabled("rwgManager")) {
@@ -493,7 +517,7 @@ function applyRWGEffects() {
     const effectiveCount = cap === null ? uncappedCount : Math.min(uncappedCount, cap);
     for (const eff of effects) {
       if (eff.type === "flavorText") continue;
-      const value = eff.computeValue instanceof Function ? eff.computeValue(effectiveCount, eff) : eff.value;
+      const value = computeRWGEffectValue(eff, effectiveCount);
       if (eff.type === "resourceCostMultiplier" && Array.isArray(eff.resourceId)) {
         for (const resourceId of eff.resourceId) {
           addEffect({

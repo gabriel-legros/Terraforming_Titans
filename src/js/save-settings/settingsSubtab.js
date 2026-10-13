@@ -96,6 +96,8 @@ function cacheSettingsElements() {
     noOverpopulationCylindersToggle: document.getElementById('no-overpopulation-cylinders-toggle'),
     noOverpopulationCylindersTooltip: document.getElementById('no-overpopulation-cylinders-tooltip'),
     buildingCostMultiplierInput: document.getElementById('building-cost-multiplier-input'),
+    fundingMultiplierInput: document.getElementById('funding-multiplier-input'),
+    fundingMultiplierTooltip: document.getElementById('funding-multiplier-tooltip'),
     researchCostMultiplierInput: document.getElementById('research-cost-multiplier-input'),
     workerRequirementMultiplierInput: document.getElementById('worker-requirement-multiplier-input'),
     projectDurationMultiplierInput: document.getElementById('project-duration-multiplier-input'),
@@ -120,7 +122,11 @@ function cacheSettingsElements() {
     artificialWorldConstructionTimeMultiplierInput: document.getElementById('artificial-world-construction-time-multiplier-input'),
     rwgRewardsCapInput: document.getElementById('rwg-rewards-cap-input'),
     rwgRewardsCapTooltip: document.getElementById('rwg-rewards-cap-tooltip'),
+    rwgEffectEffectivenessInput: document.getElementById('rwg-effect-effectiveness-input'),
+    rwgEffectEffectivenessTooltip: document.getElementById('rwg-effect-effectiveness-tooltip'),
     lockDifficultySettingsButton: document.getElementById('lock-difficulty-settings-button'),
+    resetDifficultySettingsButton: document.getElementById('reset-difficulty-settings-button'),
+    marketPricingSettingsButton: document.getElementById('market-pricing-settings-button'),
     difficultyLockStatus: document.getElementById('difficulty-lock-status'),
     suppressFaithTooltip: document.getElementById('suppress-faith-tooltip'),
     preserveProjectSettingsTooltip: document.getElementById('preserve-project-settings-tooltip'),
@@ -306,6 +312,8 @@ function updateDifficultyLockUI() {
   const cached = cacheSettingsElements();
   const locked = isDifficultySettingsLocked();
   const controls = [
+    cached.resetDifficultySettingsButton,
+    cached.marketPricingSettingsButton,
     cached.dayNightToggle,
     cached.earlyAdvancedOversightToggle,
     cached.disableFusionConsumptionScalingToggle,
@@ -328,6 +336,7 @@ function updateDifficultyLockUI() {
     cached.disableMoltenSurfaceAttritionToggle,
     cached.noOverpopulationCylindersToggle,
     cached.buildingCostMultiplierInput,
+    cached.fundingMultiplierInput,
     cached.researchCostMultiplierInput,
     cached.workerRequirementMultiplierInput,
     cached.projectDurationMultiplierInput,
@@ -347,6 +356,7 @@ function updateDifficultyLockUI() {
     cached.invasionMultiplierInput,
     cached.artificialWorldConstructionTimeMultiplierInput,
     cached.rwgRewardsCapInput,
+    cached.rwgEffectEffectivenessInput,
   ];
 
   for (let i = 0; i < controls.length; i += 1) {
@@ -368,6 +378,7 @@ function updateDifficultyLockUI() {
       ? t('ui.settings.difficultyLockedStatus', { world }, `Difficulty settings locked on ${world}.`)
       : t('ui.settings.difficultyUnlockedStatus', {}, 'Difficulty settings are not locked.');
   }
+  updateMarketPricingWindow();
 }
 
 function lockDifficultySettings() {
@@ -379,6 +390,31 @@ function lockDifficultySettings() {
   gameSettings.difficultySettingsLockedWorldKey = world.key;
   gameSettings.difficultySettingsLockedWorldName = getDifficultyLockStoryWorldName(world);
   updateDifficultyLockUI();
+}
+
+function restoreDefaultDifficultySettings() {
+  if (isDifficultySettingsLocked()) return;
+
+  const fixedGoldenAsteroidInterval = gameSettings.fixedGoldenAsteroidInterval;
+  resetDifficultySettings();
+  reapplySharedManagerEffects({
+    includeConditionalReconcile: true,
+    includeProject: true,
+    includeRWGEffects: true,
+  });
+  applyDayNightSettingEffects();
+  applySpeedControlsSetting();
+  for (const buildingName in buildings) {
+    buildings[buildingName].maintenanceProductivity = 1;
+  }
+  terraforming.resetPhaseChangeHeat();
+  terraforming.setFactoryHeatPower(0, 0);
+  terraforming.setLifeThermodynamicsGrowth({}, 0);
+  if (fixedGoldenAsteroidInterval) goldenAsteroid.generateNextSpawnTime();
+  followersManager.markUIDirty();
+  updateDifficultySettingInputs();
+  updateRWGEffectsUI();
+  updateRender(true, { forceAllSubtabs: true });
 }
 
 function confirmDifficultySettingsLock() {
@@ -418,6 +454,10 @@ function wireDifficultyMultiplierInput(input, settingId) {
       }
       gameSettings[settingId] = parsed;
       applyDifficultySettingEffects();
+      if (settingId === 'rwgEffectEffectiveness') {
+        applyRWGEffects();
+        updateRWGEffectsUI();
+      }
       updateBuildingDisplay(buildings);
       updateColonyDisplay(colonies);
       updateResearchUI();
@@ -488,6 +528,7 @@ function updateDifficultySettingInputs() {
   };
   const inputs = {
     buildingCostMultiplier: cached.buildingCostMultiplierInput,
+    fundingMultiplier: cached.fundingMultiplierInput,
     researchCostMultiplier: cached.researchCostMultiplierInput,
     workerRequirementMultiplier: cached.workerRequirementMultiplierInput,
     projectDurationMultiplier: cached.projectDurationMultiplierInput,
@@ -507,6 +548,7 @@ function updateDifficultySettingInputs() {
     invasionMultiplier: cached.invasionMultiplierInput,
     artificialWorldConstructionTimeMultiplier: cached.artificialWorldConstructionTimeMultiplierInput,
     rwgRewardsCap: cached.rwgRewardsCapInput,
+    rwgEffectEffectiveness: cached.rwgEffectEffectivenessInput,
   };
 
   normalizeDifficultySettings();
@@ -1474,6 +1516,8 @@ function addSettingsListeners() {
   }
 
   wireDifficultyMultiplierInput(cached.buildingCostMultiplierInput, 'buildingCostMultiplier');
+  wireDifficultyMultiplierInput(cached.fundingMultiplierInput, 'fundingMultiplier');
+  attachDynamicInfoTooltip(cached.fundingMultiplierTooltip, t('ui.settings.fundingMultiplierTooltip'));
   wireDifficultyMultiplierInput(cached.researchCostMultiplierInput, 'researchCostMultiplier');
   wireDifficultyMultiplierInput(cached.workerRequirementMultiplierInput, 'workerRequirementMultiplier');
   wireDifficultyMultiplierInput(cached.projectDurationMultiplierInput, 'projectDurationMultiplier');
@@ -1493,10 +1537,18 @@ function addSettingsListeners() {
   wireDifficultyMultiplierInput(cached.invasionMultiplierInput, 'invasionMultiplier');
   wireDifficultyMultiplierInput(cached.artificialWorldConstructionTimeMultiplierInput, 'artificialWorldConstructionTimeMultiplier');
   wireDifficultyNullableCapInput(cached.rwgRewardsCapInput, 'rwgRewardsCap');
+  wireDifficultyMultiplierInput(cached.rwgEffectEffectivenessInput, 'rwgEffectEffectiveness');
+
+  attachDynamicInfoTooltip(
+    cached.rwgEffectEffectivenessTooltip,
+    t('ui.settings.rwgEffectEffectivenessTooltip')
+  );
 
   if (cached.lockDifficultySettingsButton) {
     cached.lockDifficultySettingsButton.addEventListener('click', confirmDifficultySettingsLock);
   }
+  cached.resetDifficultySettingsButton.addEventListener('click', restoreDefaultDifficultySettings);
+  cached.marketPricingSettingsButton.addEventListener('click', openMarketPricingSettings);
   updateDifficultyLockUI();
 
   if (cached.rwgRewardsCapTooltip) {

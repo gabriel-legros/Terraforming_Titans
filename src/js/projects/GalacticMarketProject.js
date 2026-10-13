@@ -514,7 +514,8 @@ class GalacticMarketProject extends Project {
   }
 
   getBasePrice(category, resourceId) {
-    return this.attributes.resourceChoiceGainCost?.[category]?.[resourceId] || 0;
+    return gameSettings.marketPricing?.[category]?.[resourceId]?.buy
+      ?? this.attributes.resourceChoiceGainCost?.[category]?.[resourceId] ?? 0;
   }
 
   getBuyPrice(category, resourceId) {
@@ -526,10 +527,10 @@ class GalacticMarketProject extends Project {
   }
 
   getSellPrice(category, resourceId, quantity = 0) {
-    const base = this.getBasePrice(category, resourceId);
+    const base = this.attributes.resourceChoiceGainCost?.[category]?.[resourceId] ?? 0;
     const multiplier = GalacticMarketProject.SELL_PRICE_MULTIPLIERS[resourceId];
     const factor = typeof multiplier === 'number' ? multiplier : 0.5;
-    const baseSell = base * factor;
+    const baseSell = gameSettings.marketPricing?.[category]?.[resourceId]?.sell ?? base * factor;
     if (quantity <= 0) {
       return baseSell;
     }
@@ -556,7 +557,7 @@ class GalacticMarketProject extends Project {
   canAutomaticallySellOverflow(category, resourceId) {
     return this.isBooleanFlagSet('automaticSurplusTrading')
       && this.isSelectionResourceUnlocked(category, resourceId)
-      && this.getBasePrice(category, resourceId) > 0
+      && this.getSellPrice(category, resourceId) > 0
       && this.getSaturationSellAmount(category, resourceId) > 0;
   }
 
@@ -911,7 +912,7 @@ class GalacticMarketProject extends Project {
     const divisor = this.getSpaceshipDivisor();
     const delta = 1 / divisor;
     const currentIncrease = this.spaceshipPriceIncrease;
-    return basePrice * quantity + currentIncrease * quantity + (delta * quantity * (quantity - 1)) / 2;
+    return Math.max(0, basePrice * quantity + currentIncrease * quantity + (delta * quantity * (quantity - 1)) / 2);
   }
 
   getBuyTransactionCost(transaction, quantity) {

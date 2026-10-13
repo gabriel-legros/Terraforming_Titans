@@ -1661,13 +1661,7 @@ function updateTotalCostDisplay(project) {
       return;
     }
     const quantity = getInputQuantity(input);
-    const basePrice = project.attributes.resourceChoiceGainCost?.[category]?.[resource];
-    if (typeof basePrice !== 'number') return;
-    if (resource === 'spaceships' && typeof project.getSpaceshipTotalCost === 'function') {
-      totalCost += project.getSpaceshipTotalCost(quantity, basePrice);
-    } else {
-      totalCost += quantity * basePrice;
-    }
+    totalCost += project.getBuyPrice(category, resource, quantity);
   });
 
   const totalCostValue = elements.totalCostValue;
