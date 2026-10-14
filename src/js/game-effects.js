@@ -20,6 +20,7 @@ const DIFFICULTY_SETTING_DEFINITIONS = {
   spaceshipEnergyBeforeSpaceElevatorMultiplier: { min: 0 },
   spaceshipEnergyAfterSpaceElevatorMultiplier: { min: 0 },
   advancedResearchMultiplier: { min: 0 },
+  androidHiveMindMultiplier: { min: 0 },
   skillPointsGainMultiplier: { min: 0 },
   solisPointsGainMultiplier: { min: 0 },
   artifactsGainMultiplier: { min: 0 },
@@ -29,6 +30,7 @@ const DIFFICULTY_SETTING_DEFINITIONS = {
   artificialWorldConstructionTimeMultiplier: { min: 0.0001 },
   rwgRewardsCap: { min: 0, nullable: true, integer: true },
   rwgEffectEffectiveness: { min: 0 },
+  workersPerAndroid: { min: 0 },
 };
 
 function resetDifficultySettings() {

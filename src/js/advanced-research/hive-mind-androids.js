@@ -30,7 +30,7 @@ function updateAndroidResearch(deltaTime, resources, globalEffects, accumulatedC
   if (count <= 0) return;
 
   const baseRate = count * 0.001;
-  const rate = baseRate * androidResearch.getEffectiveProductionMultiplier();
+  const rate = baseRate * androidResearch.getEffectiveProductionMultiplier() * gameSettings.androidHiveMindMultiplier;
   const increase = rate * (deltaTime / 1000);
 
   if (accumulatedChanges && accumulatedChanges.colony) {

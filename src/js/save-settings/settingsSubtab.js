@@ -111,6 +111,7 @@ function cacheSettingsElements() {
     spaceshipEnergyAfterSpaceElevatorMultiplierInput: document.getElementById('spaceship-energy-after-space-elevator-multiplier-input'),
     spaceshipEnergyAfterSpaceElevatorTooltip: document.getElementById('spaceship-energy-after-space-elevator-tooltip'),
     advancedResearchMultiplierInput: document.getElementById('advanced-research-multiplier-input'),
+    androidHiveMindMultiplierInput: document.getElementById('android-hive-mind-multiplier-input'),
     skillPointsGainMultiplierInput: document.getElementById('skill-points-gain-multiplier-input'),
     solisPointsGainMultiplierInput: document.getElementById('solis-points-gain-multiplier-input'),
     artifactsGainMultiplierInput: document.getElementById('artifacts-gain-multiplier-input'),
@@ -127,6 +128,7 @@ function cacheSettingsElements() {
     lockDifficultySettingsButton: document.getElementById('lock-difficulty-settings-button'),
     resetDifficultySettingsButton: document.getElementById('reset-difficulty-settings-button'),
     marketPricingSettingsButton: document.getElementById('market-pricing-settings-button'),
+    workersPerAndroidInput: document.getElementById('workers-per-android-input'),
     difficultyLockStatus: document.getElementById('difficulty-lock-status'),
     suppressFaithTooltip: document.getElementById('suppress-faith-tooltip'),
     preserveProjectSettingsTooltip: document.getElementById('preserve-project-settings-tooltip'),
@@ -348,6 +350,7 @@ function updateDifficultyLockUI() {
     cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput,
     cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput,
     cached.advancedResearchMultiplierInput,
+    cached.androidHiveMindMultiplierInput,
     cached.skillPointsGainMultiplierInput,
     cached.solisPointsGainMultiplierInput,
     cached.artifactsGainMultiplierInput,
@@ -357,6 +360,7 @@ function updateDifficultyLockUI() {
     cached.artificialWorldConstructionTimeMultiplierInput,
     cached.rwgRewardsCapInput,
     cached.rwgEffectEffectivenessInput,
+    cached.workersPerAndroidInput,
   ];
 
   for (let i = 0; i < controls.length; i += 1) {
@@ -540,6 +544,7 @@ function updateDifficultySettingInputs() {
     spaceshipEnergyBeforeSpaceElevatorMultiplier: cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput,
     spaceshipEnergyAfterSpaceElevatorMultiplier: cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput,
     advancedResearchMultiplier: cached.advancedResearchMultiplierInput,
+    androidHiveMindMultiplier: cached.androidHiveMindMultiplierInput,
     skillPointsGainMultiplier: cached.skillPointsGainMultiplierInput,
     solisPointsGainMultiplier: cached.solisPointsGainMultiplierInput,
     artifactsGainMultiplier: cached.artifactsGainMultiplierInput,
@@ -549,6 +554,7 @@ function updateDifficultySettingInputs() {
     artificialWorldConstructionTimeMultiplier: cached.artificialWorldConstructionTimeMultiplierInput,
     rwgRewardsCap: cached.rwgRewardsCapInput,
     rwgEffectEffectiveness: cached.rwgEffectEffectivenessInput,
+    workersPerAndroid: cached.workersPerAndroidInput,
   };
 
   normalizeDifficultySettings();
@@ -1529,6 +1535,7 @@ function addSettingsListeners() {
   wireDifficultyMultiplierInput(cached.spaceshipEnergyBeforeSpaceElevatorMultiplierInput, 'spaceshipEnergyBeforeSpaceElevatorMultiplier');
   wireDifficultyMultiplierInput(cached.spaceshipEnergyAfterSpaceElevatorMultiplierInput, 'spaceshipEnergyAfterSpaceElevatorMultiplier');
   wireDifficultyMultiplierInput(cached.advancedResearchMultiplierInput, 'advancedResearchMultiplier');
+  wireDifficultyMultiplierInput(cached.androidHiveMindMultiplierInput, 'androidHiveMindMultiplier');
   wireDifficultyMultiplierInput(cached.skillPointsGainMultiplierInput, 'skillPointsGainMultiplier');
   wireDifficultyMultiplierInput(cached.solisPointsGainMultiplierInput, 'solisPointsGainMultiplier');
   wireDifficultyMultiplierInput(cached.artifactsGainMultiplierInput, 'artifactsGainMultiplier');
@@ -1538,6 +1545,7 @@ function addSettingsListeners() {
   wireDifficultyMultiplierInput(cached.artificialWorldConstructionTimeMultiplierInput, 'artificialWorldConstructionTimeMultiplier');
   wireDifficultyNullableCapInput(cached.rwgRewardsCapInput, 'rwgRewardsCap');
   wireDifficultyMultiplierInput(cached.rwgEffectEffectivenessInput, 'rwgEffectEffectiveness');
+  wireDifficultyMultiplierInput(cached.workersPerAndroidInput, 'workersPerAndroid');
 
   attachDynamicInfoTooltip(
     cached.rwgEffectEffectivenessTooltip,

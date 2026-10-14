@@ -5761,6 +5761,8 @@ setLanguageData({
       difficultyUnlockedStatus: 'Difficulty settings are not locked.',
       resetDifficultySettings: 'Reset to default',
       marketPricing: 'Market pricing',
+      workersPerAndroid: 'Workers per android',
+      androidHiveMindMultiplier: 'Android Hive Mind Multiplier',
       marketPricingIntro: 'Set base prices in Funding per unit for each traded resource. Applies to Cargo Rocket and (later) Galactic Market.',
       marketPricingResource: 'Resource',
       marketPricingBuy: 'Base buy price',

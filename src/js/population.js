@@ -101,6 +101,7 @@ class PopulationModule extends EffectableEntity {
     const ratio = this.getEffectiveWorkerRatio();
     const multipliers = this.getWorkerEfficiencyMultipliers();
     const androidState = this.getAndroidWorkerState(enforceAssignmentCap);
+    const androidWorkers = androidState.availableAndroids * gameSettings.workersPerAndroid;
     const bioworkers = this.getBioworkerContribution();
     const keratiHiveWorkers = this.getKeratiHiveWorkerContribution();
     const colonistWorkers = Math.floor(
@@ -108,7 +109,7 @@ class PopulationModule extends EffectableEntity {
     );
     const uncappedTotalWorkers =
       colonistWorkers +
-      androidState.availableAndroids +
+      androidWorkers +
       bioworkers +
       keratiHiveWorkers;
     const aerostat = colonies?.aerostat_colony || null;
@@ -126,7 +127,7 @@ class PopulationModule extends EffectableEntity {
       artMultiplier: multipliers.artMultiplier,
       colonistMultiplier: multipliers.colonistMultiplier,
       colonistWorkers,
-      androidWorkers: androidState.availableAndroids,
+      androidWorkers,
       bioworkers,
       keratiHiveWorkers,
       uncappedTotalWorkers,
