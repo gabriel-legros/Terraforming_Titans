@@ -951,6 +951,7 @@ setLanguageData({
       },
       foundry: {
         limitTooltip: 'Foundries are limited to 1 per unit of base land on the current world.',
+        liquidHydrogenWarning: 'Foundries cannot operate while liquid hydrogen remains on the surface.',
       },
       waterTank: {
         emptyAboveCap: 'Empty above Cap',

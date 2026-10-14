@@ -7,6 +7,26 @@ function getFoundryBuildingText(path, fallback, vars) {
 }
 
 class Foundry extends Building {
+  getTargetProductivity(resources, deltaTime) {
+    if (resources.surface.liquidHydrogen.value > 0) {
+      return 0;
+    }
+
+    return super.getTargetProductivity(resources, deltaTime);
+  }
+
+  updateProductivity(resources, deltaTime) {
+    if (resources.surface.liquidHydrogen.value > 0) {
+      this.setAutomationActivityMultiplier(0);
+      this.productivity = 0;
+      this.displayProductivity = 0;
+      this.setProductivityLimitInfo(0, 0, []);
+      return;
+    }
+
+    super.updateProductivity(resources, deltaTime);
+  }
+
   getBuildLimit() {
     return Math.max(0, Math.floor(resolveWorldBaseLand(terraforming)));
   }
@@ -55,11 +75,29 @@ class Foundry extends Building {
   }
 
   initUI(_, cache) {
-    this._ensureTooltip(cache);
+    if (!cache.liquidHydrogenWarning) {
+      const warning = document.createElement('div');
+      warning.classList.add('project-kessler-warning');
+      const icon = document.createElement('span');
+      icon.classList.add('project-kessler-warning__icon');
+      icon.textContent = '\u26a0';
+      const text = document.createElement('span');
+      warning.append(icon, text);
+      cache.combinedRow.insertBefore(warning, cache.combinedRow.querySelector('.card-body'));
+      cache.liquidHydrogenWarning = warning;
+      cache.liquidHydrogenWarningText = text;
+    }
+    this.updateUI(cache);
   }
 
   updateUI(cache) {
     this._ensureTooltip(cache);
+    const warningText = t('ui.buildings.foundry.liquidHydrogenWarning');
+    if (cache.liquidHydrogenWarningText.textContent !== warningText) {
+      cache.liquidHydrogenWarningText.textContent = warningText;
+    }
+    cache.liquidHydrogenWarning.style.display = resources.surface.liquidHydrogen.value > 0
+      && !cache.combinedRow.classList.contains('collapsed') ? 'flex' : 'none';
   }
 }
 
