@@ -61,7 +61,7 @@ class SpaceshipAutomation {
       isAutomationManuallyDisabled: () => disposalProject.isAutomationManuallyDisabled(),
       shouldAutomationDisable: () => disposalProject.shouldAutomationDisable(),
       getMaxAssignableShips: () => this.automationShipPool + this.automationMassDriverCapacity,
-      getAutomationShipCount: () => disposalProject.getActiveShipCount(),
+      getAutomationShipCount: () => disposalProject.getAutomationShipCount() + this.getMassDriverActiveEquivalency(disposalProject),
       calculateAutomationEnergyRatePerShip: () => disposalProject.calculateAutomationEnergyRatePerShip()
     };
   }
@@ -614,6 +614,7 @@ class SpaceshipAutomation {
       unlocked: true,
       isVisible: () => true,
       getAutomationDisableAllowed: () => false,
+      getAutomationShipCount: () => resources.special.spaceships.value,
       isAutomationManuallyDisabled: () => false,
       calculateAutomationEnergyRatePerShip: () => 0
     };

@@ -194,7 +194,7 @@
     }
 
     hasVacationAccess() {
-      return this.getEarnedResortPoints() > 0;
+      return !this.isPermanentlyDisabled() && this.getEarnedResortPoints() > 0;
     }
 
     getHappinessBonus() {

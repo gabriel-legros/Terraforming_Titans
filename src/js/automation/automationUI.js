@@ -2969,6 +2969,7 @@ function updateAutomationUI() {
   if (!automationUIStale) {
     if (panelActive) {
       updateScriptAutomationUI();
+      updateShipAutomationTargets();
     }
     return;
   }
