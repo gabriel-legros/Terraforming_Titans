@@ -212,7 +212,8 @@
       const a = prev[i], b = curr[i];
       const diff = Math.abs(a - b);
       const scale = Math.max(1, Math.abs(a), Math.abs(b));
-      if (diff > absTol && diff/scale > relTol) return false;
+      // Large reservoirs can oscillate by one representable increment at equilibrium.
+      if (diff > absTol && diff/scale > Math.max(relTol, Number.EPSILON)) return false;
     }
     return true;
   }

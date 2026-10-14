@@ -101,4 +101,6 @@ It begins near `192.364 kPa` and can peak near `4.09e9` tons/s. An exact static 
 
 ## Equilibrium Snapping
 
+RWG adaptive stability checks allow relative differences up to `Number.EPSILON`, even when successive refinements tighten the requested tolerance below it. This prevents one-increment floating-point oscillations in large reservoirs from blocking completion at 20/20 refinements.
+
 Snapping is disabled by default and controlled by `terraformingParameters.gameplay.simulation.equilibriumSnapEnabled`. With Phase Change Heat disabled, a global atmospheric remainder below `0.01` tons/s or the atmosphere reservoir's one-ULP storage resolution may be reconciled into dominant precipitation so displayed global rates match representable storage changes. Zonal changes snap only when every zonal remainder is within its rate/ULP tolerance. Phase Change Heat uses neither snap because transition-energy accounting must remain exact.
