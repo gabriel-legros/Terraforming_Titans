@@ -4231,7 +4231,7 @@ setLanguageData({
             convertCost: 'Research Cost: {value}',
             clearCost: 'Clear All Cost: {value}',
             convertAction: 'Hack +{value}',
-            convertInfo: 'Each hack spends {cost} research to disable 1 hazardous machinery.',
+            convertInfo: 'Each hack spends {cost} research to convert 1 ton of hazardous machinery into 1 ton of scrap metal.',
             autoSpendIfClear: 'Auto spend if spending would clear the hazard',
             barSafe: 'Clear {value}%',
             barHazard: 'Machinery {value}%',
@@ -4239,6 +4239,7 @@ setLanguageData({
           },
           tooltips: {
             maxCoverage: 'Maximum machinery coverage is 100% minus half the current water coverage.',
+            decay: 'Each ton of hazardous machinery removed by natural decay, counter-hacking, or Crusader patrols becomes 1 ton of surface scrap metal.',
             hacking: 'Counter-hacking spends research to disable hazardous machinery directly. Auto spend clears the hazard automatically once current research can pay the full remaining cost.  This setting persists on travel.',
             autoSpendIfClear: 'When enabled, counter-hacking automatically spends research only if the current research stock can clear all remaining hazardous machinery at once.',
             androidDecay: 'The Hazardous Machinery is capable of hacking autonomous androids, up to 5% of worker androids per second. This does not impact androids assigned away from signals, such as assigned to underground mining or land expansion projects.',
