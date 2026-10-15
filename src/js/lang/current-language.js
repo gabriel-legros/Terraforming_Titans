@@ -1458,7 +1458,7 @@ setLanguageData({
           "terra": "Terra",
           "net": "Entanglement net"
         },
-        "objective": "Hydra restores the climate toward {temperature} K and {pressure} MPa.",
+        "objective": "Hydra restores the climate toward {temperature} {temperatureUnit} and {pressure} MPa.",
         "health": "{percent}% HP",
         "abilities": "Abilities",
         "penalties": "Penalties",
@@ -1523,20 +1523,20 @@ setLanguageData({
             "name": "Ignis | Surface industry",
             "abilities": {
               "rebuild": "Repairs itself and sibling cores using scrap, junk and planetary mass.",
-              "emissions": "Releases greenhouse gases below {temperatureThreshold} K."
+              "emissions": "Releases greenhouse gases below {temperatureThreshold} {temperatureUnit}."
             },
             "penalties": {
               "occupation": "Occupies {landOccupied}% of Underground Expansion land.",
               "buildCost": "Building and colony construction costs: +{buildCostPenalty}%.",
               "maintenance": "Maintenance costs: ×{ignisMaintenanceMultiplier}, reduced by aerostat support."
             },
-            "tactics": "Deploy Crusaders, cool below {cold} K or heat above {hot} K."
+            "tactics": "Deploy Crusaders, cool below {cold} {temperatureUnit} or heat above {hot} {temperatureUnit}."
           },
           "terra": {
             "name": "Terra | Deep crust",
             "abilities": {
               "rebuild": "Repairs itself and sibling cores using planetary mass.",
-              "heat": "Adds geothermal heat below {temperatureThreshold} K.",
+              "heat": "Adds geothermal heat below {temperatureThreshold} {temperatureUnit}.",
               "venting": "Vents gases below {pressureThreshold} MPa."
             },
             "penalties": {

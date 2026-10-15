@@ -777,7 +777,8 @@ class HydraProject extends ArtificialSkyProject {
       pressureThreshold: formatNumber(pressureThreshold / 1e6, true),
       disposalPressureThreshold: formatNumber(config.objective.pressurePa
         * (1 + config.objective.pressureToleranceFraction) / 1e6, true),
-      temperatureThreshold: formatNumber(temperatureThreshold, true),
+      temperatureThreshold: formatNumber(toDisplayTemperature(temperatureThreshold), true),
+      temperatureUnit: getTemperatureUnit(),
       fusionMass: formatNumber(config.aether.fusionAvoidanceMassKg / 1000, true),
       orbitalThreshold: formatNumber(config.aether.researchOrbitalDisableAboveFraction * 100, true),
       stellarRepairPercent: formatNumber(config.aether.stellarRepairFraction * 100, true),
@@ -805,7 +806,8 @@ class HydraProject extends ArtificialSkyProject {
     const text = t(this.isCompleted ? 'ui.projects.hydra.victory' : 'ui.projects.hydra.summary');
     if (ui.summary.textContent !== text) ui.summary.textContent = text;
     const objective = t('ui.projects.hydra.objective', {
-      temperature: formatNumber(config.objective.temperatureK, true),
+      temperature: formatNumber(toDisplayTemperature(config.objective.temperatureK), true),
+      temperatureUnit: getTemperatureUnit(),
       pressure: formatNumber(config.objective.pressurePa / 1e6, true)
     });
     if (ui.objective.textContent !== objective) ui.objective.textContent = objective;
@@ -838,7 +840,9 @@ class HydraProject extends ArtificialSkyProject {
         tactics: t(`ui.projects.hydra.cores.${id}.tactics`, {
           dugOutDepth: formatNumber(config.terra.dugOutMinimumDepth, true),
           pressure: formatNumber(config.aero.minimumPressurePa, true),
-          cold: formatNumber(config.ignis.coldTemperatureK, true), hot: formatNumber(config.ignis.hotTemperatureK, true),
+          cold: formatNumber(toDisplayTemperature(config.ignis.coldTemperatureK), true),
+          hot: formatNumber(toDisplayTemperature(config.ignis.hotTemperatureK), true),
+          temperatureUnit: getTemperatureUnit(),
           ocean: formatNumber(config.aqua.minimumOceanCoverage * 100, true),
           currentOcean: formatNumber(env.oceanCoverage * 100, true)
         })
