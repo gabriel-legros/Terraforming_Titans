@@ -492,6 +492,7 @@ class ArtificialSkyProject extends SpaceshipProject {
       this.carryDiscreteExpansionProgress({ applyProgress: progress => this.applyContinuousProgress(progress) });
     }
     super.finalizeAssignmentChange(wasContinuous);
+    this.updateDurationFromEffects();
   }
 
   applySpaceMirrorDisableEffect() {
