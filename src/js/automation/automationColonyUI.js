@@ -99,7 +99,7 @@ function buildAutomationColonyUI() {
 
   const header = createAutomationCardHeader(
     card,
-    getAutomationCardText('colonyAutomationTitle', {}, 'Colony Automation'),
+    getAutomationCardText('colonyAutomationTitle', {}, 'Colony Presets'),
     toggleCollapsed,
     'colony'
   );

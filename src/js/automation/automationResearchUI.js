@@ -16,7 +16,7 @@ function buildAutomationResearchUI() {
 
   const header = createAutomationCardHeader(
     card,
-    getAutomationCardText('researchAutomationTitle', {}, 'Research Automation'),
+    getAutomationCardText('researchAutomationTitle', {}, 'Research Presets'),
     toggleCollapsed,
     'research'
   );

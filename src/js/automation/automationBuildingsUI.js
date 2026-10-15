@@ -99,7 +99,7 @@ function buildAutomationBuildingsUI() {
 
   const header = createAutomationCardHeader(
     card,
-    getAutomationCardText('buildingsAutomationTitle', {}, 'Buildings Automation'),
+    getAutomationCardText('buildingsAutomationTitle', {}, 'Buildings Presets'),
     toggleCollapsed,
     'buildings'
   );

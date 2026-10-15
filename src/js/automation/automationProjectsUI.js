@@ -384,7 +384,7 @@ function buildAutomationProjectsUI() {
 
   const header = createAutomationCardHeader(
     card,
-    getAutomationCardText('projectsAutomationTitle', {}, 'Projects Automation'),
+    getAutomationCardText('projectsAutomationTitle', {}, 'Projects Presets'),
     toggleCollapsed,
     'projects'
   );
