@@ -20,7 +20,7 @@ function getBiodomeLandFraction(terraforming) {
       : (typeof buildingCountToNumber === 'function'
         ? buildingCountToNumber(biodome?.active)
         : Math.max(0, Math.floor(Number(biodome?.active) || 0)));
-    const fraction = (activeCount * biodome.requiresLand * biodome.getEffectivenessMultiplier()) / geometricLand;
+    const fraction = (activeCount * biodome.requiresLand) / geometricLand;
     return Math.max(0, Math.min(1, fraction));
   } catch (error) {
     return 0;

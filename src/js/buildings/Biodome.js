@@ -32,6 +32,10 @@ class Biodome extends Building {
     return super.getEffectiveProductionMultiplier() * this.getEffectivenessMultiplier();
   }
 
+  getEffectiveConsumptionMultiplier() {
+    return super.getEffectiveConsumptionMultiplier() * this.getEffectivenessMultiplier();
+  }
+
   refreshMetabolismRates() {
     const process = getActiveLifeMetabolismProcess();
     const perBiomass = process.growth.perBiomass;
@@ -67,7 +71,7 @@ class Biodome extends Building {
 
       if (value < 0) {
         const bucket = consumption[targetCategory] ?? (consumption[targetCategory] = {});
-        bucket[targetResource] = amount * this.getEffectivenessMultiplier();
+        bucket[targetResource] = amount;
         continue;
       }
 

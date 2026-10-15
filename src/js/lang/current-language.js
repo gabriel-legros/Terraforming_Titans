@@ -355,10 +355,10 @@ setLanguageData({
           ammonia: 'Gain up to +5% specialization points per terraforming target with a range, rising linearly from +0% at either edge to +5% at its midpoint, added together.',
           oommaa: 'Ecumenopolis coverage reduces the minimum luminosity requirement by the same percentage, reaching a 100% reduction at full coverage.',
           klishy: 'Android Hive Mind produces twice as much research.',
-          kerati: 'Crusaders are twice as effective at removing hazardous biomass and machinery, and count twice toward the world faith conversion ratio.',
+          kerati: 'Crusaders are twice as effective.',
           shrilek: 'Underground Land Expansion can go twice as deep, doubling the amount of underground land it can add.',
-          vanadophore: 'Aerostats support 20% more buildings through their direct building support allowance.',
-          yggies: 'Biodomes produce twice as much output, generate life-design points twice as fast, and protect twice as much biomass habitat from Ecumenopolis coverage.',
+          vanadophore: 'Aerostats support 20% more non-workers buildings.',
+          yggies: 'Biodomes produce and consume twice as much and generate life-design points twice as fast.',
           shiivert: 'Radioactive waste increases android worker efficiency linearly, up to x2 at 10 tons per android. Waste is not consumed.'
         },
         aboutTitle: 'About',
