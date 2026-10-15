@@ -23,8 +23,6 @@ class GameResourceLoader extends ResourceLoader {
 
 function parseArgs(argv) {
   const args = {
-    seconds: 12,
-    refinementIntervalMs: 500,
     refinementEveryChecks: 0,
     maxSteps: 0,
     greenhouseStrength: null,
@@ -39,8 +37,6 @@ function parseArgs(argv) {
     cloudFractionExponent: null
   };
   const options = {
-    '--seconds': 'seconds',
-    '--refine-ms': 'refinementIntervalMs',
     '--refine-checks': 'refinementEveryChecks',
     '--steps': 'maxSteps',
     '--greenhouse': 'greenhouseStrength',
@@ -292,12 +288,8 @@ async function run() {
     const input = buildEquilibrationInput(window, world);
     const startedAt = Date.now();
     const result = await window.runEquilibration(input, {
-      minRunMs: args.seconds * 1000,
-      additionalRunMs: 0,
-      timeoutMs: args.seconds * 1000,
       absTol: -1,
       relTol: -1,
-      instabilityRefinementIntervalMs: args.refinementIntervalMs,
       instabilityRefinementEveryChecks: args.refinementEveryChecks,
       maxSteps: args.maxSteps
     });
