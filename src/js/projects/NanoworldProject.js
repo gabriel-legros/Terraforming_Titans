@@ -69,7 +69,7 @@ class NanoworldProject extends SpecializationProject {
 
   getTravelPointGain() {
     const points = Math.max(1, Math.log10(Math.max(1, nanotechManager.nanobots)) / NANOWORLD_POINT_LOG_DIVISOR);
-    return this.applyHazardPointBonus(points);
+    return this.applyPointBonuses(points);
   }
 
   getSpecializationRequirements() {

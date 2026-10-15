@@ -4,6 +4,14 @@ function applyGameEffects() {
   }
 }
 
+function getCrusaderEffectivenessMultiplier() {
+  let multiplier = 1;
+  for (const effect of globalEffects.activeEffects) {
+    if (effect.type === 'crusaderEffectivenessMultiplier') multiplier *= effect.value;
+  }
+  return multiplier;
+}
+
 const DIFFICULTY_SETTINGS_EFFECT_SOURCE_ID = 'difficulty-settings';
 
 const DIFFICULTY_SETTING_DEFINITIONS = {
@@ -95,6 +103,7 @@ function isSpaceElevatorCostProfileActiveForEffects() {
 function clearDifficultySettingEffects() {
   const source = { sourceId: DIFFICULTY_SETTINGS_EFFECT_SOURCE_ID };
   globalEffects.removeEffect(source);
+  androidResearch.removeEffect(source);
   if (fundingModule) {
     fundingModule.removeEffect(source);
   }
@@ -258,6 +267,22 @@ function applyDifficultySettingEffects() {
       type: 'advancedResearchBoost',
       value: gameSettings.advancedResearchMultiplier,
       effectId: 'difficulty-advanced-research-multiplier'
+    });
+  }
+  if (gameSettings.androidHiveMindMultiplier !== 1) {
+    addDifficultySettingEffect({
+      target: 'androidResearch',
+      type: 'productionMultiplier',
+      value: gameSettings.androidHiveMindMultiplier,
+      effectId: 'difficulty-android-hive-mind-multiplier'
+    });
+  }
+  if (gameSettings.workersPerAndroid !== 1) {
+    addDifficultySettingEffect({
+      target: 'population',
+      type: 'androidWorkerEfficiencyMultiplier',
+      value: gameSettings.workersPerAndroid,
+      effectId: 'difficulty-workers-per-android'
     });
   }
   if (gameSettings.galaxyFleetCapacityMultiplier !== 1) {

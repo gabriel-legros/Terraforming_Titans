@@ -34,6 +34,7 @@ let rwgDominionLoreOverlayEl;
 let rwgDominionLoreListEl;
 let rwgDominionLoreTextEl;
 let rwgDominionLoreRewardStatusEl;
+let rwgDominionLoreRewardDescriptionEl;
 let rwgDominionLoreBodyTextEl;
 let rwgDominionLoreCloseBtnEl;
 let rwgDominionLoreItems = {};
@@ -375,7 +376,10 @@ function initializeDominionLoreOverlay() {
   rewardStatus.style.display = 'none';
   const loreBody = document.createElement('div');
   loreBody.className = 'rwg-lore-text-body';
+  const rewardDescription = document.createElement('p');
+  rewardDescription.style.display = 'none';
   text.appendChild(rewardStatus);
+  text.appendChild(rewardDescription);
   text.appendChild(loreBody);
   body.appendChild(list);
   body.appendChild(text);
@@ -389,6 +393,7 @@ function initializeDominionLoreOverlay() {
   rwgDominionLoreListEl = list;
   rwgDominionLoreTextEl = text;
   rwgDominionLoreRewardStatusEl = rewardStatus;
+  rwgDominionLoreRewardDescriptionEl = rewardDescription;
   rwgDominionLoreBodyTextEl = loreBody;
   rwgDominionLoreCloseBtnEl = closeBtn;
 
@@ -448,6 +453,11 @@ function refreshDominionLoreList() {
 }
 
 function selectDominionLore(id) {
+  const hasReward = !!terraformingParameters.gameplay.dominionTerraformRewards[id];
+  rwgDominionLoreRewardDescriptionEl.style.display = hasReward ? '' : 'none';
+  rwgDominionLoreRewardDescriptionEl.textContent = hasReward
+    ? t('ui.rwg.dominionLore.rewardDescription', { reward: t(`ui.rwg.dominionLore.rewards.${id}`) })
+    : '';
   rwgDominionLoreOrder.forEach((entryId) => {
     const item = rwgDominionLoreItems[entryId];
     item.classList.toggle('active', entryId === id);

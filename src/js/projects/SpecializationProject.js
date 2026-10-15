@@ -328,7 +328,8 @@
       return 0;
     }
 
-    applyHazardPointBonus(points) {
+    applyPointBonuses(points) {
+      points *= terraforming.getSpecializationPointMultiplier();
       if (points <= 0 || this.hazardPointBonusPerHazard <= 0) {
         return points;
       }

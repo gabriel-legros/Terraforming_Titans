@@ -9,6 +9,7 @@ This document records durable ownership and cross-system constraints. Feature va
 - Core simulation is centered on terraforming, physics, and cycle modules. Economy/colony behavior is centered on resources, buildings, colonies, and their UI modules.
 - `StoryManager` in `progress.js` owns story progression. Story-only project classes live under `src/js/story/` and load after their base classes.
 - `SpaceManager` owns planet travel/state.
+- Dominion first-terraform bonuses derive from `SpaceManager.dominionTerraformRewards` and the effect definitions in `terraformingParameters.gameplay.dominionTerraformRewards`. Reapply them after world initialization, save restoration, and shared-manager effect reconciliation using stable effect ids; loading or travel never grants artifacts again. These bonuses apply across dominions, including previously claimed rewards.
 - Per-artificial-world infrastructure completion belongs on the corresponding `SpaceManager.artificialWorldStatuses` entry. Project instances mirror the current entry and do not carry completion to another world through project travel state.
 - `src/js/save-settings/settings.js` owns setting migration, runtime application, and UI synchronization. `save.js` passes the saved settings payload to it.
 - `EffectableEntity` in `effectable-entity.js` supplies shared effect and flag behavior.
@@ -32,6 +33,8 @@ This document records durable ownership and cross-system constraints. Feature va
 The Difficulty section's `Reset to default` button restores the shared difficulty defaults and reapplies their effects without changing General settings or progression. It is available only while difficulty settings are unlocked.
 
 Funding multiplier applies to `FundingModule` production, including base funding and Solis funding bonuses. It stacks with existing funding production effects and does not scale market sales or other independent funding sources.
+
+Android Hive Mind and workers-per-android difficulty settings install effects on `androidResearch` and `PopulationModule`. Research production and android worker capacity consume those effects, combining them with Dominion bonuses. Difficulty resets remove only the settings' effects.
 
 Market pricing stores independent base buy/sell overrides by resource category and stable resource id in Difficulty settings. Cargo Rocket uses the shared buy prices; Galactic Market uses both sides. Missing overrides use the project parameter buy prices and existing sell-price factors, independently of custom prices on the other side. Ship purchase surcharges, sell saturation, and trade limits continue to apply. Prices persist across travel, default for legacy saves, and follow the difficulty lock and reset lifecycle.
 

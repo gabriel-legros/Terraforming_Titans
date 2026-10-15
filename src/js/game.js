@@ -783,6 +783,7 @@ function initializeGameState(options = {}) {
   }
 
   applyPlanetParameterEffects();
+  spaceManager.applyDominionTerraformRewards();
   if (typeof applyRWGEffects === 'function') {
     applyRWGEffects();
   }

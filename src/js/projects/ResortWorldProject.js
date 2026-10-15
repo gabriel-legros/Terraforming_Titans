@@ -170,7 +170,7 @@
     }
 
     getTravelPointGain() {
-      return this.isCompleted ? 1 : 0;
+      return this.isCompleted ? this.applyPointBonuses(1) : 0;
     }
 
     getShopBuyButtonText() {

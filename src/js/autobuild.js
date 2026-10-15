@@ -1254,7 +1254,7 @@ function getAerostatSupportedBuildingLimit(building) {
 
     return Math.max(
         0,
-        Math.floor(aerostat.activeNumber * building.aerostatReduction)
+        Math.floor(aerostat.activeNumber * aerostat.getBuildingSupportPerAerostat(building))
     );
 }
 

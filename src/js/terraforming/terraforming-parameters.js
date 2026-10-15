@@ -568,6 +568,16 @@ var terraformingParameters = {
   },
 
   gameplay: {
+    dominionTerraformRewards: {
+      ammonia: [{ target: 'terraforming', type: 'specializationPrecisionBonus', value: 0.05 }],
+      oommaa: [{ target: 'terraforming', type: 'ecumenopolisLuminosityReduction', value: 1 }],
+      klishy: [{ target: 'androidResearch', type: 'productionMultiplier', value: 2 }],
+      kerati: [{ target: 'global', type: 'crusaderEffectivenessMultiplier', value: 2 }],
+      shrilek: [{ target: 'project', targetId: 'undergroundExpansion', type: 'undergroundDepthMultiplier', value: 2 }],
+      vanadophore: [{ target: 'colony', targetId: 'aerostat_colony', type: 'aerostatSupportMultiplier', value: 1.2 }],
+      yggies: [{ target: 'building', targetId: 'biodome', type: 'biodomeEffectivenessMultiplier', value: 2 }],
+      shiivert: [{ target: 'population', type: 'androidWasteWorkerBonus', value: 1, tonsPerAndroid: 10 }]
+    },
     neutronStarMerging: {
       neutronStars: 1_000_000_000,
       mergersPerAssignmentSecond: 1 / 1000,

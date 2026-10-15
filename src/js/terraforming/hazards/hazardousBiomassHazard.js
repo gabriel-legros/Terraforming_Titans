@@ -138,7 +138,7 @@ class HazardousBiomassHazard {
   }
 
   getReductionPerCrusaderPerSecond() {
-    return HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER;
+    return HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER * getCrusaderEffectivenessMultiplier();
   }
 
   hasHazard(terraforming) {
@@ -413,7 +413,7 @@ class HazardousBiomassHazard {
         }, 0);
 
         if (totalBiomass > 0) {
-          const totalReduction = HAZARDOUS_BIOMASS_REDUCTION_PER_CRUSADER * crusaderCount * deltaSeconds;
+          const totalReduction = this.getReductionPerCrusaderPerSecond() * crusaderCount * deltaSeconds;
           let remainingReduction = totalReduction;
 
           const targetZone = this.manager.getCrusaderTargetZone();

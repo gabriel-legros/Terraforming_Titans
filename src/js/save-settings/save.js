@@ -854,6 +854,7 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
     }
 
     applyPlanetParameterEffects();
+    spaceManager.applyDominionTerraformRewards();
     if (typeof applyRWGEffects === 'function') {
       applyRWGEffects();
     }

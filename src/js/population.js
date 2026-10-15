@@ -101,7 +101,16 @@ class PopulationModule extends EffectableEntity {
     const ratio = this.getEffectiveWorkerRatio();
     const multipliers = this.getWorkerEfficiencyMultipliers();
     const androidState = this.getAndroidWorkerState(enforceAssignmentCap);
-    const androidWorkers = androidState.availableAndroids * gameSettings.workersPerAndroid;
+    let androidMultiplier = 1;
+    for (const effect of this.activeEffects) {
+      if (effect.type === 'androidWorkerEfficiencyMultiplier') {
+        androidMultiplier *= effect.value;
+      } else if (effect.type === 'androidWasteWorkerBonus' && androidState.effectiveAndroids > 0) {
+        const wastePerAndroid = resources.surface.radioactiveWaste.value / resources.colony.androids.value;
+        androidMultiplier *= 1 + effect.value * Math.min(1, Math.max(0, wastePerAndroid) / effect.tonsPerAndroid);
+      }
+    }
+    const androidWorkers = androidState.availableAndroids * androidMultiplier;
     const bioworkers = this.getBioworkerContribution();
     const keratiHiveWorkers = this.getKeratiHiveWorkerContribution();
     const colonistWorkers = Math.floor(

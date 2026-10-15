@@ -102,7 +102,7 @@
         return 0;
       }
       const basePoints = this.getFoundryPointGain(resolveWorldBaseLand(terraforming));
-      return this.applyHazardPointBonus(basePoints);
+      return this.applyPointBonuses(basePoints);
     }
 
     getDeepMiningDepth() {

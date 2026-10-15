@@ -253,7 +253,7 @@ class FollowersManager extends EffectableEntity {
     if (this.isFaithSuppressed()) {
       return 0;
     }
-    return this.isCurrentWorldHolyConsecrated() ? 1 : 0;
+    return this.isCurrentWorldHolyConsecrated() ? terraforming.getSpecializationPointMultiplier() : 0;
   }
 
   getHolyWorldShopPurchaseCount(id) {
@@ -660,7 +660,8 @@ class FollowersManager extends EffectableEntity {
     if (worldPopulation <= 0) {
       return 1;
     }
-    const crusaderRatio = Math.max(0, resources.special.crusaders.value) / worldPopulation;
+    const crusaderRatio = Math.max(0, resources.special.crusaders.value)
+      * getCrusaderEffectivenessMultiplier() / worldPopulation;
     const bonusProgress = Math.log10(1 + crusaderRatio * 100) / 2;
     return 1 + Math.max(0, Math.min(1, bonusProgress));
   }

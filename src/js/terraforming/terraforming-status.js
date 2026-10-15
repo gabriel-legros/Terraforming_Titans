@@ -43,12 +43,60 @@ registerTerraformingMethods('status', ({
     }
     return true;
   },
+  getLuminosityTargetRange() {
+    let reduction = 0;
+    for (const effect of this.activeEffects) {
+      if (effect.type === 'ecumenopolisLuminosityReduction') {
+        reduction += effect.value * getEcumenopolisLandFraction(this);
+      }
+    }
+    return {
+      min: this.luminosity.targetMin * Math.max(0, 1 - reduction),
+      max: this.luminosity.targetMax
+    };
+  },
+  getSpecializationPointMultiplier() {
+    let bonusPerRange = 0;
+    for (const effect of this.activeEffects) {
+      if (effect.type === 'specializationPrecisionBonus') bonusPerRange += effect.value;
+    }
+    if (!bonusPerRange) return 1;
+    const ranges = [{
+      value: this.temperature.value,
+      min: this.temperature.targetMin,
+      max: this.temperature.targetMax
+    }];
+    const pressure = this.atmosphere.totalPressureTargetRangeKPa;
+    if (pressure) ranges.push({ value: this.calculateTotalPressure(), ...pressure });
+    for (const gas in this.gasTargets) {
+      ranges.push({
+        value: calculateAtmosphericPressure(
+          this.resources.atmospheric[gas].value,
+          this.celestialParameters.gravity,
+          this.celestialParameters.radius,
+          this.celestialParameters.surfaceArea
+        ),
+        ...this.gasTargets[gas]
+      });
+    }
+    if (!this.requirements.ignoresLuminosity) {
+      ranges.push({ value: this.calculateSurfaceSolarFlux(), ...this.getLuminosityTargetRange() });
+    }
+    let bonus = 0;
+    for (const { value, min, max } of ranges) {
+      if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) continue;
+      const closeness = Math.max(0, 1 - Math.abs(2 * (value - min) / (max - min) - 1));
+      bonus += bonusPerRange * closeness;
+    }
+    return 1 + bonus;
+  },
   getLuminosityStatus() {
     if (this.requirements.ignoresLuminosity) {
       return true;
     }
     const objectiveFlux = this.calculateSurfaceSolarFlux();
-    return objectiveFlux >= this.luminosity.targetMin && objectiveFlux <= this.luminosity.targetMax;
+    const range = this.getLuminosityTargetRange();
+    return objectiveFlux >= range.min && objectiveFlux <= range.max;
   },
   getLifeStatus() {
     const densityTarget = getLifeBiomassDensityTarget(this);

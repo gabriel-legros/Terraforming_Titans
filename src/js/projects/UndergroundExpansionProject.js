@@ -89,7 +89,11 @@ class UndergroundExpansionProject extends AndroidProject {
   }
 
   getRawMaxRepeats() {
-    return Math.max(Math.floor(this.getCapLand()), 0);
+    let multiplier = 1;
+    for (const effect of this.activeEffects) {
+      if (effect.type === 'undergroundDepthMultiplier') multiplier *= effect.value;
+    }
+    return Math.max(Math.floor(this.getCapLand() * multiplier), 0);
   }
 
   syncCompletionState() {

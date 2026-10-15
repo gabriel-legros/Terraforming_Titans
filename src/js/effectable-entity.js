@@ -1163,6 +1163,7 @@ function isManagerEffectivelyEnabled(manager, managerId) {
 
 function addOrRemoveEffect(effect, action) {
   const targetHandlers = {
+    'androidResearch': androidResearch,
     'fundingModule': fundingModule,
     'population': populationModule,
     'projectManager': projectManager,
@@ -1285,6 +1286,7 @@ function reapplySharedManagerEffects(options = {}) {
     skillManager.reapplyEffects();
   }
   applyDifficultySettingEffects();
+  spaceManager.applyDominionTerraformRewards();
   if (researchManager && researchManager.reapplyEffects) {
     researchManager.reapplyEffects();
   }

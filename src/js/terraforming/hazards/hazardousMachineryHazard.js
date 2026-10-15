@@ -445,7 +445,8 @@ class HazardousMachineryHazard {
     if (!crusaders || !crusaders.unlocked) {
       return 0;
     }
-    return Math.max(0, crusaders.value || 0) * Math.max(0, parameters?.crusaderRemovalPerSecond || 0);
+    return Math.max(0, crusaders.value || 0) * Math.max(0, parameters?.crusaderRemovalPerSecond || 0)
+      * getCrusaderEffectivenessMultiplier();
   }
 
   getCounterHackCostPerMachinery(parameters) {

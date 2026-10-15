@@ -3634,8 +3634,8 @@ function updateLifeBox() {
           'luminosity.target',
           'Surface solar flux between {min} and {max}.',
           {
-            min: formatNumber(terraforming.luminosity.targetMin, false, 1),
-            max: formatNumber(terraforming.luminosity.targetMax, false, 1),
+            min: formatNumber(terraforming.getLuminosityTargetRange().min, false, 1),
+            max: formatNumber(terraforming.getLuminosityTargetRange().max, false, 1),
           }
         )
     );
@@ -3740,8 +3740,8 @@ function updateLifeBox() {
             'luminosity.target',
             'Surface solar flux between {min} and {max}.',
             {
-              min: formatNumber(terraforming.luminosity.targetMin, false, 1),
-              max: formatNumber(terraforming.luminosity.targetMax, false, 1),
+              min: formatNumber(terraforming.getLuminosityTargetRange().min, false, 1),
+              max: formatNumber(terraforming.getLuminosityTargetRange().max, false, 1),
             }
           )
       );

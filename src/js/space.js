@@ -399,9 +399,25 @@ class SpaceManager extends EffectableEntity {
         const reward = 2000 * rewardIndex;
         this.dominionTerraformRewards[resolvedDominion] = true;
         this.dominionTerraformRewardCount = rewardIndex;
+        this.applyDominionTerraformRewards();
         const artifactGain = getArtifactGainAmount(reward);
         resources.special.alienArtifact.increase(artifactGain);
         return artifactGain;
+    }
+
+    applyDominionTerraformRewards() {
+        const rewards = terraformingParameters.gameplay.dominionTerraformRewards;
+        for (const id in rewards) {
+            if (!this.dominionTerraformRewards[id]) continue;
+            rewards[id].forEach((effect, index) => addEffect({
+                ...effect,
+                sourceId: `dominion-terraform-reward:${id}`,
+                effectId: `dominion-terraform-reward:${id}:${index}`,
+                name: t('ui.rwg.dominionLore.rewardName', {
+                    name: t(`catalogs.terraformingRequirements.${id}.displayName`)
+                })
+            }));
+        }
     }
 
     // --- Getters (Keep existing getters) ---

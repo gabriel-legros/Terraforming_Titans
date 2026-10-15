@@ -284,7 +284,7 @@
     getTravelPointGain() {
       const population = Math.max(1, this.getCurrentPopulation());
       const basePoints = Math.max(1, Math.log10(population));
-      return this.applyHazardPointBonus(basePoints);
+      return this.applyPointBonuses(basePoints);
     }
 
     addManufacturingPopulation(value) {

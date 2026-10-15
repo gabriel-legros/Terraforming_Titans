@@ -86,6 +86,14 @@ class Aerostat extends BaseColony {
     return !!this.aerostats_powered_flight;
   }
 
+  getBuildingSupportPerAerostat(building) {
+    let support = building.aerostatReduction;
+    for (const effect of this.activeEffects) {
+      if (effect.type === 'aerostatSupportMultiplier') support *= effect.value;
+    }
+    return support;
+  }
+
   getAndroidCapacityShare() {
     return Math.max(
       0,
@@ -1428,7 +1436,7 @@ function getAerostatMaintenanceMitigation(context = {}) {
       }
     }
 
-    const reductionValue = building.aerostatReduction ?? 0;
+    const reductionValue = aerostat ? aerostat.getBuildingSupportPerAerostat(building) : 0;
     const reduction = Number.isFinite(reductionValue) ? reductionValue : 0;
     if (reduction <= 0) {
       continue;
