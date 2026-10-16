@@ -34,6 +34,7 @@ let rwgDominionLoreOverlayEl;
 let rwgDominionLoreListEl;
 let rwgDominionLoreTextEl;
 let rwgDominionLoreRewardStatusEl;
+let rwgDominionLoreRewardDescriptionEl;
 let rwgDominionLoreBodyTextEl;
 let rwgDominionLoreCloseBtnEl;
 let rwgDominionLoreItems = {};
@@ -375,7 +376,10 @@ function initializeDominionLoreOverlay() {
   rewardStatus.style.display = 'none';
   const loreBody = document.createElement('div');
   loreBody.className = 'rwg-lore-text-body';
+  const rewardDescription = document.createElement('p');
+  rewardDescription.style.display = 'none';
   text.appendChild(rewardStatus);
+  text.appendChild(rewardDescription);
   text.appendChild(loreBody);
   body.appendChild(list);
   body.appendChild(text);
@@ -389,6 +393,7 @@ function initializeDominionLoreOverlay() {
   rwgDominionLoreListEl = list;
   rwgDominionLoreTextEl = text;
   rwgDominionLoreRewardStatusEl = rewardStatus;
+  rwgDominionLoreRewardDescriptionEl = rewardDescription;
   rwgDominionLoreBodyTextEl = loreBody;
   rwgDominionLoreCloseBtnEl = closeBtn;
 
@@ -448,6 +453,11 @@ function refreshDominionLoreList() {
 }
 
 function selectDominionLore(id) {
+  const hasReward = !!terraformingParameters.gameplay.dominionTerraformRewards[id];
+  rwgDominionLoreRewardDescriptionEl.style.display = hasReward ? '' : 'none';
+  rwgDominionLoreRewardDescriptionEl.textContent = hasReward
+    ? t('ui.rwg.dominionLore.rewardDescription', { reward: t(`ui.rwg.dominionLore.rewards.${id}`) })
+    : '';
   rwgDominionLoreOrder.forEach((entryId) => {
     const item = rwgDominionLoreItems[entryId];
     item.classList.toggle('active', entryId === id);
@@ -1331,7 +1341,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
       const progressLabel = document.createElement('div');
       progressLabel.id = 'rwg-progress-label';
       progressLabel.style.marginBottom = '4px';
-      progressLabel.textContent = getRwgUiText('equilibrate.progressMinimum', 'Minimum fast-forward (Game is paused)');
+      progressLabel.textContent = getRwgUiText('equilibrate.progressMinimum');
 
       const barContainer = document.createElement('div');
       barContainer.style.width = '100%';
@@ -1356,17 +1366,19 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
       statsDiv.appendChild(stableRefText);
       statsDiv.appendChild(unstableRefText);
       statsDiv.appendChild(timeSimText);
+      const stepsText = document.createElement('div');
+      stepsText.textContent = getRwgUiText('equilibrate.stepsSimulated', undefined, { value: 0, total: formatNumber(terraformingParameters.gameplay.equilibration.maximumSteps, true) });
+      statsDiv.appendChild(stepsText);
 
       const endBtn = document.createElement('button');
       endBtn.id = 'rwg-end-early-btn';
       endBtn.textContent = getRwgUiText('equilibrate.endEarly', 'End Early');
-      endBtn.style.display = 'none';
       endBtn.onclick = () => { cancelToken.endEarly = true; };
 
       const addTimeBtn = document.createElement('button');
-      addTimeBtn.textContent = getRwgUiText('equilibrate.addTime', 'Add 10s');
+      addTimeBtn.textContent = getRwgUiText('equilibrate.addTime', undefined, { value: formatNumber(terraformingParameters.gameplay.equilibration.additionalSteps, true) });
       addTimeBtn.onclick = () => {
-        cancelToken.addTime = (cancelToken.addTime || 0) + 10000;
+        cancelToken.addSteps = (cancelToken.addSteps || 0) + terraformingParameters.gameplay.equilibration.additionalSteps;
       };
 
       const cancelBtn = document.createElement('button');
@@ -1388,13 +1400,13 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
         const result = await runEquilibration(eqInput, {
           cancelToken
         }, (p, info) => {
-          const label = document.getElementById('rwg-progress-label');
-          if (label && info?.label) label.textContent = info.label;
+          progressLabel.textContent = getRwgUiText(info.phase === 'verifying' ? 'equilibrate.progressAdditional' : 'equilibrate.progressMinimum');
           bar.style.width = `${(p * 100).toFixed(2)}%`;
           if (info) {
+            stepsText.textContent = getRwgUiText('equilibrate.stepsSimulated', undefined, { value: formatNumber(info.step, true), total: formatNumber(info.stepBudget, true) });
             stableRefText.textContent = getRwgUiText(
               'equilibrate.refinementsStabilityTarget',
-              'Number of refinements from stability: {value}/20',
+              undefined,
               { value: info.refinementsFromStability || 0 }
             );
             unstableRefText.textContent = getRwgUiText(
@@ -1407,7 +1419,6 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
               timeSimText.textContent = getRwgUiText('equilibrate.timeSimulated', 'Time simulated: {value}', { value: formatDuration(seconds) });
             }
           }
-          if (info?.label === getRwgUiText('equilibrate.progressAdditional', 'Additional fast-forward (Game is paused)')) endBtn.style.display = '';
         });
         const mergedAfterEq = deepMerge(defaultPlanetParameters, result.override);
         const newRes = { ...res, override: result.override, merged: mergedAfterEq };
@@ -1420,15 +1431,7 @@ function attachEquilibrateHandler(res, sStr, archetype, box) {
         attachEquilibrateHandler(newRes, sStr, archetype, box);
         attachTravelHandler(newRes, sStr);
       } catch (e) {
-        if (e?.message === 'timeout') {
-          try { if (res?.seedString) equilibratedWorlds.add(res.seedString); } catch(_){}
-          equilibratedWorlds.add(sStr);
-          box.innerHTML = renderWorldDetail(res, sStr, archetype);
-          try { writeResultDataset(box, res, sStr); } catch(_){}
-          cacheResultControls();
-          attachEquilibrateHandler(res, sStr, archetype, box);
-          attachTravelHandler(res, sStr);
-        } else if (e?.message !== 'cancelled') {
+        if (e?.message !== 'cancelled') {
           console.error('Equilibration failed:', e);
         }
       } finally {
@@ -1517,7 +1520,7 @@ async function runAutoTravelEquilibrationPopup(res) {
   const progressLabel = document.createElement('div');
   progressLabel.id = 'rwg-progress-label';
   progressLabel.style.marginBottom = '4px';
-  progressLabel.textContent = getRwgUiText('equilibrate.progressMinimum', 'Minimum fast-forward (Game is paused)');
+  progressLabel.textContent = getRwgUiText('equilibrate.progressMinimum');
 
   const barContainer = document.createElement('div');
   barContainer.style.width = '100%';
@@ -1542,17 +1545,19 @@ async function runAutoTravelEquilibrationPopup(res) {
   statsDiv.appendChild(stableRefText);
   statsDiv.appendChild(unstableRefText);
   statsDiv.appendChild(timeSimText);
+  const stepsText = document.createElement('div');
+  stepsText.textContent = getRwgUiText('equilibrate.stepsSimulated', undefined, { value: 0, total: formatNumber(terraformingParameters.gameplay.equilibration.maximumSteps, true) });
+  statsDiv.appendChild(stepsText);
 
   const endBtn = document.createElement('button');
   endBtn.id = 'rwg-end-early-btn';
   endBtn.textContent = getRwgUiText('equilibrate.endEarly', 'End Early');
-  endBtn.style.display = 'none';
   endBtn.onclick = () => { cancelToken.endEarly = true; };
 
   const addTimeBtn = document.createElement('button');
-  addTimeBtn.textContent = getRwgUiText('equilibrate.addTime', 'Add 10s');
+  addTimeBtn.textContent = getRwgUiText('equilibrate.addTime', undefined, { value: formatNumber(terraformingParameters.gameplay.equilibration.additionalSteps, true) });
   addTimeBtn.onclick = () => {
-    cancelToken.addTime = (cancelToken.addTime || 0) + 10000;
+    cancelToken.addSteps = (cancelToken.addSteps || 0) + terraformingParameters.gameplay.equilibration.additionalSteps;
   };
 
   const cancelBtn = document.createElement('button');
@@ -1571,16 +1576,15 @@ async function runAutoTravelEquilibrationPopup(res) {
   try {
     const eqInput = buildEquilibrationInputParams(res);
     const result = await runEquilibration(eqInput, {
-      cancelToken,
-      skipAdditionalFastForward: true
+      cancelToken
     }, (p, info) => {
-      const label = document.getElementById('rwg-progress-label');
-      if (label && info?.label) label.textContent = info.label;
+      progressLabel.textContent = getRwgUiText(info.phase === 'verifying' ? 'equilibrate.progressAdditional' : 'equilibrate.progressMinimum');
       bar.style.width = `${(p * 100).toFixed(2)}%`;
       if (info) {
+        stepsText.textContent = getRwgUiText('equilibrate.stepsSimulated', undefined, { value: formatNumber(info.step, true), total: formatNumber(info.stepBudget, true) });
         stableRefText.textContent = getRwgUiText(
           'equilibrate.refinementsStabilityTarget',
-          'Number of refinements from stability: {value}/20',
+          undefined,
           { value: info.refinementsFromStability || 0 }
         );
         unstableRefText.textContent = getRwgUiText(
@@ -1593,16 +1597,12 @@ async function runAutoTravelEquilibrationPopup(res) {
           timeSimText.textContent = getRwgUiText('equilibrate.timeSimulated', 'Time simulated: {value}', { value: formatDuration(seconds) });
         }
       }
-      if (info?.label === getRwgUiText('equilibrate.progressAdditional', 'Additional fast-forward (Game is paused)')) endBtn.style.display = '';
     });
     const mergedAfterEq = deepMerge(defaultPlanetParameters, result.override);
     const newRes = { ...res, override: result.override, merged: mergedAfterEq };
     syncResultStarData(newRes);
     return newRes;
   } catch (e) {
-    if (e?.message === 'timeout') {
-      return res;
-    }
     if (e?.message === 'cancelled') {
       return null;
     }

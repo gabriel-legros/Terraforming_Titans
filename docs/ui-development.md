@@ -55,6 +55,7 @@ Project cards survive travel and `projectsUI.js` rebinds new project instances t
 
 - Create an attached `<span class="info-tooltip-icon">&#9432;</span>` and call `attachDynamicInfoTooltip(icon, localizedText)`.
 - Keep the icon and tooltip attached to their owning control. Avoid detached or body-level duplicates.
+- Refresh dynamic tooltip content through the tooltip's `_prepareTooltipContent` callback so text is populated before measurement and placement.
 - For structured tooltips, cache the content and its rows/spans, update text in place, and hide unused optional rows.
 - Before removing a tooltip-bearing subtree, call `cleanupDynamicTooltipsIn(...)` on that exact subtree and clear its cached tooltip references.
 

@@ -9,6 +9,7 @@ This document records durable ownership and cross-system constraints. Feature va
 - Core simulation is centered on terraforming, physics, and cycle modules. Economy/colony behavior is centered on resources, buildings, colonies, and their UI modules.
 - `StoryManager` in `progress.js` owns story progression. Story-only project classes live under `src/js/story/` and load after their base classes.
 - `SpaceManager` owns planet travel/state.
+- Dominion first-terraform bonuses derive from `SpaceManager.dominionTerraformRewards` and the effect definitions in `terraformingParameters.gameplay.dominionTerraformRewards`. Reapply them after world initialization, save restoration, and shared-manager effect reconciliation using stable effect ids; loading or travel never grants artifacts again. These bonuses apply across dominions, including previously claimed rewards.
 - Per-artificial-world infrastructure completion belongs on the corresponding `SpaceManager.artificialWorldStatuses` entry. Project instances mirror the current entry and do not carry completion to another world through project travel state.
 - `src/js/save-settings/settings.js` owns setting migration, runtime application, and UI synchronization. `save.js` passes the saved settings payload to it.
 - `EffectableEntity` in `effectable-entity.js` supplies shared effect and flag behavior.
@@ -19,7 +20,7 @@ This document records durable ownership and cross-system constraints. Feature va
 - Dynamic-world surface gravity excludes atmospheric mass. Gravity penalties instead estimate gravity at the altitude where atmospheric pressure reaches 1 atm, including the atmosphere below that altitude.
 - World-specific values live in planet or special-seed parameters. Derive dependent values only after mod patch stages have run.
 - Specialized building, colony, and project constructors are selected through each parameter entry's `type`. Keep constructor selection data-driven.
-- Neutron Star Smasher saves cumulative merger progress through the shared finite-target project state. Only whole mergers grant rewards. Its replaceable import-cap effect carries both the metal cap and created black-hole count; the Warp Gate Network manager rebuilds those derived totals, and Artificial Quasars add the created holes after network scaling. Save/load and travel must not scale or award those rewards a second time.
+- Neutron Star Smasher saves cumulative merger progress through the shared finite-target project state. Only whole mergers grant rewards. Its replaceable import-cap effect carries both the metal cap and created black-hole count; the Warp Gate Network manager rebuilds those derived totals, and Artificial Quasars add the created holes after network scaling. Like Planet Cracker bonuses, the metal cap is measured in ship slots: convert ejecta throughput using the unmodified metal mining payload and trip duration, then allow normal ship upgrades and mining costs to apply. Save/load and travel must not scale or award those rewards a second time.
 - Building-specific logic belongs in a dedicated subclass under `src/js/buildings/`.
 - World-specialization exclusion, warnings, and unlock checks use the shared helpers in `SpecializationProject.js`; do not introduce fixed specialization lists.
 
@@ -29,9 +30,19 @@ This document records durable ownership and cross-system constraints. Feature va
 
 `startNewGame()` fully rebuilds state and returns to Mars. It preserves General settings, resets Difficulty settings and their lock state, and carries no gameplay progression forward. Any value initialized late in a session must also have an explicit new-game initialization path.
 
+The Difficulty section's `Reset to default` button restores the shared difficulty defaults and reapplies their effects without changing General settings or progression. It is available only while difficulty settings are unlocked.
+
+Funding multiplier applies to `FundingModule` production, including base funding and Solis funding bonuses. It stacks with existing funding production effects and does not scale market sales or other independent funding sources.
+
+Android Hive Mind and workers-per-android difficulty settings install effects on `androidResearch` and `PopulationModule`. Research production and android worker capacity consume those effects, combining them with Dominion bonuses. Difficulty resets remove only the settings' effects.
+
+Market pricing stores independent base buy/sell overrides by resource category and stable resource id in Difficulty settings. Cargo Rocket uses the shared buy prices; Galactic Market uses both sides. Missing overrides use the project parameter buy prices and existing sell-price factors, independently of custom prices on the other side. Ship purchase surcharges, sell saturation, and trade limits continue to apply. Prices persist across travel, default for legacy saves, and follow the difficulty lock and reset lifecycle.
+
 ### Load
 
 `loadGame()` rebuilds through `initializeGameState({ skipStoryInitialization: true })`. Difficulty settings reset to defaults before saved values are applied so absent legacy fields do not inherit the prior session.
+
+RWG effect effectiveness defaults to `1` and recalculates all earned random-world rewards from the original world and hazard counts. Apply the reward-count cap first, then scale additive bonuses, multiplier bonuses above `1`, and divisor bonuses above `1`; this also scales the bonus portion of capped import divisors. Changing effectiveness never rewrites progression counts or compounds previously applied effects. The same calculation supplies gameplay effects and their UI summary.
 
 ### Travel
 
@@ -51,7 +62,7 @@ Travel snapshots are deliberately separate from ordinary `saveState()`/`loadStat
 
 Departure has two phases. `prepareTravelState(resetLevel)` is progression finalization and runs only below the owner's `departureResetAt`; examples include specialization awards, population commits, and O'Neill conversion. `cleanupForReset(resetLevel)` removes old-world effects and references whenever the world is replaced, regardless of prestige level. Snapshot-only normalization belongs in `prepareTravelSnapshot(resetLevel)`, which runs whenever that object's transient snapshot is preserved. `SpaceManager.recordDepartureSnapshot({ resetLevel })` likewise skips world-status recording, galactic population aggregation, follower departure aggregation, and departure skill rewards at `GALAXY` or higher while leaving cleanup active.
 
-Persistent meta systems include Research (with regular research reset), Skills, Solis, Space, Galactic Invasion, Story, and explicitly preserved manager-owned resources/state. Do not infer persistence merely because an object happens to survive one path.
+Persistent meta systems include Research (with regular research reset), Skills, Solis, Space, Galactic Invasion, Story, and explicitly preserved manager-owned resources/state. Research automation checkboxes and priorities persist across travel, including SMBH shellworld research restoration; world snapshots restore completion without replacing those current settings. Do not infer persistence merely because an object happens to survive one path.
 
 UI controllers can outlive gameplay managers. Rebind their current manager context on every lifecycle initialization; do not retain the instance from the first build in a closure.
 
@@ -81,6 +92,10 @@ Durable constraints:
 - Surface land uses its existing fixed-point `BigInt` reservation/value ledger. Assignment systems that store `BigInt` counts convert to `Number` only at rate/formula boundaries.
 - Hydra owns its five swarm inventories in a world-specific story project. Aether spends orbital debris as feedstock; its swarm mass is separate from the Kessler resource. Continuous environmental transfers use the shared resource accumulator, and victory removes Hydra's effects without clearing unrelated physical debris. See [Hydra](hydra.md) for tuning and calibration.
 - Project costs may include non-consumable availability requirements by overriding `isCostConsumed(category, resource)`. Such entries remain visible in the cost UI and participate in project-specific availability checks, while `getConsumableCost()` excludes them from discrete and continuous deductions.
+- Colony energy storage includes one base shipment's energy per unassigned ship and per ship assigned to an idle or paused project. Unassigned ships use the standard ore-import shipment cost; assigned ships use their project's base shipment cost. Both include ship efficiency and the before-Space-Elevator multiplier, excluding cost penalties and elevator benefits. Space Storage uses its transfer lifecycle rather than its expansion lifecycle to determine whether assigned ships are ongoing.
+- Repeatable construction uses `ContinuousExpansionProject` directly or its capability on the required specialized base class. `getExpansionUnitCost()` supplies the recipe for one complete expansion; shared `getScaledCost()` prices a new timed cycle only for its unpaid remainder. `expansionAccounting` selects existing progress, completed, and prepaid fields, a limit, and any specialized carried-progress effects. Whole-cycle projects use `timedOnly`; instant batches retain their count types and use `Project.scaleCost()`.
+- Continuous expansion estimates and deductions share `planExpansionProgress()`: cap requested work first, consume prepaid credit, then constrain unpaid work to colony and space-storage availability including pending changes. Start does not charge continuous work. Duration effects carry elapsed timed progress before replacing timers with continuous-mode sentinels; a paid manual cycle stays active until its remaining credit is consumed and completes only the current expansion. Fractional progress and prepaid credit survive restart and save/load; estimates never consume credit or advance progress. `ProjectManager` also carries the cycle amount and prepaid credit when a project's travel snapshot retains active construction or fractional progress, restoring them before subclass loaders can change construction modes. Projects that reset construction on travel do not retain this credit. Production operations and transfers keep their separate resource accounting.
+- Deeper Mining's paid timed increment is an average-depth increment and is diluted when new mines join. Underground Land Expansion and Swampification supply dynamic land limits and reservation allowances; Space Access retains its construction recipe until that installation completes. Artificial Sky construction applies its hazard outcomes after the shared work budget is purchased.
 - Molten-surface structure attrition belongs to `Terraforming` rather than `HazardManager`, so it remains active on worlds that disable optional hazard systems. It runs with environmental hazard updates after climate stepping unless the `disableMoltenSurfaceAttrition` difficulty setting is enabled. Geological lava or plasma must reserve all geometric land before attrition begins; temperature-maintenance immunity also grants molten-surface immunity. Operational Aerostats additionally protect their own colony and the active structures covered by existing direct-support and worker-capacity calculations.
 - Every life metabolism growth/decay recipe must conserve mass. Validate coefficient arithmetic rather than tuning it by feel.
 - Non-zonal surface metabolism inputs and outputs use `perBiomass.globalSurface`; zonal liquids and biomass remain under `perBiomass.surface`.
@@ -109,6 +124,7 @@ Durable constraints:
 
 - Solve ideal zonal flux and focus-melt demand first, then project that plan onto current mirror and Hyperion Lantern capacity by priority.
 - Prepare one scoped projection context per terraforming substep and reuse its flux-invariant inputs across trial fluxes. Never retain that context across substeps.
+- Retain the best ideal-flux candidate between oversight calls. Stalled searches back off using simulation time, with a bounded periodic retry; changed targets, modes, priorities, or material projected-climate drift wake the search early. Retry state is runtime-only and scoped to the current settings and world. Reevaluate the cached fluxes and allocate current mirror/lantern capacity every call, including during backoff.
 - Run oversight after each woven climate-resource slice and immediately before its physics step.
 - Keep solved UI projections separate from live terraforming trend fields.
 - Preserve explicit signed mirror assignments on full restore (`negative` means reverse/cooling). Presets and travel restores retain the advanced-oversight assignment guard unless explicitly restoring assignments.

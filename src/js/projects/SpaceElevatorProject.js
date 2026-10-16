@@ -259,7 +259,7 @@
       return scaled;
     }
 
-    getScaledCost() {
+    getExpansionUnitCost() {
       return this.lockedConstructionCost || this.calculateCurrentCost();
     }
 
@@ -359,20 +359,7 @@
           : SPACE_ELEVATOR_MODE;
         this.lockedConstructionCost = this.calculateCurrentCost();
       }
-      if (this.isContinuous()) {
-        if (!this.isPaused && !this.canAfford(resources)) {
-          this.lockedConstructionMode = '';
-          this.lockedConstructionCost = null;
-          return false;
-        }
-        this.isActive = true;
-        this.isPaused = false;
-        this.isCompleted = false;
-        this.startingDuration = Infinity;
-        this.remainingTime = Infinity;
-        return true;
-      }
-      const started = Project.prototype.start.call(this, resources);
+      const started = this.startContinuousExpansion(resources);
       if (!started) {
         this.lockedConstructionMode = '';
         this.lockedConstructionCost = null;
@@ -408,7 +395,11 @@
     complete() {
       this.isCompleted = true;
       this.isActive = false;
-      this.recordCompletions(1, this.getConstructionMode());
+      const total = this.expansionProgress + (this.expansionCycleProgress ?? 1);
+      const completions = Math.floor(total);
+      this.expansionProgress = total - completions;
+      this.expansionPrepaidProgress = 0;
+      this.recordCompletions(completions, this.getConstructionMode());
       this.lockedConstructionMode = '';
       this.lockedConstructionCost = null;
       if (gameSettings.spaceAccessCapacity) {
@@ -463,41 +454,17 @@
           accumulatedChanges
         );
       }
-      const totals = { cost: {}, gain: {} };
-      const duration = this.getEffectiveDuration();
-      const requestedProgress = Math.min(
-        deltaTime / duration * productivity,
-        this.getRemainingTargetProgress(),
-        this.getRemainingCurrentModeProgress()
-      );
-      const cost = this.getScaledCost();
-      const progress = this.getAffordableExpansionProgress(
-        requestedProgress,
-        cost,
-        null,
-        accumulatedChanges
-      );
-      totals.cost = this.estimateExpansionCostForProgress(
-        cost,
-        progress,
-        deltaTime,
-        accumulatedChanges,
-        null,
-        { applyRates, sourceLabel: this.getRateSource() }
-      );
-      return totals;
+      return this.estimateExpansionTick(deltaTime, applyRates, productivity, accumulatedChanges, {
+        remaining() { return Math.min(this.getRemainingTargetProgress(), this.getRemainingCurrentModeProgress()); },
+        sourceLabel: this.getRateSource()
+      });
     }
 
     applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1) {
       if (!this.isContinuous() || !this.isActive) {
         return;
       }
-      const duration = this.getEffectiveDuration();
-      const requestedProgress = Math.min(
-        deltaTime / duration * productivity,
-        this.getRemainingTargetProgress(),
-        this.getRemainingCurrentModeProgress()
-      );
+      const requestedProgress = deltaTime / this.getEffectiveDuration() * productivity;
       const mode = this.getConstructionMode();
       const cost = this.getScaledCost();
       this.applyRequestedExpansionProgress(
@@ -505,6 +472,7 @@
         cost,
         accumulatedChanges,
         {
+          remaining() { return Math.min(this.getRemainingTargetProgress(), this.getRemainingCurrentModeProgress()); },
           applyRates: true,
           seconds: deltaTime / 1000,
           rateSourceLabel: this.getRateSource(),
@@ -948,6 +916,8 @@
     }
   }
 
-  ContinuousExpansionProject.applyCapabilityTo(SpaceElevatorProject);
+  ContinuousExpansionProject.applyCapabilityTo(SpaceElevatorProject, {
+    limit() { return this.getMaxRepeats(); }
+  });
   registerProjectConstructor('SpaceElevatorProject', SpaceElevatorProject);
 }());

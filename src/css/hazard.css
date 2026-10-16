@@ -673,7 +673,11 @@
 }
 
 .pulsar-storm-countdown {
-  top: 20px;
+  height: 20px;
+  line-height: 20px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: #4da6ff;
   font-size: 15px;
   font-weight: bold;

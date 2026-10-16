@@ -64,11 +64,9 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
   }
 
   getCollectorHeadroom() {
-    const maxCollectors = this.getMaxCollectors();
-    if (maxCollectors === Infinity) {
-      return Infinity;
-    }
-    return Math.max(maxCollectors - (this.collectors + this.fractionalCollectors), 0);
+    return this.getRemainingExpansionCapacity({
+      completedField: 'collectors', progressField: 'fractionalCollectors', limit: this.getMaxCollectors()
+    });
   }
 
   clampCollectorTotals() {
@@ -322,31 +320,14 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
       if (desiredCollectorGain <= 0) {
         return totals;
       }
-      const requestedCollectorGain = Math.min(desiredCollectorGain, headroom);
-      const collectorGain = this.getAffordableExpansionProgress(
-        requestedCollectorGain,
-        collectorCost,
-        storageState,
-        accumulatedChanges
-      );
-      if (collectorGain <= 0) {
-        return totals;
-      }
-
-      const expansionTotals = this.estimateExpansionCostForProgress(
-        collectorCost,
-        collectorGain,
-        deltaTime,
-        accumulatedChanges,
-        storageState,
-        {
-          applyRates: false,
-          sourceLabel: registerRateSource(
-            'project:dysonCollectorExpansion',
-            t('ui.resourceRates.sources.dysonCollector', {}, 'Dyson Collector')
-          )
-        }
-      );
+      const estimate = this.estimateRequestedExpansionProgress(desiredCollectorGain, collectorCost, deltaTime,
+        accumulatedChanges, {
+          remaining: headroom, usePrepaid: false, storageState,
+          progressOptions: {
+            completedField: 'collectors', progressField: 'fractionalCollectors', limit: this.getMaxCollectors()
+          }
+        });
+      const expansionTotals = estimate.cost;
       this.mergeResourceTotals(totals.cost, expansionTotals);
       return totals;
     }
@@ -421,6 +402,8 @@ class DysonSwarmReceiverProject extends DysonContinuousExpansionBase {
       collectorCost,
       accumulatedChanges,
       {
+        usePrepaid: false,
+        ignoreProjectPause: true,
         storageOptions: { reconcileOnDirectSpend: true },
         progressOptions: {
           completedField: 'collectors',

@@ -94,7 +94,7 @@ var terraformingParameters = {
       minimumAtmosphericColumnMassKgM2: 100,
       climateHeatDepositionFraction: 1,
       maximumTemperatureK: 10000,
-      warningTemperatureRateKPerDay: 0.001
+      warningTemperatureRateKPerDay: 0.0001
     },
     chemistry: {
       oxidation: {
@@ -105,7 +105,7 @@ var terraformingParameters = {
         combustionSpringMaximumFractionPerDay: 0.6,
         combustionSpringExponent: 2,
         combustionSpringSecondsPerDay: 86400,
-        combustionWarningTemperatureRateKPerDay: 0.001,
+        combustionWarningTemperatureRateKPerDay: 0.0001,
         climateHeatDepositionFraction: 1,
         maximumCombustionTemperatureK: 10000,
         sparkReferenceTemperatureK: 298.15,
@@ -568,6 +568,16 @@ var terraformingParameters = {
   },
 
   gameplay: {
+    dominionTerraformRewards: {
+      ammonia: [{ target: 'terraforming', type: 'specializationPrecisionBonus', value: 0.05 }],
+      oommaa: [{ target: 'terraforming', type: 'ecumenopolisLuminosityReduction', value: 1 }],
+      klishy: [{ target: 'androidResearch', type: 'productionMultiplier', value: 2 }],
+      kerati: [{ target: 'global', type: 'crusaderEffectivenessMultiplier', value: 2 }],
+      shrilek: [{ target: 'project', targetId: 'undergroundExpansion', type: 'undergroundDepthMultiplier', value: 2 }],
+      vanadophore: [{ target: 'colony', targetId: 'aerostat_colony', type: 'aerostatSupportMultiplier', value: 1.2 }],
+      yggies: [{ target: 'building', targetId: 'biodome', type: 'biodomeEffectivenessMultiplier', value: 2 }],
+      shiivert: [{ target: 'population', type: 'androidWasteWorkerBonus', value: 1, tonsPerAndroid: 10 }]
+    },
     neutronStarMerging: {
       neutronStars: 1_000_000_000,
       mergersPerAssignmentSecond: 1 / 1000,
@@ -614,6 +624,38 @@ var terraformingParameters = {
       maximumResourceSubsteps: 24,
       equilibriumSnapEnabled: false,
       equilibriumSnapRateTonsPerSecond: 0.01
+    },
+    equilibration: {
+      initialStepDays: 10,
+      maximumStepDays: 80,
+      maximumSteps: 12000,
+      additionalSteps: 2000,
+      checkEvery: 5,
+      chunkSteps: 40,
+      stableChecks: 4,
+      verificationChecks: 20,
+      adaptationChecks: 8,
+      implicitInitialSteps: 100,
+      implicitMaximumSteps: 1e12,
+      implicitGrowth: 1.3,
+      implicitReduction: 0.5,
+      implicitReversalThreshold: 0.2,
+      implicitPolishThreshold: 1e8,
+      implicitLocalPolishThreshold: 1000,
+      implicitPolishEvery: 20,
+      implicitBlockPolishEvery: 100,
+      implicitPolishCorrections: 4,
+      implicitBlockPolishCorrections: 32,
+      implicitVerificationMargin: 0.1,
+      absoluteToleranceTons: 0.01,
+      relativeTolerance: 1e-4,
+      finalRelativeTolerance: 1e-12,
+      temperatureToleranceK: 1e-6
+    },
+    mirrorOversight: {
+      initialRetryDelayMs: 100,
+      maximumRetryDelayMs: 2000,
+      climateRetryToleranceK: 0.1
     },
     life: {
       surfaceBiomassFoodPerTonPerSecond: 0.01

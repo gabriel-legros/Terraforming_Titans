@@ -82,8 +82,14 @@ class StellarEngineProject extends ArtificialSkyProject {
     return segments;
   }
 
-  getScaledCost() {
-    return Project.prototype.getScaledCost.call(this);
+  getExpansionUnitCost() {
+    const cost = Project.prototype.getScaledCost.call(this);
+    const agilityResearchCost = this.getHighAgilityFreighterResearchCost();
+    if (agilityResearchCost > 0) {
+      cost.colony ||= {};
+      cost.colony.research = (cost.colony.research || 0) + agilityResearchCost;
+    }
+    return cost;
   }
 
   getBuiltSegmentsWithProgress() {

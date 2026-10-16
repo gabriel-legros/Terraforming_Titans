@@ -445,11 +445,27 @@ class HazardousMachineryHazard {
     if (!crusaders || !crusaders.unlocked) {
       return 0;
     }
-    return Math.max(0, crusaders.value || 0) * Math.max(0, parameters?.crusaderRemovalPerSecond || 0);
+    return Math.max(0, crusaders.value || 0) * Math.max(0, parameters?.crusaderRemovalPerSecond || 0)
+      * getCrusaderEffectivenessMultiplier();
   }
 
   getCounterHackCostPerMachinery(parameters) {
     return Math.max(1, parameters?.researchToDisableCost || 10000);
+  }
+
+  convertMachineryToScrap(amount, seconds = 0, sourceId = null) {
+    const machinery = resources.surface.hazardousMachinery;
+    const scrapMetal = resources.surface.scrapMetal;
+    machinery.decrease(amount);
+    scrapMetal.increase(amount, true);
+    if (!scrapMetal.unlocked) {
+      scrapMetal.unlocked = true;
+      unlockResource(scrapMetal);
+    }
+    if (seconds > 0) {
+      machinery.modifyRate(-amount / seconds, sourceId, 'hazard');
+      scrapMetal.modifyRate(amount / seconds, sourceId, 'hazard');
+    }
   }
 
   performCounterHack(terraforming, parameters, batchCount = 1) {
@@ -472,7 +488,7 @@ class HazardousMachineryHazard {
     }
 
     research.decrease(actual * costPerMachinery);
-    resource.decrease(actual);
+    this.convertMachineryToScrap(actual);
     this.syncResource(terraforming, parameters, { preserveValue: true });
     return actual;
   }
@@ -1025,14 +1041,13 @@ class HazardousMachineryHazard {
     } else if (naturalGrowthDelta < 0) {
       const naturalDecay = Math.min(currentAmount, Math.abs(naturalGrowthDelta));
       if (naturalDecay > 0) {
-        resource.decrease(naturalDecay);
-        resource.modifyRate?.(
-          -Math.abs(penaltyValues.naturalGrowthRatePerSecond),
+        this.convertMachineryToScrap(
+          naturalDecay,
+          deltaSeconds,
           registerRateSource(
             'hazard:hazardousMachineryNaturalDecay',
             getHazardousMachineryText('rateLabels.baseDecay', 'Natural Decay')
-          ),
-          'hazard'
+          )
         );
         currentAmount -= naturalDecay;
       }
@@ -1060,14 +1075,13 @@ class HazardousMachineryHazard {
       penaltyValues.crusaderDecayRatePerSecond * deltaSeconds
     );
     if (crusaderDecay > 0) {
-      resource.decrease(crusaderDecay);
-      resource.modifyRate?.(
-        -penaltyValues.crusaderDecayRatePerSecond,
+      this.convertMachineryToScrap(
+        crusaderDecay,
+        deltaSeconds,
         registerRateSource(
           'hazard:hazardousMachineryCrusaders',
           getHazardousMachineryText('rateLabels.crusaders', 'Crusader Patrols')
-        ),
-        'hazard'
+        )
       );
       currentAmount -= crusaderDecay;
     }

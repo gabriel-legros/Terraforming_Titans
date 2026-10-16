@@ -362,7 +362,7 @@ class Research {
       };
     }
 
-    loadState(researchState) {
+    loadState(researchState, { preserveAutomationSettings = false } = {}) {
       if (!researchState) {
         return;
       }
@@ -381,8 +381,10 @@ class Research {
             research.isResearched = savedResearch.isResearched || savedTimes > 0;
             research.alertedWhenUnlocked = savedResearch.alertedWhenUnlocked || false;
             research.alertedSpaceTab = savedResearch.alertedSpaceTab || savedResearch.isResearched || false;
-            research.autoResearchEnabledForAutomation = !!savedResearch.autoResearchEnabledForAutomation;
-            research.autoResearchPriorityForAutomation = this.normalizeAutoResearchPriority(savedResearch.autoResearchPriorityForAutomation);
+            if (!preserveAutomationSettings) {
+              research.autoResearchEnabledForAutomation = !!savedResearch.autoResearchEnabledForAutomation;
+              research.autoResearchPriorityForAutomation = this.normalizeAutoResearchPriority(savedResearch.autoResearchPriorityForAutomation);
+            }
             this.updateRepeatableResearchCost(research);
             if (research.isResearched && this.getRepeatCount(research) > 0) {
               this.applyResearchEffects(research); // Reapply effects if research is completed

@@ -49,14 +49,7 @@ class WorkerCapacityBatchProject extends Project {
   getScaledCost() {
     const base = super.getScaledCost();
     const count = this.getBatchCostMultiplier();
-    const scaled = {};
-    for (const category in base) {
-      scaled[category] = {};
-      for (const resource in base[category]) {
-        scaled[category][resource] = base[category][resource] * count;
-      }
-    }
-    return scaled;
+    return this.scaleCost(base, count);
   }
 
   adjustBuildCount(delta) {

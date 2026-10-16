@@ -1847,7 +1847,7 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   const sectorLabel = selectSectorLabel(seed) || DEFAULT_SECTOR_LABEL;
   const distanceFromSun = isStarlessRogueWorld ? 0 : safeAU;
   const effects = [];
-  if (type === 'molten') {
+  if (type === 'molten' || type === 'jupiter-like') {
     effects.push({
       target: 'building',
       targetId: 'foundry',

@@ -60,7 +60,7 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     const dummyButton = { textContent: '', disabled: false };
     const dummyWrapper = { style: { display: '' } };
     const rowElements = {};
-    [HEPHAESTUS_UNASSIGNED_KEY, 'dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars', name].forEach((key) => {
+    [HEPHAESTUS_UNASSIGNED_KEY, 'dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars', 'neutronStarSmasher', name].forEach((key) => {
       rowElements[key] = {
         wrapper: dummyWrapper,
         complexity: dummyText,
@@ -158,7 +158,7 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
   }
 
   getAllAssignableKeys() {
-    return ['dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars'];
+    return ['dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars', 'neutronStarSmasher'];
   }
 
   shouldShowSpaceChemistryTarget() {
@@ -225,6 +225,11 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     return project.unlocked || project.isActive || project.repeatCount > 0;
   }
 
+  shouldShowNeutronStarSmasherTarget() {
+    const project = projectManager.projects.neutronStarSmasher;
+    return project.unlocked || project.isActive || project.repeatCount > 0;
+  }
+
   getOptionalAssignmentKeys() {
     const keys = [];
     if (this.shouldShowNuclearAlchemyTarget()) {
@@ -247,6 +252,9 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     }
     if (this.shouldShowArtificialQuasarsTarget()) {
       keys.push('artificialQuasars');
+    }
+    if (this.shouldShowNeutronStarSmasherTarget()) {
+      keys.push('neutronStarSmasher');
     }
     return keys;
   }
@@ -455,10 +463,6 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     }
   }
 
-  start(resources) {
-    return this.startContinuousExpansion(resources);
-  }
-
   update(deltaTime) {
     this.applyYardEffects();
     if (this.isActive) {
@@ -514,45 +518,9 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
       return totals;
     }
 
-    const duration = this.getEffectiveDuration();
-    const limit = this.maxRepeatCount || Infinity;
-    const completedExpansions = this.repeatCount + this.fractionalRepeatCount;
-    const remainingRepeats = limit === Infinity ? Infinity : Math.max(0, limit - completedExpansions);
-    const requestedProgress = this.isContinuous()
-      ? Math.min((deltaTime / duration) * productivity, remainingRepeats)
-      : (deltaTime / duration);
-    if (!(remainingRepeats > 0) || !(requestedProgress > 0)) {
-      return totals;
-    }
-
-    const storageState = this.createExpansionStorageState(accumulatedChanges);
-    const cost = this.getScaledCost();
-    const progress = this.isContinuous()
-      ? this.getAffordableExpansionProgress(
-          requestedProgress,
-          cost,
-          storageState,
-          accumulatedChanges
-        )
-      : requestedProgress;
-    if (!(progress > 0)) {
-      return totals;
-    }
-
-    return {
-      cost: this.estimateExpansionCostForProgress(
-        cost,
-        progress,
-        deltaTime,
-        accumulatedChanges,
-        storageState,
-        {
-          applyRates,
-          sourceLabel: this.getExpansionRateSourceLabel()
-        }
-      ),
-      gain: {}
-    };
+    return this.estimateExpansionTick(deltaTime, applyRates, productivity, accumulatedChanges, {
+      sourceLabel: this.getExpansionRateSourceLabel()
+    });
   }
 
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1, accumulatedChanges = null) {
@@ -728,7 +696,7 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
       getHephaestusText('ui.projects.common.idleUnassigned', 'Idle/Unassigned')
     );
 
-    const assignmentKeys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars'];
+    const assignmentKeys = ['dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars', 'neutronStarSmasher'];
     assignmentKeys.forEach((key) => {
       const project = projectManager.projects[key];
       const labelText = project?.displayName || key;
@@ -782,7 +750,7 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
     }
 
     const activeDyson = this.getActiveDysonKey();
-    const keys = [this.getUnassignedAssignmentKey(), 'dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars'];
+    const keys = [this.getUnassignedAssignmentKey(), 'dysonSwarmReceiver', 'dysonSphere', 'spaceChemistry', 'spaceStorage', 'lifters', 'nuclearAlchemyFurnace', 'superalloyGigafoundry', 'graphenePrinter', 'artificialStars', 'planetCrackers', 'whiteDwarfHarvesters', 'artificialQuasars', 'neutronStarSmasher'];
     keys.forEach((key) => {
       const row = elements.rowElements[key];
       const storedCurrent = this.getStoredAssignmentAmount(key);
@@ -826,6 +794,8 @@ class HephaestusMegaconstructionProject extends HephaestusAssignmentTools.create
         display = this.shouldShowWhiteDwarfHarvestersTarget() ? '' : 'none';
       } else if (key === 'artificialQuasars') {
         display = this.shouldShowArtificialQuasarsTarget() ? '' : 'none';
+      } else if (key === 'neutronStarSmasher') {
+        display = this.shouldShowNeutronStarSmasherTarget() ? '' : 'none';
       }
       if (row.wrapper.style.display !== display) {
         row.wrapper.style.display = display;

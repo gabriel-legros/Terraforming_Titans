@@ -365,7 +365,7 @@ registerTerraformingMethods('resources', ({
     };
     for (const config of configs) {
       const netChangeAmount = surfaceChanges[config.name] || 0;
-      if (Math.abs(netChangeAmount) < 1e-9) {
+      if (netChangeAmount === 0) {
         continue;
       }
       const distribution = config.distribution || {};
@@ -447,7 +447,7 @@ registerTerraformingMethods('resources', ({
       for (const zone of zones) {
         let proportion = 0;
         const isTargetZone = targetZones.includes(zone);
-        if (totalDistributionFactor > 1e-9) {
+        if (totalDistributionFactor > 0) {
           if (distributionMode === 'currentAmount') {
             const currentAmount = projectedSurface[config.distributionKey][zone] || 0;
             proportion = currentAmount / totalDistributionFactor;

@@ -591,6 +591,22 @@ class KesslerHazard {
     });
   }
 
+  removeDebrisAboveBaseline(maxRemovedTons, totalMass) {
+    if (!(maxRemovedTons > 0)) return 0;
+    this.syncDistributionToResource(terraforming, this.manager.parameters.kessler, totalMass);
+    const resource = resources.special.orbitalDebris;
+    const entryCount = this.periapsisDistribution.length;
+    let removedTotal = 0;
+    for (let i = entryCount - 1; i >= 0 && removedTotal < maxRemovedTons; i -= 1) {
+      const entry = this.periapsisDistribution[i];
+      const baselineMass = getKesslerBaselineMassForEntry(this.periapsisBaseline[i], resource, entryCount);
+      const removed = Math.min(Math.max(0, entry.massTons - baselineMass), maxRemovedTons - removedTotal);
+      entry.massTons -= removed;
+      removedTotal += removed;
+    }
+    return removedTotal;
+  }
+
   getBaselineTotalMass() {
     const resource = resources.special.orbitalDebris;
     const entryCount = this.periapsisDistribution.length;

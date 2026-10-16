@@ -172,6 +172,48 @@ function getDebrisDiskColonyResourceMinimum(resourceKey, resource) {
   return Math.max(DEBRIS_DISK_COLONY_RESOURCE_MINIMUM, solisStorage);
 }
 
+function calculateColonyResourceAttrition(seconds, attritionRate, accumulatedChanges = null) {
+  const result = { resourceLoss: 0, conversions: {}, losses: {} };
+  if (!(attritionRate > 0) || !(seconds > 0)) return result;
+  for (const [resourceKey, resource] of Object.entries(resources.colony)) {
+    if (resource.hasCap !== true) continue;
+    const currentValue = Math.max(0, resource.value + (accumulatedChanges ? accumulatedChanges.colony[resourceKey] : 0));
+    const minimumValue = getDebrisDiskColonyResourceMinimum(resourceKey, resource);
+    const loss = Math.min(Math.max(0, currentValue - minimumValue), currentValue * attritionRate * seconds);
+    if (!(loss > 0)) continue;
+    result.losses[resourceKey] = loss;
+    addDebrisDiskConversionSalvage(result.conversions, 'colony', resourceKey, loss);
+    result.resourceLoss += loss;
+  }
+  return result;
+}
+
+function destroyStructuresWithSalvage(structure, lossBigInt) {
+  const inactiveAvailable = structure.count > structure.active ? structure.count - structure.active : 0n;
+  const inactiveLoss = inactiveAvailable < lossBigInt ? inactiveAvailable : lossBigInt;
+  const activeLoss = lossBigInt - inactiveLoss;
+  if (structure.requiresDeposit) structure.releaseDeposit(resources, Number(lossBigInt));
+  structure.count -= lossBigInt;
+  if (activeLoss > 0n) {
+    structure.active = structure.active > activeLoss ? structure.active - activeLoss : 0n;
+    structure.adjustLand(-activeLoss);
+  }
+  structure.updateResourceStorage();
+  if (structure.active === 0n) {
+    structure.productivity = 0;
+    structure.displayProductivity = 0;
+  }
+  const lossCount = Number(lossBigInt);
+  const cost = structure.getBaseEffectiveCost(1);
+  const salvage = { losses: Number.isFinite(lossCount) ? lossCount : 0, conversions: {} };
+  for (const [category, costs] of Object.entries(cost)) {
+    for (const [resource, amount] of Object.entries(costs)) {
+      addDebrisDiskConversionSalvage(salvage.conversions, category, resource, amount * salvage.losses);
+    }
+  }
+  return salvage;
+}
+
 function getDebrisDiskStructureMinimum(structureKey) {
   return structureKey === 'colony:aerostat_colony'
     ? DEBRIS_DISK_AEROSTAT_MINIMUM
@@ -420,62 +462,21 @@ class DebrisDiskHazard {
       return { losses: 0, conversions: {} };
     }
 
-    const inactiveAvailable = structure.count > structure.active ? structure.count - structure.active : 0n;
-    const inactiveLoss = inactiveAvailable < lossBigInt ? inactiveAvailable : lossBigInt;
-    const activeLoss = lossBigInt - inactiveLoss;
-    if (structure.requiresDeposit) {
-      structure.releaseDeposit(resources, Number(lossBigInt));
-    }
-    structure.count -= lossBigInt;
-    if (activeLoss > 0n) {
-      structure.active = structure.active > activeLoss ? structure.active - activeLoss : 0n;
-      structure.adjustLand(-activeLoss);
-    }
-    if (structure.updateResourceStorage) {
-      structure.updateResourceStorage();
-    }
-    structure.productivity = Math.min(structure.productivity, structure.activeNumber > 0 ? structure.productivity : 0);
-    structure.displayProductivity = Math.min(structure.displayProductivity, structure.activeNumber > 0 ? structure.displayProductivity : 0);
-
+    const salvage = destroyStructuresWithSalvage(structure, lossBigInt);
     this.partialAttritionByStructure[structureKey] = Number.isFinite(accumulated)
       ? accumulated - Math.floor(accumulated)
       : 0;
 
-    const lossCount = Number(lossBigInt);
-    const cost = structure.getBaseEffectiveCost ? structure.getBaseEffectiveCost(1) : structure.cost;
-    const salvage = { losses: Number.isFinite(lossCount) ? lossCount : 0, conversions: {} };
-    Object.keys(cost || {}).forEach((category) => {
-      Object.keys(cost[category] || {}).forEach((resource) => {
-        addDebrisDiskConversionSalvage(salvage.conversions, category, resource, (cost[category][resource] || 0) * salvage.losses);
-      });
-    });
     return salvage;
   }
 
   applyAttritionToColonyResources(seconds, attritionRate) {
-    const salvage = { resourceLoss: 0, conversions: {} };
-    if (!(attritionRate > 0) || !(seconds > 0)) {
-      return salvage;
-    }
-
-    Object.keys(resources.colony).forEach((resourceKey) => {
+    const salvage = calculateColonyResourceAttrition(seconds, attritionRate);
+    for (const [resourceKey, loss] of Object.entries(salvage.losses)) {
       const resource = resources.colony[resourceKey];
-      if (resource.hasCap !== true) {
-        return;
-      }
-      const currentValue = resource.value || 0;
-      const minimumValue = getDebrisDiskColonyResourceMinimum(resourceKey, resource);
-      const attritableValue = Math.max(0, currentValue - minimumValue);
-      const loss = Math.min(attritableValue, currentValue * attritionRate * seconds);
-      if (!(loss > 0)) {
-        return;
-      }
-
       resource.decrease(loss);
       resource.modifyRate(-loss / seconds, DEBRIS_DISK_ATTRITION_LABEL, 'hazard');
-      addDebrisDiskConversionSalvage(salvage.conversions, 'colony', resourceKey, loss);
-      salvage.resourceLoss += loss;
-    });
+    }
     return salvage;
   }
 

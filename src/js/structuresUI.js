@@ -1271,7 +1271,7 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     );
     productivityValue._productivityTooltip = productivityTooltip;
     productivityValue._productivityTooltipCache = {};
-    productivityValue._updateProductivityTooltip = () => {
+    productivityTooltip._prepareTooltipContent = () => {
       const text = buildStructureProductivityTooltip(structure);
       setTooltipText(
         productivityTooltip,
@@ -1280,9 +1280,6 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
         'text'
       );
     };
-    productivityValue.addEventListener('mouseenter', productivityValue._updateProductivityTooltip);
-    productivityValue.addEventListener('focusin', productivityValue._updateProductivityTooltip);
-    productivityValue.addEventListener('pointerdown', productivityValue._updateProductivityTooltip);
 
     productivityContainer.appendChild(productivityValue);
     cached.productivityElement = productivityValue;
@@ -2635,7 +2632,7 @@ function updateDecreaseButtonText(button, buildCount) {
           const tooltip = syncCostExplanationTooltip(span, '', false);
           span._costTooltip = tooltip;
           span._costTooltipCache = {};
-          span._updateCostTooltip = () => {
+          tooltip._prepareTooltipContent = () => {
             const context = span._costTooltipContext;
             const text = buildStructureCostTooltip(
               context.structure,
@@ -2645,9 +2642,6 @@ function updateDecreaseButtonText(button, buildCount) {
             );
             setTooltipText(tooltip, text, span._costTooltipCache, 'text');
           };
-            span.addEventListener('mouseenter', span._updateCostTooltip);
-            span.addEventListener('focusin', span._updateCostTooltip);
-            span.addEventListener('pointerdown', span._updateCostTooltip);
         } else if (!item.isWorkerRequirement) {
           const textSpan = document.createElement('span');
           span.appendChild(textSpan);
@@ -2720,7 +2714,7 @@ function updateDecreaseButtonText(button, buildCount) {
           const tooltip = attachDynamicInfoTooltip(span, '');
           span._workerTooltip = tooltip;
           span._workerTooltipCache = {};
-          span._updateWorkerTooltip = () => {
+          tooltip._prepareTooltipContent = () => {
             const context = span._workerTooltipContext;
             const text = buildStructureWorkerTooltip(
               context.structure,
@@ -2728,9 +2722,6 @@ function updateDecreaseButtonText(button, buildCount) {
             );
             setTooltipText(tooltip, text, span._workerTooltipCache, 'text');
           };
-          span.addEventListener('mouseenter', span._updateWorkerTooltip);
-          span.addEventListener('focusin', span._updateWorkerTooltip);
-          span.addEventListener('pointerdown', span._updateWorkerTooltip);
 
           const container = document.createElement('span');
           container.classList.add('worker-priority-container');
@@ -3565,9 +3556,7 @@ function updateDecreaseButtonText(button, buildCount) {
             );
             setTooltipText(tooltip, text, span._maintenanceTooltipCache, 'text');
           };
-          span.addEventListener('mouseenter', span._updateMaintenanceTooltip);
-          span.addEventListener('focusin', span._updateMaintenanceTooltip);
-          span.addEventListener('pointerdown', span._updateMaintenanceTooltip);
+          tooltip._prepareTooltipContent = span._updateMaintenanceTooltip;
         } else if (sectionKey === 'production') {
           span._productionTooltip = tooltip;
           span._productionTooltipCache = {};
@@ -3582,9 +3571,7 @@ function updateDecreaseButtonText(button, buildCount) {
             );
             setTooltipText(tooltip, text, span._productionTooltipCache, 'text');
           };
-          span.addEventListener('mouseenter', span._updateProductionTooltip);
-          span.addEventListener('focusin', span._updateProductionTooltip);
-          span.addEventListener('pointerdown', span._updateProductionTooltip);
+          tooltip._prepareTooltipContent = span._updateProductionTooltip;
         } else {
           span._consumptionTooltip = tooltip;
           span._consumptionTooltipCache = {};
@@ -3599,9 +3586,7 @@ function updateDecreaseButtonText(button, buildCount) {
             );
             setTooltipText(tooltip, text, span._consumptionTooltipCache, 'text');
           };
-          span.addEventListener('mouseenter', span._updateConsumptionTooltip);
-          span.addEventListener('focusin', span._updateConsumptionTooltip);
-          span.addEventListener('pointerdown', span._updateConsumptionTooltip);
+          tooltip._prepareTooltipContent = span._updateConsumptionTooltip;
         }
       }
       return span;

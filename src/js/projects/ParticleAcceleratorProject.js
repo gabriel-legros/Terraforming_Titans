@@ -286,7 +286,7 @@ class ParticleAcceleratorProject extends Project {
     return this.getSelectedCircumferenceMeters() * MATERIAL_COST_PER_METER * HALF_MATERIAL_SPLIT;
   }
 
-  getScaledCost() {
+  getExpansionUnitCost() {
     const colony = {};
     const superalloyMultiplier = this.getEffectiveCostMultiplier('colony', 'superalloys');
     const superconductorsMultiplier = this.getEffectiveCostMultiplier('colony', 'superconductors');
@@ -496,3 +496,5 @@ try {
 } catch (err) {
   // module is not available
 }
+
+ContinuousExpansionProject.applyCapabilityTo(ParticleAcceleratorProject, { timedOnly: true });

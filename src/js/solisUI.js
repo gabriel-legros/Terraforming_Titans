@@ -919,7 +919,7 @@ function updateSolisDonationSection(refs) {
   }
 
   if (refs.donationLabel) {
-    const pointsPerArtifact = 25;
+    const pointsPerArtifact = 25 * normalizeDifficultySettingValue('solisPointsGainMultiplier', gameSettings.solisPointsGainMultiplier);
     const labelText = getSolisUIText(
       'donationLabel',
       { value: formatSolisValue(pointsPerArtifact, false, 2) },

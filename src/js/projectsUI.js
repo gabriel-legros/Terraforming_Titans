@@ -1661,13 +1661,7 @@ function updateTotalCostDisplay(project) {
       return;
     }
     const quantity = getInputQuantity(input);
-    const basePrice = project.attributes.resourceChoiceGainCost?.[category]?.[resource];
-    if (typeof basePrice !== 'number') return;
-    if (resource === 'spaceships' && typeof project.getSpaceshipTotalCost === 'function') {
-      totalCost += project.getSpaceshipTotalCost(quantity, basePrice);
-    } else {
-      totalCost += quantity * basePrice;
-    }
+    totalCost += project.getBuyPrice(category, resource, quantity);
   });
 
   const totalCostValue = elements.totalCostValue;
@@ -1770,7 +1764,9 @@ function updateProjectUI(projectName) {
     project.updateKesslerWarning();
   }
 
-  updateKesslerFailureWarning(project, elements);
+  if (!isImportProject) {
+    updateKesslerFailureWarning(project, elements);
+  }
 
 
   // Update Spaceships Assigned display if applicable
@@ -2107,7 +2103,9 @@ function updateProjectUI(projectName) {
                 elements.progressButton.textContent = statusText;
               }
             } else {
-              const statusText = getProjectsUIText('ui.projects.status.startProject', 'Start {name} (Duration: {duration} seconds)', { name: project.displayName, duration: (duration / 1000).toFixed(2) });
+              const statusText = project.attributes.startLabelKey
+                ? t(project.attributes.startLabelKey, { duration: (duration / 1000).toFixed(2) })
+                : getProjectsUIText('ui.projects.status.startProject', 'Start {name} (Duration: {duration} seconds)', { name: project.displayName, duration: (duration / 1000).toFixed(2) });
               if (isImportProject && importUI) {
                 importUI.setProgressLabel(elements, project, getProjectsUIText('ui.projects.status.startShort', 'Start (Duration: {duration} seconds)', { duration: (duration / 1000).toFixed(2) }));
               } else {

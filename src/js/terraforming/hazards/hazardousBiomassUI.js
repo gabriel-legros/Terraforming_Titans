@@ -480,7 +480,7 @@ function computeCrusaderSummary(resourcesState, manager) {
     removalConstant = CRUSADER_REMOVAL_FALLBACK;
   }
 
-  const totalRemovalPerSecond = crusaderCount * removalConstant;
+  const totalRemovalPerSecond = crusaderCount * removalConstant * getCrusaderEffectivenessMultiplier();
   return {
     count: crusaderCount,
     focusZone: manager && manager.getCrusaderTargetZone

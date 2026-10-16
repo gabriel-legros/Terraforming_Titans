@@ -2077,8 +2077,6 @@ const siriusOverrides = {
   }
 };
 
-// Hydra tuning is deliberately world-local. Masses are tons, rates are per second,
-// pressure is Pa, temperature is K, and heat flux is W/m?.
 const hydraOverrides = {
   name: 'Lerna',
   gravityPenaltyEnabled: true,
@@ -2105,56 +2103,64 @@ const hydraOverrides = {
       debrisScrapFraction: 0.7,
       oceanKeys: ['liquidHydrogen', 'liquidWater', 'liquidCO2', 'liquidMethane', 'liquidAmmonia', 'liquidOxygen', 'liquidNitrogen'],
       cores: {
-        aether: { initialMass: 1e18, maximumMass: 1e18, growthPerSecond: 0.00001 },
-        aero: { initialMass: 1e19, maximumMass: 1e19, growthPerSecond: 0.0001 },
-        aqua: { initialMass: 1e20, maximumMass: 1e20, growthPerSecond: 0.0002 },
+        aether: { initialMass: 1e19, maximumMass: 1e19, growthPerSecond: 0.001 },
+        aero: { initialMass: 1e19, maximumMass: 1e19, growthPerSecond: 0.001 },
+        aqua: { initialMass: 1e20, maximumMass: 1e20, growthPerSecond: 0.001 },
         ignis: { initialMass: 1e20, maximumMass: 1e20, growthPerSecond: 0.001 },
-        terra: { initialMass: 1e21, maximumMass: 1e21, growthPerSecond: 0.0001 }
+        terra: { initialMass: 1e21, maximumMass: 1e21, growthPerSecond: 0.001 }
       },
       aether: {
         outerOrbitFraction: 0.01, dragPerSecond: 0.002, dragDensityReference: 1e-12,
-        laserTonsPerSecond: 1e9, laserDebrisTonsPerSecond: 1e9,
-        shipCapturePerSecond: 0.001, massPerShip: 1000,
+        laserTonsPerSecond: 100_000, laserDebrisTonsPerSecond: 1000,
+        shipCapturePerSecond: 0.05, massPerShip: 1000,
         orbitalProjectDurationMultiplier: 10, researchOrbitalDisableAboveFraction: 0.1,
         starliftTonsPerSecond: 1e17,
+        stellarRepairFraction: 0.1,
         stellarFeedstockTons: 1e27,
         starliftComposition: { hydrogen: 0.97, atmosphericWater: 0.01, carbonDioxide: 0.01, inertGas: 0.01 },
         fusionAvoidanceMassKg: 2e28, strippingTonsPerSecond: 1e19,
-        bombardmentSiblingFraction: 0.25, buildingAttritionPerSecond: 0.0001
+        bombardmentSiblingFraction: 0.75, buildingAttritionPerSecond: 0.001
       },
       aero: {
         minimumPressurePa: 1e8, collapsePerSecond: 0.002,
+        gasDisposalTonsPerSecond: 1e17,
         occupiedAerostatFraction: 0.95, hackingBelowFraction: 0.5,
-        hackingPerSecond: 0.0001, massPerAerostat: 100,
+        hackingPerSecond: 0.005, massPerAerostat: 1000,
+        hackingAerostatFloor: 1000,
+        minimumResearchMultiplier: 0.01, researchRecoveryBelowFraction: 0.5,
         carbonFeedstocks: { carbonDioxide: { carbonFraction: 12 / 44, byproduct: 'oxygen' }, atmosphericMethane: { carbonFraction: 12 / 16, byproduct: 'hydrogen' } }
       },
       aqua: {
+        nanocolonyCapRecoveryBelowFraction: 0.5,
         minimumOceanCoverage: 0.1, exposurePerSecond: 0.002,
         excavationTonsPerSecond: 1e17,
         composition: { atmospheric: { oxygen: 0.4, carbonDioxide: 0.04, inertGas: 0.01 }, surface: { junk: 0.25, scrapMetal: 0.3 } },
-        androidHackingPerSecond: 0.0001, massPerAndroid: 1
+        androidHackingPerSecond: 0.1, massPerAndroid: 1
       },
       ignis: {
-        coldTemperatureK: 500, hotTemperatureK: 1300,
-        coldSuppressionPerSecond: 0.001, hotSuppressionPerSecond: 0.005,
+        buildCostMultiplier: 4,
+        maintenanceMultiplier: 50,
+        coldTemperatureK: 500, hotTemperatureK: 1800,
+        coldSuppressionPerSecond: 0.01, hotSuppressionPerSecond: 0.02,
         crusaderTonsPerSecond: 1, maximumLandFraction: 0.9,
-        miningTonsPerSecond: 1e17, emissionsTonsPerSecond: 1e16,
+        miningTonsPerSecond: 1e18, emissionsTonsPerSecond: 1e17,
         emissions: { atmosphericWater: 0.4, carbonDioxide: 0.3, atmosphericMethane: 0.2, sulfuricAcid: 0.1 }
       },
       terra: {
         maximumHeatFlux: 1e5, heatFluxPerKelvin: 500,
-        ventTonsPerSecond: 1e16,
+        ventTonsPerSecond: 1e17,
         ventComposition: { hydrogen: 0.5, atmosphericWater: 0.25, carbonDioxide: 0.15, inertGas: 0.1 },
-        miningTonsPerSecond: 1e17, excavationDurationMultiplier: 100,
-        mineCoverageFraction: 1, dugOutSuppressionPerSecond: 0.002,
-        depletedMassTons: 1e3, playerSurfaceTriggerFraction: 0.1,
-        buildingAttritionPerSecond: 0.0001, excavationAttritionPerSecond: 0.0001
+        miningTonsPerSecond: 1e18, excavationDurationMultiplier: 100,
+        dugOutSuppressionPerSecond: 0.005,
+        dugOutMinimumDepth: 95000,
+        depletedMassTons: 1e3, playerSurfaceTriggerFraction: 0.1, miningDepthTrigger: 80000,
+        buildingAttritionPerSecond: 0.001, excavationAttritionPerSecond: 0.001
       },
       net: {
-        buildTonsPerSecond: 1e12, shipBuildTonsPerSecond: 1e12,
-        segmentMass: 1e9, maximumMass: 1e20,
+        buildTonsPerSecond: 100, shipBuildTonsPerSecond: 10,
+        segmentMass: 1e4, maximumMass: 1e20,
         costPerTon: { superalloys: 1, energy: 1e6 },
-        captureTonsPerTonPerSecond: 0.01, attritionTonsPerCapturedTon: 0.1
+        captureTonsPerTonPerSecond: 1, attritionTonsPerCapturedTon: 0.001
       }
     }
   },
@@ -2174,8 +2180,8 @@ const hydraOverrides = {
       junk: { initialValue: 1e18, unlocked: true }, scrapMetal: { initialValue: 1e18, unlocked: true }
     },
     underground: {
-      ore: { initialValue: 100, maxDeposits: 452389342116, areaTotal: 4523893421169.302 },
-      geothermal: { initialValue: 10, maxDeposits: 4523893421, areaTotal: 4523893421169.302 }
+      ore: { initialValue: 100, maxDeposits: 15000, areaTotal: 150000 },
+      geothermal: { initialValue: 10, maxDeposits: 1500, areaTotal: 150000 }
     },
     atmospheric: {
       hydrogen: { initialValue: 2.865420108813261e+21 },
@@ -2333,6 +2339,11 @@ const hydraOverrides = {
   visualization: { baseColor: '#99452f' },
   effects: [
     { target: 'project', targetId: 'hydra', type: 'enable', effectId: 'hydra-enable-project' },
+    {
+      target: 'project', targetId: 'spaceStorage', type: 'booleanFlag',
+      flagId: 'disableWithdrawal', value: true,
+      effectId: 'hydra-disable-space-storage-withdrawals'
+    },
     { target: 'project', targetId: 'lifters', type: 'booleanFlag', flagId: 'disableAtmosphereStripMode', value: true }
   ]
 };
@@ -2340,15 +2351,41 @@ const hydraOverrides = {
 const specialSeedDefinitions = {
   hydra: {
     key: 'hydra', enabled: false, seed: 'Hydra', name: '',
+    enabled: true,
     nameKey: 'catalogs.specialSeeds.hydra.name',
     difficultyKey: 'catalogs.specialSeeds.hydra.difficulty',
     replayable: true, target: 'planet', archetype: 'chthonian', orbitPreset: 'hz-outer',
     specialEffects: [
       { id: 'hydra-cores', descriptionKey: 'catalogs.specialSeeds.hydra.rules' },
+      { id: 'space-storage-no-withdrawal', descriptionKey: 'catalogs.specialSeeds.hydra.noSpaceWithdrawal' },
       {
         id: 'lifters-no-strip',
         labelKey: 'catalogs.specialSeeds.commonEffects.liftersStripModeDisabled',
         descriptionKey: 'catalogs.specialSeeds.wolfysnightmare.effects.liftersNoStrip'
+      }
+    ],
+    completionRewards: [
+      {
+        id: 'laser-cannon-power',
+        descriptionKey: 'catalogs.specialSeeds.hydra.rewards.laserCannonPower',
+        disabledOnSpecialSeeds: ['hydra', 'shadesnightmare'],
+        effects: [
+          { target: 'building', targetId: 'laserCannon', type: 'productionMultiplier', value: 100 },
+          {
+            target: 'building', targetId: 'laserCannon', type: 'resourceConsumptionMultiplier',
+            resourceCategory: 'colony', resourceTarget: 'energy', value: 100
+          }
+        ]
+      },
+      {
+        id: 'reveal-superconductor-throughput',
+        descriptionKey: 'catalogs.specialSeeds.hydra.rewards.revealSuperconductorThroughput',
+        effects: [
+          {
+            target: 'skillManager', targetId: 'superconductor_throughput',
+            type: 'skillReveal', value: true
+          }
+        ]
       }
     ],
     overrides: hydraOverrides
@@ -2718,6 +2755,10 @@ const specialSeedDefinitions = {
         id: 'teleporters-disabled',
         descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.teleportersDisabled',
         description: 'The 100Q advanced research is disabled.'
+      },
+      {
+        id: 'hydra-laser-reward-disabled',
+        descriptionKey: 'catalogs.specialSeeds.shadesnightmare.effects.hydraLaserRewardDisabled'
       },
       {
         id: 'starting-research-warning',

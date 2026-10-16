@@ -86,16 +86,7 @@
       const count = this.isActive
         ? Math.max(0, this.activeBuildCount || 0)
         : this.getSelectedBuildCount();
-      const scaled = {};
-
-      for (const category in base) {
-        scaled[category] = {};
-        for (const resource in base[category]) {
-          scaled[category][resource] = base[category][resource] * count;
-        }
-      }
-
-      return scaled;
+      return this.scaleCost(base, count);
     }
 
     canStart() {

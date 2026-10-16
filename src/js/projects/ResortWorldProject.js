@@ -170,7 +170,7 @@
     }
 
     getTravelPointGain() {
-      return this.isCompleted ? 1 : 0;
+      return this.isCompleted ? this.applyPointBonuses(1) : 0;
     }
 
     getShopBuyButtonText() {
@@ -194,7 +194,7 @@
     }
 
     hasVacationAccess() {
-      return this.getEarnedResortPoints() > 0;
+      return !this.isPermanentlyDisabled() && this.getEarnedResortPoints() > 0;
     }
 
     getHappinessBonus() {

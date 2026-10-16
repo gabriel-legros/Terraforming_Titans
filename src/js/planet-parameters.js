@@ -2216,6 +2216,13 @@ const styxOverrides = {
 
 const zeusOverrides = {
   name: t('catalogs.planets.zeus.name', {}, 'Zeus'),
+  effects: [
+    {
+      target: 'building',
+      targetId: 'foundry',
+      type: 'enable'
+    }
+  ],
   travelWarning: {
     message: venusOverrides.travelWarning.message,
     hint: {

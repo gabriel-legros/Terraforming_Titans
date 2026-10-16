@@ -137,8 +137,12 @@ function updatePulsarStormNotification() {
     pulsarHazardUICache.stormContainer.appendChild(pulsarHazardUICache.stormCountdown);
   }
 
-  const stormActive = hazardManager.parameters.pulsar && hazardManager.pulsarHazard.isStormActive();
-  if (!stormActive) {
+  const pulsarParameters = hazardManager.parameters.pulsar;
+  const pulsarHazard = hazardManager.pulsarHazard;
+  const stormsEnabled = pulsarParameters
+    && pulsarHazard.getHazardStrength(terraforming, pulsarParameters) > 0
+    && pulsarHazard.getStormDurationSeconds(pulsarParameters) > 0;
+  if (!stormsEnabled) {
     if (pulsarHazardUICache.stormCountdown.textContent !== '') {
       pulsarHazardUICache.stormCountdown.textContent = '';
     }
@@ -148,11 +152,18 @@ function updatePulsarStormNotification() {
     return;
   }
 
-  const countdownText = getPulsarHazardText(
-    'stormNotification',
-    'Pulsar Storm! {seconds}s',
-    { seconds: Math.ceil(hazardManager.pulsarHazard.getStormRemainingSeconds()) }
-  );
+  const stormActive = pulsarHazard.isStormActive();
+  const countdownText = stormActive
+    ? getPulsarHazardText(
+      'stormNotification',
+      'Pulsar Storm! {seconds}s',
+      { seconds: Math.ceil(pulsarHazard.getStormRemainingSeconds()) }
+    )
+    : getPulsarHazardText(
+      'nextStormNotification',
+      'Next Pulsar Storm: {seconds}s',
+      { seconds: Math.ceil(pulsarHazard.getSecondsUntilNextStorm()) }
+    );
   if (pulsarHazardUICache.stormCountdown.textContent !== countdownText) {
     pulsarHazardUICache.stormCountdown.textContent = countdownText;
   }

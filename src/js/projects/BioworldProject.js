@@ -127,7 +127,7 @@
 
     getTravelPointGain() {
       const basePoints = this.getEvolutionPointGain(resources.surface.biomass.value);
-      return this.applyHazardPointBonus(basePoints);
+      return this.applyPointBonuses(basePoints);
     }
 
     getPassiveFoodProduction(deltaTime = 1000) {

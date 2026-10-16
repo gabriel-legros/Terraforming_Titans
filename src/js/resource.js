@@ -1241,6 +1241,12 @@ class Resource extends EffectableEntity {
       newCap += providers[index].getStorageContribution(this.category, this.name);
     }
 
+    if (this.category === 'colony' && this.name === 'energy') {
+      newCap += resources.special.spaceships.value
+        * projectParameters.oreSpaceMining.attributes.costPerShip.colony.energy * shipEfficiency
+        * gameSettings.spaceshipEnergyBeforeSpaceElevatorMultiplier;
+    }
+
     if (isManagerEffectivelyEnabled(followersManager, 'followersManager') && this.hasCap) {
       newCap += followersManager.getOrbitalStorageCapBonusForResource(this.category, this.name);
     }

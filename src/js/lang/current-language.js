@@ -154,6 +154,7 @@ setLanguageData({
       effectsSummary: {
         title: 'Random World Effects',
         tooltip: 'Bonuses from terraforming random worlds of each type',
+        scaledRewardDescription: '{description} (base reward; effectiveness ×{multiplier})',
         type: 'Type',
         amount: 'Amount',
         value: 'Value',
@@ -230,7 +231,7 @@ setLanguageData({
         yggies: 'Yggie',
         shiivert: 'Shiivert',
         random: 'Random',
-        tooltip: 'Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts once per dominion. Rewards scale for each time it is granted: 1000, 2000, 3000, and so on.',
+        tooltip: 'Completing terraforming for a non-Human and non-Gabbagian dominion grants alien artifacts and a permanent bonus once per dominion. Artifact rewards increase with each new dominion: 2000, 4000, 6000, and so on. See each Dominion page for its bonus.',
       },
       hazards: {
         title: 'Hazards',
@@ -254,15 +255,16 @@ setLanguageData({
       },
       equilibrate: {
         none: 'none',
-        tooltip: 'The climate model in Terraforming Titans is quite complex. It is not realistic for the random world generator to generate worlds that already start near equilibrium. However, most real worlds are fairly near equilibrium, at least on a short term, ignoring seasons, atmospheric loss, star heating, etc.\n\nTo reach this state, worlds can be simulated for thousands of years, as necessary, so that the climate stabilizes. This can be ended early if preferred. Some milestones might complete very easily if equilibrium fails to be reached, but it is otherwise not a major issue. For best results, keep the window in focus while running the simulation. The rest of the game will pause.\n\nEquilibrate is required before random-world travel unless this save has a Fastest Terraform real-time record strictly under 60s. \nCurrent Fastest Terraform (real time): {value}.',
-        progressMinimum: 'Minimum fast-forward (Game is paused)',
-        progressAdditional: 'Additional fast-forward (Game is paused)',
+        tooltip: 'The climate model in Terraforming Titans is quite complex. It is not realistic for the random world generator to generate worlds that already start near equilibrium. However, most real worlds are fairly near equilibrium, at least on a short term, ignoring seasons, atmospheric loss, star heating, etc.\n\nTo reach this state, worlds can be simulated for thousands of years, as necessary, so that the climate stabilizes. This can be ended early if preferred. Some milestones might complete very easily if equilibrium fails to be reached, but it is otherwise not a major issue. The simulation adapts its step size and checks stability before finishing. Worlds with persistent cycles use a fixed step budget; more steps can be added if needed. The rest of the game will pause.\n\nEquilibrate is required before random-world travel unless this save has a Fastest Terraform real-time record strictly under 60s. \nCurrent Fastest Terraform (real time): {value}.',
+        progressMinimum: 'Settling climate (Game is paused)',
+        progressAdditional: 'Checking stability (Game is paused)',
         refinementsStability: 'Number of refinements from stability: {value}',
-        refinementsStabilityTarget: 'Number of refinements from stability: {value}/20',
+        refinementsStabilityTarget: 'Number of refinements from stability: {value}',
         refinementsInstability: 'Number of refinements from instability: {value}',
         timeSimulated: 'Time simulated: {value}',
+        stepsSimulated: 'Steps simulated: {value}/{total}',
         endEarly: 'End Early',
-        addTime: 'Add 10s',
+        addTime: 'Add {value} steps',
         cancel: 'Cancel',
       },
       gravity: {
@@ -347,11 +349,23 @@ setLanguageData({
         close: 'Close',
         rewardClaimed: 'Reward claimed',
         rewardUnclaimed: 'Reward unclaimed',
+        rewardName: '{name} first terraform reward',
+        rewardDescription: 'Permanent first terraform reward: {reward}',
+        rewards: {
+          ammonia: 'Gain up to +5% specialization points per terraforming target with a range, rising linearly from +0% at either edge to +5% at its midpoint, added together.',
+          oommaa: 'Ecumenopolis coverage reduces the minimum luminosity requirement by the same percentage, reaching a 100% reduction at full coverage.',
+          klishy: 'Android Hive Mind produces twice as much research.',
+          kerati: 'Crusaders are twice as effective.',
+          shrilek: 'Underground Land Expansion can go twice as deep, doubling the amount of underground land it can add.',
+          vanadophore: 'Aerostats support 20% more non-workers buildings.',
+          yggies: 'Biodomes produce and consume twice as much and generate life-design points twice as fast.',
+          shiivert: 'Radioactive waste increases android worker efficiency linearly, up to x2 at 10 tons per android. Waste is not consumed.'
+        },
         aboutTitle: 'About',
         aboutBody: [
           'Dominions are the galactic trees of life. Each one represents a broad evolutionary and chemical family with its own preferred atmosphere, surface conditions, and special terraforming requirements.',
           'Picking a dominion in Random Worlds changes the completion target for that world. A world that is ideal for Humans can be completely wrong for a different dominion.',
-          'The first time you complete terraforming for each non-Human and non-Gabbagian dominion, you gain alien artifacts (2000, 4000, 6000, etc).',
+          'The first time you complete terraforming for each non-Human and non-Gabbagian dominion, you gain alien artifacts (2000, 4000, 6000, etc) and its permanent bonus. Bonuses apply on every world, regardless of the current dominion. Previously claimed rewards also grant these bonuses.',
         ].join('\n\n'),
       },
     },
@@ -879,6 +893,7 @@ setLanguageData({
         plasma: 'Plasma',
         keratiTerritory: 'Kerati Territory',
         planetarySwampification: 'Managed Swampland',
+        ignisOccupation: 'Ignis underground occupation',
       },
       antimatter: {
         sync: {
@@ -949,6 +964,7 @@ setLanguageData({
       },
       foundry: {
         limitTooltip: 'Foundries are limited to 1 per unit of base land on the current world.',
+        liquidHydrogenWarning: 'Foundries cannot operate while liquid hydrogen remains on the surface.',
       },
       waterTank: {
         emptyAboveCap: 'Empty above Cap',
@@ -1087,6 +1103,7 @@ setLanguageData({
         noSupportedBuildings: 'No buildings currently list an Aerostat Support value.',
         baseMaximumAerostats: 'Base land cap: {value}.',
         remainingCapacity: 'Remaining aerostat capacity: {value}.',
+        aeroOccupiedCapacity: 'Capacity occupied by Aero: {value} ({percent}%).',
         collisionAvoidanceIntro: 'Collision avoidance allows building above this base cap for extra research cost and maintenance.',
         collisionAvoidanceMaintenance: 'This extra research maintenance ignores maintenance multipliers.',
         aboveBaseCap: 'Aerostats above base cap: {value}.',
@@ -1434,54 +1451,99 @@ setLanguageData({
       "hydra": {
         "rateSources": {
           "aether": "Aether",
+          "aetherCleanup": "Aether clean-up",
           "aero": "Aero",
           "aqua": "Aqua",
           "ignis": "Ignis",
           "terra": "Terra",
           "net": "Entanglement net"
         },
-        "objective": "Hydra restores the climate toward {temperature} K and {pressure} MPa.",
+        "objective": "Hydra restores the climate toward {temperature} {temperatureUnit} and {pressure} MPa.",
         "health": "{percent}% HP",
         "abilities": "Abilities",
+        "penalties": "Penalties",
         "countermeasures": "Countermeasures",
+        "states": { "dormant": "Dormant", "waking": "Waking", "active": "Active" },
         "netTitle": "Entanglement net",
+        "startNet": "Start Entanglement Net (Duration: {duration} seconds)",
         "netHelp": "Traps and destroys Aero platforms. Wears down with use.",
         "summary": "Defeat all five cores simultaneously. Surviving cores repair each other.",
         "victory": "Hydra defeated.",
         "supplies": "Orbital debris: {debris} t | Launch failure: {small}% small / {large}% large",
         "mass": "Mass: {mass} t",
-        "rates": "Repair +{growth} t/s | Support +{support} t/s | Damage -{loss} t/s",
-        "net": "{segmentMass} t/segment | Base: {base} segments/s | Per ship: +{ship} segments/s",
+        "rates": "Repair +{growth} t/s | Support +{support} t/s\nDamage -{loss} t/s",
         "netSegments": "Available segments: {built} / {max}",
-        "netStart": "Build net ({percent}%)",
-        "netPause": "Pause construction ({percent}%)",
+        "netCapture": "Capture: {capture} t/s",
+        "netAttrition": "Attrition: {segments} segments/s",
         "netFull": "Net at capacity",
-        "netFinished": "Construction stopped",
+        "netNoShips": "Assign spaceships to build the net.",
         "cores": {
           "aether": {
             "name": "Aether | Orbit and outer system",
-            "help": "Rebuilds from orbital debris. Disables research orbitals above {orbitalThreshold}% HP. Captures ships, delays orbital projects and bombards buildings when sibling cores weaken. Imports gas as pressure falls; strips atmosphere near stellar ignition.",
-            "tactics": "Lasers destroy swarm mass and orbital debris. Atmospheric expansion burns the near-orbit swarm."
+            "abilities": {
+              "rebuild": "Repairs itself and sibling cores using orbital debris. Can also use stellar mass at {stellarRepairPercent}% rate. Uses its remaining repair budget to remove debris above each orbital bin's initial amount.",
+              "imports": "Imports gas below {pressureThreshold} MPa while stellar feedstock remains and Lerna is below the stripping threshold.",
+              "stripping": "Strips atmosphere above {fusionMass} t of planetary mass to prevent stellar ignition."
+            },
+            "penalties": {
+              "research": "Disables research orbitals above {orbitalThreshold}% HP.",
+              "delay": "Orbital project duration: x{orbitalSlow}.",
+              "capture": "Captures ships assigned to active projects.",
+              "bombardment": "Bombards buildings, non-aerostat colonies and stored colony resources when average sibling strength is below {siblingThreshold}%."
+            },
+            "tactics": "Lasers destroy swarm mass and orbital debris. Atmospheric expansion burns the near-orbit swarm; the outer swarm requires lasers."
           },
           "aero": {
             "name": "Aero | Upper atmosphere",
-            "help": "Builds platforms from atmospheric CO2 and methane. Occupies aerostat capacity and hacks aerostats when weakened.",
-            "tactics": "Aerostat capacity occupied: {occupied}%. Lower pressure below {pressure} Pa or deploy the net."
+            "abilities": {
+              "rebuild": "Repairs itself and sibling cores using carbon from atmospheric CO2 and methane, releasing oxygen and hydrogen.",
+              "disposal": "Disposes of atmospheric gases proportionally above {disposalPressureThreshold} MPa."
+            },
+            "penalties": {
+              "occupation": "Occupies Aerostat Capacity: {occupied}%.",
+              "hacking": "Hacks aerostats below {hackingThreshold}% of its starting mass, preserving at least {aerostatHackingFloor} aerostats.",
+              "research": "Research production: ×{aeroResearchMultiplier}. Recovers below {researchRecoveryThreshold}% HP."
+            },
+            "tactics": "Lower pressure below {pressure} Pa or deploy the net."
           },
           "aqua": {
             "name": "Aqua | Oceans",
-            "help": "Occupies liquid oceans, hacks androids and excavates planetary mass into gases, junk and scrap.",
+            "abilities": {
+              "rebuild": "Repairs itself and sibling cores using planetary mass.",
+              "excavation": "Excavates planetary mass into gases, junk and scrap below {pressureThreshold} MPa."
+            },
+            "penalties": {
+              "occupation": "Reserves liquid-covered land: {oceanOccupied}% of the surface.",
+              "hacking": "Hacks androids to increase its mass.",
+              "nanocolonyCap": "Nanocolony capacity: {nanocolonyCapPercent}% of normal. Recovers below {nanocolonyRecoveryThreshold}% HP."
+            },
             "tactics": "Ocean coverage: {currentOcean}%. Reduce combined liquid coverage below {ocean}% to expose Aqua."
           },
           "ignis": {
             "name": "Ignis | Surface industry",
-            "help": "Occupies land and rebuilds from scrap, junk and mined material. Releases greenhouse gases when cooled.",
-            "tactics": "Deploy Crusaders, cool toward {cold} K or heat toward {hot} K."
+            "abilities": {
+              "rebuild": "Repairs itself and sibling cores using scrap, junk and planetary mass.",
+              "emissions": "Releases greenhouse gases below {temperatureThreshold} {temperatureUnit}."
+            },
+            "penalties": {
+              "occupation": "Occupies {landOccupied}% of Underground Expansion land.",
+              "buildCost": "Building and colony construction costs: +{buildCostPenalty}%.",
+              "maintenance": "Maintenance costs: ×{ignisMaintenanceMultiplier}, reduced by aerostat support."
+            },
+            "tactics": "Deploy Crusaders, cool below {cold} {temperatureUnit} or heat above {hot} {temperatureUnit}."
           },
           "terra": {
             "name": "Terra | Deep crust",
-            "help": "Slows excavation, adds geothermal heat and vents gases. Heavy surface development triggers attacks on buildings, mine depth and underground expansion.",
-            "tactics": "Excavation time: x{slow}. Cover ore deposits with maximum-depth mines or remove planetary mass."
+            "abilities": {
+              "rebuild": "Repairs itself and sibling cores using planetary mass.",
+              "heat": "Adds geothermal heat below {temperatureThreshold} {temperatureUnit}.",
+              "venting": "Vents gases below {pressureThreshold} MPa."
+            },
+            "penalties": {
+              "delay": "Deeper mining time: x{slow}.",
+              "attacks": "Attacks buildings, non-aerostat colonies, stored colony resources, mine depth and underground expansion when structures use surface or underground land totaling at least {surfaceThreshold}% of the planet's surface area, or average mining depth exceeds {miningDepthThreshold}."
+            },
+            "tactics": "At mining depth {dugOutDepth} or deeper, decay scales with ore mines / maximum ore mines and reduces Terra self-repair. Alternatively, remove planetary mass."
           }
         }
       },
@@ -2639,9 +2701,9 @@ setLanguageData({
         crackedHeader: 'Merger Progress',
         remainingHeader: 'Pairs Remaining',
         recipeLabels: { neutronStarPair: 'Neutron star pairs' },
-        recipeTooltip: 'Each completed merger consumes two neutron stars, creates one black hole for an Artificial Quasar, and adds +{metal} metal/s to the mining cap. Yield: 0.05 solar masses of metal extracted over 10,000 in-game years (3,650,000 real-time seconds). Partial mergers grant no rewards until completed.',
+        recipeTooltip: 'Each completed merger consumes two neutron stars, creates one black hole for an Artificial Quasar, and adds +{ships} metal mining ship slots, equivalent to {metal} metal/s before mining costs and ship upgrades. Yield: 0.05 solar masses of metal extracted over 10,000 in-game years (3,650,000 real-time seconds). Partial mergers grant no rewards until completed.',
         operationNote: 'Each assigned smasher performs one merger per second at full productivity, consuming {energy} space energy per merger. The neutron-star supply scales with the average Warp Gate Network level, reaching 1B stars at level 1M.',
-        planetProgress: 'Completed mergers / black holes created: {merged} | Available neutron stars: {stars} | Added metal mining cap: +{metal}/s',
+        planetProgress: 'Completed mergers / black holes created: {merged} | Available neutron stars: {stars} | Added metal mining ship cap: +{ships} | Base gross metal yield: {metal}/s',
         status: {
           depleted: 'All accessible neutron star pairs have been merged',
           noSpaceEnergy: 'No space energy',
@@ -3003,7 +3065,7 @@ setLanguageData({
           title: 'Orbitals',
           kesslerWarning: 'Orbitals cannot approach due to Kessler Skies. Limited to research.',
           aetherWarning: 'Aether blocks research orbitals.',
-          kesslerAetherWarning: 'Kessler Skies blocks other orbitals. Aether blocks research orbitals.',
+          kesslerAetherWarning: 'Kessler Skies blocks most orbitals. Aether blocks research orbitals.',
           summary: 'Orbitals Assigned: {assigned} / {available} | Unassigned: {unassigned}',
           mode: 'Mode',
           modeManual: 'Manual',
@@ -3063,7 +3125,7 @@ setLanguageData({
           worldConversion: 'World Conversion',
           worldConversionPercent: 'World Conversion (%)',
           crusadersBonus: 'Crusaders Bonus',
-          crusadersTooltip: 'World conversion multiplier from Crusaders ratio (Crusaders / Colonists). Uses logarithmic scaling: x1 at ratio 0, soft growth as ratio rises, and capped at x2 (about x2 at a 1:1 ratio). This affects world conversion only; galactic conversion remains based on the base 1/250 world rate.',
+          crusadersTooltip: 'World conversion multiplier from Crusaders ratio (Crusaders / Colonists). The Kerati first terraform reward makes each Crusader count twice toward this ratio. Uses logarithmic scaling: x1 at ratio 0, soft growth as ratio rises, and capped at x2 (about x2 at an effective 1:1 ratio). This affects world conversion only; galactic conversion remains based on the base 1/250 world rate.',
           galacticConversionPercent: 'Galactic Conversion (%)',
           galacticConversion: 'Galactic Conversion',
           absoluteRate: '+{value}/s',
@@ -3921,6 +3983,7 @@ setLanguageData({
           clearText: 'Build all Artificial Sky segments or go rogue.',
           distanceScaling: 'All pulsar effects are multiplied by (initial distance / current distance)^2 (capped at x1).',
           stormNotification: 'Pulsar Storm! {seconds}s',
+          nextStormNotification: 'Next Pulsar Storm: {seconds}s',
           stormProjects: 'Electromagnetic storms repeat every {period}s for {duration}s and pause spaceship projects while active.',
           shielded: '{value}% Shielded',
           exposed: '{value}% Exposed',
@@ -4168,7 +4231,7 @@ setLanguageData({
             convertCost: 'Research Cost: {value}',
             clearCost: 'Clear All Cost: {value}',
             convertAction: 'Hack +{value}',
-            convertInfo: 'Each hack spends {cost} research to disable 1 hazardous machinery.',
+            convertInfo: 'Each hack spends {cost} research to convert 1 ton of hazardous machinery into 1 ton of scrap metal.',
             autoSpendIfClear: 'Auto spend if spending would clear the hazard',
             barSafe: 'Clear {value}%',
             barHazard: 'Machinery {value}%',
@@ -4176,6 +4239,7 @@ setLanguageData({
           },
           tooltips: {
             maxCoverage: 'Maximum machinery coverage is 100% minus half the current water coverage.',
+            decay: 'Each ton of hazardous machinery removed by natural decay, counter-hacking, or Crusader patrols becomes 1 ton of surface scrap metal.',
             hacking: 'Counter-hacking spends research to disable hazardous machinery directly. Auto spend clears the hazard automatically once current research can pay the full remaining cost.  This setting persists on travel.',
             autoSpendIfClear: 'When enabled, counter-hacking automatically spends research only if the current research stock can clear all remaining hazardous machinery at once.',
             androidDecay: 'The Hazardous Machinery is capable of hacking autonomous androids, up to 5% of worker androids per second. This does not impact androids assigned away from signals, such as assigned to underground mining or land expansion projects.',
@@ -5186,7 +5250,7 @@ setLanguageData({
         lifeZoneTropical: 'Tropical',
         lifeZoneTemperate: 'Temperate',
         lifeZonePolar: 'Polar',
-        researchAutomationTitle: 'Research Automation',
+        researchAutomationTitle: 'Research Presets',
         researchAutomationDescription: 'Store research presets.',
         researchAutomationDescriptionUnlocked: 'Store research presets.',
         researchAutomationDescriptionLocked: 'Purchase the Solis Research Automation upgrade to manage research presets.',
@@ -5250,14 +5314,14 @@ setLanguageData({
         shipPercentEnergyProduction: '% Energy Production Usage',
         shipReleaseIfDisabled: 'Release if disabled',
         shipNoProjectsAvailable: 'No projects available',
-        buildingsAutomationTitle: 'Buildings Automation',
+        buildingsAutomationTitle: 'Buildings Presets',
         buildingsAutomationDescription: 'Store building presets and apply them in priority order.',
         buildingsAutomationDescriptionUnlocked: 'Capture building control/autobuild settings and apply them in ordered presets.',
         buildingsAutomationDescriptionLocked: 'Purchase the Solis Buildings Automation upgrade to enable building presets.',
         buildingsBuilderHint: 'Control saves worker priority, hidden state, recipe selections, and building controls (Disable if / Target albedo / Supercharge). Autobuild saves auto-build mode, target value, Auto-build toggle, Prioritize, Set active to target, and fill filters.',
         buildingsApplyHintEmpty: 'Save a preset above to enable the Apply list.',
         buildingsApplyHintRule: 'Lower presets override higher presets when they target the same building and setting type.',
-        projectsAutomationTitle: 'Projects Automation',
+        projectsAutomationTitle: 'Projects Presets',
         projectsAutomationDescription: 'Store project presets and apply them in priority order.',
         projectsAutomationDescriptionUnlocked: 'Capture project expansion/operations settings and apply them in ordered presets.',
         projectsAutomationDescriptionLocked: 'Purchase the Solis Projects Automation upgrade to enable project presets.',
@@ -5282,7 +5346,7 @@ setLanguageData({
         spaceStorageHydrogenTargetColonyOnly: 'Colony only',
         projectsApplyHintEmpty: 'Save a preset above to enable the Apply list.',
         projectsApplyHintRule: 'Lower presets override higher presets when they target the same project and setting.',
-        colonyAutomationTitle: 'Colony Automation',
+        colonyAutomationTitle: 'Colony Presets',
         colonyAutomationDescription: 'Store colony control and autobuild presets for colony systems.',
         colonyAutomationDescriptionUnlocked: 'Capture colony controls, sliders, nanocolony settings, and orbital settings in ordered presets.',
         colonyAutomationDescriptionLocked: 'Purchase the Solis Colony Automation upgrade to enable colony presets.',
@@ -5710,6 +5774,15 @@ setLanguageData({
       lockDifficultySettings: 'Lock difficulty settings',
       difficultyLockedButton: 'Difficulty locked',
       difficultyUnlockedStatus: 'Difficulty settings are not locked.',
+      resetDifficultySettings: 'Reset to default',
+      marketPricing: 'Market pricing',
+      workersPerAndroid: 'Workers per android',
+      androidHiveMindMultiplier: 'Android Hive Mind Multiplier',
+      marketPricingIntro: 'Set base prices in Funding per unit for each traded resource. Applies to Cargo Rocket and (later) Galactic Market.',
+      marketPricingResource: 'Resource',
+      marketPricingBuy: 'Base buy price',
+      marketPricingSell: 'Base sell price',
+      marketPricingResourcePrice: '{resource}: {price}',
       difficultyLockedStatus: 'Difficulty settings locked on {world}.',
       difficultyLockWorldLabel: 'World {number}: {name}',
       difficultyLockUnknownWorld: 'Unknown world',
@@ -5762,6 +5835,8 @@ setLanguageData({
       noOverpopulationCylinders: 'No overpopulation cylinders',
       noOverpopulationCylindersTooltip: "World 14 has a feature known as the 'Zeus catapult' that is very powerful but makes a lot of sense narratively.  It is arguably too powerful.  By checking this box you can ensure you gain nothing from it.  The project will still appear.",
       buildingCostMultiplier: 'Building Cost Multiplier',
+      fundingMultiplier: 'Funding multiplier',
+      fundingMultiplierTooltip: 'Multiplies base funding income and Solis funding bonuses. Other funding income, including market sales, is unchanged.',
       researchCostMultiplier: 'Research multiplier',
       workerRequirementMultiplier: 'Worker Requirement multiplier',
       projectDurationMultiplier: 'Project duration multiplier',
@@ -5786,6 +5861,8 @@ setLanguageData({
       artificialWorldConstructionTimeMultiplier: 'Artificial World Construction Time',
       rwgRewardsCap: 'RWG Rewards cap',
       rwgRewardsCapTooltip: 'Limits how many random worlds count toward rewards in each random world type. Leave blank for uncapped rewards. Hazard bonuses count toward the same cap.',
+      rwgEffectEffectiveness: 'RWG effect effectiveness',
+      rwgEffectEffectivenessTooltip: 'Multiplies the strength of existing and future random world rewards, including hazard bonuses. Values below 1 weaken rewards; values above 1 strengthen them. 0 disables their bonuses. Duration, cost, and maintenance divisors scale their bonus above 1. The RWG Rewards cap still applies.',
       keybindsTitle: 'Keybinds',
       pauseKeybindLabel: 'Pause key',
       dialogueSkipKeybindLabel: 'Skip dialogue typing',
@@ -5876,15 +5953,20 @@ setLanguageData({
       projects: {
         "hydra": {
           "name": "Hydra",
-          "description": "Hydra is a swarm machine intelligence locked to this star system.  A failed experiment from Prometheus's master.  The cores will cooperate under threat."
+          "description": "Hydra is a swarm machine intelligence locked to this star system.  A failed experiment from Prometheus's master.  The cores will cooperate under threat. (Original Design by Pokey)"
         },
       },
     },
     specialSeeds: {
       hydra: {
-        name: 'Hydra', difficulty: 'Extreme',
+        name: 'Hydra', difficulty: 'Very Extreme',
+        noSpaceWithdrawal: 'Space Storage cannot withdraw any resources on this world.',
         rules: 'Five regenerating machine cores occupy Lerna and actively resist terraforming. Suppress all five simultaneously to defeat Hydra.',
-        requirement: 'Hydra', defeated: 'All five cores defeated', defeatFirst: 'Defeat Hydra first'
+        requirement: 'Hydra', defeated: 'All five cores defeated', defeatFirst: 'Defeat Hydra first',
+        rewards: {
+          laserCannonPower: 'Laser cannons will be 100x more powerful.',
+          revealSuperconductorThroughput: 'Reveals a new Awakening skill',
+        }
       },
       commonEffects: {
         liftersStripModeDisabled: 'Lifters Strip Mode Disabled',
@@ -5893,7 +5975,7 @@ setLanguageData({
       },
       sirius: {
         name: 'Sirius',
-        difficulty: 'Pending evaluation',
+        difficulty: 'Very Extreme',
         effects: {
           hopeStarQuestion: 'HOPE...  This is a star...  Why are we terraforming a star?',
           advancedOrbitals: 'Superalloys and Storage orbitals are available.',
@@ -5986,6 +6068,7 @@ setLanguageData({
           allFiveHazards: 'All five hazard systems are active on this world.',
           allSixHazards: 'Features all hazards and even a new horrible one.',
           teleportersDisabled: 'The 100Q advanced research is disabled.',
+          hydraLaserRewardDisabled: 'The Hydra reward to laser cannons is disabled.',
           startingResearchWarning: 'You may need at least 1M starting research from Solis to acquire some critical researches.  Chemical reactor research also enables pyrolyzers.',
           powerfulFeaturesLimited: 'Many other powerful features are disabled or limited.',
         },
@@ -6927,7 +7010,7 @@ setLanguageData({
         },
         shipyard: {
           name: 'Shipbuilding',
-          description: 'Enables the construction of spaceships.  Also unlocks special projects for asteroid mining and resource disposal.',
+          description: 'Enables the construction of spaceships.  Also unlocks special projects for asteroid mining and resource disposal.  Each available or idle ship also increases colony energy cap.',
         },
         efficient_shipyards: {
           name: 'Efficient Shipyards',
@@ -8219,6 +8302,10 @@ setLanguageData({
       chemistry_mastery: {
         name: 'Chemistry Mastery',
         description: 'Increases both chemical reactor production and consumption by 20% per rank',
+      },
+      superconductor_throughput: {
+        name: 'Superconductor Throughput',
+        description: 'Increases superconductor factory production and consumption by 20% per rank',
       },
       ship_efficiency: {
         name: 'Advanced Logistics',

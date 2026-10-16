@@ -63,6 +63,7 @@ class SpaceshipProject extends Project {
 
   constructor(config, name) {
     super(config, name);
+    this.storage = { colony: { energy: this.attributes.costPerShip?.colony?.energy || 0 } };
     this.assignedSpaceships = 0;
     this.autoAssignSpaceships = false;
     this.waitForCapacity = true;
@@ -108,6 +109,14 @@ class SpaceshipProject extends Project {
 
   getActiveShipCount() {
     return this.assignedSpaceships ?? 0;
+  }
+
+  getStorageContribution(category, resource) {
+    if (category !== 'colony' || resource !== 'energy' || this.getHazardousMachineryWorkerLoadActive()) {
+      return 0;
+    }
+    return this.assignedSpaceships * this.storage.colony.energy * shipEfficiency
+      * gameSettings.spaceshipEnergyBeforeSpaceElevatorMultiplier;
   }
 
   getHazardousMachineryWorkerLoadActive() {

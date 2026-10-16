@@ -101,6 +101,16 @@ class PopulationModule extends EffectableEntity {
     const ratio = this.getEffectiveWorkerRatio();
     const multipliers = this.getWorkerEfficiencyMultipliers();
     const androidState = this.getAndroidWorkerState(enforceAssignmentCap);
+    let androidMultiplier = 1;
+    for (const effect of this.activeEffects) {
+      if (effect.type === 'androidWorkerEfficiencyMultiplier') {
+        androidMultiplier *= effect.value;
+      } else if (effect.type === 'androidWasteWorkerBonus' && androidState.effectiveAndroids > 0) {
+        const wastePerAndroid = resources.surface.radioactiveWaste.value / resources.colony.androids.value;
+        androidMultiplier *= 1 + effect.value * Math.min(1, Math.max(0, wastePerAndroid) / effect.tonsPerAndroid);
+      }
+    }
+    const androidWorkers = androidState.availableAndroids * androidMultiplier;
     const bioworkers = this.getBioworkerContribution();
     const keratiHiveWorkers = this.getKeratiHiveWorkerContribution();
     const colonistWorkers = Math.floor(
@@ -108,7 +118,7 @@ class PopulationModule extends EffectableEntity {
     );
     const uncappedTotalWorkers =
       colonistWorkers +
-      androidState.availableAndroids +
+      androidWorkers +
       bioworkers +
       keratiHiveWorkers;
     const aerostat = colonies?.aerostat_colony || null;
@@ -126,7 +136,7 @@ class PopulationModule extends EffectableEntity {
       artMultiplier: multipliers.artMultiplier,
       colonistMultiplier: multipliers.colonistMultiplier,
       colonistWorkers,
-      androidWorkers: androidState.availableAndroids,
+      androidWorkers,
       bioworkers,
       keratiHiveWorkers,
       uncappedTotalWorkers,

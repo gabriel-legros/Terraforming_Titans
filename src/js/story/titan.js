@@ -20,6 +20,14 @@ progressTitan.storyProjects.earthProbe = {
   attributes: {
     planet: 'titan',
     costDoubling: true,
+    storyStepImages: {
+      0: {
+        src: 'assets/images/earth_destroyed.jpg',
+        labelKey: 'ui.projects.earthProbe.artistRendition',
+        titleKey: 'ui.projects.earthProbe.imageTitle',
+        altKey: 'ui.projects.earthProbe.destroyedEarth'
+      }
+    },
     storySteps: [
       'Probe telemetry confirmed: Earth fragmented into massive tectonic shards.',
       'Expansive oceans of molten silicates illuminate the planetary remains.',

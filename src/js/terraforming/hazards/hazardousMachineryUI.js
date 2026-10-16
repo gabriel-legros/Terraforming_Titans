@@ -684,7 +684,8 @@ function ensureHazardousMachineryLayout() {
   hazardousMachineryUICache.summaryStatusText = statusText;
 
   hazardousMachineryUICache.summaryDecay = createSummary(
-    getHazardousMachineryUiText('labels.decay', 'Decay and Growth')
+    getHazardousMachineryUiText('labels.decay', 'Decay and Growth'),
+    getHazardousMachineryUiText('tooltips.decay')
   ).body;
   hazardousMachineryUICache.summaryPenalties = createSummary(
     getHazardousMachineryUiText('labels.penalties', 'Operational Impact')

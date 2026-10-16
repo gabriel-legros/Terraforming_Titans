@@ -991,6 +991,7 @@ class LifeDesigner extends EffectableEntity {
     const rate =
       (biodomeCount > 0 ? Math.log10(10 * biodomeCount) : 0) *
       this.biodomePointMultiplier *
+      biodome.getEffectivenessMultiplier() *
       workerProductivity;
     this.biodomePointRate = rate;
     this.biodomePoints += (rate * delta) / 3600000;

@@ -96,6 +96,7 @@ const terraformingRequirements = {
     requireHazardClearance: true,
     lifeDesign: {
       maximumSolarFluxFraction: 0.1,
+      ignoresLifeThermodynamics: true,
       survivalTemperatureRangeK: { min: 338.15, max: 383.15 },
       optimalGrowthTemperatureBaseK: 348.15,
       naturalBiomassDecayMultiplier: 1,
@@ -340,6 +341,7 @@ const terraformingRequirements = {
     ],
     lifeDesign: {
       maximumSolarFluxFraction: 0.2,
+      ignoresLifeThermodynamics: true,
       survivalTemperatureRangeK: { min: 193.15, max: 263.15 },
       optimalGrowthTemperatureBaseK: 223.15,
       naturalBiomassDecayMultiplier: 1,
@@ -534,6 +536,7 @@ const terraformingRequirements = {
     ],
     lifeDesign: {
       maximumSolarFluxFraction: 0.1,
+      ignoresLifeThermodynamics: true,
       survivalTemperatureRangeK: { min: 293.15, max: 343.15 },
       optimalGrowthTemperatureBaseK: 320.15,
       naturalBiomassDecayMultiplier: 1,

@@ -138,7 +138,7 @@ function _computeRWGEffectsSummary() {
     const cap = gameSettings.rwgRewardsCap ?? null;
     const effectiveCount = cap === null ? uncappedCount : Math.min(uncappedCount, cap);
     const effs = effects.filter((eff) => !eff.hideInSummary).map(eff => {
-      const raw = typeof eff.computeValue === 'function' ? eff.computeValue(effectiveCount, eff) : eff.value;
+      const raw = computeRWGEffectValue(eff, effectiveCount);
       let display = '';
       let descr = eff.descriptionKey
         ? getRwgUiText(eff.descriptionKey, eff.description || '')
@@ -167,7 +167,7 @@ function _computeRWGEffectsSummary() {
         display = `${raw >= 0 ? '+' : ''}${raw}`;
       } else if (eff.type === 'globalWorkerReduction') {
         const each = eff.factor ?? 0.02;
-        const divisor = 1 + each * effectiveCount;
+        const divisor = 1 / (1 - raw);
         const eachPct = (each * 100).toFixed(0);
         descr = descr || getRwgUiText('effectsSummary.workerRequirements', 'Worker requirements divided by (1+{percent}% each)', { percent: eachPct });
         display = divisor > 0 ? `/${divisor.toFixed(2)}` : '—';
@@ -177,13 +177,13 @@ function _computeRWGEffectsSummary() {
         display = `+${(raw ?? effectiveCount)}`;
       } else if (eff.type === 'globalMaintenanceReduction') {
         const each = eff.factor ?? 0.02;
-        const divisor = 1 + each * effectiveCount;
+        const divisor = 1 / (1 - raw);
         const eachPct = (each * 100).toFixed(0);
         descr = descr || getRwgUiText('effectsSummary.maintenance', 'Maintenance divided by ({percent}% each)', { percent: eachPct });
         display = divisor > 0 ? `/${divisor.toFixed(2)}` : '—';
       } else if (eff.type === 'globalCostReduction') {
         const each = eff.factor ?? 0.01;
-        const divisor = 1 + each * Math.sqrt(Math.max(0, effectiveCount));
+        const divisor = 1 / (1 - raw);
         const eachPct = (each * 100).toFixed(0);
         descr = descr || getRwgUiText('effectsSummary.constructionCost', 'Building and colony construction cost divided by (1+{percent}% × √N)', { percent: eachPct });
         display = divisor > 0 ? `/${divisor.toFixed(3)}` : '—';
@@ -204,6 +204,12 @@ function _computeRWGEffectsSummary() {
         display = '—';
       } else if (typeof raw === 'number') {
         display = `x${raw.toFixed(3)}`;
+      }
+      if (eff.type !== 'flavorText' && gameSettings.rwgEffectEffectiveness !== 1) {
+        descr = getRwgUiText('effectsSummary.scaledRewardDescription', '', {
+          description: descr,
+          multiplier: gameSettings.rwgEffectEffectiveness,
+        });
       }
       return { effectId: eff.effectId, type: eff.type, description: descr, display };
     });

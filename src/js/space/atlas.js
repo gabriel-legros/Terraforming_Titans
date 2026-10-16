@@ -136,6 +136,7 @@ class AtlasManager extends EffectableEntity {
     }
 
     applyCompletionRewards() {
+        const currentSeedKey = this.getCurrentChallengeSeedKey();
         this.getChallengeDefinitions().forEach((definition) => {
             const seedKey = definition?.key;
             if (!seedKey) {
@@ -144,17 +145,15 @@ class AtlasManager extends EffectableEntity {
             this.getCompletionRewards(seedKey).forEach((reward, rewardIndex) => {
                 const sourceId = `atlas-reward-${seedKey}-${reward.id}`;
                 const effects = Array.isArray(reward.effects) ? reward.effects : [];
-                effects.forEach((effect, effectIndex) => {
-                    const rewardEffect = {
-                        ...effect,
-                        effectId: effect.effectId || `${sourceId}-${reward.id}-${effectIndex}`,
-                        sourceId
-                    };
-                    removeEffect(rewardEffect);
-                    if (this.isCompleted(seedKey)) {
-                        addEffect(rewardEffect);
-                    }
-                });
+                const rewardEffects = effects.map((effect, effectIndex) => ({
+                    ...effect,
+                    effectId: effect.effectId || `${sourceId}-${reward.id}-${effectIndex}`,
+                    sourceId
+                }));
+                rewardEffects.forEach(removeEffect);
+                if (this.isCompleted(seedKey) && !reward.disabledOnSpecialSeeds?.includes(currentSeedKey)) {
+                    rewardEffects.forEach(addEffect);
+                }
             });
         });
         this.markUIDirty({ force: true });

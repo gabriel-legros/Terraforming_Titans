@@ -1,5 +1,6 @@
 const STELLAR_DISPOSAL_ENERGY_PER_TON = 10_000_000;
 const STELLAR_DISPOSAL_WASTE_RESOURCES = [
+  'scrapMetal',
   'garbage',
   'trash',
   'junk',
@@ -1334,6 +1335,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
     }
 
     const disposalGroupData = this.getDisposalGroupData();
+    elements.disposalRenderedGroupData = disposalGroupData;
     const usedKeys = {};
     for (let i = 0; i < this.disposalTargets.length; i += 1) {
       usedKeys[this.getTargetSelectionKey(this.disposalTargets[i])] = true;
@@ -2405,7 +2407,10 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       }
     }
     const temperatureUnit = getTemperatureUnit();
-    if (elements.disposalLiquidHydrogenTemperatureUnit !== temperatureUnit) {
+    if (
+      elements.disposalLiquidHydrogenTemperatureUnit !== temperatureUnit
+      || elements.disposalRenderedGroupData !== this.getDisposalGroupData()
+    ) {
       elements.disposalLiquidHydrogenTemperatureUnit = temperatureUnit;
       this.refreshDisposalTargetSelects();
     }

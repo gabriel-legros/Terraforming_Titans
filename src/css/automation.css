@@ -640,7 +640,7 @@
 
 .automation-entry-scale-controls {
   display: grid;
-  grid-template-columns: minmax(220px, 2fr) minmax(110px, 0.8fr) minmax(260px, 1.6fr) auto 56px;
+  grid-template-columns: minmax(180px, 2fr) 144px minmax(280px, 1.6fr) 132px 156px 32px;
   gap: 6px 8px;
   position: absolute;
   inset: 0;
@@ -683,6 +683,30 @@
   background: #f8f9fc;
   border: 1px solid #e1e7f1;
   border-radius: 6px;
+}
+
+.ship-automation-entries {
+  container: ship-entries / inline-size;
+}
+
+.ship-automation-entry {
+  grid-template-columns: minmax(180px, 2fr) 144px minmax(280px, 1.6fr) 132px 156px 32px;
+}
+
+@container ship-entries (max-width: 1100px) {
+  .ship-automation-entry {
+    grid-template-columns: minmax(180px, 1fr) 144px minmax(280px, 1.3fr);
+  }
+
+  .ship-automation-entry > button {
+    justify-self: end;
+  }
+}
+
+.ship-automation-target {
+  min-width: 64px;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .automation-weight {
@@ -738,6 +762,12 @@
   width: 64px;
 }
 
+.automation-entry-exclude,
+.ship-automation-target {
+  font-size: 13px;
+  line-height: 1.1;
+}
+
 .automation-entry-exclude {
   display: flex;
   gap: 2px;
@@ -745,8 +775,6 @@
   justify-content: flex-start;
   white-space: nowrap;
   min-width: max-content;
-  font-size: 13px;
-  line-height: 1.1;
 }
 
 .automation-entry-exclude input[type='checkbox'] {

@@ -14,6 +14,46 @@ are inactive throughout calibration and verification. Hydrogen is included in
 adaptive snapshots and verification; use `--adaptive-only` for hydrogen oceans.
 See [Hydra tuning and calibration](hydra.md) for the Lerna recipe and verified result.
 
+## Adaptive RWG Equilibration
+
+Interactive and automatic travel share a deterministic solver. Wall-clock time does not affect its timestep, stopping conditions, or result. Defaults live in `terraformingParameters.gameplay.equilibration`.
+
+With Phase Change Heat disabled, each volatile family has its own implicit relaxation step. The solver collects the canonical phase-transfer rates and surface flows, solves their conservative transfer network, and scales the next step according to reversals in that family's movement. Connected inventories conserve mass, and inactive buried stores retain their inventory. Hydrogen uses its existing pressure-driven repartition rules. Independent step scales let slow reservoir transfers advance without repeatedly destabilizing faster atmospheric exchanges.
+
+Atmospheric chemistry advances with reactant-limited steps using the existing oxidation, aerosol-decay, acid-rain, and hydrogen-escape calculations. These processes can change a volatile family's inventory; phase redistribution itself conserves it. No chemistry or climate coefficients are retuned by equilibration.
+
+Fixed 20 ms probes measure the remaining drift. Small conservative corrections settle individual reservoirs; stalled coupled balances use a finite-difference correction with nonnegative inventory bounds. Near convergence, corrections focus on the unsettled family to avoid amplifying unrelated rounding noise. A cold buried reservoir can supply the dependent inventory when the largest exposed reservoir gives an ineffective correction. Rejected trials restore the accepted state. Climate evaluation refreshes geometry, coverage, pressure, and heat-capacity caches before recalculating temperature.
+
+Convergence requires 20 consecutive checks of five ordinary 20 ms resource updates with normal heat capacity. Checks include global and zonal inventories and mean, day, and night temperatures. The documented limits remain `0.01` ton absolute or `1e-12` relative inventory drift per check, and `1e-6 K` temperature drift. The implicit solver targets one tenth of those limits as a verification margin. One representable increment of floating-point noise is allowed without changing physical inventories. Shrinking a relaxation step cannot satisfy the final criterion.
+
+The default budget is 12,000 work steps. A work step is a complete transfer-network relaxation or a fixed-step physics evaluation, including trial evaluations. A budget-limited run returns the checkpoint with the smallest measured worst normalized drift, when one is available. Results include `reason`: `converged`, `step-limit`, or `ended-early`. The progress bar measures consumed work. End Early accepts the current accepted state; Add steps extends the budget by 2,000; Cancel discards the sandbox. Async chunks contain 40 work steps by default. The sandbox restores resource, planet, terraforming, celestial, facility, and stellar-luminosity globals after completion, cancellation, or failure.
+
+`maxSteps`, `stepDays`, `checkEvery`, `chunkSteps`, `absTol`, and `relTol` remain caller overrides. `stepDays` selects the initial relaxation scale; defaults for the implicit path use `implicitInitialSteps` native substeps. `sync` runs the same operations without asynchronous yields. Phase Change Heat and fixed-step diagnostics retain the explicit relaxation path, including `instabilityRefinementEveryChecks`; making both resource tolerances negative disables convergence termination for diagnostics. Former `minRunMs`, `additionalRunMs`, `timeoutMs`, `skipAdditionalFastForward`, and wall-clock refinement options are unused. The implicit path's independent scales do not represent a single chronological simulation trajectory.
+
+Run the repository Playwright benchmark without a save file or jsdom:
+
+```powershell
+node scripts/manual-tests/benchmark-rwg-equilibration.js --output artifacts/screenshots/equilibration-benchmark.json
+```
+
+It reports steps, termination reason, elapsed time, temperature, and atmospheric, surface, and zonal inventory drift over 2,000 ordinary 20 ms updates, using normal heat capacity. Verification reloads the returned override into real `Resource` objects and a new `Terraforming` instance instead of calling the equilibration solver again. Every seed runs in a fresh browser context. Positional arguments select seeds; `--steps` overrides the solver work budget, `--verification-steps` changes verification duration, and `--phase-change-heat` enables that setting. Use `--solver-source <path>` to compare an older `rwgEquilibrate.js` source; legacy timer-based versions use deterministic check-count refinement for this comparison.
+
+Run the complete type/orbit matrix as a quality check:
+
+```powershell
+node scripts/manual-tests/benchmark-rwg-equilibration.js --matrix --jobs 4 --sync --invariants --check --output artifacts/screenshots/equilibration-matrix.json
+```
+
+The matrix covers all 13 registered world types against all seven requested orbit presets, 14 additional moon cases, and the two reported regression seeds: 107 cases. Generator type/orbit locks remain active, so reports include actual archetypes, orbit presets, and canonical seeds alongside requested seeds. Repository assets are fulfilled from a shared byte cache while every seed receives a fresh browser context; this avoids exhausting Windows TCP buffers without sharing game state. Renderer crashes are reported as execution failures. `--jobs` runs contexts concurrently, so elapsed times from concurrent runs are not single-world performance measurements. `--sync` avoids background-timer throttling during batch runs; omit it to exercise interactive chunk scheduling.
+
+`--check` exits nonzero if any case fails. A pass requires `reason: converged` and drift within the original documented tolerances scaled to the verification interval, including all zonal inventories and mean/day/night temperatures. Global land is excluded because initialization reconciles this geometric quantity; it is not a volatile inventory. Budget exhaustion is a failed convergence check. `--invariants` observes transfer-network outputs and correction candidates, rejecting non-finite or negative values and family mass errors above `max(0.01 ton, 1e-12 relative)`. The `.summary.json` sidecar records counts, actual coverage, conservation observations, and the captured solver source checksum. See [RWG equilibration quality audit](rwg-equilibration-audit.md) for the matrix findings.
+
+Check deterministic chunk scheduling, work budgets, the initial-step override, Add steps, End Early, cancellation, and cleanup after an injected simulation error:
+
+```powershell
+node scripts/manual-tests/benchmark-rwg-equilibration.js --controls --output artifacts/screenshots/equilibration-controls.json
+```
+
 ## Solver Options
 
 - `--threshold`, `--steps`, and `--passes` override the default `0.01` tons/s solve limit, 20,000 verification steps, and 50 coordinate passes.

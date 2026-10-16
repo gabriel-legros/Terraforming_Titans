@@ -225,6 +225,25 @@ function appendJournalSegments(entry, segments) {
   });
 }
 
+function appendJournalImageLink(entry, source) {
+  if (!source || source.type !== 'project') return;
+  const image = progressData.storyProjects[source.id]?.attributes.storyStepImages?.[source.step];
+  if (!image) return;
+
+  const link = document.createElement('a');
+  link.className = 'journal-image-link';
+  link.href = image.src;
+  link.textContent = t(image.labelKey);
+  link.addEventListener('click', event => {
+    event.preventDefault();
+    createSystemPopup(t(image.titleKey), '', t('ui.common.close'), {
+      imageSrc: image.src,
+      imageAlt: t(image.altKey)
+    });
+  });
+  entry.append(document.createElement('br'), link);
+}
+
 function getChapterNumber(id) {
   const m = /^chapter(\d+)/.exec(id);
   return m ? parseInt(m[1], 10) : null;
@@ -528,6 +547,7 @@ function renderJournalEntries(entries, entrySources) {
     }
     const entry = document.createElement('p');
     appendJournalSegments(entry, buildJournalSegments(entryText));
+    appendJournalImageLink(entry, entrySources[index]);
     journalEntries.appendChild(entry);
   });
 }
@@ -691,6 +711,7 @@ function processNextJournalEntry() {
     cancelAnimationFrame(journalTypingFrameId);
     journalTypingFrameId = 0;
     appendRemainingJournalText();
+    appendJournalImageLink(entry, srcObj);
     if (!journalUserScrolling && journalContainer) {
       journalContainer.scrollTop = journalContainer.scrollHeight;
     }
@@ -882,6 +903,7 @@ function showJournalHistory() {
   journalHistoryData.forEach((text, index) => {
     const entry = document.createElement('p');
     appendJournalSegments(entry, buildJournalSegments(getResolvedJournalText(text, journalHistorySources[index])));
+    appendJournalImageLink(entry, journalHistorySources[index]);
     entriesContainer.appendChild(entry);
   });
 

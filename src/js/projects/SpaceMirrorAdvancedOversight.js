@@ -1,6 +1,7 @@
 class SpaceMirrorAdvancedOversight {
   static advancedAssignmentInProgress = false;
   static solverAlgorithm = 'newton';
+  static retryStates = new WeakMap();
 
   static runAssignments(project, settings, deltaTime = 0) {
     if (!settings || !settings.advancedOversight) return;
@@ -134,6 +135,7 @@ class SpaceMirrorAdvancedOversight {
         (!(totalMirrors > 0) || !(mirrorPowerPer > 0)) &&
         (!(totalLanterns > 0) || !(lanternPowerPer > 0))
       ) {
+        SpaceMirrorAdvancedOversight.retryStates.delete(settings);
         clearAssignments();
         syncDerivedReverseState();
         settings.assignments.mirrors = assignM;
@@ -209,6 +211,8 @@ class SpaceMirrorAdvancedOversight {
         return true;
       };
 
+      let bestSimulation = null;
+      let bestFluxes = null;
       const simulateFluxes = (zonalFluxes) => {
         terraforming.restoreTemperatureState(snapshot);
         terraforming.updateSurfaceTemperature(0, {
@@ -218,10 +222,15 @@ class SpaceMirrorAdvancedOversight {
           surfaceTemperatureProjectionContext,
         });
         const metrics = readCurrentMetrics();
-        return {
+        const result = {
           metrics,
           error: computeMetricError(metrics),
         };
+        if (!bestSimulation || result.error < bestSimulation.error) {
+          bestSimulation = result;
+          bestFluxes = { ...zonalFluxes };
+        }
+        return result;
       };
 
       const solveZoneFluxForTarget = (zone, idealFluxes, currentMetric) => {
@@ -633,10 +642,62 @@ class SpaceMirrorAdvancedOversight {
         }
       };
 
-      if (SpaceMirrorAdvancedOversight.solverAlgorithm === 'newton') {
-        solveIdealFluxesNewton();
-      } else {
-        solveIdealFluxesCurrent();
+      const retryParameters = terraformingParameters.gameplay.mirrorOversight;
+      const solverKey = JSON.stringify([
+        SpaceMirrorAdvancedOversight.solverAlgorithm,
+        fluxDisplayDivisor,
+        ZONES.map((zone) => [zone, targets[zone] || 0, getZoneMode(zone), getZonePriority(zone)]),
+      ]);
+      let retryState = SpaceMirrorAdvancedOversight.retryStates.get(settings);
+      if (
+        retryState?.terraforming !== terraforming ||
+        retryState?.solverKey !== solverKey ||
+        retryState?.solution !== settings.lastSolution
+      ) {
+        retryState = null;
+      }
+      // Compare with the last attempted solve, not the preceding tick, so gradual
+      // climate drift can also wake a stalled search. Projections are always fresh.
+      const climateChanged = retryState && solveOrder.some((zone) =>
+        !Number.isFinite(simulation.metrics[zone]) ||
+        Math.abs(simulation.metrics[zone] - retryState.metrics[zone]) > Math.max(
+          retryParameters.climateRetryToleranceK,
+          Math.abs(retryState.metrics[zone] - targets[zone]) * 0.01
+        )
+      );
+      if (retryState) {
+        retryState.remainingMs = Math.max(0, retryState.remainingMs - (
+          deltaTime > 0 ? deltaTime : terraformingParameters.gameplay.simulation.resourceSubstepMs
+        ));
+      }
+      if (!withinIdealTolerance(simulation.metrics) &&
+          (!retryState || climateChanged || retryState.remainingMs === 0)) {
+        const startingError = simulation.error;
+        if (SpaceMirrorAdvancedOversight.solverAlgorithm === 'newton') {
+          solveIdealFluxesNewton();
+        } else {
+          solveIdealFluxesCurrent();
+        }
+        // Coordinate fallbacks and derivative probes must not discard a better
+        // candidate already found during this call (including its starting point).
+        Object.assign(idealFluxes, bestFluxes);
+        simulation = bestSimulation;
+        const improved = simulation.error < startingError - Math.max(1e-12, startingError * 0.001);
+        const retryDelayMs = withinIdealTolerance(simulation.metrics) || improved ? 0 : Math.min(
+          retryParameters.maximumRetryDelayMs,
+          !climateChanged && retryState?.retryDelayMs
+            ? retryState.retryDelayMs * 2
+            : retryParameters.initialRetryDelayMs
+        );
+        retryState = {
+          terraforming,
+          solverKey,
+          metrics: simulation.metrics,
+          retryDelayMs,
+          remainingMs: retryDelayMs,
+        };
+      } else if (withinIdealTolerance(simulation.metrics)) {
+        retryState = null;
       }
 
       const computeFocusPowerTarget = () => {
@@ -857,6 +918,12 @@ class SpaceMirrorAdvancedOversight {
         availableHeatingPowerTarget,
         reversalMode: { ...reverse },
       };
+      if (retryState) {
+        retryState.solution = settings.lastSolution;
+        SpaceMirrorAdvancedOversight.retryStates.set(settings, retryState);
+      } else {
+        SpaceMirrorAdvancedOversight.retryStates.delete(settings);
+      }
 
       terraforming.runUpdateStep(0, { ignoreHeatCapacity: true });
       solvedSnapshot = terraforming.saveTemperatureState();

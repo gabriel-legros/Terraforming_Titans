@@ -179,7 +179,7 @@ class CargoRocketProject extends Project {
         });
         resourceRow.appendChild(quantityInput);
 
-        const pricePerUnit = this.attributes.resourceChoiceGainCost[category][resourceId];
+        const pricePerUnit = this.getBuyPrice(category, resourceId);
         const priceDisplay = document.createElement('span');
         priceDisplay.classList.add('resource-price-display');
         priceDisplay.dataset.resource = resourceId;
@@ -302,11 +302,7 @@ class CargoRocketProject extends Project {
         }
         const priceSpan = prices[index];
         if (priceSpan) {
-          let price = this.attributes.resourceChoiceGainCost?.[category]?.[resourceId];
-          if (typeof price !== 'number') return;
-          if (resourceId === 'spaceships') {
-            price += this.getSpaceshipPriceIncrease();
-          }
+          const price = this.getBuyPrice(category, resourceId);
           priceSpan.textContent = `${formatNumber(price, true)}`;
         }
       });
@@ -345,6 +341,14 @@ class CargoRocketProject extends Project {
     }
   }
 
+  getBuyPrice(category, resource, quantity = 1) {
+    const basePrice = gameSettings.marketPricing?.[category]?.[resource]?.buy
+      ?? this.attributes.resourceChoiceGainCost[category][resource];
+    return resource === 'spaceships'
+      ? this.getSpaceshipTotalCost(quantity, basePrice)
+      : basePrice * quantity;
+  }
+
   getSpaceshipPriceIncrease() {
     return this.spaceshipPriceIncrease;
   }
@@ -367,7 +371,7 @@ class CargoRocketProject extends Project {
     const divisor = this.getSpaceshipDivisor();
     const delta = 1 / divisor;
     const current = this.spaceshipPriceIncrease;
-    return basePrice * quantity + current * quantity + delta * quantity * (quantity - 1) / 2;
+    return Math.max(0, basePrice * quantity + current * quantity + delta * quantity * (quantity - 1) / 2);
   }
 
   getBuyTransactionCost(transaction, quantity) {
@@ -505,12 +509,7 @@ class CargoRocketProject extends Project {
 
     let totalFundingCost = 0;
     this.selectedResources.forEach(({ category, resource, quantity }) => {
-      const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
-      if (resource === 'spaceships') {
-        totalFundingCost += this.getSpaceshipTotalCost(quantity, basePrice);
-      } else {
-        totalFundingCost += basePrice * quantity;
-      }
+      totalFundingCost += this.getBuyPrice(category, resource, quantity);
     });
 
     if (resources.colony.funding.value < totalFundingCost) {
@@ -540,10 +539,7 @@ class CargoRocketProject extends Project {
       const tradeScale = this.getKesslerCargoScale(source);
       source.forEach(({ category, resource, quantity }) => {
         const scaledQuantity = quantity * tradeScale;
-        const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
-        const cost = resource === 'spaceships'
-          ? this.getSpaceshipTotalCost(scaledQuantity, basePrice)
-          : basePrice * scaledQuantity;
+        const cost = this.getBuyPrice(category, resource, scaledQuantity);
         totalFundingCost += cost;
       });
       return totalFundingCost;
@@ -560,10 +556,7 @@ class CargoRocketProject extends Project {
     }
     entries.forEach(({ category, resource, quantity }) => {
       const scaledQuantity = quantity * tradeScale;
-      const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
-      const cost = resource === 'spaceships'
-        ? this.getSpaceshipTotalCost(scaledQuantity, basePrice)
-        : basePrice * scaledQuantity;
+      const cost = this.getBuyPrice(category, resource, scaledQuantity);
       totalFundingCost += cost;
       if (useSelected) {
         this.pendingResourceGains.push({ category, resource, quantity: scaledQuantity });
@@ -600,10 +593,7 @@ class CargoRocketProject extends Project {
         const purchases = [];
         this.selectedResources.forEach(({ category, resource, quantity }) => {
           const scaledQuantity = quantity * tradeScale;
-          const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
-          const perSecCost = resource === 'spaceships'
-            ? this.getSpaceshipTotalCost(scaledQuantity, basePrice)
-            : basePrice * scaledQuantity;
+          const perSecCost = this.getBuyPrice(category, resource, scaledQuantity);
           costPerSecond += perSecCost;
           purchases.push({ category, resource, scaledQuantity });
         });
@@ -767,7 +757,8 @@ class CargoRocketProject extends Project {
     const tradeScale = this.getKesslerCargoScale(this.selectedResources);
     this.selectedResources.forEach(({ category, resource, quantity }) => {
       const scaledQuantity = quantity * tradeScale;
-      const basePrice = this.attributes.resourceChoiceGainCost[category][resource];
+      const basePrice = gameSettings.marketPricing?.[category]?.[resource]?.buy
+        ?? this.attributes.resourceChoiceGainCost[category][resource];
       purchases.push({ category, resource, quantity: scaledQuantity, basePrice, perSecCost: 0 });
     });
     purchases.forEach((purchase) => {

@@ -136,6 +136,33 @@
     margin: 4px 0 12px;
   }
 
+  .settings-grid-difficulty-rwg {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+
+  .market-pricing-window {
+    width: min(640px, 90vw);
+    max-height: 90vh;
+  }
+
+  .market-pricing-table-container {
+    overflow: auto;
+    min-height: 0;
+  }
+
+  .market-pricing-table {
+    width: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+    text-align: left;
+  }
+
+  .market-pricing-table th,
+  .market-pricing-table td {
+    padding: 4px;
+    overflow-wrap: anywhere;
+  }
+
   .settings-grid-difficulty-lock {
     grid-template-columns: 1fr;
   }
