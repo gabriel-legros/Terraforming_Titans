@@ -1304,7 +1304,7 @@ const buildingsParameters = {
     // 100 ha hemispherical Mars pressure dome: frame, glazing, equipment and controls.
     cost: {colony: {metal: 1_000_000, glass: 250_000, components: 100_000, electronics: 1_000}},
     consumption: {colony: {energy: { amount: 50_000_000_000, ignoreProductivity: true }, water: 500}, atmospheric : {carbonDioxide : 1220}},
-    realisticEnergyConsumption: 250_000_000,
+    realisticEnergyConsumption: 500_000_000,
     production: {atmospheric: {oxygen : 886.94}, surface: {biomass : 833.06}},
     storage: {},
     factoryHeatCoefficient: 0.8,

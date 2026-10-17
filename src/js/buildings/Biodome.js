@@ -7,7 +7,6 @@ class Biodome extends Building {
   constructor(config, buildingName) {
     super(config, buildingName);
     this.baseBiomassRate = this.production.surface.biomass;
-    this.baseEnergyConsumption = this.consumption.colony.energy;
     this.workerProductivity = 1;
     this.refreshMetabolismRates();
   }
@@ -42,7 +41,7 @@ class Biodome extends Building {
     const baseBiomass = this.baseBiomassRate;
     const consumption = {
       colony: {
-        energy: this.baseEnergyConsumption,
+        energy: this._baseConsumption.colony.energy,
       },
     };
     const production = {
