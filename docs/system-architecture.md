@@ -17,7 +17,7 @@ This document records durable ownership and cross-system constraints. Feature va
 ## Parameter and Constructor Ownership
 
 - Physical, atmosphere, geometry, phase-change, climate, gameplay, and hazard defaults live in `src/js/terraforming/terraforming-parameters.js`.
-- Dynamic-world surface gravity excludes atmospheric mass. Gravity penalties instead estimate gravity at the altitude where atmospheric pressure reaches 1 atm, including the atmosphere below that altitude.
+- Dynamic-world surface gravity excludes atmospheric mass. Atmospheric pressure is zero at zero surface gravity, including worlds depleted of all solid mass; negative gravity remains invalid. Gravity penalties instead estimate gravity at the altitude where atmospheric pressure reaches 1 atm, including the atmosphere below that altitude.
 - World-specific values live in planet or special-seed parameters. Derive dependent values only after mod patch stages have run.
 - Specialized building, colony, and project constructors are selected through each parameter entry's `type`. Keep constructor selection data-driven.
 - Neutron Star Smasher saves cumulative merger progress through the shared finite-target project state. Only whole mergers grant rewards. Its replaceable import-cap effect carries both the metal cap and created black-hole count; the Warp Gate Network manager rebuilds those derived totals, and Artificial Quasars add the created holes after network scaling. Like Planet Cracker bonuses, the metal cap is measured in ship slots: convert ejecta throughput using the unmodified metal mining payload and trip duration, then allow normal ship upgrades and mining costs to apply. Save/load and travel must not scale or award those rewards a second time.
@@ -41,6 +41,8 @@ Market pricing stores independent base buy/sell overrides by resource category a
 ### Load
 
 `loadGame()` rebuilds through `initializeGameState({ skipStoryInitialization: true })`. Difficulty settings reset to defaults before saved values are applied so absent legacy fields do not inherit the prior session.
+
+Legacy world snapshots missing `specialAttributes` receive an empty flags object before world-status restoration and building initialization.
 
 RWG effect effectiveness defaults to `1` and recalculates all earned random-world rewards from the original world and hazard counts. Apply the reward-count cap first, then scale additive bonuses, multiplier bonuses above `1`, and divisor bonuses above `1`; this also scales the bonus portion of capped import divisors. Changing effectiveness never rewrites progression counts or compounds previously applied effects. The same calculation supplies gameplay effects and their UI summary.
 

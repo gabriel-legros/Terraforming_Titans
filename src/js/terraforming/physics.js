@@ -97,8 +97,9 @@ function computeCloudSpeciesLayer(spec, pBar, mix) {
 }
 
 function calculateAtmosphericPressure(mass, gravity, radius, surfaceAreaOverride) {
-  if (mass <= 0){return 0};
-  if (gravity <= 0) throw new Error("Gravity must be a positive number.");
+  // Depleted dynamic worlds can have zero mass, radius, and surface gravity.
+  if (mass <= 0 || gravity === 0) return 0;
+  if (gravity < 0) throw new Error("Gravity must be a non-negative number.");
   const surfaceArea = Number.isFinite(surfaceAreaOverride) && surfaceAreaOverride > 0
     ? surfaceAreaOverride
     : 4 * Math.PI * Math.pow(radius*1e3, 2);

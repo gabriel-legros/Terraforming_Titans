@@ -491,6 +491,8 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
             currentPlanetParameters = getPlanetParameters(key);
           }
         }
+        // Legacy random-world snapshots can predate the special-attribute flags.
+        currentPlanetParameters.specialAttributes ||= {};
         if (spaceManager && typeof spaceManager.applyWorldStatusToPlanetParameters === 'function') {
           spaceManager.applyWorldStatusToPlanetParameters(currentPlanetParameters);
         }

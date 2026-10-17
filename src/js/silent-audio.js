@@ -2,6 +2,11 @@ let silentLoopAudioElement;
 let silentLoopAudioInitialized = false;
 
 const backgroundWhiteNoiseSrc = 'assets/white_noise/weak_white_noise_-60dBFS_60s_22k.wav';
+// One second of silent mono PCM: 8-bit samples at 8 kHz, with a WAV header.
+const backgroundSilenceDataUri = 'data:audio/wav;base64,' + btoa(
+  'RIFFd\x1f\0\0WAVEfmt \x10\0\0\0\x01\0\x01\0@\x1f\0\0@\x1f\0\0\x01\0\x08\0data@\x1f\0\0'
+  + '\x80'.repeat(8000)
+);
 const isFirefoxBrowser = !!navigator?.userAgent?.toLowerCase().includes('firefox');
 const defaultLoopVolume = 0.25;
 const firefoxLoopVolume = 0.02;

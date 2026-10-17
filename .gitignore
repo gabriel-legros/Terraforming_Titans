@@ -10,6 +10,7 @@ ideas/to_do.txt
 npm-ci.log
 scripts/manual-tests/memory-reports/
 artifacts/screenshots/
+artifacts/save-checks/
 artifacts/translation-work/
 src/js/build-target.js
 /local-mods/
