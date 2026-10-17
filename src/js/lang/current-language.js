@@ -268,7 +268,7 @@ setLanguageData({
         cancel: 'Cancel',
       },
       gravity: {
-        flavor: 'Humans and their bodies are very sensitive to high gravity. ',
+        flavor: 'Colonists are very sensitive to high gravity. ',
         happinessLine: 'Every m/s² above 10 reduces happiness by 5%, up to a 100% reduction.',
         costLineExponential: 'Construction costs climb 10% per m/s² above 10 and gain an exponential surcharge that doubles every additional 10 m/s² beyond 20.',
         costLineLinear: 'Construction costs climb 10% per m/s² above 10.',
