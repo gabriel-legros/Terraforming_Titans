@@ -49,7 +49,7 @@ class PlanetarySwampificationProject extends UndergroundExpansionProject {
 
   getTargetReservedLand() {
     const share = Math.max(0, Math.min(1, this.attributes.landReservationShare || 0));
-    return Math.max(0, resolveWorldGeometricLand(terraforming, resources.surface.land)) * share;
+    return Math.floor(Math.max(0, resolveWorldGeometricLand(terraforming, resources.surface.land)) * share);
   }
 
   getReservedLand() {
@@ -101,7 +101,8 @@ class PlanetarySwampificationProject extends UndergroundExpansionProject {
     const maximumProgress = (maximumReservedLand / targetLand) * segmentCount;
     return Math.max(0, Math.min(
       remainingRepeats,
-      maximumProgress - this.getTotalProgress()
+      // Subtract whole segments first so rounding cannot erase the final fraction.
+      maximumProgress - this.repeatCount - this.fractionalRepeatCount
     ));
   }
 
