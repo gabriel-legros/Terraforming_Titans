@@ -174,17 +174,32 @@ class SpaceMiningProject extends SpaceshipProject {
         { minimum: TERRAFORMING_AEROBRAKING_PARAMETERS.minimumAtmosphericColumnMassKgM2 }
       )
     );
+    const warning = document.createElement('span');
+    warning.classList.add('info-tooltip-icon', 'aerobraking-warning');
+    warning.innerHTML = '&#9888;&#xFE0E;';
+    warning.hidden = true;
+    const warningTooltip = attachDynamicInfoTooltip(warning, '');
+    warningTooltip._prepareTooltipContent = () => {
+      const columnMass = terraforming.calculateAtmosphericComposition().totalMass / terraforming.celestialParameters.surfaceArea;
+      const text = getSpaceMiningText('ui.projects.spaceship.aerobrakingThinAtmosphere', '', {
+        current: formatNumber(columnMass, false, 2),
+        minimum: formatNumber(TERRAFORMING_AEROBRAKING_PARAMETERS.minimumAtmosphericColumnMassKgM2, false, 0)
+      });
+      if (warningTooltip.textContent !== text) setTooltipText(warningTooltip, text);
+    };
     checkbox.addEventListener('change', () => {
       this.aerobrakingEnabled = checkbox.checked;
       for (const projectName in projectManager.projects) {
         updateProjectUI(projectName);
       }
     });
-    container.append(checkbox, label, info);
+    container.append(checkbox, label, info, warning);
     projectElements[this.name] = {
       ...projectElements[this.name],
       aerobrakingContainer: container,
-      aerobrakingCheckbox: checkbox
+      aerobrakingCheckbox: checkbox,
+      aerobrakingWarning: warning,
+      aerobrakingWarningTooltip: warningTooltip
     };
     return container;
   }
@@ -1184,6 +1199,16 @@ class SpaceMiningProject extends SpaceshipProject {
       elements.aerobrakingContainer.style.display = gameSettings.aerobraking ? 'flex' : 'none';
       elements.aerobrakingCheckbox.checked = this.aerobrakingEnabled;
       elements.aerobrakingCheckbox.disabled = !this.isAerobrakingTargetSelected();
+      const showWarning = gameSettings.aerobraking && this.aerobrakingEnabled
+        && this.isAerobrakingTargetSelected() && !terraforming.hasAerobrakingAtmosphere();
+      if (elements.aerobrakingWarning.hidden === showWarning) {
+        elements.aerobrakingWarning.hidden = !showWarning;
+      }
+      elements.aerobrakingWarningTooltip._dynamicTooltipEnabled = showWarning;
+      if (showWarning) elements.aerobrakingWarningTooltip._prepareTooltipContent();
+      else if (elements.aerobrakingWarningTooltip.style.display !== 'none') {
+        elements.aerobrakingWarningTooltip.style.display = 'none';
+      }
     }
   }
 

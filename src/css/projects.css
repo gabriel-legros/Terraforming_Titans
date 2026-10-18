@@ -613,6 +613,10 @@
     gap: 5px;
 }
 
+.aerobraking-warning.info-tooltip-icon {
+    color: #f44336;
+}
+
 .checkbox-container input[type="checkbox"],
 .checkbox-container input[type="text"] {
     margin: 0;

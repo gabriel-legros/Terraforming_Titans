@@ -1644,6 +1644,7 @@ setLanguageData({
         gainPerShipmentValue: 'Gain per Shipment: {value}',
         controlledByAutomation: 'Controlled by automation',
         aerobraking: 'Aerobraking',
+        aerobrakingThinAtmosphere: 'The atmosphere is currently too thin for aerobraking : {current}/ {minimum} kg/m\u00B2 atmospheric column mass.',
         aerobrakingTooltip: 'Bypasses Space Access Capacity when the destination is the surface or atmosphere and atmospheric column mass is at least {minimum} kg/m\u00B2. Converts arrival energy into planetary heat. Surface-targeted ice and water are delivered as atmospheric water vapour.',
         spaceAccessContinuous: 'Space access benefit: {benefit} (project {project}/s; shared {demand}/{capacity}/s)',
         spaceAccessContinuousCapped: 'Space access benefit: {benefit}; throughput: {throughput}% (project {project}/s; shared {demand}/{capacity}/s)',
