@@ -64,6 +64,7 @@ class GalaxyOperationManager {
         this.uhfFactionId = typeof uhfFactionId === 'string' && uhfFactionId ? uhfFactionId : 'uhf';
         this.operations = operations instanceof Map ? operations : new Map();
         this.attackHistory = [];
+        // Keep one shared step in the existing sector-keyed save format.
         this.stepSizes = new Map();
         this.autoSectors = new Set();
         this.autoThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
@@ -153,6 +154,7 @@ class GalaxyOperationManager {
                 if (!key || !Number.isFinite(numericValue) || numericValue <= 0) {
                     return;
                 }
+                this.stepSizes.clear();
                 this.stepSizes.set(String(key), Math.max(1, Math.floor(numericValue)));
             });
         }
@@ -217,7 +219,7 @@ class GalaxyOperationManager {
         if (!sectorKey) {
             return 1;
         }
-        const value = this.stepSizes.get(sectorKey);
+        const value = this.stepSizes.values().next().value;
         if (!Number.isFinite(value) || value <= 0) {
             return 1;
         }
@@ -228,9 +230,9 @@ class GalaxyOperationManager {
         if (!sectorKey) {
             return 1;
         }
+        this.stepSizes.clear();
         const numeric = Number(value);
         if (!Number.isFinite(numeric) || numeric <= 0) {
-            this.stepSizes.delete(sectorKey);
             return 1;
         }
         const step = Math.max(1, Math.floor(numeric));

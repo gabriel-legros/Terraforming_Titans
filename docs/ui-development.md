@@ -49,6 +49,7 @@ Project cards survive travel and `projectsUI.js` rebinds new project instances t
 - Parse string-backed numbers with `parseFlexibleNumber(value)` and wire them with `wireStringNumberInput(input, { parseValue, formatValue, onValue })`.
 - Store parsed values in `input.dataset.<key>` when dependent UI needs them.
 - `-` and `+` change the target by the current step; `/10` and `x10` change the step itself. Clamp and store the step per item, then refresh its label.
+- Galaxy fleet assignment steps are shared across sectors, with separate attack and defense selections owned by their managers. Read them directly rather than caching per sector. The existing `operationSteps` and `defenseSteps` save arrays retain one entry; legacy arrays use their last valid entry.
 - Create toggles with `createToggleButton({ onLabel, offLabel, isOn })` and refresh them with `setToggleButtonState(toggle, enabled)`.
 
 ## Tooltips

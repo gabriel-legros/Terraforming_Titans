@@ -1741,7 +1741,7 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
         <div class="rwg-chip"><div class="label">${getRwgUiText('details.radius', 'Radius')}</div><div class="value">${fmt(c.radius)} km</div></div>
         <div class="rwg-chip"><div class="label">${getRwgUiText('details.gravity', 'Gravity')}</div><div class="value">${fmt(c.gravity)} m/s²${gWarn}</div></div>
         <div class="rwg-chip"><div class="label">${getRwgUiText('details.albedo', 'Albedo')}</div><div class="value">${c.albedo}</div></div>
-        <div class="rwg-chip"><div class="label">${getRwgUiText('details.rotation', 'Rotation')}</div><div class="value">${fmt(c.rotationPeriod)} h</div></div>
+        <div class="rwg-chip"><div class="label">${getRwgUiText('details.spinDuration', 'Spin duration')}</div><div class="value">${fmt(c.spinPeriod)} h</div></div>
         <div class="rwg-chip"><div class="label">${getRwgUiText('details.flux', 'Flux')}</div><div class="value">${fmt((fluxWm2).toFixed ? fluxWm2.toFixed(0) : fluxWm2)} W/m²</div></div>
         ${coreHeatFlux > 0 ? `<div class="rwg-chip"><div class="label">${getRwgUiText('details.coreHeat', 'Core Heat')}</div><div class="value">${fmt(coreHeatFlux)} W/m²</div></div>` : ''}
         <div class="rwg-chip"><div class="label">${getRwgUiText('details.magnetosphere', 'Magnetosphere')}</div><div class="value">${c.hasNaturalMagnetosphere ? getRwgUiText('common.yes', 'Yes') : getRwgUiText('common.no', 'No')}</div></div>

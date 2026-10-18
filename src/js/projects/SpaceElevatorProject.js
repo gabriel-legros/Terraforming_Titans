@@ -763,11 +763,15 @@
         return;
       }
       const engineering = this.getElevatorEngineering();
-      ui.elevatorOption.disabled = !engineering.possible;
+      if (ui.elevatorOption.disabled !== !engineering.possible) {
+        ui.elevatorOption.disabled = !engineering.possible;
+      }
       if (!engineering.possible && this.constructionMode === SPACE_ELEVATOR_MODE && !this.isActive && this.expansionProgress === 0) {
         this.constructionMode = SKYHOOK_MODE;
       }
-      ui.modeSelect.value = this.constructionMode;
+      if (document.activeElement !== ui.modeSelect && ui.modeSelect.value !== this.constructionMode) {
+        ui.modeSelect.value = this.constructionMode;
+      }
       ui.elevatorsValue.textContent = formatNumber(this.elevatorCount, true);
       ui.skyhooksValue.textContent = formatNumber(this.skyhookCount, true);
       const expansionRate = 1000 / this.getEffectiveDuration();
@@ -794,7 +798,9 @@
         : t('ui.projects.spaceElevator.skyhookOnly', null, 'Skyhook only');
       ui.targetCheckbox.checked = this.capacityTargetEnabled;
       ui.throughputCapCheckbox.checked = this.capThroughputToCapacity;
-      ui.targetModeSelect.value = this.capacityTargetMode;
+      if (document.activeElement !== ui.targetModeSelect && ui.targetModeSelect.value !== this.capacityTargetMode) {
+        ui.targetModeSelect.value = this.capacityTargetMode;
+      }
       if (document.activeElement !== ui.targetInput) {
         ui.targetInput.value = formatNumber(this.capacityTarget, false, 2);
       }

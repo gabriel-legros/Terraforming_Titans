@@ -1,7 +1,6 @@
 const GalaxyOperationUI = (() => {
     const OPERATION_ARROW_LINE_WIDTH = 4;
     const operationsAllocations = new Map();
-    const operationsStepSizes = new Map();
     const operationsAutoStates = new Map();
     let cachedAutoLaunchThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
     let context = { manager: null, cache: null };
@@ -154,49 +153,8 @@ const GalaxyOperationUI = (() => {
         return available > 0 ? available : 0;
     }
 
-    function getStoredStep(key) {
-        if (!key) {
-            return 1;
-        }
-        if (operationsStepSizes.has(key)) {
-            const cached = operationsStepSizes.get(key);
-            if (Number.isFinite(cached) && cached > 0) {
-                return cached;
-            }
-        }
-        const manager = getManager();
-        if (manager?.getOperationStep) {
-            const fetched = manager.getOperationStep(key);
-            const sanitized = Number.isFinite(fetched) && fetched > 0 ? Math.max(1, Math.floor(fetched)) : 1;
-            operationsStepSizes.set(key, sanitized);
-            return sanitized;
-        }
-        return 1;
-    }
-
-    function setStoredStep(key, value) {
-        if (!key) {
-            return;
-        }
-        const numeric = Number(value);
-        const manager = getManager();
-        if (!Number.isFinite(numeric) || numeric <= 0) {
-            operationsStepSizes.delete(key);
-            if (manager?.setOperationStep) {
-                manager.setOperationStep({ sectorKey: key, value: 1 });
-            }
-            return;
-        }
-        const sanitized = Math.max(1, Math.floor(numeric));
-        operationsStepSizes.set(key, sanitized);
-        if (manager?.setOperationStep) {
-            manager.setOperationStep({ sectorKey: key, value: sanitized });
-        }
-    }
-
     function syncCacheFromManager(managerOverride) {
         operationsAllocations.clear();
-        operationsStepSizes.clear();
         operationsAutoStates.clear();
         cachedAutoLaunchThreshold = DEFAULT_OPERATION_AUTO_THRESHOLD;
         const manager = managerOverride || getManager();
@@ -417,7 +375,7 @@ const GalaxyOperationUI = (() => {
             : 'uhf');
         const availablePower = resolveOperationsAvailablePower(manager, faction);
         let current = getStoredAllocation(key);
-        let step = getStoredStep(key);
+        let step = manager.getOperationStep(key);
         let shouldUpdateAllocation = true;
         switch (action) {
         case 'zero':
@@ -439,12 +397,12 @@ const GalaxyOperationUI = (() => {
             } else {
                 step = 1;
             }
-            setStoredStep(key, step);
+            manager.setOperationStep({ sectorKey: key, value: step });
             shouldUpdateAllocation = false;
             break;
         case 'multiply':
             step *= 10;
-            setStoredStep(key, step);
+            manager.setOperationStep({ sectorKey: key, value: step });
             shouldUpdateAllocation = false;
             break;
         default:
@@ -1088,7 +1046,7 @@ const GalaxyOperationUI = (() => {
         const selectedKey = selection.key;
         const defaultFactionId = UHF_FACTION_ID || 'uhf';
         const selectedTargetFactionId = manager?.getOperationTargetFaction?.(selectedKey, defaultFactionId) || null;
-        const stepSize = getStoredStep(selectedKey);
+        const stepSize = manager.getOperationStep(selectedKey);
         const defaultDurationMs = getDefaultOperationDurationMs(manager, selectedKey, defaultFactionId, selectedTargetFactionId);
 
         updateOperationsStepDisplay(stepSize, formatNumber);

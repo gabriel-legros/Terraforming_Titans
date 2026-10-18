@@ -303,6 +303,7 @@ setLanguageData({
         gravity: 'Gravity',
         albedo: 'Albedo',
         rotation: 'Rotation',
+        spinDuration: 'Spin duration',
         flux: 'Flux',
         coreHeat: 'Core Heat',
         magnetosphere: 'Magnetosphere',

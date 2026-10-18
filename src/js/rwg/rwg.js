@@ -1675,8 +1675,8 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
   }
   let rotation = (type === "titan-like" || type === "icy-moon") ? randRange(rng, 150, 450) : randRange(rng, 10, 48);
   if (type === "venus-like") rotation = randRange(rng, 5200, 6400);
-  // For rogue worlds, spinPeriod is 0 but rotationPeriod is 24h for day-night cycle
-  const spinPeriod = isStarlessRogueWorld ? 0 : rotation;
+  // Starless rogues keep their generated physical spin separate from the day-night cycle.
+  const spinPeriod = rotation;
   const rotationPeriod = isStarlessRogueWorld ? 24 : rotation;
   const albedo = classification.albedo;
   const zonal = buildZonalDistributions(type, classification.Teq, surface, landHa, rng, params);

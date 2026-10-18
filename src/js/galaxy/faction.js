@@ -79,6 +79,7 @@ class GalaxyFaction {
         this.autoDefenseAssignments = new Map();
         this.autoDefenseTotal = 0;
         this.loadingDefenseAssignments = false;
+        // Keep one shared step in the existing sector-keyed save format.
         this.defenseStepSizes = new Map();
         this.noFleetRegeneration = options.noFleetRegeneration === true;
         this.ignoreSectorBaseDefense = options.ignoreSectorBaseDefense === true;
@@ -473,15 +474,11 @@ class GalaxyFaction {
         if (this.id !== UHF_FACTION_ID || !sectorKey) {
             return 1;
         }
-        const value = this.defenseStepSizes.get(sectorKey);
+        const value = this.defenseStepSizes.values().next().value;
         if (!Number.isFinite(value) || value <= 0) {
             return 1;
         }
-        const step = normalizeDefenseStepValue(value);
-        if (step !== value) {
-            this.defenseStepSizes.set(sectorKey, step);
-        }
-        return step;
+        return normalizeDefenseStepValue(value);
     }
 
     getDefenseReservation(manager) {
@@ -613,9 +610,9 @@ class GalaxyFaction {
         if (this.id !== UHF_FACTION_ID || !sectorKey) {
             return 1;
         }
+        this.defenseStepSizes.clear();
         const numeric = Number(value);
         if (!Number.isFinite(numeric) || numeric <= 0) {
-            this.defenseStepSizes.delete(sectorKey);
             return 1;
         }
         const step = normalizeDefenseStepValue(numeric);
@@ -711,6 +708,7 @@ class GalaxyFaction {
                     if (!sectorKey || !Number.isFinite(numericValue) || numericValue <= 0) {
                         return;
                     }
+                    this.defenseStepSizes.clear();
                     this.defenseStepSizes.set(String(sectorKey), normalizeDefenseStepValue(numericValue));
                 });
             }
