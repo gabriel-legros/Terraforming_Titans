@@ -53,6 +53,7 @@ class Biodome extends Building {
     this.applyMetabolismMap(perBiomass.surface, 'surface', consumption, production);
     this.applyMetabolismMap(perBiomass.globalSurface || {}, 'surface', consumption, production);
     this.applyMetabolismMap(perBiomass.atmospheric, 'atmospheric', consumption, production);
+    this.applyMetabolismMap(perBiomass.colony || {}, 'colony', consumption, production);
 
     this.consumption = consumption;
     this.production = production;
@@ -70,13 +71,16 @@ class Biodome extends Building {
 
       if (value < 0) {
         const bucket = consumption[targetCategory] ?? (consumption[targetCategory] = {});
-        bucket[targetResource] = amount;
+        const existing = bucket[targetResource];
+        bucket[targetResource] = Object(existing) === existing
+          ? { ...existing, amount: existing.amount + amount }
+          : (existing || 0) + amount;
         continue;
       }
 
       if (value > 0) {
         const bucket = production[targetCategory] ?? (production[targetCategory] = {});
-        bucket[targetResource] = amount;
+        bucket[targetResource] = (bucket[targetResource] || 0) + amount;
       }
     }
   }

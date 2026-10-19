@@ -2203,6 +2203,26 @@ class LifeManager extends EffectableEntity {
       }
     });
 
+    if (!plan.sterileDecayWithoutOxygen) {
+      [
+        [naturalDecayByZone, naturalDecayReason],
+        [supportedDecayByZone, decayReason],
+      ].forEach(([decayByZone, reason]) => {
+        const totalDecay = zones.reduce((total, zoneName) => total + decayByZone[zoneName], 0);
+        Object.entries(plan.decayPerBiomass.globalSurface || {}).forEach(([resourceKey, coef]) => {
+          if (coef <= 0 || totalDecay <= 0) return;
+          const delta = totalDecay * coef;
+          const resource = resources.surface[resourceKey];
+          resource.modifyRate(delta / secondsMultiplier, reason, 'life');
+          if (accumulatedChanges) {
+            accumulatedChanges.surface[resourceKey] = (accumulatedChanges.surface[resourceKey] || 0) + delta;
+          } else {
+            resource.value += delta;
+          }
+        });
+      });
+    }
+
     zones.forEach(zoneName => {
       if (biomassDyingChangeByZone[zoneName] < -1e-9) {
         terraforming.biomassDyingZones[zoneName] = true;

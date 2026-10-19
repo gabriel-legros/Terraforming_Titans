@@ -206,7 +206,7 @@ const terraformingRequirements = {
             decay: {
               allowSterileDecayWithoutOxygen: true,
               perBiomass: {
-                surface: { biomass: -1 },
+                surface: { biomass: -1, liquidWater: 0.6 },
                 atmospheric: {
                   carbonDioxide: 1.946902655,
                   hydrogen: 0.17699115,
@@ -375,6 +375,7 @@ const terraformingRequirements = {
               allowSterileDecayWithoutOxygen: true,
               perBiomass: {
                 surface: { biomass: -1 },
+                globalSurface: { scrapMetal: 1 },
                 atmospheric: {},
               },
             },
@@ -559,7 +560,7 @@ const terraformingRequirements = {
               perBiomass: {
                 surface: { biomass: 1 },
                 atmospheric: {
-                  atmosphericMethane: -0.2,
+                  atmosphericMethane: -1,
                 },
               },
             },
@@ -568,7 +569,7 @@ const terraformingRequirements = {
               perBiomass: {
                 surface: { biomass: -1 },
                 atmospheric: {
-                  atmosphericMethane: 0.2,
+                  atmosphericMethane: 1,
                 },
               },
             },
