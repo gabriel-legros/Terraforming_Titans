@@ -459,11 +459,11 @@ const terraformingRequirements = {
             decay: {
               allowSterileDecayWithoutOxygen: true,
               perBiomass: {
-                surface: { biomass: -1, liquidWater: 1 },
+                surface: { biomass: -1, liquidWater: 0.5 },
                 atmospheric: {
-                  carbonDioxide: 2,
-                  hydrogen: 5,
-                  atmosphericWater: -3,
+                  carbonDioxide: 0.5,
+                  hydrogen: 0.5,
+                  atmosphericWater: -0.5,
                 },
               },
             },
