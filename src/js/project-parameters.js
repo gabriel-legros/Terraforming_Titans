@@ -745,7 +745,6 @@ const projectParameters = {
     kesslerDebrisSize: 'large',
     attributes: {
       spaceMining: true,
-      showInResourcesRate: false,
       disableWhenHazard: ['debrisDisk']
     }
   },
@@ -768,7 +767,6 @@ const projectParameters = {
     automationRequiresEverEnabled: true,
     attributes: {
       spaceMining: true,
-      showInResourcesRate: false
     }
   },
   aerostatStructuralNet: {
@@ -788,7 +786,6 @@ const projectParameters = {
     automationRequiresEverEnabled: true,
     attributes: {
       spaceMining: true,
-      showInResourcesRate: false
     }
   },
   vanadoBiosphereBuoyancy: {
