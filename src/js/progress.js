@@ -184,6 +184,7 @@ class StoryManager {
         this.waitingForJournalEventId = null; // <<< NEW: Track the ID of the journal event we're waiting for
         this.currentChapter = null;
         this.currentChapterPlanet = null;
+        this.storyBranch = null;
 
         // --- Add event listener for journal completion ---
         this.boundHandleJournalFinished = this.handleJournalFinished.bind(this);
@@ -316,10 +317,24 @@ class StoryManager {
 
     }
 
+    setStoryBranch(branch) {
+        this.storyBranch = branch;
+        for (const id of this.activeEventIds) {
+            const event = this.findEventById(id);
+            if (event && event.chapter !== -1 && event.branch !== branch) {
+                this.activeEventIds.delete(id);
+            }
+        }
+        if (!this.activeEventIds.has(this.waitingForJournalEventId)) {
+            this.waitingForJournalEventId = null;
+        }
+    }
+
     activateEvent(event) { // Keep as is
         if (!event || this.activeEventIds.has(event.id) || this.completedEventIds.has(event.id)) {
             return;
         }
+        if (this.storyBranch && event.chapter !== -1 && event.branch !== this.storyBranch) return;
         if (!event.activePlanet && typeof spaceManager !== 'undefined' && typeof spaceManager.getCurrentPlanetKey === 'function') {
             event.activePlanet = spaceManager.getCurrentPlanetKey();
         }
@@ -348,6 +363,7 @@ class StoryManager {
 
     checkActivationConditions(event) { // extended to support typed prerequisites
          if (!event) return false;
+         if (this.storyBranch && event.chapter !== -1 && event.branch !== this.storyBranch) return false;
          if (event.prerequisites && event.prerequisites.length > 0) {
              const allPrereqsMet = event.prerequisites.every(pr => this.isPrerequisiteMet(pr, event));
              return allPrereqsMet;
@@ -497,6 +513,8 @@ class StoryManager {
                const target = objective.quantity || objective.value || 0;
                return compareValues(current, target, objective.comparison);
           }
+          case 'dagonState':
+               return galaxyInvasionManager.dagon[objective.state] === true;
           case 'galaxySectorControl': {
                const sectorLabel = objective.sectorLabel || objective.sectorKey || objective.sector || objective.label;
                const sector = findGalaxySector(sectorLabel);
@@ -686,6 +704,8 @@ class StoryManager {
                const label = objective.labelKey ? t(objective.labelKey, null, objective.label || objective.actionId) : (objective.label || objective.actionId);
                return `${label} ${format(current, true)}/${format(target, true)}`;
           }
+          case 'dagonState':
+               return t(`ui.space.invasion.dagon.objectives.${objective.state}`);
           case 'condition': {
                return objective.description || '';
           }
@@ -846,6 +866,7 @@ class StoryManager {
             return;
         }
         this.currentChapter = targetEvent.chapter;
+        this.setStoryBranch(targetEvent.branch);
         this.currentChapterPlanet = targetEvent.activePlanet || null;
 
         // Gather all prerequisite chapters recursively, including handling
@@ -941,6 +962,7 @@ class StoryManager {
             completedEventIds: Array.from(this.completedEventIds),
             appliedEffects: this.appliedEffects,
             currentChapter: this.currentChapter,
+            storyBranch: this.storyBranch,
             currentChapterPlanet: this.currentChapterPlanet,
              // Save waiting state too!
             waitingForJournalEventId: this.waitingForJournalEventId,
@@ -1010,9 +1032,16 @@ class StoryManager {
 
         this.activeEventIds = new Set(savedState.activeEventIds || []);
         this.completedEventIds = new Set(savedState.completedEventIds || []);
+        // Older Dagon saves included the reboot in the opening journal entry.
+        if (this.activeEventIds.has('chapterA.1') || this.completedEventIds.has('chapterA.1')) {
+            this.completedEventIds.add('chapterA.reboot');
+        }
         this.waitingForJournalEventId = savedState.waitingForJournalEventId || null; // <<< Load waiting state
         this.currentChapter = savedState.currentChapter || 0;
         this.currentChapterPlanet = savedState.currentChapterPlanet || null;
+        const branch = galaxyInvasionManager.dagon.started ? 'dagon' : savedState.storyBranch;
+        this.storyBranch = null;
+        if (branch) this.setStoryBranch(branch);
         this.suppressNavigationRewards = true;
 
         if (storyDebugMode) {
@@ -1077,6 +1106,7 @@ class StoryManager {
 class StoryEvent {
     constructor(config) {
         this.id = config.id;
+        this.branch = config.branch || 'main';
         this.chapter = config.chapter !== undefined ? config.chapter : getChapterNumber(config.id);
         this.type = config.type;
         this.parameters = config.parameters || {};

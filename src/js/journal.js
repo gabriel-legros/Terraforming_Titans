@@ -340,7 +340,8 @@ function ensureJournalWorldData() {
     { id: 'styx', label: 'Styx', source: getStorySource(() => progressStyx, './story/styx.js') },
     { id: 'zeus', label: 'Zeus', source: getStorySource(() => progressZeus, './story/zeus.js') },
     { id: 'olympus', label: 'Olympus', source: getStorySource(() => progressOlympus, './story/olympus.js') },
-    { id: 'earth', label: 'Earth', source: getStorySource(() => progressEarth, './story/earth.js') }
+    { id: 'earth', label: 'Earth', source: getStorySource(() => progressEarth, './story/earth.js') },
+    { id: 'dagon', label: t('ui.space.invasion.dagon.title'), source: progressDagon }
   ].filter(world => world.source && Array.isArray(world.source.chapters));
   const standardWorlds = [];
   worlds.forEach(world => {
@@ -448,7 +449,8 @@ function buildJournalIndex() {
       }
       const item = document.createElement('li');
       item.className = 'journal-index-chapter';
-      item.textContent = t('ui.journal.chapter', { number: chapterNumber }, `Chapter ${chapterNumber}`);
+      item.textContent = world.id === 'dagon' ? t('ui.space.invasion.dagon.chapter')
+        : t('ui.journal.chapter', { number: chapterNumber }, `Chapter ${chapterNumber}`);
       item.addEventListener('click', () => {
         jumpJournalToWorldChapter(world.id, chapterNumber);
       });
@@ -936,6 +938,8 @@ function getJournalTextFromSource(source) {
       }
       return joinLines(lines);
     }
+  } else if (source.type === 'dagon') {
+    return t(`story.dagon.scenes.${source.id}.text`);
   } else if (source.type === 'project') {
     const proj = progressData && progressData.storyProjects && progressData.storyProjects[source.id];
     const projectInstance = projectManager && projectManager.projects && projectManager.projects[source.id];

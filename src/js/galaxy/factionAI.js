@@ -211,6 +211,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
     }
 
     #isEnemySectorKey(key, manager) {
+        if (manager.galacticInvasionManager?.dagon.protection[key] > 0) return false;
         const sector = this.#getSectorFromKey(key, manager);
         if (!sector) {
             return false;

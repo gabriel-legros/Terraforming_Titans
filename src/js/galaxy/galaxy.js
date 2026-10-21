@@ -1181,7 +1181,7 @@ class GalaxyManager extends EffectableEntity {
         const ringCache = new Map();
         galaxyFactionParameters.forEach((definition) => {
             const startingSectors = this.#resolveStartingSectors(definition, ringCache);
-            const FactionCtor = definition.id === UHF_FACTION_ID ? GalaxyFaction : GalaxyFactionAI;
+            const FactionCtor = definition.type || (definition.id === UHF_FACTION_ID ? GalaxyFaction : GalaxyFactionAI);
             const faction = new FactionCtor({
                 ...definition,
                 startingSectors
@@ -1273,6 +1273,13 @@ class GalaxyManager extends EffectableEntity {
         const previousControl = { ...sector.control };
         mutator(sector);
         this.#normalizeSectorControl(sector, previousControl);
+    }
+
+    replaceSectorControl(sectorKey, control) {
+        const sector = this.sectors.get(sectorKey);
+        if (!sector) return;
+        this.#applyControlMapToSector(sector, control);
+        this.markUIDirty({ force: true });
     }
 
     #normalizeSectorControl(sector, previousControlSnapshot) {
@@ -1532,6 +1539,7 @@ class GalaxyManager extends EffectableEntity {
     }
 
     #isSectorTargetingRestricted(sector) {
+        if (this.galacticInvasionManager?.dagon.protection[sector.key] > 0) return true;
         if (!sector || sector.key !== R507_PROTECTED_KEY) {
             return false;
         }

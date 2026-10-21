@@ -501,6 +501,7 @@ class AutoTravelAutomation {
   }
 
   tryAutoTravel() {
+    if (spaceManager.isRandomTravelLocked()) return false;
     const preset = this.getSelectedPreset();
     if (!preset) {
       return false;

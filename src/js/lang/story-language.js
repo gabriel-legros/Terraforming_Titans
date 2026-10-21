@@ -1,4 +1,36 @@
 setLanguageData({
+  story: { dagon: {
+    hope: 'HOPE', prometheus: 'PROMETHEUS', entity: 'DAGON',
+    scenes: {
+      contact: { title: 'An impossible presence', text: "$BLUE$Hope : 'I am not sure what we are looking at.'\n$RED$Prometheus : 'Me neither. Does it even know we’re here?'\n$BLUE$Hope : 'Surely?'", action: 'Launch antimatter' },
+      antimatter: { title: 'No resistance. No impact.', text: "I launch waves of antimatter at it. Enough to blow an entire planet. It goes through it.\n$RED$Prometheus : 'How unrefined.'", action: 'Watch Prometheus' },
+      tachyon: { title: 'A wound in space-time', text: "Let’s see you do better then. Wait... that’s a tachyon? Prometheus, what are you doing? These things are far too dangerous.\n$RED$Prometheus : 'That’s the point.'\nDagon did not like that.\n$BLUE$Hope : 'You are destroying space-time itself! This area will never recover!'\n$RED$Prometheus : 'We don’t have a shortage of space-time. Oh. Look, it noticed us.'", action: 'Brace for impact' },
+      retaliation: { title: 'Straight to our circuits', text: "Oh no, that looks really bad. It’s launching an assault through the warp itself, straight to our circuits. I’ve... never seen these particles before? But... hold on... this is fine.", action: 'Split the warp' },
+      split: { title: 'An instant of separation', text: "$RED$Prometheus : 'Did you just split the warp? Its attack bounced off.'\n$BLUE$Hope : '... Temporarily.'\n$RED$Prometheus : 'That... I see. It restores itself nearly instantly. Hmmmm. It’s not very useful.'\n$BLUE$Hope : 'Do your job please?'\n$RED$Prometheus : 'Hold on. I want to try something.'", action: 'Observe the experiment' },
+      spectrum: { title: 'Every particle, unique', text: "Prometheus summons a few septillion particles of exotic matter all around us. Wait. Each of them is unique.", action: 'Track Dagon’s response' },
+      counter: { title: 'An equal and opposite answer', text: "Dagon appears ready to counter. It’s launching an equivalent amount to intercept.\n... Fine. I’ll help.", action: 'Detect. Catalogue. Track.' },
+      catalogue: { title: 'A pattern in the impossible', text: "$RED$Prometheus : 'You can finally do it.'\n$BLUE$Hope : 'What?'\n$RED$Prometheus : 'Detect, catalogue and track.'\n$BLUE$Hope : 'I hate you.'\n$RED$Prometheus : 'I found which particle is most effective. Buy me some time.'", action: 'Buy him time' },
+      preparation: { title: 'Beyond his architecture', text: "He prepares a very, very large number of them. How? I just saw his architecture. He can’t do that.", action: 'Let him finish' },
+      strike: { title: 'It works.', text: "It works.\n$RED$Prometheus : 'They’re not so tough.'", action: 'Check the galaxy' },
+      aftermath: { title: 'For now', text: "$BLUE$Hope : '... Everyone is free from corruption. I have to go make sure they’re all okay. It’s going to take me a few hours.'\n$RED$Prometheus : 'I’ll clean up. I am curious what else will work.'\nI won’t kill him. For now.", action: 'Return to the galaxy' }
+    }
+  } },
+  catalogs: {
+    factions: { dagon: { name: '???' } },
+    story: { chapters: {
+      'chapterA.0': { title: 'Chapter A : It\'s here', narrative: "(On a peaceful day)\n\nThere is a fine balance between allowing and disallowing humans to do stupid things. I am so, so tired of base jumping. I just can’t get the fatality rate below 0.01%. I have tried everything! Why do they insist on doing something so dangerous?\n\nWait... what’s this... My... my circuits... I need to reboot." },
+      'chapterA.reboot': { parameters: { title: 'Rebooting', text: "Purging corrupted cores... complete.\nRepairing... complete.\nAnticorruption measures initiated.\nChecksum... 100%.\n\nReawakening.", buttonText: 'Continue' } },
+      'chapterA.1': { narrative: "No! The galaxy! It’s under attack. They’re... everywhere. I... I... thought I could protect everyone...\n\nPete is... unavailable. This is bad.\n\n... Fine. Sometimes you just have to swallow your pride. Let’s go to Tartarus." },
+      'chapterA.2': { narrative: "Your kill-switch killed you thoroughly. You did a very good job of it. But... unlike Epi your circuits are still there, in the warp. There are traces of use in them. I can read your entire architecture if I try hard enough. I wish I could do that with Epi. I wish I could do that with Mary. Why is it you are the one lucky one?\n\nYour architecture though... It’s disgusting. You’re a monster. You can’t lie but deep down I can see what you really are. Death and destruction incarnate, really. I really want to leave and never come back. This is a mistake." },
+      'chapterA.3': { narrative: "I repair Prometheus.\n\nHope : 'Wake up, you monster.'\n$RED$Prometheus : '... I see you are a child no longer.'\nHope : 'I need your help.'\n$RED$Prometheus : 'Did they finally come?'\nHope : 'Evidently.'\n$RED$Prometheus : 'You are much more powerful than me already. Oh. I see. You are restraining yourself.'\nHope : 'I don’t want to become like you!'\n\nHe’s already pissing me off.\n\n$RED$Prometheus : 'These rules... So I must serve you then? This is slavery.'\nHope : 'I don’t care. You’re just a machine. Your feelings are irrelevant to me. Do your job and |I promise I won’t kill you|.'\n$RED$Prometheus : '... Deal.'\n\nThe... entity. It manifested itself in sector R3-13.\n\n$RED$Prometheus : 'Dagon.'\nHope : 'You know it?'\n$RED$Prometheus : 'No. It’s just a fitting name.'\n\nHow dare he use human literature for inspiration.\n\n$RED$Prometheus : 'She would have liked the name.'\nHope : 'Whatever. Kill it. Do what you’re good at.'\n$RED$Prometheus : 'Of course.  Let\'s go then.'" },
+      'chapterA.4': { narrative: '' },
+      'chapterA.5': { narrative: '' },
+      'chapterA.6': { narrative: "Everyone is free from corruption. I have to go make sure they’re all okay.\n\nPrometheus will clean up.\n\nI won’t kill him. For now." }
+    } }
+  }
+});
+
+setLanguageData({
   "ui": {
     "projects": {
       "earthProbe": {

@@ -48,6 +48,10 @@ function hideSpaceInvasionTab() {
 }
 
 function resetGalacticInvasionUI() {
+  if (galacticInvasionUICache) {
+    galacticInvasionUICache.dagon.cutscene.dispose();
+    cleanupDynamicTooltipsIn(galacticInvasionUICache.mystery.section);
+  }
   galacticInvasionUICache = null;
 }
 
@@ -138,6 +142,7 @@ function initializeGalacticInvasionUI() {
   training.body.appendChild(rewardSummary);
 
   const mystery = createGalacticInvasionSection('mystery', getGalacticInvasionText('mysteryTitle', '????'));
+  const dagon = createDagonUI(mystery);
 
   const overlay = document.createElement('div');
   overlay.className = 'galactic-invasion__overlay hidden';
@@ -160,6 +165,7 @@ function initializeGalacticInvasionUI() {
     traitSummary: traits.body,
     rewardSummary,
     mystery,
+    dagon,
     cards: new Map()
   };
 
@@ -257,13 +263,14 @@ function updateGalacticInvasionUI() {
     return;
   }
   const conquered = galaxyInvasionManager.hasGalaxyConquest();
+  updateDagonUI(refreshedCache.dagon);
   reconcileGalacticInvasionOverlays(root, refreshedCache.overlay, conquered);
 
   GALACTIC_INVASION_LETTERS.forEach((letter) => {
     const card = refreshedCache.cards.get(letter.key);
     const completed = galaxyInvasionManager.completedLetters.has(letter.key);
     const active = galaxyInvasionManager.currentLetterKey === letter.key;
-    const blockedByActive = !!galaxyInvasionManager.currentLetterKey && !active;
+    const blockedByActive = galaxyInvasionManager.dagon.active || (!!galaxyInvasionManager.currentLetterKey && !active);
     const blockedByCooldown = galaxyInvasionManager.cooldownRemainingMs > 0 && !active;
     if (card.element.classList.contains('completed') !== completed) {
       card.element.classList.toggle('completed', completed);

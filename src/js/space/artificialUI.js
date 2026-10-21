@@ -313,6 +313,7 @@ function syncHistoryActionButtons(row, entry) {
   if (cells.travelBtn) {
     cells.travelBtn.textContent = getArtificialText('history.travel', 'Travel');
     cells.travelBtn.hidden = !entry.canTravel;
+    cells.travelBtn.disabled = spaceManager.isRandomTravelLocked();
   }
 }
 
@@ -2305,6 +2306,7 @@ function renderArtificialHistory(force = false) {
   const slice = entries.slice(start, start + pageSize);
   const sig = JSON.stringify({
     page: artificialHistoryPage,
+    travelLocked: spaceManager.isRandomTravelLocked(),
     total: entries.length,
     scientificNotationThreshold: gameSettings.scientificNotationThreshold ?? 1e30,
     items: slice.map((entry) => [
@@ -2435,7 +2437,7 @@ function renderProgress(project, prepayState) {
       artificialUICache.stopBtnTooltipContent,
       getArtificialText('actions.discardWorldTitle', 'Discard this completed world')
     );
-    artificialUICache.travelBtn.disabled = false;
+    artificialUICache.travelBtn.disabled = spaceManager.isRandomTravelLocked();
     if (artificialUICache.storeBtn) {
       const canStore = artificialManager.canStoreConstructedWorld();
       artificialUICache.storeBtn.disabled = !canStore;
@@ -2482,7 +2484,7 @@ function renderSupermassiveShellworld(manager) {
     artificialUICache.supermassiveStatus.textContent = statusLabels[entry.status] || entry.status || '';
   }
   if (artificialUICache.supermassiveTravelBtn) {
-    artificialUICache.supermassiveTravelBtn.disabled = !entry.canTravel;
+    artificialUICache.supermassiveTravelBtn.disabled = !entry.canTravel || spaceManager.isRandomTravelLocked();
     artificialUICache.supermassiveTravelBtn.textContent = entry.current
       ? getArtificialText('supermassive.current', 'Current')
       : getArtificialText('supermassive.travel', 'Travel');

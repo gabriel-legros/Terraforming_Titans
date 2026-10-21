@@ -2,6 +2,7 @@ class GalacticInvasionManager extends EffectableEntity {
   constructor() {
     super({ description: 'Manages galactic invasion training.', resetAt: GAME_RESET_LEVEL.NEW_GAME });
     this.enabled = false;
+    this.dagon = new DagonInvasion();
     this.currentLetterKey = null;
     this.completedLetters = new Set();
     this.cooldownRemainingMs = 0;
@@ -65,6 +66,7 @@ class GalacticInvasionManager extends EffectableEntity {
     if (!isManagerEffectivelyEnabled(this, 'galaxyInvasionManager')) {
       return;
     }
+    this.dagon.update(deltaMs);
     if (this.cooldownRemainingMs > 0) {
       this.cooldownRemainingMs = Math.max(0, this.cooldownRemainingMs - deltaMs);
     }
@@ -111,6 +113,7 @@ class GalacticInvasionManager extends EffectableEntity {
   }
 
   startInvasion(letterKey) {
+    if (this.dagon.active) return false;
     const letter = this.getLetter(letterKey);
     if (!letter || !this.hasGalaxyConquest() || this.completedLetters.has(letter.key) || this.cooldownRemainingMs > 0 || this.currentLetterKey) {
       return false;
@@ -910,6 +913,7 @@ class GalacticInvasionManager extends EffectableEntity {
 
   saveState() {
     return {
+      dagon: this.dagon.saveState(),
       enabled: this.enabled,
       currentLetterKey: this.currentLetterKey,
       completedLetters: Array.from(this.completedLetters),
@@ -928,6 +932,8 @@ class GalacticInvasionManager extends EffectableEntity {
   }
 
   loadState(state = {}) {
+    this.dagon.loadState(state.dagon);
+    galaxyManager.getFaction('dagon').updateFleetCapacity(galaxyManager);
     this.enabled = state.enabled === true;
     this.currentLetterKey = state.currentLetterKey || null;
     this.completedLetters = new Set(Array.isArray(state.completedLetters) ? state.completedLetters : []);

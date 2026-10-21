@@ -436,7 +436,9 @@ function updateAtlasUI(options = {}) {
     }
     atlasLastSignature = signature;
 
-    status.textContent = spaceManager.isRandomTravelLocked()
+    status.textContent = galaxyInvasionManager.dagon.active
+        ? t('ui.space.invasion.dagon.travelLocked')
+        : spaceManager.isRandomTravelLocked()
         ? getAtlasText('locked', 'You must complete the current world before traveling to Atlas challenges.')
         : getAtlasText('ready', 'Challenge worlds can always be revisited after completion.');
     status.classList.toggle('atlas-status-warning', spaceManager.isRandomTravelLocked());

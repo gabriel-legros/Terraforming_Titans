@@ -39,6 +39,14 @@ const galaxyFactionParameters = [
         ignoreSectorBaseDefense: true
     },
     {
+        id: 'dagon',
+        type: DagonFaction,
+        name: getFactionName('dagon', '???'),
+        color: '#8a0303',
+        startingSectors: [],
+        defensiveness: 0.5
+    },
+    {
         id: 'cewinsii',
         name: getFactionName('cewinsii', 'Cewinsii'),
         color: '#f97316',

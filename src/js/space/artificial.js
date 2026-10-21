@@ -2409,6 +2409,7 @@ class ArtificialManager extends EffectableEntity {
     }
 
     travelToConstructedWorld() {
+        if (spaceManager.isRandomTravelLocked()) return false;
         if (!this.activeProject || this.activeProject.status !== 'completed') return false;
         const override = this.buildOverride(this.activeProject);
         this.activeProject.override = override;
@@ -2435,6 +2436,7 @@ class ArtificialManager extends EffectableEntity {
     }
 
     travelToStoredWorld(key) {
+        if (spaceManager.isRandomTravelLocked()) return false;
         const seed = String(key);
         if (!spaceManager || !spaceManager.artificialWorldStatuses) return false;
         const status = spaceManager.artificialWorldStatuses[seed];

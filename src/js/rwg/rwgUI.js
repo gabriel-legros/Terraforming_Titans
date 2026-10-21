@@ -1169,7 +1169,9 @@ function updateRandomWorldUI() {
       const travelDisabled = lockedByStory || (!!alreadyTerraformed && !replayAllowed) || !eqState.satisfied;
       travelBtn.disabled = travelDisabled;
 
-      const warningMsg = lockedByStory
+      const warningMsg = galaxyInvasionManager.dagon.active
+        ? t('ui.space.invasion.dagon.travelLocked')
+        : lockedByStory
         ? getRwgUiText('warnings.completeCurrentStory', 'You must complete the story for the current world first')
         : ((!replayAllowed && alreadyTerraformed)
           ? getRwgUiText('warnings.alreadyTerraformed', 'This world has already been terraformed.')
@@ -1710,7 +1712,9 @@ function renderWorldDetail(res, seedUsed, forcedType, options = {}) {
   const sectorChip = (galaxyEnabled && c.sector)
     ? `<div class="rwg-chip"><div class="label">${getRwgUiText('details.sector', 'Sector')}</div><div class="value">${c.sector}</div></div>`
     : '';
-  const warningMsg = lockedByStory
+  const warningMsg = galaxyInvasionManager.dagon.active
+    ? t('ui.space.invasion.dagon.travelLocked')
+    : lockedByStory
     ? getRwgUiText('warnings.completeCurrentStory', 'You must complete the story for the current world first')
     : ((!replayAllowed && alreadyTerraformed)
       ? getRwgUiText('warnings.alreadyTerraformed', 'This world has already been terraformed.')

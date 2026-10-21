@@ -107,6 +107,15 @@
           });
         }
       }
+      if (ch.id === 'chapterA.4' && completed.has(ch.id)) {
+        for (let i = 0; i <= galaxyInvasionManager.dagon.scene; i++) {
+          const source = { type: 'dagon', id: DAGON_SCENES[i] };
+          entries.push(null);
+          sources.push(source);
+          historyEntries.push(null);
+          historySources.push(source);
+        }
+      }
     });
 
     if (updateJournal && typeof loadJournalEntries === 'function') {

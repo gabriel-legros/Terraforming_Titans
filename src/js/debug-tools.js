@@ -580,6 +580,19 @@
     );
   }
 
+  function debugCaptureSector(label) {
+    const sector = findGalaxySector(label);
+    if (!sector) throw new Error(`Unknown galaxy sector: ${label}`);
+    for (const operation of Array.from(galaxyManager.operationManager.operations.values())) {
+      if (operation.sectorKey === sector.key) galaxyManager.cancelOperation(operation);
+    }
+    galaxyManager.replaceSectorControl(sector.key, { [UHF_FACTION_ID]: 1 });
+    updateGalaxyUI({ force: true });
+    updateGalacticInvasionUI({ force: true });
+    storyManager.updateCurrentObjectiveUI();
+    return sector;
+  }
+
   function forceCompleteTerraformingNoChecks() {
     const alreadyTerraformed = spaceManager.isPlanetTerraformed(spaceManager.getCurrentPlanetKey());
     if (currentPlanetParameters.specialAttributes.countsAsStandardTerraformingRun !== false) {
@@ -620,6 +633,7 @@
     globalThis.reconstructJournalState = reconstructJournalState;
     globalThis.forceCompleteTerraformingNoChecks = forceCompleteTerraformingNoChecks;
     window.giveColonyResources = giveColonyResources;
+    window.debugCaptureSector = debugCaptureSector;
     globalThis.runEquilibriumCalculation = function(terraformingInstance) {
       if (terraformingInstance && typeof terraformingInstance.calculateInitialValues === 'function') {
         console.log('Calling calculateEquilibriumConstants. initialValuesCalculated =', terraformingInstance.initialValuesCalculated);

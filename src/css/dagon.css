@@ -1,0 +1,24 @@
+﻿.dagon-section { container-type: inline-size; }
+.dagon-section > .card-header { width: 100%; cursor: pointer; text-align: left; border-width: 0 0 1px; font-family: inherit; }
+.dagon-teaser { font-style: italic; }
+.dagon-requirements { margin-bottom: 10px; }
+.dagon-warning { margin-top: 10px; }
+.dagon-repair { margin: 10px 0; }
+.dagon-repair .project-cost { margin-top: 8px; }
+.dagon-section .progress-button:disabled { opacity: 0.5; cursor: default; }
+.dagon-section .progress-button:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.dagon-cutscene { margin: 12px 0; }
+.dagon-stage canvas { display: block; width: 100%; aspect-ratio: 5 / 2; }
+.dagon-coordinate, .dagon-frame { position: absolute; top: 12px; font: 11px monospace; letter-spacing: .1em; color: #dce8fa; }
+.dagon-coordinate { left: 14px; }
+.dagon-frame { right: 14px; }
+.dagon-scene-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+.dagon-scene-actions .progress-button { flex: 1 1 180px; }
+.dagon-sector-actions { margin: 12px 0; }
+.dagon-ability-heading { display: flex; align-items: center; gap: 8px; }
+.dagon-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.dagon-sector-actions p { margin: 8px 0; font-size: 0.85em; line-height: 1.4; }
+@container (max-width: 350px) {
+  .dagon-coordinate { display: none; }
+  .dagon-frame { position: static; display: block; padding: 8px; font-size: 9px; }
+}

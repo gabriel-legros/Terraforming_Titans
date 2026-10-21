@@ -1098,6 +1098,8 @@ function renderSelectedSectorDetails() {
         empty.textContent = getGalaxyText('sector.noFactionControl', 'No factions currently control this sector.');
         container.appendChild(empty);
 
+        const dagon = createDagonSectorUI(container);
+
         const managementSection = doc.createElement('div');
         managementSection.className = 'galaxy-sector-panel__management';
 
@@ -1248,6 +1250,7 @@ function renderSelectedSectorDetails() {
 
         details = {
             container,
+            dagon,
             title,
             managementSection,
             management: {
@@ -1289,6 +1292,7 @@ function renderSelectedSectorDetails() {
         panel.replaceChildren(details.container);
     }
 
+    updateDagonSectorUI(details.dagon, sector);
     details.title.textContent = selection.displayName === 'Core'
         ? getGalaxyText('sector.coreSector', 'Core Sector')
         : getGalaxyText('sector.sectorValue', 'Sector {value}', { value: selection.displayName });

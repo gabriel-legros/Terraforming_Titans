@@ -860,10 +860,12 @@ function updateSpaceUI() {
     const isTerraformed = _spaceManagerInstance.isCurrentWorldTerraformed();
 
     if (statusContainer) {
-        const showWarning = !isTerraformed;
+        const showWarning = galaxyInvasionManager.dagon.active || !isTerraformed;
         const display = showWarning ? 'flex' : 'none';
         const hidden = !showWarning;
-        const text = showWarning
+        const text = galaxyInvasionManager.dagon.active
+            ? t('ui.space.invasion.dagon.travelLocked')
+            : showWarning
             ? getSpaceUIText('storyUi.terraformBeforeTravel', 'Terraform this world before charting a new course.')
             : '';
         if (statusContainer.style.display !== display) statusContainer.style.display = display;
@@ -906,8 +908,9 @@ function updateSpaceUI() {
             buttonTitle = getSpaceUIText('storyUi.alreadyTerraformedTitle', '{name} has already been terraformed.', { name: data.name });
         } else {
             buttonText = getSpaceUIText('storyUi.selectPlanet', 'Select {name}', { name: data.name });
-            buttonDisabled = false;
-            buttonTitle = getSpaceUIText('storyUi.travelTo', 'Travel to {name}', { name: data.name });
+            buttonDisabled = galaxyInvasionManager.dagon.active;
+            buttonTitle = buttonDisabled ? t('ui.space.invasion.dagon.travelLocked')
+                : getSpaceUIText('storyUi.travelTo', 'Travel to {name}', { name: data.name });
         }
         if (ui.button.textContent !== buttonText) ui.button.textContent = buttonText;
         if (ui.button.disabled !== buttonDisabled) ui.button.disabled = buttonDisabled;
@@ -1013,6 +1016,7 @@ document.addEventListener('click', function(evt){
  * @param {string} planetKey
  */
 function selectPlanet(planetKey, force, skipCurrentWorldWarnings){
+    if (galaxyInvasionManager.dagon.active) return;
     if(!_spaceManagerInstance) {
         console.error('SpaceManager not initialized');
         return;

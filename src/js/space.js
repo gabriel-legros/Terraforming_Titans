@@ -344,6 +344,7 @@ class SpaceManager extends EffectableEntity {
     }
 
     isRandomTravelLocked() {
+        if (galaxyInvasionManager.dagon.active) return true;
         if (this.currentRandomSeed !== null) return false;
         if (this.currentArtificialKey !== null) return false;
         return !this.planetStatuses[this.currentPlanetKey]?.rwgLock;
@@ -3142,6 +3143,7 @@ class SpaceManager extends EffectableEntity {
     }
 
     travelToStoryPlanet(targetKey) {
+        if (galaxyInvasionManager.dagon.active) return false;
         if (!targetKey) {
             console.warn('SpaceManager: No planet key provided for travel.');
             return false;
