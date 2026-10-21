@@ -82,6 +82,13 @@ registerTerraformingMethods('status', ({
     if (!this.requirements.ignoresLuminosity) {
       ranges.push({ value: this.calculateSurfaceSolarFlux(), ...this.getLuminosityTargetRange() });
     }
+    for (const entry of this.liquidCoverageTargets) {
+      ranges.push({
+        value: calculateTerraformingTargetCoverage(this, entry.coverageKey),
+        min: entry.comparison === 'atMost' ? 0 : entry.coverageTarget,
+        max: entry.comparison === 'atMost' ? entry.coverageTarget : 1
+      });
+    }
     let bonus = 0;
     for (const { value, min, max } of ranges) {
       if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) continue;

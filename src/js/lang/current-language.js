@@ -353,7 +353,7 @@ setLanguageData({
         rewardName: '{name} first terraform reward',
         rewardDescription: 'Permanent first terraform reward: {reward}',
         rewards: {
-          ammonia: 'Gain up to +5% specialization points per terraforming target with a range, rising linearly from +0% at either edge to +5% at its midpoint, added together.',
+          ammonia: 'Gain up to +5% specialization points per target range: average temperature, atmospheric pressure, individual pressures, solar flux, liquid coverage. Bonuses rise linearly from +0% at either edge to +5% at the midpoint and add together. Liquid coverage ranges extend from the minimum target to 100%, or from 0% to the maximum target.',
           oommaa: 'Ecumenopolis coverage reduces the minimum luminosity requirement by the same percentage, reaching a 100% reduction at full coverage.',
           klishy: 'Android Hive Mind produces twice as much research.',
           kerati: 'Crusaders are twice as effective.',
