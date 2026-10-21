@@ -1208,16 +1208,31 @@ class SpaceshipAutomation {
             continue;
           }
           const allocated = stepAllocations[projectId];
+          const weight = entries.find(entry => entry.projectId === projectId).weight;
           totalEnergyRate += allocated * energyRatePerShip;
-          energyAllocations.push({ projectId, allocated, energyRatePerShip });
+          energyAllocations.push({ projectId, allocated, energyRatePerShip, weight });
         }
         const energyBudget = (resources.colony.energy.productionRate || 0) * (limitValue === null ? 100 : limitValue) / 100;
         if (totalEnergyRate > energyBudget) {
-          const scale = energyBudget / totalEnergyRate;
+          // Keep capped allocations funded before dividing the remaining energy by weight.
+          energyAllocations.sort((a, b) => a.allocated / a.weight - b.allocated / b.weight);
+          let weightedEnergyRate = 0;
+          for (let index = energyAllocations.length - 1; index >= 0; index -= 1) {
+            const allocation = energyAllocations[index];
+            weightedEnergyRate += allocation.weight * allocation.energyRatePerShip;
+            allocation.remainingWeightedEnergyRate = weightedEnergyRate;
+          }
+          let remainingEnergyBudget = energyBudget;
+          let weightedFactor = 0;
+          for (const allocation of energyAllocations) {
+            weightedFactor = remainingEnergyBudget / allocation.remainingWeightedEnergyRate;
+            if (allocation.weight * weightedFactor <= allocation.allocated) break;
+            remainingEnergyBudget = Math.max(0, remainingEnergyBudget - allocation.allocated * allocation.energyRatePerShip);
+          }
           let scaledEnergyRate = 0;
           for (let index = 0; index < energyAllocations.length; index += 1) {
             const allocation = energyAllocations[index];
-            const exact = allocation.allocated * scale;
+            const exact = Math.min(allocation.allocated, allocation.weight * weightedFactor);
             allocation.kept = Math.floor(exact);
             allocation.fractional = exact - allocation.kept;
             desiredAssignments[allocation.projectId] -= allocation.allocated - allocation.kept;

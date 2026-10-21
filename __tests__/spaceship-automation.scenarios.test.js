@@ -1277,6 +1277,174 @@ describe('Spaceship automation scenarios', () => {
     cleanup();
   });
 
+  it.each([
+    ['project caps', 450, 1, false, [50, 240, 160]],
+    ['entry caps', 450, 1, true, [50, 240, 160]],
+    ['a budget too small to fund the caps', 26, 1, false, [20, 5, 1]],
+    ['zero energy production', 0, 1, false, [0, 0, 0]],
+    ['late-game ship counts', 450, 1e11, false, [50, 240, 160]],
+  ])('preserves energy-step weights with %s', (name, budget, scale, useEntryCaps, expected) => {
+    const initialShips = 10000 * scale;
+    const { automation, projects, cleanup } = createHarness({
+      initialShips,
+      energyProductionRate: budget * scale * 4,
+      projects: {
+        oreMining: { energyCostPerShip: 1, maxAssignableShips: useEntryCaps ? Infinity : 50 * scale },
+        siliconMining: { energyCostPerShip: 1, maxAssignableShips: useEntryCaps ? Infinity : 240 * scale },
+        hydrogenMining: { energyCostPerShip: 1 },
+      },
+    });
+    configurePreset(automation, {
+      mode: 'energyProduction',
+      limit: 25,
+      entries: [
+        { projectId: 'oreMining', weight: 20, max: useEntryCaps ? 50 * scale : null, maxMode: 'absolute' },
+        { projectId: 'siliconMining', weight: 5, max: useEntryCaps ? 240 * scale : null, maxMode: 'absolute' },
+        { projectId: 'hydrogenMining', weight: 1, max: null, maxMode: 'absolute' },
+      ],
+    });
+
+    try {
+      for (let update = 0; update < 3; update += 1) {
+        automation.applyAssignments();
+        const assigned = [projects.oreMining, projects.siliconMining, projects.hydrogenMining]
+          .map(project => project.getAutomationShipCount());
+        expect(assigned).toEqual(expected.map(count => count * scale));
+        const totalAssigned = assigned.reduce((sum, count) => sum + count, 0);
+        expect(totalAssigned).toBeLessThanOrEqual(budget * scale);
+        expect(resources.special.spaceships.value + totalAssigned).toBe(initialShips);
+      }
+    } finally {
+      cleanup();
+    }
+  });
+
+  it.each([
+    [120, 6, 2],
+    [135, 7, 2],
+    [5, 0, 0],
+  ])('respects ship weights and integer rounding with different energy costs and a budget of %i', (budget, cheapShips, expensiveShips) => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 1000,
+      energyProductionRate: budget,
+      projects: {
+        cheapRoute: { energyCostPerShip: 10 },
+        expensiveRoute: { energyCostPerShip: 30 },
+      },
+    });
+    configurePreset(automation, {
+      mode: 'energyProduction',
+      limit: 100,
+      entries: [
+        { projectId: 'cheapRoute', weight: 3, max: null, maxMode: 'absolute' },
+        { projectId: 'expensiveRoute', weight: 1, max: null, maxMode: 'absolute' },
+      ],
+    });
+
+    try {
+      for (let update = 0; update < 3; update += 1) {
+        automation.applyAssignments();
+        expect(projects.cheapRoute.getAutomationShipCount()).toBe(cheapShips);
+        expect(projects.expensiveRoute.getAutomationShipCount()).toBe(expensiveShips);
+        expect(cheapShips * 10 + expensiveShips * 30).toBeLessThanOrEqual(budget);
+        expect(resources.special.spaceships.value).toBe(1000 - cheapShips - expensiveShips);
+      }
+    } finally {
+      cleanup();
+    }
+  });
+
+  it('keeps zero-energy and unassigned shares while passing ships released by energy rebalancing to later steps', () => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 1000,
+      energyProductionRate: 100,
+      projects: {
+        cappedRoute: { energyCostPerShip: 1, maxAssignableShips: 50 },
+        uncappedRoute: { energyCostPerShip: 1 },
+        freeRoute: {},
+        laterRoute: {},
+      },
+    });
+    configurePreset(automation, {
+      mode: 'energyProduction',
+      limit: 100,
+      entries: [
+        { projectId: 'cappedRoute', weight: 1, max: null, maxMode: 'absolute' },
+        { projectId: 'uncappedRoute', weight: 1, max: null, maxMode: 'absolute' },
+        { projectId: 'freeRoute', weight: 1, max: null, maxMode: 'absolute' },
+        { projectId: 'unassignedShips', weight: 1, max: null, maxMode: 'absolute' },
+      ],
+    });
+    automation.getActivePreset().steps.push({
+      id: 2,
+      mode: 'remainingPercent',
+      limit: 100,
+      entries: [{ projectId: 'laterRoute', weight: 1, max: null, maxMode: 'absolute' }],
+    });
+
+    try {
+      for (let update = 0; update < 3; update += 1) {
+        automation.applyAssignments();
+        expect(projects.cappedRoute.getAutomationShipCount()).toBe(50);
+        expect(projects.uncappedRoute.getAutomationShipCount()).toBe(50);
+        expect(projects.freeRoute.getAutomationShipCount()).toBe(317);
+        expect(projects.laterRoute.getAutomationShipCount()).toBe(267);
+        expect(resources.special.spaceships.value).toBe(316);
+      }
+    } finally {
+      cleanup();
+    }
+  });
+
+  it('applies energy-step entry caps on top of earlier assignments when rebalancing weights', () => {
+    const { automation, projects, cleanup } = createHarness({
+      initialShips: 1000,
+      energyProductionRate: 450,
+      projects: {
+        oreMining: { energyCostPerShip: 1, maxAssignableShips: 50 },
+        siliconMining: { energyCostPerShip: 1, maxAssignableShips: 240 },
+        hydrogenMining: { energyCostPerShip: 1 },
+        laterRoute: {},
+      },
+    });
+    configurePreset(automation, {
+      mode: 'fill',
+      limit: 10,
+      entries: [{ projectId: 'oreMining', weight: 1, max: null, maxMode: 'absolute' }],
+    });
+    automation.getActivePreset().steps.push(
+      {
+        id: 2,
+        mode: 'energyProduction',
+        limit: 100,
+        entries: [
+          { projectId: 'oreMining', weight: 20, max: 30, maxMode: 'absolute' },
+          { projectId: 'siliconMining', weight: 5, max: null, maxMode: 'absolute' },
+          { projectId: 'hydrogenMining', weight: 1, max: null, maxMode: 'absolute' },
+        ],
+      },
+      {
+        id: 3,
+        mode: 'remainingPercent',
+        limit: 100,
+        entries: [{ projectId: 'laterRoute', weight: 1, max: null, maxMode: 'absolute' }],
+      }
+    );
+
+    try {
+      for (let update = 0; update < 3; update += 1) {
+        automation.applyAssignments();
+        expect(projects.oreMining.getAutomationShipCount()).toBe(40);
+        expect(projects.siliconMining.getAutomationShipCount()).toBe(240);
+        expect(projects.hydrogenMining.getAutomationShipCount()).toBe(180);
+        expect(projects.laterRoute.getAutomationShipCount()).toBe(540);
+        expect(resources.special.spaceships.value).toBe(0);
+      }
+    } finally {
+      cleanup();
+    }
+  });
+
   it('preserves decimal step energy budgets through save import and export', () => {
     const { automation, cleanup } = createHarness();
     automation.loadState({
