@@ -32,8 +32,26 @@ function createDagonUI(section) {
   };
   for (const key of ['story', 'galaxy', 'world', 'materials', 'training']) {
     const row = document.createElement('li');
+    const label = document.createElement('span');
+    row.appendChild(label);
+    if (key === 'story') {
+      ui.skipStory = document.createElement('button');
+      ui.skipStory.type = 'button';
+      ui.skipStory.className = 'dagon-skip-story progress-button hidden';
+      ui.skipStory.dataset.text = 'skipStory';
+      row.appendChild(ui.skipStory);
+      ui.texts.push(ui.skipStory);
+      ui.skipStory.addEventListener('click', () => {
+        if (gameCompleted || window.popupActive) return;
+        createSystemChoicePopup('', t('ui.space.invasion.dagon.skipStoryConfirm'),
+          t('ui.space.invasion.dagon.yes'), t('ui.space.invasion.dagon.no'), () => {
+            gameCompleted = true;
+            updateDagonUI(ui);
+          });
+      });
+    }
     root.querySelector('.dagon-requirements').appendChild(row);
-    ui.requirements.set(key, row);
+    ui.requirements.set(key, { row, label });
   }
   ui.start.addEventListener('click', () => { galaxyInvasionManager.dagon.start(); updateGalacticInvasionUI({ force: true }); });
   ui.repairButton.addEventListener('click', () => { galaxyInvasionManager.dagon.repairPrometheus(); updateDagonUI(ui); });
@@ -56,12 +74,13 @@ function updateDagonUI(ui) {
   ui.campaign.classList.toggle('hidden', !state.started);
   if (!state.started) {
     const requirements = state.getRequirements();
-    for (const [key, element] of ui.requirements) {
+    for (const [key, { row, label }] of ui.requirements) {
       const value = t(`ui.space.invasion.dagon.requirements.${key}`);
-      if (element.textContent !== value) element.textContent = value;
-      element.classList.add('project-requirements-item');
-      element.classList.toggle('is-unmet', !requirements[key]);
+      if (label.textContent !== value) label.textContent = value;
+      row.classList.add('project-requirements-item');
+      row.classList.toggle('is-unmet', !requirements[key]);
     }
+    ui.skipStory.classList.toggle('hidden', requirements.story);
     const canStart = state.enabled && Object.values(requirements).every(Boolean);
     ui.start.classList.toggle('hidden', !canStart);
     ui.warning.classList.toggle('hidden', !canStart);
@@ -78,6 +97,36 @@ function updateDagonUI(ui) {
   ui.complete.classList.toggle('hidden', !state.completed);
   for (const [key, value] of Object.entries(text)) if (ui[key].textContent !== value) ui[key].textContent = value;
   ui.cutscene.sync(state);
+}
+
+function createDagonMapMarker(hex) {
+  const root = document.createElement('div');
+  root.className = 'dagon-map-marker hidden';
+  root.setAttribute('role', 'img');
+  root.style.left = `${hex.galaxyCenterX}px`;
+  root.style.top = `${hex.galaxyCenterY}px`;
+  const tendrils = Array.from({ length: 18 }, (_, i) => {
+    const angle = i * Math.PI * 2 / 18;
+    const x = 100 + Math.cos(angle) * 35, y = 96 + Math.sin(angle) * 40;
+    const path = `M${x} ${y} C${x + Math.cos(angle) * 27} ${y + Math.sin(angle) * 21}, ${x + Math.cos(angle + .5) * 51} ${y + Math.sin(angle) * 36}, ${x + Math.cos(angle) * 60} ${y + Math.sin(angle) * 51}`;
+    return `<path d="${path}" stroke="${i % 3 === 0 ? '#8a1639' : '#42132d'}" stroke-width="${4.5 - (i % 5) * .6}"/><path d="${path}" stroke="#e25a6355" stroke-width=".4"/>`;
+  }).join('');
+  const orbits = Array.from({ length: 5 }, (_, i) =>
+    `<ellipse cx="97" cy="95" rx="31.5" ry="13.8" transform="rotate(${(i + 1) * 36} 97 95)" stroke="${i % 2 ? '#b94c5b88' : '#501b4788'}"/>`).join('');
+  root.innerHTML = `<svg viewBox="0 0 200 200" aria-hidden="true">
+    <defs>
+      <radialGradient id="dagon-map-aura"><stop stop-color="#ad092d" stop-opacity=".4"/><stop offset="1" stop-color="#440916" stop-opacity="0"/></radialGradient>
+      <radialGradient id="dagon-map-body" cx="47%" cy="48%"><stop stop-color="#05040b"/><stop offset=".75" stop-color="#170a20"/><stop offset="1" stop-color="#831b3d"/></radialGradient>
+    </defs>
+    <ellipse class="dagon-map-aura" cx="100" cy="96" rx="95" ry="95" fill="url(#dagon-map-aura)"/>
+    <g class="dagon-map-tendrils" fill="none" stroke-linecap="round">${tendrils}</g>
+    <ellipse cx="100" cy="96" rx="42" ry="48" transform="rotate(-7 100 96)" fill="url(#dagon-map-body)" stroke="#a13a50" stroke-width=".8"/>
+    <g fill="none" stroke-width=".6">${orbits}</g>
+    <g class="dagon-map-gaze">
+      <ellipse class="dagon-map-glint" cx="90" cy="95" rx="8" ry="1.8" transform="rotate(-7 90 95)" fill="#ff5969"/>
+    </g>
+  </svg>`;
+  return { root };
 }
 
 function createDagonSectorUI(container) {
@@ -133,6 +182,28 @@ class DagonCutscene {
     this.raf = 0;
     this.visible = false;
     this.elapsedSeconds = 0;
+    this.exoticTimeOffset = 0;
+    this.exoticMatter = Array.from({ length: 2400 }, (_, i) => {
+      const angle = i * 2.399963;
+      const radius = Math.sqrt((i * .754877666 + .5) % 1);
+      const edge = 1 + .09 * Math.sin(angle * 3);
+      return {
+        x: 235 + Math.cos(angle) * radius * 180 * edge,
+        y: 250 + Math.sin(angle) * radius * 185 * edge,
+        delay: ((i * .569840291) % 1) * 2.3,
+        phase: i * 1.618,
+        size: .8 + (i % 7) * .25,
+        color: ['#9beaff', '#d3b0ff', '#9fffd4', '#ffd9a6', '#f5b8ed', '#e1f4ff'][i % 6],
+        exchange: i % 5 === 0 ? {
+          delay: .8 + ((i * .413287) % 1) * 4.5,
+          duration: 1.9 + ((i * .319713) % 1) * .7,
+          impactX: 510 + ((i * .618034) % 1) * 155,
+          impactY: 75 + ((i * .414214) % 1) * 330,
+          originX: 780 + Math.cos(i * .73) * 30,
+          originY: 240 + Math.sin(i * .73) * 110
+        } : null
+      };
+    });
     this.motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
     this.previous.addEventListener('click', () => { if (this.index > 0) this.showScene(this.index - 1); });
     this.advance.addEventListener('click', () => {
@@ -182,6 +253,7 @@ class DagonCutscene {
   }
 
   showScene(index) {
+    this.exoticTimeOffset = index === 7 ? (this.index === 6 ? this.elapsedSeconds : 8) : 0;
     this.index = index;
     this.elapsedSeconds = 0;
     this.frame.textContent = t('ui.space.invasion.dagon.frame', { current: index + 1, total: DAGON_SCENES.length });
@@ -220,7 +292,8 @@ class DagonCutscene {
   draw(time) {
     const c = this.ctx, w = 1200, h = 480, scene = this.index;
     const reducedMotion = this.motionQuery.matches;
-    const t0 = reducedMotion ? 2 : time;
+    const t0 = reducedMotion ? (scene === 6 || scene === 7 ? 8 : 2) : time;
+    const exchangeTime = t0 + (scene === 7 ? this.exoticTimeOffset : 0);
     c.clearRect(0, 0, w, h);
     c.fillStyle = '#050711'; c.fillRect(0, 0, w, h);
     const glow = c.createRadialGradient(880, 230, 10, 800, 240, 440);
@@ -264,6 +337,119 @@ class DagonCutscene {
     c.shadowBlur = 25; c.shadowColor = '#ff273d'; c.fillStyle = '#ff5969';
     c.beginPath(); c.ellipse(827, 236, scene >= 3 ? 27 : 17, 5, -0.12, 0, Math.PI * 2); c.fill();
     c.restore();
+    if (scene >= 5 && scene <= 7) {
+      const cloudTime = scene >= 6 ? 4 + exchangeTime : reducedMotion ? 4 : t0;
+      c.save();
+      const cloudGlow = c.createRadialGradient(235, 250, 25, 235, 250, 210);
+      cloudGlow.addColorStop(0, '#826bdd18');
+      cloudGlow.addColorStop(.65, '#5fbde511');
+      cloudGlow.addColorStop(1, '#5fbde500');
+      c.globalAlpha = Math.min(1, cloudTime / 2);
+      c.fillStyle = cloudGlow;
+      c.fillRect(20, 30, 440, 440);
+      // Materialize at Prometheus, then disperse into a cloud enclosing both AIs.
+      for (const particle of this.exoticMatter) {
+        // Each launched particle is replaced by a new one spreading from Prometheus.
+        const replenishing = scene >= 6 && particle.exchange && exchangeTime >= particle.exchange.delay;
+        const age = replenishing ? (exchangeTime - particle.exchange.delay) % 5.8 : cloudTime - particle.delay;
+        if (age <= 0) continue;
+        const progress = Math.min(1, age / 1.1);
+        const spread = progress * progress * (3 - 2 * progress);
+        const driftX = Math.sin(exchangeTime * .3 + particle.phase) * 4;
+        const driftY = Math.cos(exchangeTime * .24 + particle.phase) * 4;
+        const x = 260 + (particle.x - 260) * spread + driftX * spread;
+        const y = 325 + (particle.y - 325) * spread + driftY * spread;
+        c.globalAlpha = Math.min(1, age / .3) * (.5 + .25 * Math.sin(exchangeTime * 1.2 + particle.phase));
+        c.fillStyle = particle.color;
+        c.fillRect(x, y, particle.size, particle.size);
+        if (particle.size > 2 && age < .65) {
+          c.globalAlpha *= .45;
+          c.fillRect(x - 3, y, 8, 1);
+          c.fillRect(x, y - 3, 1, 8);
+        }
+      }
+      c.restore();
+    }
+    if (scene === 6 || scene === 7) {
+      c.save();
+      c.lineWidth = 1;
+      for (const particle of this.exoticMatter) {
+        const exchange = particle.exchange;
+        if (!exchange || exchangeTime < exchange.delay) continue;
+        const age = (exchangeTime - exchange.delay) % 5.8;
+        // Already-annihilated particles stay gone when Hope joins the exchange.
+        const protectedParticle = scene === 7 && exchangeTime - age + exchange.duration >= this.exoticTimeOffset;
+        if (age < exchange.duration || (protectedParticle && age < exchange.duration + 1.15)) {
+          const progress = Math.min(1, age / exchange.duration);
+          const onward = Math.max(0, (age - exchange.duration) / 1.15);
+          const x = particle.x + (exchange.impactX - particle.x) * progress
+            + (exchange.originX + 50 - exchange.impactX) * onward;
+          const y = particle.y + (exchange.impactY - particle.y) * progress
+            + (exchange.originY - exchange.impactY) * onward;
+          c.globalAlpha = .8;
+          c.fillStyle = particle.color;
+          c.fillRect(x, y, particle.size + 1, particle.size + 1);
+          c.globalAlpha = .25;
+          c.strokeStyle = particle.color;
+          c.beginPath();
+          c.moveTo(x, y);
+          const trail = Math.min(progress, .035);
+          c.lineTo(x - (onward > 0 ? exchange.originX + 50 - exchange.impactX : exchange.impactX - particle.x) * trail,
+            y - (onward > 0 ? exchange.originY - exchange.impactY : exchange.impactY - particle.y) * trail);
+          c.stroke();
+          if (protectedParticle) {
+            const barrier = reducedMotion ? 1 : Math.min(1, t0 / .5);
+            c.globalAlpha = barrier * .65;
+            c.strokeStyle = '#83deff';
+            c.beginPath();
+            for (let side = 0; side <= 6; side++) {
+              const angle = side * Math.PI / 3;
+              const bx = x + 1 + Math.cos(angle) * 7;
+              const by = y + 1 + Math.sin(angle) * 7;
+              if (side === 0) c.moveTo(bx, by); else c.lineTo(bx, by);
+            }
+            c.stroke();
+            // Brief threads show Hope placing the barriers on new projectiles.
+            if (age < .3 && Math.floor(particle.phase) % 17 === 0) {
+              c.globalAlpha = (.3 - age) * .7 * barrier;
+              c.beginPath(); c.moveTo(200, 190); c.lineTo(x, y); c.stroke();
+            }
+          }
+          // Dagon's counter reaches the barrier at the original interception time.
+          if (age >= .4 && age < exchange.duration) {
+            const counter = (age - .4) / (exchange.duration - .4);
+            const counterX = exchange.originX + (exchange.impactX - exchange.originX) * counter;
+            const counterY = exchange.originY + (exchange.impactY - exchange.originY) * counter;
+            c.globalAlpha = .9;
+            c.fillStyle = '#ff648e';
+            c.fillRect(counterX, counterY, particle.size + 1, particle.size + 1);
+            c.globalAlpha = .35;
+            c.strokeStyle = '#fa385a';
+            c.beginPath(); c.moveTo(counterX, counterY);
+            const counterTrail = Math.max(0, counter - .05);
+            c.lineTo(exchange.originX + (exchange.impactX - exchange.originX) * counterTrail,
+              exchange.originY + (exchange.impactY - exchange.originY) * counterTrail);
+            c.stroke();
+          }
+        }
+        if (age >= exchange.duration && age < exchange.duration + .24) {
+          const flash = (age - exchange.duration) / .24;
+          c.globalAlpha = (1 - flash) * .8;
+          c.fillStyle = protectedParticle ? '#83deff' : '#fff0e0';
+          c.fillRect(exchange.impactX - 1, exchange.impactY - 1, 3, 3);
+          c.strokeStyle = protectedParticle ? '#83deff' : particle.color;
+          c.beginPath();
+          c.arc(exchange.impactX, exchange.impactY, 1 + flash * 7, 0, Math.PI * 2);
+          c.stroke();
+          if (protectedParticle) {
+            c.fillStyle = '#ff648e';
+            c.fillRect(exchange.impactX + 3 + flash * 12, exchange.impactY - flash * 9, 2, 2);
+            c.fillRect(exchange.impactX + 3 + flash * 9, exchange.impactY + flash * 12, 2, 2);
+          }
+        }
+      }
+      c.restore();
+    }
     // Small, legible AI avatars in the same schematic style as the Zeus battle.
     for (const [x, y, color, name] of [[200, 190, '#83deff', 'hope'], [260, 325, '#ff886c', 'prometheus']]) {
       c.save(); c.translate(x, y + Math.sin(t0 * 1.2) * 3);
@@ -305,7 +491,7 @@ class DagonCutscene {
         c.beginPath(); c.moveTo(330, 60); c.lineTo(310, 170); c.lineTo(330, 235); c.lineTo(305, 420); c.stroke(); c.shadowBlur = 0;
       }
     }
-    if (scene >= 5 && scene <= 8) {
+    if (scene === 8) {
       for (let i = 0; i < 100; i += 1) {
         const angle = i * 2.39996 + t0 * 0.15;
         const radius = 30 + (i % 17) * 7;
@@ -313,8 +499,6 @@ class DagonCutscene {
         if (scene >= 6) x += ((t0 * 70 + i * 19) % 420);
         c.fillStyle = scene === 8 ? '#ffe599' : `hsl(${i * 29 % 360} 80% 75%)`;
         c.fillRect(x, y, scene === 8 ? 3 : 2, 2);
-        if (scene === 6) { c.fillStyle = '#e45688'; c.fillRect(1100 - x, y, 2, 2); }
-        if (scene === 7 && i % 8 === 0) { c.strokeStyle = '#84dfff88'; c.strokeRect(x - 5, y - 5, 12, 12); }
       }
     }
     if (scene >= 9) {

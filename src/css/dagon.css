@@ -2,6 +2,7 @@
 .dagon-section > .card-header { width: 100%; cursor: pointer; text-align: left; border-width: 0 0 1px; font-family: inherit; }
 .dagon-teaser { font-style: italic; }
 .dagon-requirements { margin-bottom: 10px; }
+.dagon-section .dagon-skip-story { width: auto; margin-left: 8px; padding: 3px 10px; font-size: inherit; }
 .dagon-warning { margin-top: 10px; }
 .dagon-repair { margin: 10px 0; }
 .dagon-repair .project-cost { margin-top: 8px; }
@@ -18,6 +19,31 @@
 .dagon-ability-heading { display: flex; align-items: center; gap: 8px; }
 .dagon-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .dagon-sector-actions p { margin: 8px 0; font-size: 0.85em; line-height: 1.4; }
+.dagon-map-marker { position: absolute; width: 110px; height: 110px; transform: translate(-50%, -50%); pointer-events: none; z-index: 3; }
+.dagon-map-marker svg { display: block; width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 3px #65152f); }
+.dagon-map-glint { filter: drop-shadow(0 0 4px #ff273d); }
+.dagon-map-gaze { animation: dagon-map-search 9s infinite; }
+.dagon-map-aura { transform-origin: 100px 96px; animation: dagon-map-breathe 3.7s ease-in-out infinite alternate; }
+.dagon-map-tendrils { transform-origin: 100px 96px; animation: dagon-map-breathe 4.3s ease-in-out infinite alternate-reverse; }
+@keyframes dagon-map-search {
+  0%, 12%, 100% { transform: translate(-13px, -3px); }
+  14%, 17% { transform: translate(-17px, 1px); }
+  19%, 34% { transform: translate(16px, -5px); }
+  36%, 39% { transform: translate(12px, -7px); }
+  41%, 53% { transform: translate(4px, 9px); }
+  55%, 58% { transform: translate(8px, 7px); }
+  60%, 74% { transform: translate(-19px, 4px); }
+  76%, 79% { transform: translate(-15px, 1px); }
+  81%, 92% { transform: translate(14px, 2px); }
+  94%, 96% { transform: translate(17px, -1px); }
+}
+@keyframes dagon-map-breathe {
+  from { opacity: .65; transform: scale(.97) rotate(-2deg); }
+  to { opacity: 1; transform: scale(1.04) rotate(2deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dagon-map-gaze, .dagon-map-aura, .dagon-map-tendrils { animation: none; }
+}
 @container (max-width: 350px) {
   .dagon-coordinate { display: none; }
   .dagon-frame { position: static; display: block; padding: 8px; font-size: 9px; }

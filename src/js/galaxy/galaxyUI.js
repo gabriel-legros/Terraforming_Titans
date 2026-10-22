@@ -1352,7 +1352,8 @@ function renderSelectedSectorDetails() {
     if (!resolvedDefenseFromSummary) {
         const multiplier = manager.getFleetCapacityMultiplier?.() ?? 1;
         const combinedWorlds = Math.max(0, worldCount + rewardWorldsForDefense);
-        const baseWorldDefense = combinedWorlds > 0 ? combinedWorlds * 100 * multiplier : 0;
+        const baseWorldDefense = !manager.galacticInvasionManager?.dagon.active && combinedWorlds > 0
+            ? combinedWorlds * 100 * multiplier : 0;
         const uhfDefense = isFinite(Number(uhfFaction?.getSectorDefense?.(sector, manager)))
             ? Number(uhfFaction.getSectorDefense(sector, manager))
             : 0;
@@ -2763,6 +2764,8 @@ function cacheGalaxyElements() {
     operationsLayer.className = 'galaxy-map-operations-layer';
     mapContent.appendChild(operationsLayer);
     const hexElements = Array.from(mapContent.querySelectorAll('.galaxy-hex'));
+    const dagonMarker = createDagonMapMarker(hexElements.find(hex => hex.dataset.displayName === 'R3-13'));
+    mapContent.appendChild(dagonMarker.root);
     const hexLookup = new Map();
 
     hexElements.forEach((hex) => {
@@ -3361,6 +3364,7 @@ function cacheGalaxyElements() {
     }, galaxyManager?.getPopupVisibilityState?.() || {});
 
     galaxyUICache = {
+        dagonMarker,
         container,
         layout,
         mapWrapper,
@@ -4061,6 +4065,11 @@ function updateGalaxyUI(options = {}) {
         mapState.lastMapRefresh = now;
         updateGalaxyHexControlColors(manager, cache);
         galaxyOperationUI?.updateOperationArrows?.(manager, cache);
+    }
+    cache.dagonMarker.root.classList.toggle('hidden', !galaxyInvasionManager.dagon.active);
+    const dagonLabel = `${t('ui.space.invasion.dagon.title')} · R3-13`;
+    if (cache.dagonMarker.root.getAttribute('aria-label') !== dagonLabel) {
+        cache.dagonMarker.root.setAttribute('aria-label', dagonLabel);
     }
     renderSelectedSectorDetails();
     setGalaxySectorPopupsVisible(!!cache.selectedSector);

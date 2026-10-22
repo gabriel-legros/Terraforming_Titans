@@ -626,8 +626,9 @@ class GalaxyFaction {
         if (!(controlValue > 0)) {
             return 0;
         }
+        const fleetsOnly = manager.galacticInvasionManager?.dagon.active;
         if (this.id !== UHF_FACTION_ID) {
-            if (this.ignoreSectorBaseDefense) {
+            if (fleetsOnly || this.ignoreSectorBaseDefense) {
                 return 0;
             }
             const beneficiary = sector?.getLastFullControllerId?.()
@@ -648,7 +649,7 @@ class GalaxyFaction {
         }
         const providedWorldCount = Number(manager.getTerraformedWorldCountForSector(sector)) || 0;
         const combinedWorlds = providedWorldCount > 0 ? providedWorldCount : 0;
-        const baseDefense = combinedWorlds > 0 ? 100 * combinedWorlds : 0;
+        const baseDefense = !fleetsOnly && combinedWorlds > 0 ? 100 * combinedWorlds : 0;
         const capacityMultiplier = manager?.getFleetCapacityMultiplier?.() ?? 1;
         const sanitizedMultiplier = capacityMultiplier > 0 ? capacityMultiplier : 1;
         const upgradedDefense = baseDefense * sanitizedMultiplier;
