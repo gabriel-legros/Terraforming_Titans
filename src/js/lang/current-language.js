@@ -4292,7 +4292,7 @@ setLanguageData({
           title: 'Dagon',
           chapter: 'Chapter ?',
           subtitle: 'What is this?',
-          warning: 'Starting this will reset all advanced research to 0.  You will not be able to travel for some time.',
+          warning: 'Starting this will reset all advanced research to 0.  You will not be able to travel for some time.  New journal entries will appear.',
           requirements: { story: 'Complete the story in this save.', galaxy: 'Conquer the galaxy.', world: 'Be on an artificial world in Core or R5-07.', materials: 'Have 1 Sx electronics and 1 Sx superalloys in Space Storage.', training: 'No invasion training active.' },
           occupation: '{full} occupied · {partial} contested · {free} free sectors',
           fleet: 'Enemy fleet: {power} / {capacity}',
