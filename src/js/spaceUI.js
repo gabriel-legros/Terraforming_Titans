@@ -279,7 +279,7 @@ function updateSpaceDagonWarning() {
         warning.id = 'space-dagon-warning';
         warning.className = 'space-dagon-warning hidden';
         warning.setAttribute('role', 'img');
-        warning.innerHTML = createDagonEyeMarkup('dagon-warning');
+        warning.innerHTML = createDagonEyeMarkup('dagon-warning', 0.5);
         warning.firstElementChild.setAttribute('viewBox', '20 16 160 160');
         cacheSpaceTabWarningElements(document).button.appendChild(warning);
         spaceTabAlertElements.dagonWarning = warning;

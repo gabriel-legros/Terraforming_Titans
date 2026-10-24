@@ -121,11 +121,11 @@ function createDagonMapMarker(hex) {
   return { root };
 }
 
-function createDagonEyeMarkup(id) {
+function createDagonEyeMarkup(id, tentacleLength = 1) {
   const tendrils = Array.from({ length: 18 }, (_, i) => {
     const angle = i * Math.PI * 2 / 18;
     const x = 100 + Math.cos(angle) * 35, y = 96 + Math.sin(angle) * 40;
-    const path = `M${x} ${y} C${x + Math.cos(angle) * 27} ${y + Math.sin(angle) * 21}, ${x + Math.cos(angle + .5) * 51} ${y + Math.sin(angle) * 36}, ${x + Math.cos(angle) * 60} ${y + Math.sin(angle) * 51}`;
+    const path = `M${x} ${y} C${x + Math.cos(angle) * 27 * tentacleLength} ${y + Math.sin(angle) * 21 * tentacleLength}, ${x + Math.cos(angle + .5) * 51 * tentacleLength} ${y + Math.sin(angle) * 36 * tentacleLength}, ${x + Math.cos(angle) * 60 * tentacleLength} ${y + Math.sin(angle) * 51 * tentacleLength}`;
     return `<path d="${path}" stroke="${i % 3 === 0 ? '#8a1639' : '#42132d'}" stroke-width="${4.5 - (i % 5) * .6}"/><path d="${path}" stroke="#e25a6355" stroke-width=".4"/>`;
   }).join('');
   const orbits = Array.from({ length: 5 }, (_, i) =>
@@ -356,8 +356,10 @@ function updateDagonAbilitiesUI(ui, sector) {
     if (pool.meter.getAttribute('aria-label') !== title) pool.meter.setAttribute('aria-label', title);
   }
   for (const [ability, { button, description }] of ui.actions) {
+    const cost = ability === 'conquer' ? parameters.instantCaptureCost : ability === 'cut' ? parameters.prometheusAbilityCost
+      : ability === 'protect' ? parameters.protectionCost : parameters.abilityCost;
     const label = t('ui.space.invasion.dagon.powerCost', {
-      ability: t(`ui.space.invasion.dagon.${ability}`), cost: formatNumber(ability === 'protect' ? parameters.protectionCost : parameters.abilityCost, true)
+      ability: t(`ui.space.invasion.dagon.${ability}`), cost: formatNumber(cost, true)
     });
     let text = t(`ui.space.invasion.dagon.${ability}Description`);
     if (ability === 'cut' && !state.tentaclesSevered) {
@@ -386,12 +388,32 @@ class DagonCutscene {
     this.visible = false;
     this.elapsedSeconds = 0;
     this.exoticTimeOffset = 0;
+    this.warpTimeOffset = 0;
+    this.dagonShards = Array.from({ length: 72 }, (_, i) => ({
+      angle: i * 2.399963,
+      radius: 25 + ((i * .754878) % 1) * 115,
+      speed: 65 + ((i * .618034) % 1) * 200,
+      size: 12 + (i % 9) * 3,
+      spin: Math.sin(i * 1.7) * 2,
+      color: ['#ffc7a4', '#e75b87', '#b6eaff'][i % 3]
+    }));
+    this.warpParticles = Array.from({ length: 560 }, (_, i) => ({
+      rift: i % 3,
+      delay: (i * .618034) % 1,
+      duration: 1.1 + ((i * .414214) % 1) * .7,
+      targetY: 48 + ((i * .754878) % 1) * 384,
+      bend: Math.sin(i * 2.4) * 28,
+      size: 1 + (i % 4) * .45,
+      trail: 10 + (i % 7) * 2,
+      color: ['#ff486e', '#dc3466', '#ff94af', '#ffe0ed'][i % 4]
+    }));
     this.exoticMatter = Array.from({ length: 2400 }, (_, i) => {
       const angle = i * 2.399963;
       const radius = Math.sqrt((i * .754877666 + .5) % 1);
       const edge = 1 + .09 * Math.sin(angle * 3);
       return {
-        x: 235 + Math.cos(angle) * radius * 180 * edge,
+        // Keep the shared cloud left of the warp split, including particle drift.
+        x: 165 + Math.cos(angle) * radius * 135 * edge,
         y: 250 + Math.sin(angle) * radius * 185 * edge,
         delay: ((i * .569840291) % 1) * 2.3,
         phase: i * 1.618,
@@ -457,6 +479,8 @@ class DagonCutscene {
 
   showScene(index) {
     this.exoticTimeOffset = index === 7 ? (this.index === 6 ? this.elapsedSeconds : 8) : 0;
+    this.warpTimeOffset = index === 4 ? (this.index === 3 ? this.elapsedSeconds : 2)
+      : index === 5 || index === 6 ? (this.index === index - 1 ? this.warpTimeOffset + this.elapsedSeconds : 2) : 0;
     this.index = index;
     this.elapsedSeconds = 0;
     this.frame.textContent = t('ui.space.invasion.dagon.frame', { current: index + 1, total: DAGON_SCENES.length });
@@ -495,12 +519,12 @@ class DagonCutscene {
   draw(time) {
     const c = this.ctx, w = 1200, h = 480, scene = this.index;
     const reducedMotion = this.motionQuery.matches;
-    const t0 = reducedMotion ? (scene === 6 || scene === 7 ? 8 : 2) : time;
+    const t0 = reducedMotion ? (scene >= 6 && scene <= 8 ? 8 : scene === 9 ? 3.1 : scene === 10 ? 3.6 : 2) : time;
     const exchangeTime = t0 + (scene === 7 ? this.exoticTimeOffset : 0);
     c.clearRect(0, 0, w, h);
     c.fillStyle = '#050711'; c.fillRect(0, 0, w, h);
     const glow = c.createRadialGradient(880, 230, 10, 800, 240, 440);
-    glow.addColorStop(0, scene >= 9 ? '#152f42' : '#380c23'); glow.addColorStop(1, '#050711');
+    glow.addColorStop(0, scene >= 10 || (scene === 9 && t0 > 3.2) ? '#152f42' : '#380c23'); glow.addColorStop(1, '#050711');
     c.fillStyle = glow; c.fillRect(0, 0, w, h);
     // Deterministic stars and warped coordinate grid; no per-frame DOM or random state.
     for (let i = 0; i < 145; i += 1) {
@@ -513,7 +537,7 @@ class DagonCutscene {
       c.beginPath(); c.moveTo(0, y);
       c.bezierCurveTo(550, y, 720, y + Math.sin(y + t0 * 0.3) * 45, w, y); c.stroke();
     }
-    const fade = scene >= 10 ? 0 : scene === 9 ? Math.max(0, 1 - t0 / 3) : 1;
+    const fade = scene >= 10 ? 0 : scene === 9 ? Math.max(0, 1 - Math.max(0, t0 - 2.2) / 1.6) : 1;
     c.save(); c.globalAlpha = fade;
     // Dagon occupies most of the battlefield; a dark body with many drifting limbs.
     for (let i = 0; i < 18; i += 1) {
@@ -543,13 +567,17 @@ class DagonCutscene {
     if (scene >= 5 && scene <= 7) {
       const cloudTime = scene >= 6 ? 4 + exchangeTime : reducedMotion ? 4 : t0;
       c.save();
-      const cloudGlow = c.createRadialGradient(235, 250, 25, 235, 250, 210);
+      c.save();
+      c.translate(165, 250);
+      c.scale(.7, 1);
+      const cloudGlow = c.createRadialGradient(0, 0, 25, 0, 0, 210);
       cloudGlow.addColorStop(0, '#826bdd18');
       cloudGlow.addColorStop(.65, '#5fbde511');
       cloudGlow.addColorStop(1, '#5fbde500');
       c.globalAlpha = Math.min(1, cloudTime / 2);
       c.fillStyle = cloudGlow;
-      c.fillRect(20, 30, 440, 440);
+      c.fillRect(-210, -210, 420, 420);
+      c.restore();
       // Materialize at Prometheus, then disperse into a cloud enclosing both AIs.
       for (const particle of this.exoticMatter) {
         // Each launched particle is replaced by a new one spreading from Prometheus.
@@ -650,16 +678,66 @@ class DagonCutscene {
             c.fillRect(exchange.impactX + 3 + flash * 9, exchange.impactY + flash * 12, 2, 2);
           }
         }
+        // Some shielded particles scar Dagon once they survive the counter and arrive.
+        const impactAge = age - exchange.duration - 1.15;
+        if (protectedParticle && Math.floor(particle.phase) % 7 === 0 && impactAge >= 0 && impactAge < .8) {
+          const impact = impactAge / .8;
+          const x = exchange.originX + 50, y = exchange.originY;
+          c.save();
+          c.globalAlpha = (1 - impact) * .8;
+          c.strokeStyle = '#d9c8ff'; c.lineWidth = 1;
+          c.shadowColor = '#b895ff'; c.shadowBlur = 10;
+          c.beginPath(); c.arc(x, y, 2 + impact * 15, 0, Math.PI * 2); c.stroke();
+          for (let ray = 0; ray < 3; ray += 1) {
+            const angle = particle.phase + ray * Math.PI * 2 / 3;
+            c.beginPath(); c.moveTo(x, y);
+            c.lineTo(x + Math.cos(angle + .3) * 11, y + Math.sin(angle + .3) * 11);
+            c.lineTo(x + Math.cos(angle) * 24, y + Math.sin(angle) * 24); c.stroke();
+          }
+          c.restore();
+        }
       }
       c.restore();
     }
+    if (scene === 3 || scene === 4) this.drawWarpAssault(t0 + this.warpTimeOffset, scene === 4);
+    if (scene === 5) this.drawWarpSplit(t0 + this.warpTimeOffset);
+    if (scene === 6 && t0 < .65) {
+      c.save();
+      c.globalAlpha = 1 - t0 / .65;
+      this.drawWarpSplit(t0 + this.warpTimeOffset);
+      c.restore();
+    }
+    if (scene === 8) this.drawPrometheusCharge(t0);
+    if (scene === 4 || scene === 8) {
+      c.save();
+      c.globalAlpha = Math.min(1, t0 / .65);
+      this.drawWarpSplit(t0 + this.warpTimeOffset, scene === 4);
+      c.restore();
+    }
+    if (scene === 9) this.drawPrometheusStrike(t0);
+    if (scene === 10) this.drawHopeDeparture(t0);
     // Small, legible AI avatars in the same schematic style as the Zeus battle.
     for (const [x, y, color, name] of [[200, 190, '#83deff', 'hope'], [260, 325, '#ff886c', 'prometheus']]) {
+      const departure = scene === 10 && name === 'hope' ? Math.min(1, Math.max(0, t0 - .75)) : 0;
+      if (departure === 1) continue;
       c.save(); c.translate(x, y + Math.sin(t0 * 1.2) * 3);
+      c.globalAlpha = 1 - departure;
+      c.save();
+      if (departure > 0) c.scale(1 - departure * departure, 1 + departure * .5);
       c.shadowColor = color; c.shadowBlur = 16; c.strokeStyle = color; c.fillStyle = '#101b2c'; c.lineWidth = 2;
-      c.beginPath(); c.moveTo(0, -24); c.lineTo(18, -4); c.lineTo(13, 20); c.lineTo(-13, 20); c.lineTo(-18, -4); c.closePath(); c.fill(); c.stroke();
+      c.beginPath();
+      if (name === 'hope') {
+        c.ellipse(0, -1, 20, 23, 0, 0, Math.PI * 2);
+      } else {
+        c.moveTo(0, -30); c.lineTo(7, -15); c.lineTo(22, -23); c.lineTo(17, -6);
+        c.lineTo(25, 0); c.lineTo(17, 9); c.lineTo(13, 22); c.lineTo(0, 18);
+        c.lineTo(-13, 22); c.lineTo(-17, 9); c.lineTo(-25, 0); c.lineTo(-17, -6);
+        c.lineTo(-22, -23); c.lineTo(-7, -15);
+      }
+      c.closePath(); c.fill(); c.stroke();
       c.fillStyle = color; c.fillRect(-8, -5, 5, 3); c.fillRect(3, -5, 5, 3);
-      c.shadowBlur = 0; c.font = '15px monospace'; c.textAlign = 'center'; c.fillText(t(`story.dagon.${name}`), 0, 45);
+      c.restore();
+      c.fillStyle = color; c.shadowBlur = 0; c.font = '15px monospace'; c.textAlign = 'center'; c.fillText(t(`story.dagon.${name}`), 0, 45);
       c.restore();
     }
     c.font = '13px monospace'; c.textAlign = 'center'; c.fillStyle = '#e5a7b2';
@@ -672,45 +750,315 @@ class DagonCutscene {
         c.beginPath(); c.ellipse(x, 190, 12, 24 + i * 3, 0, -1.4, 1.4); c.stroke();
       }
     }
-    if (scene === 2 || scene === 9) {
-      c.save(); c.shadowBlur = 20; c.shadowColor = scene === 2 ? '#b895ff' : '#f7e49b';
-      for (let i = 0; i < (scene === 2 ? 3 : 15); i += 1) {
-        c.strokeStyle = scene === 2 ? '#dbb6ff' : `rgba(255,235,173,${Math.max(0, 0.8 - t0 / 6)})`;
-        c.lineWidth = scene === 2 ? 2 : 3;
-        c.beginPath(); c.moveTo(280, 325); c.lineTo(500 + i * 5, 260 + Math.sin(i + t0) * 20); c.lineTo(870, 240 + (i - 5) * 7); c.stroke();
+    if (scene === 2) {
+      c.save(); c.shadowColor = '#b895ff'; c.shadowBlur = 10;
+      // Stagger discrete, fast particles; each leaves only a short wake and a local impact scar.
+      for (let i = 0; i < 20; i += 1) {
+        const launched = t0 - i * .14;
+        if (launched < 0) continue;
+        const age = launched % 3;
+        const duration = .55 + (i % 3) * .06;
+        const targetX = 754 + (i % 4) * 14, targetY = 185 + (i * 37) % 115;
+        if (age < duration) {
+          const progress = age / duration;
+          const x = 280 + (targetX - 280) * progress, y = 325 + (targetY - 325) * progress;
+          const tail = Math.max(0, progress - .035);
+          c.globalAlpha = .55; c.strokeStyle = '#bba5ff'; c.lineWidth = 2;
+          c.beginPath(); c.moveTo(280 + (targetX - 280) * tail, 325 + (targetY - 325) * tail);
+          c.lineTo(x, y); c.stroke();
+          c.globalAlpha = 1; c.fillStyle = '#f1f4ff';
+          c.beginPath(); c.arc(x, y, 2.5 + (i % 2), 0, Math.PI * 2); c.fill();
+        } else if (age < duration + .8) {
+          const impact = (age - duration) / .8;
+          c.globalAlpha = (1 - impact) * .8; c.strokeStyle = '#d9c8ff'; c.lineWidth = 1;
+          c.beginPath(); c.arc(targetX, targetY, 2 + impact * 15, 0, Math.PI * 2); c.stroke();
+          for (let ray = 0; ray < 3; ray += 1) {
+            const angle = i + ray * Math.PI * 2 / 3;
+            c.beginPath(); c.moveTo(targetX, targetY);
+            c.lineTo(targetX + Math.cos(angle + .3) * 11, targetY + Math.sin(angle + .3) * 11);
+            c.lineTo(targetX + Math.cos(angle) * 24, targetY + Math.sin(angle) * 24); c.stroke();
+          }
+        }
       }
       c.restore();
     }
-    if (scene === 3 || scene === 4) {
-      c.lineWidth = 3; c.strokeStyle = '#fa385a';
-      for (let i = 0; i < 14; i += 1) {
-        const f = ((t0 * 0.5 + i / 14) % 1);
-        const x = 780 - f * (scene === 4 ? 450 : 560);
-        const y = 240 + Math.sin(f * 15 + i) * 30;
-        c.beginPath(); c.moveTo(x + 15, y); c.lineTo(x, y + 7); c.stroke();
+  }
+
+  drawHopeDeparture(time) {
+    if (time >= 3.1) return;
+    const c = this.ctx;
+    const opening = Math.min(1, time / .6);
+    const closing = Math.min(1, Math.max(0, (time - 1.75) / 1.35));
+    const width = 34 * opening * (1 - closing), height = 54 * opening * (1 - closing * .6);
+    c.save(); c.translate(200, 190 + Math.sin(time * 1.2) * 3);
+    c.globalAlpha = opening * (1 - closing);
+    const glow = c.createRadialGradient(0, 0, 5, 0, 0, 85);
+    glow.addColorStop(0, '#d1faff88'); glow.addColorStop(.5, '#57cfff33'); glow.addColorStop(1, '#57cfff00');
+    c.fillStyle = glow; c.fillRect(-85, -85, 170, 170);
+    c.shadowColor = '#83deff'; c.shadowBlur = 16;
+    c.fillStyle = '#061523'; c.strokeStyle = '#bbf3ff'; c.lineWidth = 2;
+    c.beginPath(); c.ellipse(0, 0, width, height, 0, 0, Math.PI * 2); c.fill(); c.stroke();
+    c.shadowBlur = 0; c.lineWidth = 1;
+    for (let ring = 0; ring < 3; ring += 1) {
+      c.strokeStyle = ring % 2 ? '#dafaffbb' : '#67caff88';
+      c.beginPath(); c.ellipse(0, 0, width + ring * 5, height + ring * 4, Math.sin(time + ring) * .12,
+        time * .8 + ring, time * .8 + ring + Math.PI * 1.4); c.stroke();
+    }
+    for (let i = 0; i < 44; i += 1) {
+      const phase = (time * .65 + i * .618034) % 1;
+      const angle = i * 2.399963 + time * .8;
+      const radius = 15 + (1 - phase) * 60;
+      c.globalAlpha = opening * (1 - closing) * Math.sin(phase * Math.PI);
+      c.fillStyle = '#c7f4ff';
+      c.fillRect(Math.cos(angle) * radius * .65, Math.sin(angle) * radius, 1.5, 1.5);
+    }
+    const glint = Math.max(0, 1 - Math.abs(time - 1.65) / .45);
+    c.globalAlpha = glint; c.strokeStyle = '#efffff'; c.lineWidth = 3; c.shadowBlur = 14;
+    c.beginPath(); c.moveTo(0, -48); c.lineTo(0, 48); c.stroke();
+    c.restore();
+  }
+
+  drawPrometheusCharge(time) {
+    const c = this.ctx, x = 115, y = 325;
+    const charge = Math.min(1, time / 6);
+    const radius = 8 + 72 * charge * charge * (3 - 2 * charge);
+    c.save();
+    // Keep the gathered matter behind HOPE's restored split.
+    c.beginPath(); c.rect(12, 0, 314, 480); c.clip();
+    const aura = c.createRadialGradient(x, y, radius * .4, x, y, radius * 2.3);
+    aura.addColorStop(0, '#ffdb7155'); aura.addColorStop(.5, '#9dcfff20'); aura.addColorStop(1, '#9dcfff00');
+    c.fillStyle = aura; c.fillRect(12, 0, 314, 480);
+    // Reuse the exotic-matter cloud as inward-spiralling fuel, with no per-frame particle allocation.
+    for (let i = 0; i < this.exoticMatter.length; i += 5) {
+      const particle = this.exoticMatter[i];
+      const progress = (time * .42 + particle.delay) % 1;
+      const spread = 1 - progress;
+      const angle = particle.phase + progress * 2.8;
+      const px = x + Math.cos(angle) * (radius * .8 + spread * 170);
+      const py = y + Math.sin(angle) * (radius * .8 + spread * 340);
+      c.globalAlpha = Math.sin(progress * Math.PI) * .8;
+      c.fillStyle = i % 3 ? '#ffe8a6' : '#c9f5ff';
+      c.fillRect(px, py, particle.size, particle.size);
+    }
+    // Two arcing streams feed the growing sphere to Prometheus's left.
+    c.globalAlpha = 1;
+    for (let i = 0; i < 100; i += 1) {
+      const progress = (time * .65 + i / 100) % 1;
+      const side = i % 2 ? 1 : -1;
+      const px = 235 + (x + radius * .65 - 235) * progress;
+      const py = 325 + (y - 325) * progress + side * Math.sin(progress * Math.PI) * 48;
+      c.fillStyle = i % 3 ? '#ffd68f' : '#fff5da';
+      c.globalAlpha = .45 + progress * .5;
+      c.beginPath(); c.arc(px, py, 1.2 + progress * 1.5, 0, Math.PI * 2); c.fill();
+    }
+    c.globalAlpha = 1;
+    this.drawPrometheusSphere(x, y, radius, time);
+    c.restore();
+  }
+
+  drawPrometheusSphere(x, y, radius, time) {
+    const c = this.ctx;
+    c.save();
+    const core = c.createRadialGradient(x - radius * .2, y - radius * .2, 0, x, y, radius);
+    core.addColorStop(0, '#ffffff'); core.addColorStop(.4, '#fff9dc');
+    core.addColorStop(.76, '#ffe5a0'); core.addColorStop(.94, '#eda95b'); core.addColorStop(1, '#b3e8ff');
+    c.fillStyle = core; c.shadowColor = '#ffe8ac'; c.shadowBlur = 22;
+    c.beginPath(); c.arc(x, y, radius, 0, Math.PI * 2); c.fill();
+    c.shadowBlur = 0;
+    c.save(); c.translate(x, y);
+    for (let i = 0; i < 6; i += 1) {
+      c.save(); c.rotate(i * Math.PI / 3 + time * .18);
+      c.strokeStyle = i % 2 ? '#fffef0bb' : '#c4f4ff99'; c.lineWidth = 1.3;
+      c.beginPath(); c.ellipse(0, 0, radius * 1.02, radius * .38, 0, .3, Math.PI * 1.8); c.stroke();
+      c.restore();
+    }
+    c.restore();
+    c.restore();
+  }
+
+  drawPrometheusStrike(time) {
+    const c = this.ctx, impactTime = 2.2;
+    c.save();
+    if (time < impactTime) {
+      // Open the split, then accelerate the fully charged sphere into Dagon.
+      if (time < .65) {
+        c.globalAlpha = 1 - time / .65;
+        this.drawWarpSplit(time);
+        c.globalAlpha = 1;
       }
-      if (scene === 4) {
-        c.strokeStyle = '#9eefff'; c.shadowColor = '#71d6ff'; c.shadowBlur = 20;
-        c.beginPath(); c.moveTo(330, 60); c.lineTo(310, 170); c.lineTo(330, 235); c.lineTo(305, 420); c.stroke(); c.shadowBlur = 0;
+      const launch = Math.max(0, (time - .45) / (impactTime - .45));
+      const progress = launch * launch;
+      const x = 115 + 745 * progress, y = 325 - 85 * progress * progress;
+      const wake = c.createRadialGradient(x, y, 15, x, y, 170);
+      wake.addColorStop(0, '#fff2b866'); wake.addColorStop(1, '#bdeaff00');
+      c.fillStyle = wake; c.fillRect(x - 170, y - 170, 340, 340);
+      for (let layer = 0; layer < 3; layer += 1) {
+        const p = Math.max(0, progress - .45);
+        const tailX = 115 + 745 * p, tailY = 325 - 85 * p * p;
+        const width = 65 - layer * 20;
+        const trail = c.createLinearGradient(tailX, tailY, x + 1, y);
+        trail.addColorStop(0, '#ffe8a600'); trail.addColorStop(1, ['#ffcd7355', '#fff1ad88', '#e4f7ffbb'][layer]);
+        c.fillStyle = trail; c.beginPath(); c.moveTo(tailX, tailY);
+        c.bezierCurveTo(tailX + (x - tailX) * .5, tailY, x - 65, y - width, x, y - width);
+        c.lineTo(x, y + width);
+        c.bezierCurveTo(x - 65, y + width, tailX + (x - tailX) * .5, tailY, tailX, tailY);
+        c.closePath(); c.fill();
+      }
+      this.drawPrometheusSphere(x, y, 80 + progress * 14, time + 8);
+    } else {
+      const age = time - impactTime;
+      const light = Math.exp(-age * .8);
+      const bloomRadius = 80 + 260 * (1 - Math.exp(-age * 3));
+      const bloom = c.createRadialGradient(860, 240, 0, 860, 240, bloomRadius);
+      bloom.addColorStop(0, '#fffef2'); bloom.addColorStop(.18, '#fff1b9dd');
+      bloom.addColorStop(.48, '#ffc57866'); bloom.addColorStop(.75, '#93deff22'); bloom.addColorStop(1, '#93deff00');
+      c.globalAlpha = light; c.fillStyle = bloom;
+      c.fillRect(860 - bloomRadius, 240 - bloomRadius, bloomRadius * 2, bloomRadius * 2);
+      // Staggered shock fronts expand beyond the frame instead of repeating a beam.
+      for (let ring = 0; ring < 5; ring += 1) {
+        const elapsed = age - ring * .16;
+        if (elapsed < 0 || elapsed > 3) continue;
+        const radius = 40 + elapsed * (230 + ring * 24);
+        c.globalAlpha = (1 - elapsed / 3) * .8;
+        c.strokeStyle = ring % 2 ? '#b6eaff' : '#fff0bc'; c.lineWidth = ring ? 2 : 5;
+        c.beginPath(); c.ellipse(860, 240, radius, radius * (.55 + ring * .1), -.2, 0, Math.PI * 2); c.stroke();
+      }
+      // Bright faults cross the original body before its shattered shell peels away.
+      if (age < 1.8) {
+        c.globalAlpha = Math.min(1, age * 5) * (1 - age / 1.8);
+        c.strokeStyle = '#fff1d0'; c.lineWidth = 2;
+        for (let i = 0; i < 16; i += 1) {
+          const angle = i * Math.PI / 8;
+          c.beginPath(); c.moveTo(860, 240);
+          for (let step = 1; step <= 4; step += 1) {
+            const radius = step * 38;
+            const turn = angle + Math.sin(i + step * 3) * .16;
+            c.lineTo(860 + Math.cos(turn) * radius, 240 + Math.sin(turn) * radius);
+          }
+          c.stroke();
+        }
+      }
+      for (const shard of this.dagonShards) {
+        const distance = shard.radius + age * shard.speed;
+        c.save();
+        c.globalAlpha = Math.max(0, 1 - age / 4.5);
+        c.translate(860 + Math.cos(shard.angle) * distance, 240 + Math.sin(shard.angle) * distance * .8);
+        c.rotate(shard.angle + age * shard.spin);
+        c.fillStyle = '#200b23'; c.strokeStyle = shard.color; c.lineWidth = 1.3;
+        c.beginPath(); c.moveTo(-shard.size, -shard.size * .35);
+        c.lineTo(shard.size * .8, -shard.size * .65); c.lineTo(shard.size * .35, shard.size * .6);
+        c.lineTo(-shard.size * .4, shard.size * .25); c.closePath(); c.fill(); c.stroke();
+        c.restore();
+      }
+      c.globalAlpha = Math.max(0, 1 - age / 6);
+      for (let i = 0; i < this.exoticMatter.length; i += 4) {
+        const particle = this.exoticMatter[i];
+        const distance = 30 + age * (75 + particle.delay * 135);
+        const x = 860 + Math.cos(particle.phase) * distance;
+        const y = 240 + Math.sin(particle.phase) * distance * .8;
+        c.strokeStyle = i % 3 ? '#ffd99f' : '#b9edff'; c.lineWidth = particle.size * .5;
+        c.beginPath(); c.moveTo(x, y);
+        c.lineTo(x - Math.cos(particle.phase) * 12, y - Math.sin(particle.phase) * 10); c.stroke();
       }
     }
-    if (scene === 8) {
-      for (let i = 0; i < 100; i += 1) {
-        const angle = i * 2.39996 + t0 * 0.15;
-        const radius = 30 + (i % 17) * 7;
-        let x = 260 + Math.cos(angle) * radius, y = 260 + Math.sin(angle) * radius;
-        if (scene >= 6) x += ((t0 * 70 + i * 19) % 420);
-        c.fillStyle = scene === 8 ? '#ffe599' : `hsl(${i * 29 % 360} 80% 75%)`;
-        c.fillRect(x, y, scene === 8 ? 3 : 2, 2);
-      }
+    c.restore();
+  }
+
+  drawWarpAssault(time, deflected) {
+    const c = this.ctx;
+    const opening = Math.min(1, time / .6);
+    c.save();
+    const stormGlow = c.createRadialGradient(570, 240, 30, 530, 240, 390);
+    stormGlow.addColorStop(0, '#e72b6038'); stormGlow.addColorStop(1, '#840a3000');
+    c.fillStyle = stormGlow; c.fillRect(180, 0, 800, 480);
+    // Dagon tears three jagged apertures through the warp, feeding them from its core.
+    for (let rift = 0; rift < 3; rift += 1) {
+      const x = 728 + rift * 18, y = 94 + rift * 146;
+      c.globalAlpha = opening; c.shadowBlur = 18; c.shadowColor = '#ff285b';
+      c.strokeStyle = '#ed466e'; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(827, 236);
+      c.bezierCurveTo(920, y, x + 65, y - 60, x, y); c.stroke();
+      c.save(); c.translate(x, y); c.scale(opening, .9 + .06 * Math.sin(time * 2 + rift));
+      c.fillStyle = '#080512'; c.strokeStyle = '#ff6a91'; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(0, -82); c.lineTo(13, -46); c.lineTo(7, -29);
+      c.lineTo(24, -9); c.lineTo(12, 14); c.lineTo(18, 42); c.lineTo(0, 82);
+      c.lineTo(-11, 45); c.lineTo(-8, 25); c.lineTo(-20, 4); c.lineTo(-10, -27);
+      c.lineTo(-17, -48); c.closePath(); c.fill(); c.stroke();
+      c.strokeStyle = '#ffb1c7'; c.lineWidth = 1;
+      c.beginPath(); c.moveTo(-3, -65); c.lineTo(-10, -34); c.lineTo(4, -6);
+      c.lineTo(-7, 23); c.lineTo(0, 62); c.stroke();
+      c.restore();
     }
-    if (scene >= 9) {
-      c.strokeStyle = '#c0e8ff55'; c.lineWidth = 1;
-      for (let i = 0; i < 20; i += 1) {
-        const a = i * Math.PI / 10, r = 25 + Math.min(t0, 5) * 60;
-        c.beginPath(); c.moveTo(860 + Math.cos(a) * r, 240 + Math.sin(a) * r);
-        c.lineTo(860 + Math.cos(a) * (r + 16), 240 + Math.sin(a) * (r + 16)); c.stroke();
+    c.shadowBlur = 0; c.globalCompositeOperation = 'lighter';
+    // Cached particles occupy a broad front; the split reflects their trajectories.
+    for (const particle of this.warpParticles) {
+      const elapsed = time / particle.duration - particle.delay;
+      if (elapsed < 0) continue;
+      const phase = elapsed % 1;
+      const originX = 728 + particle.rift * 18, originY = 94 + particle.rift * 146;
+      let x, y, dx, dy;
+      const reflected = deflected && phase >= .63;
+      if (reflected) {
+        const progress = (phase - .63) / .37;
+        dx = 420 + particle.delay * 150;
+        dy = (particle.targetY < 240 ? -1 : 1) * (130 + particle.delay * 170);
+        x = 364 + progress * dx; y = particle.targetY + progress * dy;
+      } else {
+        const progress = deflected ? phase / .63 : phase;
+        dx = (deflected ? 364 : 225 + particle.delay * 70) - originX;
+        dy = particle.targetY - originY;
+        x = originX + progress * dx;
+        y = originY + progress * dy + Math.sin(progress * Math.PI) * particle.bend;
       }
+      const length = Math.hypot(dx, dy);
+      c.globalAlpha = reflected ? .7 : Math.min(1, phase * 12) * (deflected ? .7 : Math.min(.8, (1 - phase) * 5));
+      c.strokeStyle = reflected ? '#c4c7ff' : particle.color;
+      c.lineWidth = particle.size * .65;
+      c.beginPath(); c.moveTo(x - dx / length * particle.trail, y - dy / length * particle.trail);
+      c.lineTo(x, y); c.stroke();
+      c.fillStyle = reflected ? '#e4faff' : particle.color;
+      c.fillRect(x - particle.size / 2, y - particle.size / 2, particle.size, particle.size);
     }
+    c.restore();
+  }
+
+  drawWarpSplit(time, underAttack = false) {
+    const c = this.ctx;
+    c.save();
+    const opacity = c.globalAlpha;
+    // Two luminous banks surround an actual dark gap, splitting the entire attack front.
+    const splitGlow = c.createLinearGradient(292, 0, 395, 0);
+    splitGlow.addColorStop(0, '#6bdfff00'); splitGlow.addColorStop(.5, '#79dcff44'); splitGlow.addColorStop(1, '#6bdfff00');
+    c.fillStyle = splitGlow; c.fillRect(292, 0, 103, 480);
+    c.beginPath();
+    for (let y = 0; y <= 480; y += 24) {
+      const x = 332 + Math.sin(y * .067 + time * .4) * 8;
+      if (y === 0) c.moveTo(x, y); else c.lineTo(x, y);
+    }
+    for (let y = 480; y >= 0; y -= 24) c.lineTo(354 + Math.sin(y * .067 + time * .4) * 8, y);
+    c.closePath(); c.fillStyle = '#02040d'; c.fill();
+    c.shadowColor = '#66dfff'; c.shadowBlur = 16;
+    for (let bank = 0; bank < 2; bank += 1) {
+      c.beginPath();
+      for (let y = 0; y <= 480; y += 24) {
+        const x = 332 + bank * 22 + Math.sin(y * .067 + time * .4) * 8;
+        if (y === 0) c.moveTo(x, y); else c.lineTo(x, y);
+      }
+      c.strokeStyle = bank ? '#d8fcff' : '#76cfff'; c.lineWidth = bank ? 3 : 2; c.stroke();
+    }
+    c.shadowBlur = 0;
+    c.strokeStyle = '#8cddff88'; c.lineWidth = 1;
+    for (let i = 0; i < 3; i += 1) {
+      c.beginPath(); c.moveTo(220, 190);
+      c.quadraticCurveTo(290, 190, 328, 80 + i * 155); c.stroke();
+    }
+    if (underAttack) for (let i = 0; i < 14; i += 1) {
+      const pulse = (time * .85 + i * .618034) % 1;
+      const y = 28 + (i * 73) % 425;
+      c.globalAlpha = opacity * (1 - pulse) * .85; c.strokeStyle = '#d7fcff'; c.lineWidth = 1.5;
+      c.beginPath(); c.arc(365, y, 3 + pulse * 22, -Math.PI / 2, Math.PI / 2); c.stroke();
+      c.fillStyle = '#eaffff'; c.fillRect(360, y - 2, 10 * (1 - pulse), 4);
+    }
+    c.restore();
   }
 }

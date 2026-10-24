@@ -4327,8 +4327,8 @@ setLanguageData({
           selectSector: 'Select a sector on the map to use an ability.',
           logistics: 'Accelerated Logistics',
           cut: 'Cut tentacle',
-          protectDescription: 'Protect a sector with UHF presence from attacks for 2 hours. Cancels incoming attacks.',
-          logisticsDescription: 'UHF offensive operations in this sector take 1 minute for the next 2 hours.',
+          protectDescription: 'Protect a sector with UHF presence from attacks for 10 minutes. Cancels incoming attacks.',
+          logisticsDescription: 'UHF offensive operations in this sector take 30 seconds for the next 10 minutes.',
           conquerDescription: 'Instantly take control of this sector. Cannot target Dagon or an intact tentacle.',
           cutDescription: 'Sever one entire tentacle at its root.  Requires full control of an adjacent sector.',
           cutRoots: 'Roots: {sectors}.',
@@ -4345,7 +4345,7 @@ setLanguageData({
           frame: 'Step {current} / {total}',
           waiting: 'Follow the journal to continue. Open the lightning panel on the galaxy map to use AI abilities on the selected sector.',
           complete: 'Corruption purged. All Dagon-occupied sectors have been liberated.',
-          objectives: { started: 'Begin the Dagon invasion.', prometheusRepaired: 'Repair Prometheus in the Invasion card.', tentaclesSevered: 'Cut all five tentacles with Prometheus to expose R3-13.', completed: 'Complete the encounter in the Dagon invasion card.' }
+          objectives: { severTentacles: 'Sever tentacles: {current}/{count}.', started: 'Begin the Dagon invasion.', prometheusRepaired: 'Repair Prometheus in the Invasion card.', tentaclesSevered: 'Cut all five tentacles with Prometheus to expose R3-13.', completed: 'Complete the encounter in the Dagon invasion card.' }
         },
         conquestRequired: 'To avoid unnecessary casualties as a result of confusion from these training exercises, you must conquer the Galaxy first.',
         fleetPower: 'Fleet Power: {value}',

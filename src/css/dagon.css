@@ -44,7 +44,7 @@
 .dagon-map-ability-effects.is-blocked .dagon-laser-charge { color: #6bffa2; }
 .dagon-laser-countdown { font: bold 12px sans-serif; paint-order: stroke; stroke: #170a20; stroke-width: 3px; }
 .dagon-laser-source { animation: dagon-corruption-pulse 1.5s ease-in-out infinite; }
-.space-dagon-warning { width: 28px; height: 28px; margin-left: 2px; vertical-align: middle; }
+.space-dagon-warning { width: 21px; height: 21px; margin-left: 2px; vertical-align: middle; }
 .space-dagon-warning:not(.hidden) { display: inline-flex; }
 .space-dagon-warning svg { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 0 2px #ed4678); }
 .dagon-laser-core { animation: dagon-laser-surge 1.1s ease-in-out infinite alternate; }

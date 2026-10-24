@@ -242,7 +242,8 @@ class DagonInvasion {
     const prometheus = ability === 'conquer' || ability === 'cut';
     if (prometheus && !this.prometheusRepaired) return false;
     const parameters = terraformingParameters.gameplay.dagon;
-    const cost = ability === 'protect' ? parameters.protectionCost : parameters.abilityCost;
+    const cost = ability === 'conquer' ? parameters.instantCaptureCost : prometheus ? parameters.prometheusAbilityCost
+      : ability === 'protect' ? parameters.protectionCost : parameters.abilityCost;
     if (this[prometheus ? 'prometheusPower' : 'hopePower'] < cost) return false;
     switch (ability) {
       case 'protect': return !(this.protection[sectorKey] > 0) && sector.getControlValue('uhf') > 0;
@@ -263,8 +264,10 @@ class DagonInvasion {
   useSectorAbility(sectorKey, ability = 'protect') {
     if (!this.canUseSectorAbility(sectorKey, ability)) return false;
     const parameters = terraformingParameters.gameplay.dagon;
-    const cost = ability === 'protect' ? parameters.protectionCost : parameters.abilityCost;
-    this[ability === 'conquer' || ability === 'cut' ? 'prometheusPower' : 'hopePower'] -= cost;
+    const prometheus = ability === 'conquer' || ability === 'cut';
+    const cost = ability === 'conquer' ? parameters.instantCaptureCost : prometheus ? parameters.prometheusAbilityCost
+      : ability === 'protect' ? parameters.protectionCost : parameters.abilityCost;
+    this[prometheus ? 'prometheusPower' : 'hopePower'] -= cost;
     if (ability === 'cut') {
       const tentacle = this.tentacles.find(arm => !this.severedTentacles.includes(arm.id) && arm.keys[1] === sectorKey);
       this.severedTentacles.push(tentacle.id);
@@ -284,7 +287,7 @@ class DagonInvasion {
         }
       }
       if (ability === 'conquer') galaxyManager.replaceSectorControl(sectorKey, { uhf: 1 });
-      else this.protection[sectorKey] = parameters.abilityDurationMs;
+      else this.protection[sectorKey] = parameters.protectionDurationMs;
     }
     galaxyManager.markUIDirty({ force: true });
     return true;

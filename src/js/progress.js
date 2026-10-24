@@ -515,6 +515,8 @@ class StoryManager {
           }
           case 'dagonState':
                return galaxyInvasionManager.dagon[objective.state] === true;
+          case 'dagonTentacles':
+               return galaxyInvasionManager.dagon.severedTentacles.length >= objective.count;
           case 'galaxySectorControl': {
                const sectorLabel = objective.sectorLabel || objective.sectorKey || objective.sector || objective.label;
                const sector = findGalaxySector(sectorLabel);
@@ -706,6 +708,11 @@ class StoryManager {
           }
           case 'dagonState':
                return t(`ui.space.invasion.dagon.objectives.${objective.state}`);
+          case 'dagonTentacles':
+               return t('ui.space.invasion.dagon.objectives.severTentacles', {
+                    current: Math.min(galaxyInvasionManager.dagon.severedTentacles.length, objective.count),
+                    count: objective.count
+               });
           case 'condition': {
                return objective.description || '';
           }
@@ -1035,6 +1042,12 @@ class StoryManager {
         // Older Dagon saves included the reboot in the opening journal entry.
         if (this.activeEventIds.has('chapterA.1') || this.completedEventIds.has('chapterA.1')) {
             this.completedEventIds.add('chapterA.reboot');
+        }
+        // Insert the tentacle milestones into older campaigns without restarting the finale.
+        if (this.completedEventIds.has('chapterA.4')) {
+            for (let count = 1; count <= 5; count++) this.completedEventIds.add(`chapterA.tentacles${count}`);
+        } else if (!this.completedEventIds.has('chapterA.tentacles5')) {
+            this.activeEventIds.delete('chapterA.4');
         }
         this.waitingForJournalEventId = savedState.waitingForJournalEventId || null; // <<< Load waiting state
         this.currentChapter = savedState.currentChapter || 0;
