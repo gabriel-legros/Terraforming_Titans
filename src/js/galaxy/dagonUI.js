@@ -1,3 +1,17 @@
+function revealDagonOnGalaxyMap() {
+  tabManager.activateTab('space');
+  spaceSubtabManager.activate('space-galaxy');
+  document.getElementById('space-galaxy').scrollTop = 0;
+  const cache = galaxyUICache;
+  const hex = cache.hexLookup.get(galaxyInvasionManager.dagon.centralSectorKey);
+  const state = cache.mapState;
+  state.userInteracted = true;
+  state.deferredCenter = false;
+  state.offsetX = cache.mapCanvas.clientWidth / 2 - hex.galaxyCenterX * state.scale;
+  state.offsetY = cache.mapCanvas.clientHeight / 2 - hex.galaxyCenterY * state.scale;
+  updateGalaxyMapTransform(cache);
+}
+
 function createDagonUI(section) {
   section.section.className = 'project-card dagon-section';
   section.header.className = 'card-header';
@@ -89,8 +103,6 @@ function updateDagonUI(ui) {
   const ready = storyManager.completedEventIds.has('chapterA.4');
   const repairReady = storyManager.completedEventIds.has('chapterA.1');
   ui.repair.classList.toggle('hidden', state.prometheusRepaired || !repairReady || state.completed);
-  const storage = projectManager.projects.spaceStorage;
-  ui.repairButton.disabled = storage.getStoredResourceValue('electronics') < 1e21 || storage.getStoredResourceValue('superalloys') < 1e21;
   text.repairCost = t('ui.space.invasion.dagon.repairCost', { electronics: resources.colony.electronics.displayName, superalloys: resources.colony.superalloys.displayName });
   ui.begin.classList.toggle('hidden', !ready || state.scene >= 0 || state.completed);
   ui.waiting.classList.toggle('hidden', ready || state.completed);
@@ -105,6 +117,11 @@ function createDagonMapMarker(hex) {
   root.setAttribute('role', 'img');
   root.style.left = `${hex.galaxyCenterX}px`;
   root.style.top = `${hex.galaxyCenterY}px`;
+  root.innerHTML = createDagonEyeMarkup('dagon-map');
+  return { root };
+}
+
+function createDagonEyeMarkup(id) {
   const tendrils = Array.from({ length: 18 }, (_, i) => {
     const angle = i * Math.PI * 2 / 18;
     const x = 100 + Math.cos(angle) * 35, y = 96 + Math.sin(angle) * 40;
@@ -113,60 +130,246 @@ function createDagonMapMarker(hex) {
   }).join('');
   const orbits = Array.from({ length: 5 }, (_, i) =>
     `<ellipse cx="97" cy="95" rx="31.5" ry="13.8" transform="rotate(${(i + 1) * 36} 97 95)" stroke="${i % 2 ? '#b94c5b88' : '#501b4788'}"/>`).join('');
-  root.innerHTML = `<svg viewBox="0 0 200 200" aria-hidden="true">
+  return `<svg viewBox="0 0 200 200" aria-hidden="true">
     <defs>
-      <radialGradient id="dagon-map-aura"><stop stop-color="#ad092d" stop-opacity=".4"/><stop offset="1" stop-color="#440916" stop-opacity="0"/></radialGradient>
-      <radialGradient id="dagon-map-body" cx="47%" cy="48%"><stop stop-color="#05040b"/><stop offset=".75" stop-color="#170a20"/><stop offset="1" stop-color="#831b3d"/></radialGradient>
+      <radialGradient id="${id}-aura"><stop stop-color="#ad092d" stop-opacity=".4"/><stop offset="1" stop-color="#440916" stop-opacity="0"/></radialGradient>
+      <radialGradient id="${id}-body" cx="47%" cy="48%"><stop stop-color="#05040b"/><stop offset=".75" stop-color="#170a20"/><stop offset="1" stop-color="#831b3d"/></radialGradient>
     </defs>
-    <ellipse class="dagon-map-aura" cx="100" cy="96" rx="95" ry="95" fill="url(#dagon-map-aura)"/>
+    <ellipse class="dagon-map-aura" cx="100" cy="96" rx="95" ry="95" fill="url(#${id}-aura)"/>
     <g class="dagon-map-tendrils" fill="none" stroke-linecap="round">${tendrils}</g>
-    <ellipse cx="100" cy="96" rx="42" ry="48" transform="rotate(-7 100 96)" fill="url(#dagon-map-body)" stroke="#a13a50" stroke-width=".8"/>
+    <ellipse cx="100" cy="96" rx="42" ry="48" transform="rotate(-7 100 96)" fill="url(#${id}-body)" stroke="#a13a50" stroke-width=".8"/>
     <g fill="none" stroke-width=".6">${orbits}</g>
     <g class="dagon-map-gaze">
       <ellipse class="dagon-map-glint" cx="90" cy="95" rx="8" ry="1.8" transform="rotate(-7 90 95)" fill="#ff5969"/>
     </g>
   </svg>`;
-  return { root };
 }
 
-function createDagonSectorUI(container) {
+function createDagonTentacleMap(hexes, width, height) {
   const root = document.createElement('div');
-  root.className = 'dagon-sector-actions hidden';
-  root.innerHTML = `<div class="dagon-ability-heading"><span class="galaxy-sector-panel__subtitle"></span></div><p class="dagon-protection"></p><div class="dagon-actions"><button type="button" class="dagon-protect galaxy-operations-launch__button"></button><button type="button" class="dagon-conquer galaxy-operations-launch__button"></button></div><p class="dagon-cost"></p>`;
-  const ui = { root, sectorKey: null, title: root.querySelector('.galaxy-sector-panel__subtitle'),
-    protection: root.querySelector('.dagon-protection'), cost: root.querySelector('.dagon-cost'),
-    protect: root.querySelector('.dagon-protect'), conquer: root.querySelector('.dagon-conquer') };
-  ui.protect.addEventListener('click', () => {
-    galaxyInvasionManager.dagon.useSectorAbility(ui.sectorKey);
-    updateGalaxyUI({ force: true });
+  root.className = 'dagon-map-arms hidden';
+  root.setAttribute('aria-hidden', 'true');
+  const lookup = new Map(hexes.map(hex => [hex.galaxyKey, hex]));
+  const groups = galaxyInvasionManager.dagon.tentacles.map((tentacle, armIndex) => {
+    const route = tentacle.keys.map(key => lookup.get(key));
+    const points = [];
+    for (let segment = 0; segment < route.length - 1; segment += 1) {
+      const a = route[Math.max(0, segment - 1)], b = route[segment];
+      const c = route[segment + 1], d = route[Math.min(route.length - 1, segment + 2)];
+      for (let step = 0; step < 24; step += 1) {
+        const t = step / 24;
+        const point = {};
+        for (const [axis, property] of [['x', 'galaxyCenterX'], ['y', 'galaxyCenterY']]) {
+          point[axis] = .5 * (2 * b[property] + (-a[property] + c[property]) * t
+            + (2 * a[property] - 5 * b[property] + 4 * c[property] - d[property]) * t * t
+            + (-a[property] + 3 * b[property] - 3 * c[property] + d[property]) * t * t * t);
+        }
+        points.push(point);
+      }
+    }
+    const tip = route[route.length - 1];
+    points.push({ x: tip.galaxyCenterX, y: tip.galaxyCenterY });
+    const left = [], right = [], filaments = [[], [], []], wisps = [];
+    points.forEach((point, i) => {
+      const before = points[Math.max(0, i - 1)], after = points[Math.min(points.length - 1, i + 1)];
+      const angle = Math.atan2(after.y - before.y, after.x - before.x);
+      const nx = -Math.sin(angle), ny = Math.cos(angle), progress = i / (points.length - 1);
+      const radius = .5 + 13 * Math.pow(1 - progress, .75);
+      const ripple = Math.sin(i * .23 + armIndex) * 3 * Math.sin(progress * Math.PI);
+      const x = point.x + nx * ripple, y = point.y + ny * ripple;
+      const fringe = radius * (1 + .2 * Math.sin(i * .53 + armIndex));
+      left.push(`${x + nx * fringe},${y + ny * fringe}`);
+      right.push(`${x - nx * radius},${y - ny * radius}`);
+      filaments.forEach((line, strand) => {
+        const displacement = Math.sin(i * .12 + strand * 2.1 + armIndex) * radius * .65;
+        line.push(`${x + nx * displacement},${y + ny * displacement}`);
+      });
+      if (i % 12 === 0 && progress > .08 && progress < .92) {
+        const side = i % 24 === 0 ? 1 : -1;
+        const reach = radius * (1.8 + .6 * Math.sin(i));
+        const tx = Math.cos(angle), ty = Math.sin(angle);
+        wisps.push(`<path d="M${x} ${y} C${x + nx * reach * side - tx * 12} ${y + ny * reach * side - ty * 12}, ${x + nx * reach * side + tx * 10} ${y + ny * reach * side + ty * 10}, ${x + nx * reach * side * .7 + tx * 24} ${y + ny * reach * side * .7 + ty * 24}" fill="none" stroke="#b8b3ed" stroke-width=".7" opacity=".35"/>`);
+      }
+    });
+    return `<g data-arm="${tentacle.id}">
+      <path d="M${left.join(' L')} L${right.slice().reverse().join(' L')} Z" fill="#9982d6" opacity=".25" filter="url(#dagon-arm-mist)"/>
+      <path d="M${left.join(' L')} L${right.reverse().join(' L')} Z" fill="url(#dagon-arm-spectral)"/>
+      <g class="dagon-arm-filaments" fill="none" stroke-linecap="round">
+        ${filaments.map((line, index) => `<path d="M${line.join(' L')}" stroke="${['#c6c1f5', '#9be0d9', '#9574c7'][index]}" stroke-width="${[1.2, .65, 2][index]}" opacity="${[.7, .5, .4][index]}"/>`).join('')}
+        ${wisps.join('')}
+      </g>
+    </g>`;
   });
-  ui.conquer.addEventListener('click', () => {
-    galaxyInvasionManager.dagon.useSectorAbility(ui.sectorKey, true);
-    updateGalaxyUI({ force: true });
-  });
+  root.innerHTML = `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+    <defs>
+      <linearGradient id="dagon-arm-spectral" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#20132f" stop-opacity=".7"/><stop offset=".45" stop-color="#8470ba" stop-opacity=".3"/><stop offset="1" stop-color="#9ecbcf" stop-opacity=".08"/></linearGradient>
+      <filter id="dagon-arm-mist" x="-25%" y="-25%" width="150%" height="150%"><feGaussianBlur stdDeviation="4"/></filter>
+    </defs>
+    ${groups.join('')}
+  </svg>`;
+  return { root, arms: new Map(Array.from(root.querySelectorAll('[data-arm]'), arm => [arm.dataset.arm, arm])) };
+}
+
+function createDagonAbilityEffects(width, height) {
+  const root = document.createElement('div');
+  root.className = 'dagon-map-ability-effects hidden';
+  root.setAttribute('aria-hidden', 'true');
+  root.innerHTML = `<svg viewBox="0 0 ${width} ${height}" width="${width}" height="${height}">
+    <defs>
+      <filter id="dagon-laser-blur" filterUnits="userSpaceOnUse" x="-80" y="-80" width="${Math.hypot(width, height) + 160}" height="160"><feGaussianBlur stdDeviation="7"/></filter>
+      <radialGradient id="dagon-laser-flare"><stop stop-color="#efffff" stop-opacity=".95"/><stop offset=".25" stop-color="#b7b9ff" stop-opacity=".75"/><stop offset="1" stop-color="#7e51d1" stop-opacity="0"/></radialGradient>
+    </defs>
+    <g class="dagon-laser-beam" stroke-linecap="round">
+      <g class="dagon-laser-discharge">
+      <line stroke="#b3a0ff" stroke-width="56" opacity=".45" filter="url(#dagon-laser-blur)"/>
+      <line stroke="#9579ec" stroke-width="27" opacity=".65"/>
+      <line class="dagon-laser-core" stroke="#deffff" stroke-width="10"/>
+      <path class="dagon-laser-filament" fill="none" stroke="#b6fff4" stroke-width="2"/>
+      <path class="dagon-laser-filament" fill="none" stroke="#e9d9ff" stroke-width="1.5"/>
+      <circle r="38" fill="url(#dagon-laser-flare)"/>
+      <g class="dagon-laser-impact">
+        <circle r="72" fill="url(#dagon-laser-flare)"/>
+        <circle class="dagon-laser-ring" r="40" fill="none" stroke="#c6fff2" stroke-width="2"/>
+        <circle r="52" fill="none" stroke="#bd9cff" stroke-width="1" stroke-dasharray="3 9"/>
+        <path d="M-62 0H62M0 -62V62M-42 -42L42 42M-42 42L42 -42" stroke="#d8e4ff" stroke-width="1" opacity=".7"/>
+      </g>
+      </g>
+      <g class="dagon-laser-charge">
+        <line stroke="#ddbcff" stroke-width="1.5" stroke-dasharray="5 10" opacity=".65"/>
+        <circle class="dagon-laser-source" r="42" fill="url(#dagon-laser-flare)"/>
+        <g class="dagon-laser-target" fill="none" stroke="currentColor">
+          <circle r="27" stroke-width="1" opacity=".4"/>
+          <circle class="dagon-laser-countdown-ring" r="27" pathLength="1" stroke-dasharray="1" stroke-width="2" transform="rotate(-90)"/>
+          <path d="M-30 -8V-15Q-30 -22 -23 -22H-17M17 -22H23Q30 -22 30 -15V-8M30 8V15Q30 22 23 22H17M-17 22H-23Q-30 22 -30 15V8" stroke-width="1.5"/>
+          <text class="dagon-laser-countdown" y="22" text-anchor="middle" stroke="none" fill="currentColor"></text>
+        </g>
+      </g>
+    </g>
+  </svg>`;
+  return { root, targetKey: null, beam: root.querySelector('.dagon-laser-beam'),
+    lines: Array.from(root.querySelectorAll('line')), filaments: Array.from(root.querySelectorAll('.dagon-laser-filament')),
+    impact: root.querySelector('.dagon-laser-impact'), target: root.querySelector('.dagon-laser-target'),
+    countdown: root.querySelector('.dagon-laser-countdown'), ring: root.querySelector('.dagon-laser-countdown-ring'),
+    source: root.querySelector('.dagon-laser-source') };
+}
+
+function updateDagonAbilityEffects(cache) {
+  const state = galaxyInvasionManager.dagon;
+  const pulsing = state.active && state.pulseRemainingMs > 0;
+  cache.dagonTentacles.root.classList.toggle('is-pulsing', pulsing);
+  const neighbors = pulsing ? state.getPulseSectorKeys() : new Set();
+  for (const hex of cache.hexElements) {
+    const threatened = neighbors.has(hex.galaxyKey) && !(state.protection[hex.galaxyKey] > 0)
+      && galaxyManager.sectors.get(hex.galaxyKey).getControlValue('dagon') < 1 - FULL_CONTROL_EPSILON;
+    if (hex.classList.contains('is-dagon-pulse-target') !== threatened) hex.classList.toggle('is-dagon-pulse-target', threatened);
+  }
+  const effects = cache.dagonAbilityEffects;
+  const charging = state.active && state.laserChargeRemainingMs > 0 && state.laserTargetKey !== null;
+  const firing = state.active && state.laserRemainingMs > 0 && state.laserTargetKey !== null;
+  effects.root.classList.toggle('hidden', !charging && !firing);
+  if (!charging && !firing) return;
+  effects.root.classList.toggle('is-charging', charging);
+  effects.root.classList.toggle('is-blocked', state.protection[state.laserTargetKey] > 0);
+  if (effects.targetKey !== state.laserTargetKey) {
+    effects.targetKey = state.laserTargetKey;
+    const origin = cache.hexLookup.get(state.centralSectorKey), target = cache.hexLookup.get(state.laserTargetKey);
+    const dx = target.galaxyCenterX - origin.galaxyCenterX, dy = target.galaxyCenterY - origin.galaxyCenterY;
+    const length = Math.hypot(dx, dy);
+    effects.beam.setAttribute('transform', `translate(${origin.galaxyCenterX} ${origin.galaxyCenterY}) rotate(${Math.atan2(dy, dx) * 180 / Math.PI})`);
+    for (const line of effects.lines) line.setAttribute('x2', length);
+    effects.filaments.forEach((path, index) => {
+      const bend = index ? -22 : 22;
+      path.setAttribute('d', `M0 0 C${length * .2} ${bend}, ${length * .3} ${-bend}, ${length * .5} 0 S${length * .8} ${bend}, ${length} 0`);
+    });
+    effects.impact.setAttribute('transform', `translate(${length} 0)`);
+    effects.target.setAttribute('transform', `translate(${length} 0) rotate(${-Math.atan2(dy, dx) * 180 / Math.PI})`);
+  }
+  if (charging) {
+    const progress = 1 - state.laserChargeRemainingMs / terraformingParameters.gameplay.dagon.laserChargeDurationMs;
+    const countdown = formatDuration(Math.ceil(state.laserChargeRemainingMs / 1000));
+    if (effects.countdown.textContent !== countdown) effects.countdown.textContent = countdown;
+    const offset = String(progress);
+    if (effects.ring.style.strokeDashoffset !== offset) effects.ring.style.strokeDashoffset = offset;
+    const scale = `scale(${.4 + progress * .6})`;
+    if (effects.source.getAttribute('transform') !== scale) effects.source.setAttribute('transform', scale);
+  }
+  const opacity = charging ? '1' : String(Math.min(1, state.laserRemainingMs / terraformingParameters.gameplay.dagon.laserDurationMs * 3));
+  if (effects.root.style.opacity !== opacity) effects.root.style.opacity = opacity;
+}
+
+function createDagonAbilitiesUI(container) {
+  const root = document.createElement('div');
+  root.className = 'dagon-abilities';
+  const selection = document.createElement('p');
+  selection.className = 'galaxy-sector-panel__subtitle';
+  const status = document.createElement('p');
+  root.append(selection, status);
+  const ui = { root, selection, status, sectorKey: null, pools: new Map(), actions: new Map() };
+  for (const [owner, abilities] of [['hope', ['protect', 'logistics']], ['prometheus', ['conquer', 'cut']]]) {
+    const group = document.createElement('div');
+    group.className = 'dagon-power-group';
+    const title = document.createElement('strong');
+    const power = document.createElement('p');
+    const meter = document.createElement('progress');
+    group.append(title, power, meter);
+    for (const ability of abilities) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'galaxy-operations-launch__button';
+      const description = document.createElement('p');
+      button.addEventListener('click', () => {
+        galaxyInvasionManager.dagon.useSectorAbility(ui.sectorKey, ability);
+        updateGalaxyUI({ force: true });
+      });
+      group.append(button, description);
+      ui.actions.set(ability, { button, description });
+    }
+    ui.pools.set(owner, { group, title, power, meter });
+    root.appendChild(group);
+  }
   container.appendChild(root);
   return ui;
 }
 
-function updateDagonSectorUI(ui, sector) {
+function updateDagonAbilitiesUI(ui, sector) {
   const state = galaxyInvasionManager.dagon;
-  ui.sectorKey = sector.key;
-  ui.root.classList.toggle('hidden', !state.active);
-  ui.protect.disabled = ui.conquer.disabled = !state.active;
-  if (!state.active) return;
-  const cost = state.getResearchCost();
-  const cannotAfford = !(cost > 0) || resources.colony.advancedResearch.value < cost;
-  const remaining = state.protection[sector.key] || 0;
-  ui.protect.disabled = cannotAfford || remaining > 0 || sector.getControlValue('uhf') <= 0;
-  ui.conquer.classList.toggle('hidden', !state.prometheusRepaired);
-  ui.conquer.disabled = cannotAfford || !state.prometheusRepaired || sector.getControlValue('uhf') >= 1 - FULL_CONTROL_EPSILON;
-  const text = {
-    title: t('ui.space.invasion.dagon.sectorAbilities'),
-    protect: t('ui.space.invasion.dagon.protect'), conquer: t('ui.space.invasion.dagon.conquer'),
-    protection: remaining > 0 ? t('ui.space.invasion.dagon.protection', { time: formatDuration(Math.ceil(remaining / 1000)) }) : t('ui.space.invasion.dagon.unprotected'),
-    cost: cost > 0 ? t('ui.space.invasion.dagon.researchCost', { cost: formatNumber(cost, true, 2), resource: resources.colony.advancedResearch.displayName }) : t('ui.space.invasion.dagon.zeroProduction')
-  };
-  for (const [key, value] of Object.entries(text)) if (ui[key].textContent !== value) ui[key].textContent = value;
+  const parameters = terraformingParameters.gameplay.dagon;
+  ui.sectorKey = sector ? sector.key : null;
+  const selection = sector ? t('ui.space.invasion.dagon.targetSector', { sector: sector.getDisplayName() })
+    : t('ui.space.invasion.dagon.selectSector');
+  if (ui.selection.textContent !== selection) ui.selection.textContent = selection;
+  const status = [];
+  if (state.blocksOffensiveOperation(ui.sectorKey)) status.push(t('ui.space.invasion.dagon.offensiveBlocked'));
+  for (const [timers, label] of [[state.protection, 'protection'], [state.logistics, 'logisticsActive']]) {
+    if (timers[ui.sectorKey] > 0) status.push(t(`ui.space.invasion.dagon.${label}`, { time: formatDuration(Math.ceil(timers[ui.sectorKey] / 1000)) }));
+  }
+  const statusText = status.join(' ');
+  if (ui.status.textContent !== statusText) ui.status.textContent = statusText;
+  ui.status.classList.toggle('hidden', !statusText);
+  for (const [owner, pool] of ui.pools) {
+    pool.group.classList.toggle('hidden', owner === 'prometheus' && !state.prometheusRepaired);
+    const title = t(`ui.space.invasion.dagon.${owner}Power`);
+    const power = t('ui.space.invasion.dagon.powerValue', { value: formatNumber(Math.floor(state[`${owner}Power`]), true), capacity: formatNumber(parameters.powerCapacity, true), rate: parameters.powerPerSecond });
+    for (const [key, value] of Object.entries({ title, power })) if (pool[key].textContent !== value) pool[key].textContent = value;
+    if (pool.meter.max !== parameters.powerCapacity) pool.meter.max = parameters.powerCapacity;
+    if (pool.meter.value !== state[`${owner}Power`]) pool.meter.value = state[`${owner}Power`];
+    if (pool.meter.getAttribute('aria-label') !== title) pool.meter.setAttribute('aria-label', title);
+  }
+  for (const [ability, { button, description }] of ui.actions) {
+    const label = t('ui.space.invasion.dagon.powerCost', {
+      ability: t(`ui.space.invasion.dagon.${ability}`), cost: formatNumber(ability === 'protect' ? parameters.protectionCost : parameters.abilityCost, true)
+    });
+    let text = t(`ui.space.invasion.dagon.${ability}Description`);
+    if (ability === 'cut' && !state.tentaclesSevered) {
+      const roots = new Set(state.tentacles.filter(arm => !state.severedTentacles.includes(arm.id)).map(arm => arm.keys[1]));
+      text += ` ${t('ui.space.invasion.dagon.cutRoots', {
+        sectors: [...roots].map(key => galaxyManager.sectors.get(key).getDisplayName()).join(', ')
+      })}`;
+    }
+    if (button.textContent !== label) button.textContent = label;
+    if (description.textContent !== text) description.textContent = text;
+    button.disabled = !state.canUseSectorAbility(ui.sectorKey, ability);
+  }
 }
 
 class DagonCutscene {

@@ -25,6 +25,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         super(options);
         this.borderFleetAssignments = new Map();
         this.autoOperationTimer = 0;
+        this.autoOperationIntervalMs = AUTO_OPERATION_INTERVAL_MS;
         this.defensiveness = this.#sanitizeDefensiveness(options?.defensiveness);
         this.pendingOperationPower = 0;
         this.autoOperationRange = this.#sanitizeOperationRange(options?.autoOperationRange);
@@ -119,17 +120,17 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
             return;
         }
         this.autoOperationTimer += deltaTime;
-        if (this.autoOperationTimer < AUTO_OPERATION_INTERVAL_MS) {
+        if (this.autoOperationTimer < this.autoOperationIntervalMs) {
             return;
         }
-        while (this.autoOperationTimer >= AUTO_OPERATION_INTERVAL_MS) {
-            this.autoOperationTimer -= AUTO_OPERATION_INTERVAL_MS;
-            this.#launchAutoOperation(manager);
+        while (this.autoOperationTimer >= this.autoOperationIntervalMs) {
+            this.autoOperationTimer -= this.autoOperationIntervalMs;
+            this.launchAutoOperation(manager);
             this.pendingOperationPower = this.#rollOperationPower();
         }
     }
 
-    #launchAutoOperation(manager) {
+    launchAutoOperation(manager) {
         const launcher = manager?.startOperation;
         if (typeof launcher !== 'function') {
             return false;
@@ -146,7 +147,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         if (availablePower < operationPower) {
             return false;
         }
-        const targetSelection = this.#pickAutoOperationTarget(manager);
+        const targetSelection = this.pickAutoOperationTarget(manager);
         if (!targetSelection || !targetSelection.sectorKey) {
             return false;
         }
@@ -163,7 +164,7 @@ class GalaxyFactionAI extends GalaxyFactionBaseClass {
         return true;
     }
 
-    #pickAutoOperationTarget(manager) {
+    pickAutoOperationTarget(manager) {
         const candidateMap = this.#gatherTargetCandidates(manager);
         if (!candidateMap.size) {
             return null;

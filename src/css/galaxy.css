@@ -637,7 +637,8 @@
 .galaxy-sector-panel__title-row,
 .galaxy-operations-panel__header,
 .galaxy-defense-section__title,
-.galaxy-map-popup--incoming > .galaxy-section__header {
+.galaxy-map-popup--incoming > .galaxy-section__header,
+.galaxy-map-popup--abilities > .galaxy-section__header {
   cursor: grab;
   user-select: none;
 }

@@ -45,7 +45,7 @@ let spaceStatOneillTooltipContentEl = null;
 
 const atlasTabElements = { button: null, content: null };
 const galaxyTabElements = { button: null, content: null };
-const spaceTabAlertElements = { button: null, warning: null, alert: null, storyAlert: null };
+const spaceTabAlertElements = { button: null, warning: null, dagonWarning: null, alert: null, storyAlert: null };
 let spaceTabAlertNeeded = false;
 let spaceStoryAlertNeeded = false;
 
@@ -267,6 +267,28 @@ function setSpaceIncomingAttackWarning(isActive, isThreat = true) {
     if (warning.hasAttribute('title')) {
         warning.removeAttribute('title');
     }
+}
+
+function updateSpaceDagonWarning() {
+    const state = galaxyInvasionManager.dagon;
+    const active = state.active && ((state.pulseRemainingMs > 0 && !state.tentaclesSevered) || state.laserChargeRemainingMs > 0);
+    let warning = spaceTabAlertElements.dagonWarning;
+    if (!warning && !active) return;
+    if (!warning || !warning.isConnected) {
+        warning = document.createElement('span');
+        warning.id = 'space-dagon-warning';
+        warning.className = 'space-dagon-warning hidden';
+        warning.setAttribute('role', 'img');
+        warning.innerHTML = createDagonEyeMarkup('dagon-warning');
+        warning.firstElementChild.setAttribute('viewBox', '20 16 160 160');
+        cacheSpaceTabWarningElements(document).button.appendChild(warning);
+        spaceTabAlertElements.dagonWarning = warning;
+    }
+    if (warning.classList.contains('hidden') === active) warning.classList.toggle('hidden', !active);
+    const hidden = String(!active);
+    if (warning.getAttribute('aria-hidden') !== hidden) warning.setAttribute('aria-hidden', hidden);
+    const label = t('ui.space.invasion.dagon.abilityWarning');
+    if (warning.getAttribute('aria-label') !== label) warning.setAttribute('aria-label', label);
 }
 
 function showSpaceAtlasTab() {

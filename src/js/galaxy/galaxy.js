@@ -31,6 +31,7 @@ class GalaxyManager extends EffectableEntity {
             sector: true,
             operations: true,
             defense: true,
+            abilities: false,
             incoming: false
         };
         this.fleetUpgradePurchases = {};
@@ -178,6 +179,7 @@ class GalaxyManager extends EffectableEntity {
             sector: this.popupVisibility.sector !== false,
             operations: this.popupVisibility.operations !== false,
             defense: this.popupVisibility.defense !== false,
+            abilities: this.popupVisibility.abilities === true,
             incoming: this.popupVisibility.incoming === true
         };
     }
@@ -187,6 +189,7 @@ class GalaxyManager extends EffectableEntity {
             sector: state.sector !== false,
             operations: state.operations !== false,
             defense: state.defense !== false,
+            abilities: state.abilities === true,
             incoming: state.incoming === true
         };
         return this.getPopupVisibilityState();

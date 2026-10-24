@@ -89,7 +89,7 @@ function reconcileGalacticInvasionOverlays(root, primaryOverlay, conquered) {
     overlay.classList.toggle('hidden', conquered);
   });
   if (!overlays.includes(primaryOverlay)) {
-    root.appendChild(primaryOverlay);
+    root.querySelector('.galactic-invasion__content').appendChild(primaryOverlay);
     primaryOverlay.classList.toggle('hidden', conquered);
   }
 }
@@ -105,10 +105,9 @@ function initializeGalacticInvasionUI() {
   }
   resetGalacticInvasionUI();
   root.textContent = '';
-  root.classList.add('galactic-invasion');
 
   const content = document.createElement('div');
-  content.className = 'galactic-invasion__content';
+  content.className = 'galactic-invasion galactic-invasion__content';
 
   const training = createGalacticInvasionSection('training', getGalacticInvasionText('trainingTitle', 'Invasion Training'));
   const trainingDescription = document.createElement('p');
@@ -151,8 +150,8 @@ function initializeGalacticInvasionUI() {
     'To avoid unnecessary casualties as a result of confusion from these training exercises, you must conquer the Galaxy first.'
   );
 
-  content.append(training.section, mystery.section);
-  root.append(content, overlay);
+  content.append(training.section, mystery.section, overlay);
+  root.appendChild(content);
 
   galacticInvasionUICache = {
     root,

@@ -906,6 +906,7 @@ function updateRender(force = false, options = {}) {
   if (typeof updateProjectAlert === 'function') updateProjectAlert();
   if (typeof updateResearchAlert === 'function') updateResearchAlert();
   if (typeof updateHopeAlert === 'function') updateHopeAlert();
+  updateSpaceDagonWarning();
   updateSidebarAutomationToggleVisibility();
   updateAutomationUI();
   updateAutoTravelLoadingPopupVisibility();

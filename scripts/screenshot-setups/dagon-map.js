@@ -7,11 +7,14 @@ galaxyManager.initialize();
 galaxyManager.enabled = true;
 galaxyManager.hasSeenWelcomePopup = true;
 galaxyInvasionManager.dagon.started = true;
+galaxyInvasionManager.dagon.prometheusRepaired = true;
+gameCompleted = true;
 const sectors = galaxyManager.getSectors();
+const tentacleKeys = new Set(galaxyInvasionManager.dagon.tentacles.flatMap(tentacle => tentacle.keys));
 sectors.forEach((sector, index) => {
   const label = sector.getDisplayName();
   const control = ['Core', 'R5-07'].includes(label) ? { uhf: 1 }
-    : ['R3-13', 'R4-05'].includes(label) || index < 32 ? { dagon: 1 }
+    : tentacleKeys.has(sector.key) || label === 'R4-05' || index < 32 ? { dagon: 1 }
     : index < 96 ? { uhf: 0.5, dagon: 0.5 } : { uhf: 1 };
   galaxyManager.replaceSectorControl(sector.key, control);
 });

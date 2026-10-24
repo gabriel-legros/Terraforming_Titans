@@ -9,6 +9,7 @@ galaxyInvasionManager.enabled = true;
 galaxyInvasionManager.dagon.enabled = true;
 galaxyInvasionManager.dagon.started = true;
 galaxyInvasionManager.dagon.prometheusRepaired = true;
+galaxyInvasionManager.dagon.severedTentacles = galaxyInvasionManager.dagon.tentacles.map(tentacle => tentacle.id);
 const scene = Number(new URLSearchParams(location.search).get('dagonScene') ?? 7);
 galaxyInvasionManager.dagon.scene = scene;
 galaxyManager.hasEverControlledWholeGalaxyFlag = true;

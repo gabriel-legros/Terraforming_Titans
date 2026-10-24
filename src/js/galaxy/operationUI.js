@@ -1110,7 +1110,8 @@ const GalaxyOperationUI = (() => {
             ? manager.hasNeighboringStronghold(uhfFactionId, selection.q, selection.r)
             : false;
         const hasPresence = Number(sector.getControlValue ? sector.getControlValue(uhfFactionId) : 0) > 0;
-        const canLaunchOnSelection = !sectorFullyControlled && (hasStronghold || hasPresence);
+        const dagonBlocked = manager.galacticInvasionManager?.dagon.blocksOffensiveOperation(selection.key);
+        const canLaunchOnSelection = !dagonBlocked && !sectorFullyControlled && (hasStronghold || hasPresence);
 
         const sectorPower = manager.getSectorDefensePower
             ? manager.getSectorDefensePower(selection.key, uhfFactionId, targetFactionId)
@@ -1197,7 +1198,7 @@ const GalaxyOperationUI = (() => {
         const hasAntimatter = !!antimatterResource && antimatterValue >= antimatterCost;
         const insufficientAntimatter = !sectorFullyControlled && hasAssignment && !hasAntimatter;
         const hasChance = successChance > 0;
-        let launchBlocked = sectorFullyControlled || !hasFleetPower || !hasAssignment || !hasAntimatter || !hasChance;
+        let launchBlocked = dagonBlocked || sectorFullyControlled || !hasFleetPower || !hasAssignment || !hasAntimatter || !hasChance;
         let statusMessage = '';
 
         if (operationRunning) {
@@ -1275,6 +1276,7 @@ const GalaxyOperationUI = (() => {
                 statusMessage = getOperationsText('autoLaunchRequires', { value: formatNumber(requiredAutoPower, false, 2) }, `Auto launch requires ${formatNumber(requiredAutoPower, false, 2)} power.`);
             }
         }
+        if (dagonBlocked) statusMessage = t('ui.space.invasion.dagon.offensiveBlocked');
         syncTextContent(operationsStatusMessage, statusMessage);
         syncClassState(operationsLaunchButton, 'is-insufficient-antimatter', insufficientAntimatter && !operationRunning);
         syncClassState(operationsCostValue, 'is-insufficient-antimatter', insufficientAntimatter);

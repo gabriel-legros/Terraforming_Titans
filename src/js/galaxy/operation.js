@@ -439,6 +439,7 @@ class GalaxyOperationManager {
         if (this.isFactionFullControlSector?.(sector, attackerId)) {
             return null;
         }
+        if (this.manager.galacticInvasionManager?.dagon.blocksOffensiveOperation(sectorKey)) return null;
         const operationKey = this.#getOperationKey(sectorKey, attackerId);
         const existing = this.operations.get(operationKey);
         if (existing && existing.status === 'running') {
@@ -1241,6 +1242,7 @@ class GalaxyOperationManager {
             if (!sector || !sectorKey) {
                 return;
             }
+            if (this.manager.galacticInvasionManager?.dagon.blocksOffensiveOperation(sectorKey)) return;
             if (this.isFactionFullControlSector?.(sector, this.uhfFactionId)) {
                 return;
             }
@@ -1286,6 +1288,7 @@ class GalaxyOperationManager {
                 return;
             }
             const sectorKey = String(rawKey);
+            if (this.manager.galacticInvasionManager?.dagon.blocksOffensiveOperation(sectorKey)) return;
             const sector = this.manager?.sectors?.get?.(sectorKey);
             if (!sector || this.isFactionFullControlSector?.(sector, this.uhfFactionId)) {
                 return;

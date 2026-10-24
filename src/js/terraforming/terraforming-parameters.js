@@ -568,6 +568,26 @@ var terraformingParameters = {
   },
 
   gameplay: {
+    dagon: {
+      startingPower: 900,
+      powerCapacity: 7200,
+      powerPerSecond: 1,
+      abilityCost: 900,
+      protectionCost: 300,
+      abilityDurationMs: 7200000,
+      acceleratedOperationMs: 60000,
+      attackReadinessFraction: 0.5,
+      attackIntervalMs: 10000,
+      maxOngoingAttacks: 12,
+      attackDefenseMultiplier: 3,
+      minimumAttackFraction: 0.01,
+      enemyAbilityCooldownMs: 600000,
+      initialPulseCooldownMs: 300000,
+      pulseDurationMs: 15000,
+      pulseControlGain: 0.1,
+      laserChargeDurationMs: 15000,
+      laserDurationMs: 4000
+    },
     dominionTerraformRewards: {
       ammonia: [{ target: 'terraforming', type: 'specializationPrecisionBonus', value: 0.05 }],
       oommaa: [{ target: 'terraforming', type: 'ecumenopolisLuminosityReduction', value: 1 }],

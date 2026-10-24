@@ -267,11 +267,28 @@ body.journal-collapsed .tab-content {
 .projects-subtab-content-wrapper,
 .terraforming-subtab-content-wrapper,
 .hope-subtab-content-wrapper,
-.space-subtab-content-wrapper,
 .subtab-content-wrapper {
     flex: 1 1 auto;
     box-sizing: border-box;
     margin-right: -10px;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 10px;
+    scrollbar-gutter: stable;
+}
+
+.space-subtab-content-wrapper {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+    margin-right: -10px;
+    overflow: hidden;
+}
+
+.space-subtab-content {
+    flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
     padding-right: 10px;

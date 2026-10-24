@@ -2,6 +2,8 @@
 
 The game refreshes dense UI panels during rendering, travel, load, automation, and tooltip interactions. Preserve DOM identity in recurring paths to avoid layout work, flicker, focus loss, scroll jumps, stale listeners, and noisy mutation-observer results.
 
+Each Space subtab owns its vertical scrolling container. The shared Space wrapper only constrains layout; hiding a subtab preserves its native scroll position independently of the others. The Dagon reveal resets only Galaxy's position once.
+
 ## Simulation and Rendering Boundary
 
 - `updateLogic`, `produceResources`, manager `update(...)` methods, production code, automation, and state rebuilds mutate game state only.

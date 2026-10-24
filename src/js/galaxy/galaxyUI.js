@@ -86,7 +86,7 @@ if (!galaxyOperationUI && typeof globalThis !== 'undefined' && globalThis.Galaxy
 const OPERATION_ARROW_MARGIN = 24;
 const OPERATION_ARROW_MIN_LENGTH = 18;
 const GALAXY_MAP_REFRESH_INTERVAL_MS = 1000;
-const GALAXY_POPUP_DRAG_SELECTORS = '.galaxy-sector-panel__title-row, .galaxy-operations-panel__header, .galaxy-defense-section__title, .galaxy-map-popup--incoming > .galaxy-section__header';
+const GALAXY_POPUP_DRAG_SELECTORS = '.galaxy-sector-panel__title-row, .galaxy-operations-panel__header, .galaxy-defense-section__title, .galaxy-map-popup--incoming > .galaxy-section__header, .galaxy-map-popup--abilities > .galaxy-section__header';
 
 const operationsAllocations = new Map();
 const operationsStepSizes = new Map();
@@ -675,6 +675,7 @@ function clearPopupClosedStates() {
     cache.popupClosed.operations = false;
     cache.popupClosed.defense = false;
     cache.popupClosed.incoming = false;
+    cache.popupClosed.abilities = false;
 }
 
 function setGalaxySectorPopupsVisible(visible) {
@@ -685,6 +686,12 @@ function setGalaxySectorPopupsVisible(visible) {
     const visibility = cache.popupVisibility || { sector: true, operations: true, defense: true };
     const closed = cache.popupClosed || { sector: false, operations: false, defense: false };
     const selectedVisible = !!(visible && cache.selectedSector);
+    cache.abilitiesToggle.classList.toggle('hidden', !galaxyInvasionManager.dagon.active);
+    const abilitiesTitle = t('ui.space.invasion.dagon.abilitiesTitle');
+    if (cache.abilitiesTitle.textContent !== abilitiesTitle) cache.abilitiesTitle.textContent = abilitiesTitle;
+    if (cache.abilitiesToggle.getAttribute('aria-label') !== abilitiesTitle) cache.abilitiesToggle.setAttribute('aria-label', abilitiesTitle);
+    cache.abilitiesPopup.classList.toggle('is-hidden', !galaxyInvasionManager.dagon.active || visibility.abilities !== true || closed.abilities === true);
+    updateDagonAbilitiesUI(cache.dagonAbilities, cache.selectedSector ? galaxyManager.sectors.get(cache.selectedSector.key) : null);
     if (cache.sectorPopup) {
         const hidden = !(selectedVisible && visibility.sector !== false && closed.sector !== true);
         if (cache.sectorPopup.classList.contains('is-hidden') !== hidden) {
@@ -742,11 +749,11 @@ function showGalaxyPopupFromClose(section) {
         return;
     }
     const popupKey = section.dataset.popupKey;
-    if (popupKey === 'incoming') {
-        galaxyUICache.popupVisibility.incoming = false;
+    if (popupKey === 'incoming' || popupKey === 'abilities') {
+        galaxyUICache.popupVisibility[popupKey] = false;
         galaxyManager?.setPopupVisibilityState?.(galaxyUICache.popupVisibility);
         updateGalaxyMapControlStates();
-    } else if (!galaxyUICache.selectedSector) {
+    } else if (popupKey !== 'abilities' && !galaxyUICache.selectedSector) {
         return;
     }
     setPopupClosedState(popupKey, true);
@@ -1098,8 +1105,6 @@ function renderSelectedSectorDetails() {
         empty.textContent = getGalaxyText('sector.noFactionControl', 'No factions currently control this sector.');
         container.appendChild(empty);
 
-        const dagon = createDagonSectorUI(container);
-
         const managementSection = doc.createElement('div');
         managementSection.className = 'galaxy-sector-panel__management';
 
@@ -1250,7 +1255,6 @@ function renderSelectedSectorDetails() {
 
         details = {
             container,
-            dagon,
             title,
             managementSection,
             management: {
@@ -1292,7 +1296,6 @@ function renderSelectedSectorDetails() {
         panel.replaceChildren(details.container);
     }
 
-    updateDagonSectorUI(details.dagon, sector);
     details.title.textContent = selection.displayName === 'Core'
         ? getGalaxyText('sector.coreSector', 'Core Sector')
         : getGalaxyText('sector.sectorValue', 'Sector {value}', { value: selection.displayName });
@@ -1322,7 +1325,7 @@ function renderSelectedSectorDetails() {
     const rewardWorldsForDefense = uhfHasFullControl ? rewardWorlds : 0;
 
     if (details.requirementNotice) {
-        if (requiredWorld && !uhfHasFullControl) {
+        if (!gameCompleted && requiredWorld && !uhfHasFullControl) {
             details.requirementNotice.textContent = getGalaxyText('sector.requirementNotice', 'Conquest of this sector is required to progress to World {value}.', { value: requiredWorld });
             details.requirementNotice.classList.remove('is-hidden');
         } else {
@@ -1814,6 +1817,7 @@ function resetGalaxyHexStyles(cache) {
     }
     cache.hexElements.forEach((hex) => {
         clearHexControlStyles(hex);
+        if (hex.galaxyProtectionElement) hex.galaxyProtectionElement.classList.add('hidden');
     });
 }
 
@@ -1993,6 +1997,20 @@ function updateGalaxyHexControlColors(manager, cache) {
     }
     const uhfFaction = manager.getFaction?.(GALAXY_UHF_FACTION_ID) || null;
     cache.hexElements.forEach((hex) => {
+        const protectedSector = galaxyInvasionManager.dagon.active && galaxyInvasionManager.dagon.protection[hex.galaxyKey] > 0;
+        if (protectedSector && !hex.galaxyProtectionElement) {
+            const perimeter = hex.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            perimeter.classList.add('galaxy-hex__protection');
+            perimeter.setAttribute('viewBox', '0 0 100 100');
+            perimeter.setAttribute('preserveAspectRatio', 'none');
+            perimeter.setAttribute('aria-hidden', 'true');
+            const outline = hex.ownerDocument.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            outline.setAttribute('points', '50,3 97,26.5 97,73.5 50,97 3,73.5 3,26.5');
+            perimeter.appendChild(outline);
+            hex.appendChild(perimeter);
+            hex.galaxyProtectionElement = perimeter;
+        }
+        if (hex.galaxyProtectionElement) hex.galaxyProtectionElement.classList.toggle('hidden', !protectedSector);
         const q = Number(hex.dataset.q);
         const r = Number(hex.dataset.r);
         if (!Number.isFinite(q) || !Number.isFinite(r)) {
@@ -2764,8 +2782,12 @@ function cacheGalaxyElements() {
     operationsLayer.className = 'galaxy-map-operations-layer';
     mapContent.appendChild(operationsLayer);
     const hexElements = Array.from(mapContent.querySelectorAll('.galaxy-hex'));
+    const dagonTentacles = createDagonTentacleMap(hexElements, hexBuild.contentWidth, hexBuild.contentHeight);
+    mapContent.appendChild(dagonTentacles.root);
     const dagonMarker = createDagonMapMarker(hexElements.find(hex => hex.dataset.displayName === 'R3-13'));
     mapContent.appendChild(dagonMarker.root);
+    const dagonAbilityEffects = createDagonAbilityEffects(hexBuild.contentWidth, hexBuild.contentHeight);
+    mapContent.appendChild(dagonAbilityEffects.root);
     const hexLookup = new Map();
 
     hexElements.forEach((hex) => {
@@ -2826,7 +2848,14 @@ function cacheGalaxyElements() {
     defenseToggle.textContent = GALAXY_DEFENSE_ICON;
     defenseToggle.setAttribute('aria-label', getGalaxyText('map.toggleDefense', 'Toggle defense controls'));
     defenseToggle.setAttribute('aria-pressed', 'true');
-    combatControls.append(operationsToggle, defenseToggle);
+    const abilitiesToggle = doc.createElement('button');
+    abilitiesToggle.type = 'button';
+    abilitiesToggle.className = 'galaxy-map-control-button hidden';
+    abilitiesToggle.dataset.popupKey = 'abilities';
+    abilitiesToggle.textContent = '\u26a1';
+    abilitiesToggle.setAttribute('aria-label', t('ui.space.invasion.dagon.abilitiesTitle'));
+    abilitiesToggle.setAttribute('aria-pressed', 'false');
+    combatControls.append(abilitiesToggle, operationsToggle, defenseToggle);
 
     mapCanvas.appendChild(mapContent);
     mapCanvas.appendChild(zoomControls);
@@ -2879,10 +2908,10 @@ function cacheGalaxyElements() {
         event.stopPropagation();
         adjustGalaxyMapScale(1 / HEX_SCALE_STEP);
     });
-    [detailsToggle, operationsToggle, defenseToggle, incomingAttacksToggle].forEach((button) => {
+    [detailsToggle, abilitiesToggle, operationsToggle, defenseToggle, incomingAttacksToggle].forEach((button) => {
         button.addEventListener('click', handleGalaxyPopupToggle);
     });
-    [detailsToggle, operationsToggle, defenseToggle, incomingAttacksToggle].forEach((button) => {
+    [detailsToggle, abilitiesToggle, operationsToggle, defenseToggle, incomingAttacksToggle].forEach((button) => {
         button.addEventListener('mousedown', (event) => event.stopPropagation());
         button.addEventListener('touchstart', (event) => {
             event.stopPropagation();
@@ -2907,6 +2936,14 @@ function cacheGalaxyElements() {
     }, { passive: false });
 
     const operations = createGalaxySection(doc, getGalaxyText('sections.operations', 'Operations'), '');
+    const abilities = createGalaxySection(doc, '', '');
+    const abilitiesTitle = doc.createElement('span');
+    abilities.header.appendChild(abilitiesTitle);
+    abilities.section.classList.add('galaxy-map-popup', 'galaxy-map-popup--abilities', 'is-hidden');
+    attachGalaxyPopupCloseButton(doc, abilities, 'abilities');
+    const dagonAbilities = createDagonAbilitiesUI(abilities.body);
+    attachGalaxyPopupDrag(abilities.section);
+    mapWrapper.appendChild(abilities.section);
     operations.section.classList.add('galaxy-section--operations', 'galaxy-map-popup', 'galaxy-map-popup--operations', 'galaxy-map-popup--bare', 'is-hidden');
     const operationsCloseButton = attachGalaxyPopupCloseButton(doc, operations, 'operations');
     const operationsCache = galaxyOperationUI.populateSection({
@@ -3357,6 +3394,7 @@ function cacheGalaxyElements() {
     container.replaceChildren(layout);
 
     const popupVisibility = Object.assign({
+        abilities: false,
         sector: true,
         operations: true,
         defense: true,
@@ -3364,6 +3402,12 @@ function cacheGalaxyElements() {
     }, galaxyManager?.getPopupVisibilityState?.() || {});
 
     galaxyUICache = {
+        dagonAbilityEffects,
+        dagonTentacles,
+        abilitiesPopup: abilities.section,
+        abilitiesTitle,
+        abilitiesToggle,
+        dagonAbilities,
         dagonMarker,
         container,
         layout,
@@ -3380,6 +3424,7 @@ function cacheGalaxyElements() {
         defenseToggle,
         incomingAttacksToggle,
         popupToggleButtons: {
+            abilities: abilitiesToggle,
             sector: detailsToggle,
             operations: operationsToggle,
             defense: defenseToggle,
@@ -3387,6 +3432,7 @@ function cacheGalaxyElements() {
         },
         popupVisibility,
         popupClosed: {
+            abilities: false,
             sector: false,
             operations: false,
             defense: false,
@@ -4067,6 +4113,11 @@ function updateGalaxyUI(options = {}) {
         galaxyOperationUI?.updateOperationArrows?.(manager, cache);
     }
     cache.dagonMarker.root.classList.toggle('hidden', !galaxyInvasionManager.dagon.active);
+    cache.dagonTentacles.root.classList.toggle('hidden', !galaxyInvasionManager.dagon.active);
+    updateDagonAbilityEffects(cache);
+    for (const [id, arm] of cache.dagonTentacles.arms) {
+        arm.classList.toggle('hidden', galaxyInvasionManager.dagon.severedTentacles.includes(id));
+    }
     const dagonLabel = `${t('ui.space.invasion.dagon.title')} · R3-13`;
     if (cache.dagonMarker.root.getAttribute('aria-label') !== dagonLabel) {
         cache.dagonMarker.root.setAttribute('aria-label', dagonLabel);

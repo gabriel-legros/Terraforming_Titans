@@ -649,7 +649,10 @@ class GalacticInvasionManager extends EffectableEntity {
     return offensePower < defensePower * 5;
   }
 
-  getOperationDurationOverrideMs({ attackerId, targetFactionId }) {
+  getOperationDurationOverrideMs({ sector, attackerId, targetFactionId }) {
+    if (this.dagon.active && attackerId === UHF_FACTION_ID && this.dagon.logistics[sector?.key] > 0) {
+      return terraformingParameters.gameplay.dagon.acceleratedOperationMs;
+    }
     if (!this.hasActiveTrait('commandBypass')) {
       return 0;
     }
