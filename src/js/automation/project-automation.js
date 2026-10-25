@@ -591,9 +591,9 @@ class ProjectAutomation extends ProjectAutomationPresetManagerBaseClass {
       }
     }
     if (Object.prototype.hasOwnProperty.call(source, 'resourceTransferWeights')) {
-      if (Object.prototype.hasOwnProperty.call(weightSource, resourceKey)) {
-        filtered.transferWeight = this.deepClone(weightSource[resourceKey]);
-      }
+      filtered.transferWeight = Object.prototype.hasOwnProperty.call(weightSource, resourceKey)
+        ? this.deepClone(weightSource[resourceKey])
+        : 1;
     }
     if (Object.prototype.hasOwnProperty.call(source, 'transferWeight')) {
       filtered.transferWeight = source.transferWeight;

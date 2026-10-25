@@ -236,6 +236,26 @@ describe('Project automation visibility', () => {
     });
   });
 
+  it.each([
+    'metal', 'silicon', 'graphite', 'glass', 'components', 'electronics',
+    'superconductors', 'superalloys', 'liquidWater', 'food', 'biomass',
+    'carbonDioxide', 'inertGas', 'oxygen', 'atmosphericMethane',
+    'atmosphericAmmonia', 'hydrogen'
+  ])('includes default and explicit transfer weights in generated %s single-resource JSON', (resourceKey) => {
+    const automation = new ProjectAutomation();
+    const spaceStorage = createSpaceStorageProject();
+    setGlobal('projectManager', createSpaceStorageProjectManager(spaceStorage), originalGlobals);
+    const projectId = `spaceStorageSingleResource:${resourceKey}`;
+
+    for (const weight of [undefined, 0, 7, 0.5]) {
+      if (weight !== undefined) {
+        spaceStorage.resourceTransferWeights[resourceKey] = weight;
+      }
+      const json = JSON.stringify(automation.captureProjectSettingsForId(projectId));
+      expect(JSON.parse(json).operations.transferWeight).toBe(weight === undefined ? 1 : weight);
+    }
+  });
+
   it('does not snapshot or apply resource weights in a Space Storage operations preset', () => {
     const automation = new ProjectAutomation();
     const spaceStorage = createSpaceStorageProject();
