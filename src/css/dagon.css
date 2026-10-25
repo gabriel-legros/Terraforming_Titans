@@ -16,6 +16,7 @@
 .dagon-scene-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
 .dagon-scene-actions .progress-button { flex: 1 1 180px; }
 .galaxy-map-popup--abilities { top: 14px; right: 328px; width: min(300px, calc(100% - 28px)); z-index: 7; }
+.galaxy-map-control-button.is-unseen { border-color: #ffe28a; color: #fff0b3; box-shadow: 0 0 8px #ffd45c, 0 0 20px #ffd45c99; }
 .dagon-abilities p { margin: 6px 0 10px; font-size: .85em; line-height: 1.4; }
 .dagon-power-group + .dagon-power-group { margin-top: 16px; padding-top: 14px; border-top: 1px solid currentColor; }
 .dagon-power-group progress { display: block; width: 100%; height: 7px; border: 0; border-radius: 4px; overflow: hidden; appearance: none; --dagon-power-color: #69a7ef; accent-color: var(--dagon-power-color); }

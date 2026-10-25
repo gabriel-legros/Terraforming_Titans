@@ -48,6 +48,7 @@ class DagonInvasion {
     this.enabled = true;
     this.started = false;
     this.completed = false;
+    this.abilitiesOpened = false;
     this.prometheusRepaired = false;
     this.protection = {};
     this.logistics = {};
@@ -322,6 +323,7 @@ class DagonInvasion {
 
   saveState() {
     return { enabled: this.enabled, started: this.started, completed: this.completed,
+      abilitiesOpened: this.abilitiesOpened,
       prometheusRepaired: this.prometheusRepaired, protection: { ...this.protection }, logistics: { ...this.logistics },
       hopePower: this.hopePower, prometheusPower: this.prometheusPower, severedTentacles: [...this.severedTentacles],
       pulseCooldownMs: this.pulseCooldownMs, laserCooldownMs: this.laserCooldownMs,
@@ -334,6 +336,7 @@ class DagonInvasion {
     this.enabled = true;
     this.started = state.started === true;
     this.completed = state.completed === true;
+    this.abilitiesOpened = state.abilitiesOpened === true;
     this.prometheusRepaired = state.prometheusRepaired === true;
     this.protection = { ...state.protection };
     this.logistics = { ...state.logistics };

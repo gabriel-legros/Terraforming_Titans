@@ -687,6 +687,7 @@ function setGalaxySectorPopupsVisible(visible) {
     const closed = cache.popupClosed || { sector: false, operations: false, defense: false };
     const selectedVisible = !!(visible && cache.selectedSector);
     cache.abilitiesToggle.classList.toggle('hidden', !galaxyInvasionManager.dagon.active);
+    cache.abilitiesToggle.classList.toggle('is-unseen', galaxyInvasionManager.dagon.active && !galaxyInvasionManager.dagon.abilitiesOpened);
     const abilitiesTitle = t('ui.space.invasion.dagon.abilitiesTitle');
     if (cache.abilitiesTitle.textContent !== abilitiesTitle) cache.abilitiesTitle.textContent = abilitiesTitle;
     if (cache.abilitiesToggle.getAttribute('aria-label') !== abilitiesTitle) cache.abilitiesToggle.setAttribute('aria-label', abilitiesTitle);
@@ -727,6 +728,9 @@ function handleGalaxyPopupToggle(event) {
     const cache = galaxyUICache;
     if (!popupKey || !cache || !cache.popupVisibility) {
         return;
+    }
+    if (popupKey === 'abilities') {
+        galaxyInvasionManager.dagon.abilitiesOpened = true;
     }
     cache.popupVisibility[popupKey] = popupKey === 'incoming'
         ? cache.popupVisibility[popupKey] !== true
