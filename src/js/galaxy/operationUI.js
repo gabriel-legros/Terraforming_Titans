@@ -1318,15 +1318,11 @@ const GalaxyOperationUI = (() => {
 
         const arrowCache = cache.operationArrows;
         const activeArrowKeys = new Set();
-        const doc = cache.mapOperationsLayer.ownerDocument || globalThis.document;
+        const localOperationBorders = new Map();
+        const doc = cache.mapOperationsLayer.ownerDocument;
         const hexLookup = cache.hexLookup;
-        if (!doc || !operations) {
-            arrowCache.forEach((arrow) => arrow.remove());
-            arrowCache.clear();
-            return;
-        }
 
-        operations.forEach((operation) => {
+        operations?.forEach((operation) => {
             if (!operation || operation.status !== 'running') {
                 return;
             }
@@ -1339,6 +1335,11 @@ const GalaxyOperationUI = (() => {
             const originKey = `${origin.q},${origin.r}`;
             const originHex = hexLookup?.get?.(originKey);
             if (!targetHex || !originHex) {
+                return;
+            }
+            const factionColor = manager.getFaction(operation.factionId || UHF_FACTION_ID).color;
+            if (originKey === sectorKey) {
+                localOperationBorders.set(targetHex, factionColor);
                 return;
             }
             const startX = Number(originHex.galaxyCenterX);
@@ -1370,12 +1371,6 @@ const GalaxyOperationUI = (() => {
                 return;
             }
 
-            const factionId = typeof operation.factionId === 'string' && operation.factionId
-                ? operation.factionId
-                : null;
-            const factionColor = factionId
-                ? manager.getFaction?.(factionId)?.color
-                : null;
             const angleDeg = Math.atan2(adjustedDeltaY, adjustedDeltaX) * (180 / Math.PI);
             const arrowKey = `${sectorKey}|${operation.factionId || 'uhf'}`;
             activeArrowKeys.add(arrowKey);
@@ -1411,6 +1406,19 @@ const GalaxyOperationUI = (() => {
             arrow.remove();
             arrowCache.delete(arrowKey);
         });
+        cache.localOperationBorders.forEach((color, hex) => {
+            if (!localOperationBorders.has(hex)) {
+                hex.classList.remove('is-local-operation');
+                hex.style.removeProperty('--galaxy-local-operation-color');
+            }
+        });
+        localOperationBorders.forEach((color, hex) => {
+            if (cache.localOperationBorders.get(hex) !== color) {
+                hex.style.setProperty('--galaxy-local-operation-color', color);
+                hex.classList.add('is-local-operation');
+            }
+        });
+        cache.localOperationBorders = localOperationBorders;
     }
 
     function applyExternalAllocation(key, value) {

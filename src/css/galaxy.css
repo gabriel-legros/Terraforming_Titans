@@ -703,6 +703,20 @@
   background: var(--galaxy-hex-background-hover, linear-gradient(160deg, rgba(60, 100, 148, 0.9), rgba(12, 24, 40, 0.92)));
 }
 
+.galaxy-hex.is-local-operation {
+  background: var(--galaxy-local-operation-color);
+}
+
+.galaxy-hex.is-local-operation::before {
+  inset: 4px;
+  background: var(--galaxy-hex-background);
+}
+
+.galaxy-hex.is-local-operation:hover::before,
+.galaxy-hex.is-local-operation.is-selected::before {
+  background: var(--galaxy-hex-background-hover);
+}
+
 .galaxy-hex__story {
   position: absolute;
   bottom: 6px;
@@ -1272,7 +1286,7 @@
 }
 
 .galaxy-defense-form__button {
-  padding: 5px 8px;
+  padding: 5px 2px;
   border-radius: 6px;
   border: 1px solid rgba(212, 120, 120, 0.5);
   background: rgba(132, 32, 32, 0.72);

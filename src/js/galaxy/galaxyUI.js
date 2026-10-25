@@ -2113,6 +2113,11 @@ function clearOperationArrows(cache) {
         }
     });
     cache.operationArrows.clear();
+    cache.localOperationBorders.forEach((color, hex) => {
+        hex.classList.remove('is-local-operation');
+        hex.style.removeProperty('--galaxy-local-operation-color');
+    });
+    cache.localOperationBorders.clear();
     cache.operationArrowSignature = '';
 }
 
@@ -3516,6 +3521,7 @@ function cacheGalaxyElements() {
         hexElements,
         hexLookup,
         operationArrows: new Map(),
+        localOperationBorders: new Map(),
         operationArrowSignature: '',
         selectedHex: null,
         selectedSector: null
