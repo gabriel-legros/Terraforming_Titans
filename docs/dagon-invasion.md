@@ -1,13 +1,15 @@
 # Dagon development controls
 
-The encounter is disabled by default. On an eligible save, enable its arrival controls from the browser console:
+The encounter's arrival controls are enabled for new games and existing saves, including older saves with `dagon.enabled` set to `false`. The story, conquest, world, storage, and training requirements still apply. The button starts the encounter only once per save. New game resets encounter progress.
+
+For development, hide the arrival controls for the current session from the browser console:
 
 ```js
-galaxyInvasionManager.dagon.enabled = true;
+galaxyInvasionManager.dagon.enabled = false;
 updateGalacticInvasionUI({ force: true });
 ```
 
-This flag is saved. Set it to `false` to hide the arrival controls again; it does not cancel an encounter already in progress. The console flag does not bypass the story, conquest, world, or storage requirements. The button starts the encounter only once per save. New game resets it.
+Set it to `true` to show the arrival controls again. Hiding them does not cancel an encounter already in progress. The flag remains in saved state for compatibility, but loading a save or starting a new game always enables the controls.
 
 After validating arrival requirements, starting Dagon writes the current state to the existing `pretravel` save slot before changing occupation, operations, or the story branch. This replaces the previous pre-travel checkpoint. If saving fails, the invasion does not start. Rejected or repeated start attempts do not overwrite the checkpoint.
 

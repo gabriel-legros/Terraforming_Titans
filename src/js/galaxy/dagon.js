@@ -45,7 +45,7 @@ class DagonFaction extends GalaxyFactionAI {
 
 class DagonInvasion {
   constructor() {
-    this.enabled = false;
+    this.enabled = true;
     this.started = false;
     this.completed = false;
     this.prometheusRepaired = false;
@@ -331,7 +331,7 @@ class DagonInvasion {
   }
 
   loadState(state = {}) {
-    this.enabled = state.enabled === true;
+    this.enabled = true;
     this.started = state.started === true;
     this.completed = state.completed === true;
     this.prometheusRepaired = state.prometheusRepaired === true;
