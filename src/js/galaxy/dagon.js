@@ -39,7 +39,7 @@ class DagonFaction extends GalaxyFactionAI {
 
   updateFleetCapacity(manager) {
     this.fleetCapacity = manager.galacticInvasionManager?.dagon.active
-      ? manager.getFaction(UHF_FACTION_ID).fleetCapacity * 2 : 0;
+      ? manager.getFaction(UHF_FACTION_ID).fleetCapacity * 3 : 0;
   }
 }
 
@@ -52,7 +52,7 @@ class DagonInvasion {
     this.protection = {};
     this.logistics = {};
     this.hopePower = terraformingParameters.gameplay.dagon.startingPower;
-    this.prometheusPower = terraformingParameters.gameplay.dagon.startingPower;
+    this.prometheusPower = terraformingParameters.gameplay.dagon.prometheusStartingPower;
     this.pulseCooldownMs = terraformingParameters.gameplay.dagon.initialPulseCooldownMs;
     this.laserCooldownMs = terraformingParameters.gameplay.dagon.enemyAbilityCooldownMs;
     this.pulseRemainingMs = 0;
@@ -345,7 +345,9 @@ class DagonInvasion {
     this.laserChargeRemainingMs = Math.max(0, Math.min(parameters.laserChargeDurationMs, state.laserChargeRemainingMs ?? 0));
     this.laserRemainingMs = Math.max(0, Math.min(parameters.laserDurationMs, state.laserRemainingMs ?? 0));
     this.laserTargetKey = state.laserTargetKey ?? null;
-    this.prometheusPower = Math.max(0, Math.min(parameters.powerCapacity, state.prometheusPower ?? parameters.startingPower));
+    this.prometheusPower = this.prometheusRepaired
+      ? Math.max(0, Math.min(parameters.powerCapacity, state.prometheusPower ?? parameters.prometheusStartingPower))
+      : parameters.prometheusStartingPower;
     this.severedTentacles = [...(state.severedTentacles || [])];
     this.scene = Math.max(-1, Math.min(DAGON_SCENES.length - 1, Math.floor(state.scene ?? -1)));
     // Saves predating route tracking either had the original four arms or none.

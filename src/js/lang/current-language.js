@@ -4343,7 +4343,7 @@ setLanguageData({
           previous: 'Previous scene',
           next: 'Next scene',
           frame: 'Step {current} / {total}',
-          waiting: 'Follow the journal to continue. Open the lightning panel on the galaxy map to use AI abilities on the selected sector.',
+          waiting: 'Follow the journal to continue. Open the lightning panel on the galaxy map to use AI abilities.',
           complete: 'Corruption purged. All Dagon-occupied sectors have been liberated.',
           objectives: { severTentacles: 'Sever tentacles: {current}/{count}.', started: 'Begin the Dagon invasion.', prometheusRepaired: 'Repair Prometheus in the Invasion card.', tentaclesSevered: 'Cut all five tentacles with Prometheus to expose R3-13.', completed: 'Complete the encounter in the Dagon invasion card.' }
         },

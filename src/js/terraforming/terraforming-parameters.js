@@ -570,6 +570,7 @@ var terraformingParameters = {
   gameplay: {
     dagon: {
       startingPower: 900,
+      prometheusStartingPower: 0,
       powerCapacity: 7200,
       powerPerSecond: 1,
       abilityCost: 600,
