@@ -1028,6 +1028,7 @@ class GalaxyManager extends EffectableEntity {
     }
 
     canPurchaseFleetUpgrade(key) {
+        if (this.galacticInvasionManager.dagon.active) return false;
         const definition = GALAXY_FLEET_UPGRADE_DEFINITIONS[key];
         if (!definition) {
             return false;
