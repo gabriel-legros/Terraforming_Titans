@@ -4328,7 +4328,7 @@ setLanguageData({
           selectSector: 'Select a sector on the map to use an ability.',
           logistics: 'Accelerated Logistics',
           cut: 'Cut tentacle',
-          protectDescription: 'Protect a sector from attacks for 10 minutes. Cancels incoming attacks.',
+          protectDescription: 'Protect a sector from attacks and Dagon abilities for 10 minutes. Cancels incoming attacks.',
           logisticsDescription: 'Offensive operations in this sector take 30 seconds for the next 10 minutes.',
           conquerDescription: 'Instantly take control of this sector. Cannot target Dagon or an intact tentacle.',
           cutDescription: 'Sever one entire tentacle at its root.  Requires full control of an adjacent sector.',
