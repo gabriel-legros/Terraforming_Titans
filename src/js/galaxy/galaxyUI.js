@@ -3288,6 +3288,12 @@ function cacheGalaxyElements() {
     const upgradesShop = doc.createElement('div');
     upgradesShop.className = 'galaxy-upgrades-shop';
 
+    const shopWarning = doc.createElement('p');
+    shopWarning.className = 'galaxy-upgrades-shop__warning';
+    shopWarning.textContent = t('ui.galaxy.shop.dagonLocked');
+    shopWarning.classList.toggle('hidden', !galaxyInvasionManager.dagon.active);
+    upgradesShop.appendChild(shopWarning);
+
     const shopHeader = doc.createElement('div');
     shopHeader.className = 'galaxy-upgrades-shop__header';
     const shopTitle = doc.createElement('span');
@@ -3484,6 +3490,7 @@ function cacheGalaxyElements() {
         logisticsOperationsValue: operationsValue,
         fleetShop: {
             container: upgradesShop,
+            warning: shopWarning,
             totalValue: shopTotalValue,
             items: fleetShopItems
         },
@@ -3580,6 +3587,9 @@ function updateFleetShopDisplay(manager, cache) {
     if (!shop) {
         return;
     }
+    const warningText = t('ui.galaxy.shop.dagonLocked');
+    if (shop.warning.textContent !== warningText) shop.warning.textContent = warningText;
+    shop.warning.classList.toggle('hidden', !galaxyInvasionManager.dagon.active);
     const totalMultiplier = manager?.getFleetUpgradeTotalMultiplier?.() ?? 1;
     if (shop.totalValue) {
         const totalText = `${formatFleetMultiplier(totalMultiplier)}x`;

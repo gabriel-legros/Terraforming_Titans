@@ -801,6 +801,7 @@ setLanguageData({
       },
       shop: {
         title: 'Fleet Logistics Shop',
+        dagonLocked: 'There is no time for this right now.',
         totalMultiplier: 'Total Multiplier',
         zeroPurchases: '0 purchases',
         purchase: 'purchase',
@@ -4286,7 +4287,7 @@ setLanguageData({
           sectorAbilities: 'AI interventions',
           here: 'It is here.',
           skipStory: 'Skip',
-          skipStoryConfirm: 'This will mark your save file as completed.  This is usually done by beating world 16 and loading your pre-travel save from the ending.  Are you sure?',
+          skipStoryConfirm: 'The events here are meant to happen after the ending.  This will mark your save file as completed.  This is usually done by beating world 16 and loading your pre-travel save from the ending.  Are you sure?',
           yes: 'Yes',
           no: 'No',
           title: 'Dagon',

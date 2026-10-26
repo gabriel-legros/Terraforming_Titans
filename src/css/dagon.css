@@ -2,7 +2,8 @@
 .dagon-section > .card-header { width: 100%; cursor: pointer; text-align: left; border-width: 0 0 1px; font-family: inherit; }
 .dagon-teaser { font-style: italic; }
 .dagon-requirements { margin-bottom: 10px; }
-.dagon-section .dagon-skip-story { width: auto; margin-left: 8px; padding: 3px 10px; font-size: inherit; }
+.dagon-section button.dagon-skip-story { width: auto; margin-left: 6px; padding: 1px 4px; border: 0; background: transparent; color: #888; font-size: .75em; font-weight: 400; line-height: 1.2; box-shadow: none; }
+.dagon-section button.dagon-skip-story:hover { background: #88888818; text-decoration: underline; }
 .dagon-warning { margin-top: 10px; }
 .dagon-repair { margin: 10px 0; }
 .dagon-repair .project-cost { margin-top: 8px; }
