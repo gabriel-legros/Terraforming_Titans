@@ -6561,7 +6561,7 @@ setLanguageData({
       },
       keratiHive: {
         name: 'Kerati Hive',
-        description: 'Construct a planet-scale Kerati hive complex with brood basins, condensers, gas-exchange towers, and communal chambers suitable for a permanent Kerati settlement. Once complete, it provides 50 workers per base land on that world.',
+        description: 'Construct a planet-scale Kerati hive complex with spawning pools, barracks and communal chambers suitable for a permanent Kerati settlement. Once complete, it provides 50 workers per base land on that world.',
       },
       treeOfLife: {
         name: 'Tree of Life',
