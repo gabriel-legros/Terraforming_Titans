@@ -115,7 +115,7 @@ class SpaceshipProject extends Project {
     if (category !== 'colony' || resource !== 'energy' || this.getHazardousMachineryWorkerLoadActive()) {
       return 0;
     }
-    return this.assignedSpaceships * this.storage.colony.energy * shipEfficiency
+    return this.assignedSpaceships * projectParameters.oreSpaceMining.attributes.costPerShip.colony.energy * shipEfficiency
       * gameSettings.spaceshipEnergyBeforeSpaceElevatorMultiplier;
   }
 
@@ -1078,6 +1078,13 @@ class SpaceshipProject extends Project {
     return totalResourceGain;
   }
 
+  calculateExportFundingGain(disposalAmount) {
+    if (!(this.attributes.fundingGainAmount > 0) || disposalAmount <= 0) {
+      return 0;
+    }
+    return disposalAmount * this.attributes.fundingGainAmount;
+  }
+
   calculateSpaceshipTotalDisposal() {
     const totalDisposal = {};
     const entries = this.getDiscreteDisposalEntries();
@@ -1284,7 +1291,7 @@ class SpaceshipProject extends Project {
       if (this.attributes.fundingGainAmount > 0 && totalDisposed > 0) {
         this.pendingGain = {
           colony: {
-            funding: totalDisposed * this.attributes.fundingGainAmount
+            funding: this.calculateExportFundingGain(totalDisposed)
           }
         };
       } else {
@@ -1683,7 +1690,7 @@ class SpaceshipProject extends Project {
       const disposalCount = this.getContinuousDisposalCount(context);
       const fundingCount = this.getContinuousFundingCount(context);
       const multiplier = disposalCount > 0 ? (fundingCount / disposalCount) : 0;
-      fundingGain = appliedDisposal * this.attributes.fundingGainAmount * multiplier;
+      fundingGain = this.calculateExportFundingGain(appliedDisposal) * multiplier;
     }
 
     const totalGain = {};

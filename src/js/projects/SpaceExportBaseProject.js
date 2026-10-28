@@ -750,10 +750,11 @@ class SpaceExportBaseProject extends SpaceshipProject {
     }
     
     if (elements.gainPerResourceElement && this.attributes.fundingGainAmount) {
+        const fundingPerResource = this.calculateExportFundingGain(1);
         elements.gainPerResourceElement.textContent = this.getText(
           'gainPerResource',
-          { value: formatNumber(this.attributes.fundingGainAmount, true) },
-          `Gain/Resource: ${formatNumber(this.attributes.fundingGainAmount, true)}`
+          { value: formatNumber(fundingPerResource, true) },
+          `Gain/Resource: ${formatNumber(fundingPerResource, true)}`
         );
     }
 
@@ -785,7 +786,7 @@ class SpaceExportBaseProject extends SpaceshipProject {
     }
     return {
       colony: {
-        funding: totalDisposalAmount * this.attributes.fundingGainAmount * multiplier,
+        funding: this.calculateExportFundingGain(totalDisposalAmount) * multiplier,
       },
     };
   }

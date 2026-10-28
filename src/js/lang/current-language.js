@@ -5848,7 +5848,7 @@ setLanguageData({
       marketPricing: 'Market pricing',
       workersPerAndroid: 'Workers per android',
       androidHiveMindMultiplier: 'Android Hive Mind Multiplier',
-      marketPricingIntro: 'Set base prices in Funding per unit for each traded resource. Applies to Cargo Rocket and (later) Galactic Market.',
+      marketPricingIntro: 'Set base prices in Funding per unit for each traded resource. Applies to Cargo Rocket, Metal Exportation and (later) Galactic Market. Metal Exportation scales its default payout with the metal sell price.',
       marketPricingResource: 'Resource',
       marketPricingBuy: 'Base buy price',
       marketPricingSell: 'Base sell price',
@@ -7080,7 +7080,7 @@ setLanguageData({
         },
         shipyard: {
           name: 'Shipbuilding',
-          description: 'Enables the construction of spaceships.  Also unlocks special projects for asteroid mining and resource disposal.  Each available or idle ship also increases colony energy cap.',
+          description: 'Enables the construction of spaceships.  Also unlocks special projects for asteroid mining and resource disposal.  Each available or idle ship adds the same colony energy capacity, regardless of assignment.',
         },
         efficient_shipyards: {
           name: 'Efficient Shipyards',

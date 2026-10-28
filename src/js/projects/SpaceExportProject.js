@@ -4,6 +4,13 @@ class SpaceExportProject extends SpaceExportBaseProject {
     this.tradeSaturationMultiplier = 1;
   }
 
+  calculateExportFundingGain(disposalAmount) {
+    const { category, resource } = this.selectedDisposalResource;
+    const defaultSellPrice = MARKET_PRICING_DEFAULTS[category][resource].sell;
+    const sellPrice = gameSettings.marketPricing?.[category]?.[resource]?.sell ?? defaultSellPrice;
+    return super.calculateExportFundingGain(disposalAmount) * (sellPrice / defaultSellPrice);
+  }
+
   getExportCap() {
     if (
       typeof spaceManager !== 'undefined' &&

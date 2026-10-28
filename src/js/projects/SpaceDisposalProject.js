@@ -2075,7 +2075,7 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       if (this.attributes.fundingGainAmount > 0) {
         this.pendingGain = {
           colony: {
-            funding: totalDisposed * this.attributes.fundingGainAmount
+            funding: this.calculateExportFundingGain(totalDisposed)
           }
         };
       } else {
