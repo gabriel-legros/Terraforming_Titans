@@ -788,7 +788,7 @@ function formatDominionUnlockLabel(rule) {
 function resolveParams(current, overrides) { return deepMerge(current || DEFAULT_PARAMS, overrides || {}); }
 
 // ===================== Seed helpers =====================
-// Supports both legacy k=v annotations and positional: S|<planet|moon>|<type>|<orbitPreset>
+// Supports legacy k=v annotations and S|<planet|moon>|<type>|<orbitPreset>|<hazards>|<dominion>.
 function normalizeHazardList(source) {
   if (Array.isArray(source)) {
     return source
@@ -833,7 +833,7 @@ function formatHazardList(hazards) {
 
 function parseSeedSpec(seedInput) {
   let base = "";
-  let ann = {}; // { target, type, orbitPreset, hazards, aAU }
+  let ann = {}; // { target, type, orbitPreset, hazards, dominionId, aAU }
   let seedInt;
   if (typeof seedInput === "string") {
     const segs = seedInput.split("|");
@@ -852,6 +852,7 @@ function parseSeedSpec(seedInput) {
         else if (k === "o" || k === "orbit" || k === "orbitpreset") ann.orbitPreset = v;
         else if (k === "tg" || k === "target") ann.target = v.toLowerCase();
         else if (k === "hazard" || k === "haz" || k === "feature") ann.hazards = normalizeHazardList(v);
+        else if (k === "dominion") ann.dominionId = v;
         else if (k === "d" || k === "au") {
           const num = parseFloat(v);
           if (!Number.isNaN(num)) ann.aAU = num;
@@ -861,12 +862,13 @@ function parseSeedSpec(seedInput) {
       }
     }
     if (unkeyed.length) {
-      const [p0, p1, p2, p3] = unkeyed;
+      const [p0, p1, p2, p3, p4] = unkeyed;
       const p0l = (p0 || "").toLowerCase();
       if (p0l === "planet" || p0l === "moon") ann.target = p0l;
       if (p1) ann.type = p1;
       if (p2) ann.orbitPreset = p2;
       if (p3) ann.hazards = normalizeHazardList(p3);
+      if (p4 && p4 !== '0' && p4 !== '1') ann.dominionId = p4;
     }
     seedInt = baseIsInt ? (parseInt(base, 10) >>> 0) : hashStringToInt(base);
   } else {
@@ -2052,6 +2054,35 @@ class RwgManager extends EffectableEntity {
   isDominionUnlocked(id) { return !id ? false : !this.lockedDominions.has(id); }
   getDominionUnlockRule(id) { return getDominionUnlockRule(id); }
   getDominionUnlockLabel(id) { return formatDominionUnlockLabel(getDominionUnlockRule(id)); }
+  applyDominionSelection(result, dominionId) {
+    const dominions = this.getAvailableDominions();
+    const requested = dominionId === 'random'
+      ? dominions[Math.floor(Math.random() * dominions.length)]
+      : dominionId;
+    const selection = this.isFeatureUnlocked('dominions') && dominions.includes(requested)
+      ? requested
+      : 'human';
+    result.dominionId = selection;
+    const override = result.override || (result.override = {});
+    override.specialAttributes = {
+      ...(override.specialAttributes || {}),
+      terraformingRequirementId: selection
+    };
+    result.specialAttributes = {
+      ...(result.specialAttributes || {}),
+      terraformingRequirementId: selection
+    };
+    result.merged.specialAttributes = {
+      ...(result.merged.specialAttributes || {}),
+      terraformingRequirementId: selection
+    };
+    const parts = result.seedString.split('|').slice(0, 4);
+    const hazards = formatHazardList(result.hazards);
+    if (hazards || selection !== 'human') parts.push(hazards || 'none');
+    if (selection !== 'human') parts.push(selection);
+    result.seedString = parts.join('|');
+    return result;
+  }
   lockDominion(id) { if (id) this.lockedDominions.add(id); }
   unlockDominion(id) { if (id) this.lockedDominions.delete(id); }
   updateDominionUnlocksFromGalaxy(galaxyManager) {
@@ -2117,8 +2148,9 @@ class RwgManager extends EffectableEntity {
   generateRandomPlanet(seed, opts = {}) {
     const P = resolveParams(this.params, opts.params);
     const { seedInt: S, baseSeed, ann: seedAnn } = parseSeedSpec(seed);
+    const dominionId = opts.dominionId ?? seedAnn.dominionId ?? 'human';
     const specialSeedResult = buildSpecialSeedWorldResult(baseSeed, S);
-    if (specialSeedResult) return specialSeedResult;
+    if (specialSeedResult) return this.applyDominionSelection(specialSeedResult, dominionId);
 
     // Star
     let star = opts.star ?? generateStar(S ^ 0x1234, P);
@@ -2241,7 +2273,7 @@ class RwgManager extends EffectableEntity {
       hazard: forcedHazards
     });
 
-    return {
+    return this.applyDominionSelection({
       star,
       orbitAU: aAU,
       orbitPreset: usedPreset,
@@ -2253,7 +2285,7 @@ class RwgManager extends EffectableEntity {
       seedString: canonicalSeed,
       override,
       merged: deepMerge(defaultPlanetParameters, override)
-    };
+    }, dominionId);
   }
 
   generateSystem(seed, planetCount, opts = {}) {

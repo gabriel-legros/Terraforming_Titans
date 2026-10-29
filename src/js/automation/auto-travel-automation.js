@@ -361,23 +361,6 @@ class AutoTravelAutomation {
     };
   }
 
-  _applyDominionSelection(res, dominionSetting) {
-    const special = { ...(res.override?.specialAttributes || {}) };
-    const dominions = rwgManager.getAvailableDominions();
-    const selection = dominionSetting === 'random'
-      ? dominions[Math.floor(Math.random() * dominions.length)]
-      : dominionSetting;
-    special.terraformingRequirementId = selection;
-    const override = res.override || {};
-    override.specialAttributes = special;
-    res.override = override;
-    res.merged.specialAttributes = {
-      ...(res.merged.specialAttributes || {}),
-      ...special
-    };
-    res.dominionId = selection;
-  }
-
   _travelToStoredArtificialWorld(preset) {
     if (preset.target !== 'storedArtificial') {
       return false;
@@ -409,6 +392,7 @@ class AutoTravelAutomation {
       target: this._resolveRandomWorldSelection(preset.target, 'auto'),
       orbitPreset: this._resolveRandomWorldSelection(preset.orbitPreset, 'auto'),
       type: this._resolveRandomWorldSelection(typeId, 'auto'),
+      dominionId: preset.dominion,
       hazards: this._rollHazardsForTravel(preset)
     };
     if (typeId === 'random') {
@@ -418,7 +402,6 @@ class AutoTravelAutomation {
     if (!res || !res.merged) {
       return null;
     }
-    this._applyDominionSelection(res, preset.dominion);
     return res;
   }
 

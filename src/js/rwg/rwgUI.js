@@ -21,6 +21,7 @@ let rwgHazardItemsEl;
 let rwgHazardItems = {};
 let rwgHazardListOrder = [];
 let rwgResultEl;
+let rwgResultSeedEl;
 let rwgTravelBtnEl;
 let rwgDominionEl;
 let rwgDominionLoreBtnEl;
@@ -504,6 +505,7 @@ function closeDominionLore() {
 
 function cacheResultControls() {
   rwgResultEl = document.getElementById('rwg-result');
+  rwgResultSeedEl = rwgResultEl.querySelector('.rwg-seed-value');
   rwgTravelBtnEl = document.getElementById('rwg-travel-btn');
   rwgDominionEl = document.getElementById('rwg-dominion');
   rwgDominionLoreBtnEl = document.getElementById('rwg-dominion-lore-btn');
@@ -521,24 +523,26 @@ function cacheResultControls() {
   rwgDominionLoreBtnEl.onclick = () => openDominionLore();
 }
 
-function applyDominionSelection(res) {
-  const override = res.override || (res.override = {});
-  const special = { ...(override.specialAttributes || {}) };
-  override.specialAttributes = special;
-  const dominions = rwgManager.getAvailableDominions();
-  const selection = rwgSelectedDominion === RWG_DOMINION_RANDOM
-    ? dominions[Math.floor(Math.random() * dominions.length)]
-    : rwgSelectedDominion;
-  res.dominionId = selection;
-  res.specialAttributes = {
-    ...(res.specialAttributes || {})
-  };
-  special.terraformingRequirementId = selection;
-  res.specialAttributes.terraformingRequirementId = selection;
-  res.merged.specialAttributes = {
-    ...(res.merged.specialAttributes || {}),
-    ...special
-  };
+function updateRwgDominionSelection(res, seedUsed) {
+  rwgSelectedDominion = rwgDominionEl.value;
+  const previousSeedString = res.seedString;
+  const equilibrated = isRandomWorldEquilibrated(seedUsed, res.seedString);
+  rwgManager.applyDominionSelection(res, rwgSelectedDominion);
+  const { seed, options } = decodeSeedOptions(seedUsed);
+  const seedKey = encodeSeedOptions(seed, { ...options, dominionId: res.dominionId });
+  if (equilibrated) {
+    equilibratedWorlds.add(seedKey);
+    equilibratedWorlds.add(res.seedString);
+  }
+  rwgResultSeedEl.textContent = res.seedString;
+  const enteredSeed = rwgSeedEl.value.trim();
+  if (enteredSeed && (enteredSeed === previousSeedString || decodeSeedOptions(enteredSeed).seed === seed)) {
+    rwgSeedEl.value = res.seedString;
+  }
+  writeResultDataset(rwgResultEl, res, seedKey);
+  attachEquilibrateHandler(res, seedKey, res.archetype, rwgResultEl);
+  attachTravelHandler(res, seedKey);
+  updateRandomWorldUI();
 }
 
 function applyDynamicMassSelection(res, enabled) {
@@ -816,8 +820,9 @@ function encodeSeedOptions(seed, opts = {}) {
   const ty = opts.type ?? 'auto';
   const o = opts.orbitPreset ?? 'auto';
   const h = formatHazardList(opts.hazards ?? opts.hazard) || 'none';
+  const dominion = opts.dominionId && opts.dominionId !== 'human' ? `|${opts.dominionId}` : '';
   const dm = opts.dynamicMass ? '1' : '0';
-  return `${seed}|${t}|${ty}|${o}|${h}|${dm}`;
+  return `${seed}|${t}|${ty}|${o}|${h}${dominion}|${dm}`;
 }
 
 function decodeSeedOptions(str) {
@@ -827,9 +832,12 @@ function decodeSeedOptions(str) {
   const ty = parts[2] ?? 'auto';
   const o = parts[3] ?? 'auto';
   const h = parts[4] ?? 'auto';
-  const dm = parts.length > 5 ? parts[5] === '1' : null;
+  const legacyDynamicMass = parts[5] === '0' || parts[5] === '1';
+  const dominionId = !legacyDynamicMass && parts[5] ? parts[5] : 'human';
+  const dynamicMassField = parts[legacyDynamicMass ? 5 : 6];
+  const dm = dynamicMassField === undefined ? null : dynamicMassField === '1';
   const hazards = normalizeHazardList(h);
-  return { seed, options: { target: t, type: ty, orbitPreset: o, hazards, dynamicMass: dm } };
+  return { seed, options: { target: t, type: ty, orbitPreset: o, hazards, dominionId, dynamicMass: dm } };
 }
 
 function initializeRandomWorldUI() {
@@ -988,6 +996,15 @@ function initializeRandomWorldUI() {
   historyCollapsed = false;
 
   initializeDominionLoreOverlay();
+
+  rwgSeedEl.addEventListener('input', () => {
+    const { options } = decodeSeedOptions(rwgSeedEl.value.trim());
+    rwgSelectedDominion = rwgManager.isFeatureUnlocked('dominions')
+      && rwgManager.getAvailableDominions().includes(options.dominionId)
+      ? options.dominionId
+      : 'human';
+    refreshDominionSelect();
+  });
 
   // Wire buttons
   const btnPlanet = controls.querySelector('#rwg-generate-planet');
@@ -1196,6 +1213,7 @@ function updateRandomWorldUI() {
 
 function attachTravelHandler(res, sStr) {
   attachRwgWorldRenameControl(res, sStr);
+  rwgDominionEl.onchange = () => updateRwgDominionSelection(res, sStr);
   const travelBtn = rwgTravelBtnEl || document.getElementById('rwg-travel-btn');
   rwgTravelBtnEl = travelBtn || rwgTravelBtnEl;
   if (!travelBtn) return;
@@ -1229,7 +1247,6 @@ function attachTravelHandler(res, sStr) {
           res.merged = deepMerge(defaultPlanetParameters, override);
           syncResultStarData(res);
         }
-        applyDominionSelection(res);
         const travelled = spaceManager.travelToRandomWorld(res, sStr);
         if (travelled) {
           const box = document.getElementById('rwg-result');
@@ -1289,6 +1306,7 @@ function drawSingle(seed, options) {
     availableOrbits: orbitOptions,
     type: resolvedOptions.type,
     availableTypes: typeOptions,
+    dominionId: rwgSelectedDominion,
     hazards: normalizedHazards
   });
   if (res.archetype === 'jupiter-like') {
@@ -1304,7 +1322,7 @@ function drawSingle(seed, options) {
   }
   updateHazardListVisibility();
   syncEnabledHazards();
-  const seedKey = encodeSeedOptions(sStr, { ...resolvedOptions, hazards: appliedHazards });
+  const seedKey = encodeSeedOptions(sStr, { ...resolvedOptions, hazards: appliedHazards, dominionId: res.dominionId });
   equilibratedWorlds.delete(seedKey);
   equilibratedWorlds.delete(res.seedString);
   let archetype = res.archetype;
