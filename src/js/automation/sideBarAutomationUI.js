@@ -5,6 +5,8 @@ const sidebarAutomationElements = {
   title: null,
   toggle: null,
   panel: null,
+  pauseAllLabel: null,
+  pauseAllToggle: null,
   entries: null,
   index: null,
   objective: null,
@@ -211,6 +213,26 @@ function buildSidebarAutomationUI() {
   if (!panel) {
     return;
   }
+
+  const pauseAllSection = document.createElement('div');
+  pauseAllSection.classList.add('journal-automation-section');
+  const pauseAllHeader = document.createElement('label');
+  pauseAllHeader.classList.add('journal-automation-section-header');
+  const pauseAllLabel = document.createElement('span');
+  pauseAllLabel.textContent = getSidebarAutomationText('pauseAll');
+  const pauseAllToggle = createToggleButton({
+    onLabel: getSidebarAutomationText('on'),
+    offLabel: getSidebarAutomationText('off'),
+    isOn: false
+  });
+  pauseAllToggle.id = 'journal-automation-pause-all';
+  pauseAllToggle.classList.add('journal-automation-switch');
+  pauseAllToggle.setAttribute('aria-label', getSidebarAutomationText('pauseAll'));
+  pauseAllHeader.append(pauseAllLabel, pauseAllToggle);
+  pauseAllSection.appendChild(pauseAllHeader);
+  panel.appendChild(pauseAllSection);
+  elements.pauseAllLabel = pauseAllLabel;
+  elements.pauseAllToggle = pauseAllToggle;
 
   const autoTravel = createSidebarSection(
     getSidebarAutomationText('autoTravel', null, 'Auto-travel'),
@@ -480,6 +502,11 @@ function initializeSidebarAutomationUI() {
   }
   buildSidebarAutomationUI();
   sidebarAutomationElements.toggle.addEventListener('click', toggleJournalAutomationMode);
+  sidebarAutomationElements.pauseAllToggle.addEventListener('click', () => {
+    automationManager.paused = !automationManager.paused;
+    automationManager.markUIDirty();
+    updateAutomationUI();
+  });
 
   sidebarAutomationElements.autoTravelPresetSelect.addEventListener('change', (event) => {
     if (!event.target.value) {
@@ -706,6 +733,16 @@ function updateSidebarAutomationUI() {
   const elements = sidebarAutomationElements;
   const manager = automationManager;
   updateSidebarAutomationToggleVisibility();
+  const pauseAllText = getSidebarAutomationText('pauseAll');
+  if (elements.pauseAllLabel.textContent !== pauseAllText) {
+    elements.pauseAllLabel.textContent = pauseAllText;
+    elements.pauseAllToggle.setAttribute('aria-label', pauseAllText);
+  }
+  const onLabel = getSidebarAutomationText('on');
+  const offLabel = getSidebarAutomationText('off');
+  if (elements.pauseAllToggle.dataset.onLabel !== onLabel) elements.pauseAllToggle.dataset.onLabel = onLabel;
+  if (elements.pauseAllToggle.dataset.offLabel !== offLabel) elements.pauseAllToggle.dataset.offLabel = offLabel;
+  setToggleButtonState(elements.pauseAllToggle, manager.paused);
 
   const autoTravelAutomation = manager.autoTravelAutomation;
   const autoTravelUnlocked = manager.hasFeature('automationAutoTravel');

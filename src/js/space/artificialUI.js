@@ -71,6 +71,8 @@ const artificialUICache = {
   advancedSettingsOverlay: null,
   ignoreStrategicReserve: null,
   autoStart: null,
+  autoStartText: null,
+  autoStartMode: null,
   autoStore: null,
   autoStoreWithMaxStockpile: null,
   startBtn: null,
@@ -1408,16 +1410,28 @@ function ensureArtificialLayout() {
 
   const automationRow = document.createElement('div');
   automationRow.className = 'artificial-automation-options';
+  const autoStartControl = document.createElement('div');
+  autoStartControl.className = 'artificial-priority artificial-automation-option';
   const autoStartLabel = document.createElement('label');
-  autoStartLabel.className = 'artificial-priority artificial-automation-option';
+  autoStartLabel.className = 'artificial-inline-checkbox';
   const autoStartCheckbox = document.createElement('input');
   autoStartCheckbox.type = 'checkbox';
   artificialUICache.autoStart = autoStartCheckbox;
   autoStartLabel.appendChild(autoStartCheckbox);
   const autoStartText = document.createElement('span');
-  autoStartText.textContent = getArtificialText('costs.autoStart', 'Auto Start');
+  autoStartText.textContent = getArtificialText('common.auto');
+  artificialUICache.autoStartText = autoStartText;
   autoStartLabel.appendChild(autoStartText);
-  automationRow.appendChild(autoStartLabel);
+  const autoStartMode = document.createElement('select');
+  autoStartMode.className = 'artificial-select';
+  autoStartMode.setAttribute('aria-label', getArtificialText('costs.autoMode'));
+  autoStartMode.append(
+    buildOption('start', getArtificialText('costs.start')),
+    buildOption('prepay', getArtificialText('actions.prepay'))
+  );
+  artificialUICache.autoStartMode = autoStartMode;
+  autoStartControl.append(autoStartLabel, autoStartMode);
+  automationRow.appendChild(autoStartControl);
 
   const autoStoreLabel = document.createElement('label');
   autoStoreLabel.className = 'artificial-priority artificial-automation-option';
@@ -2031,6 +2045,11 @@ function ensureArtificialLayout() {
     if (artificialManager) {
       artificialManager.setAutoStart(autoStartCheckbox.checked);
     }
+    updateArtificialUI();
+  });
+  autoStartMode.addEventListener('change', () => {
+    artificialManager.autoStartMode = autoStartMode.value;
+    artificialManager.runAutomation();
     updateArtificialUI();
   });
   autoStoreCheckbox.addEventListener('change', () => {
@@ -3274,6 +3293,22 @@ function updateArtificialUI(options = {}) {
   }
   if (artificialUICache.autoStart) {
     artificialUICache.autoStart.checked = manager.getAutoStart();
+  }
+  const autoStartText = getArtificialText('common.auto');
+  if (artificialUICache.autoStartText.textContent !== autoStartText) {
+    artificialUICache.autoStartText.textContent = autoStartText;
+  }
+  const autoStartMode = artificialUICache.autoStartMode;
+  const autoModeLabel = getArtificialText('costs.autoMode');
+  if (autoStartMode.getAttribute('aria-label') !== autoModeLabel) {
+    autoStartMode.setAttribute('aria-label', autoModeLabel);
+  }
+  syncSelectOptions(autoStartMode, [
+    { value: 'start', label: getArtificialText('costs.start') },
+    { value: 'prepay', label: getArtificialText('actions.prepay') }
+  ]);
+  if (document.activeElement !== autoStartMode && autoStartMode.value !== manager.autoStartMode) {
+    autoStartMode.value = manager.autoStartMode;
   }
   if (artificialUICache.autoStore) {
     artificialUICache.autoStore.checked = manager.getAutoStore();

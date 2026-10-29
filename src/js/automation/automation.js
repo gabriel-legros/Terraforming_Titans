@@ -74,6 +74,7 @@ class AutomationManager extends EffectableEntity {
   constructor() {
     super({ description: 'Automation Manager', resetAt: GAME_RESET_LEVEL.NEW_GAME });
     this.enabled = false;
+    this.paused = false;
     this.uiDirty = true;
     this.automationCardOrder = [
       'autoTravel',
@@ -273,6 +274,9 @@ class AutomationManager extends EffectableEntity {
   }
 
   applyTravelCombinationPresets() {
+    if (this.paused) {
+      return false;
+    }
     if (this.scriptAutomation) {
       this.scriptAutomation.resetVariables();
     }
@@ -337,6 +341,7 @@ class AutomationManager extends EffectableEntity {
   saveState() {
     return {
       enabled: this.enabled,
+      paused: this.paused,
       automationCardOrder: this.getAutomationCardOrder(),
       features: { ...this.features },
       booleanFlags: Array.from(this.booleanFlags),
@@ -354,6 +359,7 @@ class AutomationManager extends EffectableEntity {
 
   loadState(data = {}, legacyResearchState = null) {
     this.enabled = !!data.enabled;
+    this.paused = !!data.paused;
     this.automationCardOrder = this.normalizeAutomationCardOrder(data.automationCardOrder);
     this.features = Object.assign({
       automationAutoTravel: false,
@@ -399,7 +405,7 @@ class AutomationManager extends EffectableEntity {
   }
 
   update(delta) {
-    if (isEquilibrating || isCurrentWorldManagerDisabled('automationManager')) {
+    if (this.paused || isEquilibrating || isCurrentWorldManagerDisabled('automationManager')) {
       return;
     }
     if (this.autoTravelAutomation) {

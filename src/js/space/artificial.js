@@ -429,6 +429,7 @@ class ArtificialManager extends EffectableEntity {
         this.prioritizeSpaceStorage = true;
         this.ignoreStrategicReserve = false;
         this.autoStart = false;
+        this.autoStartMode = 'start';
         this.autoStore = false;
         this.autoStoreWithMaxStockpile = true;
         this.nextId = 1;
@@ -1274,13 +1275,14 @@ class ArtificialManager extends EffectableEntity {
         return this.autoStoreWithMaxStockpile;
     }
 
-    startDraftConstruction() {
+    startDraftConstruction(prepay = false) {
         if (!this.enabled || this.activeProject) return false;
         const selection = this.getDraftSelection();
         const namePrefix = String(selection.name || '').trim() || this.getDefaultWorldNamePrefix(selection.type);
         const nameNumber = this.normalizeWorldNumber(selection.number);
         if (selection.type === 'shell') {
             return this.startShellConstruction({
+                prepay,
                 radiusEarth: selection.radiusEarth,
                 core: selection.core,
                 starContext: selection.starContext,
@@ -1292,6 +1294,7 @@ class ArtificialManager extends EffectableEntity {
         }
         if (selection.type === 'ring') {
             return this.startRingConstruction({
+                prepay,
                 starCore: selection.ringStarCore,
                 orbitRadiusAU: selection.orbitRadiusAU,
                 widthKm: selection.widthKm,
@@ -1304,6 +1307,7 @@ class ArtificialManager extends EffectableEntity {
         }
         if (selection.type === 'disk') {
             return this.startDiskConstruction({
+                prepay,
                 starCore: selection.diskStarCore,
                 diskInnerRadiusAU: selection.diskInnerRadiusAU,
                 diskRadiusAU: selection.diskRadiusAU,
@@ -1323,7 +1327,7 @@ class ArtificialManager extends EffectableEntity {
             this.storeConstructedWorld();
         }
         if (this.autoStart && !this.activeProject) {
-            this.startDraftConstruction();
+            this.startDraftConstruction(this.autoStartMode === 'prepay');
         }
     }
 
@@ -1598,6 +1602,7 @@ class ArtificialManager extends EffectableEntity {
         core,
         starContext
       };
+      if (options?.prepay) this.applyPrepay(selection, cost);
       const prepayState = this.getPrepayState(selection, cost);
       const remainingCost = this.getRemainingCost(cost, prepayState.paid);
       if (!this.canCoverCost(remainingCost)) {
@@ -1697,6 +1702,7 @@ class ArtificialManager extends EffectableEntity {
         targetFluxWm2: options?.targetFluxWm2 || RINGWORLD_TARGET_FLUX_WM2,
         starCore
       };
+      if (options?.prepay) this.applyPrepay(selection, cost);
       const prepayState = this.getPrepayState(selection, cost);
       const remainingCost = this.getRemainingCost(cost, prepayState.paid);
       if (!this.canCoverCost(remainingCost)) return false;
@@ -1796,6 +1802,7 @@ class ArtificialManager extends EffectableEntity {
         diskRadiusAU,
         diskStarCore: starCore
       };
+      if (options?.prepay) this.applyPrepay(selection, cost);
       const prepayState = this.getPrepayState(selection, cost);
       const remainingCost = this.getRemainingCost(cost, prepayState.paid);
       if (!this.canCoverCost(remainingCost)) return false;
@@ -2654,6 +2661,7 @@ class ArtificialManager extends EffectableEntity {
             prioritizeSpaceStorage: this.prioritizeSpaceStorage,
             ignoreStrategicReserve: this.ignoreStrategicReserve,
             autoStart: this.autoStart,
+            autoStartMode: this.autoStartMode,
             autoStore: this.autoStore,
             autoStoreWithMaxStockpile: this.autoStoreWithMaxStockpile,
             fleetCapacityWorldCap: this.fleetCapacityWorldCap,
@@ -2681,6 +2689,7 @@ class ArtificialManager extends EffectableEntity {
         this.prioritizeSpaceStorage = state.prioritizeSpaceStorage !== false;
         this.ignoreStrategicReserve = state.ignoreStrategicReserve === true;
         this.autoStart = state.autoStart === true;
+        this.autoStartMode = state.autoStartMode === 'prepay' ? 'prepay' : 'start';
         this.autoStore = state.autoStore === true;
         this.autoStoreWithMaxStockpile = state.autoStoreWithMaxStockpile !== false;
         if (Array.isArray(state.unlockedTypes)) {

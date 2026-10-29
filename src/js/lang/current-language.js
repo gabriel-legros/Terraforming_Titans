@@ -510,6 +510,8 @@ setLanguageData({
         close: 'X',
         confirm: 'Confirm',
         autoStart: 'Auto Start',
+        start: 'Start',
+        autoMode: 'Automatic construction mode',
         autoStore: 'Auto Store',
         autoStoreWithMaxStockpile: 'with max stockpile',
         paid: 'Paid',
@@ -5572,6 +5574,7 @@ setLanguageData({
         presetScriptUsageLine: 'line {line}',
         presetScriptUsageLineNamed: 'line {line} ({name})',
         sidebar: {
+          pauseAll: 'Pause all',
           autoTravel: 'Auto-travel',
           scripting: 'Scripting',
           ships: 'Ships',
