@@ -809,7 +809,6 @@ const projectParameters = {
     type: 'PlanetaryThrustersProject',
     name: '',
     category: 'infrastructure',
-    requireStar: true,
     cost: {
       colony: {
         metal: 5_000_000_000,

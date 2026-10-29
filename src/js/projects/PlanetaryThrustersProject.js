@@ -276,6 +276,7 @@ class PlanetaryThrustersProject extends Project{
     /* spin */
     const spinHTML=`<div class="card-header"><span class="card-title">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.spin.title', 'Spin')} <span id="thruster-spin-tooltip" class="info-tooltip-icon">&#9432;</span></span></div>
     <div class="card-body">
+      <div id="thruster-rogue-warning" class="thruster-rogue-warning" ${terraforming.celestialParameters.rogue ? '' : 'hidden'}>${t('ui.projects.planetaryThrusters.spin.rogueWarning')}</div>
       <div class="stats-grid six-col">
         <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.spin.rotation', 'Rotation:')}</span><span id="rotNow" class="stat-value">—</span></div>
         <div><span class="stat-label">${getPlanetaryThrustersText('ui.projects.planetaryThrusters.common.target', 'Target:')}</span>
@@ -324,7 +325,7 @@ class PlanetaryThrustersProject extends Project{
     </div>`;
     const motCard=document.createElement('div');motCard.className="info-card";motCard.innerHTML=motHTML;c.appendChild(motCard);
     if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(motCard);
-    motCard.style.display=this.isCompleted?"block":"none";
+    motCard.style.display=this.isCompleted && !terraforming.celestialParameters.rogue?"block":"none";
 
     /* power */
     const veDisplay = this.hasTractorBeams()
@@ -358,6 +359,7 @@ class PlanetaryThrustersProject extends Project{
     const distTargetEl = g('#distTarget', motCard);
     const distDvEl = g('#distDv', motCard);
     this.el={spinCard, motCard, pwrCard,
+      rogueWarning:g('#thruster-rogue-warning',spinCard),
       rotNow:g('#rotNow',spinCard),rotTarget:g('#rotTarget',spinCard),
       rotDv:g('#rotDv',spinCard),rotE:g('#rotE',spinCard),rotCb:g('#rotInvest',spinCard),
       rotSpent:g('#rotSpent',spinCard),rotBurn:g('#rotBurn',spinCard),
@@ -394,7 +396,7 @@ class PlanetaryThrustersProject extends Project{
       g('#thruster-rogue-tooltip', motCard),
       getPlanetaryThrustersText(
         'ui.projects.planetaryThrusters.motion.goRogueTooltip',
-        'Cut ties with the host star once the colony reaches 10000 AU. This permanently marks the world as a rogue planet, removes the star, and shutters planetary thrusters.'
+        'Cut ties with the host star once the colony reaches 10000 AU. This permanently marks the world as a rogue planet and removes the star. Planetary thrusters remain available for spin only; Hyperion Lanterns control the day-night cycle.'
       )
     );
     attachDynamicInfoTooltip(
@@ -454,7 +456,7 @@ class PlanetaryThrustersProject extends Project{
       }
     };
     this.el.distCb.onchange= ()=>{
-      this.motionInvest = this.el.distCb.checked;
+      this.motionInvest = this.el.distCb.checked && !terraforming.celestialParameters.rogue;
       if(this.motionInvest){
         this.spinInvest=false;this.el.rotCb.checked=false;
         this.activeMode='motion';
@@ -569,6 +571,7 @@ class PlanetaryThrustersProject extends Project{
       this.setBurnTime(this.el ? this.el.distBurn : null, Number.NaN);
       return;
     }
+    if(p.rogue) return;
     // If we've escaped previously, ignore parent for preview and show heliocentric costs
     if(!isBoundToParent(p)){
       const tgt=this.readMotionTargetAU();
@@ -643,6 +646,7 @@ class PlanetaryThrustersProject extends Project{
     this.activeMode = null;
     this.dVreq = 0;
     this.dVdone = 0;
+    const spinPeriod = getSpinPeriodHours(terraforming.celestialParameters);
     const celestialTargets = [
       terraforming?.celestialParameters,
       terraforming?.initialCelestialParameters,
@@ -653,8 +657,8 @@ class PlanetaryThrustersProject extends Project{
       cel.rogue = true;
       cel.roguePulsar = false;
       cel.starLuminosity = 0;
-      // When going rogue, preserve current rotation as day-night cycle but set spin to 0
-      cel.spinPeriod = 0;
+      // Preserve physical spin independently of the lantern-controlled day-night cycle.
+      cel.spinPeriod = spinPeriod;
       if (cel.rotationPeriod === undefined || cel.rotationPeriod === 0) {
         cel.rotationPeriod = 24; // Default to 24h day-night cycle
       }
@@ -698,6 +702,12 @@ class PlanetaryThrustersProject extends Project{
       return;
     }
 
+    if(this.motionInvest && p.rogue){
+      this.motionInvest=false;
+      this.dVreq=this.dVdone=0;
+      this.activeMode=null;
+      return;
+    }
     if(this.motionInvest){
       if(resetEnergy) this.energySpentMotion=0;
       if (isBoundToParent(p)) {
@@ -736,25 +746,28 @@ class PlanetaryThrustersProject extends Project{
       return;
     }
 
+    const p = terraforming.celestialParameters;
+    const rogueWarningText = t('ui.projects.planetaryThrusters.spin.rogueWarning');
+    if(this.el.rogueWarning.textContent !== rogueWarningText) this.el.rogueWarning.textContent = rogueWarningText;
+    if(this.el.rogueWarning.hidden !== !p.rogue) this.el.rogueWarning.hidden = !p.rogue;
     if(this.el.spinCard){
       const vis = this.isCompleted ? 'block' : 'none';
       this.el.spinCard.style.display = vis;
-      this.el.motCard.style.display = vis;
+      this.el.motCard.style.display = this.isCompleted && !p.rogue ? 'block' : 'none';
       this.el.pwrCard.style.display = vis;
     }
     if(this.el.rotCb) this.el.rotCb.checked = this.spinInvest;
     if(this.el.distCb) this.el.distCb.checked = this.motionInvest;
     if(this.el.goRogueAutoCb) this.el.goRogueAutoCb.checked = this.autoGoRogue;
     if(this.el.goRogueBtn) this.el.goRogueBtn.disabled = !this.canGoRogue();
-    const p = terraforming.celestialParameters;
 
     // If the project state says we escaped, mirror that onto the planet on load
     if(this.escapeComplete && p && !p.hasEscapedParent){ p.hasEscapedParent = true; }
 
     this.el.rotNow.textContent = getPlanetaryThrustersText(
       'ui.projects.planetaryThrusters.spin.rotationValue',
-      `${fmt(getRotationPeriodHours(p)/24,false,3)} days`,
-      { value: fmt(getRotationPeriodHours(p)/24,false,3) }
+      `${fmt(getSpinPeriodHours(p)/24,false,3)} days`,
+      { value: fmt(getSpinPeriodHours(p)/24,false,3) }
     );
     // Show parent-centric radius when truly bound; heliocentric AU otherwise
     this.el.distNow.textContent = isBoundToParent(p)
@@ -807,7 +820,7 @@ class PlanetaryThrustersProject extends Project{
       }
     }
 
-    if(this.el.distTarget){
+    if(this.el.distTarget && !p.rogue){
       if(isBoundToParent(p)){
         this.el.distTargetRow.style.display="none";
         this.el.distDvRow.style.display="none"; // use Escape row when bound to parent
@@ -897,7 +910,7 @@ class PlanetaryThrustersProject extends Project{
       this.lastActiveTime = 0;
       return;
     }
-    if(!this.isCompleted || this.power<=0 || (!this.spinInvest && !this.motionInvest)){
+    if(!this.isCompleted || this.power<=0 || (!this.spinInvest && (!this.motionInvest || terraforming.celestialParameters.rogue))){
       this.lastActiveTime = 0;
       return;
     }
@@ -910,7 +923,7 @@ class PlanetaryThrustersProject extends Project{
   estimateCostAndGain(deltaTime = 1000, applyRates = true, productivity = 1){
     const totals = { cost: {}, gain: {} };
     this.syncPowerFromMode();
-    if(!this.isCompleted || this.power<=0 || (!this.spinInvest && !this.motionInvest)) return totals;
+    if(!this.isCompleted || this.power<=0 || (!this.spinInvest && (!this.motionInvest || terraforming.celestialParameters.rogue))) return totals;
     if (applyRates && resources?.colony?.energy?.modifyRate) {
       resources.colony.energy.modifyRate(-this.power * productivity, this.getRateSource(), 'project');
     }
@@ -920,7 +933,7 @@ class PlanetaryThrustersProject extends Project{
 
   applyCostAndGain(deltaTime = 1000, accumulatedChanges, productivity = 1){
     this.syncPowerFromMode();
-    if(!this.isCompleted || this.power<=0 || (!this.spinInvest && !this.motionInvest)){
+    if(!this.isCompleted || this.power<=0 || (!this.spinInvest && (!this.motionInvest || terraforming.celestialParameters.rogue))){
       return;
     }
     const p = terraforming.celestialParameters;
@@ -1055,11 +1068,6 @@ class PlanetaryThrustersProject extends Project{
     this.lastActiveTime = 0;
   }
 
-  isVisible(){
-    if (terraforming?.celestialParameters?.rogue) return false;
-    return super.isVisible();
-  }
-
   saveAutomationSettings() {
     const settings = {
       ...super.saveAutomationSettings(),
@@ -1111,7 +1119,7 @@ class PlanetaryThrustersProject extends Project{
       this.spinInvest = settings.spinInvest === true;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'motionInvest')) {
-      this.motionInvest = settings.motionInvest === true;
+      this.motionInvest = settings.motionInvest === true && !terraforming.celestialParameters.rogue;
     }
     if (Object.prototype.hasOwnProperty.call(settings, 'autoGoRogue')) {
       this.autoGoRogue = settings.autoGoRogue === true;
@@ -1224,7 +1232,7 @@ class PlanetaryThrustersProject extends Project{
     this.powerPercent = Math.max(0, state.powerPercent ?? this.powerPercent);
     this.step = state.step || 1;
     this.spinInvest = state.spinInvest || false;
-    this.motionInvest = state.motionInvest || false;
+    this.motionInvest = !terraforming.celestialParameters.rogue && (state.motionInvest || false);
     this.autoGoRogue = state.autoGoRogue === true;
     this.tgtDays = Math.min(THRUSTER_MAX_SPIN_DAYS, Math.max(0.1, state.tgtDays || 1));
     this.tgtAU = Math.min(THRUSTER_MAX_DISTANCE_AU, Math.max(0.1, state.tgtAU || 1));

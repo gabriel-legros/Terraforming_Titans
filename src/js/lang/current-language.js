@@ -2379,6 +2379,7 @@ setLanguageData({
         liquidHydrogenStatus: 'Blocked: remove liquid hydrogen first',
         spin: {
           title: 'Spin',
+          rogueWarning: 'On rogue worlds, Hyperion Lanterns control the day-night cycle. Changing physical spin does not change the day-night cycle.',
           tooltip: 'Use planetary thrusters to change the world\'s rotation period. When you check Invest, continuous thruster power is applied toward the target day length, consuming colony energy per second. Progress is measured in equivalent delta-v; when the target is reached, investment stops automatically.',
           rotation: 'Rotation:',
           day: 'day',
@@ -2398,7 +2399,7 @@ setLanguageData({
           hillRadius: 'Hill Radius:',
           goRogue: 'Go Rogue',
           autoGoRogueAriaLabel: 'Automatically go rogue when available',
-          goRogueTooltip: 'Cut ties with the host star once the colony reaches 10000 AU. This permanently marks the world as a rogue planet, removes the star, and shutters planetary thrusters.',
+          goRogueTooltip: 'Cut ties with the host star once the colony reaches 10000 AU. This permanently marks the world as a rogue planet and removes the star. Planetary thrusters remain available for spin only; Hyperion Lanterns control the day-night cycle.',
           escapeParentFirst: '⚠ Escape parent first',
           parentFallback: 'Parent',
         },
