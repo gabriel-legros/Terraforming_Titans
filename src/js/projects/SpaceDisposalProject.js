@@ -333,7 +333,8 @@ class SpaceDisposalProject extends SpaceExportBaseProject {
       const target = this.createDisposalTarget(rawTarget);
       const selection = target.selectedDisposalResource;
       const key = selection ? `${selection.category}:${selection.resource}` : null;
-      if (!key || !validKeys[key]) {
+      // Research effects are restored after project state; keep waste targets until then.
+      if (!key || (!validKeys[key] && !this.isStellarWasteSelection(selection))) {
         target.selectedDisposalResource = null;
       }
       sanitized.push(target);

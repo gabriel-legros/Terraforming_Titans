@@ -11,6 +11,12 @@ function createHarness() {
 
   class MockSpaceExportBaseProject {
     updateUI() {}
+    saveState() { return {}; }
+    loadState() {}
+    saveAutomationSettings() { return {}; }
+    loadAutomationSettings() {}
+    saveTravelState() { return {}; }
+    loadTravelState() {}
   }
 
   setGlobal('SpaceExportBaseProject', MockSpaceExportBaseProject, originalGlobals);
@@ -67,6 +73,67 @@ function createOxygenTarget() {
 }
 
 describe('Resource Disposal active-target grace', () => {
+  it.each([
+    ['game state', 'saveState', 'loadState'],
+    ['project preset', 'saveAutomationSettings', 'loadAutomationSettings'],
+    ['travel state', 'saveTravelState', 'loadTravelState'],
+  ])('preserves waste targets in %s before research effects are restored', (_label, save, load) => {
+    const { project, cleanup } = createHarness();
+    const originalElements = global.projectElements;
+    global.projectElements = {};
+    let wasteUnlocked = true;
+    project.isBooleanFlagSet = flagId => flagId === 'stellarGarbageDisposal' && wasteUnlocked;
+    project.maxDisposalTargets = 15;
+    project.nextDisposalTargetId = 1;
+    project.getDefaultLimitSettings = () => ({
+      disableTemperatureThreshold: 303.15,
+      disablePressureThreshold: 0,
+      disableCoverageThreshold: 0,
+    });
+    project.getDisposalGroupData = () => ({
+      resourceGroupLookup: wasteUnlocked ? {
+        'surface:scrapMetal': 'stellarWaste',
+        'surface:garbage': 'stellarWaste',
+        'surface:trash': 'stellarWaste',
+        'surface:junk': 'stellarWaste',
+        'surface:radioactiveWaste': 'stellarWaste',
+      } : {},
+    });
+    project.clearContinuousExecutionPlanCache = () => {};
+    project.disposalTargets = ['scrapMetal', 'garbage', 'trash', 'junk', 'radioactiveWaste']
+      .map(resource => project.createDisposalTarget({
+        selectedDisposalResource: { category: 'surface', resource },
+        autoStart: true,
+      }));
+
+    try {
+      const saved = JSON.parse(JSON.stringify(project[save]()));
+      wasteUnlocked = false;
+      project.disposalTargets = [];
+      project[load](saved);
+
+      expect(project.cloneDisposalTargets()).toEqual(saved.disposalTargets);
+      expect(project.disposalTargets.every(target => !project.canTargetRun(target))).toBe(true);
+      project.ensureDisposalTargets();
+      expect(project.cloneDisposalTargets()).toEqual(saved.disposalTargets);
+
+      wasteUnlocked = true;
+      project.ensureDisposalTargets();
+      expect(project.cloneDisposalTargets()).toEqual(saved.disposalTargets);
+      expect(project.disposalTargets.every(target => project.canTargetRun(target))).toBe(true);
+      expect(project[save]().disposalTargets).toEqual(saved.disposalTargets);
+
+      project.disposalTargets[0].selectedDisposalResource = { category: 'surface', resource: 'invalidWaste' };
+      project.disposalTargets[1].selectedDisposalResource = { category: 'colony', resource: 'garbage' };
+      project.sanitizeDisposalTargets();
+      expect(project.disposalTargets[0].selectedDisposalResource).toBeNull();
+      expect(project.disposalTargets[1].selectedDisposalResource).toBeNull();
+    } finally {
+      global.projectElements = originalElements;
+      cleanup();
+    }
+  });
+
   it('refreshes disposal options when travel restores the waste unlock after UI creation', () => {
     const { project, cleanup } = createHarness();
     const originalElements = global.projectElements;
