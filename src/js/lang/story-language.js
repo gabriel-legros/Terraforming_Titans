@@ -489,7 +489,7 @@ setLanguageData({
           "narrative": "Mary : 'Excellent.  We have the basic components in place.  Now comes the hard part.  We actually need to assemble this thing.  It's going to require a lot of extra structural material.  I am sorry HOPE I am going to have to ask you to help Mars and Titan this time.  The assembly... we can't do it alone.  It's too big.'"
         },
         "chapter8.3": {
-          "narrative": "Evelyn : 'Mary!  Kane and his followers are sabotaging thruster sites on Mars!'  \n Mary : 'I know.'  \n Evelyn : 'Do... do something?'  \n Mars : 'I already did.  *picks up phone*  Feroza.  You got how many?  10?  Great.  Make them talk.'  \n Evelyn : 'That was... that was bait?'  \n Mary : 'Yes.  I let security be a little bit more lax than usual today.'"
+          "narrative": "Evelyn : 'Mary!  Kane and his followers are sabotaging thruster sites on Mars!'  \n Mary : 'I know.'  \n Evelyn : 'Do... do something?'  \n Mary : 'I already did.  *picks up phone*  Feroza.  You got how many?  10?  Great.  Make them talk.'  \n Evelyn : 'That was... that was bait?'  \n Mary : 'Yes.  I let security be a little bit more lax than usual today.'"
         },
         "chapter8.4": {
           "narrative": "Evelyn : 'Mary...'  \n Mary : 'What is it?' \n Evelyn : 'HOPE just... unlocked the ability to recover silica from asteroids.'  \n Mary : 'That sounds useful.'  \n Evelyn : 'Yes but...  that was not planned.  Mars has lots of rocks so we never planned for this.'  \n Mary : 'So?'  \n Evelyn : 'That means HOPE is... learning.'  \n Mary : '...  Good work HOPE.  Keep going.'  \n System Message : Silica space mining now available."
