@@ -506,7 +506,8 @@ class DagonCutscene {
     const animate = now => {
       this.raf = 0;
       if (!this.visible || document.hidden || !this.root.isConnected) return;
-      const dt = Math.min(100, now - last);
+      // The first frame timestamp can precede the performance.now() sampled above.
+      const dt = Math.max(0, Math.min(100, now - last));
       last = now;
       this.elapsedSeconds += dt / 1000;
       if (!this.motionQuery.matches) this.draw(this.elapsedSeconds);
