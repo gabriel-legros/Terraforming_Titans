@@ -533,6 +533,22 @@
     color: #555555;
   }
 
+  .terraforming-graphs-phase-legend {
+    justify-content: center;
+  }
+
+  .terraforming-graphs-phase-legend .terraforming-graphs-legend-swatch {
+    box-sizing: border-box;
+    border: 1px solid #888888;
+    flex-shrink: 0;
+  }
+
+  .terraforming-graphs-phase-legend .is-current {
+    border-radius: 50%;
+    border-color: #ffffff;
+    box-shadow: 0 0 0 1px #888888;
+  }
+
   @media (max-width: 760px) {
     .terraforming-graphs-body {
       grid-template-columns: 1fr;

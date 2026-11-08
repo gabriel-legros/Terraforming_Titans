@@ -13,6 +13,13 @@ const TERRAFORMING_PHASE_ZOOM_STEP = 1.25;
 const TERRAFORMING_PHASE_MIN_SPAN_RATIO = 0.08;
 const TERRAFORMING_PHASE_MAX_TEMPERATURE = 10000;
 const TERRAFORMING_PHASE_MAX_PRESSURE = 1e12;
+const TERRAFORMING_PHASE_COLORS = {
+  solid: '#bcd9f3',
+  liquid: '#3b82c4',
+  gas: '#f4f4f4',
+  supercritical: '#f5b041',
+  current: '#e11d48'
+};
 
 function getTerraformingGraphText(path, fallback, vars) {
   return t(`ui.terraforming.graphs.${path}`, vars, fallback);
@@ -420,6 +427,7 @@ class TerraformingGraphsManager {
       phaseSection: null,
       phaseTitle: null,
       phaseCanvas: null,
+      phaseLegendItems: {},
       phaseZoomControls: null,
       phaseZoomIn: null,
       phaseZoomOut: null,
@@ -540,6 +548,16 @@ class TerraformingGraphsManager {
     phaseDisclaimer.textContent = getTerraformingGraphText('phaseDisclaimer', 'Phase diagrams in Terraforming Titans are very simplified versions of the real ones. Pressure is typically used as saturation pressure, not total pressure.');
     const phaseCanvas = document.createElement('canvas');
     phaseCanvas.className = 'terraforming-graphs-phase-canvas';
+    const phaseLegend = document.createElement('div');
+    phaseLegend.className = 'terraforming-graphs-legend terraforming-graphs-phase-legend';
+    for (const [id, color] of Object.entries(TERRAFORMING_PHASE_COLORS)) {
+      const item = this.createLegendItem();
+      item.swatch.style.backgroundColor = color;
+      item.swatch.classList.toggle('is-current', id === 'current');
+      item.label.textContent = getTerraformingGraphText(`phaseLegend.${id}`);
+      phaseLegend.appendChild(item.wrapper);
+      this.ui.phaseLegendItems[id] = item;
+    }
     const phaseZoomControls = document.createElement('div');
     phaseZoomControls.className = 'terraforming-graphs-phase-zoom';
     const phaseZoomIn = document.createElement('button');
@@ -562,6 +580,7 @@ class TerraformingGraphsManager {
     phaseSection.appendChild(phaseTitle);
     phaseSection.appendChild(phaseCanvas);
     phaseSection.appendChild(phaseZoomControls);
+    phaseSection.appendChild(phaseLegend);
     phaseSection.appendChild(phaseNote);
     phaseSection.appendChild(phaseButtons);
     chart.appendChild(canvas);
@@ -1243,6 +1262,10 @@ class TerraformingGraphsManager {
   }
 
   drawPhaseDiagram() {
+    for (const [id, item] of Object.entries(this.ui.phaseLegendItems)) {
+      const label = getTerraformingGraphText(`phaseLegend.${id}`);
+      if (item.label.textContent !== label) item.label.textContent = label;
+    }
     const definition = TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS[this.selectedPhaseDiagram]
       || TERRAFORMING_PHASE_DIAGRAM_DEFINITIONS.water;
     const baseRanges = this.buildPhaseBaseRanges(definition);
@@ -1299,13 +1322,6 @@ class TerraformingGraphsManager {
     ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     ctx.clearRect(0, 0, width, height);
 
-    const colorMap = {
-      gas: '#f4f4f4',
-      liquid: '#3b82c4',
-      solid: '#bcd9f3',
-      supercritical: '#f5b041'
-    };
-
     const tempSpan = maxTemp - minTemp;
     const logSpan = logMax - logMin;
     const darkMode = document.body.classList.contains('dark-mode');
@@ -1341,7 +1357,7 @@ class TerraformingGraphsManager {
         } else {
           phase = pressure >= phaseBoundaryPressure ? 'liquid' : 'gas';
         }
-        ctx.fillStyle = colorMap[phase];
+        ctx.fillStyle = TERRAFORMING_PHASE_COLORS[phase];
         const x = padding.left + colT * plotWidth;
         const cellWidth = plotWidth / cols + 0.5;
         const cellHeight = plotHeight / rows + 0.5;
@@ -1413,7 +1429,7 @@ class TerraformingGraphsManager {
     const markerY = padding.top + (1 - (Math.log10(clampedPressure) - logMin) / logSpan) * plotHeight;
     ctx.beginPath();
     ctx.arc(markerX, markerY, 4, 0, Math.PI * 2);
-    ctx.fillStyle = '#e11d48';
+    ctx.fillStyle = TERRAFORMING_PHASE_COLORS.current;
     ctx.fill();
     ctx.lineWidth = 1.5;
     ctx.strokeStyle = '#ffffff';

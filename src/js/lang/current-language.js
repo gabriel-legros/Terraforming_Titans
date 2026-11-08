@@ -3960,6 +3960,13 @@ setLanguageData({
           oxygen: 'O2',
           nitrogen: 'N2',
         },
+        phaseLegend: {
+          solid: 'Solid',
+          liquid: 'Liquid',
+          gas: 'Gas',
+          supercritical: 'Supercritical fluid',
+          current: 'Current conditions',
+        },
       },
       hazardsUi: {
         statusLabels: {
