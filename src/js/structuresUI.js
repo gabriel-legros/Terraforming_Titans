@@ -354,7 +354,7 @@ function refreshAutoBuildTarget(structure) {
     : ` (${formatNumber(aerostatCapacity, true)})`;
 
   if (els.autoBuildTarget) {
-    const targetText = autoBuildUsesFill
+    let targetText = autoBuildUsesFill
       ? `${getStructuresUIText('ui.structures.autoBuild.maxFill', 'Max fill : {value}%', {
           value: formatNumber(structure.autoBuildFillPercent || 0, true)
         })}${aerostatCapacitySuffix}`
@@ -369,6 +369,16 @@ function refreshAutoBuildTarget(structure) {
         : getStructuresUIText('ui.structures.autoBuild.targetText', 'Target : {value}', {
             value: `${formatNumber(targetCount, true)}${aerostatCapacitySuffix}`
           });
+    if (structure.autoBuildEditing) {
+      targetText = `(\u23f8) ${targetText} (\u23f8)`;
+      const pausedLabel = getStructuresUIText('ui.structures.autoBuild.pausedWhileEditing', null);
+      const targetLabel = `${pausedLabel}. ${targetText}`;
+      if (els.autoBuildTarget.getAttribute('aria-label') !== targetLabel) {
+        els.autoBuildTarget.setAttribute('aria-label', targetLabel);
+      }
+    } else if (els.autoBuildTarget.hasAttribute('aria-label')) {
+      els.autoBuildTarget.removeAttribute('aria-label');
+    }
     if (els.autoBuildTarget.textContent !== targetText) {
       els.autoBuildTarget.textContent = targetText;
     }
@@ -590,7 +600,10 @@ function rebuildStructureUICache() {
 function invalidateStructureUICache() {
   structureUICacheInvalidated = true;
   // Explicitly clear element caches when UI is rebuilt
-  for (const k in structureUIElements) delete structureUIElements[k];
+  for (const k in structureUIElements) {
+    structureUIElements[k].boundStructure.autoBuildEditing = false;
+    delete structureUIElements[k];
+  }
   for (const k in unhideButtonContainerCache) delete unhideButtonContainerCache[k];
 }
 
@@ -681,6 +694,8 @@ function createStructureButtons(structures, containerId, buildCallback, toggleCa
   });
   Object.keys(existingRows).forEach(structureName => {
     const row = existingRows[structureName];
+    const cached = structureUIElements[structureName];
+    if (cached) cached.boundStructure.autoBuildEditing = false;
     cleanupTrackedUIListeners(row);
     cleanupDynamicTooltipsIn(row);
     row.remove();
@@ -726,6 +741,7 @@ function rebindStructureInstance(nextStructure, cached, isColony) {
 
 function refreshStructureRowStaticText(structure, cached) {
   if (!cached) return;
+  structure.autoBuildEditing = document.activeElement === cached.autoBuildInput;
   if (cached.combinedRow) {
     cached.combinedRow.classList.toggle('hidden', !structure.unlocked || structure.isHidden);
   }
@@ -999,6 +1015,14 @@ function createStructureRow(structure, buildCallback, toggleCallback, isColony) 
     }
   });
   cached.autoBuildWire = autoBuildWire;
+  autoBuildInput.addEventListener('focus', () => {
+    structure.autoBuildEditing = true;
+    refreshAutoBuildTarget(structure);
+  });
+  autoBuildInput.addEventListener('blur', () => {
+    structure.autoBuildEditing = false;
+    refreshAutoBuildTarget(structure);
+  });
 
   const autoBuildBasisSelect = document.createElement('select');
   autoBuildBasisSelect.classList.add('auto-build-basis');

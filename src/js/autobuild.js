@@ -1365,7 +1365,7 @@ function autoBuild(buildings, delta = 0) {
     // Step 1: Calculate ratios and populate buildableBuildings with required info
     for (const buildingName in buildings) {
         const building = buildings[buildingName];
-        if (!building || building.isHidden || !building.unlocked) continue;
+        if (!building || building.isHidden || !building.unlocked || building.autoBuildEditing) continue;
         let skipAutoBuildForAutoUpgradeColony = false;
         if (gameSettings.autobuildIgnoreAutoUpgradeColonies && colonies[buildingName] === building && building.autoUpgradeEnabled) {
             const nextName = building.getNextTierName();

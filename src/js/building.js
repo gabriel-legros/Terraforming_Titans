@@ -123,6 +123,7 @@ class Building extends EffectableEntity {
     this.alertedWhenUnlocked = this.unlocked ? true : false;
 
     this.autoBuildEnabled = false;
+    this.autoBuildEditing = false;
     this.autoBuildPercent = 0.1;
     this.autoBuildStep = 0.01;
     this.autoBuildPriority = 0;
