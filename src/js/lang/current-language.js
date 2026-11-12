@@ -1350,7 +1350,7 @@ setLanguageData({
       autoBuild: {
         header: 'Auto-build',
         targetText: 'Target : {value}',
-        pausedWhileEditing: 'Construction paused while editing target',
+        pausedWhileEditing: 'Construction and automatic activation paused while editing target',
         maxFill: 'Max fill : {value}%',
         priority: 'Priority : ',
         setActiveToTarget: 'Set active to target',

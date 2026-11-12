@@ -1240,7 +1240,7 @@ function canApplyAutoActiveTarget(building) {
     if (building.enforceAutoActiveLock && building.enforceAutoActiveLock()) {
         return false;
     }
-    return !!building.autoActiveEnabled;
+    return !!building.autoActiveEnabled && !building.autoBuildEditing;
 }
 
 function getAerostatSupportedBuildingLimit(building) {
