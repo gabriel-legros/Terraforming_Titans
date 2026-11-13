@@ -2647,6 +2647,13 @@ function produceResources(deltaTime, buildings) {
     spaceManager.clearTerraformedWorldCountCache?.();
   }
   reportStellarAbsorptionRates(deltaTime, accumulatedSpecialChanges.stellarAbsorption);
+  if (isManagerEffectivelyEnabled(galaxyManager, 'galaxyManager')) {
+    resources.special.fleetPower.modifyRate(
+      galaxyManager.getFaction(UHF_FACTION_ID).fleetGrowthRate,
+      getLocalizedRateSource('galaxy:fleetGrowth', 'ui.resourceRates.sources.fleetGrowth'),
+      'galaxy'
+    );
+  }
   recalculateTotalRates();
 }
 

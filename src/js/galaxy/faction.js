@@ -60,6 +60,7 @@ class GalaxyFaction {
         }
         this.fleetCapacity = 0;
         this.fleetPower = 0;
+        this.fleetGrowthRate = 0;
         this.controlledSectors = [];
         this.controlCacheDirty = true;
         this.borderSectors = [];
@@ -207,6 +208,7 @@ class GalaxyFaction {
     }
 
     update(deltaTime, manager) {
+        this.fleetGrowthRate = 0;
         this.updateFleetCapacity(manager);
         if ((this.contestedCacheDirty || this.neighborEnemyCacheDirty)
             && manager
@@ -248,7 +250,7 @@ class GalaxyFaction {
         if (!Number.isFinite(seconds) || seconds <= 0) {
             return;
         }
-        const baseChange = (capacityGap * seconds) / REPLACEMENT_SECONDS;
+        const baseChange = (capacity * seconds) / REPLACEMENT_SECONDS;
         if (!(baseChange > 0)) {
             return;
         }
@@ -268,6 +270,7 @@ class GalaxyFaction {
         const allowance = capacity - activeReserve;
         const nextPower = currentPower + appliedDelta;
         this.fleetPower = allowance >= 0 ? Math.min(nextPower, allowance) : Math.max(0, nextPower);
+        this.fleetGrowthRate = (this.fleetPower - currentPower) / seconds;
     }
 
     markControlDirty() {

@@ -984,6 +984,8 @@ function setupHarness(initialStorage = {}) {
   setGlobal('dayNightCycle', { isDay: () => true }, originalGlobals);
   setGlobal('gameSettings', { unfulfilledMaintenancePenalties: false }, originalGlobals);
   setGlobal('followersManager', null, originalGlobals);
+  setGlobal('galaxyManager', { enabled: false }, originalGlobals);
+  setGlobal('isManagerEffectivelyEnabled', manager => manager.enabled, originalGlobals);
   setGlobal('fundingModule', null, originalGlobals);
   setGlobal('terraforming', {
     initialLand: 0,

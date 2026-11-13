@@ -528,8 +528,13 @@
 
 .wgc-rd-artifact-toggle .ui-toggle__label {
   min-width: 0;
-  color: var(--wgc-text-light) !important;
+  color: #e4f2ff !important;
   white-space: nowrap;
+}
+
+#wgc-rd-section .wgc-rd-artifact-toggle:not(.is-on) .ui-toggle__track {
+  background-color: #263750;
+  border-color: #7898bd;
 }
 
 #wgc-rd-section {

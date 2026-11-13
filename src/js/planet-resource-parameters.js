@@ -299,6 +299,7 @@
       nanobots: { name: '', hasCap: true, baseCap: 1, initialValue: 1, unlocked: false, hideRate: true, showInSidebar: false, preserveOnTravel: true },
       solisPoints: { name: '', hasCap: false, initialValue: 0, unlocked: false, hideRate: true, showInSidebar: false, preserveOnTravel: true },
       galacticPopulation: { name: '', hasCap: true, baseCap: 0, initialValue: 0, unlocked: false, showInSidebar: false },
+      fleetPower: { name: '', hasCap: true, baseCap: 0, initialValue: 0, unlocked: false, showInSidebar: false },
       alienArtifact: { name: '', hasCap: false, initialValue: 0, unlocked: false, preserveOnTravel: true },
       crusaders: { name: '', hasCap: false, initialValue: 0, hideWhenSmall : true, unlocked: false },
       warpCircuits: { name: '', hasCap: false, initialValue: 0, unlocked: false },

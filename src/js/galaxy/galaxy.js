@@ -17,6 +17,7 @@ class GalaxyManager extends EffectableEntity {
     constructor() {
         super({ description: 'Manages the galactic view.', resetAt: GAME_RESET_LEVEL.NEW_GAME });
         this.enabled = false;
+        this.showFleetInSidebar = false;
         this.initialized = false;
         this.radius = GALAXY_RADIUS;
         this.factions = new Map();
@@ -75,6 +76,16 @@ class GalaxyManager extends EffectableEntity {
     markUIDirty(options = {}) {
         this.uiDirty = true;
         this.forceUIRefresh = this.forceUIRefresh || options.force === true;
+    }
+
+    syncFleetResources() {
+        const faction = this.getFaction(UHF_FACTION_ID);
+        const resource = resources.special.fleetPower;
+        resource.value = faction.fleetPower;
+        resource.baseCap = faction.fleetCapacity;
+        resource.cap = faction.fleetCapacity;
+        resource.unlocked = isManagerEffectivelyEnabled(this, 'galaxyManager');
+        resource.showInSidebar = this.showFleetInSidebar;
     }
 
     initialize() {
@@ -164,6 +175,7 @@ class GalaxyManager extends EffectableEntity {
             operations: operationState.operations,
             fleetUpgrades: this.#serializeFleetUpgrades(),
             successfulOperations: this.successfulOperations,
+            showFleetInSidebar: this.showFleetInSidebar,
             hasEverControlledWholeGalaxyFlag: this.hasEverControlledWholeGalaxy(),
             operationSteps: operationState.operationSteps,
             operationAutoSectors: operationState.operationAutoSectors,
@@ -246,6 +258,7 @@ class GalaxyManager extends EffectableEntity {
         });
         this.hasEverControlledWholeGalaxyFlag = state?.hasEverControlledWholeGalaxyFlag === true;
         this.hasSeenWelcomePopup = state?.hasSeenWelcomePopup === true;
+        this.showFleetInSidebar = state?.showFleetInSidebar === true;
         this.setPopupVisibilityState(state?.popupVisibility || {});
         if (state && Number.isFinite(state.successfulOperations)) {
             this.successfulOperations = Math.max(0, state.successfulOperations);

@@ -3185,6 +3185,19 @@ function cacheGalaxyElements() {
 
     const logistics = createGalaxySection(doc, getGalaxyText('sections.logisticsAndStatistics', 'Logistics & Statistics'));
     logistics.section.classList.add('galaxy-section--logistics');
+    const logisticsSidebarToggle = createToggleButton({
+        onLabel: getGalaxyText('logistics.showInSidebar'),
+        offLabel: getGalaxyText('logistics.showInSidebar'),
+        isOn: galaxyManager.showFleetInSidebar
+    });
+    logisticsSidebarToggle.classList.add('galaxy-logistics-sidebar-toggle');
+    logisticsSidebarToggle.addEventListener('click', () => {
+        galaxyManager.showFleetInSidebar = !galaxyManager.showFleetInSidebar;
+        setToggleButtonState(logisticsSidebarToggle, galaxyManager.showFleetInSidebar);
+        galaxyManager.syncFleetResources();
+        updateResourceDisplay(resources);
+    });
+    logistics.header.appendChild(logisticsSidebarToggle);
     const logisticsStats = doc.createElement('div');
     logisticsStats.className = 'galaxy-logistics-stats';
     const logisticsPowerRow = doc.createElement('div');
@@ -3197,7 +3210,7 @@ function cacheGalaxyElements() {
     logisticsPowerInfo.innerHTML = '&#9432;';
     const logisticsPowerTooltip = attachDynamicInfoTooltip(
         logisticsPowerInfo,
-        getGalaxyText('logistics.fleetPowerTooltip', 'Total UHF fleet strength currently ready to deploy in operations or defenses.  This value grows proportionally to fleet capacity over time, but suffers exponential growth penalty after it reaches 50% of fleet capacity.')
+        getGalaxyText('logistics.fleetPowerTooltip')
     );
     doc.body.appendChild(logisticsPowerTooltip);
     logisticsPowerLabel.appendChild(doc.createTextNode(' '));
@@ -3481,6 +3494,7 @@ function cacheGalaxyElements() {
         operationsSummaryItems: operationsCache.operationsSummaryItems,
         operationsStatusMessage: operationsCache.operationsStatusMessage,
         logisticsStats,
+        logisticsSidebarToggle,
         logisticsPowerValue,
         logisticsCapacityValue,
         logisticsCapacityTooltip: capacityTooltip.tooltip,
@@ -3999,6 +4013,7 @@ function updateLogisticsDisplay(manager, cache) {
     if (!cache) {
         return;
     }
+    setToggleButtonState(cache.logisticsSidebarToggle, manager?.showFleetInSidebar === true);
     const powerNode = cache.logisticsPowerValue;
     const capacityNode = cache.logisticsCapacityValue;
     const storyNode = cache.logisticsStoryMultiplierValue;

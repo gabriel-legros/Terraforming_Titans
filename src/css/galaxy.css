@@ -280,6 +280,38 @@
   gap: 8px;
 }
 
+.galaxy-section--logistics > .galaxy-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.galaxy-logistics-sidebar-toggle {
+  margin-left: auto;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  font-size: 0.8rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+.galaxy-logistics-sidebar-toggle .ui-toggle__label {
+  min-width: 0;
+  white-space: nowrap;
+}
+
+#space-galaxy .galaxy-logistics-sidebar-toggle .ui-toggle__label {
+  color: #e4f2ff;
+}
+
+#space-galaxy .galaxy-logistics-sidebar-toggle:not(.is-on) .ui-toggle__track {
+  background-color: #263750;
+  border-color: #7898bd;
+}
+
 .galaxy-section__header--with-close {
   display: flex;
   align-items: center;

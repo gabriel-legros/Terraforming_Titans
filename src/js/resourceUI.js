@@ -1900,6 +1900,9 @@ function updateResourceDisplay(resources, deltaSeconds) {
     const resourceNames = getResourceNamesForDisplay(category, resources[category], resources);
     for (let i = 0; i < resourceNames.length; i += 1) {
       const resourceName = resourceNames[i];
+      if (category === 'special' && resourceName === 'fleetPower') {
+        galaxyManager.syncFleetResources();
+      }
       const resourceObj = getDisplayResourceObject(resources, category, resourceName);
       if (!resourceObj) continue;
       const roundResourceBarAmountDown = category === 'colony' || category === 'spaceStorage';
