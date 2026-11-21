@@ -698,7 +698,11 @@ var progressMars = {
           terraformingParameter : 'tropicalTemperature',
           value: 273.15
       }],
-        reward: []
+        reward: [{
+          target: 'building',
+          targetId: 'waterPump',
+          type: 'enable'
+        }]
       },
       {
 	        id: "chapter3.3",
