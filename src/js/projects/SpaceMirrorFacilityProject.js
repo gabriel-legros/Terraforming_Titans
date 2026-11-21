@@ -1155,7 +1155,7 @@ function initializeMirrorOversightUI(container) {
   };
   setLifeOptimalButton.addEventListener('click', () => {
     const requirements = getActiveLifeDesignRequirements();
-    const optimalK = requirements.optimalGrowthTemperatureBaseK + lifeDesigner.currentDesign.optimalGrowthTemperature.value;
+    const optimalK = requirements.optimalGrowthTemperatureBaseK + lifeDesigner.currentDesign.optimalGrowthTemperature.getEffectiveValue();
     const displayValue = gameSettings.useCelsius ? optimalK - 273.15 : optimalK;
     const formattedValue = displayValue.toFixed(2);
     mirrorOversightSettings.targets.tropical = optimalK;
