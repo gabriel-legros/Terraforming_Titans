@@ -98,7 +98,7 @@ const rdItems = {
   componentsEfficiency: getWGCText('rdItems.componentsEfficiency', 'Components production efficiency'),
   electronicsEfficiency: getWGCText('rdItems.electronicsEfficiency', 'Electronics production efficiency'),
   superconductorEfficiency: getWGCText('rdItems.superconductorEfficiency', 'Superconductor production efficiency'),
-  androidsEfficiency: getWGCText('rdItems.androidsEfficiency', 'Androids production efficiency'),
+  androidsEfficiency: getWGCText('rdItems.androidsEfficiency', 'Androids production throughput'),
   superalloyEfficiency: getWGCText('rdItems.superalloyEfficiency', 'Superalloy production efficiency'),
   superalloyFusionEfficiency: getWGCText('rdItems.superalloyFusionEfficiency', 'Superalloy Fusion efficiency'),
   foodProduction: getWGCText('rdItems.foodProduction', 'Food production efficiency')

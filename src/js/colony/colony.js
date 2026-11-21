@@ -6,6 +6,12 @@ const luxuryResources = {
   androids: true
 };
 
+const colonyWasteResources = {
+  components: true,
+  electronics: true,
+  androids: true
+};
+
 const colonyOutputNeedResources = {
   energy: true,
   food: true
@@ -444,14 +450,37 @@ class Colony extends Building {
   
         // Accumulate consumption changes (as negative values)
         accumulatedChanges[category][resource] = (accumulatedChanges[category][resource] || 0) - fulfilledConsumption;
-  
+
         // Update consumption rate for the resource
         resources[category][resource].modifyRate(
           - (fullConsumption * (1000 / deltaTime)),
           this.getRateSource(),
           'building'
         );
+
+        if (category === 'colony' && colonyWasteResources[resource]) {
+          this.produceConsumptionWaste(accumulatedChanges, resources.colony[resource], fulfilledConsumption, deltaTime);
+        }
       }
+    }
+  }
+
+  // Worn-out goods become surface waste using the resource's maintenance conversion split.
+  produceConsumptionWaste(accumulatedChanges, sourceData, consumedAmount, deltaTime) {
+    if (!(consumedAmount > 0)) {
+      return;
+    }
+    const conversionEntries = getMaintenanceConversionEntries(sourceData);
+    for (let i = 0; i < conversionEntries.length; i += 1) {
+      const conversion = conversionEntries[i];
+      const amount = consumedAmount * conversion.value;
+      accumulatedChanges[conversion.category][conversion.resource] =
+        (accumulatedChanges[conversion.category][conversion.resource] || 0) + amount;
+      resources[conversion.category][conversion.resource].modifyRate(
+        amount * (1000 / deltaTime),
+        this.getRateSource(),
+        'building'
+      );
     }
   }
   

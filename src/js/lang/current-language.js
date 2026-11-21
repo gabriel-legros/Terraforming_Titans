@@ -4742,7 +4742,7 @@ setLanguageData({
           componentsEfficiency: 'Components production efficiency',
           electronicsEfficiency: 'Electronics production efficiency',
           superconductorEfficiency: 'Superconductor production efficiency',
-          androidsEfficiency: 'Androids production efficiency',
+          androidsEfficiency: 'Androids production throughput',
           superalloyEfficiency: 'Superalloy production efficiency',
           superalloyFusionEfficiency: 'Superalloy Fusion efficiency',
           foodProduction: 'Food production efficiency',
@@ -8378,7 +8378,7 @@ setLanguageData({
       },
       android_efficiency: {
         name: 'Androids Efficiency',
-        description: 'Increases android factory production by 40% per rank',
+        description: 'Increases android factory throughput by 40% per rank',
       },
       nanotech_efficiency: {
         name: 'Nanotech Efficiency',

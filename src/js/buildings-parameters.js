@@ -305,7 +305,8 @@ const buildingsParameters = {
     category: 'production',
     description: '',
     cost: { colony: { metal: 500, glass : 200, components: 100, electronics: 50} },
-    consumption: { colony: { energy: 100_000_000, metal: 0.4, electronics: 0.1} },
+    // 0.1 androids/s at 0.1 t each: 0.04 t metal, 0.04 t components and 0.02 t electronics per android.
+    consumption: { colony: { energy: 100_000_000, metal: 0.004, components: 0.004, electronics: 0.002} },
     realisticEnergyConsumption: 10_000,
     production: { colony: { androids: 0.1 } },
     storage: {},

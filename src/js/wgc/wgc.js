@@ -843,11 +843,21 @@ class WarpGateCommand extends EffectableEntity {
       componentsEfficiency: 'componentFactory',
       electronicsEfficiency: 'electronicsFactory',
       superconductorEfficiency: 'superconductorFactory',
-      androidsEfficiency: 'androidFactory',
       superalloyEfficiency: 'superalloyFoundry',
       superalloyFusionEfficiency: 'superalloyFusionReactor',
       foodProduction: 'hydroponicFarm',
     };
+    if (key === 'androidsEfficiency') {
+      addEffect({
+        target: 'building',
+        targetId: 'androidFactory',
+        type: 'throughputMultiplier',
+        value: mult - 1,
+        effectId,
+        sourceId: 'wgcRD'
+      });
+      return;
+    }
     if (mapping[key]) {
       addEffect({
         target: 'building',

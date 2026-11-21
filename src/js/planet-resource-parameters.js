@@ -23,7 +23,8 @@
       electronics: { name: '', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : { scrapMetal: 0.2, junk: 0.8 }}, unit: 'ton'},
       superconductors: { name: '', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'} , unit: 'ton' },
       superalloys: { name: '', initialValue: 0, hasCap: true, baseCap: 200, unlocked:false, maintenanceConversion : {surface : 'scrapMetal'}, maintenanceMultiplier: 0 , unit: 'ton' },
-      androids: {name: '', initialValue: 0, hasCap: true, baseCap: 1000, unlocked: false, maintenanceConversion : {surface : 'junk'}},
+      // One android is 0.1 t (40% metal, 40% components, 20% electronics); conversionValue converts its waste to tons.
+      androids: {name: '', initialValue: 0, hasCap: true, baseCap: 1000, unlocked: false, conversionValue: 0.1, maintenanceConversion : {surface : { scrapMetal: 0.84, junk: 0.16 }}},
       research: { name: '', initialValue: 0, hasCap: false, unlocked:false, marginTop: 10 },
       advancedResearch: { name: '', initialValue: 0, hasCap: false, unlocked:false, preserveOnTravel: true },
     },

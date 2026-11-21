@@ -96,7 +96,6 @@ class SkillManager {
       return Math.pow(effectConfig.baseValue, skill.rank);
     }
     if (
-      (skill.id === 'android_efficiency' && effectConfig.type === 'productionMultiplier') ||
       (skill.id === 'chemistry_mastery' && (
         effectConfig.type === 'productionMultiplier' ||
         effectConfig.type === 'consumptionMultiplier'

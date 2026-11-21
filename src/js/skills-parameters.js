@@ -81,7 +81,7 @@ const skillParameters = {
     effect: {
       target: 'building',
       targetId: 'androidFactory',
-      type: 'productionMultiplier',
+      type: 'throughputMultiplier',
       baseValue: 0.4,
       perRank: true
     },

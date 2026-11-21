@@ -1091,8 +1091,10 @@ class HazardousMachineryHazard {
       penaltyValues.androidDecayRatePerSecond * deltaSeconds
     );
     if (androidLoss > 0) {
+      // Hacked androids join the machinery by mass; androids.conversionValue is tons per android.
+      const androidMass = resources.colony.androids.conversionValue;
       resources.colony.androids.value = Math.max(0, (resources.colony.androids.value || 0) - androidLoss);
-      resource.increase(androidLoss);
+      resource.increase(androidLoss * androidMass);
       resources.colony.androids.modifyRate?.(
         -penaltyValues.androidDecayRatePerSecond,
         registerRateSource(
@@ -1102,7 +1104,7 @@ class HazardousMachineryHazard {
         'hazard'
       );
       resource.modifyRate?.(
-        penaltyValues.androidDecayRatePerSecond,
+        penaltyValues.androidDecayRatePerSecond * androidMass,
         registerRateSource(
           'hazard:hazardousMachineryAndroidConversion',
           getHazardousMachineryText('rateLabels.androidDecay', 'Hazardous Machinery')

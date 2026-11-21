@@ -2135,7 +2135,7 @@ const hydraOverrides = {
         minimumOceanCoverage: 0.1, exposurePerSecond: 0.002,
         excavationTonsPerSecond: 1e17,
         composition: { atmospheric: { oxygen: 0.4, carbonDioxide: 0.04, inertGas: 0.01 }, surface: { junk: 0.25, scrapMetal: 0.3 } },
-        androidHackingPerSecond: 0.1, massPerAndroid: 1
+        androidHackingPerSecond: 0.1, massPerAndroid: 0.1
       },
       ignis: {
         buildCostMultiplier: 4,
