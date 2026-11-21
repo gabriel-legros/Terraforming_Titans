@@ -130,6 +130,18 @@ progressData.chapters.push({
   reward: [ { target: 'building', targetId: 'atmosphericWaterCollector', type: 'enable' } ]
 });
 
+progressData.chapters.push({
+  id: 'any.waterPump',
+  type: 'journal',
+  chapter: -1,
+  narrative: 'Liquid water detected.\nProcessing blueprint : waterPump.btb...',
+  prerequisites: [
+    { type: 'condition', conditionId: 'shouldUnlockWaterPump', description: '' }
+  ],
+  objectives: [],
+  reward: [ { target: 'building', targetId: 'waterPump', type: 'enable' } ]
+});
+
 if (typeof module !== 'undefined') {
   module.exports = progressData;
 }

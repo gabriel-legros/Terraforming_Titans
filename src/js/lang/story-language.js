@@ -339,8 +339,8 @@ setLanguageData({
         "chapter3.1": {
           "narrative": "Receiving transmission...\n  'We have lichen now! It's a beautiful sight. In a slimy, green kind of way.  Like nature's questionable fashion choice, but hey, it's working!  Here's the problem though : life on Earth, as we know, simply won't grow without liquid water.  It can survive fine, for very long durations even, but growing?  Nope.  It's time to make some puddles. Get the equator to 273.15K. But go easy on the gas, okay? We're not trying to create Venus 2: Electric Boogaloo.  One more thing : as life begins to properly convert CO2 into O2, the planet might end up cooling again, with CO2 being a greenhouse gas and all.  Be careful, it's best to be a bit too hot than too cold at this stage, because if it starts snowing all over the planet the albedo will skyrocket, causing even more cooling. It's a chilly domino effect we don't want!'"
         },
-        "chapter3.2": {
-          "narrative": "Milestone Achievement: Liquid water is now stable at the equator. \nProcessing blueprint : waterPump.btb..."
+        "any.waterPump": {
+          "narrative": "Liquid water detected.\nProcessing blueprint : waterPump.btb..."
         },
         "chapter3.3": {
           "narrative": "Receiving transmission...\n  'The lichen is going wild! It's a regular garden of... well, lichen. Soon we can have grass, or even trees.  Next, we should start talking about air.  We can't have an atmosphere full of oxygen, that would be dangerous unfortunately.  We need some sort of filler.  Inert gases, mainly nitrogen, are ideal for that.   Need more nitrogen? Build more shipyards. More oxygen? Bury some carbon and electrolyze some water or silica. It's not rocket science... well, the shipyard part kind of is, but you get the idea.  You should start thinking about importing a bunch of it!'"

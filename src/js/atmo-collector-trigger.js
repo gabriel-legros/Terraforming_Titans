@@ -12,8 +12,13 @@ function shouldUnlockAtmosphericWaterCollector() {
   return temp > boiling;
 }
 
+function shouldUnlockWaterPump() {
+  return resources.surface.liquidWater.value > 1e6;
+}
+
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { shouldUnlockAtmosphericWaterCollector };
+  module.exports = { shouldUnlockAtmosphericWaterCollector, shouldUnlockWaterPump };
 } else {
   globalThis.shouldUnlockAtmosphericWaterCollector = shouldUnlockAtmosphericWaterCollector;
+  globalThis.shouldUnlockWaterPump = shouldUnlockWaterPump;
 }

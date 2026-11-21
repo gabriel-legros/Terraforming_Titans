@@ -701,24 +701,11 @@ var progressMars = {
         reward: []
       },
       {
-        id: "chapter3.2",
-        type: "journal",
-        chapter: 3,
-        narrative: "Milestone Achievement: Liquid water is now stable at the equator. \nProcessing blueprint : waterPump.btb...",
-        prerequisites: ["chapter3.1"],
-        objectives: [],
-        reward: [{
-          target: 'building',
-          targetId: 'waterPump',
-          type: 'enable'
-        }]
-      },
-      {
 	        id: "chapter3.3",
 	        type: "journal",
 	        chapter: 3,
 	        narrative: "Receiving transmission...\n  'The lichen is going wild! It's a regular garden of... well, lichen. Soon we can have grass, or even trees.  Next, we should start talking about air.  We can't have an atmosphere full of oxygen, that would be dangerous unfortunately.  We need some sort of filler.  Inert gases, mainly nitrogen, are ideal for that.   Need more nitrogen? Build more shipyards. More oxygen? Bury some carbon and electrolyze some water or silica. It's not rocket science... well, the shipyard part kind of is, but you get the idea.  You should start thinking about importing a bunch of it!'",
-	        prerequisites: ["chapter3.2"],
+	        prerequisites: ["chapter3.1"],
 	        objectives: [{
 	          type: 'terraforming',
 	          terraformingParameter : 'pressure',

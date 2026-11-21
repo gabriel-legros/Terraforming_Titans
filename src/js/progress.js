@@ -1049,6 +1049,10 @@ class StoryManager {
         } else if (!this.completedEventIds.has('chapterA.tentacles5')) {
             this.activeEventIds.delete('chapterA.4');
         }
+        // The Mars water pump unlock moved from chapter3.2 to the any.waterPump trigger.
+        if (this.completedEventIds.delete('chapter3.2') | this.activeEventIds.delete('chapter3.2')) {
+            this.completedEventIds.add('any.waterPump');
+        }
         this.waitingForJournalEventId = savedState.waitingForJournalEventId || null; // <<< Load waiting state
         this.currentChapter = savedState.currentChapter || 0;
         this.currentChapterPlanet = savedState.currentChapterPlanet || null;
