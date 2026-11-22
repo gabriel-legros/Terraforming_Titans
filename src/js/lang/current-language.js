@@ -508,6 +508,7 @@ setLanguageData({
         spaceStoragePayments: 'space storage payments',
         advancedSettings: 'Advanced Settings',
         ignoreStrategicReserve: 'Ignore strategic reserve',
+        keepAutoPrepayOnTravel: 'Keep auto prepay on on travel',
         close: 'X',
         confirm: 'Confirm',
         autoStart: 'Auto Start',

@@ -428,6 +428,7 @@ class ArtificialManager extends EffectableEntity {
         this.allowSpaceStoragePayments = true;
         this.prioritizeSpaceStorage = true;
         this.ignoreStrategicReserve = false;
+        this.keepAutoPrepayOnTravel = false;
         this.autoStart = false;
         this.autoStartMode = 'start';
         this.autoStore = false;
@@ -1255,6 +1256,11 @@ class ArtificialManager extends EffectableEntity {
 
     getAutoStart() {
         return this.autoStart;
+    }
+
+    clearAutoPrepayOnTravel() {
+        if (this.autoStartMode !== 'prepay' || this.keepAutoPrepayOnTravel) return;
+        this.clearAutoStart();
     }
 
     setAutoStore(value) {
@@ -2660,6 +2666,7 @@ class ArtificialManager extends EffectableEntity {
             allowSpaceStoragePayments: this.allowSpaceStoragePayments,
             prioritizeSpaceStorage: this.prioritizeSpaceStorage,
             ignoreStrategicReserve: this.ignoreStrategicReserve,
+            keepAutoPrepayOnTravel: this.keepAutoPrepayOnTravel,
             autoStart: this.autoStart,
             autoStartMode: this.autoStartMode,
             autoStore: this.autoStore,
@@ -2688,6 +2695,7 @@ class ArtificialManager extends EffectableEntity {
             : state.prioritizeSpaceStorage !== false;
         this.prioritizeSpaceStorage = state.prioritizeSpaceStorage !== false;
         this.ignoreStrategicReserve = state.ignoreStrategicReserve === true;
+        this.keepAutoPrepayOnTravel = state.keepAutoPrepayOnTravel === true;
         this.autoStart = state.autoStart === true;
         this.autoStartMode = state.autoStartMode === 'prepay' ? 'prepay' : 'start';
         this.autoStore = state.autoStore === true;

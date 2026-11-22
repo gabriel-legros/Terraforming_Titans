@@ -3133,6 +3133,7 @@ class SpaceManager extends EffectableEntity {
         }
         this._ensureGalacticPopulationTotals();
         initializeGameState({ resetLevel: GAME_RESET_LEVEL.PLANET });
+        artificialManager.clearAutoPrepayOnTravel();
         restoreCurrentSmbhShellworldSnapshot(this);
         if (followersManager && followersManager.syncGalacticBelievers) {
             followersManager.syncGalacticBelievers();

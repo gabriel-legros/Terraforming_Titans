@@ -1398,11 +1398,21 @@ function ensureArtificialLayout() {
   reserveCheckbox.type = 'checkbox';
   reserveCheckbox.id = 'artificial-ignore-strategic-reserve';
   reserveRow.append(reserveLabel, reserveCheckbox);
+  const keepPrepayRow = document.createElement('div');
+  keepPrepayRow.classList.add('space-storage-settings-row');
+  const keepPrepayLabel = document.createElement('label');
+  keepPrepayLabel.classList.add('space-storage-settings-label');
+  keepPrepayLabel.htmlFor = 'artificial-keep-auto-prepay-on-travel';
+  keepPrepayLabel.textContent = getArtificialText('costs.keepAutoPrepayOnTravel', 'Keep auto prepay on on travel');
+  const keepPrepayCheckbox = document.createElement('input');
+  keepPrepayCheckbox.type = 'checkbox';
+  keepPrepayCheckbox.id = 'artificial-keep-auto-prepay-on-travel';
+  keepPrepayRow.append(keepPrepayLabel, keepPrepayCheckbox);
   const advancedSettingsConfirm = document.createElement('button');
   advancedSettingsConfirm.type = 'button';
   advancedSettingsConfirm.classList.add('space-storage-settings-confirm');
   advancedSettingsConfirm.textContent = getArtificialText('costs.confirm', 'Confirm');
-  advancedSettingsWindow.append(advancedSettingsHeader, reserveRow, advancedSettingsConfirm);
+  advancedSettingsWindow.append(advancedSettingsHeader, reserveRow, keepPrepayRow, advancedSettingsConfirm);
   advancedSettingsOverlay.appendChild(advancedSettingsWindow);
   document.body.appendChild(advancedSettingsOverlay);
   artificialUICache.advancedSettingsOverlay = advancedSettingsOverlay;
@@ -2024,6 +2034,7 @@ function ensureArtificialLayout() {
   advancedSettingsButton.addEventListener('click', () => {
     if (artificialManager) {
       reserveCheckbox.checked = artificialManager.getIgnoreStrategicReserve();
+      keepPrepayCheckbox.checked = artificialManager.keepAutoPrepayOnTravel;
     }
     advancedSettingsOverlay.classList.add('is-visible');
   });
@@ -2040,6 +2051,9 @@ function ensureArtificialLayout() {
       artificialManager.setIgnoreStrategicReserve(reserveCheckbox.checked);
     }
     updateArtificialUI();
+  });
+  keepPrepayCheckbox.addEventListener('change', () => {
+    artificialManager.keepAutoPrepayOnTravel = keepPrepayCheckbox.checked;
   });
   autoStartCheckbox.addEventListener('change', () => {
     if (artificialManager) {
