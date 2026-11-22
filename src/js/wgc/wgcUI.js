@@ -1108,7 +1108,7 @@ function openRecruitDialog(teamIndex, slotIndex, member) {
   const autoInfo = document.createElement('span');
   autoInfo.className = 'info-tooltip-icon';
   autoInfo.innerHTML = '&#9432;';
-  attachDynamicInfoTooltip(autoInfo, getWGCText('autoTooltip', 'Automatically assigns points each update to match the ratios below. Ratios set to 0 are ignored.'));
+  attachDynamicInfoTooltip(autoInfo, getWGCText('autoTooltip'));
   autoToggle.appendChild(autoInfo);
   const autoCheckbox = document.createElement('input');
   autoCheckbox.type = 'checkbox';

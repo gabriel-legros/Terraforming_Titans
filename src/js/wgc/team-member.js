@@ -89,13 +89,7 @@ class WGCTeamMember {
     if (points <= 0) return false;
     const ratioSum = entries.reduce((sum, key) => sum + this.autoRatios[key], 0);
     if (ratioSum <= 0) return false;
-    const base = WGCTeamMember.getBaseStats(this.classType);
-    const current = {
-      power: this.power - base.power,
-      athletics: this.athletics - base.athletics,
-      wit: this.wit - base.wit
-    };
-    let total = entries.reduce((sum, key) => sum + Math.max(0, current[key]), 0);
+    let total = entries.reduce((sum, key) => sum + Math.max(0, this[key]), 0);
     let spent = 0;
     while (points > 0) {
       let bestStat = '';
@@ -105,7 +99,7 @@ class WGCTeamMember {
         let mse = 0;
         for (const candidate of entries) {
           const desired = this.autoRatios[candidate] / ratioSum;
-          const actual = (current[candidate] + (candidate === key ? 1 : 0)) / nextTotal;
+          const actual = (this[candidate] + (candidate === key ? 1 : 0)) / nextTotal;
           const diff = desired - actual;
           mse += diff * diff;
         }
@@ -116,7 +110,6 @@ class WGCTeamMember {
         }
       }
       if (!bestStat) break;
-      current[bestStat] += 1;
       total += 1;
       this[bestStat] += 1;
       points -= 1;

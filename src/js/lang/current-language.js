@@ -4837,7 +4837,7 @@ setLanguageData({
         skillHeader: 'Skill',
         pointsHeader: 'Points',
         autoLabel: 'Auto',
-        autoTooltip: 'Automatically assigns points each update to match the ratios below. Ratios set to 0 are ignored.',
+        autoTooltip: 'Automatically assigns points each update to match the ratios below, counting class base stats. Ratios set to 0 are ignored.',
         power: 'Power',
         athletics: 'Athletics',
         wit: 'Wit',
