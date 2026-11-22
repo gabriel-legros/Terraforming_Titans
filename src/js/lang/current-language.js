@@ -6414,7 +6414,7 @@ setLanguageData({
       },
       boschReactor: {
         name: 'Chemical Reactor',
-        description: 'Configurable reactors that combine imported hydrogen with atmospheric resources to synthesize vital compounds.',
+        description: 'Configurable reactors that can perform various chemical reactions.  Uses the colony version of the resource when available (i.e. water and hydrogen) and atmospheric otherwise.',
         recipes: {
           recipe1: { shortName: 'Bosch Reaction' },
           recipe2: { shortName: 'Water Synthesis' },
