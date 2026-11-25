@@ -186,7 +186,7 @@ async function checkSave(browser, origin, file, options) {
     result.stages.load = result.errors.some(error => error.phase === phase) ? 'fail' : 'pass';
 
     phase = 'tick';
-    result.tick = await page.evaluate(() => {
+    result.tick = await page.evaluate(options.exercise || (() => {
       const realDelta = terraformingParameters.gameplay.simulation.resourceSubstepMs;
       const delta = realDelta * (gameSpeed || 1);
       // Calling logic directly also exercises saves that were paused when exported.
@@ -194,7 +194,7 @@ async function checkSave(browser, origin, file, options) {
       updateRender.lastDelta = delta;
       updateRender(true, { forceAllSubtabs: true });
       return { realDeltaMs: realDelta, simulationDeltaMs: delta };
-    });
+    }));
     await page.waitForTimeout(50);
     result.stages.tick = result.errors.some(error => error.phase === phase) ? 'fail' : 'pass';
   };
@@ -254,7 +254,11 @@ async function main() {
   }
 }
 
-main().catch(error => {
-  console.error(error.stack || error.message);
-  process.exitCode = 1;
-});
+module.exports = { startServer, checkSave };
+
+if (require.main === module) {
+  main().catch(error => {
+    console.error(error.stack || error.message);
+    process.exitCode = 1;
+  });
+}

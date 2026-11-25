@@ -22,6 +22,12 @@ If dependencies are missing, install them with `npm ci` using the same environme
 
 Report pass/fail counts. Excluded suites are omitted from discovery and do not appear in Jest's skipped counts. Remove temporary test-result artifacts before finishing.
 
+## Water conservation
+
+The lightweight water suites exercise maintenance payments, overflow, phase changes, and exact zonal extraction. Atmospheric oxidation tests also balance hydrogen and oxygen atoms when a reaction produces new water. Run the suites with `npm test -- --runInBand water`.
+
+For the whole-game regression, run `node scripts/manual-tests/water-mass-budget.js` with Playwright Chromium installed. It opens `test_saves/debug/water_conservation.json` in an isolated context and checks the change in total water against known imports on every tick. It covers the transition to an empty tank at 6× luxury use, the 5B t/s pump case, pump shutdown, redirected colony deliveries, and circulation after imports stop. Surface water is measured from the exact zonal liquid, ice, and buried ice inventories, alongside atmospheric vapor, colony water, and space storage.
+
 ## Manual save compatibility audit
 
 Run the standalone Chromium audit separately from Jest:
