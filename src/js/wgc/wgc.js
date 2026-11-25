@@ -689,16 +689,17 @@ class WarpGateCommand extends EffectableEntity {
       }
     }
     if (success) op.successes += 1;
-    let artifactReward = 0;
+    let artifactGain = 0;
     if (artifact) {
       const opDifficulty = op.activeDifficulty ?? op.difficulty ?? 0;
-      artifactReward = 1 + opDifficulty * 0.1;
+      let artifactReward = 1 + opDifficulty * 0.1;
       const mult = event.artifactMultiplier || (event.specialty === 'Natural Scientist' ? 2 : 1);
       artifactReward *= mult * artifactModifier;
       if (stanceObj.artifact === 'Rapid Extraction') {
         artifactReward *= 0.25;
       }
       op.artifacts += artifactReward;
+      artifactGain = getArtifactGainAmount(artifactReward);
     }
     const rollsStr = rollResult.rolls.join(',');
     const outcome = success
@@ -707,9 +708,9 @@ class WarpGateCommand extends EffectableEntity {
     const rollerName = roller ? ` (${roller.firstName})` : '';
     const artText = artifact
       ? getWGCLogText(
-          artifactReward === 1 ? 'artifactReward' : 'artifactsReward',
-          artifactReward === 1 ? ' +{count} Artifact' : ' +{count} Artifacts',
-          { count: formatNumber(artifactReward, false, 2) }
+          artifactGain === 1 ? 'artifactReward' : 'artifactsReward',
+          artifactGain === 1 ? ' +{count} Artifact' : ' +{count} Artifacts',
+          { count: formatNumber(artifactGain, false, 2) }
         )
       : '';
     let skillDetail = formatNumber(skillTotal, false, 2);
