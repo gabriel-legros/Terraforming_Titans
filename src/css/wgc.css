@@ -824,6 +824,9 @@
 
 .operation-summary {
   font-size: 0.8em;
+  line-height: 1.25;
+  height: 2.5em;
+  overflow-y: auto;
   margin-top: 4px;
   color: var(--wgc-text-medium);
   text-align: center;
