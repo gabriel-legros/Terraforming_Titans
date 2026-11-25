@@ -588,6 +588,37 @@ function getMaintenanceConversionEntries(sourceData) {
   return entries;
 }
 
+function applyMaintenanceConversions(accumulatedChanges, conversions, paidCost, displayCost, source, deltaTime) {
+  for (const conversion of conversions) {
+    const target = resources[conversion.category]?.[conversion.resource];
+    if (target) {
+      accumulatedChanges[conversion.category][conversion.resource] =
+        (accumulatedChanges[conversion.category][conversion.resource] || 0) + paidCost * conversion.value;
+      target.modifyRate(displayCost * conversion.value * (1000 / deltaTime), source, 'building');
+    }
+  }
+}
+
+function settleMaintenanceConversions(deltaTime, accumulatedChanges, pendingMaintenanceConversions) {
+  for (const resource in pendingMaintenanceConversions) {
+    const entries = pendingMaintenanceConversions[resource];
+    let unpaid = Math.max(0, -(resources.colony[resource].value + accumulatedChanges.colony[resource]));
+    // Leave the latest requests unpaid first, preserving maintenance's original order.
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const entry = entries[i];
+      const remaining = Math.min(entry.amount, unpaid);
+      unpaid -= remaining;
+      const paid = entry.amount - remaining;
+      if (paid > 0) {
+        applyMaintenanceConversions(
+          accumulatedChanges, entry.conversions, paid, paid * entry.displayRatio, entry.source, deltaTime
+        );
+        entry.amount = remaining;
+      }
+    }
+  }
+}
+
 class Resource extends EffectableEntity {
   constructor(resourceData) {
     super(resourceData);
@@ -2347,6 +2378,7 @@ function produceResources(deltaTime, buildings) {
   // Temporary object to store changes
   const accumulatedChanges = {};
   const accumulatedMaintenance = {}; // Object to store accumulated maintenance costs
+  const pendingMaintenanceConversions = {};
   const accumulatedSpecialChanges = initializeAccumulatedSpecialChanges();
     // Initialize accumulated changes and maintenance
   for (const category in resources) {
@@ -2387,7 +2419,7 @@ function produceResources(deltaTime, buildings) {
   for(const buildingName in buildings){
     const building = buildings[buildingName];
     // Apply maintenance after production/consumption so conversions respect availability
-    building.applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime);
+    building.applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime, pendingMaintenanceConversions);
   }
 
   if (antimatterBattery) {
@@ -2482,6 +2514,9 @@ function produceResources(deltaTime, buildings) {
     lifeManager.updateLife(deltaTime, accumulatedChanges, accumulatedSpecialChanges);
   }
 
+  // Project and other late production can pay maintenance reserved earlier in the tick.
+  settleMaintenanceConversions(deltaTime, accumulatedChanges, pendingMaintenanceConversions);
+
   // Call terraforming.updateResources AFTER accumulating building/funding changes
   // but BEFORE applying accumulatedChanges to resource values.
   // terraforming.updateResources will call modifyRate with type 'terraforming'.
@@ -2519,6 +2554,9 @@ function produceResources(deltaTime, buildings) {
       accumulatedChanges.space.energy += antimatterToSpaceEnergy(antimatterGain);
     }
   }
+
+  // Zonal transfers credit their actual production only after the climate substeps.
+  settleMaintenanceConversions(deltaTime, accumulatedChanges, pendingMaintenanceConversions);
 
   if (terraforming) {
     routeColonyMiningOverflowToSpaceStorage(deltaTime, accumulatedChanges, accumulatedSpecialChanges);

@@ -2032,7 +2032,7 @@ class Building extends EffectableEntity {
     }
   }
 
-  applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime) {
+  applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime, pendingMaintenanceConversions = {}) {
     this.maintenanceCost = this.calculateMaintenanceCost();
     this.currentMaintenance = {}; // Reset current maintenance
     const displayProductivity = this.ignoreResourceForProductivityResourceDisplay
@@ -2072,24 +2072,19 @@ class Building extends EffectableEntity {
         const resourceData = resources.colony[resource];
         if (resourceData.maintenanceConversion) {
           const conversionEntries = getMaintenanceConversionEntries(resourceData);
-          for (let i = 0; i < conversionEntries.length; i += 1) {
-            const conversion = conversionEntries[i];
-
-            // Apply conversion by adding the scaled maintenance cost to the target resource
-            const convertedAmount = maintenanceCost * conversion.value * conversionScale;
-            const displayConvertedAmount = displayMaintenanceCost * conversion.value * conversionScale;
-
-            if (resources[conversion.category] && resources[conversion.category][conversion.resource]) {
-              accumulatedChanges[conversion.category][conversion.resource] =
-                (accumulatedChanges[conversion.category][conversion.resource] || 0) + convertedAmount;
-
-              // Update production rate for the converted resource
-              resources[conversion.category][conversion.resource].modifyRate(
-                displayConvertedAmount * (1000 / deltaTime),
-                this.getRateSource(),
-                'building'
-              );
-            }
+          const paidCost = maintenanceCost * conversionScale;
+          const source = this.getRateSource();
+          applyMaintenanceConversions(
+            accumulatedChanges, conversionEntries, paidCost, displayMaintenanceCost * conversionScale, source, deltaTime
+          );
+          if (conversionEntries.length > 0 && maintenanceCost > paidCost) {
+            const entries = pendingMaintenanceConversions[resource] ||= [];
+            entries.push({
+              amount: maintenanceCost - paidCost,
+              displayRatio: displayMaintenanceCost / maintenanceCost,
+              conversions: conversionEntries,
+              source
+            });
           }
         }
       }

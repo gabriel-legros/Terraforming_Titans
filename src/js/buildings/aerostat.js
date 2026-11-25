@@ -513,8 +513,8 @@ class Aerostat extends BaseColony {
     return super.canAfford(buildCount, reservePercent, additionalReserves);
   }
 
-  applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime) {
-    super.applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime);
+  applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime, pendingMaintenanceConversions) {
+    super.applyMaintenance(accumulatedChanges, accumulatedMaintenance, deltaTime, pendingMaintenanceConversions);
 
     if (!Number.isFinite(deltaTime) || deltaTime <= 0) {
       return;
