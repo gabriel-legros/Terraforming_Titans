@@ -1789,7 +1789,7 @@ const researchParameters = {
         id: 'hydrocarbon_research',
         name: '',
         description: '',
-        cost: { advancedResearch: 1000 },
+        cost: { advancedResearch: 500 },
         prerequisites: [],
         effects: [
           {
