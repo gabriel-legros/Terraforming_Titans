@@ -101,7 +101,7 @@ const defaultPlanetParameters = {
     workerRatio: 0.5
   },
   gravityPenaltyEnabled: true,
-  fundingRate: 0, // Default
+  fundingRate: 10,
   // Default host star information (for Solar System worlds)
   star: {
     name: t('catalogs.planets.default.star.name', {}, 'Sun'),
@@ -254,7 +254,6 @@ const marsOverrides = {
       "night": 134.02114478624944
     }
   },
-  fundingRate: 10,
   visualization: {
     baseColor: '#8a2a2a',
   }
@@ -262,7 +261,6 @@ const marsOverrides = {
 
 const titanOverrides = {
   name: '',
-  fundingRate: 10,
   resources: {
     surface: {
       land: { initialValue : 8_300_000_000 },

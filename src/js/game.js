@@ -202,8 +202,7 @@ function initializeDefaultGlobals(){
   skillManager = new SkillManager(skillParameters);
 
   //Initialize funding
-  const fundingRate = currentPlanetParameters.fundingRate || 0;
-  fundingModule = new FundingModule(resources, fundingRate);
+  fundingModule = new FundingModule(resources, defaultPlanetParameters.fundingRate);
 
   //initialize population module
   populationModule = new PopulationModule(resources, currentPlanetParameters.populationParameters);
@@ -554,8 +553,7 @@ function initializeGameState(options = {}) {
     restoreConstructionOfficeSettings(travelState.constructionOffice, resetLevel);
   }
 
-  const fundingRate = currentPlanetParameters.fundingRate || 0;
-  fundingModule = new FundingModule(resources, fundingRate);
+  fundingModule = new FundingModule(resources, defaultPlanetParameters.fundingRate);
   populationModule = new PopulationModule(resources, currentPlanetParameters.populationParameters);
 
   lifeDesigner = new LifeDesigner();

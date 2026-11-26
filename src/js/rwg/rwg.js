@@ -1880,7 +1880,6 @@ function buildPlanetOverride({ seed, star, aAU, isMoon, forcedType, forcedHazard
     ...(hazardOverride ? { hazards: hazardOverride.hazards } : {}),
     zonalCoverageCache,
     finalTemps: { mean: temps.mean, day: temps.day, night: temps.night },
-    fundingRate: Math.round(randRange(mulberry32(seed ^ 0xB00B), 5, 15)),
     buildingParameters: { maintenanceFraction: 0.001 },
     populationParameters: { workerRatio: 0.5 },
     gravityPenaltyEnabled: true,

@@ -36,7 +36,7 @@ This document records durable ownership and cross-system constraints. Feature va
 
 The Difficulty section's `Reset to default` button restores the shared difficulty defaults and reapplies their effects without changing General settings or progression. It is available only while difficulty settings are unlocked.
 
-Funding multiplier applies to `FundingModule` production, including base funding and Solis funding bonuses. It stacks with existing funding production effects and does not scale market sales or other independent funding sources.
+All worlds use the shared base funding rate of 10 per second, including generated worlds restored from saves. The funding multiplier applies to `FundingModule` production, including base funding and Solis funding bonuses. It stacks with existing funding production effects and does not scale market sales or other independent funding sources.
 
 Android Hive Mind and workers-per-android difficulty settings install effects on `androidResearch` and `PopulationModule`. Research production and android worker capacity consume those effects, combining them with Dominion bonuses. Difficulty resets remove only the settings' effects.
 
