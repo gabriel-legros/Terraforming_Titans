@@ -262,6 +262,7 @@ const marsOverrides = {
 
 const titanOverrides = {
   name: '',
+  fundingRate: 10,
   resources: {
     surface: {
       land: { initialValue : 8_300_000_000 },

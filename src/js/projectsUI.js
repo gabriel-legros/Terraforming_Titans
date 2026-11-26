@@ -824,7 +824,7 @@ function createProjectItem(project) {
   }
 
   // Repeat Count / Depth Display
-  if ((project.repeatable && project.maxRepeatCount !== Infinity) ||
+  if ((project.repeatable && project.maxRepeatCount !== Infinity && !project.attributes?.hideRepeatCount) ||
       (typeof DeeperMiningProject !== 'undefined' && project instanceof DeeperMiningProject && project.maxDepth !== Infinity)) {
     const repeatCountElement = document.createElement('p');
     repeatCountElement.id = `${project.name}-repeat-count`;
@@ -1802,7 +1802,7 @@ function updateProjectUI(projectName) {
       elements.underworldSection.style.display = project.isBooleanFlagSet('underworld_mining') ? 'flex' : 'none';
     } else {
       elements.repeatCountElement.textContent = getProjectsUIText(
-        'ui.projects.status.completedCount',
+        project.attributes.repeatCountLabelKey || 'ui.projects.status.completedCount',
         'Completed: {current} / {max}',
         {
           current: project.repeatCount,
@@ -2127,7 +2127,8 @@ function updateProjectUI(projectName) {
     if (elements.autoStartCheckboxContainer) {
       if (project.attributes && project.attributes.hideAutoStart === true) {
         elements.autoStartCheckboxContainer.style.display = 'none';
-      } else if (projectManager.isBooleanFlagSet('automateSpecialProjects') && !shouldHideStartBar) {
+      } else if (projectManager.isBooleanFlagSet('automateSpecialProjects') &&
+          (!shouldHideStartBar || project.attributes.autoStartWithCustomControls)) {
         elements.autoStartCheckboxContainer.style.display = 'flex';
       } else {
         elements.autoStartCheckboxContainer.style.display = 'none';
@@ -2253,11 +2254,14 @@ function updateTotalCostDisplayElement(element, totalCost, project, perSecond = 
       );
       const resourceDisplayName = resources[category][resource].displayName ||
         resource.charAt(0).toUpperCase() + resource.slice(1);
+      const amount = `${formatNumber(requiredAmount, true)}${suffix}`;
       entries.push({
         category,
         resource,
         requiredAmount,
-        text: `${resourceDisplayName}: ${formatNumber(requiredAmount, true)}${suffix}`,
+        text: options.resourceAmountKey
+          ? t(options.resourceAmountKey, { amount, resource: resourceDisplayName })
+          : `${resourceDisplayName}: ${amount}`,
         tooltip: buildProjectCostTooltip(
           forceColonyOnly ? null : project,
           category,

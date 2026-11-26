@@ -747,7 +747,7 @@ class Project extends EffectableEntity {
     }
   }
 
-  complete() {
+  complete(storyStepIndex) {
     this.isCompleted = true;
     this.isActive = false;
 
@@ -771,10 +771,12 @@ class Project extends EffectableEntity {
     }
 
     if (this.attributes && Array.isArray(this.attributes.storySteps)) {
-      const stepIndex = this.repeatCount - 1;
+      const stepIndex = storyStepIndex ?? this.repeatCount - 1;
       const step = this.attributes.storySteps[stepIndex];
       if (step && typeof addJournalEntry === 'function' && !this.shownStorySteps.has(stepIndex)) {
-        addJournalEntry(step, null, { type: 'project', id: this.name, step: stepIndex });
+        const source = { type: 'project', id: this.name, step: stepIndex };
+        if (storyStepIndex !== undefined) source.stepLabel = `${this.repeatCount}/${this.maxRepeatCount}`;
+        addJournalEntry(step, null, source);
         this.shownStorySteps.add(stepIndex);
       }
     }

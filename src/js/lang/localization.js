@@ -611,9 +611,18 @@ function applyLocalizedStoryFields(localizedStory) {
     if (localizedProject.description !== undefined) {
       project.description = localizedProject.description;
     }
-    if (Array.isArray(localizedProject.storySteps)) {
-      project.attributes.storySteps = localizedProject.storySteps.slice();
-      project.attributes.storyStepLines = localizedProject.storySteps.map(languageTextToLines);
+    let storySteps = localizedProject.storySteps;
+    if (localizedProject.leads) {
+      const leads = Array.from({ length: project.maxRepeatCount }, (_, index) => localizedProject.leads[`step${index + 1}`]);
+      project.attributes.storyStepTitles = leads.map(lead => lead.title);
+      storySteps = leads.map((lead, index) => {
+        const story = languageTextToLines(localizedProject.storySteps?.[index] ?? lead.story).join('\n');
+        return [lead.title, story].filter(Boolean).join(' : ');
+      });
+    }
+    if (Array.isArray(storySteps)) {
+      project.attributes.storySteps = storySteps.slice();
+      project.attributes.storyStepLines = storySteps.map(languageTextToLines);
     }
     if (Array.isArray(localizedProject.sequenceSteps)) {
       for (let i = 0; i < localizedProject.sequenceSteps.length; i += 1) {

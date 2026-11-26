@@ -630,6 +630,10 @@ function loadGame(slotOrCustomString, recreate = true, options = {}) {
     
       // Restore projects
       if (gameState.projects) {
+          const savedProjects = gameState.projects.projects || gameState.projects;
+          if (savedProjects.triangulate_attack) {
+            TitanAftermathProject.migrateLegacyProjects(savedProjects, gameState.story?.completedEventIds || []);
+          }
           if (gameState.mirrorOversightSettings &&
               gameState.projects.projects.spaceMirrorFacility &&
               !gameState.projects.projects.spaceMirrorFacility.mirrorOversightSettings) {

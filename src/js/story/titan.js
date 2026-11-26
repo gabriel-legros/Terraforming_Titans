@@ -1,45 +1,57 @@
 var progressTitan = { rwgLock: false, chapters: [], storyProjects: {} };
 
 progressTitan.storyProjects.earthProbe = {
-  type: 'Project',
-  name: 'Earth Recon Probe',
+  type: 'TitanAftermathProject',
+  name: '',
+  description: '',
   category: 'story',
   chapter: 4,
-  cost: {
-    colony: {
-      components: 10,
-      electronics: 10,
-      energy: 10000
-    }
-  },
+  cost: {},
   duration: 300000,
-  description: 'Send an automated probe back to Earth to search for clues.',
   repeatable: true,
-  maxRepeatCount: 10,
+  maxRepeatCount: 15,
   unlocked: false,
   attributes: {
     planet: 'titan',
-    costDoubling: true,
-    storyStepImages: {
-      0: {
-        src: 'assets/images/earth_destroyed.jpg',
-        labelKey: 'ui.projects.earthProbe.artistRendition',
-        titleKey: 'ui.projects.earthProbe.imageTitle',
-        altKey: 'ui.projects.earthProbe.destroyedEarth'
-      }
-    },
-    storySteps: [
-      'Probe telemetry confirmed: Earth fragmented into massive tectonic shards.',
-      'Expansive oceans of molten silicates illuminate the planetary remains.',
-      'No continental structures persist; only turbulent magma storms detected.',
-      'Residual gamma radiation permeates ruins of former metropolitan zones.',
-      'Carbonized debris displays signatures of precision-directed energy pulses.',
-      'Spectroscopic analysis indicates widespread positron annihilation events.',
-      'Impact cratering consistent with a colossal asteroid collision identified.',
-      'Data reveals catastrophic events unfolded within minutes.',
-      'Orbital dispersion patterns resemble formation dynamics of a nascent asteroid belt.',
-      'Surface integrity nullified.  Analysis confirms simultaneous laser, antimatter, and asteroid offensive.'
-    ]
+    hideRepeatCount: true,
+    preserveProgressOnTravel: true,
+    autoStartWithCustomControls: true,
+    reliefCost: 10_000_000_000,
+    reliefResources: ['food', 'components', 'electronics', 'androids'],
+    // Lead order also identifies the corresponding journal entry in saved games.
+    milestones: [
+      // Chapter 4 adds 10 components, 10 electronics or 10k energy per lead when used.
+      // Research starts at 2k on lead 3 and rises by 1k per lead.
+      { id: 'debris', leads: [
+        { id: 'photograph', cost: { components: 10, electronics: 10, energy: 10000 } },
+        { id: 'thermal', cost: { electronics: 20, energy: 20000 } },
+        { id: 'orbit', cost: { components: 30, research: 2000 } }
+      ] },
+      { id: 'transmissions', leads: [
+        { id: 'relay', cost: { components: 40, electronics: 40 } },
+        { id: 'carrier', cost: { electronics: 50, energy: 50000 } },
+        { id: 'clocks', cost: { electronics: 60, research: 5000 } }
+      ] },
+      { id: 'attacks', leads: [
+        { id: 'crater', cost: { components: 70, energy: 70000 } },
+        { id: 'glass', cost: { electronics: 80, research: 7000 } },
+        { id: 'gamma', cost: { electronics: 90, energy: 90000 } },
+        { id: 'timeline', cost: { components: 100, research: 9000 } }
+      ] },
+      // Chapter 5 restarts at 100k per material and 5M research, adding that amount per lead.
+      { id: 'trajectories', requiresFlag: 'triangulate_attack', leads: [
+        { id: 'asteroid', cost: {research: 5000000 } },
+        { id: 'laser', cost: {research: 10000000 } },
+        { id: 'positrons', cost: { research: 15000000 } }
+      ] },
+      { id: 'contact', leads: [
+        { id: 'parallax', cost: {research: 20000000 } },
+        { id: 'occultation', cost: {research: 25000000 } }
+      ] }
+    ],
+    puzzleImage: {
+      src: 'assets/images/earth_destroyed.jpg'
+    }
   }
 };
 
@@ -82,6 +94,7 @@ progressTitan.chapters.push(
       {
         target: 'fundingModule',
         type: 'setFundingRate',
+        excludePlanetId: 'titan',
         value: 3
       }
     ]
@@ -378,8 +391,10 @@ progressTitan.chapters.push(
     reward: [
       {
         target: 'project',
-        targetId: 'triangulate_attack',
-        type: 'enable'
+        targetId: 'earthProbe',
+        type: 'booleanFlag',
+        flagId: 'triangulate_attack',
+        value: true
       }
     ],
   },
@@ -391,43 +406,12 @@ progressTitan.chapters.push(
     prerequisites: ["chapter5.6"],
     objectives: [{
       type: 'project',
-      projectId: 'triangulate_attack',
-      repeatCount: 5
+      projectId: 'earthProbe',
+      repeatCount: 15
     }],
     reward: []
   }
 );
-
-progressTitan.storyProjects.triangulate_attack = {
-  type: 'Project',
-  name: 'Triangulate Attack Origin',
-  category: 'story',
-  chapter: 5,
-  cost: {
-    colony: {
-      components: 100000,
-      electronics: 100000,
-      research: 5000000,
-      energy: 100000
-    }
-  },
-  duration: 300000,
-  description: 'Analyze the data from the Earth probes and cross-reference it with historical astronomical data to triangulate the origin of the three attacks.',
-  repeatable: true,
-  maxRepeatCount: 5,
-  unlocked: false,
-  attributes: {
-    planet: 'titan',
-    costDoubling: true,
-    storySteps: [
-    'Cross-referencing asteroid trajectory data points toward the vicinity of Barnard\'s Star, suggesting deliberate manipulation from a known stellar system.',
-    'Initial spectral analysis of the laser beam indicates no match with known astronomical sources or human technologies, but aligns closely with energetic events in the Crab Nebula.',
-    'The positron beam emission aligns precisely with Cygnus X-1, a stellar-mass black hole previously catalogued for anomalous energetic outputs.',
-    'Timing and coordination analysis confirm that the asteroid and energy beams originated from distinctly separate astronomical locations, suggesting strategic coordination.',
-    'An optical anomaly detected along the positron beam trajectory hints at a cloaked object or unknown spatial anomaly masking its true source.'    ]
-  }
-};
-
 
 progressTitan.chapters.push(
   {
@@ -571,6 +555,13 @@ progressTitan.chapters.push(
     objectives: [{
       type: 'terraforming',
       terraformingParameter : 'complete',
+    },{
+      type: 'projectAttribute',
+      projectId: 'earthProbe',
+      attribute: 'chaos',
+      labelKey: 'ui.projects.earthProbe.chaosPercent',
+      comparison: 'lte',
+      quantity: 0
     }],
     reward: [
       {

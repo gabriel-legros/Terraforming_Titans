@@ -39,8 +39,42 @@ setLanguageData({
   "ui": {
     "projects": {
       "earthProbe": {
+        "investigation": "Earth investigation",
+        "reconstruction": "Earth’s final minutes",
+        "puzzleAlt": "{done} of {total} pieces of the artist’s rendition have been uncovered.",
+        "mars": "Chaos on Mars",
+        "chaosPercent": "Chaos (%)",
+        "penalty": "-{percent}% funding and advanced research",
+        "cut": "Completing a milestone lowers chaos on Mars by 10 points.",
+        "investigationComplete": "The investigation is complete.",
+        "locked": "The investigation will resume later.",
+        "progress": "{done}/{total}",
+        "requires": "Requires ",
+        "resourceAmount": "{amount} {resource}",
+        "minutes": "{minutes} min",
+        "investigate": "Start · {time}",
+        "working": "{time} left",
+        "relief": "Relief shipments",
+        "reliefTerms": "Each reduces chaos by 5 points.",
+        "send": "Send {amount}",
+        "delivered": "Delivered",
+        "dispatches": [
+          "",
+          "",
+          "",
+          "",
+          "",
+          ""
+        ],
+        "relieved": "",
+        "stages": {
+          "debris": "Map the debris field",
+          "transmissions": "Find the impact points",
+          "attacks": "Identify the three attacks",
+          "trajectories": "Reconstruct the trajectories",
+          "contact": "Piecing it together"
+        },
         "artistRendition": "Artist Rendition",
-        "imageTitle": "Earth destroyed",
         "destroyedEarth": "Artist rendition of destroyed Earth."
       },
       "zeusBattle": {
@@ -1863,31 +1897,25 @@ setLanguageData({
       },
       "projects": {
         "earthProbe": {
-          "name": "Earth Recon Probe",
-          "description": "Send an automated probe back to Earth to search for clues.",
-          "storySteps": [
-            "Probe telemetry confirmed: Earth fragmented into massive tectonic shards.",
-            "Expansive oceans of molten silicates illuminate the planetary remains.",
-            "No continental structures persist; only turbulent magma storms detected.",
-            "Residual gamma radiation permeates ruins of former metropolitan zones.",
-            "Carbonized debris displays signatures of precision-directed energy pulses.",
-            "Spectroscopic analysis indicates widespread positron annihilation events.",
-            "Impact cratering consistent with a colossal asteroid collision identified.",
-            "Chronometric data reveals catastrophic events unfolded within minutes.",
-            "Orbital dispersion patterns resemble formation dynamics of a nascent asteroid belt.",
-            "Surface integrity nullified—analysis confirms simultaneous laser, antimatter, and asteroid offensive."
-          ]
-        },
-        "triangulate_attack": {
-          "name": "Triangulate Attack Origin",
-          "description": "Analyze the data from the Earth probes and cross-reference it with historical astronomical data to triangulate the origin of the three attacks.",
-          "storySteps": [
-            "Cross-referencing asteroid trajectory data points toward the vicinity of Barnard's Star, suggesting deliberate manipulation from a known stellar system.",
-            "Initial spectral analysis of the laser beam indicates no match with known astronomical sources or human technologies, but aligns closely with energetic events in the Crab Nebula (Messier 1).",
-            "The positron beam emission aligns precisely with Cygnus X-1, a stellar-mass black hole previously catalogued for anomalous energetic outputs.",
-            "Timing and coordination analysis confirm that the asteroid and energy beams originated from distinctly separate astronomical locations, suggesting strategic coordination.",
-            "An optical anomaly detected along the positron beam trajectory hints at a cloaked object or unknown spatial anomaly masking its true source."
-          ]
+          "name": "The Aftermath",
+          "description": "What just happened?",
+          "leads": {
+            "step1":  { "title": "Take a photograph of Earth and the Moon from closer up", "story": "A giant ball of magma dominates the scene." },
+            "step2":  { "title": "Take a closer picture", "story": "The moon is fractured.  Earth is a new asteroid belt." },
+            "step3":  { "title": "Take a closer picture", "story": "Earth is completely destroyed.  No tectonic plates remain." },
+            "step4":  { "title": "Look at where Asia should be", "story": "Earth is emitting vast amount of radiation from Asia." },
+            "step5":  { "title": "Look at where Europe should be", "story": "European lava seas show signs of extreme disintegration." },
+            "step6":  { "title": "Look at where North America should be", "story": "A massive crater points at an impact of sorts." },
+            "step7":  { "title": "Look at where South America should be", "story": "Earth is emitting vas amount of radiation from South America." },
+            "step8":  { "title": "Decipher the European strike", "story": "Extremely powerful laser weaponry?" },
+            "step9":  { "title": "Decipher the North American strike", "story": "A high-velocity asteroid impact?" },
+            "step10": { "title": "Decipher the Asian strike", "story": "A positron beam?" },
+            "step11": { "title": "Laser : where from?", "story": "Data points at a distant star." },
+            "step12": { "title": "Asteroid : where from?", "story": "Data points at a distant black hole, Cygnus X-1." },
+            "step13": { "title": "Positron beam : where from?", "story": "Data points at a distant neutron star." },
+            "step14": { "title": "Conclusion", "story": "Simultaneous triple strike from three different directions.  Destruction was inevitable." },
+            "step15": { "title": "However?", "story": "Astronomy data points at a cloaked object far between Earth and Cygnus X-1." }
+          }
         },
         "sticky_dust_trap": {
           "name": "Sticky Dust Trap",

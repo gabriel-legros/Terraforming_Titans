@@ -590,9 +590,8 @@ function addJournalEntry(text, eventId = null, source = null) {
   let entryText = joinLines(text);
   entryText = resolveStoryPlaceholders(entryText);
 
-  if (source && source.type === 'project' &&
-      progressData && progressData.storyProjects && progressData.storyProjects[source.id]) {
-    const proj = progressData.storyProjects[source.id];
+  const proj = source?.type === 'project' ? progressData?.storyProjects?.[source.id] : null;
+  if (proj) {
     const projectInstance = projectManager && projectManager.projects && projectManager.projects[source.id];
     const total = projectInstance && projectInstance.getJournalStepTotal
       ? projectInstance.getJournalStepTotal()

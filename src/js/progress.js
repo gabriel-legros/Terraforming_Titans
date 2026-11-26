@@ -796,6 +796,7 @@ class StoryManager {
     }
 
     shouldApplyEffect(effect) {
+        if (effect.excludePlanetId && effect.excludePlanetId === spaceManager.getCurrentPlanetKey()) return false;
         return !effect.planetId || effect.planetId === spaceManager.getCurrentPlanetKey();
     }
 
@@ -887,6 +888,7 @@ class StoryManager {
                     proj.unlocked = true;
                     proj.repeatCount = Math.max(proj.repeatCount || 0, obj.repeatCount || 1);
                     proj.isCompleted = true;
+                    proj.applyEffects();
                 }
             }
         };
