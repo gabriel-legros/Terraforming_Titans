@@ -7,6 +7,7 @@ This document records durable ownership and cross-system constraints. Feature va
 - `index.html` is the ordered classic-script entry point. Browser game files consume required upstream globals directly.
 - `src/js/terraforming/terraforming.js` owns `Terraforming` construction and update orchestration. Adjacent ordered `terraforming-*.js` files attach status, resource stepping, climate, effects, and persistence behavior.
 - Core simulation is centered on terraforming, physics, and cycle modules. Economy/colony behavior is centered on resources, buildings, colonies, and their UI modules.
+- Nuclear Alchemy and Nanoalchemy share the furnace recipe catalog. Each recipe defines its complexity, space storage key, and planetary output category. The nanocolony divides its work by recipe weight before applying complexity and scales all outputs together when colony hydrogen is scarce.
 - `StoryManager` in `progress.js` owns story progression. Story-only project classes live under `src/js/story/` and load after their base classes.
 - Dagon encounter state belongs to `GalacticInvasionManager`; occupation and fleets remain owned by `GalaxyManager`. Scripted control changes use `replaceSectorControl` to reconcile control memory and caches. Chapter ? and the invasion cutscene share persisted progression. See [Dagon development controls](dagon-invasion.md).
 - `SpaceManager` owns planet travel/state.

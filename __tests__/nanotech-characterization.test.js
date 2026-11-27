@@ -142,9 +142,11 @@ describe('NanotechManager characterization', () => {
       nanobots: 1,
       showNanobotsInSidebar: false,
       travelNanobotFloor: 1,
+      nanoalchemyWeights: { graphite: 1, oxygen: 1, inertGas: 1, silicon: 1, metal: 1 },
       siliconSlider: 10,
       maintenanceSlider: 0,
       glassSlider: 0,
+      nanoalchemySlider: 0,
       metalSlider: 10,
       maintenance2Slider: 0,
       componentsSlider: 0,
@@ -224,6 +226,7 @@ describe('NanotechManager characterization', () => {
       'nanotech-graphene-slider',
       'nanotech-hazardous-biomass-slider',
       'nanotech-hazardous-biomass2-slider',
+      'nanoalchemy-work',
     ]);
     expect(limitIds).toEqual([
       'nanotech-energy-limit',

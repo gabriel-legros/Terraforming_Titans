@@ -745,6 +745,46 @@ input[type="range"].pretty-slider::-moz-range-thumb {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+#nanotech-nanoalchemy summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+#nanotech-nanoalchemy[open] summary {
+  margin-bottom: 12px;
+}
+
+#nanotech-nanoalchemy .nanotech-slider-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+details#nanotech-nanoalchemy .nanotech-slider-card .slider-header {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  gap: 6px;
+}
+
+details#nanotech-nanoalchemy .slider-header .slider-values {
+  flex-flow: row wrap;
+  gap: 4px 12px;
+  font-size: 0.85em;
+}
+
+#nanotech-nanoalchemy table {
+  font-size: 0.9em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+#nanotech-nanoalchemy td:last-child {
+  white-space: nowrap;
+}
+
+#nanotech-nanoalchemy th:first-child {
+  text-align: left;
+}
+
 #nanocolony-container .nanotech-slider-card {
   display: flex;
   flex-direction: column;

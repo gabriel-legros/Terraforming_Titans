@@ -373,6 +373,7 @@ const NANOTECH_CONTROL_PARAMETERS = [
   { property: 'siliconSlider', defaultValue: 10, fixedOnLoad: true },
   { property: 'maintenanceSlider', defaultValue: 0, travelValue: 0 },
   { property: 'glassSlider', defaultValue: 0, travelValue: 0 },
+  { property: 'nanoalchemySlider', defaultValue: 0, travelValue: 0 },
   { property: 'metalSlider', defaultValue: 10, fixedOnLoad: true },
   { property: 'maintenance2Slider', defaultValue: 0, travelValue: 0 },
   { property: 'componentsSlider', defaultValue: 0, travelValue: 0 },

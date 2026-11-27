@@ -2759,6 +2759,17 @@ const researchParameters = {
         ]
       },
       {
+        id: 'nanoalchemy',
+        name: '',
+        description: '',
+        cost: { advancedResearch: 50_000_000_000_000_000 },
+        prerequisites: ['nuclear_alchemy', 'nanotechnology_stage_4'],
+        effects: [
+          { target: 'nanotechManager', type: 'booleanFlag', flagId: 'nanoalchemy', value: true },
+          { target: 'project', targetId: 'nanoworld', type: 'booleanFlag', flagId: 'nanoalchemy', value: true }
+        ]
+      },
+      {
         id: 'silica_phase_out_initiative',
         name: '',
         description: '',

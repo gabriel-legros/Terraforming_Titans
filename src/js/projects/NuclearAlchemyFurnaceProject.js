@@ -2,37 +2,36 @@ const NUCLEAR_ALCHEMY_RECIPES = {
   graphite: {
     label: t('ui.projects.nuclearAlchemy.recipeLabels.graphite', {}, 'Carbon (Graphite)'),
     storageKey: 'graphite',
+    planetaryCategory: 'surface',
     complexity: 2
   },
   oxygen: {
     label: t('ui.projects.nuclearAlchemy.recipeLabels.oxygen', {}, 'Oxygen'),
     storageKey: 'oxygen',
+    planetaryCategory: 'atmospheric',
     complexity: 3
   },
   inertGas: {
     label: t('ui.projects.nuclearAlchemy.recipeLabels.inertGas', {}, 'Nitrogen'),
     storageKey: 'inertGas',
+    planetaryCategory: 'atmospheric',
     complexity: 4
   },
   silicon: {
     label: t('ui.projects.nuclearAlchemy.recipeLabels.silicon', {}, 'Silica'),
     storageKey: 'silicon',
+    planetaryCategory: 'colony',
     complexity: 6
   },
   metal: {
     label: t('ui.projects.nuclearAlchemy.recipeLabels.metal', {}, 'Metal'),
     storageKey: 'metal',
+    planetaryCategory: 'colony',
     complexity: 10
   }
 };
 
-const NUCLEAR_ALCHEMY_RECIPE_KEYS = [
-  'graphite',
-  'oxygen',
-  'inertGas',
-  'silicon',
-  'metal'
-];
+const NUCLEAR_ALCHEMY_RECIPE_KEYS = Object.keys(NUCLEAR_ALCHEMY_RECIPES);
 const NUCLEAR_ALCHEMY_UNASSIGNED_KEY = 'idleUnassigned';
 const NUCLEAR_ALCHEMY_ASSIGNMENT_STEP_MAX = 1_000_000_000_000_000_000_000_000_000_000n;
 

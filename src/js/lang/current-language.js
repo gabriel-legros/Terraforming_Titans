@@ -3211,6 +3211,11 @@ setLanguageData({
       },
       nanotech: {
         managerDescription: 'Manages the nanobot swarm',
+        nanoalchemy: {
+          work: 'Work allocation',
+          growth: 'Growth {value}%',
+          hydrogen: 'Hydrogen draw {rate}',
+        },
         title: 'Nanocolony',
         effectName: 'Nanocolony',
         hint: 'The swarm can consume power to grow. Each nanobot needs 1pW. All other consumptions happens after buildings and projects. When travelling, HOPE can hide {travelCap} nanobots from the Dead Hand Protocol',
@@ -7543,6 +7548,10 @@ setLanguageData({
           name: 'Nuclear Alchemy',
           description: 'Alchemy has always been possible... with the right knowledge and extreme infrastructure.',
         },
+        nanoalchemy: {
+          name: 'Nanoalchemy',
+          description: 'We have finally mastered nuclear alchemy to the point where we can do it precisely.  Due to the delicacy of the task, it is best suited to nanobots.  Enables the nanolocolony to perform nuclear alchemy.',
+        },
         silica_phase_out_initiative: {
           name: 'Silica phase-out Initiative',
           description: "Silica has always been one of the most abundant resource we've ever had access to.  Unfortunately, times have changed and we need to look at alternate solutions.  We can use carbon to make glass (diamonds) and circuits.  Unlocks new recipes for glass smelters, electronics factories and manufacturing worlds.",
@@ -8259,6 +8268,10 @@ setLanguageData({
           alternateElectronicsRecipe: {
             label: 'Alternate Electronics Recipe',
             description: 'Unlocks the option to use graphite instead of biomass for Nanotechnology Stage III at the same consumption rate.',
+          },
+          nanoalchemy: {
+            label: 'Nanoalchemy Throughput +1%',
+            description: 'Each rank adds 1% of base Nanoalchemy throughput, up to 10× throughput at 900 ranks.',
           },
         },
       },

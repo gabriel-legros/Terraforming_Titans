@@ -237,6 +237,8 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
     return {
       maintenanceSlider: nanotechManager.maintenanceSlider,
       glassSlider: nanotechManager.glassSlider,
+      nanoalchemySlider: nanotechManager.nanoalchemySlider,
+      nanoalchemyWeights: { ...nanotechManager.nanoalchemyWeights },
       maintenance2Slider: nanotechManager.maintenance2Slider,
       componentsSlider: nanotechManager.componentsSlider,
       maintenance3Slider: nanotechManager.maintenance3Slider,
@@ -394,6 +396,10 @@ class ColonyAutomation extends ColonyAutomationPresetManagerBaseClass {
 
   applyNanocolonyControlSettings(control) {
     const before = this.captureNanocolonyControlSettings();
+    if (control.nanoalchemySlider !== undefined) {
+      nanotechManager.nanoalchemySlider = Math.max(0, Math.min(10, Number(control.nanoalchemySlider) || 0));
+    }
+    if (control.nanoalchemyWeights) nanotechManager.setNanoalchemyWeights(control.nanoalchemyWeights);
     const zeroDefaultKeys = [
       'maintenanceSlider',
       'glassSlider',

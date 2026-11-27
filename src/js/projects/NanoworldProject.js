@@ -31,6 +31,14 @@ const NANOWORLD_SHOP_ITEMS = [
     description: getNanoworldText(`shopItems.stage${stage}.description`),
   })),
   {
+    id: 'nanoalchemy',
+    label: getNanoworldText('shopItems.nanoalchemy.label'),
+    description: getNanoworldText('shopItems.nanoalchemy.description'),
+    requiresFlag: 'nanoalchemy',
+    cost: 1,
+    maxPurchases: NANOWORLD_MAX_SHOP_PURCHASES,
+  },
+  {
     id: 'alternateElectronicsRecipe',
     label: getNanoworldText('shopItems.alternateElectronicsRecipe.label'),
     cost: 10,

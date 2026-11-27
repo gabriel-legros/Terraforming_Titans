@@ -79,7 +79,7 @@ function renderNanotechSlider(title, description, sliderId, impactId, rateId, ti
           <div class="tick-marks"${ticksAttribute}>${Array(11).fill('<span></span>').join('')}</div>
         </div>
       </div>
-      <p class="slider-description">${description}</p>
+      ${description ? `<p class="slider-description">${description}</p>` : ''}
     </div>`;
 }
 
@@ -152,6 +152,38 @@ function renderNanotechSkullStage() {
     </div>`;
 }
 
+function renderNanoalchemy() {
+  const rows = NUCLEAR_ALCHEMY_RECIPE_KEYS.map((key) => `
+    <tr>
+      <th scope="row"><label for="nanoalchemy-weight-${key}">${t(`ui.projects.nuclearAlchemy.recipeLabels.${key}`)}</label></th>
+      <td>${NUCLEAR_ALCHEMY_RECIPES[key].complexity}</td>
+      <td><input type="number" min="0" step="any" class="hephaestus-weight-input" id="nanoalchemy-weight-${key}"></td>
+      <td id="nanoalchemy-rate-${key}"></td>
+    </tr>`).join('');
+  return `
+    <details id="nanotech-nanoalchemy" hidden>
+      <summary>${t('catalogs.research.advanced.nanoalchemy.name')}</summary>
+      <div class="nanotech-slider-grid">
+        ${renderNanotechSlider(
+          `<label for="nanoalchemy-work">${t('ui.colony.nanotech.nanoalchemy.work')} <span id="nanoalchemy-allocation"></span></label>`,
+          '',
+          'nanoalchemy-work', 'nanoalchemy-growth', 'nanoalchemy-hydrogen'
+        )}
+        <div class="nanotech-slider-card">
+          <table>
+            <thead><tr>
+              <th>${t('ui.projects.nuclearAlchemy.resource')}</th>
+              <th>${t('ui.projects.common.complexity')}</th>
+              <th>${t('ui.projects.common.weight')}</th>
+              <th>${t('ui.projects.common.rate')}</th>
+            </tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    </details>`;
+}
+
 function renderNanotechCard(manager) {
   const energyLimit = NANOTECH_LIMIT_PARAMETERS[0];
   return `
@@ -188,6 +220,7 @@ function renderNanotechCard(manager) {
       <p class="nanotech-hint">${t('ui.colony.nanotech.hint', { travelCap: `<span id="nanotech-travel-cap">${formatNumber(manager.getTravelPreserveCap())}</span>` })}<span class="info-tooltip-icon" id="nanotech-travel-tooltip">&#9432;</span>.</p>
       ${NANOTECH_STAGE_PARAMETERS.map((stage) => renderNanotechStage(stage, manager)).join('')}
       ${renderNanotechSkullStage()}
+      ${renderNanoalchemy()}
     </div>`;
 }
 
@@ -245,6 +278,18 @@ NanotechManager.prototype.cacheUIRefs = function cacheUIRefs(container) {
     travelCapEl: qs('nanotech-travel-cap'),
     growthImpactEl: qs('nanotech-growth-impact'),
     energyRateEl: qs('nanotech-growth-energy'),
+    nanoalchemy: {
+      menu: qs('nanotech-nanoalchemy'),
+      work: qs('nanoalchemy-work'),
+      allocation: qs('nanoalchemy-allocation'),
+      growth: qs('nanoalchemy-growth'),
+      hydrogen: qs('nanoalchemy-hydrogen'),
+      recipes: NUCLEAR_ALCHEMY_RECIPE_KEYS.map((key) => ({
+        key,
+        weight: qs(`nanoalchemy-weight-${key}`),
+        rate: qs(`nanoalchemy-rate-${key}`),
+      })),
+    },
     stages: {},
     limits: {},
     recycling: {},
@@ -322,6 +367,20 @@ NanotechManager.prototype.updateTickMarks = function updateTickMarks(ticksElemen
 
 NanotechManager.prototype.bindUIHandlers = function bindUIHandlers() {
   const C = this.uiCache;
+  const alchemy = C.nanoalchemy;
+  if (!alchemy.menu.dataset.nanotechBound) {
+    alchemy.menu.addEventListener('toggle', () => nanotechManager.updateUI());
+    alchemy.work.addEventListener('input', () => {
+      nanotechManager.nanoalchemySlider = alchemy.work.valueAsNumber;
+      nanotechManager.updateUI();
+    });
+    for (const { key, weight } of alchemy.recipes) {
+      weight.addEventListener('input', () => {
+        nanotechManager.setNanoalchemyWeights({ ...nanotechManager.nanoalchemyWeights, [key]: weight.value });
+      });
+    }
+    alchemy.menu.dataset.nanotechBound = 'true';
+  }
   NANOTECH_STAGE_PARAMETERS.forEach((stage) => {
     const stageCache = C.stages[stage.id];
     [
@@ -489,6 +548,28 @@ NanotechManager.prototype.updateUI = function updateUI() {
   setToggleButtonState(C.sidebarToggle, this.showNanobotsInSidebar);
 
   const temperatureDisabled = this.isTemperatureDisabled();
+  const alchemy = C.nanoalchemy;
+  alchemy.menu.hidden = !this.isBooleanFlagSet('nanoalchemy');
+  if (!alchemy.menu.hidden && alchemy.menu.open) {
+    if (alchemy.work.valueAsNumber !== this.nanoalchemySlider) alchemy.work.value = this.nanoalchemySlider;
+    const allocation = `${this.nanoalchemySlider * 10}%`;
+    if (alchemy.allocation.textContent !== allocation) alchemy.allocation.textContent = allocation;
+    const growth = t('ui.colony.nanotech.nanoalchemy.growth', {
+      value: (temperatureDisabled ? 0 : -100 * this.nanoalchemyGrowthPenalty).toFixed(3),
+    });
+    if (alchemy.growth.textContent !== growth) alchemy.growth.textContent = growth;
+    const hydrogen = t('ui.colony.nanotech.nanoalchemy.hydrogen', {
+      rate: formatNanotechSingleRate(temperatureDisabled ? 0 : this.nanoalchemyHydrogenRate, 'ton/s'),
+    });
+    if (alchemy.hydrogen.textContent !== hydrogen) alchemy.hydrogen.textContent = hydrogen;
+    for (const { key, weight, rate } of alchemy.recipes) {
+      if (document.activeElement !== weight && weight.valueAsNumber !== this.nanoalchemyWeights[key]) {
+        weight.value = this.nanoalchemyWeights[key];
+      }
+      const output = formatNanotechSingleRate(temperatureDisabled ? 0 : this.nanoalchemyRates[key], 'ton/s');
+      if (rate.textContent !== output) rate.textContent = output;
+    }
+  }
   const alternateRecipeUnlocked = this.isAlternateElectronicsRecipeUnlocked();
   const stage3UsesGraphite = this.usesStage3Graphite();
   if (stage3UsesGraphite && this.biomassLimitMode === 'percent_total') this.biomassLimitMode = 'percent';

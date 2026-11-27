@@ -26,12 +26,14 @@ class NanotechManager extends EffectableEntity {
     this.uiDirty = true;
     this.uiCache = null;
     this.uiState = {};
+    this.nanoalchemyRates = {};
     this.initializeControlState();
     this.resetActivityState();
     this.setActivityFractions(1);
   }
 
   initializeControlState() {
+    this.setNanoalchemyWeights({});
     NANOTECH_CONTROL_PARAMETERS.forEach((control) => {
       this[control.property] = control.defaultValue;
     });
@@ -146,6 +148,23 @@ class NanotechManager extends EffectableEntity {
       * this.getNanotechEfficiencyMultiplier();
   }
 
+  setNanoalchemyWeights(weights) {
+    this.nanoalchemyWeights = {};
+    this.nanoalchemyShares = {};
+    for (const key of NUCLEAR_ALCHEMY_RECIPE_KEYS) {
+      const weight = Number(weights[key] ?? 1);
+      this.nanoalchemyWeights[key] = Number.isFinite(weight) ? Math.max(0, weight) : 0;
+    }
+    // Scale before summing so even very large relative weights retain their proportions.
+    const largest = Math.max(...Object.values(this.nanoalchemyWeights));
+    const scaledTotal = largest && NUCLEAR_ALCHEMY_RECIPE_KEYS.reduce(
+      (sum, key) => sum + this.nanoalchemyWeights[key] / largest, 0
+    );
+    for (const key of NUCLEAR_ALCHEMY_RECIPE_KEYS) {
+      this.nanoalchemyShares[key] = scaledTotal ? (this.nanoalchemyWeights[key] / largest) / scaledTotal : 0;
+    }
+  }
+
   getSkullGrowthContribution() {
     return this.isStageEnabled(NANOTECH_SKULL_STAGE_PARAMETER)
       ? 0.0015 * this.hazardousBiomassFraction * this.getNanotechEfficiencyMultiplier()
@@ -166,7 +185,7 @@ class NanotechManager extends EffectableEntity {
     });
     contributions.hazardousBiomass = this.getSkullGrowthContribution();
 
-    let penalty = 0;
+    let penalty = this.nanoalchemyGrowthPenalty;
     NANOTECH_STAGE_PARAMETERS.forEach((stage) => {
       if (!this.isStageEnabled(stage)) return;
       const fraction = productionFractions[stage.output.key] ?? this[stage.output.fractionProperty];
@@ -244,18 +263,14 @@ class NanotechManager extends EffectableEntity {
   }
 
   resetActivityState() {
+    this.clearCurrentActivity();
     NANOTECH_ACTIVITY_PARAMETERS.forEach((activity) => {
-      this[activity.currentProperty] = 0;
       this[activity.optimalProperty] = 0;
       this[activity.fractionProperty] = 0;
       this[activity.enoughProperty] = true;
       if (activity.outputCurrentProperty) {
-        this[activity.outputCurrentProperty] = 0;
         this[activity.outputFractionProperty] = 1;
       }
-    });
-    NANOTECH_STAGE_PARAMETERS.forEach((stage) => {
-      this[stage.maintenance.currentProperty] = 0;
     });
     this.effectiveGrowthRate = 0;
   }
@@ -267,6 +282,9 @@ class NanotechManager extends EffectableEntity {
   }
 
   clearCurrentActivity() {
+    this.nanoalchemyGrowthPenalty = 0;
+    this.nanoalchemyHydrogenRate = 0;
+    for (const key of NUCLEAR_ALCHEMY_RECIPE_KEYS) this.nanoalchemyRates[key] = 0;
     NANOTECH_ACTIVITY_PARAMETERS.forEach((activity) => {
       this[activity.currentProperty] = 0;
       if (activity.outputCurrentProperty) this[activity.outputCurrentProperty] = 0;
@@ -517,6 +535,39 @@ class NanotechManager extends EffectableEntity {
     );
   }
 
+  processNanoalchemy(seconds, accumulatedChanges, efficiency) {
+    if (!this.nanoalchemySlider || !this.isBooleanFlagSet('nanoalchemy')) return;
+    const hydrogen = resources.colony.colonyHydrogen;
+    const available = this.getAvailableResource(hydrogen, accumulatedChanges, 'colony', 'colonyHydrogen');
+    if (available <= 0) return;
+
+    const allocation = this.nanoalchemySlider / 10;
+    const multiplier = 1 + projectManager.projects.nanoworld.getShopPurchaseCount('nanoalchemy') * 0.01;
+    const workRate = this.nanobots * NANOTECH_STAGE_BY_ID.stage1.input.coefficient * efficiency * allocation * multiplier;
+    let requestedRate = 0;
+    for (const key of NUCLEAR_ALCHEMY_RECIPE_KEYS) {
+      const rate = workRate * this.nanoalchemyShares[key] / NUCLEAR_ALCHEMY_RECIPES[key].complexity;
+      this.nanoalchemyRates[key] = rate;
+      requestedRate += rate;
+    }
+    if (requestedRate <= 0) return;
+    const spent = Math.min(requestedRate * seconds, available);
+    const fraction = spent / (requestedRate * seconds);
+    const source = registerRateSource('nanotech:nanoalchemy', t('catalogs.research.advanced.nanoalchemy.name'));
+    this.nanoalchemyGrowthPenalty = 0.0015 * allocation * fraction;
+    this.nanoalchemyHydrogenRate = spent / seconds;
+    this.addAccumulatedChange(accumulatedChanges, 'colony', 'colonyHydrogen', -spent);
+    hydrogen.modifyRate(-this.nanoalchemyHydrogenRate, source, 'nanotech');
+    for (const key of NUCLEAR_ALCHEMY_RECIPE_KEYS) {
+      const rate = this.nanoalchemyRates[key] * fraction;
+      this.nanoalchemyRates[key] = rate;
+      if (rate <= 0) continue;
+      const category = NUCLEAR_ALCHEMY_RECIPES[key].planetaryCategory;
+      this.addAccumulatedChange(accumulatedChanges, category, key, rate * seconds);
+      resources[category][key].modifyRate(rate, source, 'nanotech');
+    }
+  }
+
   produceResources(deltaTime, accumulatedChanges, accumulatedSpecialChanges) {
     if (deltaTime === 0) return;
     this.syncNanobotsResource();
@@ -540,6 +591,7 @@ class NanotechManager extends EffectableEntity {
     this.optimalEnergyConsumption = this.nanobots * 1e-12;
 
     const recyclingEnabled = this.isBooleanFlagSet('nanotechRecycling');
+    this.processNanoalchemy(deltaTime / 1000, accumulatedChanges, efficiency);
     NANOTECH_PROCESSING_ORDER.forEach((stageId) => {
       const stage = NANOTECH_STAGE_BY_ID[stageId];
       const inputProvided = this.consumeStageInput(stage, deltaTime, accumulatedChanges, recyclingEnabled);
@@ -739,6 +791,7 @@ class NanotechManager extends EffectableEntity {
       nanobots: this.nanobots,
       showNanobotsInSidebar: this.showNanobotsInSidebar,
       travelNanobotFloor: this.getTravelNanobotFloor(),
+      nanoalchemyWeights: { ...this.nanoalchemyWeights },
     };
     NANOTECH_CONTROL_PARAMETERS.forEach((control) => {
       state[control.property] = this[control.property];
@@ -756,6 +809,7 @@ class NanotechManager extends EffectableEntity {
 
   loadState(state) {
     if (!state) return;
+    this.setNanoalchemyWeights(state.nanoalchemyWeights || {});
     this.nanobots = state.nanobots || 1;
     this.setNanobotsSidebarVisibility(state.showNanobotsInSidebar === true);
     this.travelNanobotFloor = Number.isFinite(state.travelNanobotFloor)
@@ -763,6 +817,7 @@ class NanotechManager extends EffectableEntity {
       : Math.max(1, Math.min(this.nanobots, this.getTravelPreserveCap()));
     NANOTECH_CONTROL_PARAMETERS.forEach((control) => {
       if (control.fixedOnLoad) this[control.property] = control.defaultValue;
+      else if (control.property === 'nanoalchemySlider') this.nanoalchemySlider = Math.max(0, Math.min(10, Number(state.nanoalchemySlider) || 0));
       else if (control.property === 'stage3Resource') this.stage3Resource = state.stage3Resource === 'graphite' ? 'graphite' : 'biomass';
       else this[control.property] = state[control.property] || control.defaultValue;
     });
