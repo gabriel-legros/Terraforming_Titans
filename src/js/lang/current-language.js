@@ -7550,7 +7550,7 @@ setLanguageData({
         },
         nanoalchemy: {
           name: 'Nanoalchemy',
-          description: 'We have finally mastered nuclear alchemy to the point where we can do it precisely.  Due to the delicacy of the task, it is best suited to nanobots.  Enables the nanolocolony to perform nuclear alchemy.',
+          description: 'We have finally mastered nuclear alchemy to the point where we can do it precisely.  Due to the delicacy of the task, it is best suited to nanobots.  Enables the nanoocolony to perform nuclear alchemy.',
         },
         silica_phase_out_initiative: {
           name: 'Silica phase-out Initiative',
