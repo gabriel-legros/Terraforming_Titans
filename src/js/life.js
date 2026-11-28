@@ -259,55 +259,74 @@ class LifeAttribute {
       : Math.min(this.maxUpgrades, zeroKelvinLimit);
   }
 
-  getConvertedValue() {
+  getNumericResult() {
     const requirements = getActiveLifeDesignRequirements();
     const survivalTemperatureRangeK = requirements.survivalTemperatureRangeK
       ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.survivalTemperatureRangeK;
     const effectiveValue = this.getEffectiveValue();
     switch (this.name) {
       case 'minTemperatureTolerance':
-        return (survivalTemperatureRangeK.min - effectiveValue).toFixed(2) + 'K';
+        return survivalTemperatureRangeK.min - effectiveValue;
       case 'maxTemperatureTolerance':
-        return (survivalTemperatureRangeK.max + effectiveValue).toFixed(2) + 'K';
+        return survivalTemperatureRangeK.max + effectiveValue;
       case 'optimalGrowthTemperature':
-        return (
-          requirements.optimalGrowthTemperatureBaseK + effectiveValue
-        ).toFixed(2) + 'K';
+        return requirements.optimalGrowthTemperatureBaseK + effectiveValue;
       case 'growthTemperatureTolerance':
-        return calculateGrowthTemperatureTolerance(effectiveValue).toFixed(2);
+        return calculateGrowthTemperatureTolerance(effectiveValue);
       case 'photosynthesisEfficiency':
-        return (requirements.photosynthesisRatePerPoint * effectiveValue).toFixed(5);
-      case 'radiationTolerance':
-        const totalRadiationTolerance = getInnateRadiationTolerancePoints() + effectiveValue;
-        return `${formatNumber(totalRadiationTolerance * totalRadiationTolerance * LIFE_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY, false, 2)} mSv/day mitigated`;
+        return requirements.photosynthesisRatePerPoint * effectiveValue;
+      case 'radiationTolerance': {
+        const points = getInnateRadiationTolerancePoints() + effectiveValue;
+        return points * points * LIFE_RADIATION_MITIGATION_PER_POINT_MSV_PER_DAY;
+      }
       case 'invasiveness':
         return effectiveValue;
       case 'spaceEfficiency':
-        // Calculate and display the actual max density
-        const densityMultiplier = 1 + effectiveValue; // Each point adds 100% of base density
-        const maxDensity = requirements.baseMaxBiomassDensityTPerM2 * densityMultiplier;
-        return formatNumber(maxDensity, false, 1) + ' tons/m²'; // Display calculated density with 1 decimal place
+        return requirements.baseMaxBiomassDensityTPerM2 * (1 + effectiveValue);
       case 'geologicalBurial':
-        // Calculate rate: starts at 0, adds 0.0001 per point, max 0.001 at 10 points
-        const burialRate = effectiveValue * 0.0001;
-        return burialRate.toFixed(4); // Display rate with 4 decimal places
+        return effectiveValue * 0.0001;
       case 'bioworkforce':
-        const bioworkersPerBiomassPerPoint = requirements.bioworkersPerBiomassPerPoint
+        return effectiveValue * (requirements.bioworkersPerBiomassPerPoint
           ?? DEFAULT_LIFE_DESIGN_REQUIREMENTS.bioworkersPerBiomassPerPoint
-          ?? 0.00001;
+          ?? 0.00001);
+      case 'bioships':
+        return effectiveValue * BIOSHIPS_FRACTION_PER_POINT_PER_SECOND * 100;
+      default:
+        return null;
+    }
+  }
+
+  getConvertedValue() {
+    const result = this.getNumericResult();
+    switch (this.name) {
+      case 'minTemperatureTolerance':
+      case 'maxTemperatureTolerance':
+      case 'optimalGrowthTemperature':
+        return result.toFixed(2) + 'K';
+      case 'growthTemperatureTolerance':
+        return result.toFixed(2);
+      case 'photosynthesisEfficiency':
+        return result.toFixed(5);
+      case 'radiationTolerance':
+        return formatNumber(result, false, 2) + ' mSv/day mitigated';
+      case 'spaceEfficiency':
+        return formatNumber(result, false, 1) + ' tons/m²';
+      case 'geologicalBurial':
+        return result.toFixed(4);
+      case 'bioworkforce':
         return getLifeText(
           'ui.life.attributes.bioworkforce.convertedValue',
           '{value} workers per ton biomass',
-          { value: (effectiveValue * bioworkersPerBiomassPerPoint).toFixed(5) }
+          { value: result.toFixed(5) }
         );
       case 'bioships':
         return getLifeText(
           'ui.lifeDesigner.attributes.bioships.convertedValue',
           '{percent}% biomass/s to spaceships',
-          { percent: formatNumber(effectiveValue * BIOSHIPS_FRACTION_PER_POINT_PER_SECOND * 100, false, 2) }
+          { percent: formatNumber(result, false, 2) }
         );
       default:
-        return null;
+        return result;
     }
   }
 }

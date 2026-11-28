@@ -4933,6 +4933,20 @@ setLanguageData({
           variables: {
             source: 'Variables',
           },
+          lifeDesigner: {
+            points: 'Points',
+            result: 'Result',
+            results: {
+              minTemperatureTolerance: 'Result (K)',
+              maxTemperatureTolerance: 'Result (K)',
+              optimalGrowthTemperature: 'Result (K)',
+              growthTemperatureTolerance: 'Result (K)',
+              radiationTolerance: 'Result (mSv/day mitigated)',
+              spaceEfficiency: 'Result (t/m²)',
+              bioworkforce: 'Result (workers per ton of biomass)',
+              bioships: 'Result (% of biomass/s)',
+            },
+          },
           common: {
             value: 'Value',
             count: 'Count',

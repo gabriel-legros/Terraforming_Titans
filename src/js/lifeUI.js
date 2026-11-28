@@ -229,30 +229,13 @@ function isLifeShopCategoryUnlocked(category) {
 
 function getConvertedDisplay(attributeName, attribute) {
   if (tempAttributes.includes(attributeName)) {
-      const requirements = getActiveLifeDesignRequirementsForUI();
-    const effectiveValue = attribute.getEffectiveValue();
-    let kelvin = 0;
-    switch (attributeName) {
-      case 'minTemperatureTolerance':
-        kelvin = requirements.survivalTemperatureRangeK.min - effectiveValue;
-        break;
-      case 'maxTemperatureTolerance':
-        kelvin = requirements.survivalTemperatureRangeK.max + effectiveValue;
-        break;
-      case 'optimalGrowthTemperature':
-        kelvin = requirements.optimalGrowthTemperatureBaseK + effectiveValue;
-        break;
-    }
+    const kelvin = attribute.getNumericResult();
     return `${formatNumber(toDisplayTemperature(kelvin), false, 2)}${getTemperatureUnit()}`;
   }
-  if (attributeName === 'photosynthesisEfficiency') {
-    const requirements = getActiveLifeDesignRequirementsForUI();
-    return (requirements.photosynthesisRatePerPoint * attribute.getEffectiveValue()).toFixed(5);
-  }
   if (attributeName === 'invasiveness') {
-    return formatNumber(attribute.getEffectiveValue(), false, 2);
+    return formatNumber(attribute.getNumericResult(), false, 2);
   }
-  return attribute.getConvertedValue() !== null ? attribute.getConvertedValue() : '-';
+  return attribute.getConvertedValue() ?? '-';
 }
 
 function getLifeAttributeMaxDisplay(attribute) {

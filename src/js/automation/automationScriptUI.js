@@ -1266,7 +1266,7 @@ function renderReferencePicker(automation, ref, row) {
     return;
   }
 
-  if (ref.source === 'hazards') {
+  if (ref.source === 'hazards' || ref.source === 'lifeDesigner') {
     const targets = registry.getTargets(ref.source, ref.category);
     const target = createSelect(targets.map(item => ({ id: item.id, label: item.label })), ref.target);
     target.addEventListener('change', event => {

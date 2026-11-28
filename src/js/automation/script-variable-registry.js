@@ -9,6 +9,7 @@ class ScriptVariableRegistry {
       { id: 'colony', label: this.getScriptVariableText('sources.colony', 'Colony') },
       { id: 'projects', label: this.getScriptVariableText('sources.projects', 'Special Projects') },
       { id: 'terraforming', label: this.getScriptVariableText('sources.terraforming', 'Terraforming') },
+      { id: 'lifeDesigner', label: t('ui.life.designer.title') },
       { id: 'celestial', label: this.getScriptVariableText('sources.celestial', 'Celestial Parameters') },
       { id: 'artificial', label: this.getScriptVariableText('artificial.source', 'Artificial') },
       { id: 'hazards', label: this.getScriptVariableText('sources.hazards', 'Hazards') },
@@ -30,6 +31,7 @@ class ScriptVariableRegistry {
     if (sourceId === 'colony') return this.getColonyCategories();
     if (sourceId === 'projects') return this.getProjectCategories();
     if (sourceId === 'terraforming') return this.getTerraformingCategories();
+    if (sourceId === 'lifeDesigner') return [{ id: 'currentDesign', label: t('ui.life.designer.currentDesign') }];
     if (sourceId === 'celestial') return [{ id: 'celestial', label: this.getScriptVariableText('sources.celestial', 'Celestial Parameters') }];
     if (sourceId === 'artificial') return this.getArtificialCategories();
     if (sourceId === 'hazards') return [{ id: 'hazards', label: this.getScriptVariableText('sources.hazards', 'Hazards') }];
@@ -45,6 +47,14 @@ class ScriptVariableRegistry {
     if (sourceId === 'colony') return this.getColonyTargets(categoryId);
     if (sourceId === 'projects') return this.getProjectTargets(categoryId);
     if (sourceId === 'terraforming') return this.getTerraformingTargets(categoryId);
+    if (sourceId === 'lifeDesigner') {
+      return baseLifeAttributeOrder.map(id => ({
+        id,
+        label: id === 'photosynthesisEfficiency'
+          ? t('ui.life.metabolismEfficiency.name', { name: getActiveLifeMetabolismProcess().displayName })
+          : lifeDesigner.currentDesign[id].displayName
+      }));
+    }
     if (sourceId === 'celestial') return [{ id: 'celestial', label: this.getScriptVariableText('sources.celestial', 'Celestial Parameters') }];
     if (sourceId === 'artificial') return this.getArtificialTargets();
     if (sourceId === 'hazards') return this.getHazardTargets();
@@ -60,6 +70,13 @@ class ScriptVariableRegistry {
     if (sourceId === 'colony') return this.getColonyAttributes(categoryId, targetId);
     if (sourceId === 'projects') return this.getProjectAttributes(targetId);
     if (sourceId === 'terraforming') return this.getTerraformingAttributes(categoryId, targetId);
+    if (sourceId === 'lifeDesigner') {
+      const resultLabel = this.getScriptVariableText('lifeDesigner.result');
+      return [
+        { id: 'points', label: this.getScriptVariableText('lifeDesigner.points'), valueType: 'number' },
+        { id: 'result', label: this.getScriptVariableText(`lifeDesigner.results.${targetId}`, resultLabel), valueType: 'number' }
+      ];
+    }
     if (sourceId === 'celestial') return this.getCelestialAttributes();
     if (sourceId === 'artificial') return this.getArtificialAttributes();
     if (sourceId === 'hazards') return this.getHazardAttributes(targetId);
@@ -657,6 +674,13 @@ class ScriptVariableRegistry {
     if (ref.source === 'colony') return this.resolveColonyValue(ref);
     if (ref.source === 'projects') return this.resolveProjectValue(ref);
     if (ref.source === 'terraforming') return this.resolveTerraformingValue(ref);
+    if (ref.source === 'lifeDesigner') {
+      const attribute = lifeDesigner.currentDesign[ref.target];
+      if (!(attribute instanceof LifeAttribute)) return 0;
+      if (ref.attribute === 'points') return attribute.value;
+      if (ref.attribute === 'result') return attribute.getNumericResult();
+      return 0;
+    }
     if (ref.source === 'celestial') return this.resolveCelestialValue(ref);
     if (ref.source === 'artificial') return this.resolveArtificialValue(ref);
     if (ref.source === 'hazards') return this.resolveHazardValue(ref);
@@ -1337,7 +1361,7 @@ class ScriptVariableRegistry {
       const option = options.find(item => item.id === ref.option);
       return this.joinReferenceLabels(source?.label, attribute?.label, option?.label);
     }
-    if (ref.source === 'hazards') {
+    if (ref.source === 'hazards' || ref.source === 'lifeDesigner') {
       const targets = this.getTargets(ref.source, ref.category);
       const target = targets.find(item => item.id === ref.target);
       const attributes = this.getAttributes(ref.source, ref.category, ref.target);
