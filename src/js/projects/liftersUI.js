@@ -337,7 +337,7 @@ function renderLiftersUI(project, container) {
 
 function updateLiftersUI(project) {
   const elements = projectElements[project.name];
-  if (!elements || !elements.liftersCard) {
+  if (!elements || !elements.liftersCard || elements.projectItem?.classList.contains('collapsed')) {
     return;
   }
 

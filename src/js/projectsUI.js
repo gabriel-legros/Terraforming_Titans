@@ -1764,7 +1764,7 @@ function updateProjectUI(projectName) {
     project.updateKesslerWarning();
   }
 
-  if (!isImportProject) {
+  if (!isImportProject && elements.kesslerFailureWarning) {
     updateKesslerFailureWarning(project, elements);
   }
 
@@ -2579,4 +2579,5 @@ function toggleProjectCollapse(projectCard) {
   });
 
   updateProjectCollapsePreference(name, collapsed);
+  if (!collapsed) updateProjectUI(name);
 }

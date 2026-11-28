@@ -273,11 +273,7 @@ function renderSpaceStorageUI(project, container) {
   transferWeightsToggle.setAttribute('aria-label', transferWeightsText);
   transferWeightsToggle.addEventListener('click', () => {
     project.transferWeightsVisible = !project.transferWeightsVisible;
-    setToggleButtonState(transferWeightsToggle, project.transferWeightsVisible);
-    const controls = projectElements[project.name]?.transferWeightControls || {};
-    for (const resourceKey in controls) {
-      controls[resourceKey].style.display = project.transferWeightsVisible ? 'flex' : 'none';
-    }
+    updateSpaceStorageUI(project);
   });
   card.querySelector('.card-header').appendChild(transferWeightsToggle);
   if (typeof makeCollapsibleCard === 'function') makeCollapsibleCard(card);
@@ -1562,18 +1558,22 @@ function updateSpaceStorageUI(project) {
       const input = els.transferWeightValueInputs[opt.resource];
       if (!controls || !slider || !input) return;
       controls.style.display = project.transferWeightsVisible ? 'flex' : 'none';
+      if (!project.transferWeightsVisible) return;
       const label = getSpaceStorageUIText(
         'ui.projects.spaceStorage.transferWeightForResource',
         'Transfer weight for {resource}',
         { resource: getSpaceStorageResourceLabel(opt) }
       );
-      slider.setAttribute('aria-label', label);
-      input.setAttribute('aria-label', label);
+      if (slider.getAttribute('aria-label') !== label) slider.setAttribute('aria-label', label);
+      if (input.getAttribute('aria-label') !== label) input.setAttribute('aria-label', label);
       const weight = project.getResourceTransferWeight(opt.resource);
-      slider.value = String(Math.max(1, Math.min(100, weight)));
+      const sliderValue = String(Math.max(1, Math.min(100, weight)));
+      if (slider.value !== sliderValue) slider.value = sliderValue;
       if (input !== document.activeElement) {
-        input.dataset.spaceStorageTransferWeight = String(weight);
-        input.value = weight >= 1e6 ? formatNumber(weight, true, 3) : String(weight);
+        const rawValue = String(weight);
+        const displayValue = weight >= 1e6 ? formatNumber(weight, true, 3) : rawValue;
+        if (input.dataset.spaceStorageTransferWeight !== rawValue) input.dataset.spaceStorageTransferWeight = rawValue;
+        if (input.value !== displayValue) input.value = displayValue;
       }
     });
   }
@@ -1644,16 +1644,16 @@ function updateSpaceStorageUI(project) {
     });
   }
   if (els.usageCells) {
+    const capLimits = project.getResourceCapLimits();
     storageResourceOptions.forEach(opt => {
       const cell = els.usageCells[opt.resource];
       if (cell) {
         const amount = project.getStoredResourceValue ? project.getStoredResourceValue(opt.resource) : 0;
-        const capLimit = project.getResourceCapLimit(opt.resource);
-        if (Number.isFinite(capLimit)) {
-          cell.textContent = `${formatNumber(amount, false, 2)}/${formatNumber(Math.max(0, capLimit), false, 2)}`;
-        } else {
-          cell.textContent = formatNumber(amount, false, 2);
-        }
+        const capLimit = capLimits[opt.resource];
+        const usage = Number.isFinite(capLimit)
+          ? `${formatNumber(amount, false, 2)}/${formatNumber(Math.max(0, capLimit), false, 2)}`
+          : formatNumber(amount, false, 2);
+        if (cell.textContent !== usage) cell.textContent = usage;
       }
     });
   }
@@ -1718,23 +1718,18 @@ function updateSpaceStorageUI(project) {
       const button = els.transferButtons[opt.resource];
       const icon = els.transferIcons[opt.resource];
       const tooltip = els.transferTooltips[opt.resource];
-      const mode = project.getResourceTransferMode(opt.resource);
-      if (button) {
-        button.disabled = withdrawalDisabled;
-      }
-      if (mode === 'withdraw') {
-        icon.innerHTML = '&#8595;&#xFE0E;';
-        button.classList.add('withdraw');
-        button.classList.remove('store');
-        tooltip.textContent = getSpaceStorageUIText('ui.projects.spaceStorage.withdrawFromSpaceStorage', 'Withdraw from space storage');
-      } else {
-        icon.innerHTML = '&#8593;&#xFE0E;';
-        button.classList.add('store');
-        button.classList.remove('withdraw');
-        tooltip.textContent = withdrawalDisabled
+      const withdraw = project.getResourceTransferMode(opt.resource) === 'withdraw';
+      if (button.disabled !== withdrawalDisabled) button.disabled = withdrawalDisabled;
+      button.classList.toggle('withdraw', withdraw);
+      button.classList.toggle('store', !withdraw);
+      const arrow = withdraw ? '\u2193\uFE0E' : '\u2191\uFE0E';
+      if (icon.textContent !== arrow) icon.textContent = arrow;
+      const text = withdraw
+        ? getSpaceStorageUIText('ui.projects.spaceStorage.withdrawFromSpaceStorage', 'Withdraw from space storage')
+        : withdrawalDisabled
           ? getSpaceStorageUIText('ui.projects.spaceStorage.withdrawalDisabled', 'Withdrawal disabled on this world')
           : getSpaceStorageUIText('ui.projects.spaceStorage.storeInSpaceStorage', 'Store in space storage');
-      }
+      if (tooltip.textContent !== text) tooltip.textContent = text;
     });
   }
   if (els.fullIcons) {
@@ -1756,7 +1751,7 @@ function updateSpaceStorageUI(project) {
           };
           tooltipText = tooltipByCategory[target.category];
         }
-        if (tooltip) {
+        if (tooltip && tooltip.textContent !== tooltipText) {
           tooltip.textContent = tooltipText;
         }
         if (mode === 'withdraw' && res && res.hasCap && res.value >= res.cap) {

@@ -115,6 +115,12 @@ The audit covers:
 - Matched post-fix Zeus report: `chrome-memory-2026-07-31T03-20-57-333Z.json`. Seven sweeps across 908.9 seconds changed connected nodes by only `+2` and elements/listeners by `+1`, entirely from a legitimate newly appearing Golden Asteroid button. Matched snapshot memory fell `0.21 MiB`, `extra_native_bytes` was unchanged, private memory fell `1.93 MiB`, and working set fell `14.26 MiB`.
 - None of the ordinary, paused, player-save, or allocation-instrumented fifteen-minute runs reproduced multi-gigabyte retained growth. The observed 1-1.2 GB high-water mark remains credible after broad initialization, while Allocation Timeline itself can add hundreds of MiB of temporary renderer memory. The supplied 9 GB observation is not attributable to a universal renderer, GPU, DOM, listener, or JavaScript leak in the exercised state; reproducing it requires a more specific player action/state or a substantially longer profiler recording.
 
+### 2026-11-27 - Mega projects during disk-world auto-travel
+
+- Load `test_saves/debug/performance.json`, restore its automation, open Special Projects → Mega, then switch to Research and back. The save runs Manufacturing World with zero superconductors in Space Storage and auto-travels between stored disks. In Chromium, 320 accelerated trips retained 680 extra Constructed Worlds rows. Paging hid obsolete rows while the list kept their elements and listener callbacks. The history now keeps only the current page and releases each departing row's listeners.
+- With the save's Mega cards in their saved collapse state, a mutation observer on `#mega-projects` counted 231 DOM mutations during one unchanged refresh before the fix and 63 afterward. Space Storage now updates changed transfer controls and computes the cap table once per refresh. The Lifters and Space Chemistry assignment panels refresh on expansion and skip their hidden rows while collapsed.
+- In alternating 60-refresh Chromium samples of the same game state, median Mega render time including layout fell from about 10 ms to 5.7 ms. Emptying every Space Storage resource produced comparable timings of 9.3 ms before and 5.2 ms after. A separate stress run cycled 2,500 pairs of synthetic history entries through the normal renderer. The old code kept 5,010 rows and the fix kept 10. The additional rows alone had little effect on steady Mega render time in this run, so the player's full late-session slowdown remains unconfirmed.
+
 ## Findings and Fixes
 
 ### Retained listeners and lifecycle cleanup

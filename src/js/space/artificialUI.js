@@ -284,7 +284,7 @@ function syncHistoryActionButtons(row, entry) {
   if (!cells.discardBtn && entry.canDiscard) {
     const discardBtn = document.createElement('button');
     discardBtn.className = 'artificial-history-travel-btn artificial-history-discard-btn';
-    discardBtn.addEventListener('click', (event) => {
+    addTrackedUIListener(row, discardBtn, 'click', (event) => {
       event.stopPropagation();
       artificialManager.discardStoredWorld(row.dataset.historyId);
     });
@@ -299,7 +299,7 @@ function syncHistoryActionButtons(row, entry) {
   if (!cells.travelBtn && entry.canTravel) {
     const travelBtn = document.createElement('button');
     travelBtn.className = 'artificial-history-travel-btn';
-    travelBtn.addEventListener('click', (event) => {
+    addTrackedUIListener(row, travelBtn, 'click', (event) => {
       event.stopPropagation();
       const attemptTravel = (skipCurrentWorldWarnings) => {
         if (!skipCurrentWorldWarnings && handleCurrentWorldTravelWarnings(() => attemptTravel(true))) {
@@ -376,7 +376,7 @@ function buildHistoryRow(entry) {
   const statusLabel = statusLabelMap[statusKey] || (statusKey ? statusKey.charAt(0).toUpperCase() + statusKey.slice(1) : '');
   status.textContent = statusLabel;
   status.className = `artificial-history-status artificial-history-${statusKey}`;
-  editBtn.addEventListener('click', (event) => {
+  addTrackedUIListener(row, editBtn, 'click', (event) => {
     event.stopPropagation();
     if (name.dataset.editing === 'true') return;
     name.dataset.editing = 'true';
@@ -2358,40 +2358,32 @@ function renderArtificialHistory(force = false) {
 
   const list = artificialUICache.historyList;
   list._historyRows ||= new Map();
-  runWithTrackedUIListeners(artificialUICache.historyList, () => {
-    let header = list._historyHeader;
-    if (!header) {
-      header = buildHistoryHeader();
-      list._historyHeader = header;
+  const visibleIds = new Set(slice.map(entry => entry.id));
+  list._historyRows.forEach((row, id) => {
+    if (!visibleIds.has(id)) {
+      cleanupTrackedUIListeners(row);
+      row.remove();
+      list._historyRows.delete(id);
+    }
+  });
+  if (!list._historyHeader) {
+    list._historyHeader = buildHistoryHeader();
+  } else {
+    updateHistoryHeader(list._historyHeader);
+  }
+  if (list.firstElementChild !== list._historyHeader) list.prepend(list._historyHeader);
+  slice.forEach((entry, index) => {
+    let row = list._historyRows.get(entry.id);
+    if (!row) {
+      row = buildHistoryRow(entry);
+      list._historyRows.set(entry.id, row);
     } else {
-      updateHistoryHeader(header);
+      updateHistoryRow(row, entry);
     }
-    if (list.children[0] !== header) {
-      list.insertBefore(header, list.children[0] || null);
+    const next = list.children[index + 1];
+    if (next !== row) {
+      list.insertBefore(row, next || null);
     }
-    const usedRows = new Set();
-    slice.forEach((entry, index) => {
-      let row = list._historyRows.get(entry.id);
-      if (!row) {
-        row = buildHistoryRow(entry);
-        list._historyRows.set(entry.id, row);
-      } else {
-        updateHistoryRow(row, entry);
-      }
-      const desiredIndex = index + 1;
-      if (list.children[desiredIndex] !== row) {
-        list.insertBefore(row, list.children[desiredIndex] || null);
-      }
-      if (row.style.display) {
-        row.style.display = '';
-      }
-      usedRows.add(row);
-    });
-    list._historyRows.forEach((row) => {
-      if (!usedRows.has(row) && row.style.display !== 'none') {
-        row.style.display = 'none';
-      }
-    });
   });
   const pageText = `${entries.length ? artificialHistoryPage + 1 : 0}/${Math.max(maxPage + 1, 1)}`;
   if (artificialUICache.historyPage.textContent !== pageText) {

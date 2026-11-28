@@ -735,6 +735,7 @@ class SpaceChemistryProject extends NuclearAlchemyFurnaceProject {
   }
 
   updateUI() {
+    if (projectElements[this.name]?.projectItem?.classList.contains('collapsed')) return;
     super.updateUI();
     if (!this.uiElements || !this.uiElements.rowElements) {
       return;
